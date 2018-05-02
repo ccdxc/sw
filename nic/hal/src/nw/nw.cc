@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -128,7 +129,21 @@ end:
     return ret;;
 }
 
+//-----------------------------------------------------------------------------
+// dump network spec
+//-----------------------------------------------------------------------------
+static inline void
+network_dump (NetworkSpec& spec)
+{
+    std::string    nw_cfg;
 
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &nw_cfg);
+    HAL_TRACE_DEBUG("Network configuration:");
+    HAL_TRACE_DEBUG("{}", nw_cfg.c_str());
+}
 
 //------------------------------------------------------------------------------
 // validate an incoming network create request
@@ -296,10 +311,7 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
     hal_handle_t             sg_handle = 0;
 
     num_sgs = spec.sg_key_handle_size();
-
-    HAL_TRACE_DEBUG("{}:adding {} no. of sgs", __FUNCTION__,
-                    num_sgs);
-
+    HAL_TRACE_DEBUG("Adding {} no. of sgs", num_sgs);
     for (i = 0; i < num_sgs; i++) {
         sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
         if (!sg) {
@@ -333,7 +345,9 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     ip_prefix_t                     ip_pfx;
 
-    hal_api_trace(" API Begin: network create ");
+    HAL_TRACE_DEBUG("Received network create request");
+    // dump incoming config
+    network_dump(spec);
 
     auto kh = spec.key_or_handle();
     auto nw_pfx = kh.nw_key().ip_prefix();

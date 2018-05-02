@@ -109,6 +109,7 @@ typedef struct nat_cfg_pol_s {
 //-----------------------------------------------------------------------------
 
 // pol.cc
+void nat_cfg_pol_dump(nat::NatPolicySpec& spec);
 hal_ret_t nat_cfg_pol_create_cfg_handle(
     nat::NatPolicySpec& spec, nat_cfg_pol_t **out_pol);
 void nat_cfg_pol_rsp_build(

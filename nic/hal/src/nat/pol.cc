@@ -4,6 +4,7 @@
 // Handles Config APIs for NAT Policy
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
@@ -138,6 +139,22 @@ nat_cfg_pol_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
         return ret;
 
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// dump nat policy spec
+//-----------------------------------------------------------------------------
+void
+nat_cfg_pol_dump (nat::NatPolicySpec& spec)
+{
+    std::string    nat_pol_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &nat_pol_cfg);
+    HAL_TRACE_DEBUG("NAT policy configuration:");
+    HAL_TRACE_DEBUG("{}", nat_pol_cfg.c_str());
 }
 
 static hal_ret_t

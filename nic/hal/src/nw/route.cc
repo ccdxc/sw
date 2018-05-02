@@ -4,6 +4,7 @@
 // Handles CRUD APIs for Routes
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -130,7 +131,24 @@ route_del_from_db (route_t *route)
     }
 
 end:
+
     return ret;;
+}
+
+//-----------------------------------------------------------------------------
+// dump route spec
+//-----------------------------------------------------------------------------
+static inline void
+route_dump (RouteSpec& spec)
+{
+    std::string    route_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &route_cfg);
+    HAL_TRACE_DEBUG("Route configuration:");
+    HAL_TRACE_DEBUG("{}", route_cfg.c_str());
 }
 
 //------------------------------------------------------------------------------

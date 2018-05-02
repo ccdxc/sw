@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -353,6 +354,22 @@ ep_del_from_l3_db (ep_l3_key_t *l3_key)
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// dump endpoint spec
+//-----------------------------------------------------------------------------
+static inline void
+endpoint_dump (EndpointSpec& spec)
+{
+    std::string    ep_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &ep_cfg);
+    HAL_TRACE_DEBUG("Endpoint configuration:");
+    HAL_TRACE_DEBUG("{}", ep_cfg.c_str());
+}
+
 //------------------------------------------------------------------------------
 // validate an incoming endpoint create request
 //------------------------------------------------------------------------------
@@ -699,12 +716,14 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     if_t                            *hal_if = NULL;
     ep_l3_entry_t                   **l3_entry = NULL;
     ep_ip_entry_t                   **ip_entry = NULL;
-    // pd::pd_ep_args_t                pd_ep_args;
     ep_create_app_ctxt_t            app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     nwsec_group_t                   *nwsec_group = NULL;
     L2SegmentKeyHandle              l2seg_key_handle;
+
+    // dump incoming request
+    endpoint_dump(spec);
 
     ret = validate_endpoint_create(spec, rsp);
     if (ret != HAL_RET_OK) {

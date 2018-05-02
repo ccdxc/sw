@@ -17,6 +17,18 @@ function create_namespaces {
   echo "All namespaces created"
 }
 
+function create_endpoints {
+  EP_URL="$NAPLES_AGENT_IP:9007/api/endpoints/"
+
+  curl -d'{"Kind":"Endpoint","Meta":{"Name":"kingdom1-router","Tenant":"default","Namespace":"kingdom-1"},"spec":{"NetworkName":"kingdom-1","Interface":"default-uplink-0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
+  validate_get "kingdom-1" $EP_URL
+
+  curl -d'{"kind":"Endpoint","Meta":{"Name":"public-router","Tenant":"default","Namespace":"public"},"spec":{"NetworkName":"public","Interface":"default-uplink-1"},"status":{"IPv4Address":"20.1.1.1/24","MacAddress":"00:33:33:33:33:33","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
+  validate_get "public" $EP_URL
+
+  echo "All endpoints created"
+}
+
 function create_networks {
   echo "Creating Networks"
   NETWORK_URL="$NAPLES_AGENT_IP:9007/api/networks/"
@@ -24,7 +36,7 @@ function create_networks {
   curl -d'{"Kind":"Network","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"kingdom-1"}, "spec":{"IPv4Subnet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
   validate_get "kingdom-1" $NETWORK_URL
 
-  curl -d'{"Kind":"Network","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec:":{"IPv4Subet": "20.1.1.0/24", "IPv4Gateway":"20.1.1.1", "VlanID":200}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
+  curl -d'{"Kind":"Network","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"IPv4Subnet": "20.1.1.0/24", "IPv4Gateway":"20.1.1.1", "VlanID":200}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
   validate_get "public" $NETWORK_URL
 
   echo "All networks created"
@@ -51,8 +63,11 @@ function create_nat_policies {
 function create_routes {
   ROUTE_URL="$NAPLES_AGENT_IP:9007/api/routes/"
 
-  curl -d'{"Kind":"Route","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"default"}, "spec":{"ip-prefix":"10.1.1.0/24", "interface":"default-uplink-1","gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
+  curl -d'{"Kind":"Route","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"kingdom-1"}, "spec":{"ip-prefix":"10.1.1.0/24", "interface":"default-uplink-0","gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
   validate_get "kingdom-1" $ROUTE_URL
+
+  curl -d'{"Kind":"Route","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"ip-prefix":"20.1.1.0/24", "interface":"default-uplink-0","gateway-ip":"20.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
+  validate_get "public" $ROUTE_URL
 
   echo "All Routes created"
 }
@@ -121,12 +136,11 @@ echo "HNTAP running"
 
 # create objects
 create_namespaces
-
-# Comment out additional objects until debugging
 # create_networks
-# create_nat_pools
-# create_nat_policies
+# create_endpoints
 # create_routes
+# create_nat_pools
 # create_nat_bindings
+# create_nat_policies
 
 exit 0

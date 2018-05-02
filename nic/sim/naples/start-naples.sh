@@ -12,13 +12,13 @@ export MODEL_ZMQ_TYPE_TCP=1
 export ZMQ_SOC_DIR=$NIC_DIR
 ulimit -c unlimited
 
-// create directory for logs/traces
+# create directory for logs/traces
 mkdir -p $LOG_DIR
 exec > $LOG_DIR/start-naples.log
 exec 2>&1
 set -x
 
-// Starting the processes from log directory so that cores are saved there.
+# starting the processes from log directory so that cores are saved there
 cd $LOG_DIR
 
 echo "Starting NAPLES model ..."

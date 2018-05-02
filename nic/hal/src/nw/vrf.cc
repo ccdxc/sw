@@ -4,6 +4,7 @@
 // Handles CRUD APIs for VRFs
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -239,61 +240,17 @@ vrf_del_from_db (vrf_t *vrf)
 //-----------------------------------------------------------------------------
 // print vrf spec
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline void
 vrf_spec_dump (VrfSpec& spec)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    fmt::MemoryWriter   buf;
-    ip_addr_t           my_tep;
-    ip_prefix_t         gipo_pfx;
+    std::string    vrf_cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
-        return HAL_RET_OK;
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
     }
-
-    buf.write("Vrf Spec: ");
-    if (spec.has_key_or_handle()) {
-        auto kh = spec.key_or_handle();
-        if (kh.key_or_handle_case() == VrfKeyHandle::kVrfId) {
-            buf.write("vrf_id : {}, ", kh.vrf_id());
-        } else if (kh.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
-            buf.write("vrf_hdl : {}, ", kh.vrf_handle());
-        }
-    } else {
-        buf.write("vrf_id_hdl : NULL, ");
-    }
-
-    if (spec.has_security_key_handle()) {
-        auto kh = spec.security_key_handle();
-        if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileId) {
-            buf.write("sec_prof_id : {}, ", kh.profile_id());
-        } else if (kh.key_or_handle_case() ==
-                       SecurityProfileKeyHandle::kProfileHandle) {
-            buf.write("sec_prof_hdl : {}, ", kh.profile_handle());
-        }
-    } else {
-        buf.write("sec_pro_id_hdl : NULL, ");
-    }
-
-    buf.write("type : {}, ",
-              (spec.vrf_type() == types::VrfType::VRF_TYPE_NONE) ? "none" :
-              (spec.vrf_type() == types::VrfType::VRF_TYPE_INFRA) ? "infra" :
-              "customer");
-
-    if (spec.has_mytep_ip()) {
-        ip_addr_spec_to_ip_addr(&my_tep, spec.mytep_ip());
-        buf.write("my_tep : {}", ipaddr2str(&my_tep));
-    }
-    if (spec.has_gipo_prefix()) {
-        ret = ip_pfx_spec_to_pfx(&gipo_pfx, spec.gipo_prefix());
-        if (ret == HAL_RET_OK) {
-            buf.write("gipo_pfx : {}/{}", ipaddr2str(&gipo_pfx.addr),
-                      gipo_pfx.len);
-        }
-    }
-    HAL_TRACE_DEBUG("{}", buf.c_str());
-
-    return ret;
+    google::protobuf::util::MessageToJsonString(spec, &vrf_cfg);
+    HAL_TRACE_DEBUG("VRF configuration:");
+    HAL_TRACE_DEBUG("{}", vrf_cfg.c_str());
 }
 
 //------------------------------------------------------------------------------

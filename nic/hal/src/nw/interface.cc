@@ -4,6 +4,7 @@
 // Handles CRUD APIs for all interfaces
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -310,6 +311,22 @@ if_lookup_key_or_handle_to_str (const kh::InterfaceKeyHandle& key_handle)
     }
 
 	return buf;
+}
+
+//-----------------------------------------------------------------------------
+// dump interface spec
+//-----------------------------------------------------------------------------
+static inline void
+interface_dump (InterfaceSpec& spec)
+{
+    std::string    if_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &if_cfg);
+    HAL_TRACE_DEBUG("Interface configuration:");
+    HAL_TRACE_DEBUG("{}", if_cfg.c_str());
 }
 
 //------------------------------------------------------------------------------
@@ -834,6 +851,9 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                     spec.key_or_handle().interface_id(),
                     IfType_Name(spec.type()),
                     IfEnicType_Name(spec.if_enic_info().enic_type()));
+
+    // dump incoming config
+    interface_dump(spec);
 
     // do basic validations on interface
     ret = validate_interface_create(spec, rsp);

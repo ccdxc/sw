@@ -351,11 +351,12 @@ check_traces:
 
 sanity_logs:
 	tar cvzf nic_sanity_logs.tar.gz -T /dev/null  \
-        $(shell ls                    \
-                core.hal              \
-                core.capmodel         \
-                gen/capri_loader.conf \
-                *.log                 \
-                *.log.*               \
-                ../dol/*.log          \
+        $(shell ls                          \
+                core.hal                    \
+                core.capmodel               \
+                gen/capri_loader.conf       \
+                /root/naples/data/logs/*    \
+                *.log                       \
+                *.log.*                     \
+                ../dol/*.log                \
                 ../dol/*.log.*)
