@@ -12,6 +12,6 @@ fix:
 	@${DEL_BAK}
 
 bld_proto:
-	protoc -I/usr/local/include -I. \
+	protoc  -I. \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
 		--gofast_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. venice.proto

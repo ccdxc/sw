@@ -12,7 +12,7 @@ fix:
 	@${DEL_BAK}
 
 bld_proto:
-	@protoc -I/usr/local/include -I. -I../../../../../vendor \
+	@protoc -I. -I../../../../../vendor \
 		-I${GOPATH}/src/ \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
 		--gofast_out=plugins=grpc,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. certificates.proto

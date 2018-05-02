@@ -1,5 +1,5 @@
 all:
-	@protoc -I/usr/local/include -I. \
+	@protoc -I. \
 		-I../../../..//vendor \
 		-I${GOPATH}/src \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \

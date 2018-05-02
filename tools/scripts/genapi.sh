@@ -33,7 +33,7 @@ cd ${curdir}/${protopath}
 echo "changed path to ${curdir}/${protopath} - $(pwd)"
 for protofile in *.proto
 do
-    protoc -I/usr/local/include -I. \
+    protoc -I. \
         -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
@@ -51,7 +51,7 @@ do
     pkg=$(echo $line | awk '{ print $2 }')
     [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
     echo "++ parsing ${protofiles} for pkg ${pkg}"
-    protoc -I/usr/local/include -I. \
+    protoc -I. \
         -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \

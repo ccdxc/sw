@@ -12,7 +12,7 @@ fix:
 	@${DEL_BAK}
 
 bld_proto:
-	@protoc -I/usr/local/include -I. -I../../../vendor \
+	@protoc -I. -I../../../vendor \
                 -I${GOPATH}/src \
                 -I../../../api \
                 -I../../../api/protos \
