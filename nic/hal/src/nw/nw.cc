@@ -338,12 +338,12 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     hal_ret_t                       ret = HAL_RET_OK;
     network_t                       *nw = NULL;
     vrf_id_t                        tid;
-    ep_t                            *gw_ep = NULL;
     vrf_t                           *vrf = NULL;
     network_create_app_ctxt_t       app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     ip_prefix_t                     ip_pfx;
+    hal_handle_t                    gw_ep_handle = HAL_HANDLE_INVALID;
 
     HAL_TRACE_DEBUG("Received network create request");
     // dump incoming config
@@ -368,16 +368,18 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
         goto end;
     }
 
-    // check if gateway ep is present
-    if (spec.gateway_ep_handle() != HAL_HANDLE_INVALID) {
+    // check if gateway IP is present
+    if (spec.gateway_ip().v4_or_v6_case()) {
+        /* TODO
         gw_ep = find_ep_by_handle(spec.gateway_ep_handle());
         if (gw_ep == NULL) {
             HAL_TRACE_ERR("unable to retrieve gateway endpoint");
             ret = HAL_RET_EP_NOT_FOUND;
             goto end;
         }
+        */
     } else {
-        HAL_TRACE_DEBUG("gateway way ep is not present."
+        HAL_TRACE_DEBUG("gateway IP is not present."
                         " flows using this network will not have reachability info.");
     }
 
@@ -413,7 +415,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     nw->nw_key.vrf_id = tid;
-    nw->gw_ep_handle = spec.gateway_ep_handle();
+    nw->gw_ep_handle = gw_ep_handle;
     MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
     ret = ip_pfx_spec_to_pfx(&nw->nw_key.ip_pfx, nw_pfx);
     if (ret != HAL_RET_OK) {
@@ -928,11 +930,16 @@ network_check_update (NetworkSpec& spec, network_t *nw,
                       network_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    hal_handle_t        gw_ep_handle = HAL_HANDLE_INVALID;
 
     // check for the gateway ep change
-    if (nw->gw_ep_handle != spec.gateway_ep_handle()) {
+    if (spec.gateway_ip().v4_or_v6_case()) {
+        // TODO Find gw_ep_handle from IP and vrf
+    }
+
+    if (nw->gw_ep_handle != gw_ep_handle) {
         app_ctxt->gw_ep_changed = true;
-        app_ctxt->new_gw_ep_handle = spec.gateway_ep_handle();
+        app_ctxt->new_gw_ep_handle = gw_ep_handle;
     }
 
     // check for sg list change

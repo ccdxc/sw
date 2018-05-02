@@ -39,7 +39,7 @@ message NetworkSpec {
   // key_or_handle is the network being create or updated
   kh.NetworkKeyHandle                key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint64                             rmac              = 4;    // router mac for this network
-  fixed64                            gateway_ep_handle = 5;    // gateway ep handle
+  types.IPAddress                    gateway_ip        = 5;
   repeated kh.SecurityGroupKeyHandle sg_key_handle     = 6 [(gogoproto.moretags) = "venice:ref"];    // list of security group handles
 }
 

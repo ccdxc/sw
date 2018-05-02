@@ -5,7 +5,7 @@ import types_pb2
 nw_cust_obj = {}
 
 def PreCreateCb(data, req_spec, resp_spec):
-    req_spec.request[0].gateway_ep_handle = 0
+    req_spec.request[0].gateway_ip.v4_addr = 0
 
 def PostCreateCb(data, req_spec, resp_spec):
     global nw_cust_obj
