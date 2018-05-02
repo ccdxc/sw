@@ -51,9 +51,13 @@ struct barco_sgl_le_t {
 %%
     .param storage_tx_seq_barco_chain_action_start
     .param storage_tx_seq_comp_sgl_handler_start
+    .param storage_tx_seq_comp_sgl_pad_only
 
 storage_tx_seq_comp_status_handler_start:
    
+    // c6 indicates whether padding is enabled, for use by possible_sgl_pdma_xfer
+    setcf       c6, [!c0]
+    
     // bit 15: valid bit, bits 14-12: error bits
     add         r_status, d.status, r0
     smeqh       c4, r_status, 0xf000, 0x8000
@@ -93,11 +97,13 @@ aol_padding:
     // Note that preliminary DMA setup has been made in storage_tx_seq_comp_status_desc1_handler.
     // We now make adjustment based on pad length result.
     bne         r_pad_len, r0, possible_sgl_pdma_xfer
-    nop
+
+    // Tell possible_sgl_pdma_xfer that padding is enabled
+    setcf       c6, [c0]                                          // delay slot
 
     // pad length is zero so don't write A1/L1
-    DMA_CMD_CANCEL(dma_p2m_3)
-    DMA_CMD_CANCEL(dma_p2m_4)
+    DMA_CMD_CANCEL(dma_p2m_6)
+    DMA_CMD_CANCEL(dma_p2m_7)
     b           possible_sgl_pdma_xfer
     nop
 
@@ -108,9 +114,15 @@ sgl_padding_for_hash:
     // i.e., addr0/len0 specifies one block of data, find the last applicable SGL
     // and apply padding.
    
+    // Tell possible_sgl_pdma_xfer that padding is enabled
+    setcf       c6, [c0]
+    
 if0:
     beq         r_pad_len, r0, endif0
-    sub         r_last_sgl_p, r_num_blks, 1                       // delay slot
+    
+    // Tell possible_sgl_pdma_xfer that padding is enabled
+    setcf       c6, [c0]                                          // delay slot
+    sub         r_last_sgl_p, r_num_blks, 1
     add         r_last_sgl_p, STORAGE_KIVEC2ACC_SGL_VEC_ADDR, \
                 r_last_sgl_p, BARCO_SGL_DESC_SIZE_SHIFT
 
@@ -124,16 +136,16 @@ if0:
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len0))
-    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_data_len, acc_chain_data_len, r_sgl_field_p, dma_p2m_2)
+    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_data_len, acc_chain_data_len, r_sgl_field_p, dma_p2m_6)
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr1))
-    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_buf_addr, acc_chain_pad_buf_addr, r_sgl_field_p, dma_p2m_3)
+    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_buf_addr, acc_chain_pad_buf_addr, r_sgl_field_p, dma_p2m_7)
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len1))
-    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_len, acc_chain_pad_len, r_sgl_field_p, dma_p2m_4)
-    DMA_PHV2MEM_FENCE(dma_p2m_4)
+    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_len, acc_chain_pad_len, r_sgl_field_p, dma_p2m_8)
+    DMA_PHV2MEM_FENCE(dma_p2m_8)
 endif0:
 
     // In addition, storage_tx_seq_comp_status_desc0_handler has already set up
@@ -151,8 +163,19 @@ possible_sgl_pdma_xfer:
     // PDMA compressed data only for non-error case (c4 was set)
     seq.c4      c4, STORAGE_KIVEC5_SGL_PDMA_EN, 1
     bcf         [!c4], possible_barco_push
+    phvwr.c6    p.storage_kivec3acc_pad_len, r_pad_len          // delay slot
+    bbeq        STORAGE_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop
     
+    // PDMA only padding data to the last user buffer specified in SGL
+    LOAD_TABLE2_FOR_ADDR_PC_IMM(r_last_sgl_p, 
+                                STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                                storage_tx_seq_comp_sgl_pad_only)
+    b           possible_barco_push
+    nop
+    
+sgl_pdma_xfer_full:
+                                
     // PDMA compressed data to user buffers specified in SGL
     LOAD_TABLE1_FOR_ADDR_PC_IMM(STORAGE_KIVEC2ACC_SGL_PDMA_OUT_ADDR, 
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
@@ -195,10 +218,10 @@ comp_error:
     bbeq        STORAGE_KIVEC5_AOL_PAD_EN, 0, possible_stop_chain
     seq         c5, STORAGE_KIVEC5_NEXT_DB_EN, 1 // delay slot
    
-    DMA_CMD_CANCEL(dma_p2m_2)
-    DMA_CMD_CANCEL(dma_p2m_3)
-    DMA_CMD_CANCEL(dma_p2m_4)
     DMA_CMD_CANCEL(dma_p2m_5)
+    DMA_CMD_CANCEL(dma_p2m_6)
+    DMA_CMD_CANCEL(dma_p2m_7)
+    DMA_CMD_CANCEL(dma_p2m_8)
 
 possible_stop_chain:
    

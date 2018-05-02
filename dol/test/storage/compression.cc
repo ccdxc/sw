@@ -942,8 +942,7 @@ int _decompress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
   cp_desc_t d;
 
   // clear some initial area.
-  dp_mem_t *partial_buf = uncompressed_host_buf->fragment_find(0, 1024);
-  partial_buf->clear_thru();
+  uncompressed_host_buf->fragment_find(0, 64)->clear_thru();
 
   // Prepare source SGLs
   host_sgl1->clear();
@@ -1033,8 +1032,7 @@ int _decompress_to_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
   cp_desc_t d;
 
   // clear some initial area.
-  dp_mem_t *partial_buf = uncompressed_buf->fragment_find(0, 16);
-  partial_buf->clear_thru();
+  uncompressed_buf->fragment_find(0, 64)->clear_thru();
 
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
           __func__, push_type, seq_comp_qid);
@@ -1070,6 +1068,7 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
                                  status_buf, compressed_buf,
                                  kUncompressedDataSize);
   // Prepare an SGL for the sequencer to output data.
+  compressed_host_buf->fragment_find(0, 64)->clear_thru();
   seq_sgl->clear();
   cp_sq_ent_sgl_t *ssgl = (cp_sq_ent_sgl_t *)seq_sgl->read();
 
@@ -1622,8 +1621,7 @@ int _decompress_clear_header_present(comp_queue_push_t push_type,
   cp_desc_t d;
 
   // clear some initial area.
-  dp_mem_t *partial_buf = uncompressed_buf->fragment_find(0, 16);
-  partial_buf->clear_thru();
+  uncompressed_buf->fragment_find(0, 64)->clear_thru();
 
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
           __func__, push_type, seq_comp_qid);

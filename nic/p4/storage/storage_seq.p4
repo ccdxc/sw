@@ -262,7 +262,6 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
-  modify_field(storage_kivec4.barco_pndx_addr, seq_comp_status_desc0_scratch.barco_pndx_addr);
   modify_field(storage_kivec4.barco_pndx_shadow_addr, seq_comp_status_desc0_scratch.barco_pndx_shadow_addr);
   modify_field(storage_kivec4.barco_desc_size, seq_comp_status_desc0_scratch.barco_desc_size);
   modify_field(storage_kivec4.barco_pndx_size, seq_comp_status_desc0_scratch.barco_pndx_size);
@@ -318,7 +317,6 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
  *****************************************************************************/
 
 //@pragma little_endian src_hbm_pa dst_hbm_pa sgl_pdma_in_pa sgl_pdma_out_pa data_len sgl_vec_pa pad_buf_pa
-@pragma little_endian pad_buf_pa
 action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_pdma_in_pa, sgl_pdma_out_pa, 
                                      sgl_vec_pa, pad_buf_pa,
                                      data_len, pad_len_shift, stop_chain_on_error,
@@ -432,7 +430,7 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
                             len0, len1, len2, len3) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  STORAGE_KIVEC3_USE(storage_kivec3_scratch, storage_kivec3)
+  STORAGE_KIVEC3ACC_USE(storage_kivec3acc_scratch, storage_kivec3acc)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -447,15 +445,15 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
 
   // DMA to SGL 0
   if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len0) {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_3, dma_m2m_4, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_2, dma_m2m_3, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr0, 0,
                              storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_3, dma_m2m_4, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_2, dma_m2m_3, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr0, 0,
                              seq_comp_sgl_scratch.len0,
                              0, 0, 0)
@@ -465,15 +463,15 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
 
   // DMA to SGL 1
   if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len1) {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_5, dma_m2m_6, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_4, dma_m2m_5, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr1, 0,
                              storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_5, dma_m2m_6, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_4, dma_m2m_5, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr1, 0,
                              seq_comp_sgl_scratch.len1,
                              0, 0, 0)
@@ -483,15 +481,15 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
 
   // DMA to SGL 2
   if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len2) {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_7, dma_m2m_8, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_6, dma_m2m_7, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr2, 0,
                              storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_7, dma_m2m_8, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_6, dma_m2m_7, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr2, 0,
                              seq_comp_sgl_scratch.len2,
                              0, 0, 0)
@@ -501,20 +499,60 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
 
   // DMA to SGL 3
   if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len3) {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_8, dma_m2m_9, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr3, 0,
                              storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 
-                             storage_kivec3.data_addr, 0,
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_8, dma_m2m_9, 
+                             storage_kivec3acc.data_addr, 0,
                              seq_comp_sgl_scratch.addr3, 0,
                              seq_comp_sgl_scratch.len3,
                              0, 0, 0)
     modify_field(storage_kivec5.data_len, 
                  (storage_kivec5.data_len - seq_comp_sgl_scratch.len3));
+  }
+
+  // Exit the pipeline here
+}
+
+
+/*****************************************************************************
+ *  seq_comp_sgl_pad_only: DMA only padding data to 
+ *****************************************************************************/
+
+@pragma little_endian addr0 addr1 addr2 len0 len1 len2 link
+action seq_comp_sgl_pad_only(addr0, len0, rsvd0,
+                             addr1, len1, rsvd1,
+                             addr2, len2, rsvd2,
+                             link, rsvd) {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC3ACC_USE(storage_kivec3acc_scratch, storage_kivec3acc)
+  STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  modify_field(barco_sgl_scratch.addr0, addr0);
+  modify_field(barco_sgl_scratch.len0, len0);
+  modify_field(barco_sgl_scratch.rsvd0, rsvd0);
+  modify_field(barco_sgl_scratch.addr1, addr1);
+  modify_field(barco_sgl_scratch.len1, len1);
+  modify_field(barco_sgl_scratch.rsvd1, rsvd1);
+  modify_field(barco_sgl_scratch.addr2, addr2);
+  modify_field(barco_sgl_scratch.len2, len2);
+  modify_field(barco_sgl_scratch.rsvd2, rsvd2);
+  modify_field(barco_sgl_scratch.link, link);
+  modify_field(barco_sgl_scratch.rsvd, rsvd);
+
+  if (storage_kivec3acc.pad_len > 0) {
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_2, dma_m2m_3, 
+                             storage_kivec3acc.pad_buf_addr, 0,
+                             barco_sgl_scratch.addr0 + 
+  			       ((1 << storage_kivec5.pad_len_shift) - storage_kivec3acc.pad_len),
+                             0, storage_kivec3acc.pad_len,
+                             0, 0, 0)
   }
 
   // Exit the pipeline here
@@ -561,7 +599,6 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data,
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.barco_ring_addr, seq_xts_status_desc_scratch.next_db_addr);
-  modify_field(storage_kivec4.barco_pndx_addr, seq_xts_status_desc_scratch.barco_pndx_addr);
   modify_field(storage_kivec4.barco_pndx_shadow_addr, seq_xts_status_desc_scratch.barco_pndx_shadow_addr);
   modify_field(storage_kivec4.barco_desc_size, seq_xts_status_desc_scratch.barco_desc_size);
   modify_field(storage_kivec4.barco_pndx_size, seq_xts_status_desc_scratch.barco_pndx_size);

@@ -28,7 +28,7 @@
 #define STORAGE_KIVEC0_DST_QID                  \
     k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR                \
-    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit18_ebit33}
+    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit10_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST               \
     k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0                    \
@@ -78,22 +78,27 @@
 #define STORAGE_KIVEC3_DATA_ADDR                \
     k.storage_kivec3_data_addr
 
+#define STORAGE_KIVEC3ACC_DATA_ADDR             \
+    k.{storage_kivec3acc_data_addr_sbit0_ebit31...storage_kivec3acc_data_addr_sbit32_ebit63}
+#define STORAGE_KIVEC3ACC_PAD_BUF_ADDR          \
+    k.{storage_kivec3acc_pad_buf_addr_sbit0_ebit31...storage_kivec3acc_pad_buf_addr_sbit32_ebit33}
+#define STORAGE_KIVEC3ACC_PAD_LEN               \
+    k.{storage_kivec3acc_pad_len_sbit0_ebit5...storage_kivec3acc_pad_len_sbit14_ebit15}
+
+#define STORAGE_KIVEC4_BARCO_ALT_DESC_ADDR      \
+    k.{storage_kivec4_barco_alt_desc_addr_sbit0_ebit15...storage_kivec4_barco_alt_desc_addr_sbit56_ebit63}
 #define STORAGE_KIVEC4_BARCO_RING_ADDR          \
-    k.{storage_kivec4_barco_ring_addr_sbit0_ebit15...storage_kivec4_barco_ring_addr_sbit32_ebit33}
+    k.{storage_kivec4_barco_ring_addr_sbit0_ebit23...storage_kivec4_barco_ring_addr_sbit32_ebit33}
 #define STORAGE_KIVEC4_BARCO_DESC_SIZE          \
-    k.{storage_kivec4_barco_desc_size_sbit0_ebit1...storage_kivec4_barco_desc_size_sbit2_ebit3}
-#define STORAGE_KIVEC4_BARCO_PNDX_ADDR          \
-    k.{storage_kivec4_barco_pndx_addr_sbit0_ebit5...storage_kivec4_barco_pndx_addr_sbit30_ebit33}
+    k.storage_kivec4_barco_desc_size
 #define STORAGE_KIVEC4_BARCO_PNDX_SHADOW_ADDR   \
-    k.{storage_kivec4_barco_pndx_shadow_addr_sbit0_ebit3...storage_kivec4_barco_pndx_shadow_addr_sbit28_ebit33}
+    k.{storage_kivec4_barco_pndx_shadow_addr_sbit0_ebit5...storage_kivec4_barco_pndx_shadow_addr_sbit30_ebit33}
 #define STORAGE_KIVEC4_BARCO_PNDX_SIZE          \
     k.storage_kivec4_barco_pndx_size
 #define STORAGE_KIVEC4_BARCO_RING_SIZE          \
-    k.{storage_kivec4_barco_ring_size_sbit0_ebit2...storage_kivec4_barco_ring_size_sbit3_ebit4}
+    k.storage_kivec4_barco_ring_size
 #define STORAGE_KIVEC4_BARCO_NUM_DESCS          \
     k.storage_kivec4_barco_num_descs
-#define STORAGE_KIVEC4_W_NDX                    \
-    k.{storage_kivec4_w_ndx_sbit0_ebit0...storage_kivec4_w_ndx_sbit9_ebit15}
 
 #define STORAGE_KIVEC5_INTR_ADDR                \
     k.{storage_kivec5_intr_addr_sbit0_ebit7...storage_kivec5_intr_addr_sbit40_ebit63}
@@ -117,6 +122,8 @@
     k.storage_kivec5_sgl_pad_hash_en
 #define STORAGE_KIVEC5_SGL_PDMA_EN              \
     k.storage_kivec5_sgl_pdma_en
+#define STORAGE_KIVEC5_SGL_PDMA_PAD_ONLY        \
+    k.storage_kivec5_sgl_pdma_pad_only
 #define STORAGE_KIVEC5_INTR_EN                  \
     k.storage_kivec5_intr_en
 #define STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH\
@@ -250,6 +257,34 @@
 #define CAPRI_DMA_M2M_TYPE_SRC      0
 #define CAPRI_DMA_M2M_TYPE_DST      1
 
+// Copied from rdma/common/include/capri.h
+#define DMA_CMD_MEM2MEM_T struct capri_dma_cmd_mem2mem_t
+
+struct capri_dma_cmd_mem2mem_t {
+    rsvd            : 16;
+    size            : 14;
+    rsvd1           : 1;
+    override_lif    : 11;
+    addr            : 52;
+    barrier         : 1;
+    round           : 1;
+    pcie_msg        : 1;
+    use_override_lif: 1;
+    phv_end         : 10;
+    phv_start       : 10;
+    wr_fence_fence  : 1;
+    wr_fence        : 1;
+    cache           : 1;
+    host_addr       : 1;
+    mem2mem_type    : 2;
+    cmdeop          : 1;
+    cmdtype         : 3;
+};
+
+#define DMA_M2M_PTR_WRITE(_field, _val)                                 \
+  phvwrp    r_next_dma_cmd_ptr, offsetof(DMA_CMD_MEM2MEM_T, _field),    \
+            sizeof(DMA_CMD_MEM2MEM_T._field), _val;                     \
+
 #define CLEAR_TABLE_VALID_e(_num)                                       \
   phvwri.e  p.app_header_table##_num##_valid, 0;                        \
   nop;                                                                  \
@@ -318,6 +353,19 @@
   phvwr     p.common_te1_phv_table_pc, _pc;                             \
   phvwr     p.common_te1_phv_table_addr, _table_addr;                   \
 
+#define LOAD_TABLE2_FOR_ADDR64(_table_addr, _load_size, _pc)            \
+  phvwri    p.app_header_table2_valid, 1;                               \
+  phvwrpair p.common_te2_phv_table_lock_en, 1,                          \
+        p.common_te2_phv_table_raw_table_size, _load_size;              \
+  phvwrpair p.common_te2_phv_table_pc, _pc,                             \
+        p.common_te2_phv_table_addr, _table_addr;                       \
+
+#define LOAD_TABLE2_FOR_ADDR64_e(_table_addr, _load_size, _pc)          \
+  phvwri    p.app_header_table2_valid, 1;                               \
+  phvwrpair.e p.common_te2_phv_table_lock_en, 1,                        \
+        p.common_te2_phv_table_raw_table_size, _load_size;              \
+  phvwrpair p.common_te2_phv_table_pc, _pc,                             \
+        p.common_te2_phv_table_addr, _table_addr;                       \
 
 // Load a table based on absolute address,
 // where phvwrpair is unusable because
@@ -349,6 +397,14 @@
 #define LOAD_TABLE1_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)     \
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE1_FOR_ADDR34(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE2_FOR_ADDR_PC_IMM(_table_addr, _load_size, _pc)       \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE2_FOR_ADDR64(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE2_FOR_ADDR_PC_IMM_e(_table_addr, _load_size, _pc)     \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE2_FOR_ADDR64_e(_table_addr, _load_size, r1)                 \
 
 // Special API to load table1 without setting the header valid bits
 // pc is an immediate value
@@ -867,35 +923,39 @@
    sub      r4, _addr, R2N_BUF_STATUS_BUF_OFFSET;                         \
    _R2N_BUF_POST_SETUP(r4)                                                \
 
+// Offset to the start of a TxDMA descriptor in PHV
+#define PHV_DMA_CMD_START_OFFSET(_dma_cmd) offsetof(p, _dma_cmd##_dma_cmd_type)
+
 // Setup the compression data buffer DMA based on flat source buffer 
 // and destination SGL (processing one SGL entry in this macro).
 // Notes: These GPRs are used for input/output to/from this macro
-//  1. r6 stores the running count of data remaining to be xfered
-//  2. r7 stores the offeset of the source data buffer from where
+//  1. r_src_len stores the running count of data remaining to be xfered
+//  2. r_src_addr stores the offset of the source data buffer from where
 //     the current xfer is to be done.
 // Steps:
-//  1. Adjust data len (0 => 64L xfer) and store it in r4
-//  2. Setup the DMA size based on the min size in r4 vs r6. 
-//  3. Source of the DMA is stored in r7.
+//  1. Adjust data len (0 => 64L xfer) and store it in r_xfer_len
+//  2. Setup the DMA size based on the min size in r_xfer_len vs r_src_len. 
+//  3. Source of the DMA is stored in r_src_addr.
 //  4. Destination of the DMA is based on the address in SGL.
-//  5. Update data remaining (r6) and address offset (r7) 
+//  5. Update data remaining (r_src_len) and address offset (r_src_addr) 
 //  6. If data xfer is complete, jump to the branch instruction
-//  7. Use a branch delay slot of nop to avoid spurious updates after 
-//     this macro is invoked 
-#define COMP_SGL_DMA(_dma_cmd_ptr_src, _dma_cmd_ptr_dst, _addr, _len,   \
-                     _branch_instr)                                     \
+#define COMP_SGL_DMA(_dma_cmd_ptr_src, _dma_cmd_ptr_dst,                \
+                      next_dma_cmd_ptr,_addr, _len, _branch_instr)      \
+   addi     r_next_dma_cmd_ptr, r0, next_dma_cmd_ptr;                   \
    seq      c1, _len, r0;                                               \
-   cmov     r4, c1, 65536, _len;                                        \
-   sle      c2, r6, r4;                                                 \
-   add.c2   r4, r0, r6;                                                 \
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r4, 0, 0,              \
-                     _dma_cmd_ptr_src)                                  \
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, _addr, r4, 0, 0,           \
-                     _dma_cmd_ptr_dst)                                  \
-   add      r7, r7, r4;                                                 \
+   cmov     r_xfer_len, c1, 65536, _len;                                \
+   sle      c2, r_src_len, r_xfer_len;                                  \
+   add.c2   r_xfer_len, r0, r_src_len;                                  \
+   add      r_dst_addr, r0, _addr;                                      \
+   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r_src_addr,       \
+                              r_xfer_len, 0, 0, _dma_cmd_ptr_src)       \
+   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_dst_addr,       \
+                              r_xfer_len, 0, 0, _dma_cmd_ptr_dst)       \
+   add      r_src_addr, r_src_addr, r_xfer_len;                         \
+   add      r_dst_addr, r_dst_addr, r_xfer_len;                         \
+   sub      r_sgl_len, _len, r_xfer_len;                                \
    bcf      [c2], _branch_instr;                                        \
-   sub      r6, r6, r4;                                                 \
-
+   sub      r_src_len, r_src_len, r_xfer_len;                           \
 
 #define NVME_DATA_XFER_FROM_HOST(_prp_entry, _dst_addr, _data_len,      \
                                  _xfer_len,  _src_dma_cmd, _dst_dma_cmd,\

@@ -505,17 +505,25 @@ header_type storage_kivec3_t {
   }
 }
 
+// kivec3cc: header union with to_stage_3, used by acclerator chaining (128 bits max)
+header_type storage_kivec3acc_t {
+  fields {
+    data_addr	: 64;
+    pad_buf_addr: 34;   // pad buffer in HBM
+    pad_len     : 16;
+  }
+}
+
 // kivec4: header union with stage_2_stage for table 0 (160 bits max)
 header_type storage_kivec4_t {
   fields {
+    barco_alt_desc_addr: 64;
     barco_ring_addr : 34;
-    barco_pndx_addr	: 34;
     barco_pndx_shadow_addr: 34;
     barco_desc_size	: 4;
     barco_pndx_size	: 3;
     barco_ring_size	: 5;
     barco_num_descs	: 5;
-    w_ndx		    : 16;	// Working consumer index
   }
 }
 
@@ -537,6 +545,7 @@ header_type storage_kivec5_t {
     sgl_pad_hash_en     :  1;
     sgl_pdma_en         :  1;
     copy_src_dst_on_error: 1;
+    sgl_pdma_pad_only   :  1;
   }
 }
 
@@ -684,15 +693,19 @@ header_type storage_kivec5_t {
   modify_field(scratch.roce_msn, kivec.roce_msn);			\
   modify_field(scratch.data_addr, kivec.data_addr);			\
 
+#define STORAGE_KIVEC3ACC_USE(scratch, kivec)				\
+  modify_field(scratch.data_addr, kivec.data_addr);			\
+  modify_field(scratch.pad_buf_addr, kivec.pad_buf_addr);		\
+  modify_field(scratch.pad_len, kivec.pad_len);		\
+
 #define STORAGE_KIVEC4_USE(scratch, kivec)				\
-  modify_field(scratch.barco_pndx_addr, kivec.barco_pndx_addr);			\
+  modify_field(scratch.barco_alt_desc_addr, kivec.barco_alt_desc_addr);			\
   modify_field(scratch.barco_pndx_shadow_addr, kivec.barco_pndx_shadow_addr);\
   modify_field(scratch.barco_desc_size, kivec.barco_desc_size);			\
   modify_field(scratch.barco_pndx_size, kivec.barco_pndx_size);			\
   modify_field(scratch.barco_ring_size, kivec.barco_ring_size);			\
   modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);			\
   modify_field(scratch.barco_num_descs, kivec.barco_num_descs);			\
-  modify_field(scratch.w_ndx, kivec.w_ndx);				\
 
 #define STORAGE_KIVEC5_USE(scratch, kivec)				\
   modify_field(scratch.intr_addr, kivec.intr_addr);			\
@@ -708,6 +721,7 @@ header_type storage_kivec5_t {
   modify_field(scratch.sgl_pad_hash_en, kivec.sgl_pad_hash_en);	        \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
+  modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
 
 
 // Macros for ASM param addresses (hardcoded in P4)
