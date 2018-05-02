@@ -188,6 +188,8 @@ pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args)
         // Install new native l2seg input prop entry
         native_l2seg = l2seg_lookup_by_handle(args->new_native_l2seg_clsc);
         ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif,
+                                              ENICIF_UPD_FLAGS_NONE,
+                                              0,
                                               native_l2seg,
                                               NULL, args, NULL,
                                               TABLE_OPER_INSERT);
@@ -619,13 +621,21 @@ hal_ret_t
 pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 {
     hal_ret_t            ret;
-    nwsec_profile_t      *pi_nwsec = NULL;
     if_t                 *hal_if = (if_t *)pd_enicif->pi_if;
+    lif_t                *lif = NULL;
     l2seg_t              *native_l2seg_clsc = NULL;
 
-    pi_nwsec = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
-    if (pi_nwsec == NULL) {
-        HAL_TRACE_DEBUG("{}: No nwsec. Programming default", __FUNCTION__);
+    // Check if lif is promiscous
+    if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        lif = if_get_lif(hal_if);
+        HAL_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
+
+        if (lif->packet_filters.receive_promiscuous) {
+            // skip's hw pgm as that will be triggered eventually
+            // Have to trigger programming of other ENICs
+            pd_enicif_update_num_prom_lifs(hal_if, true, false);
+
+        }
     }
 
     // Check if classic
@@ -633,7 +643,6 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
         (is_forwarding_mode_host_pinned())) {
         // Program Input Properties Mac Vlan
         ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL,
-                                                  pi_nwsec,
                                                   TABLE_OPER_INSERT);
     }
 
@@ -652,6 +661,8 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
             native_l2seg_clsc =
                 l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
             ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif,
+                                                  ENICIF_UPD_FLAGS_NONE,
+                                                  0,
                                                   native_l2seg_clsc,
                                                   NULL, NULL, NULL,
                                                   TABLE_OPER_INSERT);
@@ -686,7 +697,10 @@ pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
             goto end;
         }
 
-        ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, l2seg,
+        ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif,
+                                              ENICIF_UPD_FLAGS_NONE,
+                                              0,
+                                              l2seg,
                                               (pd_if_l2seg_entry_t *)
                                               pi_l2seg_entry->pd,
                                               args, lif_args, oper);
@@ -750,11 +764,86 @@ is_l2seg_native_on_enicif_classic(if_t *hal_if, l2seg_t *l2seg)
 }
 
 // ----------------------------------------------------------------------------
+// walk all l2segs and update num_prom lifs
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_update_num_prom_lifs (if_t *hal_if, bool inc, bool skip_hw_pgm)
+{
+    if_l2seg_entry_t            *if_l2seg_entry = NULL;
+    l2seg_t                     *l2seg = NULL;
+    pd_l2seg_t                  *pd_l2seg = NULL;
+    dllist_ctxt_t               *l2seg_lnode = NULL;
+
+    // handle native l2seg
+    if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+        l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+        pd_l2seg = (pd_l2seg_t *)l2seg->pd;
+        pd_l2seg_update_prom_lifs(pd_l2seg, hal_if,
+                                  inc,
+                                  skip_hw_pgm);
+    }
+    // walk l2segs in classic mode
+    dllist_for_each(l2seg_lnode, &(hal_if->l2seg_list_clsc_head)) {
+        if_l2seg_entry = dllist_entry(l2seg_lnode, if_l2seg_entry_t, lentry);
+
+        l2seg = l2seg_lookup_by_handle(if_l2seg_entry->l2seg_handle);
+        pd_l2seg = (pd_l2seg_t *)l2seg->pd;
+        pd_l2seg_update_prom_lifs(pd_l2seg, hal_if,
+                                  inc,
+                                  skip_hw_pgm);
+    }
+
+    return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Update input properties given enic and l2seg.
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_upd_inp_prop_l2seg (if_t *hal_if,
+                              l2seg_t *l2seg,
+                              uint32_t upd_flags,
+                              uint32_t num_prom_lifs)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    if_l2seg_entry_t    *if_l2seg = NULL;
+    pd_if_l2seg_entry_t *pd_if_l2seg = NULL;
+
+    HAL_TRACE_DEBUG("Processing Enic: {}, l2seg_id: {}",
+                    hal_if->if_id, l2seg->seg_id);
+    if (hal_if->native_l2seg_clsc == l2seg->hal_handle) {
+        pd_if_l2seg = NULL;
+    } else {
+        l2seg_in_classic_enicif(hal_if, l2seg->hal_handle, &if_l2seg);
+        HAL_ASSERT(if_l2seg != NULL);
+        pd_if_l2seg = (pd_if_l2seg_entry_t *)if_l2seg->pd;
+    }
+
+    ret = pd_enicif_pd_pgm_inp_prop_l2seg((pd_enicif_t *)hal_if->pd_if,
+                                          upd_flags,
+                                          num_prom_lifs,
+                                          l2seg,
+                                          pd_if_l2seg,
+                                          NULL, NULL,
+                                          TABLE_OPER_UPDATE);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program input prop. err:{}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Programming input properties table for classic nic
 // ----------------------------------------------------------------------------
 #define inp_prop data.input_properties_action_u.input_properties_input_properties
 hal_ret_t
-pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
+pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
+                                uint32_t upd_flags,
+                                uint32_t num_prom_lifs,
+                                l2seg_t *l2seg,
                                 pd_if_l2seg_entry_t *if_l2seg,
                                 pd_if_update_args_t *args,
                                 pd_if_lif_update_args_t *lif_args,
@@ -810,6 +899,11 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     lif = if_get_lif(hal_if);
     HAL_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
 
+    if (!(upd_flags & ENICIF_UPD_FLAGS_NUM_PROM_LIFS)) {
+        // no change in prom lifs
+        num_prom_lifs = l2seg_pd->num_prom_lifs;
+    }
+
     // Key
     key.capri_intrinsic_lif = if_get_hw_lif_id(hal_if);
     if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
@@ -838,6 +932,32 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
     inp_prop.allow_flood = 1;
+
+    HAL_TRACE_DEBUG("Checking for clear_prom_repl");
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        if (g_hal_state->allow_local_switch_for_promiscuous()) {
+            if (num_prom_lifs == 0) {
+                // no need to replicate. just send to uplink.
+                inp_prop.clear_promiscuous_repl = 1;
+            } else if (num_prom_lifs == 1) {
+                if (l2seg_pd->prom_if_handle == ((if_t *)pd_enicif->pi_if)->hal_handle) {
+                    // no need to replicate. pkt is ingress on the one prom lif
+                    inp_prop.clear_promiscuous_repl = 1;
+                } else {
+                    // need to replicate to the prom lif. pkt is ingress on non-prom lif.
+                    inp_prop.clear_promiscuous_repl = 0;
+                }
+            } else {
+                // more than 1 prom. lifs => Have to take prom. replication.
+                inp_prop.clear_promiscuous_repl = 0;
+            }
+        } else {
+            // no need to replicate. just send to uplink
+            inp_prop.clear_promiscuous_repl = 1;
+        }
+    }
+
+    HAL_TRACE_DEBUG("clear_prom_repl: {}", inp_prop.clear_promiscuous_repl);
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert
@@ -1050,7 +1170,6 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
     pd_enicif_t          *pd_enicif;
     if_t                 *hal_if;
     l2seg_t              *native_l2seg_clsc = NULL;
-    nwsec_profile_t      *pi_nwsec = NULL;
 
     HAL_TRACE_DEBUG("{}: updating lif params for enicif: {}",
                     __FUNCTION__, if_get_if_id(args->intf));
@@ -1061,15 +1180,10 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
     // Check if classic
     if ((hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) ||
         (is_forwarding_mode_host_pinned())) {
-        pi_nwsec = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
-        if (pi_nwsec == NULL) {
-            HAL_TRACE_DEBUG("{}: No nwsec. Programming default", __FUNCTION__);
-        }
 
         if (args->vlan_insert_en_changed) {
             // Program Input Properties Mac Vlan
             ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, args,
-                                                      pi_nwsec,
                                                       TABLE_OPER_UPDATE);
         }
     }
@@ -1092,6 +1206,8 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
                 native_l2seg_clsc =
                     l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
                 ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif,
+                                                      ENICIF_UPD_FLAGS_NONE,
+                                                      0,
                                                       native_l2seg_clsc,
                                                       NULL, NULL, args,
                                                       TABLE_OPER_UPDATE);
@@ -1187,7 +1303,6 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
 hal_ret_t
 pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
                                     pd_if_lif_update_args_t *lif_args,
-                                    nwsec_profile_t *nwsec_prof,
                                     table_oper_t oper)
 {
     hal_ret_t                                   ret = HAL_RET_OK;
@@ -1240,7 +1355,8 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
 
     // form data
-    pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, true);
+    pd_enicif_inp_prop_form_data(pd_enicif, ENICIF_UPD_FLAGS_NONE, NULL,
+                                 data, true);
 
     if (oper == TABLE_OPER_INSERT) {
         ret = pd_enicif_pgm_inp_prop_mac_vlan_entry(&key, &mask, &data,
@@ -1304,7 +1420,8 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
             return HAL_RET_OK;
         }
 
-        pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, false);
+        pd_enicif_inp_prop_form_data(pd_enicif, ENICIF_UPD_FLAGS_NONE, NULL,
+                                     data, false);
 #if 0
         // Data. Only srclif as this will make the pkt drop
         inp_prop_mac_vlan_data.src_lif_check_en = 1;
@@ -1326,6 +1443,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
 
 hal_ret_t
 pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
+                              uint32_t upd_flags,
                               nwsec_profile_t *nwsec_prof,
                               input_properties_mac_vlan_actiondata &data,
                               bool host_entry)
@@ -1360,6 +1478,11 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         pd_l2seg = (pd_l2seg_t *)if_enicif_get_pd_l2seg((if_t*)pd_enicif->pi_if);
         HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
 
+        if (!(upd_flags & ENICIF_UPD_FLAGS_NWSEC_PROF)) {
+            // no change, take from l2seg.
+            nwsec_prof = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
+        }
+
         data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
         inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_fl_lkup_id;
         inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_ENIC;
@@ -1388,6 +1511,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
 
 hal_ret_t
 pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
+                                     uint32_t upd_flags,
                                      nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                                   ret = HAL_RET_OK;
@@ -1399,7 +1523,8 @@ pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
                             P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
     HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
-    pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, true);
+    pd_enicif_inp_prop_form_data(pd_enicif, upd_flags, nwsec_prof,
+                                 data, true);
 
     sdk_ret = inp_prop_mac_vlan_tbl->update(pd_enicif->inp_prop_mac_vlan_idx_host, &data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

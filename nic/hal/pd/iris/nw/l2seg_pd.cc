@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
@@ -8,6 +10,8 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/pd/iris/nw/l2seg_uplink_pd.hpp"
+#include "nic/hal/pd/iris/nw/enicif_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -777,6 +781,94 @@ pd_l2seg_mem_free (pd_l2seg_mem_free_args_t *args)
 
     return ret;
 }
+
+hal_ret_t
+pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
+                          if_t *prom_enic_if,
+                          bool inc,
+                          bool skip_hw_pgm)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    bool                        trigger_inp_prp_pgm = false;
+    l2seg_t                     *l2seg = (l2seg_t *)pd_l2seg->l2seg;
+    if_t                        *hal_if = NULL;
+    hal_handle_t                *p_hdl_id = NULL;
+    intf::IfType                if_type;
+    pd_add_l2seg_uplink_args_t  up_args = {0};
+    pd_enicif_t                 *pd_enicif = (pd_enicif_t *)prom_enic_if->pd_if;
+
+    if (inc) {
+        pd_l2seg->num_prom_lifs++;
+        if (pd_l2seg->num_prom_lifs == 1) {
+            pd_l2seg->prom_if_handle = prom_enic_if->hal_handle;
+            pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
+            trigger_inp_prp_pgm = true;
+        }
+        if (pd_l2seg->num_prom_lifs == 2) {
+            pd_l2seg->prom_if_handle = HAL_HANDLE_INVALID;
+            pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
+            trigger_inp_prp_pgm = true;
+        }
+        HAL_TRACE_DEBUG("L2seg id: {}, Incrementing prom lifs to: {}, "
+                        "trig_inp_prop: {}",
+                        l2seg->seg_id, pd_l2seg->num_prom_lifs,
+                        trigger_inp_prp_pgm);
+    } else {
+        pd_l2seg->num_prom_lifs--;
+        if (pd_l2seg->num_prom_lifs == 1) {
+            pd_l2seg->prom_if_handle = prom_enic_if->hal_handle;
+            pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
+            trigger_inp_prp_pgm = true;
+        }
+        if (pd_l2seg->num_prom_lifs == 0) {
+            pd_l2seg->prom_if_handle = HAL_HANDLE_INVALID;
+            pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
+            trigger_inp_prp_pgm = true;
+        }
+        HAL_TRACE_DEBUG("L2seg id: {}, Decrementing prom lifs to: {}, "
+                        "trig_inp_prop: {}",
+                        l2seg->seg_id, pd_l2seg->num_prom_lifs,
+                        trigger_inp_prp_pgm);
+    }
+
+    if (trigger_inp_prp_pgm && !skip_hw_pgm) {
+        for (const void *ptr : *l2seg->if_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            HAL_TRACE_DEBUG("Processing IF: {}", *p_hdl_id);
+            hal_if = find_if_by_handle(*p_hdl_id);
+            if_type = hal::intf_get_if_type(hal_if);
+            HAL_TRACE_DEBUG("Processing IF: {}, type: {}", *p_hdl_id, if_type);
+            switch(if_type) {
+            case intf::IF_TYPE_ENIC:
+                ret = pd_enicif_upd_inp_prop_l2seg(hal_if, l2seg,
+                                                   ENICIF_UPD_FLAGS_NUM_PROM_LIFS,
+                                                   pd_l2seg->num_prom_lifs);
+                break;
+            case intf::IF_TYPE_UPLINK:
+                up_args.l2seg = l2seg;
+                up_args.intf = hal_if;
+                ret = l2seg_uplink_upd_input_properties_tbl(&up_args,
+                                                            L2SEG_UPLINK_UPD_FLAGS_NUM_PROM_LIFS,
+                                                            NULL,
+                                                            pd_l2seg->num_prom_lifs,
+                                                            prom_enic_if);
+                break;
+            case intf::IF_TYPE_UPLINK_PC:
+                // Handle Uplink PCs
+                break;
+            default:
+                HAL_ASSERT(0);
+            }
+        }
+    }
+
+
+    return ret;
+}
+
+
+
+
 
 }    // namespace pd
 }    // namespace hal

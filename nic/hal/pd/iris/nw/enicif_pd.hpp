@@ -10,6 +10,10 @@
 namespace hal {
 namespace pd {
 
+#define ENICIF_UPD_FLAGS_NONE           0x0
+#define ENICIF_UPD_FLAGS_NWSEC_PROF     0x1
+#define ENICIF_UPD_FLAGS_NUM_PROM_LIFS  0x2
+
 struct pd_enicif_s {
     // Hw Indices
     uint32_t    inp_prop_mac_vlan_idx_host;     // Pkts from Host
@@ -85,7 +89,7 @@ pd_enicif_free (pd_enicif_t *enicif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 pd_enicif_link_pi_pd(pd_enicif_t *pd_enicif, if_t *pi_if)
 {
     pd_enicif->pi_if = pi_if;
@@ -95,7 +99,7 @@ pd_enicif_link_pi_pd(pd_enicif_t *pd_enicif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 pd_enicif_delink_pi_pd(pd_enicif_t *pd_enicif, if_t *pi_if)
 {
     pd_enicif->pi_if = NULL;
@@ -107,12 +111,12 @@ hal_ret_t pd_enicif_program_hw(pd_enicif_t *pd_enicif);
 hal_ret_t pd_enicif_free (pd_enicif_t *enicif);
 void link_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 void unlink_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
-hal_ret_t pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, 
-                                              pd_if_lif_update_args_t *lif_args,
-                                              nwsec_profile_t *nwsec_prof,
-                                              table_oper_t ope);
 hal_ret_t
-pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif, 
+pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
+                                    pd_if_lif_update_args_t *lif_args,
+                                    table_oper_t oper);
+hal_ret_t
+pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                     pd_if_lif_update_args_t *lif_upd,
                                     table_oper_t oper);
 hal_ret_t pd_enicif_cleanup(pd_enicif_t *pd_enicif);
@@ -121,15 +125,17 @@ uint32_t pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif);
 pd_lif_t *pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif);
 hal_ret_t
 pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
+                              uint32_t upd_flags,
                               nwsec_profile_t *nwsec_prof,
                               input_properties_mac_vlan_actiondata &data,
                               bool host_entry);
 hal_ret_t pd_enicif_lif_update(pd_if_lif_update_args_t *args);
 hal_ret_t
-pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif, 
+pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
+                                     uint32_t upd_flags,
                                      nwsec_profile_t *nwsec_prof);
 hal_ret_t
-pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif, 
+pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
                           dllist_ctxt_t *l2sege_list,
                           pd_if_update_args_t *args,
                           pd_if_lif_update_args_t *lif_args,
@@ -143,17 +149,26 @@ hal_ret_t pd_enicif_alloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list);
 hal_ret_t pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list);
 hal_ret_t pd_enicif_alloc_l2seg_entries (pd_enicif_t *pd_enicif);
 hal_ret_t
-pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
+pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
+                                uint32_t upd_flags,
+                                uint32_t num_prom_lifs,
+                                l2seg_t *l2seg,
                                 pd_if_l2seg_entry_t *if_l2seg,
                                 pd_if_update_args_t *args,
                                 pd_if_lif_update_args_t *lif_args,
                                 table_oper_t oper);
+hal_ret_t
+pd_enicif_upd_inp_prop_l2seg(if_t *hal_if,
+                             l2seg_t *l2seg,
+                             uint32_t upd_flags,
+                             uint32_t num_prom_lifs);
 hal_ret_t pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args);
-hal_ret_t pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, 
+hal_ret_t pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif,
                                       dllist_ctxt_t *l2sege_list);
 hal_ret_t pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx);
 hal_ret_t pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args);
-
+hal_ret_t pd_enicif_update_num_prom_lifs(if_t *hal_if,
+                                         bool inc, bool skip_hw_pgm);
 hal_ret_t pd_enicif_create(pd_if_create_args_t *args);
 hal_ret_t pd_enicif_update(pd_if_update_args_t *args);
 hal_ret_t pd_enicif_delete(pd_if_delete_args_t *args);

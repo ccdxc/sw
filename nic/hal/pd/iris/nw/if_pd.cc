@@ -264,14 +264,16 @@ pd_if_nwsec_update(pd_if_nwsec_update_args_t *args)
     hal_ret_t                   ret = HAL_RET_OK;
     intf::IfType                if_type;
     void                        *pd_if = args->intf->pd_if;
-    pd_add_l2seg_uplink_args_t      uplink_args = { 0 };
+    pd_add_l2seg_uplink_args_t  uplink_args = { 0 };
+    uint32_t                    enicif_upd_flags = ENICIF_UPD_FLAGS_NONE;;
 
-    HAL_TRACE_DEBUG("{}:", __FUNCTION__);
+    enicif_upd_flags |= ENICIF_UPD_FLAGS_NWSEC_PROF;
 
     if_type = hal::intf_get_if_type(args->intf);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             ret = pd_enicif_upd_inp_prop_mac_vlan_tbl((pd_enicif_t *)pd_if,
+                                                      enicif_upd_flags,
                                                       args->nwsec_prof);
             break;
         case intf::IF_TYPE_UPLINK:
@@ -279,7 +281,8 @@ pd_if_nwsec_update(pd_if_nwsec_update_args_t *args)
             uplink_args.l2seg = args->l2seg;
             uplink_args.intf = args->intf;
             ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args,
-                                                        args->nwsec_prof);
+                                                        L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF,
+                                                        args->nwsec_prof, 0, NULL);
             break;
         default:
             HAL_ASSERT(0);

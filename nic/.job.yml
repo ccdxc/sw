@@ -1,6 +1,6 @@
 ---
 targets:
-  main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make -j4 all && make run-gtests; ret=$? ; make sanity_logs ; exit $ret" ]
+  main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make -j4 all && make run-gtests && make check_traces; ret=$? ; make sanity_logs ; exit $ret" ]
   halctl: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make -j4 all &&  cd $GOPATH/src/github.com/pensando/sw/nic/agent/cmd/halctl && go test" ]
   arm_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make ARCH=aarch64 nic && make ARCH=aarch64 sanity-tests && make ARCH=aarch64 gtests && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]
   arm_haps_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make PLATFORM=haps ARCH=aarch64 nic && make PLATFORM=haps ARCH=aarch64 sanity-tests && make PLATFORM=haps ARCH=aarch64 gtests && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]

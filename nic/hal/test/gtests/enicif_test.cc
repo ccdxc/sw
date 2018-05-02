@@ -575,6 +575,162 @@ TEST_F(enicif_test, test3)
 
 
 }
+
+// ----------------------------------------------------------------------------
+// Test classic enicifs and promiscous mode changes on lif
+// ----------------------------------------------------------------------------
+TEST_F(enicif_test, test4)
+{
+    hal_ret_t                   ret;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
+    LifSpec                     lif_spec;
+    LifResponse                 lif_rsp;
+    L2SegmentSpec               l2seg_spec;
+    L2SegmentResponse           l2seg_rsp;
+    InterfaceSpec               enicif_spec, upif_spec, enicif_spec1;
+    InterfaceResponse           enicif_rsp, upif_rsp, enicif_rsp1;
+    SecurityProfileSpec         sp_spec;
+    SecurityProfileResponse     sp_rsp;
+    NetworkSpec                 nw_spec;
+    NetworkResponse             nw_rsp;
+    InterfaceDeleteRequest      del_req;
+    InterfaceDeleteResponse     del_rsp;
+    int                         num_l2segs = 3;
+    uint64_t                    l2seg_hdls[10] = { 0 };
+    NetworkKeyHandle                *nkh = NULL;
+    InterfaceL2SegmentSpec          if_l2seg_spec;
+    InterfaceL2SegmentResponse      if_l2seg_rsp;
+    // slab_stats_t                *pre = NULL, *post = NULL;
+    // bool                        is_leak = false;
+
+    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(4);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(4);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(4);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    // Create Uplink If
+    upif_spec.set_type(intf::IF_TYPE_UPLINK);
+    upif_spec.mutable_key_or_handle()->set_interface_id(400);
+    upif_spec.mutable_if_uplink_info()->set_port_num(1);
+    // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(upif_spec, &upif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t up_hdl = upif_rsp.mutable_status()->if_handle();
+
+    // Create Uplink If -2
+    upif_spec.set_type(intf::IF_TYPE_UPLINK);
+    upif_spec.mutable_key_or_handle()->set_interface_id(401);
+    upif_spec.mutable_if_uplink_info()->set_port_num(1);
+    // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(upif_spec, &upif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    // uint64_t up_hdl1 = upif_rsp.mutable_status()->if_handle();
+
+    // Create a lif
+    lif_spec.mutable_key_or_handle()->set_lif_id(41);
+    lif_spec.mutable_packet_filter()->set_receive_promiscuous(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create l2segments
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
+    for (int i = 1; i <= num_l2segs; i++) {
+        // Create l2segment
+        l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(4);
+        l2seg_spec.mutable_key_or_handle()->set_segment_id(400 + i);
+        l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+        l2seg_spec.mutable_wire_encap()->set_encap_value(400 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        l2seg_hdls[i] = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    }
+
+    // Adding L2segment on Uplink
+    if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(401);
+    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(400);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    hal::hal_cfg_db_close();
+
+    // Create classic enic
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(41);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(41);
+    enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
+    enicif_spec.mutable_if_enic_info()->set_pinned_uplink_if_handle(up_hdl);
+    auto l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh->set_l2segment_handle(l2seg_hdls[1]);
+    l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh->set_l2segment_handle(l2seg_hdls[2]);
+    enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_hdls[3]);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Adding L2segment on Uplink
+    if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(402);
+    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(400);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    hal::hal_cfg_db_close();
+
+    // Update lif
+    lif_spec.mutable_key_or_handle()->set_lif_id(41);
+    lif_spec.mutable_packet_filter()->set_receive_promiscuous(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
+    // Set promiscous to true
+    lif_spec.mutable_packet_filter()->set_receive_promiscuous(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
+
+}
 #if 0
 // ----------------------------------------------------------------------------
 // Creating muliple enicifs

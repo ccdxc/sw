@@ -56,6 +56,7 @@ typedef struct hal_cfg_s {
     char                     feature_set[HAL_MAX_NAME_STR];
     hal_feature_set_t        features;
     hal_forwarding_mode_t    forwarding_mode;
+    bool                     allow_local_switch_for_promiscuous;
     bool                     sync_mode_logging;
     std::string              cfg_path;                  // full HAL config path
     std::string              catalog_file;              // full path of catalog file

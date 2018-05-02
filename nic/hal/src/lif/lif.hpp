@@ -110,6 +110,8 @@ typedef struct lif_update_app_ctxt_s {
     bool         vlan_strip_en;
     bool         qstate_map_init_set;
     bool         vlan_insert_en_changed:1;
+    uint64_t     pkt_filter_prom_changed:1;
+    uint64_t     receive_promiscous:1;
     uint64_t     vlan_strip_en_changed:1;
     uint64_t     pinned_uplink_changed:1;
     uint64_t     rx_policer_changed:1;
@@ -155,6 +157,7 @@ hal_ret_t lif_update_trigger_if(lif_t *lif,
                                 bool vlan_insert_en);
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
+static inline void lif_spec_dump (LifSpec& spec);
 
 // SVC APIs
 hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,

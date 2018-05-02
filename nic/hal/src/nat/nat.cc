@@ -1058,7 +1058,8 @@ nat_mapping_add_to_db (addr_entry_t *mapping, hal_handle_t handle)
         HAL_TRACE_ERR("Failed to add nat mapping ({}, {}) -> ({}, {}) to "
                       "handle db, err : {}",
                       mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
-                      mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+                      mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr),
+                      ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
         return ret;
     }

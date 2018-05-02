@@ -366,9 +366,12 @@ typedef struct pd_lif_create_args_s {
 } __PACK__ pd_lif_create_args_t;
 
 typedef struct pd_lif_update_args_s {
-    lif_t    *lif;
+    lif_t   *lif;
+    lif_t   *lif_clone;
     bool    vlan_strip_en_changed;
     bool    vlan_strip_en;
+    bool    pkt_filter_prom_changed;
+    bool    receive_promiscous;
     bool    qstate_map_init_set;
     bool    rss_config_changed;
     bool    rx_policer_changed;

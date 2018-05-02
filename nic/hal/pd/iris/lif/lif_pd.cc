@@ -1,6 +1,8 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
+#include "nic/hal/pd/iris/nw/enicif_pd.hpp"
+#include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
@@ -98,6 +100,10 @@ pd_lif_update (pd_lif_update_args_t *args)
         }
     }
 
+    if (args->pkt_filter_prom_changed) {
+        ret = pd_lif_handle_promiscous_filter_change(lif, args, false);
+    }
+
     // Process ETH RSS configuration changes
     if (args->rss_config_changed) {
         ret = eth_rss_init(pd_lif->hw_lif_id, &lif->rss,
@@ -134,6 +140,7 @@ pd_lif_update (pd_lif_update_args_t *args)
             goto end;
         }
     }
+
 
 end:
     return ret;
@@ -437,6 +444,38 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_update_args_t *args)
     }
     return lif->vlan_strip_en;
 }
+
+//-----------------------------------------------------------------------------
+// Handles promiscous filter change
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_handle_promiscous_filter_change (lif_t *lif,
+                                        pd_lif_update_args_t *args,
+                                        bool skip_hw_pgm)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t  *entry  = NULL;
+    if_t                        *hal_if = NULL;
+    dllist_ctxt_t               *lnode = NULL;
+
+    // only one enic per lif in classic mode. Prom. mode change happens only
+    // in classic nic.
+    HAL_ASSERT(dllist_count(&lif->if_list_head) == 1);
+
+    dllist_for_each(lnode, &lif->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal_if = find_if_by_handle(entry->handle_id);
+
+        ret = pd_enicif_update_num_prom_lifs(hal_if,
+                                             args->receive_promiscous ? true : false,
+                                             skip_hw_pgm);
+
+    }
+
+    return ret;
+}
+
+
 
 #define TX_POLICER_ACTION(_d, _arg) _d.tx_table_s5_t4_lif_rate_limiter_table_action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params._arg
 hal_ret_t

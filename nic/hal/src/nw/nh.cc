@@ -935,7 +935,7 @@ nexthop_del_route (nexthop_t *nh, route_t *route)
     nexthop_unlock(nh, __FILENAME__, __LINE__, __func__);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("Failed to remove route {} from nexthop {}, err: {}",
-                        route_to_str(route), nexthop_to_str(nh));
+                        route_to_str(route), nexthop_to_str(nh), ret);
         goto end;
     }
     HAL_TRACE_DEBUG("Deleted route {} from nh {}",

@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -643,6 +644,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     HAL_TRACE_DEBUG("{}:lif create for id {}", __FUNCTION__,
                     spec.key_or_handle().lif_id());
 
+	lif_spec_dump(spec);
+
     // validate the request message
     ret = validate_lif_create(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -821,7 +824,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif_t                 *lif_clone = NULL;
     lif_update_app_ctxt_t *app_ctxt  = NULL;
     uint32_t              hw_lif_id;
-    LifSpec                     *spec = NULL;
+    LifSpec               *spec = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -854,6 +857,11 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         lif_clone->pinned_uplink = app_ctxt->new_pinned_uplink;
     }
 
+    if (app_ctxt->pkt_filter_prom_changed) {
+        lif_clone->packet_filters.receive_promiscuous =
+            app_ctxt->receive_promiscous;
+    }
+
     if (app_ctxt->rss_config_changed) {
         lif_clone->rss.enable = spec->rss().enable();
         lif_clone->rss.type = spec->rss().type();
@@ -863,12 +871,15 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_lif_update_args_init(&args);
-    args.lif                   = lif_clone;
+    args.lif                   = lif;
+    args.lif_clone             = lif_clone;
     args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
     args.vlan_strip_en         = app_ctxt->vlan_strip_en;
     args.qstate_map_init_set   = app_ctxt->qstate_map_init_set;
     args.rx_policer_changed    = app_ctxt->rx_policer_changed;
     args.tx_policer_changed    = app_ctxt->tx_policer_changed;
+    args.pkt_filter_prom_changed = app_ctxt->pkt_filter_prom_changed;
+    args.receive_promiscous    = app_ctxt->receive_promiscous;
 
     hw_lif_id = lif_hw_lif_id_get(lif);
 
@@ -1138,6 +1149,16 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         HAL_TRACE_DEBUG("{}: tx policer configuration changed", __FUNCTION__);
     }
 
+    if (lif->packet_filters.receive_promiscuous !=
+        spec->packet_filter().receive_promiscuous()) {
+        HAL_TRACE_DEBUG("lif prom change: {} => {}",
+                        lif->packet_filters.receive_promiscuous,
+                        spec->packet_filter().receive_promiscuous());
+        app_ctxt->pkt_filter_prom_changed = true;
+        app_ctxt->receive_promiscous = spec->
+            packet_filter().receive_promiscuous();
+    }
+
     return ret;
 }
 
@@ -1157,6 +1178,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     uint64_t              hw_lif_id    = 0;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+
+	lif_spec_dump(spec);
 
     // validate the request message
     ret = validate_lif_update(spec, rsp);
@@ -1188,12 +1211,20 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         goto end;
     }
 
+    if (!is_forwarding_mode_classic_nic() && app_ctxt.pkt_filter_prom_changed) {
+        HAL_TRACE_ERR("lif's promiscous filter can't be changed in mode {}",
+                      g_hal_state->forwarding_mode());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
     if (!(app_ctxt.vlan_strip_en_changed ||
           app_ctxt.vlan_insert_en_changed ||
           app_ctxt.qstate_map_init_set ||
           app_ctxt.rss_config_changed ||
           app_ctxt.rx_policer_changed ||
-          app_ctxt.tx_policer_changed)) {
+          app_ctxt.tx_policer_changed ||
+          app_ctxt.pkt_filter_prom_changed)) {
         HAL_TRACE_ERR("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
@@ -1743,9 +1774,20 @@ lif_print(lif_t *lif)
 //-----------------------------------------------------------------------------
 // Print lif spec
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline void
 lif_spec_dump (LifSpec& spec)
 {
+    std::string    lif_cfg;
+
+     if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+         return;
+     }
+     google::protobuf::util::MessageToJsonString(spec, &lif_cfg);
+     HAL_TRACE_DEBUG("Lif configuration:");
+     HAL_TRACE_DEBUG("{}", lif_cfg.c_str());
+     return;
+
+#if 0
     hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
 
@@ -1782,6 +1824,7 @@ lif_spec_dump (LifSpec& spec)
 
     HAL_TRACE_DEBUG("{}", buf.c_str());
     return ret;
+#endif
 }
 
 

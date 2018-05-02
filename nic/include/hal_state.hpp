@@ -250,6 +250,14 @@ public:
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
 
+    void set_allow_local_switch_for_promiscuous(bool allow) {
+        allow_local_switch_for_promiscuous_ = allow;
+    }
+
+    bool allow_local_switch_for_promiscuous(void) const {
+        return allow_local_switch_for_promiscuous_;
+    }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -295,11 +303,17 @@ private:
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
-    hal_handle_t            infra_vrf_handle_;    // infra vrf handle
+    hal_handle_t            infra_vrf_handle_;                      // infra vrf handle
     eventmgr                *event_mgr_;
     ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
     if_id_t                 app_redir_if_id_;
+
+    // Classic Mode:
+    //  - Ucast packet from host, registered mac will be a MISS.
+    //    0: Don't send this packet to promiscous lifs.
+    //    1: Send this packet to promiscous lifs.
+    bool                    allow_local_switch_for_promiscuous_;
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
@@ -513,6 +527,14 @@ public:
         oper_db_->set_forwarding_mode(mode);
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return oper_db_->forwarding_mode(); }
+
+    void set_allow_local_switch_for_promiscuous(bool allow) {
+        oper_db_->set_allow_local_switch_for_promiscuous(allow);
+    }
+
+    bool allow_local_switch_for_promiscuous(void) const {
+        return oper_db_->allow_local_switch_for_promiscuous();
+    }
 
     eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }
 

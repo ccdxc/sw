@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __HAL_PD_L2SEG_HPP__
 #define __HAL_PD_L2SEG_HPP__
@@ -27,6 +29,12 @@ typedef struct pd_l2seg_s {
     uint32_t        inp_prop_tbl_idx[HAL_MAX_UPLINK_IF_PCS];
     uint32_t        inp_prop_tbl_idx_pri[HAL_MAX_UPLINK_IF_PCS];
     uint32_t        inp_prop_tbl_cpu_idx;   // traffic from CPU
+
+    // Valid only for classic mode
+    uint32_t        num_prom_lifs;       // Prom lifs in l2seg.
+    hal_handle_t    prom_if_handle;      // Enic if handle for prom_lif.
+                                         // Valid only if num_prom_lifs is 1.
+    uint32_t        prom_if_dest_lport;  // Prom IF's dlport
 
     void            *l2seg;              // PI L2 segment
 } __PACK__ pd_l2seg_t;
@@ -57,6 +65,9 @@ l2seg_pd_init (pd_l2seg_t *l2seg_pd)
     l2seg_pd->l2seg_fl_lkup_id     = INVALID_INDEXER_INDEX;
     l2seg_pd->cpu_l2seg_id         = INVALID_INDEXER_INDEX;
     l2seg_pd->inp_prop_tbl_cpu_idx = INVALID_INDEXER_INDEX;
+    l2seg_pd->num_prom_lifs        = 0;
+    l2seg_pd->prom_if_handle       = HAL_HANDLE_INVALID;
+    l2seg_pd->prom_if_dest_lport   = INVALID_INDEXER_INDEX;
 
     for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
         l2seg_pd->inp_prop_tbl_idx[i]     = INVALID_INDEXER_INDEX;
@@ -93,6 +104,9 @@ l2seg_pd_mem_free (pd_l2seg_t *l2seg_pd)
 extern void *flow_lkupid_get_hw_key_func(void *entry);
 extern uint32_t flow_lkupid_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool flow_lkupid_compare_hw_key_func(void *key1, void *key2);
+hal_ret_t pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
+                                    if_t *prom_enic_if,
+                                    bool inc, bool skip_hw_pgm);
 }   // namespace pd
 }   // namespace hal
 

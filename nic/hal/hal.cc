@@ -638,6 +638,9 @@ hal_init (hal_cfg_t *hal_cfg)
     // set the forwarding mode
     g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
 
+    // Default set to local switch prom. for DOLs to pass
+    g_hal_state->set_allow_local_switch_for_promiscuous(true);
+
     // do module initialization
     hal_module_init(hal_cfg);
 
