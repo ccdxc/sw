@@ -28,7 +28,7 @@ func createDnode(nodeUUID, nodeURL, dbPath string) (*data.DNode, error) {
 	cfg := meta.DefaultClusterConfig()
 	cfg.DeadInterval = time.Millisecond * 500
 	cfg.NodeTTL = 5
-	cfg.RebalanceDelay = time.Millisecond * 100
+	cfg.RebalanceDelay = time.Second
 	cfg.RebalanceInterval = time.Millisecond * 10
 
 	// create the data node
