@@ -7,7 +7,6 @@
 #define __PNSO_API_H__
 
 #include <stdint.h>
-#include <stdbool.h>
 
 /**
  * Pensando offloaders for storage and security
@@ -206,6 +205,8 @@ struct pnso_crypto_desc {
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
  * service
+ * @algo_type: specifies one of the enumerated values of the compressor
+ * algorithm (i.e. pnso_compressor_type)
  * @threshold_len: specifies the expected compressed buffer length in
  * bytes. This is to instruct the compression operation, upon its
  * completion, to compress the buffer to a length that must be less
@@ -223,11 +224,14 @@ struct pnso_crypto_desc {
  *	services, when compression operation fails.  This flag is
  *	effective only when compression, hash and/or checksum operation
  *	is requested.
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_compression_desc {
+	uint16_t algo_type;
 	uint16_t threshold_len;
 	uint16_t flags;
+	uint16_t rsvd;
 };
 
 /**
@@ -248,31 +252,33 @@ struct pnso_decompression_desc {
 /**
  * struct pnso_hash_desc - represents the descriptor for data deduplication
  * hash operation
+ * @algo_type: specifies one of the enumerated values of the hash
+ * algorithm (i.e. pnso_hash_type) for data deduplication.
  * @flags: specifies the following applicable descriptor flags to
  * hash descriptor.
  *	PNSO_DFLAG_HASH_PER_BLOCK - indicates whether to produce one
  *	hash per block or one for the entire buffer.
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_hash_desc {
+	uint16_t algo_type;
 	uint16_t flags;
-	uint16_t rsvd;
 };
 
 /**
  * struct pnso_checksum_desc - represents the descriptor for checksum
  * operation
+ * @algo_type: specifies one of the enumerated values of the checksum
+ * algorithm (i.e. pnso_chksum_type).
  * @flags: specifies the following applicable descriptor flags to
  * checksum descriptor.
  *	PNSO_DFLAG_CHKSUM_PER_BLOCK - indicates whether to produce one
  *	checksum per block or one for the entire buffer.
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_checksum_desc {
+	uint16_t algo_type;
 	uint16_t flags;
-	uint16_t rsvd;
 };
 
 /**
@@ -318,7 +324,7 @@ struct pnso_hash_or_chksum_tag {
  * service type.
  * @output_data_len: specifies the length of the output buffer processed in
  * bytes depending on the service type.
- * @interim_buf: specifies a temporary scatter/gather buffer list that to
+ * @output_buf: specifies a temporary scatter/gather buffer list that to
  * be used as output buffer for this service. Valid only for non-last
  * services.
  * @num_tags: specifies number of SHAs or checksums.
@@ -333,7 +339,7 @@ struct pnso_service_status {
 	pnso_error_t err;
 	uint8_t svc_type;
 	uint32_t output_data_len;
-	struct pnso_buffer_list *interim_buf;
+	struct pnso_buffer_list *output_buf;
 	uint16_t num_tags;
 	struct pnso_hash_or_chksum_tag *tags;
 };
@@ -358,10 +364,6 @@ struct pnso_service_result {
  * for acceleration
  * @svc_type: specifies one of the enumerated values for the accelerator
  * service type.
- * @algo_type: specifies one of the enumerated values of the compressor or
- * dedupe or chksum algorithm (i.e. enum pnso_compressor_type/
- * pnso_chksum_type/pnso_hash_type) based on the chosen accelerator
- * service type.
  * @crypto_desc: specifies the descriptor for encryption/decryption
  * service.
  * @cp_desc: specifies the descriptor for compression service.
@@ -373,10 +375,6 @@ struct pnso_service_result {
  */
 struct pnso_service {
 	uint8_t svc_type;
-	uint8_t algo_type;	/* pnso_compressor_type
-				 * pnso_hash_type
-				 * pnso_chksum_type
-				 */
 	union {
 		struct pnso_crypto_desc crypto_desc;
 		struct pnso_compression_desc cp_desc;
