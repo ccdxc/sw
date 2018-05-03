@@ -374,12 +374,6 @@ ctx_t::create_session()
 
     HAL_TRACE_DEBUG("fte: create session");
 
-    // Create new session only when atleast one of the EP is known
-    if (sep_ == NULL && dep_ == NULL) {
-        HAL_TRACE_ERR("fte: both src and dst ep unknown, key={}", key_);
-        return HAL_RET_EP_NOT_FOUND;
-    }
-
     ikey = key_;
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(ikey);
