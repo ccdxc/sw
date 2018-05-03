@@ -66,11 +66,11 @@ func TestPointsPrecision(t *testing.T) {
 
 	// push metrics
 	ts1 := time.Now()
-	table.Gauge("cpu_usage").Set(67.6, time.Time{})
-	table.Gauge("disk_usage").Set(31.4, time.Time{})
+	table.Gauge("cpu_usage").Set(67.6, ts1)
+	table.Gauge("disk_usage").Set(31.4, ts1)
 	time.Sleep(4 * testSendInterval)
 	ts2 := time.Now()
-	table.Gauge("memory_usage").Set(4.5, time.Time{})
+	table.Gauge("memory_usage").Set(4.5, ts2)
 	time.Sleep(50 * testSendInterval)
 
 	// create expected records
