@@ -107,34 +107,22 @@ message IpsecSADecrypt {
   uint32                         salt                      = 16;  // Initial Random number - 32 bits (need to be same on peer)
 }
 
+message IpsecRuleMatchSpec {
+  uint64             rule_id    = 1;    // rule id
+  types.RuleMatch    match      = 2;    // match conditions
+  // IPSec security associaton parameters
+  oneof IpSecSAInfo {
+      IpsecSAEncrypt                 enc_security_association      = 10;   // security association parameters
+      IpsecSADecrypt                 dec_security_association      = 11;
+  } 
+}
 
 // IpsecRuleSpec is the user intent for the IPSec rule
 message IpsecRuleSpec {
   types.ObjectMeta               meta                      = 1;    // common object meta
   kh.IpsecRuleKeyHandle          key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
   kh.VrfKeyHandle                vrf_key_handle            = 3 [(gogoproto.moretags) = "venice:ref"];
-
-  // IPSec rule match conditions
-  repeated types.IPAddressObj    src_address               = 4;    // source address(es)
-  repeated types.IPAddressObj    dst_address               = 6;    // destination address(es)
-  repeated types.IPProtocol      protocol                  = 7;
-  message AppPortInfo {
-    repeated types.L4PortRange    dst_port_range = 1; // dst port range low, high value
-    repeated types.L4PortRange    src_port_range = 2; // src port range low, high value
-  }
-  message EspInfo {
-      uint32      spi = 1;
-  }
-
-  oneof L4AppInfo {
-     AppPortInfo   port_info         = 8;
-     EspInfo       esp_info          = 9;
-  }
-  // IPSec security associaton parameters
-  oneof IpSecSAInfo {
-      IpsecSAEncrypt                 enc_security_association      = 10;   // security association parameters
-      IpsecSADecrypt                 dec_security_association      = 11;
-  } 
+  repeated IpsecRuleMatchSpec    rules                     = 4;
 }
 
 // IpsecRuleRequestMsg is the batched add or modify of NAT rule request
