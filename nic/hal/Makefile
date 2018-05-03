@@ -124,6 +124,10 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/crypto_keys.pb.o \
 				$(OBJ_DIR)/ipseccb.pb.o \
 				$(OBJ_DIR)/ipseccb.o \
+				$(OBJ_DIR)/ipsec.pb.o \
+				$(OBJ_DIR)/ipsec_sa_encrypt.o \
+				$(OBJ_DIR)/ipsec_sa_decrypt.o \
+				$(OBJ_DIR)/ipsec_rule.o \
 				$(OBJ_DIR)/l4lb.o \
 				$(OBJ_DIR)/cpucb.pb.o \
 				$(OBJ_DIR)/cpucb.o \

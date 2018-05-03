@@ -1097,6 +1097,7 @@ hal_oper_db::hal_oper_db()
     wring_id_ht_ = NULL;
     proxy_type_ht_ = NULL;
     ipseccb_id_ht_ = NULL;
+    ipsec_sa_id_ht_ = NULL;
     cpucb_id_ht_ = NULL;
     rawrcb_id_ht_ = NULL;
     app_redir_if_id_ = HAL_IFINDEX_INVALID;
@@ -1148,6 +1149,7 @@ hal_oper_db::~hal_oper_db()
     wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
     proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
     ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
+    ipsec_sa_id_ht_ ? ht::destroy(ipsec_sa_id_ht_) : HAL_NOP;
     cpucb_id_ht_ ? ht::destroy(cpucb_id_ht_) : HAL_NOP;
     rawrcb_id_ht_ ? ht::destroy(rawrcb_id_ht_) : HAL_NOP;
     rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;

@@ -19,6 +19,7 @@
 #include "nic/hal/src/telemetry/telemetry.hpp"
 #include "nic/hal/src/internal/crypto_keys.hpp"
 #include "nic/hal/src/internal/ipseccb.hpp"
+#include "nic/hal/src/ipsec/ipsec.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
@@ -910,6 +911,7 @@ typedef struct pd_ipseccb_create_args_s {
     ipseccb_t            *ipseccb;
 } __PACK__ pd_ipseccb_create_args_t;
 
+
 static inline void
 pd_ipseccb_create_args_init (pd_ipseccb_create_args_t *args)
 {
@@ -995,6 +997,53 @@ pd_ipseccb_decrypt_get_args_init (pd_ipseccb_decrypt_get_args_t *args)
     args->ipseccb = NULL;
     return;
 }
+
+// ipsec_sa
+typedef struct pd_ipsec_sa_create_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_sa_create_args_t;
+
+
+static inline void
+pd_ipsec_sa_create_args_init (pd_ipsec_sa_create_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
+
+typedef struct pd_ipsec_sa_update_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_sa_update_args_t;
+
+static inline void
+pd_ipsec_sa_update_args_init (pd_ipsec_sa_update_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
+
+typedef struct pd_ipsec_sa_delete_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_sa_delete_args_t;
+
+static inline void
+pd_ipsec_sa_delete_args_init (pd_ipsec_sa_delete_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
+
+typedef struct pd_ipsec_sa_get_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_sa_get_args_t;
+
+static inline void
+pd_ipsec_sa_get_args_init (pd_ipsec_sa_get_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
+
 
 // l4lb
 typedef struct pd_l4lb_create_args_s {

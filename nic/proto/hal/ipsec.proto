@@ -22,12 +22,12 @@ service Ipsec {
   rpc IpsecSAEncryptCreate (IpsecSAEncryptRequestMsg) returns (IpsecSAEncryptResponseMsg) {}
   rpc IpsecSAEncryptUpdate (IpsecSAEncryptRequestMsg) returns (IpsecSAEncryptResponseMsg) {}
   rpc IpsecSAEncryptDelete (IpsecSAEncryptDeleteRequestMsg) returns (IpsecSAEncryptDeleteResponseMsg) {}
-  rpc IpsecSAEncryptGet (IpsecSAEncryptGetRequestMsg) returns (IpsecSAEncryptGetRequestMsg) {}
+  rpc IpsecSAEncryptGet (IpsecSAEncryptGetRequestMsg) returns (IpsecSAEncryptGetResponseMsg) {}
 
   rpc IpsecSADecryptCreate (IpsecSADecryptRequestMsg) returns (IpsecSADecryptResponseMsg) {}
   rpc IpsecSADecryptUpdate (IpsecSADecryptRequestMsg) returns (IpsecSADecryptResponseMsg) {}
   rpc IpsecSADecryptDelete (IpsecSADecryptDeleteRequestMsg) returns (IpsecSADecryptDeleteResponseMsg) {}
-  rpc IpsecSADecryptGet (IpsecSADecryptGetRequestMsg) returns (IpsecSADecryptGetRequestMsg) {}
+  rpc IpsecSADecryptGet (IpsecSADecryptGetRequestMsg) returns (IpsecSADecryptGetResponseMsg) {}
 
 }
 
@@ -187,20 +187,20 @@ message IpsecRuleGetRequestMsg {
 
 
 
-// IpsecSAEncryptRequestMsg is batched add or modify ipseccb request
+// IpsecSAEncryptRequestMsg is batched add or modify ipsec_sa request
 message IpsecSAEncryptRequestMsg {
   repeated IpsecSAEncrypt   request = 1;    // batched request
 }
 
-// IpsecSAEncryptStatus is the operational status of a given ipseccb
+// IpsecSAEncryptStatus is the operational status of a given ipsec_sa
 message IpsecSAEncryptStatus {
-  fixed64    ipseccb_handle     = 1;    // id of ipseccb returned by HAL
+  fixed64    ipsec_sa_handle     = 1;    // id of ipsec_sa returned by HAL
 }
 
 // IpsecSAEncryptResponse is response to IpsecSA
 message IpsecSAEncryptResponse {
   types.ApiStatus        api_status            = 1;    // API status code
-  IpsecSAEncryptStatus       ipseccb_status   = 2;    // ipseccb status, if api succeeded
+  IpsecSAEncryptStatus       ipsec_sa_status   = 2;    // ipsec_sa status, if api succeeded
 }
 
 // IpsecSAEncryptResponseMsg is batched response to IpsecSAEncryptRequestMsg
@@ -208,13 +208,13 @@ message IpsecSAEncryptResponseMsg {
   repeated IpsecSAEncryptResponse    response = 1;    // batched response
 }
 
-// IpsecSAEncryptDeleteRequest is used to delete a ipseccb
+// IpsecSAEncryptDeleteRequest is used to delete a ipsec_sa
 message IpsecSAEncryptDeleteRequest {
   types.ObjectMeta        meta          = 1;    // object meta
   kh.IpsecSAEncryptKeyHandle     key_or_handle = 2;    // IpsecSA key or handle
 }
 
-// IpsecSAEncryptDeleteRequestMsg is used to delete a batch of ipseccbs
+// IpsecSAEncryptDeleteRequestMsg is used to delete a batch of ipsec_sas
 message IpsecSAEncryptDeleteRequestMsg {
   repeated IpsecSAEncryptDeleteRequest    request = 1;    // batched delete request
 }
@@ -224,32 +224,41 @@ message IpsecSAEncryptDeleteResponseMsg {
   repeated types.ApiStatus    api_status = 1;    // API status code
 }
 
-// IpsecSAEncryptGetRequest is used to get information about a ipseccb
+// IpsecSAEncryptGetRequest is used to get information about a ipsec_sa
 message IpsecSAEncryptGetRequest {
   types.ObjectMeta          meta          = 1;    // object meta
   kh.IpsecSAEncryptKeyHandle            key_or_handle = 2;    // IpsecSA key or handle
 }
 
-// IpsecSAEncryptGetRequestMsg is batched GET requests for ipseccbs
+// IpsecSAEncryptGetRequestMsg is batched GET requests for ipsec_sas
 message IpsecSAEncryptGetRequestMsg {
   repeated IpsecSAEncryptGetRequest    request = 1;    // batched get request
 }
 
+message IpsecSAEncryptGetResponse {
+  types.ApiStatus        api_status = 1;
+  IpsecSAEncrypt         spec       = 2;
+  IpsecSAEncryptStatus   status     = 3;
+}
 
-// IpsecSADecryptRequestMsg is batched add or modify ipseccb request
+message IpsecSAEncryptGetResponseMsg {
+    repeated IpsecSAEncryptGetResponse response = 1;
+}
+
+// IpsecSADecryptRequestMsg is batched add or modify ipsec_sa request
 message IpsecSADecryptRequestMsg {
   repeated IpsecSADecrypt   request = 1;    // batched request
 }
 
-// IpsecSADecryptStatus is the operational status of a given ipseccb
+// IpsecSADecryptStatus is the operational status of a given ipsec_sa
 message IpsecSADecryptStatus {
-  fixed64    ipseccb_handle     = 1;    // id of ipseccb returned by HAL
+  fixed64    ipsec_sa_handle     = 1;    // id of ipsec_sa returned by HAL
 }
 
 // IpsecSADecryptResponse is response to IpsecSA
 message IpsecSADecryptResponse {
   types.ApiStatus        api_status            = 1;    // API status code
-  IpsecSADecryptStatus       ipseccb_status   = 2;    // ipseccb status, if api succeeded
+  IpsecSADecryptStatus       ipsec_sa_status   = 2;    // ipsec_sa status, if api succeeded
 }
 
 // IpsecSADecryptResponseMsg is batched response to IpsecSADecryptRequestMsg
@@ -257,13 +266,13 @@ message IpsecSADecryptResponseMsg {
   repeated IpsecSADecryptResponse    response = 1;    // batched response
 }
 
-// IpsecSADecryptDeleteRequest is used to delete a ipseccb
+// IpsecSADecryptDeleteRequest is used to delete a ipsec_sa
 message IpsecSADecryptDeleteRequest {
   types.ObjectMeta        meta          = 1;    // object meta
   kh.IpsecSADecryptKeyHandle     key_or_handle = 2;    // IpsecSA key or handle
 }
 
-// IpsecSADecryptDeleteRequestMsg is used to delete a batch of ipseccbs
+// IpsecSADecryptDeleteRequestMsg is used to delete a batch of ipsec_sas
 message IpsecSADecryptDeleteRequestMsg {
   repeated IpsecSADecryptDeleteRequest    request = 1;    // batched delete request
 }
@@ -273,13 +282,24 @@ message IpsecSADecryptDeleteResponseMsg {
   repeated types.ApiStatus    api_status = 1;    // API status code
 }
 
-// IpsecSADecryptGetRequest is used to get information about a ipseccb
+// IpsecSADecryptGetRequest is used to get information about a ipsec_sa
 message IpsecSADecryptGetRequest {
   types.ObjectMeta          meta          = 1;    // object meta
   kh.IpsecSADecryptKeyHandle            key_or_handle = 2;    // IpsecSA key or handle
 }
 
-// IpsecSADecryptGetRequestMsg is batched GET requests for ipseccbs
+// IpsecSADecryptGetRequestMsg is batched GET requests for ipsec_sas
 message IpsecSADecryptGetRequestMsg {
   repeated IpsecSADecryptGetRequest    request = 1;    // batched get request
 }
+
+message IpsecSADecryptGetResponse {
+  types.ApiStatus        api_status = 1;
+  IpsecSADecrypt         spec       = 2;
+  IpsecSADecryptStatus   status     = 3;
+}
+
+message IpsecSADecryptGetResponseMsg {
+    repeated IpsecSADecryptGetResponse response = 1;
+}
+

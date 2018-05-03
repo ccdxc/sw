@@ -75,6 +75,7 @@ cc_library(
     glob(["src/nat/*.cc"]) +
     glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]) +
+    glob(["src/ipsec/*.cc"]) +
     glob(["src/gft/*.cc"]),
     hdrs = [
         "hal.hpp",
@@ -94,6 +95,7 @@ cc_library(
     glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/gft/*.hpp"]) +
+    glob(["src/ipsec/*.hpp"]) +
     glob(["src/export/*.hpp"]),
     copts = sdk_copts,
     deps = [
@@ -153,6 +155,7 @@ cc_library(
         glob(["src/lif/*.hpp"]) +
         glob(["src/firewall/*.hpp"]) +
         glob(["src/nat/*.hpp"]) +
+        glob(["src/ipsec/*.hpp"]) +
         glob(["src/dos/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
         glob(["src/gft/*.hpp"]) +

@@ -63,6 +63,8 @@ typedef uint32_t        wring_id_t;
 typedef uint32_t        dos_policy_id_t;
 typedef uint32_t        acl_id_t;
 typedef uint32_t        ipseccb_id_t;
+typedef uint32_t        ipsec_sa_id_t;
+typedef uint32_t        ipsec_rule_id_t;
 typedef uint32_t        lif_id_t;
 typedef uint32_t        nwsec_policy_cfg_id_t;
 typedef uint32_t        nwsec_group_id_t;

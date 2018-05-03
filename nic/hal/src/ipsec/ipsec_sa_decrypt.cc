@@ -4,7 +4,7 @@
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/internal/ipsec.hpp"
+#include "nic/hal/src/ipsec/ipsec.hpp"
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/export/vrf_api.hpp"
@@ -15,20 +15,20 @@ void *
 ipsec_sa_decrypt_get_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((ipsec_sa_decrypt_t *)entry)->cb_id);
+    return (void *)&(((ipsec_sa_t *)entry)->sa_id);
 }
 
 uint32_t
 ipsec_sa_decrypt_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipsec_sa_decrypt_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipsec_sa_id_t)) % ht_size;
 }
 
 bool
 ipsec_sa_decrypt_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(ipsec_sa_decrypt_id_t *)key1 == *(ipsec_sa_decrypt_id_t *)key2) {
+    if (*(ipsec_sa_id_t *)key1 == *(ipsec_sa_id_t *)key2) {
         return true;
     }
     return false;
@@ -38,7 +38,7 @@ void *
 ipsec_sa_decrypt_get_handle_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((ipsec_sa_decrypt_t *)entry)->hal_handle);
+    return (void *)&(((ipsec_sa_t *)entry)->hal_handle);
 }
 
 uint32_t
@@ -63,7 +63,7 @@ ipsec_sa_decrypt_compare_handle_key_func (void *key1, void *key2)
 // 1. check if IPSECCB exists already
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_ipsec_sa_decrypt_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
+validate_ipsec_sa_decrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
 {
     // must have key-handle set
     if (!spec.has_key_or_handle()) {
@@ -72,7 +72,7 @@ validate_ipsec_sa_decrypt_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     }
     // must have key in the key-handle
     if (spec.key_or_handle().key_or_handle_case() !=
-            IpsecCbKeyHandle::kIpseccbId) {
+            IpsecSADecryptKeyHandle::kCbId) {
         rsp->set_api_status(types::API_STATUS_IPSEC_CB_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -83,9 +83,9 @@ validate_ipsec_sa_decrypt_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 // insert this IPSEC CB in all meta data structures
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-add_ipsec_sa_decrypt_to_db (ipsec_sa_decrypt_t *ipseccb)
+add_ipsec_sa_to_db (ipsec_sa_t *ipsec)
 {
-    g_hal_state->ipsec_sa_decrypt_id_ht()->insert(ipseccb, &ipseccb->ht_ctxt);
+    g_hal_state->ipseccb_id_ht()->insert(ipsec, &ipsec->ht_ctxt);
     return HAL_RET_OK;
 }
 
@@ -95,11 +95,11 @@ add_ipsec_sa_decrypt_to_db (ipsec_sa_decrypt_t *ipseccb)
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t
-ipsec_sa_decrypt_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
+ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
-    ipsec_sa_decrypt_t                *ipseccb;
-    pd::pd_ipsec_sa_decrypt_create_args_t    pd_ipsec_sa_decrypt_args;
+    ipsec_sa_t                *ipsec;
+    pd::pd_ipsec_sa_create_args_t    pd_ipsec_sa_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
@@ -110,86 +110,63 @@ ipsec_sa_decrypt_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     // validate the request message
     ret = validate_ipsec_sa_decrypt_create(spec, rsp);
 
-    ipseccb = ipsec_sa_decrypt_alloc_init();
-    if (ipseccb == NULL) {
+    ipsec = ipsec_sa_alloc_init();
+    if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         return HAL_RET_OOM;
     }
 
-    ipseccb->cb_id = spec.key_or_handle().ipsec_sa_decrypt_id();
+    ipsec->sa_id = spec.key_or_handle().cb_id();
 
-    ipseccb->iv_size = spec.iv_size();
-    ipseccb->icv_size = spec.icv_size();
-    ipseccb->block_size = spec.block_size();
-    ipseccb->iv = spec.iv();
-    ipseccb->iv_salt = spec.iv_salt();
-    ipseccb->esn_hi = spec.esn_hi();
-    ipseccb->esn_lo = spec.esn_lo();
-    ipseccb->spi = spec.spi();
-    ipseccb->new_spi = spec.new_spi();
-    ipseccb->key_index = spec.key_index();
-    ipseccb->new_key_index = spec.new_key_index();
-    ipseccb->barco_enc_cmd = spec.barco_enc_cmd();
+    ipsec->iv_salt = spec.salt();
+    ipsec->spi = spec.spi();
+    ipsec->new_spi = spec.rekey_spi();
+    //ipsec->key_index = spec.key_index();
+    //ipsec->new_key_index = spec.new_key_index();
 
-    ipseccb->tunnel_sip4 = spec.tunnel_sip4();
-    ipseccb->tunnel_dip4 = spec.tunnel_dip4();
-
+    ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
+    ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
     vrf = vrf_get_infra_vrf();
     if (vrf) {
         tid = vrf->vrf_id;
         HAL_TRACE_DEBUG("infra_vrf success tid = {}", tid);
     }
 
-    sep = find_ep_by_v4_key(tid, htonl(spec.tunnel_sip4()));
+    sep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_sip4.addr.v4_addr));
     if (sep) {
         smac = ep_get_mac_addr(sep);
         if (smac) {
-            memcpy(ipseccb->smac, smac, ETH_ADDR_LEN);
+            memcpy(ipsec->smac, smac, ETH_ADDR_LEN);
         }
     } else {
-        memcpy(ipseccb->smac, smac1, ETH_ADDR_LEN);
+        memcpy(ipsec->smac, smac1, ETH_ADDR_LEN);
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
-    dep = find_ep_by_v4_key(tid, htonl(spec.tunnel_dip4()));
+    dep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_dip4.addr.v4_addr));
     if (dep) {
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
-            memcpy(ipseccb->dmac, dmac, ETH_ADDR_LEN);
+            memcpy(ipsec->dmac, dmac, ETH_ADDR_LEN);
         }
     } else {
-        memcpy(ipseccb->dmac, dmac1, ETH_ADDR_LEN);
+        memcpy(ipsec->dmac, dmac1, ETH_ADDR_LEN);
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
 
-    ipseccb->vrf_vlan = (int16_t)spec.vrf_vlan();
-    ipseccb->is_v6 = spec.is_v6();
-    ipseccb->is_nat_t = spec.is_nat_t();
-    ipseccb->is_random = spec.is_random();
-    ipseccb->extra_pad = spec.extra_pad();
-    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6());
-    ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
+    ipsec->hal_handle = hal_alloc_handle();
 
-    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6));
-
-    ipseccb->hal_handle = hal_alloc_handle();
-
-    uint64_t sess_hdl = 0;
-    SessionSpec sess_spec;
-    SessionResponse sess_rsp;
-    ::google::protobuf::uint32  ip1 = ipseccb->tunnel_sip4;
-    ::google::protobuf::uint32  ip2 = ipseccb->tunnel_dip4;
 
     // allocate all PD resources and finish programming
-    pd::pd_ipsec_sa_decrypt_create_args_init(&pd_ipsec_sa_decrypt_args);
-    pd_ipsec_sa_decrypt_args.ipseccb = ipseccb;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_CREATE, (void *)&pd_ipsec_sa_decrypt_args);
+    pd::pd_ipsec_sa_create_args_init(&pd_ipsec_sa_args);
+    pd_ipsec_sa_args.ipsec_sa = ipsec;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_CREATE, (void *)&pd_ipsec_sa_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSEC CB create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto cleanup;
     }
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_CREATE,
-                          (void *)&pd_ipsec_sa_decrypt_args);
+                          (void *)&pd_ipsec_sa_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSEC CB decrypt create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -197,36 +174,18 @@ ipsec_sa_decrypt_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     }
 
     // add this L2 segment to our db
-    ret = add_ipsec_sa_decrypt_to_db(ipseccb);
+    ret = add_ipsec_sa_to_db(ipsec);
     HAL_ASSERT(ret == HAL_RET_OK);
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_ipsec_sa_decrypt_status()->set_ipsec_sa_decrypt_handle(ipseccb->hal_handle);
-
-    sess_spec.mutable_meta()->set_vrf_id(1);
-    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
-    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
-    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_ip_proto(types::IPPROTO_ESP); 
-    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->mutable_esp()->set_spi(0);
-    sess_spec.mutable_initiator_flow()->mutable_flow_data()->mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
-
-
-    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
-    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
-    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_ip_proto(types::IPPROTO_ESP); 
-    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->mutable_esp()->set_spi(0);
-    sess_spec.mutable_responder_flow()->mutable_flow_data()->mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
-    ret = fte::session_create(sess_spec, &sess_rsp);
-
-    sess_hdl = sess_rsp.mutable_status()->session_handle();
-    HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
+    rsp->mutable_ipsec_sa_status()->set_ipsec_sa_handle(ipsec->hal_handle);
 
     return HAL_RET_OK;
 
 cleanup:
 
-    ipsec_sa_decrypt_free(ipseccb);
+    ipsec_sa_free(ipsec);
     return ret;
 }
 
@@ -234,11 +193,11 @@ cleanup:
 // process a IPSEC CB update request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipsec_sa_decrypt_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
+ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
-    ipsec_sa_decrypt_t*               ipseccb;
-    pd::pd_ipsec_sa_decrypt_update_args_t    pd_ipsec_sa_decrypt_args;
+    ipsec_sa_t*               ipsec;
+    pd::pd_ipsec_sa_update_args_t    pd_ipsec_sa_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
@@ -246,72 +205,54 @@ ipsec_sa_decrypt_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 
     auto kh = spec.key_or_handle();
 
-    ipseccb = find_ipsec_sa_decrypt_by_id(kh.ipsec_sa_decrypt_id());
-    if (ipseccb == NULL) {
+    ipsec = find_ipsec_sa_by_id(kh.cb_id());
+    if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_IPSEC_CB_NOT_FOUND;
     }
 
-    pd::pd_ipsec_sa_decrypt_update_args_init(&pd_ipsec_sa_decrypt_args);
-    pd_ipsec_sa_decrypt_args.ipseccb = ipseccb;
+    pd::pd_ipsec_sa_update_args_init(&pd_ipsec_sa_args);
+    pd_ipsec_sa_args.ipsec_sa = ipsec;
 
-    ipseccb->iv_size = spec.iv_size();
-    ipseccb->icv_size = spec.icv_size();
-    ipseccb->block_size = spec.block_size();
-    ipseccb->iv = spec.iv();
-    ipseccb->iv_salt = spec.iv_salt();
-    ipseccb->esn_hi = spec.esn_hi();
-    ipseccb->esn_lo = spec.esn_lo();
-    ipseccb->spi = spec.spi();
-    ipseccb->new_spi = spec.new_spi();
-    ipseccb->key_index = spec.key_index();
-    ipseccb->new_key_index = spec.new_key_index();
-    ipseccb->barco_enc_cmd = spec.barco_enc_cmd();
+    ipsec->iv_salt = spec.salt();
+    ipsec->spi = spec.spi();
+    ipsec->new_spi = spec.rekey_spi();
 
-    ipseccb->tunnel_sip4 = spec.tunnel_sip4();
-    ipseccb->tunnel_dip4 = spec.tunnel_dip4();
+    ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
+    ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
 
-    ipseccb->vrf_vlan = (uint16_t)spec.vrf_vlan();
-    ipseccb->is_v6 = spec.is_v6();
-    ipseccb->is_nat_t = spec.is_nat_t();
-    ipseccb->is_random = spec.is_random();
-    ipseccb->extra_pad = spec.extra_pad();
-    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6());
-    ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
-
-    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {}\n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6));
     vrf = vrf_get_infra_vrf();
     if (vrf) {
         tid = vrf->vrf_id;
         HAL_TRACE_DEBUG("infra_vrf success tid = {}", tid);
     } else {
     }
-    sep = find_ep_by_v4_key(tid, (spec.tunnel_sip4()));
+    sep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_sip4.addr.v4_addr));
     if (sep) {
         smac = ep_get_mac_addr(sep);
         if (smac) {
-            memcpy(ipseccb->smac, smac, ETH_ADDR_LEN);
+            memcpy(ipsec->smac, smac, ETH_ADDR_LEN);
         }
     } else {
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
-    dep = find_ep_by_v4_key(tid, (spec.tunnel_dip4()));
+    dep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_dip4.addr.v4_addr));
     if (dep) {
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
-            memcpy(ipseccb->dmac, dmac, ETH_ADDR_LEN);
+            memcpy(ipsec->dmac, dmac, ETH_ADDR_LEN);
         }
     } else {
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_UPDATE, (void *)&pd_ipsec_sa_decrypt_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_UPDATE, (void *)&pd_ipsec_sa_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE,
-                          (void *)&pd_ipsec_sa_decrypt_args);
+                          (void *)&pd_ipsec_sa_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
@@ -327,28 +268,28 @@ ipsec_sa_decrypt_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 // process a IPSEC CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipsec_sa_decrypt_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
+ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg *resp)
 {
     hal_ret_t              ret = HAL_RET_OK;
-    ipsec_sa_decrypt_t                ripseccb;
-    ipsec_sa_decrypt_t*               ipseccb;
-    pd::pd_ipsec_sa_decrypt_get_args_t    pd_ipsec_sa_decrypt_args;
-    IpsecCbGetResponse *rsp = resp->add_response();
+    ipsec_sa_t                ripsec;
+    ipsec_sa_t*               ipsec;
+    pd::pd_ipsec_sa_get_args_t    pd_ipsec_sa_args;
+    IpsecSADecryptGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
 
-    ipseccb = find_ipsec_sa_decrypt_by_id(kh.ipsec_sa_decrypt_id());
-    if (ipseccb == NULL) {
+    ipsec = find_ipsec_sa_by_id(kh.cb_id());
+    if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_IPSEC_CB_NOT_FOUND;
     }
 
-    ipsec_sa_decrypt_init(&ripseccb);
-    ripseccb.cb_id = ipseccb->cb_id;
-    pd::pd_ipsec_sa_decrypt_get_args_init(&pd_ipsec_sa_decrypt_args);
-    pd_ipsec_sa_decrypt_args.ipseccb = &ripseccb;
+    ipsec_sa_init(&ripsec);
+    ripsec.sa_id = ipsec->sa_id;
+    pd::pd_ipsec_sa_get_args_init(&pd_ipsec_sa_args);
+    pd_ipsec_sa_args.ipsec_sa = &ripsec;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_GET, (void *)&pd_ipsec_sa_decrypt_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_GET, (void *)&pd_ipsec_sa_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
@@ -356,47 +297,28 @@ ipsec_sa_decrypt_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
     }
 
     // fill config spec of this IPSEC CB
-    rsp->mutable_spec()->mutable_key_or_handle()->set_ipsec_sa_decrypt_id(ripseccb.cb_id);
+    rsp->mutable_spec()->mutable_key_or_handle()->set_cb_id(ripsec.sa_id);
 
-    rsp->mutable_spec()->set_iv_size(ripseccb.iv_size);
-    rsp->mutable_spec()->set_icv_size(ripseccb.icv_size);
-    rsp->mutable_spec()->set_block_size(ripseccb.block_size);
-    rsp->mutable_spec()->set_iv_salt(ripseccb.iv_salt);
-    rsp->mutable_spec()->set_iv(ripseccb.iv);
-    rsp->mutable_spec()->set_key_index(ripseccb.key_index);
-    rsp->mutable_spec()->set_new_key_index(ripseccb.new_key_index);
-    rsp->mutable_spec()->set_esn_hi(ripseccb.esn_hi);
-    rsp->mutable_spec()->set_esn_lo(ripseccb.esn_lo);
-    rsp->mutable_spec()->set_spi(ripseccb.spi);
-    rsp->mutable_spec()->set_new_spi(ripseccb.new_spi);
-    rsp->mutable_spec()->set_barco_enc_cmd(ripseccb.barco_enc_cmd);
+    rsp->mutable_spec()->set_salt(ripsec.iv_salt);
+    rsp->mutable_spec()->set_spi(ripsec.spi);
+    rsp->mutable_spec()->set_rekey_spi(ripsec.new_spi);
 
-    rsp->mutable_spec()->set_tunnel_sip4(ripseccb.tunnel_sip4);
-    rsp->mutable_spec()->set_tunnel_dip4(ripseccb.tunnel_dip4);
+    //rsp->mutable_spec()->set_tunnel_sip4(ripsec.tunnel_sip4);
+    //rsp->mutable_spec()->set_tunnel_dip4(ripsec.tunnel_dip4);
 
-    rsp->mutable_spec()->set_pi(ripseccb.pi);
-    rsp->mutable_spec()->set_ci(ripseccb.ci);
-    rsp->mutable_spec()->set_is_v6(ripseccb.is_v6);
-    rsp->mutable_spec()->set_is_nat_t(ripseccb.is_nat_t);
-    rsp->mutable_spec()->set_is_random(ripseccb.is_random);
-    rsp->mutable_spec()->set_extra_pad(ripseccb.extra_pad);
-    rsp->mutable_spec()->set_vrf_vlan(ripseccb.vrf_vlan);
 
     // fill operational state of this IPSEC CB
-    rsp->mutable_status()->set_ipsec_sa_decrypt_handle(ipseccb->hal_handle);
+    rsp->mutable_status()->set_ipsec_sa_handle(ipsec->hal_handle);
 
     // fill stats of this IPSEC CB
     rsp->set_api_status(types::API_STATUS_OK);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_GET,
-                          (void *)&pd_ipsec_sa_decrypt_args);
+                          (void *)&pd_ipsec_sa_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Decrypt IPSECCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    rsp->mutable_spec()->set_expected_seq_no(ripseccb.expected_seq_no);
-    rsp->mutable_spec()->set_seq_no_bmp(ripseccb.seq_no_bmp);
-    rsp->mutable_spec()->set_last_replay_seq_no(ripseccb.last_replay_seq_no);
 
     return HAL_RET_OK;
 }
@@ -405,30 +327,30 @@ ipsec_sa_decrypt_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
 // process a IPSEC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipsec_sa_decrypt_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteResponseMsg *rsp)
+ipsec_sadecrypt_delete (ipsec::IpsecSADecryptDeleteRequest& req, ipsec::IpsecSADecryptDeleteResponseMsg *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
-    ipsec_sa_decrypt_t*               ipseccb;
-    pd::pd_ipsec_sa_decrypt_delete_args_t    pd_ipsec_sa_decrypt_args;
+    ipsec_sa_t*               ipsec;
+    pd::pd_ipsec_sa_delete_args_t    pd_ipsec_sa_args;
 
     auto kh = req.key_or_handle();
-    ipseccb = find_ipsec_sa_decrypt_by_id(kh.ipsec_sa_decrypt_id());
-    if (ipseccb == NULL) {
+    ipsec = find_ipsec_sa_by_id(kh.cb_id());
+    if (ipsec == NULL) {
         rsp->add_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
 
-    pd::pd_ipsec_sa_decrypt_delete_args_init(&pd_ipsec_sa_decrypt_args);
-    pd_ipsec_sa_decrypt_args.ipseccb = ipseccb;
+    pd::pd_ipsec_sa_delete_args_init(&pd_ipsec_sa_args);
+    pd_ipsec_sa_args.ipsec_sa = ipsec;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DELETE, (void *)&pd_ipsec_sa_decrypt_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DELETE, (void *)&pd_ipsec_sa_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_DELETE,
-                          (void *)&pd_ipsec_sa_decrypt_args);
+                          (void *)&pd_ipsec_sa_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);

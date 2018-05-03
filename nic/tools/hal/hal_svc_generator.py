@@ -38,7 +38,7 @@ from tenjin import *
 from tenjin_wrapper import *
 
 def file_skip(name):
-    skip_list = ['port', 'quiesce', 'debug', 'barco_rings', 'event', 'interface_pb2.py', 'proxy_pb2.py', 'wring', 'rdma', 'system', 'session_pb2.py', 'rawrcb', 'swphv', 'ipsec_pb2', 'table' ]
+    skip_list = ['port', 'quiesce', 'debug', 'barco_rings', 'event', 'interface_pb2.py', 'proxy_pb2.py', 'wring', 'rdma', 'system', 'session_pb2.py', 'rawrcb', 'swphv', 'table' ]
     if not name.endswith(".py") or "grpc" in name:
         return True
 

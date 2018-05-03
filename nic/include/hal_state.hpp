@@ -221,6 +221,7 @@ public:
     ht *wring_id_ht(void) const { return wring_id_ht_; }
     ht *proxy_type_ht(void) const { return proxy_type_ht_; }
     ht *ipseccb_id_ht(void) const { return ipseccb_id_ht_; }
+    ht *ipsec_sa_id_ht(void) const { return ipsec_sa_id_ht_; }
     ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
     ht *rawrcb_id_ht(void) const { return rawrcb_id_ht_; }
     ht *rawccb_id_ht(void) const { return rawccb_id_ht_; }
@@ -287,6 +288,7 @@ private:
     ht    *proxy_type_ht_;
     ht    *acl_ht_;
     ht    *ipseccb_id_ht_;
+    ht    *ipsec_sa_id_ht_;
     ht    *cpucb_id_ht_;
     ht    *rawrcb_id_ht_;
     ht    *rawccb_id_ht_;

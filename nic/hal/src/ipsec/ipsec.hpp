@@ -1,5 +1,5 @@
-#ifndef __IPSECCB_HPP__
-#define __IPSECCB_HPP__
+#ifndef __IPSEC_HPP__
+#define __IPSEC_HPP__
 
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
@@ -15,6 +15,9 @@ using sdk::lib::dllist_ctxt_t;
 using ipsec::IpsecSAEncrypt;
 using ipsec::IpsecSADecrypt;
 using ipsec::IpsecRuleSpec;
+using kh::IpsecSAEncryptKeyHandle;
+using kh::IpsecSADecryptKeyHandle;
+using kh::IpsecRuleKeyHandle;
 
 using ipsec::IpsecRuleRequestMsg;
 using ipsec::IpsecRuleStatus;
@@ -34,7 +37,9 @@ using ipsec::IpsecSAEncryptDeleteRequest;
 using ipsec::IpsecSAEncryptDeleteRequestMsg;
 using ipsec::IpsecSAEncryptDeleteResponseMsg;
 using ipsec::IpsecSAEncryptGetRequest;
+using ipsec::IpsecSAEncryptGetResponse;
 using ipsec::IpsecSAEncryptGetRequestMsg;
+using ipsec::IpsecSAEncryptGetResponseMsg;
 
 using ipsec::IpsecSADecryptRequestMsg;
 using ipsec::IpsecSADecryptStatus;
@@ -44,16 +49,17 @@ using ipsec::IpsecSADecryptDeleteRequest;
 using ipsec::IpsecSADecryptDeleteRequestMsg;
 using ipsec::IpsecSADecryptDeleteResponseMsg;
 using ipsec::IpsecSADecryptGetRequest;
+using ipsec::IpsecSADecryptGetResponse;
 using ipsec::IpsecSADecryptGetRequestMsg;
-
+using ipsec::IpsecSADecryptGetResponseMsg;
 
 namespace hal {
 
-typedef struct ipsec_sa_encrypt_s {
+typedef struct ipsec_sa_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
-    ipseccb_id_t          cb_id;                   // CB id
-    uint32_t              tunnel_sip4;
-    uint32_t              tunnel_dip4;
+    ipsec_sa_id_t         sa_id;                   // CB id
+    ip_addr_t             tunnel_sip4;
+    ip_addr_t             tunnel_dip4;
     uint8_t               iv_size;
     uint8_t               icv_size;
     uint8_t               block_size;
@@ -71,8 +77,6 @@ typedef struct ipsec_sa_encrypt_s {
     hal_handle_t          hal_handle;              // HAL allocated handle
     mac_addr_t            smac;
     mac_addr_t            dmac; 
-    ip_addr_t             sip6;
-    ip_addr_t             dip6;
     uint8_t               is_v6; 
     uint8_t               is_nat_t;
     uint8_t               is_random;
@@ -86,103 +90,132 @@ typedef struct ipsec_sa_encrypt_s {
 
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
-} __PACK__ ipseccb_t;
+} __PACK__ ipsec_sa_t;
+
+
+typedef struct ipsec_rule_s {
+    hal_spinlock_t        slock;                   // lock to protect this structure
+    ipsec_rule_id_t       rule_id;                   // CB id
+    hal_handle_t          hal_handle;              // HAL allocated handle
+    ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
+    ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
+} __PACK__ ipsec_rule_t;
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_IPSECCB                           4
 
-// allocate a ipseccbment instance
-static inline ipseccb_t *
-ipseccb_alloc (void)
+// allocate a ipsec_sament instance
+static inline ipsec_sa_t *
+ipsec_sa_alloc (void)
 {
-    ipseccb_t    *ipseccb;
+    ipsec_sa_t    *ipsec_sa;
 
-    ipseccb = (ipseccb_t *)g_hal_state->ipseccb_slab()->alloc();
-    if (ipseccb == NULL) {
+    ipsec_sa = (ipsec_sa_t *)g_hal_state->ipseccb_slab()->alloc();
+    if (ipsec_sa == NULL) {
         return NULL;
     }
-    return ipseccb;
+    return ipsec_sa;
 }
 
-// initialize a ipseccbment instance
-static inline ipseccb_t *
-ipseccb_init (ipseccb_t *ipseccb)
+// initialize a ipsec_sament instance
+static inline ipsec_sa_t *
+ipsec_sa_init (ipsec_sa_t *ipsec_sa)
 {
-    if (!ipseccb) {
+    if (!ipsec_sa) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&ipseccb->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&ipsec_sa->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
-    ipseccb->pd = NULL;
+    ipsec_sa->pd = NULL;
 
     // initialize meta information
-    ipseccb->ht_ctxt.reset();
-    ipseccb->hal_handle_ht_ctxt.reset();
+    ipsec_sa->ht_ctxt.reset();
+    ipsec_sa->hal_handle_ht_ctxt.reset();
 
-    return ipseccb;
+    return ipsec_sa;
 }
 
 // allocate and initialize a IPSECCB instance
-static inline ipseccb_t *
-ipseccb_alloc_init (void)
+static inline ipsec_sa_t *
+ipsec_sa_alloc_init (void)
 {
-    return ipseccb_init(ipseccb_alloc());
+    return ipsec_sa_init(ipsec_sa_alloc());
 }
 
 static inline hal_ret_t
-ipseccb_free (ipseccb_t *ipseccb)
+ipsec_sa_free (ipsec_sa_t *ipsec_sa)
 {
-    HAL_SPINLOCK_DESTROY(&ipseccb->slock);
-    hal::delay_delete_to_slab(HAL_SLAB_IPSECCB, ipseccb);
+    HAL_SPINLOCK_DESTROY(&ipsec_sa->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_IPSECCB, ipsec_sa);
     return HAL_RET_OK;
 }
 
-static inline ipseccb_t *
-find_ipseccb_by_id (ipseccb_id_t ipseccb_id)
+static inline ipsec_sa_t *
+find_ipsec_sa_by_id (ipsec_sa_id_t ipsec_sa_id)
 {
-    return (ipseccb_t *)g_hal_state->ipseccb_id_ht()->lookup(&ipseccb_id);
+    return (ipsec_sa_t *)g_hal_state->ipseccb_id_ht()->lookup(&ipsec_sa_id);
 }
 
 extern void *ipsec_sa_encrypt_get_key_func(void *entry);
 extern uint32_t ipsec_sa_encrypt_compute_hash_func(void *key, uint32_t ht_size);
-extern bool ipsecb_sa_encrypt_compare_key_func(void *key1, void *key2);
+extern bool ipsec_sa_encrypt_compare_key_func(void *key1, void *key2);
 
-extern void *ipsecb_sa_encrypt_get_handle_key_func(void *entry);
-extern uint32_t ipsecb__sa_encryptcompute_handle_hash_func(void *key, uint32_t ht_size);
+extern void *ipsec_sa_encrypt_get_handle_key_func(void *entry);
+extern uint32_t ipsec_sa_encrypt_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool ipsec_sa_encryptcompare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t ipsec_sa_encrypt_create(ipsec::IpsecSAEncrypt& spec,
+hal_ret_t ipsec_saencrypt_create(ipsec::IpsecSAEncrypt& spec,
                        ipsec::IpsecSAEncryptResponse *rsp);
 
-hal_ret_t ipsec_sa_encrypt_update(ipsec::IpsecSAEncrypt& spec,
+hal_ret_t ipsec_saencrypt_update(ipsec::IpsecSAEncrypt& spec,
                        ipsec::IpsecSAEncryptResponse *rsp);
 
-hal_ret_t ipsec_sa_encrypt_delete(ipsec::IpsecSAEncryptDeleteRequest& req,
+hal_ret_t ipsec_saencrypt_delete(ipsec::IpsecSAEncryptDeleteRequest& req,
                        ipsec::IpsecSAEncryptDeleteResponseMsg *rsp);
 
-hal_ret_t ipsec_sa_encrypt_get(ipsec::IpsecSAEncryptGetRequest& req,
-                    ipsec::IpsecSAEncryptGetRequestMsg *rsp);
+hal_ret_t ipsec_saencrypt_get(ipsec::IpsecSAEncryptGetRequest& req,
+                    ipsec::IpsecSAEncryptGetResponseMsg *rsp);
 
 extern void *ipsec_sa_decrypt_get_key_func(void *entry);
 extern uint32_t ipsec_sa_decrypt_compute_hash_func(void *key, uint32_t ht_size);
-extern bool ipsecb_sa_decrypt_compare_key_func(void *key1, void *key2);
+extern bool ipsec_sa_decrypt_compare_key_func(void *key1, void *key2);
 
-extern void *ipsecb_sa_decrypt_get_handle_key_func(void *entry);
-extern uint32_t ipsecb__sa_decryptcompute_handle_hash_func(void *key, uint32_t ht_size);
+extern void *ipsec_sa_decrypt_get_handle_key_func(void *entry);
+extern uint32_t ipsec_sa_decrypt_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool ipsec_sa_decryptcompare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t ipsec_sa_decrypt_create(ipsec::IpsecSADecrypt& spec,
+hal_ret_t ipsec_sadecrypt_create(ipsec::IpsecSADecrypt& spec,
                        ipsec::IpsecSADecryptResponse *rsp);
 
-hal_ret_t ipsec_sa_decrypt_update(ipsec::IpsecSADecrypt& spec,
+hal_ret_t ipsec_sadecrypt_update(ipsec::IpsecSADecrypt& spec,
                        ipsec::IpsecSADecryptResponse *rsp);
 
-hal_ret_t ipsec_sa_decrypt_delete(ipsec::IpsecSADecryptDeleteRequest& req,
+hal_ret_t ipsec_sadecrypt_delete(ipsec::IpsecSADecryptDeleteRequest& req,
                        ipsec::IpsecSADecryptDeleteResponseMsg *rsp);
 
-hal_ret_t ipsec_sa_decrypt_get(ipsec::IpsecSADecryptGetRequest& req,
-                    ipsec::IpsecSADecryptGetRequestMsg *rsp);
+hal_ret_t ipsec_sadecrypt_get(ipsec::IpsecSADecryptGetRequest& req,
+                    ipsec::IpsecSADecryptGetResponseMsg *rsp);
+
+extern void *ipsec_rule_get_key_func(void *entry);
+extern uint32_t ipsec_rule_compute_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_rule_compare_key_func(void *key1, void *key2);
+
+extern void *ipsec_rule_get_handle_key_func(void *entry);
+extern uint32_t ipsec_rule_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_rule_compare_handle_key_func(void *key1, void *key2);
+
+hal_ret_t ipsec_rule_create(ipsec::IpsecRuleSpec& spec,
+                       ipsec::IpsecRuleResponse *rsp);
+
+hal_ret_t ipsec_rule_update(ipsec::IpsecRuleSpec& spec,
+                       ipsec::IpsecRuleResponse *rsp);
+
+hal_ret_t ipsec_rule_delete(ipsec::IpsecRuleDeleteRequest& req,
+                       ipsec::IpsecRuleDeleteResponseMsg *rsp);
+
+hal_ret_t ipsec_rule_get(ipsec::IpsecRuleGetRequest& req,
+                    ipsec::IpsecRuleGetRequestMsg *rsp);
 
 }    // namespace hal
 

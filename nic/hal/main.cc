@@ -56,6 +56,7 @@
 #include "nic/gen/hal/svc/descriptor_aol_svc_gen.hpp"
 #include "nic/gen/hal/svc/acl_svc_gen.hpp"
 #include "nic/gen/hal/svc/ipseccb_svc_gen.hpp"
+#include "nic/gen/hal/svc/ipsec_svc_gen.hpp"
 #include "nic/gen/hal/svc/cpucb_svc_gen.hpp"
 #include "nic/gen/hal/svc/crypto_keys_svc_gen.hpp"
 #include "nic/gen/hal/svc/rawccb_svc_gen.hpp"
@@ -100,6 +101,7 @@ svc_reg (const std::string& server_addr,
     WRingServiceImpl         wring_svc;
     ProxyServiceImpl         proxy_svc;
     IpsecCbServiceImpl       ipseccb_svc;
+    IpsecServiceImpl         ipsec_svc;
     CpuCbServiceImpl         cpucb_svc;
     CryptoKeyServiceImpl     crypto_key_svc;
     RawrCbServiceImpl        rawrcb_svc;
@@ -147,6 +149,7 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&acl_svc);
         server_builder.RegisterService(&telemetry_svc);
         server_builder.RegisterService(&ipseccb_svc);
+        server_builder.RegisterService(&ipsec_svc);
         server_builder.RegisterService(&cpucb_svc);
         server_builder.RegisterService(&crypto_key_svc);
         server_builder.RegisterService(&rawrcb_svc);

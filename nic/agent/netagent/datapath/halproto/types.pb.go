@@ -395,6 +395,8 @@
 		IpsecSAEncryptDeleteResponseMsg
 		IpsecSAEncryptGetRequest
 		IpsecSAEncryptGetRequestMsg
+		IpsecSAEncryptGetResponse
+		IpsecSAEncryptGetResponseMsg
 		IpsecSADecryptRequestMsg
 		IpsecSADecryptStatus
 		IpsecSADecryptResponse
@@ -404,6 +406,8 @@
 		IpsecSADecryptDeleteResponseMsg
 		IpsecSADecryptGetRequest
 		IpsecSADecryptGetRequestMsg
+		IpsecSADecryptGetResponse
+		IpsecSADecryptGetResponseMsg
 		IpsecCbKeyHandle
 		IpsecCbSpec
 		IpsecCbRequestMsg
