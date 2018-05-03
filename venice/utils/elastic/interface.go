@@ -16,6 +16,12 @@ type ESClient interface {
 	// Version returns the version of the running elasticsearch instance.
 	Version() (string, error)
 
+	// CreateIndexTemplate creates a template with given name and settings
+	CreateIndexTemplate(ctx context.Context, name, settings string) error
+
+	// DeleteIndexTemplate deletes the template identified by given name
+	DeleteIndexTemplate(ctx context.Context, name string) error
+
 	// CreateIndex creates the given index with the given settings.
 	CreateIndex(ctx context.Context, index, settings string) error
 

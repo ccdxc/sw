@@ -120,6 +120,93 @@ func (e *Client) Version() (string, error) {
 	return "", fmt.Errorf("failed to get elasticsearch version")
 }
 
+// CreateIndexTemplate creates the requested index template with given setting and name.
+// Once the template is created, elasticsearch will automatically apply the properties for
+// new indices that matches the index pattern given in template. This helps to
+// avoid creating repeative/daily based indices explicitly as the index call will
+// automatically create new indices if it does not exists already. Internally, it will utlize
+// the templates to apply properties to new indices.
+func (e *Client) CreateIndexTemplate(ctx context.Context, name, settings string) error {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			// create index template
+			resp, err := e.esClient.IndexPutTemplate(name).BodyString(settings).Do(ctx)
+			if err != nil {
+				return resp, err
+			} else if !resp.Acknowledged {
+				return resp, NewError(ErrRespNotAcknowledged, "")
+			}
+
+			return resp, err
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debugf("retrying, create template {%s}", settings)
+			retryCount++
+			continue
+		}
+
+		return rErr
+	}
+}
+
+// DeleteIndexTemplate deletes the index template identified by given name.
+// Templates are only applied at index creation time. So, changing/deleting a template will
+// have no impact on existing indices.
+func (e *Client) DeleteIndexTemplate(ctx context.Context, name string) error {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			// create index template
+			resp, err := e.esClient.IndexDeleteTemplate(name).Do(ctx)
+			if err != nil {
+				return resp, err
+			} else if !resp.Acknowledged {
+				return resp, NewError(ErrRespNotAcknowledged, "")
+			}
+
+			return resp, err
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debugf("retrying, delete template {%s}", name)
+			retryCount++
+			continue
+		}
+
+		return rErr
+	}
+}
+
 // CreateIndex creates the requested index on elastic cluster. Settings contains the index
 // settings (shards, replicas) and any mapping of the obj fields.
 // After creating the index, only number of replicas can be changed dynamically but not number of shards.
@@ -260,13 +347,6 @@ func (e *Client) Index(ctx context.Context, index, iType, ID string, obj interfa
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
-			// check if index exists
-			if indexExistsResp, err := e.esClient.IndexExists(index).Do(ctx); err != nil {
-				return indexExistsResp, err
-			} else if !indexExistsResp {
-				return indexExistsResp, NewError(ErrIndexNotExist, "")
-			}
-
 			// index the given document(obj)
 			return e.esClient.Index().Index(index).Type(iType).Id(ID).BodyJson(obj).Do(ctx)
 		}, retryCount, rResp, rErr)
@@ -593,6 +673,11 @@ func (e *Client) resetClient() error {
 
 // resetClientHelper creates a new client using the URL from resolver and replaces it with the old client
 func (e *Client) resetClientHelper() error {
+	if e.resolverClient == nil {
+		e.logger.Error("could not find the resolver to fetch elastic address")
+		return fmt.Errorf("could not find the resolver to fetch elastic address")
+	}
+
 	e.logger.Debug("trying to reset the client")
 	// try to get the new list of URLs and re-create client
 	elasticURLs, err := getElasticSearchURLs(e.resolverClient)

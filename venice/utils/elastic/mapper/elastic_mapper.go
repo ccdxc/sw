@@ -18,9 +18,10 @@ const (
 
 // Elastic mapper options
 type options struct {
-	shards   uint   // Shard count
-	replicas uint   // Replica count
-	codec    string // Codec compression scheme
+	shards        uint   // Shard count
+	replicas      uint   // Replica count
+	codec         string // Codec compression scheme
+	indexPatterns string // index pattern for the template
 }
 
 // Option fills the optional params for Mapper
@@ -29,6 +30,9 @@ type Option func(opt *options)
 // ElasticConfig contains the settings and mappings
 // definition for an Elastic Index.
 type ElasticConfig struct {
+	// IndexPatterns contains elastic index patterns for the template
+	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
+	IndexPatterns string `json:"index_patterns,omitempty"`
 
 	// Settings contains elastic index settings
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html#create-index-settings
@@ -124,6 +128,13 @@ func WithCodec(codec string) Option {
 	}
 }
 
+// WithIndexPatterns specifies index pattern for the template
+func WithIndexPatterns(pattern string) Option {
+	return func(o *options) {
+		o.indexPatterns = pattern
+	}
+}
+
 // GetElasticType returns the mapping to go data type
 // to elastic data types listed below.
 //
@@ -214,8 +225,9 @@ func ElasticMapper(obj interface{}, docType string, opts ...Option) (ElasticConf
 
 	// Fill in complete index mapping
 	indexMapping := ElasticConfig{
-		Settings: settings,
-		Mappings: mappings,
+		IndexPatterns: options.indexPatterns,
+		Settings:      settings,
+		Mappings:      mappings,
 	}
 
 	log.Debugf("Elastic Index Mapping: %+v", indexMapping)

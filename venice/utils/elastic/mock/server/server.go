@@ -183,6 +183,10 @@ func (e *ElasticServer) addHandlers() {
 			return
 		}
 
+		if _, ok := e.indexes[indexName]; !ok {
+			e.indexes[indexName] = make(map[string][]byte)
+		}
+
 		e.indexes[indexName][docID] = body
 
 		w.Write([]byte("{}"))
@@ -227,5 +231,15 @@ func (e *ElasticServer) addHandlers() {
 
 		respData, _ := json.Marshal(es.SearchResult{Hits: resp})
 		w.Write(respData)
+	})
+
+	// template create operation
+	e.ms.AddHandler("/_template/{template_name}", "PUT", func(w http.ResponseWriter, r *http.Request) {
+		resp := `{
+					"acknowledged": true,
+					"shards_acknowledged": true
+				}`
+
+		w.Write([]byte(resp))
 	})
 }

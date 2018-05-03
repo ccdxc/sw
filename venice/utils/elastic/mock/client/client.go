@@ -49,6 +49,16 @@ func (e *mockClient) Version() (string, error) {
 	return "", nil
 }
 
+// CreateIndexTemplate creates the tempalte using mockClient
+func (e *mockClient) CreateIndexTemplate(ctx context.Context, template, settings string) error {
+	return nil
+}
+
+// DeleteIndexTemplate deletes the tempalte using mockClient
+func (e *mockClient) DeleteIndexTemplate(ctx context.Context, tempplate string) error {
+	return nil
+}
+
 // CreateIndex creates the index using mockClient
 func (e *mockClient) CreateIndex(ctx context.Context, index, settings string) error {
 	if _, ok := e.indexes[index]; ok {

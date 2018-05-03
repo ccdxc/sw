@@ -31,12 +31,13 @@ import (
 // e.g. `ObjectMeta.Namespace` can be queried directly without having to go through nested query.
 
 var (
-	tenantName     = "ford"
-	indexName      = elastic.GetIndex(globals.Events, tenantName)
-	indexType      = elastic.GetDocType(globals.Events)
-	from           = int32(0)
-	maxResults     = int32(10)
-	infraNamespace = "infra"
+	tenantName         = "ford"
+	indexName          = elastic.GetIndex(globals.Events, tenantName)
+	indexType          = elastic.GetDocType(globals.Events)
+	from               = int32(0)
+	maxResults         = int32(10)
+	infraNamespace     = "infra"
+	eventsTemplateName = elastic.GetTemplateName(globals.Events)
 
 	// test command line args
 	preserveEvents = flag.Bool("preserve-events", false, "Preserve events?")
@@ -108,16 +109,19 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 	}
 	log.Infof("Elasticsearch version %s", esversion)
 
-	mapping, err := mapper.ElasticMapper(eventObj, indexType, mapper.WithShardCount(1), mapper.WithReplicaCount(0))
+	// get a mapping with index pattern
+	mapping, err := mapper.ElasticMapper(eventObj, indexType, mapper.WithShardCount(1), mapper.WithReplicaCount(0),
+		mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", indexType)))
 	AssertOk(c, err, "Failed to generate elastic mapping for events")
 
 	// Generate JSON string for the mapping
 	configs, err := mapping.JSONString()
 	AssertOk(c, err, "Failed to get JSONString from elastic mapper")
 
-	// Create elastic index with event mapping and settings
-	if err := esClient.CreateIndex(ctx, indexName, configs); err != nil && !elastic.IsIndexExists(err) {
-		log.Fatalf("failed to create index: %v, %v", err, elastic.IsIndexExists(err))
+	// create events template; once the template is created, elasticsearch will automatically apply the
+	// properties for new indices that're matching the template's index pattern.
+	if err := esClient.CreateIndexTemplate(ctx, eventsTemplateName, configs); err != nil {
+		log.Fatalf("failed to create events template: %v", err)
 	}
 
 	// index events
@@ -131,6 +135,11 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 	searchEvents(ctx, esClient, c)
 
 	// TODO: update events
+
+	// delete index template
+	if err := esClient.DeleteIndexTemplate(ctx, eventsTemplateName); err != nil {
+		log.Fatalf("failed to delete events template: %v", err)
+	}
 }
 
 // searchEvents runs a couple of queries on the elastic cluster

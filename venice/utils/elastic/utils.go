@@ -97,6 +97,16 @@ func GetDocType(dtype globals.DataType) string {
 	return ""
 }
 
+// GetTemplateName returns the template name for the given data type
+func GetTemplateName(dtype globals.DataType) string {
+	switch dtype {
+	case globals.Events:
+		return fmt.Sprintf("%s-template", GetDocType(dtype))
+	}
+
+	return ""
+}
+
 // getElasticSearchAddrs helper function to get the elasticsearch addresses using the resolver
 func getElasticSearchAddrs(resolverClient resolver.Interface) ([]string, error) {
 	for i := 0; i < maxRetries; i++ {

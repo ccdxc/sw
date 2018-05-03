@@ -4,12 +4,14 @@ package evtsmgr
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/pensando/sw/api"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/elastic"
 	mockes "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
@@ -100,5 +102,33 @@ func TestEventsManagerInstantiation(t *testing.T) {
 
 	// invalid elastic URL
 	_, err = NewEventsManager("server-name", "listen-url", mockResolver, logger)
-	tu.Assert(t, err != nil, "expected failure, EventsManager init succeeded")
+	tu.Assert(t, strings.Contains(err.Error(), "no such host"), "expected failure, EventsManager init succeeded")
+}
+
+// TestEventsElasticTemplate tests events template creation in elasticsearch
+func TestEventsElasticTemplate(t *testing.T) {
+	mockElasticsearchServer, _ := setup()
+	defer mockElasticsearchServer.Stop()
+
+	var esClient elastic.ESClient
+	var err error
+
+	// create elastic client
+	tu.AssertEventually(t,
+		func() (bool, interface{}) {
+			esClient, err = elastic.NewClient(mockElasticsearchServer.GetElasticURL(), nil, logger)
+			if err != nil {
+				log.Errorf("error creating client: %v", err)
+				return false, nil
+			}
+			return true, nil
+		}, "failed to create elastic client", "20ms", "2m")
+
+	err = createEventsElasticTemplate(esClient)
+	tu.AssertOk(t, err, "failed to create events template")
+
+	mockElasticsearchServer.Stop()
+
+	err = createEventsElasticTemplate(esClient)
+	tu.Assert(t, err != nil, "expected failure but events template creation succeeded")
 }
