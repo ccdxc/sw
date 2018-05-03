@@ -954,91 +954,63 @@ rule_lib_alloc()
 hal_ret_t
 security_rule_add(const acl_ctx_t **acl_ctx, nwsec_rule_t *nwsec_rule)
 {
-    ipv4_rule_t  *rule;
-    hal_ret_t    ret = HAL_RET_OK;
-    int          src_addr_len = 1, dst_addr_len = 1, dst_port_len = 1;
-    int          src_port_len = 1, src_sg_len  = 1, dst_sg_len =1;
+    ipv4_rule_t       *rule;
+    rule_match_t      *match = &nwsec_rule->fw_rule_match;
+    rule_match_app_t  *app_match = &APP_MATCH(nwsec_rule->fw_rule_match);
+    hal_ret_t         ret = HAL_RET_OK;
+    addr_list_elem_t  *src_addr, *dst_addr;
+    port_list_elem_t  *dst_port;
+    dllist_ctxt_t     *sa_entry, *da_entry, *dp_entry;
+    int               src_addr_len = 1, dst_addr_len = 1, dst_port_len = 1;
 
-    // Form Individual rules from nwsec_rules.
-    // Two options : get it as vector of ipv4_rule or as generators.
-    if (nwsec_rule->src_addr_len) {
-        src_addr_len = nwsec_rule->src_addr_len;
-    }
-    if (nwsec_rule->dst_addr_len) {
-        dst_addr_len = nwsec_rule->dst_addr_len;
-    }
-
-    if (nwsec_rule->src_port_len) {
-        src_port_len  = nwsec_rule->src_port_len;
+    if (!dllist_empty(&match->src_addr_list)) {
+        src_addr_len = dllist_count(&match->src_addr_list);
     }
 
-    if (nwsec_rule->dst_port_len) {
-        dst_port_len = nwsec_rule->dst_port_len;
+    if (!dllist_empty(&match->dst_addr_list)) {
+        dst_addr_len = dllist_count(&match->dst_addr_list);
     }
 
-    if (nwsec_rule->src_sg_len) {
-        src_sg_len = nwsec_rule->src_sg_len;
+    if (!dllist_empty(&app_match->l4dstport_list)) {
+        dst_port_len = dllist_count(&app_match->l4dstport_list);
     }
 
-    if (nwsec_rule->dst_sg_len) {
-        dst_sg_len = nwsec_rule->dst_sg_len;
-    }
+    sa_entry = match->src_addr_list.next;
+    da_entry = match->dst_addr_list.next;
+    dp_entry = app_match->l4dstport_list.next;
 
-    for (int src_addr_idx = 0; src_addr_idx < src_addr_len; src_addr_idx++) {
+    for (int src_addr_idx =0; src_addr_idx < src_addr_len; src_addr_idx++){
+        src_addr = RULE_MATCH_GET_ADDR(sa_entry);
+        sa_entry = sa_entry->next;
         for (int dst_addr_idx = 0; dst_addr_idx < dst_addr_len; dst_addr_idx++) {
-            for (int src_port_idx = 0; src_port_idx < src_port_len; src_port_idx++) {
-                for (int dst_port_idx = 0; dst_port_idx < dst_port_len; dst_port_idx++) {
-                    for (int src_sg_idx = 0; src_sg_idx < src_sg_len; src_sg_idx++) {
-                        for (int dst_sg_idx = 0; dst_sg_idx < dst_sg_len; dst_sg_idx++) {
-                            rule  = rule_lib_alloc();
+            dst_addr = RULE_MATCH_GET_ADDR(da_entry);
+            da_entry = da_entry->next;
+            for (int dst_port_idx = 0; dst_port_idx < dst_port_len; dst_port_idx++) {
+                dst_port = RULE_MATCH_GET_PORT(dp_entry);
+                dp_entry = dp_entry->next;
 
-                            rule->field[PROTO].value.u32 = 0;
-                            if (nwsec_rule->src_addr_len) {
-                                rule->field[IP_SRC].value.u32 = nwsec_rule->src_address.addr[src_addr_idx].ip_lo.v4_addr;
-                                rule->field[IP_SRC].mask_range.u32 = nwsec_rule->src_address.addr[src_addr_idx].ip_hi.v4_addr;
-                            }
-
-                            if (nwsec_rule->dst_addr_len) {
-
-                                rule->field[IP_DST].value.u32 = nwsec_rule->dst_address.addr[dst_addr_idx].ip_lo.v4_addr;
-                                rule->field[IP_DST].mask_range.u32 = nwsec_rule->dst_address.addr[dst_addr_idx].ip_hi.v4_addr;
-                            }
-
-                            if (nwsec_rule->src_port_len) {
-
-                                rule->field[PORT_SRC].value.u32 = nwsec_rule->src_port_range.port[src_port_idx].port_lo;
-                                rule->field[PORT_SRC].mask_range.u32 = nwsec_rule->src_port_range.port[src_port_idx].port_hi;
-                            }
-
-                            if (nwsec_rule->dst_port_len) {
-
-                                rule->field[PORT_DST].value.u32 = nwsec_rule->dst_port_range.port[dst_port_idx].port_lo;
-                                rule->field[PORT_DST].mask_range.u32 = nwsec_rule->dst_port_range.port[dst_port_idx].port_hi;
-                            }
-
-                            if (nwsec_rule->src_sg_len) {
-
-                                rule->field[SRC_SG].value.u32 = nwsec_rule->src_sg.sg[src_sg_idx].sg_lo;
-                                rule->field[SRC_SG].mask_range.u32 = nwsec_rule->src_sg.sg[src_sg_idx].sg_hi;
-                            }
-
-                            if (nwsec_rule->dst_sg_len) {
-
-                                rule->field[DST_SG].value.u32 = nwsec_rule->dst_sg.sg[dst_sg_idx].sg_lo;
-                                rule->field[DST_SG].mask_range.u32 = nwsec_rule->dst_sg.sg[dst_sg_idx].sg_hi;
-                            }
-                            rule->data.priority = nwsec_rule->priority;
-                            rule->data.userdata = (void *)nwsec_rule;
-
-                            ret = rule_lib_add(acl_ctx, rule);
-                            if (ret != HAL_RET_OK) {
-                                HAL_TRACE_ERR("Unable to create the acl rules");
-                                return ret;
-                            }
-                            //  << push it to the vector of ipv4_rule_t >>>
-                        }
-                    }
+                rule  = rule_lib_alloc();
+                rule->field[PROTO].value.u32 = 0;
+                if (!dllist_empty(&match->src_addr_list)) {
+                    rule->field[IP_SRC].value.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_lo;
+                    rule->field[IP_SRC].mask_range.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_hi;
                 }
+                if (!dllist_empty(&match->dst_addr_list)) {
+                    rule->field[IP_DST].value.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_lo;
+                    rule->field[IP_DST].mask_range.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_hi;
+                }
+                if (!dllist_empty(&app_match->l4dstport_list)) {
+                    rule->field[PORT_DST].value.u32 = dst_port->port_range.port_lo;
+                    rule->field[PORT_DST].mask_range.u32 = dst_port->port_range.port_hi;
+                }
+                rule->data.priority = nwsec_rule->priority;
+                rule->data.userdata = (void *)nwsec_rule;
+                ret = rule_lib_add(acl_ctx, rule);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to create the acl rules");
+                    return ret;
+                }
+                //  << push it to the vector of ipv4_rule_t >>>
             }
         }
     }
@@ -1063,107 +1035,32 @@ hal_ret_t
 extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
 {
     hal_ret_t              ret = HAL_RET_OK;
-    uint32_t               hv = 2166136261;
+    //uint32_t             hv = 2166136261; // lns:revisit
 
     rule->rule_id = spec.rule_id();
 
     // Action
-    rule->action = nwsec::SECURITY_RULE_ACTION_ALLOW;
-    rule->log_action =  nwsec::LOG_NONE;
+    rule->fw_rule_action.sec_action = nwsec::SECURITY_RULE_ACTION_ALLOW;
+    rule->fw_rule_action.log_action =  nwsec::LOG_NONE;
     if (spec.has_action()) {
-        rule->action =  spec.action().sec_action();
-        rule->log_action = spec.action().log_action();
+        rule->fw_rule_action.sec_action =  spec.action().sec_action();
+        rule->fw_rule_action.log_action = spec.action().log_action();
     }
 
     // Parse APPs (set alg name only for now)
-    rule->alg = nwsec::APP_SVC_NONE;
-    for (int i = 0; i < spec.action().app_data_size() && rule->alg == nwsec::APP_SVC_NONE; i++) {
+    rule->fw_rule_action.alg = nwsec::APP_SVC_NONE;
+    for (int i = 0; i < spec.action().app_data_size() && rule->fw_rule_action.alg == nwsec::APP_SVC_NONE; i++) {
         auto app = spec.action().app_data(i).alg();
-        rule->alg = app;
+        rule->fw_rule_action.alg = app;
     }
-
-    uint32_t  sz = spec.match().src_address_size();
-    HAL_TRACE_DEBUG("Policy_rules:: src address Size {}", sz);
-    for (uint32_t i = 0; i < sz; i++) {
-        if (spec.match().src_address(i).has_address()) {
-            if (spec.match().src_address(i).address().has_prefix()) {
-                rule->src_address.addr[i].ip_lo.v4_addr =  spec.match().src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
-                rule->src_address.addr[i].af = IP_AF_IPV4;
-                rule->src_address.addr[i].ip_hi.v4_addr =  spec.match().src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
-                hv = calculate_hash_value(&rule->src_address.addr[i].ip_lo.v4_addr, sizeof(rule->src_address.addr[i].ip_lo.v4_addr), hv);
-                hv = calculate_hash_value(&rule->src_address.addr[i].ip_hi.v4_addr, sizeof(rule->src_address.addr[i].ip_hi.v4_addr), hv);
-            }
-        }
+    ret = rule_match_spec_extract(spec.match(), &rule->fw_rule_match);
+    if ( ret != HAL_RET_OK) {
+        rule_match_cleanup(&rule->fw_rule_match);
+        HAL_TRACE_ERR("Failed to retrieve rule_match");
+        return ret;
     }
-    rule->src_addr_len = sz;
-
-    sz = spec.match().dst_address_size();
-    // Allocate as much as address needed.
-    HAL_TRACE_DEBUG("Policy_rules:: dst addrss size {}", sz);
-    for (uint32_t i = 0; i < sz; i++) {
-        if (spec.match().dst_address(i).has_address()) {
-            if (spec.match().dst_address(i).address().has_prefix()) {
-                rule->dst_address.addr[i].ip_lo.v4_addr =  spec.match().dst_address(i).address().prefix().ipv4_subnet().address().v4_addr();
-                rule->dst_address.addr[i].af = IP_AF_IPV4;
-                rule->dst_address.addr[i].ip_hi.v4_addr =  spec.match().dst_address(i).address().prefix().ipv4_subnet().address().v4_addr();
-                hv = calculate_hash_value(&rule->dst_address.addr[i].ip_lo.v4_addr, sizeof(rule->dst_address.addr[i].ip_lo.v4_addr), hv);
-                hv = calculate_hash_value(&rule->dst_address.addr[i].ip_hi.v4_addr, sizeof(rule->dst_address.addr[i].ip_hi.v4_addr), hv);
-            }
-        }  // To Do : Handle ip range address range, handle ipv6 address.
-    }
-    rule->dst_addr_len = sz;
-
-    sz = spec.match().src_sg_size();
-    HAL_TRACE_DEBUG("Policy_rules:: src  sg Size {}", sz);
-    for (uint32_t i = 0; i < sz; i++) {
-        rule->src_sg.sg[i].sg_hi =  spec.match().src_sg(i);
-        rule->src_sg.sg[i].sg_lo =  spec.match().src_sg(i);
-        hv = calculate_hash_value(&rule->src_sg.sg[i], sizeof(rule->src_sg.sg[i]), hv);
-    }
-    rule->src_sg_len = sz;
-
-    sz = spec.match().dst_sg_size();
-    HAL_TRACE_DEBUG("Policy_rules:: dst sg Size {}", sz);
-    for (uint32_t i = 0; i < sz; i++) {
-        rule->dst_sg.sg[i].sg_hi =  spec.match().dst_sg(i);
-        rule->dst_sg.sg[i].sg_lo =  spec.match().dst_sg(i);
-        hv = calculate_hash_value(&rule->dst_sg.sg[i], sizeof(rule->dst_sg.sg[i]), hv);
-    }
-    rule->dst_sg_len = sz;
-
-    uint32_t  app_sz = spec.match().app_match_size();
-    for (uint32_t i = 0; i < app_sz; i++) {
-        const types::RuleMatch_AppMatchInfo  app = spec.match().app_match(i);
-        if (app.App_case() == types::RuleMatch_AppMatchInfo::kPortInfo) {
-            const types::RuleMatch_L4PortAppInfo port_info = app.port_info();
-            sz  = port_info.dst_port_range_size();
-            HAL_TRACE_DEBUG("Policy_rules:: dst port range Size {}", sz);
-            for (uint32_t i = 0; i < sz; i++) {
-                rule->dst_port_range.port[i].port_hi  =
-                        port_info.dst_port_range(i).port_high();
-                rule->dst_port_range.port[i].port_lo =
-                        port_info.dst_port_range(i).port_low();
-                hv = calculate_hash_value(&rule->dst_port_range.port[i].port_hi, sizeof(rule->dst_port_range.port[i].port_hi), hv);
-                hv = calculate_hash_value(&rule->dst_port_range.port[i].port_lo, sizeof(rule->dst_port_range.port[i].port_lo), hv);
-            }
-            rule->dst_port_len = sz;
-            sz = port_info.src_port_range_size();
-            HAL_TRACE_DEBUG("Policy_rules::src port range Size {}", sz);
-            for (uint32_t i = 0; i < sz; i++) {
-                rule->src_port_range.port[i].port_hi  =
-                    port_info.src_port_range(i).port_high();
-                rule->src_port_range.port[i].port_lo =
-                    port_info.src_port_range(i).port_low();
-
-                hv = calculate_hash_value(&rule->src_port_range.port[i].port_hi, sizeof(rule->src_port_range.port[i].port_hi), hv);
-                hv = calculate_hash_value(&rule->src_port_range.port[i].port_lo, sizeof(rule->src_port_range.port[i].port_lo), hv);
-            }
-            rule->src_port_len = sz;
-            rule->hash_value = hv;
-        }
-    }
+    rule->hash_value = spec.rule_id(); // lns: Will evaluate at a later time: Using rule id as hv (or unique identifier).
     return ret;
-
 }
 
 //Rule Db related
@@ -1333,7 +1230,6 @@ extract_policy_from_spec(nwsec::SecurityPolicySpec&     spec,
 {
     nwsec_rule_t     *nwsec_rule;
     hal_ret_t        ret = HAL_RET_OK;
-
 
     int rule_sz = spec.rule_size();
     HAL_TRACE_DEBUG("Policy_rules:: Firewall Size {}", rule_sz);

@@ -14,6 +14,7 @@
 #include "nic/include/pd.hpp"
 //#include "nic/include/fte_lib/acl.hpp"
 #include "nic/fte/acl/acl.hpp"
+#include "nic/hal/src/utils/rule_match.hpp"
 
 
 using sdk::lib::ht_ctxt_t;
@@ -98,7 +99,6 @@ typedef  struct nwsec_policy_rules_s {
     dllist_ctxt_t          lentry;
 } __PACK__ nwsec_policy_rules_t;
 
-
 typedef struct nwsec_policy_cfg_s {
     hal_spinlock_t               slock;      // lock to protect this strucuture
     nwsec_policy_key_t           plcy_key;
@@ -118,7 +118,6 @@ typedef struct nwsec_group_s {
     hal_handle_t       hal_handle;
     ht_ctxt_t          ht_ctxt;
 }__PACK__ nwsec_group_t;
-
 
 // Empty context for now
 typedef struct nwsec_policy_cfg_create_app_ctxt_s {
@@ -505,7 +504,6 @@ nwsec_policy_compute_hash_func (void *key, uint32_t ht_size);
 bool
 nwsec_policy_compare_key_func (void *key1, void *key2);
 
-
 void *
 nwsec_rule_get_key_func (void *entry);
 
@@ -517,10 +515,6 @@ nwsec_rule_compare_key_func (void *key1, void *key2);
 typedef struct app_list {
     dllist_ctxt_t   dlentry;
 } app_list_t;
-
-typedef struct app_group_list_s {
-    dllist_ctxt_t   dlentry;
-} app_group_list_t;
 
 typedef struct port_range {
     int port_lo;
@@ -545,30 +539,31 @@ FIELD_DEF(address_field_t, ipvx_range_t, addr, 10);
 FIELD_DEF(sg_field_t, sg_range_t, sg, 10);
 FIELD_DEF(port_range_field_t, port_range_t, port, 10);
 
+/*typedef struct app_data_s {
+    // Will contain alg data for start
+    app_type        type;
+    union {
+        port_range_t   l4_app;
+        icmp_t         icmp_app
+    }
+} app_data_t*/
+
+typedef struct fw_action_s {
+    nwsec::SecurityAction    sec_action;
+    nwsec::LogAction         log_action;
+    nwsec::ALGName           alg;
+    //TBD:lseshan 
+    //app_data_t               app_data;  Multiple app data - This should be
+    //replaced by dllist_ctxt_t app_data
+} fw_action_t;
+
+typedef uint64_t rule_key_t;
 typedef struct nwsec_rule_s {
-    uint64_t              rule_id; // Identified the rule - Assumed to be given by Upper layers
-    bool                  enable;
+    rule_key_t            rule_id;
+    rule_match_t          fw_rule_match;        // Rule match conditions
+    fw_action_t           fw_rule_action;       // Rule actions
 
-    nwsec::SecurityAction action;
-    nwsec::LogAction      log_action;
-    nwsec::ALGName        alg;
-
-    bool                  count_en;
-
-    dllist_ctxt_t         app_list_head;    // List of Alg apps
-    dllist_ctxt_t         app_group_list_head;
-    address_field_t       src_address;
-    int                   src_addr_len;
-    sg_field_t            src_sg;
-    int                   src_sg_len;
-    address_field_t       dst_address;
-    int                   dst_addr_len;
-    sg_field_t            dst_sg;
-    int                   dst_sg_len;
-    port_range_field_t    dst_port_range;
-    int                   dst_port_len;
-    port_range_field_t    src_port_range;
-    int                   src_port_len;
+    //Operationl state of rules
     uint32_t              hash_value;
     dllist_ctxt_t         dlentry;
     ht_ctxt_t             ht_ctxt;      // Hash context when this data strucutre is stored in nwsec_policy_t->hash_tree
@@ -576,6 +571,8 @@ typedef struct nwsec_rule_s {
     hal_handle_t          hal_handle;
     acl::ref_t            ref_count;
 } nwsec_rule_t;
+
+#define APP_MATCH(match)  match.app
 
 typedef struct policy_key_s {
     uint32_t         policy_id;
@@ -593,7 +590,6 @@ typedef struct nwsec_policy_s {
     const acl_ctx_t *acl_ctx;  // lib acl context needed by acl lib
     ht_ctxt_t       ht_ctxt;  // Hash context for storing it in the config db
 } nwsec_policy_t;
-
 
 static inline nwsec_policy_t *
 nwsec_policy_alloc(void)
@@ -783,8 +779,8 @@ nwsec_rule_init (nwsec_rule_t *rule)
     });
     ref_inc(&rule->ref_count);
 
-    dllist_reset(&rule->app_list_head);
-    dllist_reset(&rule->app_group_list_head);
+
+    rule_match_init(&rule->fw_rule_match);
     dllist_reset(&rule->dlentry);
     return rule;
 }

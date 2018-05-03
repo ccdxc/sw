@@ -228,15 +228,15 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     nwsec_rule = (const hal::nwsec_rule_t *)rule->data.userdata;
 
     HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",
-                    nwsec_rule->rule_id, nwsec_rule->action, nwsec_rule->alg);
+                    nwsec_rule->rule_id, nwsec_rule->fw_rule_action.sec_action, nwsec_rule->fw_rule_action.alg);
 
     match_rslt->valid = 1;
-    if (nwsec_rule->action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
+    if (nwsec_rule->fw_rule_action.sec_action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
         match_rslt->action = session::FLOW_ACTION_ALLOW;
     } else {
         match_rslt->action = session::FLOW_ACTION_DROP;
     }
-    match_rslt->alg = nwsec_rule->alg;
+    match_rslt->alg = nwsec_rule->fw_rule_action.alg;
 
  end:
     if (ret != HAL_RET_OK) {

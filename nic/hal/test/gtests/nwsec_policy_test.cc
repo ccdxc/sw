@@ -107,10 +107,17 @@ TEST_F(nwsec_policy_test, test1)
     types::IPAddressObj *dst_addr = match->add_dst_address();
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0xAABBCC00);
+    types::IPAddressObj *src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11223300);
 
-    types::L4PortRange *port_range = match->add_app_match()->mutable_port_info()->add_dst_port_range();
+    types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+    types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
+    types::L4PortRange *src_port_range = app->mutable_port_info()->add_src_port_range();
+    src_port_range->set_port_low(100);
+    src_port_range->set_port_high(200);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitypolicy_create(pol_spec, &res);
@@ -120,7 +127,9 @@ TEST_F(nwsec_policy_test, test1)
 
     ipv4_tuple v4_tuple = {};
     v4_tuple.ip_dst = 0xAABBCC00;
+    v4_tuple.ip_src = 0x11223300;
     v4_tuple.port_dst = 1000;
+    v4_tuple.port_src = 100;
     ipv4_rule_t *rule = NULL;
     nwsec_policy_t *res_policy;
     res_policy = find_nwsec_policy_by_key(10, 0);
@@ -131,6 +140,8 @@ TEST_F(nwsec_policy_test, test1)
 
     v4_tuple.ip_dst = 0xAABB0000;
     v4_tuple.port_dst = 1000;
+    v4_tuple.port_src = 300;
+    v4_tuple.ip_src = 0x11224400;
     rule = NULL;
     acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_EQ(rule, nullptr);
@@ -138,17 +149,24 @@ TEST_F(nwsec_policy_test, test1)
 
     // Policy Update
     rule_spec = pol_spec.add_rule();
-    rule_spec->set_rule_id(1);
+    rule_spec->set_rule_id(2);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
     match = rule_spec->mutable_match();
     dst_addr = match->add_dst_address();
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0xAABB0000);
+    src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11224400);
 
-    port_range = match->add_app_match()->mutable_port_info()->add_dst_port_range();
+    app = match->add_app_match();
+    port_range = app->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
- 
+    src_port_range = app->mutable_port_info()->add_src_port_range();
+    src_port_range->set_port_low(300);
+    src_port_range->set_port_high(400);
+
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitypolicy_update(pol_spec, &res);
     hal::hal_cfg_db_close();

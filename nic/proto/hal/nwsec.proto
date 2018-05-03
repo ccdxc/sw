@@ -571,7 +571,7 @@ message SecurityRuleAction {
 }
 
 message SecurityRule {
-  uint64                          rule_id            = 1;      // Identifier supplied by agent
+  uint64                          rule_id            = 1[(gogoproto.moretags) = "venice:mandatory"];      // Identifier supplied by agent  
   types.RuleMatch                 match              = 2;      // match conditions 
   SecurityRuleAction              action             = 3;      // action related to the rule 
   repeated string                 appid              = 4;      // Future For appid based policy enforcment - can be moved into RuleMatch 
@@ -580,7 +580,7 @@ message SecurityRule {
 // SecurityPolicySpec that contains set of SecurityRules
 message SecurityPolicySpec {
   types.ObjectMeta              meta                   = 1;
-  kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2;      // Policy Name that identifies the security Policy
+  kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2[(gogoproto.moretags) = "venice:\"key\""];      // Policy Name that identifies the security Policy
   repeated SecurityRule         rule                   = 3;      // List of security rules
 }
 

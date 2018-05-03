@@ -87,7 +87,7 @@ rule_match_dst_port_spec_extract (
     for (int i = 0; i < port_info.dst_port_range_size(); i++) {
         if ((ret = port_list_elem_l4portrange_spec_handle(
                 port_info.dst_port_range(i),
-                &app->l4srcport_list)) != HAL_RET_OK)
+                &app->l4dstport_list)) != HAL_RET_OK)
             return ret;
     }
 
