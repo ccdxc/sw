@@ -34,20 +34,21 @@ var (
 
 	// middleFmt is list of "." separated variables, optionally subscripted by "*"
 	// for slices or maps, "key" for maps.
-	middleFmt = "(" + varFmt + "|" + subscriptedStarFmt + "|" + subscriptedVarFmt + ")*"
+	middleFmt = "(" + subscriptedStarFmt + "|" + subscriptedVarFmt + "|" + varFmt + ")*"
 
 	// Ends with variable or a subscripted variable.
-	endFmt = "(" + varFmt + "|" + subscriptedStarFmt + "|" + subscriptedVarFmt + ")"
+	endFmt = "(" + subscriptedStarFmt + "|" + subscriptedVarFmt + "|" + varFmt + ")"
 
 	fieldKeyFmt = startFmt + middleFmt + endFmt
 
-	validFieldKeyRegexp = regexp.MustCompile("^" + fieldKeyFmt + "$")
+	keyRE           = regexp.MustCompile(fieldKeyFmt)
+	validFieldKeyRE = regexp.MustCompile("^" + fieldKeyFmt + "$")
 
 	fieldKeyErrMsg = "valid field must be a . separated string of alphabets, indexed using [*] for slices and [key] for maps, and must start and end with an alphabet"
 )
 
 func validateFieldKey(k string) error {
-	if !validFieldKeyRegexp.MatchString(k) {
+	if !validFieldKeyRE.MatchString(k) {
 		return fmt.Errorf("%v is not valid, %v", k, fieldKeyErrMsg)
 	}
 	return nil
@@ -55,13 +56,14 @@ func validateFieldKey(k string) error {
 
 // Op related validations.
 var (
-	opFmt              = `(\s*=\s*|\s*!=\s*|\s+in\s+|\s+notin\s+)`
-	validFieldOpRegexp = regexp.MustCompile("^" + opFmt + "$")
-	fieldOpErrMsg      = "op must be one of {=, !=, in, notin}"
+	opFmt          = `(\s*=\s*|\s*!=\s*|\s+in\s+|\s+notin\s+)`
+	opRE           = regexp.MustCompile(opFmt)
+	validFieldOpRE = regexp.MustCompile("^" + opFmt + "$")
+	fieldOpErrMsg  = "op must be one of {=, !=, in, notin}"
 )
 
 func validateFieldOp(op string) error {
-	if !validFieldOpRegexp.MatchString(op) {
+	if !validFieldOpRE.MatchString(op) {
 		return fmt.Errorf("%v is not valid, %v", op, fieldOpErrMsg)
 	}
 	return nil
@@ -69,22 +71,25 @@ func validateFieldOp(op string) error {
 
 // Value(s) related validations.
 var (
-	val      = "[A-Za-z0-9-_./ ]" // ".", "/", " " and "_" are ok in values
-	commaVal = val + "|(\\\\,)"   // escaping "," is supported
-	valFmt   = "(" + commaVal + ")*"
+	valStart = "[A-Za-z0-9-_/\\.]"             // ".", "/", " " and "_" are ok in values
+	valMore  = valStart + `|(\s)` + "|(\\\\,)" // " " and escaping "," is supported in the middle
+	valFmt   = "(" + valStart + ")+(" + valMore + ")*"
 
-	valsStartFmt  = "\\((" + commaVal + ")+" // "(" is mandated for multiple values
-	valsMiddleFmt = "(,(" + commaVal + ")+" + ")*"
+	valsStartFmt  = "\\((" + valFmt + ")+" // "(" is mandated for multiple values
+	valsMiddleFmt = "(,(" + valFmt + ")+" + ")*"
 	valsEndFmt    = "\\)"
 	valsFmt       = valsStartFmt + valsMiddleFmt + valsEndFmt
 
-	fieldValsFmt         = "(" + valFmt + "|" + valsFmt + ")"
-	validFieldValsRegexp = regexp.MustCompile("^" + fieldValsFmt + "$")
-	fieldValsErrMsg      = "valid values must be a single alphanumeric value or a comma separated set of alphanumeric values"
+	fieldValsFmt = "(" + valsFmt + "|(" + valFmt + "))*"
+
+	valRE            = regexp.MustCompile(valFmt)
+	valsRE           = regexp.MustCompile(fieldValsFmt)
+	validFieldValsRE = regexp.MustCompile("^" + fieldValsFmt + "$")
+	fieldValsErrMsg  = "valid values must be a single alphanumeric value or a comma separated set of alphanumeric values"
 )
 
 func validateFieldVals(vals string) error {
-	if !validFieldValsRegexp.MatchString(vals) {
+	if !validFieldValsRE.MatchString(vals) {
 		return fmt.Errorf("%v is not valid, %v", vals, fieldValsErrMsg)
 	}
 	return nil
@@ -94,7 +99,7 @@ func validateFieldVals(vals string) error {
 var (
 	singleOpFmt  = `(\s*=\s*|\s*!=\s*)`              // spaces are optional around = and !=
 	setOpFmt     = `(\s+in\s+|\s+notin\s+)`          // atleast one space is needed for in and notin
-	singleValFmt = singleOpFmt + "(" + valFmt + ")*" // = and != need a single value or empty
+	singleValFmt = singleOpFmt + "(" + valFmt + ")?" // = and != need a single value or empty
 	setValFmt    = setOpFmt + valsFmt                // in and notin need multiple values
 	fieldValFmt  = "(" + singleValFmt + "|" + setValFmt + ")"
 	reqFmt       = "(" + fieldKeyFmt + fieldValFmt + ")"
@@ -102,12 +107,12 @@ var (
 	reqNextFmt   = "(," + reqFmt + ")*$"
 	selFmt       = reqStartFmt + reqNextFmt
 
-	validSelRegexp = regexp.MustCompile(selFmt)
-	selErrMsg      = "valid selector must be a comma separated set of <key,op,values> tuples, key is a string of alphabets, with indices for slices and maps, op must be one of {=,!=,in,notin}, values must be a single alphanumeric string or a comma separated set of alphanumeric strings in parentheses"
+	validSelRE = regexp.MustCompile(selFmt)
+	selErrMsg  = "valid selector must be a comma separated set of <key,op,values> tuples, key is a string of alphabets, with indices for slices and maps, op must be one of {=,!=,in,notin}, values must be a single alphanumeric string or a comma separated set of alphanumeric strings in parentheses"
 )
 
 func validateSelector(sel string) error {
-	if !validSelRegexp.MatchString(sel) {
+	if !validSelRE.MatchString(sel) {
 		return fmt.Errorf("%v is not valid, %v", sel, selErrMsg)
 	}
 	return nil

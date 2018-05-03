@@ -391,3 +391,101 @@ func TestRequirementConstructor(t *testing.T) {
 		}
 	}
 }
+
+func TestSelectorParseV2(t *testing.T) {
+	testGoodStrings := []string{
+		"x.a=a,y.b=b c,z.c=c",
+		"x.c!=a,y.c=b",
+		"w.y[z]=foo bar,x.x[y].z=bar",
+		"v.x.y[z]!=foo,w.w[x].y[z]=bar",
+		"x.x=loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongone",
+	}
+	testGoodSetStrings := []string{
+		"x.y in (a,b,c)",
+		"x.y in\t (a,b,c d)",
+		"x.y in (a,b,c  d)",
+		"x.x in (a,b),y.y in (c,d)",
+		"x.x notin (a,b,c)",
+		"x.x in (a,b),y.y notin (a,b)",
+	}
+	testBadStrings := []string{
+		"",
+		"x.x=superrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrlooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongone",
+		"x.x=a||y.y=b",
+		"x.x==a==b",
+		"!x.x=a",
+		"x.x<a",
+		"!x.x",
+		"x.x>1",
+		"x.x>1,z<5",
+		"x=",
+		"x.x= ",
+		"x.x=,z.z= ",
+		"x.x= ,z.z= ",
+		"x.x in a",
+		"x.x in (a",
+		"x.x in (a,b",
+		"x.x=(a,b)",
+	}
+	for _, test := range testGoodStrings {
+		if _, err := ParseV2(test); err != nil {
+			t.Errorf("%v: error %v (%#v)\n", test, err, err)
+		}
+	}
+	for _, test := range testGoodSetStrings {
+		if _, err := ParseV2(test); err != nil {
+			t.Errorf("%v: error %v (%#v)\n", test, err, err)
+		}
+	}
+	for _, test := range testBadStrings {
+		if _, err := ParseV2(test); err == nil {
+			t.Errorf("%v: did not get expected error\n", test)
+		}
+	}
+}
+
+func TestSelectorParseWithEscapeV2(t *testing.T) {
+	testGoodStrings := []string{
+		"x.x=a\\,b\\,c",
+		"x.x!=a\\,b",
+	}
+	testGoodSetStrings := []string{
+		"x.x in (a\\,1,b\\,2,c\\,3)",
+		"x.x notin (a\\,1,b\\,2,c\\,3)",
+	}
+	testBadStrings := []string{
+		"",
+		"x.x=a\\a||y.y=b",
+		"x.x=a\\b",
+		"x.x=(a\\\\1,b",
+		"x.x=\\",
+		"x.x in \\",
+		"x.x in (=\\)",
+	}
+	for _, test := range testGoodStrings {
+		if _, err := ParseV2(test); err != nil {
+			t.Errorf("%v: error %v (%#v)\n", test, err, err)
+		}
+	}
+	for _, test := range testGoodSetStrings {
+		if _, err := ParseV2(test); err != nil {
+			t.Errorf("%v: error %v (%#v)\n", test, err, err)
+		}
+	}
+	for _, test := range testBadStrings {
+		if _, err := ParseV2(test); err == nil {
+			t.Errorf("%v: did not get expected error\n", test)
+		}
+	}
+}
+
+func TestDeterministicParseV2(t *testing.T) {
+	s1, err := ParseV2("x.x=a,a.a=x")
+	s2, err2 := ParseV2("a.a=x,x.x=a")
+	if err != nil || err2 != nil {
+		t.Errorf("Unexpected parse error")
+	}
+	if s1.String() != s2.String() {
+		t.Errorf("Non-deterministic parse")
+	}
+}

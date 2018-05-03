@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -657,4 +658,133 @@ func (s *SelectorParser) Print(v reflect.Value) string {
 func (s *SelectorParser) Parse(in string) (reflect.Value, error) {
 	sel, err := Parse(in)
 	return reflect.ValueOf(*sel), err
+}
+
+// TODO: Remove old lexer and parser
+var (
+	spaceRE           = regexp.MustCompile(`\s*`)
+	maxSelectorLength = 1000
+)
+
+// parseV2 parses a selector string in to requirements.
+func parseV2(sel string) ([]*Requirement, error) {
+	// Check selector length.
+	if len(sel) > maxSelectorLength {
+		return nil, fmt.Errorf("Maximum supported field selector length: %v, found: %v", maxSelectorLength, len(sel))
+	}
+	// Validate the selector using regex.
+	if err := validateSelector(sel); err != nil {
+		return nil, err
+	}
+	// Selector is now a comma separated list of <key op val(s)*> tuples.
+	reqs := make([]*Requirement, 0)
+	ii := 0
+	for ii < len(sel) {
+		// Parse the key
+		k := keyRE.FindString(sel[ii:])
+		// Defensive check
+		if len(k) == 0 {
+			return nil, fmt.Errorf("Unexpected error parsing key with: %v", sel[ii:])
+		}
+		ii += len(k)
+
+		// Parse the op
+		o := opRE.FindString(sel[ii:])
+		// Defensive check
+		if len(o) == 0 {
+			return nil, fmt.Errorf("Unexpected error parsing operator with: %v", sel[ii:])
+		}
+		ii += len(o)
+		o = spaceRE.ReplaceAllString(o, "")
+		var op Operator
+		switch o {
+		case "=":
+			op = Operator_equals
+		case "!=":
+			op = Operator_notEquals
+		case "in":
+			op = Operator_in
+		case "notin":
+			op = Operator_notIn
+		default:
+			return nil, fmt.Errorf("Unexpected operator: %q, key %v", o, k)
+		}
+
+		// Parse the value(s)
+		vals := []string{}
+		v := valsRE.FindString(sel[ii:])
+		if len(v) == 0 {
+			// Empty value is ok for "=" and "!="
+			if op == Operator_equals || op == Operator_notEquals {
+				r, err := NewRequirement(k, op, vals)
+				if err != nil {
+					return nil, err
+				}
+				reqs = append(reqs, r)
+				continue
+			}
+			return nil, fmt.Errorf("Unexpected error parsing values with: %v", sel[ii:])
+		}
+		ii += len(v)
+		v = strings.TrimPrefix(v, "(")
+		v = strings.TrimSuffix(v, ")")
+		jj := 0
+		// Extract value(s)
+		for jj < len(v) {
+			val := valRE.FindString(v[jj:])
+			if len(val) == 0 {
+				return nil, fmt.Errorf("Unexpected error parsing value with: %v", v[jj:])
+			}
+			jj += len(val) + 1 // 1 for comma
+			vals = append(vals, val)
+		}
+		r, err := NewRequirement(k, op, vals)
+		if err != nil {
+			return nil, err
+		}
+		reqs = append(reqs, r)
+		ii++ // go past the "," in case there are more requirements.
+	}
+	return reqs, nil
+}
+
+// ParseV2 takes a string representing a selector and returns a selector
+// object, or an error. This parsing function differs from ParseSelector
+// as they parse different selectors with different syntaxes.
+// The input will cause an error if it does not follow this form:
+//
+//  <selector-syntax>         ::= <requirement> | <requirement> "," <selector-syntax>
+//  <requirement>             ::= KEY [ <set-based-restriction> | <exact-match-restriction> ]
+//  <set-based-restriction>   ::= <inclusion-exclusion> <value-set>
+//  <inclusion-exclusion>     ::= <inclusion> | <exclusion>
+//  <exclusion>               ::= "notin"
+//  <inclusion>               ::= "in"
+//  <value-set>               ::= "(" <values> ")"
+//  <values>                  ::= VALUE | VALUE "," <values>
+//  <exact-match-restriction> ::= ["="|"!="] VALUE
+//
+// KEY is a sequence of one or more characters, which may be "." separated. For slices and maps,
+// there is support for indexing. Please see validation.go for those requirements.
+// VALUE is a sequence of zero or more characters (see validation.go).
+// Delimiter is white space: (' ', '\t')
+// Example(s) of valid syntax:
+//  "x.x in (foo,baz),z notin ()"
+//  "x.y[z]=foo"
+//
+// Note:
+//  (1) Inclusion - " in " - denotes that the KEY exists and is equal to any of the
+//      VALUEs in its requirement
+//  (2) Exclusion - " notin " - denotes that the KEY is not equal to any
+//      of the VALUEs in its requirement or does not exist
+//  (3) The empty string is a valid VALUE
+//
+func ParseV2(selector string) (*Selector, error) {
+	requirements, err := parseV2(selector)
+	if err != nil {
+		return &Selector{}, err
+	}
+	sort.Sort(ByKey(requirements)) // sort to grant determistic parsing
+	return &Selector{
+		Requirements: requirements,
+	}, nil
 }
