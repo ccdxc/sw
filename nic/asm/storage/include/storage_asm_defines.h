@@ -568,7 +568,7 @@
 // 2. scheduler bit clear with eval (this would eval p_ndx == c_ndx)
 #define NVME_QUEUE_POP_DOORBELL_CLEAR                                   \
    tblwr d.c_ndx, d.w_ndx;                                              \
-   QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_RESET,                    \
+   QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_EVAL,                     \
                         NVME_KIVEC_GLOBAL_SRC_LIF,                      \
                         NVME_KIVEC_GLOBAL_SRC_QTYPE,                    \
                         NVME_KIVEC_GLOBAL_SRC_QID)                      \

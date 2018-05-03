@@ -113,8 +113,8 @@ int test_run_nvme_dp_write_cmd() {
   dp_mem_t *nvme_cmd, *nvme_status, *write_buf;
 
   // Use non-zero queue (0 is Admin Q)
-  uint16_t nvme_sq = queues::get_host_nvme_sq(1);
-  uint16_t nvme_cq = queues::get_host_nvme_cq(1);
+  uint16_t nvme_sq = queues::get_host_nvme_sq(3);
+  uint16_t nvme_cq = queues::get_host_nvme_cq(3);
 
   if (consume_nvme_sq_cq_entries(nvme_sq, nvme_cq, &nvme_cmd, &nvme_status, 
                                  &cmd_index, &status_index) < 0) {
