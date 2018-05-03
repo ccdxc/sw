@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	nhID uint32
+	nhID uint64
 )
 
 var nhShowCmd = &cobra.Command{
@@ -26,7 +26,7 @@ var nhShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(nhShowCmd)
 
-	nhShowCmd.Flags().Uint32Var(&nhID, "id", 1, "Specify nexthop-id")
+	nhShowCmd.Flags().Uint64Var(&nhID, "id", 1, "Specify nexthop-id")
 }
 
 func nhShowCmdHandler(cmd *cobra.Command, args []string) {

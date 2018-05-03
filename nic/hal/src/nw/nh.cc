@@ -429,7 +429,7 @@ nexthop_lookup_key_or_handle_to_str (const NexthopKeyHandle& kh)
 	memset(buf, 0, 50);
 
     if (kh.key_or_handle_case() == NexthopKeyHandle::kNexthopId) {
-        snprintf(buf, 50, "nh_id: %d", kh.nexthop_id());
+        snprintf(buf, 50, "nh_id: %lu", kh.nexthop_id());
     } else if (kh.key_or_handle_case() == NexthopKeyHandle::kNexthopHandle) {
         snprintf(buf, 50, "nh_handle: 0x%lx", kh.nexthop_handle());
     }

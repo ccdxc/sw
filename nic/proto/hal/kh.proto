@@ -85,7 +85,7 @@ message NetworkKeyHandle {
 // NexthopKeyHandle uniquely identifies a Nexthop
 message NexthopKeyHandle {
   oneof key_or_handle {
-    uint32     nexthop_id     = 1;    // nexthop id
+    uint64     nexthop_id     = 1;    // nexthop id
     fixed64    nexthop_handle = 2;    // nexthop's handle returned bu HAL
   }
 }

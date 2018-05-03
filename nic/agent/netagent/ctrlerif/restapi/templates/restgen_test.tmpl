@@ -586,6 +586,7 @@ import (
                             },
                             Spec:   netproto.{{title $crudObject}}Spec{
                               GatewayIP: "10.1.1.1",
+                              IPPrefix:  "10.1.1.0/24",
                             },
                         }
                         postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)

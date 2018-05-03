@@ -86,6 +86,7 @@ func TestRouteDelete(t *testing.T) {
 		},
 		Spec: netproto.RouteSpec{
 			GatewayIP: "10.1.1.1",
+			IPPrefix:  "10.1.1.0/24",
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/routes/", &deleteData, &resp)
