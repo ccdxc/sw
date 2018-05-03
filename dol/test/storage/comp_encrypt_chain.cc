@@ -41,16 +41,16 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
 {
     uncomp_buf = new dp_mem_t(1, app_max_size,
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
-                              DP_MEM_ALLOC_NO_FILL);
+                              0, DP_MEM_ALLOC_NO_FILL);
 
     // size of compressed buffers accounts any for compression failure,
     // i.e., must be as large as uncompressed buffer plus cp_hdr_t
     comp_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
                             DP_MEM_ALIGN_PAGE, params.comp_mem_type_,
-                            DP_MEM_ALLOC_NO_FILL);
+                            0, DP_MEM_ALLOC_NO_FILL);
     xts_encrypt_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
                           DP_MEM_ALIGN_PAGE, params.encrypt_mem_type_,
-                          DP_MEM_ALLOC_NO_FILL);
+                          0, DP_MEM_ALLOC_NO_FILL);
     // for comp status, caller can elect to have 2 status buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
@@ -180,7 +180,9 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
                            (uint8_t)log2(xts::kXtsPISize);
     chain_params.chain_ent.push_entry.barco_ring_size = (uint8_t)log2(kXtsQueueSize);
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
-    comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
+    if (comp_status_buf1 != comp_status_buf2) {
+        comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
+    }
     chain_params.chain_ent.status_hbm_pa = comp_status_buf1->pa();
     if (comp_status_buf1 != comp_status_buf2) {
         chain_params.chain_ent.status_dma_en = 1;

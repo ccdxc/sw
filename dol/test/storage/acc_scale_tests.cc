@@ -62,7 +62,6 @@ comp_encrypt_chain_scale_t::comp_encrypt_chain_scale_t(comp_encrypt_chain_scale_
     exp_opaque_data_buf->fill_thru(0xcc);
 
     // Other inits
-    comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
         xts_status_frag = xts_status_host_buf->fragment_find(i * sizeof(uint64_t),
@@ -101,7 +100,6 @@ comp_encrypt_chain_scale_t::~comp_encrypt_chain_scale_t()
         delete xts_opaque_host_buf;
         delete exp_status_data_buf;
         delete exp_opaque_data_buf;
-        delete comp_pad_buf;
     }
 }
 
@@ -440,7 +438,6 @@ comp_hash_chain_scale_t::comp_hash_chain_scale_t(comp_hash_chain_scale_params_t 
     exp_opaque_data_buf->write_thru();
 
     // Other inits
-    comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
     for (i = 0; i < comp_hash_chain_vec.size(); i++) {
 
@@ -488,7 +485,6 @@ comp_hash_chain_scale_t::~comp_hash_chain_scale_t()
         hash_status_host_vec.clear();
         hash_opaque_host_vec.clear();
         delete exp_opaque_data_buf;
-        delete comp_pad_buf;
     }
     comp_hash_chain_vec.clear();
 }

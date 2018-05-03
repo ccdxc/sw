@@ -203,6 +203,8 @@ extern comp_queue_t *dc_queue;
 extern comp_queue_t *cp_hotq;
 extern comp_queue_t *dc_hotq;
 
+extern dp_mem_t *comp_pad_buf;
+
 bool comp_status_poll(dp_mem_t *status,
                       const cp_desc_t &d,
                       bool suppress_log = false);

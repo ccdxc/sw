@@ -39,10 +39,10 @@ encrypt_only_t::encrypt_only_t(encrypt_only_params_t params) :
 
     unencrypt_buf = new dp_mem_t(1, app_max_size,
                                  DP_MEM_ALIGN_PAGE, params.unencrypt_mem_type_,
-                                 DP_MEM_ALLOC_NO_FILL);
+                                 0, DP_MEM_ALLOC_NO_FILL);
     xts_encrypt_buf = new dp_mem_t(1, app_max_size,
                           DP_MEM_ALIGN_PAGE, params.encrypt_mem_type_,
-                          DP_MEM_ALLOC_NO_FILL);
+                          0, DP_MEM_ALLOC_NO_FILL);
     xts_status_buf = new dp_mem_t(1, sizeof(uint64_t),
                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                   kMinHostMemAllocSize);
