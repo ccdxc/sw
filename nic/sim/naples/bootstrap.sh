@@ -3,6 +3,7 @@
 #NAT Gateway IP and nat subnet 
 NAT_GWIP=10.101.0.1      # IP address of the NAT gateway 
 NAT_SUBNET=10.100.0.0/16 # This should match the nat IP pool
+LOCAL_SUBNET_VLAN=100
 
 #naples uplink interfaces
 INTF1=pen-intf1
@@ -25,11 +26,16 @@ function setup_intf1()
         if [ $? -eq 0 ]; then
             set -x
             ip link set up dev $INTF1
+            subif=$INTF1.$LOCAL_SUBNET_VLAN
+
+            ip link add link $INTF1 name $subif type vlan id $LOCAL_SUBNET_VLAN
+            ip link set up dev $subif
+
             #interface route for NAT gateway IP
-            ip route add $NAT_GWIP/32 dev $INTF1
+            ip route add $NAT_GWIP/32 dev $subif
             
             #static ARP for NAT gateway IP
-            ip neigh add 10.101.0.1 lladdr 00:0c:ba:ba:ba:ba dev pen-intf1
+            ip neigh add 10.101.0.1 lladdr 00:0c:ba:ba:ba:ba dev $subif
             
             #static route for NAT subnet
             ip route add $NAT_SUBNET via $NAT_GWIP
