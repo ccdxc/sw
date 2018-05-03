@@ -892,8 +892,8 @@
             "type": "string"
           },
           {
-            "name": "Status.ObjectRef.Kind",
-            "description": "Kind represents the type of the API object.",
+            "name": "Status.ObjectRef.Tenant",
+            "description": "Tenant of the object.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -906,8 +906,22 @@
             "type": "string"
           },
           {
+            "name": "Status.ObjectRef.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Status.ObjectRef.Name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.URI",
+            "description": "URI is a link to accessing the referenced object.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1384,8 +1398,8 @@
             "type": "string"
           },
           {
-            "name": "Attributes.ObjectRef.Kind",
-            "description": "Kind represents the type of the API object.",
+            "name": "Attributes.ObjectRef.Tenant",
+            "description": "Tenant of the object.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1398,8 +1412,22 @@
             "type": "string"
           },
           {
+            "name": "Attributes.ObjectRef.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Attributes.ObjectRef.Name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.ObjectRef.URI",
+            "description": "URI is a link to accessing the referenced object.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2338,17 +2366,25 @@
     "apiObjectRef": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "Tenant": {
           "type": "string",
-          "description": "Kind represents the type of the API object."
+          "description": "Tenant of the object."
         },
         "Namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
         "Name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "URI": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
         }
       },
       "description": "ObjectRef contains identifying information about an object."
