@@ -171,6 +171,20 @@ using telemetry::CollectorGetRequestMsg;
 using telemetry::CollectorGetResponse;
 using telemetry::CollectorGetResponseMsg;
 
+using telemetry::DropMonitorRuleSpec;
+using telemetry::DropMonitorRuleStatus;
+using telemetry::DropMonitorRuleResponse;
+using telemetry::DropMonitorRuleRequestMsg;
+using telemetry::DropMonitorRuleResponseMsg;
+using telemetry::DropMonitorRuleDeleteRequest;
+using telemetry::DropMonitorRuleDeleteResponse;
+using telemetry::DropMonitorRuleDeleteRequestMsg;
+using telemetry::DropMonitorRuleDeleteResponseMsg;
+using telemetry::DropMonitorRuleGetRequest;
+using telemetry::DropMonitorRuleGetRequestMsg;
+using telemetry::DropMonitorRuleGetResponse;
+using telemetry::DropMonitorRuleGetResponseMsg;
+
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
 
@@ -183,6 +197,9 @@ static inline uint64_t
 min(uint64_t a, uint64_t b) {
     return a < b ? a : b;
 }
+
+#define MIRROR_SESSION_ID       1
+#define DROP_MONITOR_RULE_ID    1
 
 class hal_client {
 public:
@@ -1469,6 +1486,57 @@ public:
         return 0;
     }
 
+    #define DROP_MONITOR_RULE_CREATE_(arg1) \
+    { \
+        DropMonitorRuleRequestMsg     req_msg; \
+        DropMonitorRuleSpec           *spec; \
+        DropMonitorRuleResponseMsg    rsp_msg; \
+        Status                        status; \
+        ClientContext                 context; \
+        spec = req_msg.add_request(); \
+        spec->mutable_meta()->set_vrf_id(vrf_id); \
+        spec->mutable_key_or_handle()->set_dropmonitorrule_id(dropmon_rule_id); \
+        auto ms_kh = spec->add_ms_key_handle(); \
+        ms_kh->set_mirrorsession_id(mirror_session_id); \
+        spec->mutable_reasons()->set_##arg1 (true); \
+        status = telemetry_stub_->DropMonitorRuleCreate(&context, req_msg, &rsp_msg); \
+        if (status.ok()) { \
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK); \
+            std::cout << "drop monitor rule succeeded, mirr_sess_id = " << mirror_session_id << std::endl; \
+        } \
+    } \
+
+    uint32_t drop_monitor_rule_create (uint32_t vrf_id, uint32_t mirror_session_id,
+                                       uint32_t dropmon_rule_id) {
+        /* Need to program mirror session for every drop reason */
+        DROP_MONITOR_RULE_CREATE_(drop_malformed_pkt);
+        DROP_MONITOR_RULE_CREATE_(drop_input_mapping);
+        DROP_MONITOR_RULE_CREATE_(drop_input_mapping_dejavu);
+        DROP_MONITOR_RULE_CREATE_(drop_flow_hit);
+        DROP_MONITOR_RULE_CREATE_(drop_flow_miss);
+        DROP_MONITOR_RULE_CREATE_(drop_nacl);
+        DROP_MONITOR_RULE_CREATE_(drop_ipsg);
+        DROP_MONITOR_RULE_CREATE_(drop_ip_normalization);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_normalization);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_rst_with_invalid_ack_num);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_non_syn_first_pkt);
+        DROP_MONITOR_RULE_CREATE_(drop_icmp_normalization);
+        DROP_MONITOR_RULE_CREATE_(drop_input_properties_miss);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_out_of_window);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_split_handshake);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_win_zero_drop);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_data_after_fin);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_non_rst_pkt_after_rst);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_invalid_responder_first_pkt);
+        DROP_MONITOR_RULE_CREATE_(drop_tcp_unexpected_pkt);
+        DROP_MONITOR_RULE_CREATE_(drop_src_lif_mismatch);
+        DROP_MONITOR_RULE_CREATE_(drop_parser_icrc_error);
+        DROP_MONITOR_RULE_CREATE_(drop_parse_len_error);
+        DROP_MONITOR_RULE_CREATE_(drop_hardware_error);
+
+        return 0;
+    }
+
     uint32_t mirror_session_create(uint32_t vrf_id, uint32_t session_id,
                                    uint32_t sip, uint32_t dip) {
         MirrorSessionRequestMsg     req_msg;
@@ -2258,8 +2326,10 @@ main (int argc, char** argv)
     hclient.ep_create(vrf_id, l2seg_id, dest_if_id, sg_id, 0x70695a480273, ip_addr, 2);
 
     hclient.gre_tunnel_if_create(vrf_id, 100, 0x0a0a01FD, 0x0a0a01FE);
-    hclient.mirror_session_create(1, vrf_id,
+    hclient.mirror_session_create(vrf_id, MIRROR_SESSION_ID,
                                   0x0a0a01FD, 0x0a0a01FE);  // 10.10.1.253 is our IP
+    hclient.drop_monitor_rule_create(vrf_id, MIRROR_SESSION_ID,
+                                     DROP_MONITOR_RULE_ID);
 
     // create a session for NAT case
     hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a01FD,
