@@ -697,26 +697,26 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 	ether_addr_copy(hdr->eth.smac_h, smac);
 	ether_addr_copy(hdr->eth.dmac_h, attr->roce.dmac);
 
-	if (vlan == 0xffff) {
-		hdr->eth.type = cpu_to_be16(ETH_P_IP);
-	} else {
-		hdr->vlan.tag = vlan;
-		hdr->vlan.type = cpu_to_be16(ETH_P_IP);
-		hdr->vlan.type = cpu_to_be16(ETH_P_8021Q);
-	}
-
 	if (net == RDMA_NETWORK_IPV4) {
+		hdr->eth.type = cpu_to_be16(ETH_P_IP);
 		hdr->ip4.tos = grh->traffic_class;
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
 		hdr->ip4.saddr = *(__be32 *)(sgid.raw + 12);
 		hdr->ip4.daddr = *(__be32 *)(grh->dgid.raw + 12);
 	} else {
+		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
 		hdr->grh.traffic_class = grh->traffic_class;
 		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
 		hdr->grh.hop_limit = grh->hop_limit;
 		hdr->grh.source_gid = sgid;
 		hdr->grh.destination_gid = grh->dgid;
+	}
+
+	if (vlan != 0xffff) {
+		hdr->vlan.tag = cpu_to_be16(vlan);
+		hdr->vlan.type = hdr->eth.type;
+		hdr->eth.type = cpu_to_be16(ETH_P_8021Q);
 	}
 
 	hdr->udp.sport = cpu_to_be16(49152); /* XXX hardcode val */
