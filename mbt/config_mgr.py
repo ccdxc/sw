@@ -244,6 +244,8 @@ class ConfigObjectHelper(object):
         self.sorted_ext_refs = []
         # These are the objects for which CRUD operations will be done in HAL. 
         self._config_objects = []
+        # These are ref objects created
+        self._ext_ref_objects = []
         # These are the objects, that have been created as external references for the
         # the config objects above.
         self._reference_objects = []
@@ -565,9 +567,21 @@ def GetConfigObjectFromKey(key):
             return config_object
     return None
 
+# This is used to get the external reference object being referred to from the key. Used in the context 
+# of callbacks, to retrieve an external reference object
+def GetExtRefObjectFromKey(key):
+    object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
+    for config_object in object_helper._ext_ref_objects:
+        if config_object.key_or_handle == key:
+            return config_object
+    return None
+
 def CreateConfigFromKeyType(key_type, ext_refs={}, external_constraints=None):
     object_helper = cfg_meta_mapper.key_type_to_config[key_type]
     ref_object = object_helper.CreateConfigObject('API_STATUS_OK', ext_refs, external_constraints)
+    if ref_object:
+        object_helper._ext_ref_objects.append(ref_object)
+        object_helper.num_create_ops += 1
     return ref_object.key_or_handle
 
 def CreateReferenceObject(ref_object_spec):
