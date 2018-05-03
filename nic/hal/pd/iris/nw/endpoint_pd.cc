@@ -33,8 +33,8 @@ pd_ep_create(pd_ep_create_args_t *args)
 
     mac = ep_get_mac_addr(args->ep);
 
-    HAL_TRACE_DEBUG("{}: creating pd state for ep: {}",
-                    __FUNCTION__, ep_l2_key_to_str(args->ep));
+    HAL_TRACE_DEBUG("creating pd state for ep: {}",
+                    ep_l2_key_to_str(args->ep));
 
     // Create ep PD
     pd_ep = ep_pd_alloc_init();
@@ -49,8 +49,8 @@ pd_ep_create(pd_ep_create_args_t *args)
     // Create EP L3 entry PDs
     ret = ep_pd_alloc_ip_entries(args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to alloc. ip entries: ep:{}",
-                      __FUNCTION__, ep_l2_key_to_str(args->ep));
+        HAL_TRACE_ERR("unable to alloc. ip entries: ep:{}",
+                      ep_l2_key_to_str(args->ep));
         goto end;
     }
 
@@ -58,8 +58,8 @@ pd_ep_create(pd_ep_create_args_t *args)
     ret = ep_pd_alloc_res(pd_ep);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-EP::{}: Unable to alloc. resources for EP: {}:{}",
-                      __FUNCTION__, ep_get_l2segid(args->ep),
+        HAL_TRACE_ERR("Unable to alloc. resources for EP: {}:{}",
+                      ep_get_l2segid(args->ep),
                 ether_ntoa((struct ether_addr*)*mac));
         goto end;
     }
@@ -85,8 +85,7 @@ pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG(":{}: updating pd state for ep:{}",
-                    __FUNCTION__,
+    HAL_TRACE_DEBUG("updating pd state for ep:{}",
                     ep_l2_key_to_str(pd_ep_upd_args->ep));
 
     if (pd_ep_upd_args->iplist_change) {
@@ -108,8 +107,8 @@ pd_ep_delete (pd_ep_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("{}:deleting pd state for ep {}",
-                    __FUNCTION__, ep_l2_key_to_str(args->ep));
+    HAL_TRACE_DEBUG("deleting pd state for ep {}",
+                    ep_l2_key_to_str(args->ep));
 
     ep_pd = (pd_ep_t *)args->ep->pd;
 
@@ -132,8 +131,7 @@ pd_ep_delete (pd_ep_delete_args_t *args)
     // free up the resource and memory
     ret = ep_pd_cleanup(ep_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed pd ep delete",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("failed pd ep delete");
     }
 
 end:
@@ -187,8 +185,7 @@ ep_pd_cleanup(pd_ep_t *ep_pd)
     // Releasing resources
     ret = ep_pd_dealloc_res(ep_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for ep: {}",
-                      __FUNCTION__,
+        HAL_TRACE_ERR("unable to dealloc res for ep: {}",
                       (ep_l2_key_to_str((ep_t *)(ep_pd->pi_ep))));
         goto end;
     }
@@ -220,7 +217,7 @@ pd_ep_upd_iplist_change (pd_ep_update_args_t *pd_ep_upd_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("{} ip-list change: ", __FUNCTION__);
+    HAL_TRACE_DEBUG("ip-list change: ");
 
     // Allocated PD State for new IP entries
     ret = ep_pd_alloc_pd_ip_entries(pd_ep_upd_args->add_iplist);
@@ -285,8 +282,8 @@ ep_pd_alloc_pd_ip_entries (dllist_ctxt_t *pi_ep_list)
         // Link PI to PD
         pi_ip_entry->pd->pi_ep_ip_entry = pi_ip_entry;
 
-        HAL_TRACE_DEBUG("PD-EP:{}: Allocating PD IP Entry: {}",
-                __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+        HAL_TRACE_DEBUG("Allocating PD IP Entry: {}",
+                        ipaddr2str(&(pi_ip_entry->ip_addr)));
 
     }
 
@@ -320,8 +317,7 @@ ep_pd_alloc_ip_entries(pd_ep_create_args_t *args)
 
     ret = ep_pd_alloc_pd_ip_entries(&(pi_ep->ip_list_head));
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP:{}: Failed to allocated PD IP entries.",
-                __FUNCTION__);
+        HAL_TRACE_ERR("Failed to allocated PD IP entries.");
     }
 
     // Clean up
@@ -383,8 +379,8 @@ ep_pd_delete_pd_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
                                           pi_ip_entry->pd);
             // Unlink PD from PI
             pi_ip_entry->pd = NULL;
-            HAL_TRACE_DEBUG("PD-EP:{}: Freeing PD IP Entry: {}",
-                    __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+            HAL_TRACE_DEBUG("Freeing PD IP Entry: {}",
+                            ipaddr2str(&(pi_ip_entry->ip_addr)));
         } else {
             HAL_ASSERT(0);
         }
@@ -482,8 +478,7 @@ ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep)
 
     ret = ep_pd_pgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head));
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP:{}: Failed to program IPSG entries",
-                __FUNCTION__);
+        HAL_TRACE_ERR("Failed to program IPSG entries");
         goto end;
     }
 
@@ -561,12 +556,12 @@ ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
     sdk_ret = ipsg_tbl->remove(pd_ip_entry->ipsg_tbl_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP::{}: Unable to deprogram IPSG for: {}",
-                __FUNCTION__, ipaddr2str(&(pi_ep_ip_entry->ip_addr)));
+        HAL_TRACE_ERR("Unable to deprogram IPSG for: {}",
+                      ipaddr2str(&(pi_ep_ip_entry->ip_addr)));
         goto end;
     } else {
-        HAL_TRACE_DEBUG("PD-EP::{}: DeProgrammed IPSG at: {} ",
-                __FUNCTION__, pd_ip_entry->ipsg_tbl_idx);
+        HAL_TRACE_DEBUG("DeProgrammed IPSG at: {} ",
+                        pd_ip_entry->ipsg_tbl_idx);
     }
 
 end:
@@ -643,14 +638,13 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
                             &(pd_ip_entry->ipsg_tbl_idx));
      ret = hal_sdk_ret_to_hal_ret(sdk_ret);
      if (ret != HAL_RET_OK) {
-         HAL_TRACE_ERR("PD-EP::{}: Unable to program IPSG for: {}",
-                 __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+         HAL_TRACE_ERR("Unable to program IPSG for: {}",
+                       ipaddr2str(&(pi_ip_entry->ip_addr)));
          goto end;
      } else {
-         HAL_TRACE_DEBUG("PD-EP::{}: Programmed IPSG for: at: {} "
+         HAL_TRACE_DEBUG("Programmed IPSG for: at: {} "
                          "(vrf:{}, ip:{}) => "
                          "act_id:{}, lif:{}, vlan_v:{}, vlan_vid:{}, mac:{}",
-                         __FUNCTION__,
                          pd_ip_entry->ipsg_tbl_idx,
                          key.flow_lkp_metadata_lkp_vrf,
                          ipaddr2str(&(pi_ip_entry->ip_addr)),
@@ -706,12 +700,12 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
         sdk_ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:classic: unable to program for ep:{}",
-                          __FUNCTION__, ep_l2_key_to_str(pi_ep));
+            HAL_TRACE_ERR("classic: unable to program for ep:{}",
+                          ep_l2_key_to_str(pi_ep));
             goto end;
         } else {
-            HAL_TRACE_DEBUG("{}:classic: programmed for ep:{} at hash_idx:{}",
-                            __FUNCTION__, ep_l2_key_to_str(pi_ep), hash_idx);
+            HAL_TRACE_DEBUG("classic: programmed for ep:{} at hash_idx:{}",
+                            ep_l2_key_to_str(pi_ep), hash_idx);
         }
 
         pd_ep->reg_mac_tbl_idx = hash_idx;
@@ -721,12 +715,12 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
         sdk_ret = reg_mac_tbl->update(hash_idx, &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:classic: unable to reprogram for ep:{} at: {}",
-                          __FUNCTION__, ep_l2_key_to_str(pi_ep), hash_idx);
+            HAL_TRACE_ERR("classic: unable to reprogram for ep:{} at: {}",
+                          ep_l2_key_to_str(pi_ep), hash_idx);
             goto end;
         } else {
-            HAL_TRACE_DEBUG("{}:classic: reprogrammed for ep:{} at: {}",
-                            __FUNCTION__, ep_l2_key_to_str(pi_ep), hash_idx);
+            HAL_TRACE_DEBUG("classic: reprogrammed for ep:{} at: {}",
+                            ep_l2_key_to_str(pi_ep), hash_idx);
         }
     }
 end:

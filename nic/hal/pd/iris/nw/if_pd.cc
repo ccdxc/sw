@@ -24,7 +24,7 @@ pd_if_create (pd_if_create_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("{}: if create ", __FUNCTION__);
+    HAL_TRACE_DEBUG("if create ");
 
 
     if_type = hal::intf_get_if_type(args->intf);
@@ -63,7 +63,7 @@ pd_if_update (pd_if_update_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("{}: if update", __FUNCTION__);
+    HAL_TRACE_DEBUG("if update");
 
     if_type = hal::intf_get_if_type(args->intf);
     switch(if_type) {
@@ -101,7 +101,7 @@ pd_if_delete (pd_if_delete_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("{}: if delete", __FUNCTION__);
+    HAL_TRACE_DEBUG("if delete");
 
     if_type = hal::intf_get_if_type(args->intf);
     switch(if_type) {
@@ -139,7 +139,7 @@ pd_if_get (pd_if_get_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("{}: if get", __FUNCTION__);
+    HAL_TRACE_DEBUG("if get");
 
     if_type = hal::intf_get_if_type(args->hal_if);
     switch(if_type) {
@@ -174,7 +174,7 @@ pd_if_get (pd_if_get_args_t *args)
 hal_ret_t
 pd_if_lif_update(pd_if_lif_update_args_t *args)
 {
-    HAL_TRACE_DEBUG("{}: if lif update", __FUNCTION__);
+    HAL_TRACE_DEBUG("if lif update");
     return pd_enicif_lif_update(args);
 }
 
@@ -189,7 +189,7 @@ pd_if_mem_free (pd_if_mem_free_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("{}: if mem_free", __FUNCTION__);
+    HAL_TRACE_DEBUG("if mem_free");
 
     if_type = hal::intf_get_if_type(args->intf);
     switch(if_type) {
@@ -226,7 +226,7 @@ pd_if_make_clone (pd_if_make_clone_args_t *args)
     if_t *hal_if = args->hal_if;
     // if_t *clone = args->clone;
 
-    HAL_TRACE_DEBUG("{}: if clone", __FUNCTION__);
+    HAL_TRACE_DEBUG("if clone");
 
     if_type = hal::intf_get_if_type(hal_if);
     switch(if_type) {

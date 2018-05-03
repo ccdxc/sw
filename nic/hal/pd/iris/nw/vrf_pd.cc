@@ -230,7 +230,7 @@ pd_vrf_restore (pd_vrf_restore_args_t *args)
     // program hw
     ret = vrf_pd_program_hw(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
+        HAL_TRACE_ERR("failed to program hw");
         goto end;
     }
 #endif

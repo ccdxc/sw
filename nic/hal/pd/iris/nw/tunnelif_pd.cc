@@ -22,8 +22,8 @@ pd_tunnelif_create(pd_if_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;;
     pd_tunnelif_t        *pd_tunnelif;
 
-    HAL_TRACE_DEBUG(":{}: Creating pd state for Tunnelif: {}",
-                    __FUNCTION__, if_get_if_id(args->intf));
+    HAL_TRACE_DEBUG("Creating pd state for Tunnelif: {}",
+                    if_get_if_id(args->intf));
 
     // Create Tunnel If PD
     pd_tunnelif = pd_tunnelif_alloc_init();
@@ -39,8 +39,8 @@ pd_tunnelif_create(pd_if_create_args_t *args)
     ret = pd_tunnelif_alloc_res(pd_tunnelif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR(":{}: unable to alloc. resources for TunnelIf: {}",
-                      __FUNCTION__, if_get_if_id(args->intf));
+        HAL_TRACE_ERR("unable to alloc. resources for TunnelIf: {}",
+                      if_get_if_id(args->intf));
         goto end;
     }
 
@@ -77,20 +77,19 @@ pd_tunnelif_delete (pd_if_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("{}:deleting pd state for tunnelif: {}",
-                    __FUNCTION__, args->intf->if_id);
+    HAL_TRACE_DEBUG("deleting pd state for tunnelif: {}",
+                    args->intf->if_id);
     tunnelif_pd = (pd_tunnelif_t *)args->intf->pd_if;
 
     // deprogram HW
     ret = pd_tunnelif_deprogram_hw(tunnelif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("unable to deprogram hw");
     }
 
     ret = pd_tunnelif_cleanup(tunnelif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed pd tunnelif delete",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("failed pd tunnelif delete");
     }
 
     return ret;
@@ -166,8 +165,7 @@ pd_tunnelif_cleanup(pd_tunnelif_t *pd_tunnelif)
     // Releasing resources
     ret = pd_tunnelif_dealloc_res(pd_tunnelif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}: unable to dealloc res for enicif: {}",
-                      __FUNCTION__,
+        HAL_TRACE_ERR("unable to dealloc res for enicif: {}",
                       ((if_t *)(pd_tunnelif->pi_if))->if_id);
         goto end;
     }
@@ -464,11 +462,10 @@ pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 
     ret = tnnl_rw_entry_delete(&key);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram tnnl rw table: ret:{}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("unable to deprogram tnnl rw table: ret:{}", ret);
     } else {
-        HAL_TRACE_DEBUG("{}:deprogrammed tnnl rw table. index:{}",
-                        __FUNCTION__, pd_tif->tunnel_rw_idx);
+        HAL_TRACE_DEBUG("deprogrammed tnnl rw table. index:{}",
+                        pd_tif->tunnel_rw_idx);
     }
     pd_tif->tunnel_rw_idx = INVALID_INDEXER_INDEX;
 
@@ -530,27 +527,22 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     memset(tnnl_rw_key, 0, sizeof(pd_tnnl_rw_entry_key_t));
 
     pi_if = (if_t *) pd_tif->pi_if;
-    HAL_ABORT_TRACE(pi_if, "ABORT:{}: PD should always have PI",
-                    __FUNCTION__);
+    HAL_ABORT_TRACE(pi_if, "PD should always have PI");
 
     actionid = pd_tunnelif_get_p4pd_encap_action_id(pi_if->encap_type);
 
     rtep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
-    HAL_ABORT_TRACE(rtep_ep, "ABORT:{}: should have caught in PI",
-                    __FUNCTION__);
+    HAL_ABORT_TRACE(rtep_ep, "ABORT:should have caught in PI");
 
     l2seg = l2seg_lookup_by_handle(rtep_ep->l2seg_handle);
-    HAL_ABORT_TRACE(l2seg, "ABORT:{}: EP should not exist with no l2seg",
-                    __FUNCTION__);
+    HAL_ABORT_TRACE(l2seg, "ABORT: EP should not exist with no l2seg");
 
     ep_if = find_if_by_handle(rtep_ep->if_handle);
-    HAL_ABORT_TRACE(ep_if, "ABORT:{}: EP should not exist with no IF",
-                    __FUNCTION__);
+    HAL_ABORT_TRACE(ep_if, "ABORT: EP should not exist with no IF");
 
     ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
-    HAL_ABORT_TRACE(ret == HAL_RET_OK, "ABORT:{}: EP presence means "
-                    "l2seg should be UP on IF",
-                    __FUNCTION__);
+    HAL_ABORT_TRACE(ret == HAL_RET_OK, "ABORT: EP presence means "
+                    "l2seg should be UP on IF");
 
     tnnl_rw_key->tnnl_rw_act = (tunnel_rewrite_actions_en) actionid;
 
@@ -600,11 +592,10 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 
     ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to program tnnl rw table: ret:{}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("unable to program tnnl rw table: ret:{}", ret);
     } else {
-        HAL_TRACE_DEBUG("{}:programmed tnnl rw table. index:{}",
-                        __FUNCTION__, pd_tif->tunnel_rw_idx);
+        HAL_TRACE_DEBUG("programmed tnnl rw table. index:{}",
+                        pd_tif->tunnel_rw_idx);
     }
 
     return ret;
@@ -664,8 +655,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
         if (v4_valid) {
             act.tunnel_rewrite_encap_vxlan.ip_type = IP_HEADER_TYPE_IPV4;
         } else {
-            HAL_TRACE_ERR(":{}: Invalid outer encap header",
-                          __FUNCTION__);
+            HAL_TRACE_ERR("Invalid outer encap header");
             ret = HAL_RET_ERR;
             goto fail_flag;
 #ifdef PHASE2

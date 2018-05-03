@@ -18,14 +18,14 @@ static hal_ret_t pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
 // ----------------------------------------------------------------------------
 // APPREDIR If Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_app_redir_if_create(pd_if_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_app_redir_if_t    *pd_app_redir_if;
 
-    HAL_TRACE_DEBUG("{}: Creating pd state for app_redir_if: {}", 
-                    __FUNCTION__, if_get_if_id(args->intf));
+    HAL_TRACE_DEBUG("Creating pd state for app_redir_if: {}",
+                    if_get_if_id(args->intf));
 
     // Create APPREDIR If PD
     pd_app_redir_if = pd_app_redir_if_alloc_init();
@@ -41,8 +41,8 @@ pd_app_redir_if_create(pd_if_create_args_t *args)
     ret = pd_app_redir_if_alloc_res(pd_app_redir_if, args->intf);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("{}: Unable to alloc. resources for app_redir_if: {}",
-                      __FUNCTION__, if_get_if_id(args->intf));
+        HAL_TRACE_ERR("Unable to alloc. resources for app_redir_if: {}",
+                      if_get_if_id(args->intf));
         goto end;
     }
 
@@ -76,15 +76,14 @@ pd_app_redir_if_delete (pd_if_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("{}:deleting pd state for app_redir_if {}",
-                    __FUNCTION__, args->intf->if_id);
+    HAL_TRACE_DEBUG("deleting pd state for app_redir_if {}",
+                    args->intf->if_id);
     app_redir_if_pd = (pd_app_redir_if_t *)args->intf->pd_if;
 
     // pd cleanup
     ret = pd_app_redir_if_cleanup(app_redir_if_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed pd app_redir_if delete",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("failed pd app_redir_if delete");
     }
 
     return ret;
@@ -110,7 +109,7 @@ pd_app_redir_if_get (pd_if_get_args_t *args)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD APPREDIR if
 // ----------------------------------------------------------------------------
-static hal_ret_t 
+static hal_ret_t
 pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
                           if_t *intf)
 {
@@ -127,12 +126,12 @@ pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
         pd_lif_get_lport_id(&args);
         pd_app_redir_if->lport_id = args.lport_id;
         // pd_app_redir_if->lport_id = lif_get_lport_id(lif);
-        HAL_TRACE_DEBUG("{}: if_id:{} lif_id:{} lport_id:{}", 
-                        __FUNCTION__, if_get_if_id((if_t *)pd_app_redir_if->pi_if),
+        HAL_TRACE_DEBUG("if_id:{} lif_id:{} lport_id:{}",
+                        if_get_if_id((if_t *)pd_app_redir_if->pi_if),
                         lif_get_lif_id(lif), pd_app_redir_if->lport_id);
     } else {
-        HAL_TRACE_ERR("{}: if_id:{} lif does not exist", 
-                        __FUNCTION__, if_get_if_id((if_t *)pd_app_redir_if->pi_if));
+        HAL_TRACE_ERR("if_id:{} lif does not exist",
+                       if_get_if_id((if_t *)pd_app_redir_if->pi_if));
         return HAL_RET_LIF_NOT_FOUND;
     }
 
@@ -142,7 +141,7 @@ pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD APPREDIR if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_app_redir_if_dealloc_res(pd_app_redir_if_t *pd_app_redir_if)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -154,9 +153,9 @@ pd_app_redir_if_dealloc_res(pd_app_redir_if_t *pd_app_redir_if)
 // PD app_redir_if Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD If 
+//  - Free PD If
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -173,8 +172,8 @@ pd_app_redir_if_cleanup(pd_app_redir_if_t *upif_pd)
     // Releasing resources
     ret = pd_app_redir_if_dealloc_res(upif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for app_redir_if: {}", 
-                      __FUNCTION__, ((if_t *)(upif_pd->pi_if))->if_id);
+        HAL_TRACE_ERR("unable to dealloc res for app_redir_if: {}",
+                      ((if_t *)(upif_pd->pi_if))->if_id);
         goto end;
     }
 

@@ -20,8 +20,8 @@ pd_uplinkpc_create(pd_if_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;;
     pd_uplinkpc_t      *pd_upif;
 
-    HAL_TRACE_DEBUG("{}:if_id:{} creating pd state for if_id",
-                    __FUNCTION__, if_get_if_id(args->intf));
+    HAL_TRACE_DEBUG("if_id:{} creating pd state for if_id",
+                    if_get_if_id(args->intf));
 
     // Create lif PD
     pd_upif = uplinkpc_pd_alloc_init();
@@ -37,8 +37,8 @@ pd_uplinkpc_create(pd_if_create_args_t *args)
     ret = uplinkpc_pd_alloc_res(pd_upif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-UplinkPC::{}: if_id:{} Unable to alloc. resources",
-                      __FUNCTION__, if_get_if_id(args->intf));
+        HAL_TRACE_ERR("if_id:{} Unable to alloc. resources",
+                      if_get_if_id(args->intf));
         goto end;
     }
 
@@ -73,18 +73,16 @@ pd_uplinkpc_update (pd_if_update_args_t *args)
                                                  args->aggr_mbrlist,
                                                  TABLE_OPER_UPDATE);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to program "
-                          "table:output_mapping, ret:{}",
-                          __FUNCTION__, ret);
+            HAL_TRACE_ERR("failed to program "
+                          "table:output_mapping, ret:{}", ret);
             goto end;
         }
 
         // Reprogram tm register
         ret = uplinkpc_pd_upd_tm_register(args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to program "
-                          "table:tm_register, ret:{}",
-                          __FUNCTION__, ret);
+            HAL_TRACE_ERR("failed to program "
+                          "table:tm_register, ret:{}", ret);
             goto end;
         }
     }
@@ -105,21 +103,20 @@ pd_uplinkpc_delete (pd_if_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("{}:deleting pd state for uplinkpc {}",
-                    __FUNCTION__, args->intf->if_id);
+    HAL_TRACE_DEBUG("deleting pd state for uplinkpc {}",
+                    args->intf->if_id);
     uplinkpc_pd = (pd_uplinkpc_t *)args->intf->pd_if;
 
     // deprogram HW
     ret = uplinkpc_pd_deprogram_hw(uplinkpc_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("unable to deprogram hw");
     }
 
 
     ret = uplinkpc_pd_cleanup(uplinkpc_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed pd uplinkpc delete",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("failed pd uplinkpc delete");
     }
 
     return ret;
@@ -157,20 +154,18 @@ uplinkpc_pd_alloc_res(pd_uplinkpc_t *pd_upif)
 #if 0
     rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_upif->hw_lif_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc hw_lif_id err: {}",
-                      __FUNCTION__, rs);
+        HAL_TRACE_ERR("failed to alloc hw_lif_id err: {}",
+                      rs);
         pd_upif->hw_lif_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
 #endif
     pd_upif->hw_lif_id = if_allocate_hwlif_id();
     if (pd_upif->hw_lif_id == INVALID_INDEXER_INDEX) {
-        HAL_TRACE_ERR("{}:failed to alloc hw_lif_id err: {}",
-                      __FUNCTION__, rs);
+        HAL_TRACE_ERR("failed to alloc hw_lif_id err: {}", rs);
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("{}: if_id:{} allocated hw_lif_id:{}",
-                    __FUNCTION__,
+    HAL_TRACE_DEBUG("if_id:{} allocated hw_lif_id:{}",
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->hw_lif_id);
 
@@ -178,13 +173,11 @@ uplinkpc_pd_alloc_res(pd_uplinkpc_t *pd_upif)
     rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->up_ifpc_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc uplink_ifpc_id err: {}",
-                      __FUNCTION__, rs);
+        HAL_TRACE_ERR("failed to alloc uplink_ifpc_id err: {}", rs);
         pd_upif->up_ifpc_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("{}: if_id:{} allocated uplink_ifpc_id : {}",
-                    __FUNCTION__,
+    HAL_TRACE_DEBUG("if_id:{} allocated uplink_ifpc_id : {}",
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->up_ifpc_id);
 
@@ -192,13 +185,11 @@ uplinkpc_pd_alloc_res(pd_uplinkpc_t *pd_upif)
     rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_upif->
             uppc_lport_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc uplink_ifpc_id err: {}",
-                      __FUNCTION__, rs);
+        HAL_TRACE_ERR("failed to alloc uplink_ifpc_id err: {}", rs);
         pd_upif->uppc_lport_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("{}:if_id:{} allocated lport_id:{}",
-                    __FUNCTION__,
+    HAL_TRACE_DEBUG("if_id:{} allocated lport_id:{}",
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->uppc_lport_id);
     return ret;
@@ -217,42 +208,42 @@ uplinkpc_pd_dealloc_res(pd_uplinkpc_t *upif_pd)
 #if 0
         rs = g_hal_state_pd->lif_hwid_idxr()->free(upif_pd->hw_lif_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free hw_lif_id err: {}",
-                          __FUNCTION__, upif_pd->hw_lif_id);
+            HAL_TRACE_ERR("failed to free hw_lif_id err: {}",
+                          upif_pd->hw_lif_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 #endif
         // TODO: Have to free up the index from lif manager
 
-        HAL_TRACE_DEBUG("{}:freed hw_lif_id: {}",
-                        __FUNCTION__, upif_pd->hw_lif_id);
+        HAL_TRACE_DEBUG("freed hw_lif_id: {}",
+                        upif_pd->hw_lif_id);
     }
 
     if (upif_pd->up_ifpc_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->free(upif_pd->up_ifpc_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free uplink_ifpc_id err: {}",
-                          __FUNCTION__, upif_pd->up_ifpc_id);
+            HAL_TRACE_ERR("failed to free uplink_ifpc_id err: {}",
+                          upif_pd->up_ifpc_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("{}:freed uplink_ifpc_id: {}",
-                        __FUNCTION__, upif_pd->up_ifpc_id);
+        HAL_TRACE_DEBUG("freed uplink_ifpc_id: {}",
+                        upif_pd->up_ifpc_id);
     }
 
     if (upif_pd->uppc_lport_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->lport_idxr()->free(upif_pd->uppc_lport_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free lport_id err: {}",
-                          __FUNCTION__, upif_pd->uppc_lport_id);
+            HAL_TRACE_ERR("failed to free lport_id err: {}",
+                          upif_pd->uppc_lport_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("{}:freed lport_id: {}",
-                        __FUNCTION__, upif_pd->uppc_lport_id);
+        HAL_TRACE_DEBUG("freed lport_id: {}",
+                        upif_pd->uppc_lport_id);
     }
 
 end:
@@ -282,8 +273,7 @@ uplinkpc_pd_cleanup(pd_uplinkpc_t *upif_pd)
     // Releasing resources
     ret = uplinkpc_pd_dealloc_res(upif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for uplinkpc: {}",
-                      __FUNCTION__,
+        HAL_TRACE_ERR("unable to dealloc res for uplinkpc: {}",
                       ((if_t *)(upif_pd->pi_if))->if_id);
         goto end;
     }
@@ -309,14 +299,14 @@ uplinkpc_pd_deprogram_hw (pd_uplinkpc_t *pd_upif)
     // De program TM register
     ret = uplinkpc_pd_depgm_tm_register(pd_upif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("unable to deprogram hw");
     }
 #endif
 
     // De-Program Output Mapping Table
     ret = uplinkpc_pd_depgm_output_mapping_tbl(pd_upif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("unable to deprogram hw");
     }
     return ret;
 }
@@ -335,12 +325,12 @@ uplinkpc_pd_depgm_tm_register(pd_uplinkpc_t *pd_upif)
 
     ret = capri_tm_uplink_lif_set(tm_oport, 0);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram for if_id: {}",
-                __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));
+        HAL_TRACE_ERR("unable to deprogram for if_id: {}",
+                      if_get_if_id((if_t *)pd_upif->pi_if));
     } else {
-        HAL_TRACE_DEBUG("{}:deprogrammed for if_id: {} "
+        HAL_TRACE_DEBUG("deprogrammed for if_id: {} "
                         "iport:{} => hwlif: {}",
-                        __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if),
+                        if_get_if_id((if_t *)pd_upif->pi_if),
                         tm_oport, 0);
     }
 
@@ -364,11 +354,11 @@ uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif)
     sdk_ret = dm_omap->remove(pd_upif->uppc_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram omapping table. index:{}",
-                __FUNCTION__, pd_upif->uppc_lport_id);
+        HAL_TRACE_ERR("unable to deprogram omapping table. index:{}",
+                      pd_upif->uppc_lport_id);
     } else {
-        HAL_TRACE_ERR("{}:deprogrammed omapping table. index:{}",
-                __FUNCTION__, pd_upif->uppc_lport_id);
+        HAL_TRACE_ERR("deprogrammed omapping table. index:{}",
+                      pd_upif->uppc_lport_id);
     }
 
     return ret;
@@ -492,12 +482,12 @@ uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc,
 
     ret = capri_tm_uplink_lif_set(tm_oport, hw_lif_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:if_id:{} unable to program for if_id",
-                __FUNCTION__, if_get_if_id(pi_if));
+        HAL_TRACE_ERR("if_id:{} unable to program for if_id",
+                      if_get_if_id(pi_if));
     } else {
-        HAL_TRACE_DEBUG("{}: if_id:{} programmed "
+        HAL_TRACE_DEBUG("if_id:{} programmed "
                         "iport:{} => hwlif: {}",
-                        __FUNCTION__, if_get_if_id(pi_if), tm_oport, hw_lif_id);
+                        if_get_if_id(pi_if), tm_oport, hw_lif_id);
     }
 
     return ret;
@@ -582,24 +572,24 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
         sdk_ret = dm_omap->insert_withid(&data, pd_uppcif->uppc_lport_id);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:{} unable to program. ret:{}",
-                    __FUNCTION__, oper, ret);
+            HAL_TRACE_ERR("{} unable to program. ret:{}",
+                          oper, ret);
         } else {
-            HAL_TRACE_DEBUG("{}:{} programmed "
+            HAL_TRACE_DEBUG("{} programmed "
                             "table:output_mapping index:{}",
-                            __FUNCTION__, oper,
+                            oper,
                             pd_uppcif->uppc_lport_id);
         }
     } else {
         sdk_ret = dm_omap->update(pd_uppcif->uppc_lport_id, &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:{} unable to "
+            HAL_TRACE_ERR("{} unable to "
                           "program table:output_mapping. ret:{}",
-                          __FUNCTION__, oper, ret);
+                          oper, ret);
         } else {
-            HAL_TRACE_DEBUG("{}:{} programmed table:output_mapping index:{}",
-                            __FUNCTION__, oper,
+            HAL_TRACE_DEBUG("{} programmed table:output_mapping index:{}",
+                            oper,
                             pd_uppcif->uppc_lport_id);
         }
     }

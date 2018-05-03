@@ -317,7 +317,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     // populate the action information
     if (flow_attrs->drop) {
         d.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
-        HAL_TRACE_DEBUG("PD-Session:{}: Action being set to drop", __FUNCTION__);
+        HAL_TRACE_DEBUG("Action being set to drop");
     } else {
         d.actionid = FLOW_INFO_FLOW_INFO_ID;
     }
@@ -1086,9 +1086,9 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
         HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
                        *flow_info_hwid, ret);
         return ret;
-    }    
-    
-    return HAL_RET_OK;     
+    }
+
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------------
@@ -1103,9 +1103,9 @@ pd_get_cpu_bypass_flowid (pd_get_cpu_bypass_flowid_args_t *args)
         pd_add_cpu_bypass_flow_info(&flow_info_hwid);
         g_hal_state_pd->set_cpu_bypass_flowid(flow_info_hwid);
     }
-    
+
     args->hw_flowid = g_hal_state_pd->cpu_bypass_flowid();
- 
+
     return HAL_RET_OK;
 }
 

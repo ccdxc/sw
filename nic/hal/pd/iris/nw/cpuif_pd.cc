@@ -21,8 +21,8 @@ pd_cpuif_create(pd_if_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;;
     pd_cpuif_t           *pd_cpuif;
 
-    HAL_TRACE_DEBUG("PD-CPUif::{}: Creating pd state for CPUif: {}",
-                    __FUNCTION__, if_get_if_id(args->intf));
+    HAL_TRACE_DEBUG("Creating pd state for CPUif: {}",
+                    if_get_if_id(args->intf));
 
     // Create CPU If PD
     pd_cpuif = pd_cpuif_alloc_init();
@@ -38,8 +38,8 @@ pd_cpuif_create(pd_if_create_args_t *args)
     ret = pd_cpuif_alloc_res(pd_cpuif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-CPUIF::{}: Unable to alloc. resources for Uplinnkif: {}",
-                      __FUNCTION__, if_get_if_id(args->intf));
+        HAL_TRACE_ERR("Unable to alloc. resources for Uplinnkif: {}",
+                      if_get_if_id(args->intf));
         goto end;
     }
 
@@ -76,21 +76,20 @@ pd_cpuif_delete (pd_if_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-cpuif:{}:deleting pd state for cpuif {}",
-                    __FUNCTION__, args->intf->if_id);
+    HAL_TRACE_DEBUG("Deleting pd state for cpuif {}",
+                    args->intf->if_id);
     cpuif_pd = (pd_cpuif_t *)args->intf->pd_if;
 
     // deprogram HW
     ret = pd_cpuif_deprogram_hw(cpuif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-cpuif:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("unable to deprogram hw");
     }
 
     // pd cleanup
     ret = pd_cpuif_cleanup(cpuif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-cpuif:{}:failed pd cpuif delete",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("failed pd cpuif delete");
     }
 
     return ret;
@@ -129,8 +128,7 @@ pd_cpuif_alloc_res(pd_cpuif_t *pd_cpuif)
     //if (rs != indexer::SUCCESS) {
     //    return HAL_RET_NO_RESOURCE;
     //}
-    HAL_TRACE_DEBUG("PD-CPUIf:{}: if_id:{} Allocated lport_id:{}",
-                    __FUNCTION__,
+    HAL_TRACE_DEBUG("if_id:{} Allocated lport_id:{}",
                     if_get_if_id((if_t *)pd_cpuif->pi_if),
                     pd_cpuif->cpu_lport_id);
 
@@ -171,8 +169,7 @@ pd_cpuif_cleanup(pd_cpuif_t *upif_pd)
     // Releasing resources
     ret = pd_cpuif_dealloc_res(upif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-cpuif:{}: unable to dealloc res for cpuif: {}",
-                      __FUNCTION__,
+        HAL_TRACE_ERR("unable to dealloc res for cpuif: {}",
                       ((if_t *)(upif_pd->pi_if))->if_id);
         goto end;
     }
@@ -197,7 +194,7 @@ pd_cpuif_deprogram_hw (pd_cpuif_t *pd_cpuif)
     // De-Program Output Mapping Table
     ret = pd_cpuif_pd_depgm_output_mapping_tbl(pd_cpuif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-cpuif:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("unable to deprogram hw");
     }
 
     return ret;
@@ -273,11 +270,11 @@ pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
     sdk_ret = dm_omap->insert_withid(&data, pd_cpuif->cpu_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-cpuIf::{}: lif_id:{} Unable to program",
-                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+        HAL_TRACE_ERR("lif_id:{} Unable to program",
+                      lif_get_lif_id((lif_t *)pd_lif->pi_lif));
     } else {
-        HAL_TRACE_DEBUG("PD-cpuIf::{}: lif_id:{} Success",
-                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+        HAL_TRACE_DEBUG("lif_id:{} Success",
+                        lif_get_lif_id((lif_t *)pd_lif->pi_lif));
     }
     return ret;
 }
