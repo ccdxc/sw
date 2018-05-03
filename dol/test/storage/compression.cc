@@ -136,7 +136,7 @@ static comp_hash_chain_t      *comp_hash_chain;
 static decrypt_decomp_chain_t *decrypt_decomp_chain;
 static chksum_decomp_chain_t  *chksum_decomp_chain;
 
-static dp_mem_t *comp_pad_buf;
+dp_mem_t *comp_pad_buf;
 
 // Forward declaration with default param values
 int run_cp_test(cp_desc_t& desc,

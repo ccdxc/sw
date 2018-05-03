@@ -42,12 +42,12 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
 {
     uncomp_buf = new dp_mem_t(1, app_max_size,
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
-                              DP_MEM_ALLOC_NO_FILL);
+                              0, DP_MEM_ALLOC_NO_FILL);
     // size of compressed buffers accounts any for compression failure,
     // i.e., must be as large as uncompressed buffer plus cp_hdr_t
     xts_decrypt_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
                           DP_MEM_ALIGN_PAGE, params.decrypt_mem_type_,
-                          DP_MEM_ALLOC_NO_FILL);
+                          0, DP_MEM_ALLOC_NO_FILL);
     // for XTS status, caller can elect to have 2 status buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
@@ -152,6 +152,8 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
                                      caller_comp_status_buf,
                                      comp_encrypt_chain->cp_output_data_len_get(),
                                      app_blk_size);
+    caller_comp_status_buf->fragment_find(0, sizeof(uint64_t))->clear_thru();
+
     // Use caller's Comp opaque info, if any
     if (caller_comp_opaque_buf) {
         cp_desc.cmd_bits.opaque_tag_on = 1;

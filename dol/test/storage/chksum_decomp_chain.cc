@@ -45,7 +45,7 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
 {
     uncomp_buf = new dp_mem_t(1, app_max_size,
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
-                              DP_MEM_ALLOC_NO_FILL);
+                              0, DP_MEM_ALLOC_NO_FILL);
     /*
      * Allocate enough chksum status for the worst case
      */
