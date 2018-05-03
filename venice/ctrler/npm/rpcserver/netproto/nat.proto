@@ -65,8 +65,8 @@ service NatPoolApi {
 
 // nat binding object
 message NatBindingSpec {
-    string NatPoolName   = 1[(gogoproto.jsontag) = "nat-pool,omitempty"];
-    string IPAddress     = 2[(gogoproto.jsontag) = "ip-address,omitempty"];
+    string NatPoolName     = 1[(gogoproto.jsontag) = "nat-pool,omitempty"];
+    string IPAddress       = 2[(gogoproto.jsontag) = "ip-address,omitempty"];
 }
 
 message NatBindingStatus {

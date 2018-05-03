@@ -77,15 +77,15 @@ func TestNatBindingUpdate(t *testing.T) {
 
 	var actualNatBindingSpec netproto.NatBindingSpec
 	updatedNatBindingSpec := netproto.NatBindingSpec{
-		NatPoolName: "updatedNatPool",
+		NatPoolName: "preCreatedNatPool",
 		IPAddress:   "192.168.1.2",
 	}
 	putData := netproto.NatBinding{
 		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "preCreatedTenant",
+			Tenant:    "default",
 			Name:      "preCreatedNatBinding",
-			Namespace: "preCreatedNamespace",
+			Namespace: "default",
 		},
 		Spec: updatedNatBindingSpec,
 	}
@@ -119,6 +119,7 @@ func TestNatBindingDelete(t *testing.T) {
 		},
 		Spec: netproto.NatBindingSpec{
 			NatPoolName: "preCreatedNatPool",
+			IPAddress:   "10.1.1.1",
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natbindings/", &deleteData, &resp)

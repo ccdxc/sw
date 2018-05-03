@@ -75,7 +75,7 @@ function create_nat_policies {
 function create_nat_bindings {
   NAT_BINDING_URL="$NAPLES_AGENT_IP:9007/api/natbindings/"
 
-  curl -d'{"Kind":"NatBinding","meta":{"Name":"kg1","Tenant":"default","Namespace":"default"}, "spec":{"nat-pool":"kg1-natpool", "ip-address":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $NAT_BINDING_URL
+  curl -d'{"Kind":"NatBinding","meta":{"Name":"kg2","Tenant":"default","Namespace":"default"}, "spec":{"nat-pool":"kg1/kg1-natpool", "ip-address":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $NAT_BINDING_URL
   validate_get "kg1" $NAT_BINDING_URL
 
   echo "All Nat Bindings created"

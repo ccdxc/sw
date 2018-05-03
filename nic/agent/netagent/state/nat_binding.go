@@ -9,6 +9,8 @@ import (
 
 	"fmt"
 
+	"strings"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -34,6 +36,20 @@ func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
 		return err
 	}
 
+	// find the corresponding natpool
+	np, err := na.findNatPool(nb.ObjectMeta, nb.Spec.NatPoolName)
+	if err != nil {
+		log.Infof("Could not find the specified NatPool. %v", nb.Spec.NatPoolName)
+		return err
+	}
+
+	// find the corresponding natpool's namespace
+
+	natPoolNS, err := na.FindNamespace(nb.Tenant, np.Namespace)
+	if err != nil {
+		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
+	}
+
 	nb.Status.NatBindingID, err = na.store.GetNextID(NatBindingID)
 
 	if err != nil {
@@ -42,7 +58,7 @@ func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateNatBinding(nb, ns)
+	err = na.datapath.CreateNatBinding(nb, np, natPoolNS.Status.NamespaceID, ns)
 	if err != nil {
 		log.Errorf("Error creating nat binding in datapath. NatBinding {%+v}. Err: %v", nb, err)
 		return err
@@ -146,4 +162,30 @@ func (na *NetAgent) DeleteNatBinding(nb *netproto.NatBinding) error {
 	err = na.store.Delete(nb)
 
 	return err
+}
+
+// findNatPool finds the associated NatPool with the NatBinding.
+// The binding can refer to the nat pool outside its own namespace.
+// In such cases, we expect the natpool name to be written as <remote namespace>/<natpoolname>
+// These are expected to be tenant scoped
+func (na *NetAgent) findNatPool(natBindingMeta api.ObjectMeta, natPool string) (*netproto.NatPool, error) {
+	var poolMeta api.ObjectMeta
+
+	np := strings.Split(natPool, "/")
+	switch len(np) {
+	// NatPool in local namespace
+	case 1:
+		poolMeta.Tenant = natBindingMeta.Tenant
+		poolMeta.Namespace = natBindingMeta.Namespace
+		poolMeta.Name = natPool
+		return na.FindNatPool(poolMeta)
+		// NatPool in remote namespace
+	case 2:
+		poolMeta.Tenant = natBindingMeta.Tenant
+		poolMeta.Namespace = np[0]
+		poolMeta.Name = np[1]
+		return na.FindNatPool(poolMeta)
+	default:
+		return nil, fmt.Errorf("nat pool {%v} not found", natPool)
+	}
 }

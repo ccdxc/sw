@@ -145,7 +145,7 @@ type NetDatapathAPI interface {
 	CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                              // creates a route
 	UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                              // updates a route
 	DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                              // deletes a route
-	CreateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error                                                                                    // creates a nat policy in the datapath
+	CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) error                                         // creates a nat policy in the datapath
 	UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error                                                                                    // updates a nat policy in the datapath
 	DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error                                                                                    // deletes a nat policy in the datapath
 }

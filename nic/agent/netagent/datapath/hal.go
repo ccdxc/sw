@@ -208,6 +208,10 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockNatClient.EXPECT().NatPoolCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockNatClient.EXPECT().NatPoolUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockNatClient.EXPECT().NatPoolDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockNatClient.EXPECT().NatMappingCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockNatClient.EXPECT().NatMappingDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNatClient.EXPECT().NatMappingUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil) ToDo uncomment when HAL supports NatMappingUpdate
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
@@ -1581,8 +1585,76 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 }
 
 // CreateNatBinding creates a NAT Binding in the datapath
-func (hd *Datapath) CreateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 
+	natBindingIP := net.ParseIP(nb.Spec.IPAddress)
+	if len(natBindingIP) == 0 {
+		log.Errorf("could not parse IP from {%v}", natBindingIP)
+		return ErrIPParse
+	}
+
+	ipAddr := &halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(natBindingIP),
+		},
+	}
+
+	natPoolVrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: natPoolVrfID,
+		},
+	}
+
+	natPoolKey := &halproto.NatPoolKeyHandle{
+		KeyOrHandle: &halproto.NatPoolKeyHandle_PoolKey{
+			PoolKey: &halproto.NatPoolKey{
+				VrfKh:  natPoolVrfKey,
+				PoolId: np.Status.NatPoolID,
+			},
+		},
+	}
+
+	natBindingReqMsg := &halproto.NatMappingRequestMsg{
+		Request: []*halproto.NatMappingSpec{
+			{
+				KeyOrHandle: &halproto.NatMappingKeyHandle{
+					KeyOrHandle: &halproto.NatMappingKeyHandle_Svc{
+						Svc: &halproto.Svc{
+							VrfKh:  vrfKey,
+							IpAddr: ipAddr,
+						},
+					},
+				},
+				NatPool: natPoolKey,
+				Bidir:   true, // Set Bidirectional to true inorder to create forward and reverse mappings.
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Natclient.NatMappingCreate(context.Background(), natBindingReqMsg)
+		if err != nil {
+			log.Errorf("Error creating nat pool. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Natclient.NatMappingCreate(context.Background(), natBindingReqMsg)
+		if err != nil {
+			log.Errorf("Error creating nat pool. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 

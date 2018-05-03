@@ -384,15 +384,15 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                                                       NatPoolName: "updatedNatPool",
+                                                                       NatPoolName: "preCreatedNatPool",
                                                                        IPAddress: "192.168.1.2",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
                                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
                                     ObjectMeta: api.ObjectMeta{
-                                        Tenant: "preCreatedTenant",
+                                        Tenant: "default",
                                         Name:   "preCreated{{title $crudObject}}",
-                                        Namespace: "preCreatedNamespace",
+                                        Namespace: "default",
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
@@ -602,6 +602,7 @@ import (
                             },
                             Spec:   netproto.{{title $crudObject}}Spec{
                                        NatPoolName: "preCreatedNatPool",
+                                       IPAddress: "10.1.1.1",
                                    },
                                }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)

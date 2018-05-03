@@ -206,7 +206,7 @@ func (dp *mockDatapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) 
 }
 
 // CreateNatBinding creates a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
+func (dp *mockDatapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) error {
 
 	return nil
 }
@@ -1819,9 +1819,26 @@ func TestNatBindingCreateDelete(t *testing.T) {
 		},
 	}
 
+	// create backing nat pool
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.0.0.1-10.1.1.100",
+		},
+	}
+
 	// create nat pool
-	err := ag.CreateNatBinding(&nb)
+	err := ag.CreateNatPool(&np)
 	AssertOk(t, err, "Error creating nat pool")
+
+	// create nat binding
+	err = ag.CreateNatBinding(&nb)
+	AssertOk(t, err, "Error creating nat binding")
 	natPool, err := ag.FindNatBinding(nb.ObjectMeta)
 	AssertOk(t, err, "Nat Pool was not found in DB")
 	Assert(t, natPool.Name == "testNatBinding", "NatBinding names did not match", natPool)
@@ -1901,13 +1918,29 @@ func TestNatBindingUpdate(t *testing.T) {
 			IPAddress:   "10.1.1.1",
 		},
 	}
+	// create backing nat pool
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.0.0.1-10.1.1.100",
+		},
+	}
 
 	// create nat pool
-	err := ag.CreateNatBinding(&nb)
+	err := ag.CreateNatPool(&np)
 	AssertOk(t, err, "Error creating nat pool")
-	natPool, err := ag.FindNatBinding(nb.ObjectMeta)
-	AssertOk(t, err, "Tenant was not found in DB")
-	Assert(t, natPool.Name == "updateNatBinding", "Nat Pool names did not match", natPool)
+
+	// create nat pool
+	err = ag.CreateNatBinding(&nb)
+	AssertOk(t, err, "Error creating nat binding")
+	natBinding, err := ag.FindNatBinding(nb.ObjectMeta)
+	AssertOk(t, err, "NatBinding was not found in DB")
+	Assert(t, natBinding.Name == "updateNatBinding", "Nat Binding names did not match", natBinding)
 
 	nbSpec := netproto.NatBindingSpec{
 		NatPoolName: "updateNatPool",
@@ -1918,4 +1951,99 @@ func TestNatBindingUpdate(t *testing.T) {
 
 	err = ag.UpdateNatBinding(&nb)
 	AssertOk(t, err, "Error updating nat pool")
+}
+
+func TestNatBidingToRemoteNatPool(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	// create backing remote Namespace and NatPool
+	rns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "remoteNamespace",
+		},
+	}
+	err := ag.CreateNamespace(&rns)
+	AssertOk(t, err, "Could not create remote namespace")
+
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "remoteNamespace",
+			Name:      "remoteNamespaceNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.0.0.1-10.1.1.100",
+		},
+	}
+
+	// create nat pool
+	err = ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+
+	nb := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "updateNatBinding",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "remoteNamespace/remoteNamespaceNatPool",
+			IPAddress:   "10.1.1.1",
+		},
+	}
+
+	// create nat binding
+	err = ag.CreateNatBinding(&nb)
+	AssertOk(t, err, "Error creating nat binding")
+	natPool, err := ag.FindNatBinding(nb.ObjectMeta)
+	AssertOk(t, err, "NatBinding was not found in DB")
+	Assert(t, natPool.Name == "updateNatBinding", "Nat Pool names did not match", natPool)
+}
+
+func TestNatPoolBindingOnNonExistentNatPools(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	// nat binding
+	nb := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "updateNatBinding",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "nonexistentNs/remoteNamespaceNatPool",
+			IPAddress:   "10.1.1.1",
+		},
+	}
+
+	// create nat binding
+	err := ag.CreateNatBinding(&nb)
+	Assert(t, err != nil, "Nat Bindings with nat pools on non existent namespaces should fail")
+
+	nb = netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "updateNatBinding",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "badformat/random/nonexistentNs/remoteNamespaceNatPool",
+			IPAddress:   "10.1.1.1",
+		},
+	}
+
+	// create nat binding
+	err = ag.CreateNatBinding(&nb)
+	Assert(t, err != nil, "Nat Bindings with nat pools on non existent namespaces should fail")
+
 }

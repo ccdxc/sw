@@ -215,9 +215,9 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	nb := netproto.NatBinding{
 		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "preCreatedTenant",
+			Tenant:    "default",
 			Name:      "preCreatedNatBinding",
-			Namespace: "preCreatedNamespace",
+			Namespace: "default",
 		},
 		Spec: netproto.NatBindingSpec{
 			NatPoolName: "preCreatedNatPool",
