@@ -163,8 +163,8 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_output_encrypt_app_min_size, "Compress->XTS encrypt chaining: app min block size", false},
   {&tests::compress_output_encrypt_app_nominal_size, "Compress->XTS encrypt chaining: app nominal block size", false},
   {&tests::compress_output_encrypt_app_max_size, "Compress->XTS encrypt chaining: app max block size", false},
-  {&tests::compress_clear_insert_header, "Compress without 'insert_header' bit set (HBM->HBM flat 64K buf)", false},
-  {&tests::decompress_clear_header_present, "Decompress without 'header_present' bit set (HBM->HBM flat 64K buf)", false},
+  // {&tests::compress_clear_insert_header, "Compress without 'insert_header' bit set (HBM->HBM flat 64K buf)", false},
+  // {&tests::decompress_clear_header_present, "Decompress without 'header_present' bit set (HBM->HBM flat 64K buf)", false},
   // Enable when model is fixed.
   //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
 };

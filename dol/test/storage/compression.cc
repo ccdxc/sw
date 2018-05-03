@@ -1634,12 +1634,21 @@ int _decompress_clear_header_present(comp_queue_push_t push_type,
                                    kUncompressedDataSize);
 
   /* reset the bit to indicate header is not present */
-  d.cmd_bits.insert_header = 0;
+  d.cmd_bits.header_present = 0;
 
   if (run_dc_test(d, status_buf, 0, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
+
+  // Verify data buf
+  if (test_data_verify_and_dump(uncompressed_data,
+                                uncompressed_buf->read_thru(),
+                                kUncompressedDataSize)) {
+      printf("Testcase %s failed\n", __func__);
+      return -1;
+  }
+
   printf("Testcase %s passed\n", __func__);
   return 0;
 }
