@@ -158,7 +158,8 @@ struct resp_rx_phv_t {
     my_token_id: 8;
     immdt_as_dbell_data: 64;
     atomic_release_byte: 8;
-    pad: 176;   //22B
+    struct resp_bt_info_t bt_info;
+    pad: 16;   //2B
 
     // scratch (flit 6)
     // size: 64  = 32 + 32

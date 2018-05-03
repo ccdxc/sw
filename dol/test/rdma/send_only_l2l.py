@@ -177,10 +177,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', num_pkts):
             return False
 
-        # verify that busy is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'busy', 0):
-            return False
-
         ############     RQ STATS VALIDATIONS #################
         # verify that num_pkts is incremented by num_pkts
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_pkts', num_pkts):

@@ -12,6 +12,7 @@ struct rdma_stage0_table_k k;
 #define TO_S3_P to_s3_dcqcn_info
 #define TO_S4_P to_s4_dcqcn_info
 #define TO_S5_P to_s5_rqcb1_wb_info
+#define BT_TO_S_INFO_P to_s1_bt_info
 
 #define RSQWQE_P            r1
 #define RQCB2_P             r2
@@ -20,6 +21,7 @@ struct rdma_stage0_table_k k;
 
 %%
     .param      resp_tx_rqcb2_process
+    .param      resp_tx_rqcb2_bt_process
     .param      resp_tx_ack_process
     .param      resp_tx_dcqcn_rate_process
     .param      resp_tx_dcqcn_timer_process
@@ -27,7 +29,7 @@ struct rdma_stage0_table_k k;
 resp_tx_rqcb_process:
 
     .brbegin
-    brpri           r7[MAX_RQ_RINGS-1:0], [DCQCN_TIMER_PRI, DCQCN_RATE_COMPUTE_PRI, RSQ_BT_PRI, ACK_NAK_PRI, RSQ_PRI, RQ_PRI]
+    brpri           r7[MAX_RQ_RINGS-1:0], [DCQCN_TIMER_PRI, DCQCN_RATE_COMPUTE_PRI, BT_PRI, ACK_NAK_PRI, RSQ_PRI, RQ_PRI]
     nop
 
     .brcase         RQ_RING_ID
@@ -126,13 +128,47 @@ resp_tx_rqcb_process:
         nop.e
         nop
 
-    .brcase         RSQ_BT_RING_ID
+    .brcase         BT_RING_ID
         // reset sched_eval_done
         tblwr           d.ring_empty_sched_eval_done, 0
 
-        // TBD : migrate to new approach
-        b               exit
-        nop             //BD Slot
+        // if a read response packet generation thread is in progress 
+        // (identified by read_rsp_lock bit), wait till it goes out
+        bbeq            d.read_rsp_lock, 1, exit
+        seq             c1, RSQ_P_INDEX, RSQ_C_INDEX    //BD Slot
+
+        // if we are already backtracking a request, ignore further scheduling opportunities
+        bbeq            d.bt_lock, 1, exit
+        add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)    //BD Slot
+
+        // take the lock such that further scheduling opportunities are ignored
+        tblwr           d.bt_lock, 1
+
+        add             r6, r0, RSQ_C_INDEX
+        // if RSQ is empty, we need to start from cindex-1
+        mincr.c1        r6, d.log_rsq_size, -1
+
+        // overwrite the rsqwqe cindex from cb state if bt is in progress
+        seq             c2, d.bt_in_progress, 1
+        add.c2          r6, r0, d.bt_rsq_cindex
+
+bt_in_progress:
+
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, log_rsq_size, d.log_rsq_size) 
+        CAPRI_SET_FIELD_RANGE2(BT_TO_S_INFO_P, log_pmtu, rsq_base_addr, d.{log_pmtu...rsq_base_addr})
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, bt_cindex, BT_P_INDEX)
+        // we want to end the search when we reach here
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, end_index, RSQ_P_INDEX)
+        // we want to start search from here
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, search_index, r6)
+
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, curr_read_rsp_psn, d.curr_read_rsp_psn)
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, read_rsp_in_progress, d.read_rsp_in_progress)
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, bt_in_progress, d.bt_in_progress)
+
+        //load rqcb2 to get psn to backtrack to (which is copied by rxdma)
+        CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb2_bt_process, RQCB2_P)
+
 
     .brcase         DCQCN_RATE_COMPUTE_RING_ID
         // reset sched_eval_done
@@ -182,30 +218,3 @@ resp_tx_rqcb_process:
 exit:
     phvwr.e     p.common.p4_intr_global_drop, 1
     nop
-
-//check_backtrack_q:
-//    seq         c1, RSQ_BT_C_INDEX, RSQ_BT_P_INDEX
-//    seq         c2, d.adjust_rsq_c_index_in_progress, 0
-//
-//    // if backtrack ring is invoked, but adjust_rsq_c_index_in_progress is not set
-//    // (which is set in RXDMA), then ignore backtrack ring and check for other work
-//    // It is possible that backtrack ring was already invoked which set
-//    // adjust_rsq_c_index_in_progress to 0, but might not have made backtrack_c_index     // equal to backtrack_p_index yet (due to DMA delays) and scheduler gave one
-//    // more opportunity. 
-//    bcf         [c1 | c2], check_rq
-//    tblwr       d.adjust_rsq_c_index_in_progress, 0 //BD Slot
-//
-//backtrack_q:
-//    // reset all the in_progress variables
-//    tblwr       d.read_rsp_in_progress, 0
-//    tblwr       d.curr_read_rsp_psn, 0
-//    tblwr       d.read_rsp_lock, 0
-//
-//    add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-//    CAPRI_SET_FIELD(r4, BT_ADJUST_INFO_T, adjust_rsq_c_index, d.adjust_rsq_c_index)
-//    CAPRI_SET_FIELD(r4, BT_ADJUST_INFO_T, rsq_bt_p_index, RSQ_BT_P_INDEX)
-//
-//    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsq_backtrack_adjust_process, RQCB1_P)
-//
-//    nop.e
-//    nop

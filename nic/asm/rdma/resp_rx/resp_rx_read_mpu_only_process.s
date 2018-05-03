@@ -48,8 +48,6 @@ resp_rx_read_mpu_only_process:
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
 
-    // ring rsq dbell if reqd
-    bbeq    k.t1_s2s_rqcb_to_read_atomic_rkey_info_skip_rsq_dbell, 1, exit
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
     CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15), DB_DATA)
     // store db_data in LE format

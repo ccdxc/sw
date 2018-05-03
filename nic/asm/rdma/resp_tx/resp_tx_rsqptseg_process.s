@@ -20,7 +20,7 @@ struct resp_tx_s4_t0_k k;
 
 #define IN_P t0_s2s_rkey_to_ptseg_info
 
-#define K_PT_SEG_OFFSET CAPRI_KEY_RANGE(IN_P, pt_seg_offset_sbit0_ebit15, pt_seg_offset_sbit24_ebit31)
+#define K_PT_SEG_OFFSET CAPRI_KEY_RANGE(IN_P, pt_seg_offset_sbit0_ebit7, pt_seg_offset_sbit24_ebit31)
 
 %%
 

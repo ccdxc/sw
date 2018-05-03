@@ -35,7 +35,6 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_dummy_rqpt_process
     .param    resp_rx_rqcb1_in_progress_process
     .param    resp_rx_write_dummy_process
-    .param    resp_rx_rsq_backtrack_process
     .param    resp_rx_rqcb1_recirc_sge_process
     .param    resp_rx_dcqcn_ecn_process
     .param    resp_rx_dcqcn_cnp_process
@@ -422,9 +421,7 @@ wr_only_skip_immdt_as_dbell:
 process_read_atomic:
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
     //                      (sizeof(rsqwqe_t) * p_index));
-    seq         c1, d.rsq_quiesce, 1
-    // if rsq_quiesce is on, use rsq_p_index_prime, else use rsq_p_index
-    cmov        NEW_RSQ_P_INDEX, c1, d.rsq_pindex_prime, d.rsq_pindex
+    add         NEW_RSQ_P_INDEX, r0, d.rsq_pindex
     sll         RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     add         RSQWQE_P, RSQWQE_P, NEW_RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
     // p_index/c_index are in little endian
@@ -433,32 +430,21 @@ process_read_atomic:
     // DMA for RSQWQE
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
     
-    // in case of quiesce mode, only duplicate reqs would move rsq_p_index in a 
-    // lock step manner. If we receive non-duplicate, we increment only
-    // rsq_p_index_prime. Standard is not clear whether we can handle fresh
-    // requests while duplicate requests are being handled. If needed, we can
-    // stop dropping new requests if quiesce mode is on.
-    // 
-    tblwr.c1    d.rsq_pindex_prime, NEW_RSQ_P_INDEX
-    tblwr.!c1   d.rsq_pindex, NEW_RSQ_P_INDEX
+    tblwr       d.rsq_pindex, NEW_RSQ_P_INDEX
 
     // common params for both read/atomic
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY, p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_RD_ATOMIC_P, va, r_key, CAPRI_RXDMA_RETH_VA_R_KEY)
-    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, rsq_p_index), NEW_RSQ_P_INDEX, \
-                CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, skip_rsq_dbell), d.rsq_quiesce
-    
+    phvwr       CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, rsq_p_index), NEW_RSQ_P_INDEX
 
     bcf         [c6 | c5], process_atomic
     phvwr       p.rsqwqe.psn, d.e_psn   //BD Slot
 
 process_read:
-    // for read, set the end of commands right here if quiesce is on.
     // for atomic, we have to execute the atomic request and hence
     // end of commands is set in atomic_resource_process function.
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe, rsqwqe, RSQWQE_P)
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, c1)
     phvwr       p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
     // do a MPU-only lookup
@@ -517,7 +503,11 @@ seq_err_or_duplicate:
 duplicate:
     // if cswap/fna/read, branch out
     bcf         [c6 | c5 | c3], duplicate_rd_atomic
-    nop         //BD Slot
+    // release chance to next packet
+    // instead of incrementing the nxt_to_go_token_id, decrement the token_id itself
+    // this is done because, nxt_to_go_token_id is modified in S4 and as a general rule
+    // two stages should not be updating the same variable.
+    tblsub      d.token_id, 1   //BD Slot
 
 duplicate_wr_send:
     // ring the ack_nak ring one more time so that a new ack is pushed out
@@ -530,67 +520,54 @@ duplicate_wr_send:
                             DB_ADDR, DB_DATA)
 
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
 
-    // release chance to next packet
-    tbladd.e  d.nxt_to_go_token_id, 1  
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
 duplicate_rd_atomic:
-    // TBD: Disabling duplicate read/atomic handling for now.
-    // need to change to new logic
-        
-//    // recirc if threre is already another duplicate req in progress
-//    seq             c1, d.adjust_rsq_c_index_in_progress, 1
-//    bcf             [c1], recirc_wait_for_turn
-//    nop             //BD Slot
-//
-//    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_READ_REQ)
-//    // RETH and ATOMICETH have VA, r_key at same location 
-//    cmov            r6, c2, CAPRI_RXDMA_RETH_DMA_LEN, 8
-//
-//    // since there is no space in stage-to-stage data, using to-stage
-//    // to populate va/r_key/len so that it is accessible to backtrack_process
-//    // function which may get called multiple times in successive stages
-//    // during backtrack process
-//    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, r4)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, CAPRI_RXDMA_RETH_VA)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-//
-//    seq         c3, d.rsq_quiesce, 1
-//    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, search_psn, CAPRI_APP_DATA_BTH_PSN)
-//    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, d.rsq_pindex_prime, c3)
-//    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, RSQ_P_INDEX, !c3)
-//    add         r5, r0, RSQ_P_INDEX
-//    mincr       r5, d.log_rsq_size, -1
-//    // in quiesce mode, make sure hi_index is 1 more than RSQ_P_INDEX.
-//    // since previous mincr has decremented by 1, we are incrementing by 2 here.
-//    mincr.c3    r5, d.log_rsq_size, +2
-//    seq         c4, RSQ_P_INDEX, RSQ_C_INDEX
-//    add         r6, r0, RSQ_C_INDEX
-//    // if rsq is empty, we need to start with c_index-1
-//    mincr.c4    r6, d.log_rsq_size, -1
-//
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, hi_index, r5)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, index, r6)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, rsq_base_addr, d.rsq_base_addr)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_pmtu, d.log_pmtu)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, walk, RSQ_EVAL_MIDDLE)
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_rsq_size, d.log_rsq_size)
-//    
-//    cmov        r5, c2, RSQ_OP_TYPE_READ, RSQ_OP_TYPE_ATOMIC 
-//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, read_or_atomic, r5)
-//    
-//    //load entry at cindex first
-//    sll         r3, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
-//    add         r3, r3, r6, LOG_SIZEOF_RSQWQE_T
-//    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rsq_backtrack_process, r3)
+    // drop further duplicate processing if threre is already another duplicate req in progress
+    // it is most likely that further duplicates are with later psn values than the current 
+    // duplicate whose backtrack is in progress (assuming requester is doing go-back-n). in this
+    // case, droping further duplicate processing is ok because, upon backtracking to the psn of
+    // current duplicate under process, all the further packets are anyway re-generated due 
+    // to the way RSQ backtrack is implemented in new logic.
+    // in case the duplicate that is being dropped is having earlier psn value, requester will
+    // retry anyway. If we want to optimize this case, instead of blindly dropping the duplicate,
+    // we could load rqcb2 to see if the new duplicate psn is earlier than what is under process 
+    // and recirc it instead of dropping it.
+    seq             c1, d.bt_in_progress, 1
+    bcf             [c1], drop_duplicate_rd_atomic
+    tblwr.!c1       d.bt_in_progress, 1 //BD Slot
 
-    nop.e
-    nop
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_START)
+
+    // copy bt_info to rqcb2
+    add             r6, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, \
+                    ((CB_UNIT_SIZE_BYTES * 2) + FIELD_OFFSET(rqcb2_t, bt_info))
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, bt_info, bt_info, r6)
+
+    // ring backtrack doorbell to wakeup txdma
+    DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 1)
+    PREPARE_DOORBELL_INC_PINDEX(CAPRI_RXDMA_INTRINSIC_LIF, \
+                                CAPRI_RXDMA_INTRINSIC_QTYPE, \
+                                CAPRI_RXDMA_INTRINSIC_QID, \
+                                BT_RING_ID, DB_ADDR, DB_DATA)
+    phvwr           p.db_data1, DB_DATA.dx
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
     
+    // copy psn/va/r_key/len and op_type
+    phvwr.c3        p.bt_info.len, CAPRI_RXDMA_RETH_DMA_LEN
+    phvwr.!c3       p.bt_info.read_or_atomic, RSQ_OP_TYPE_ATOMIC
+    phvwr.e         p.bt_info.psn, CAPRI_APP_DATA_BTH_PSN
+    phvwr           p.{bt_info.va...bt_info.r_key}, CAPRI_RXDMA_RETH_VA_R_KEY //Exit Slot
+    
+drop_duplicate_rd_atomic:
+    //Generate DMA command to skip to payload end
+    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
+
 
 /****** Logic for NAKs ******/
 
@@ -620,7 +597,10 @@ nak:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
 
     // release chance to next packet
-    tbladd.e  d.nxt_to_go_token_id, 1  
+    // instead of incrementing the nxt_to_go_token_id, decrement the token_id itself
+    // this is done because, nxt_to_go_token_id is modified in S4 and as a general rule
+    // two stages should not be updating the same variable.
+    tblsub.e    d.token_id, 1
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
 /****** Logic for UD ******/

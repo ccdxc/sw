@@ -1081,6 +1081,15 @@ typedef union header_template_s {
     header_template_v6_t v6;
 } PACKED header_template_t;
 
+typedef struct bt_info_s {
+    uint32_t    len;
+    uint32_t    r_key;
+    uint64_t    va;
+    uint32_t    psn : 24;
+    uint32_t    rsvd : 7;
+    uint32_t    read_or_atomic : 1;
+} PACKED bt_info_t;
+
 #define RQ_RING_ID            RING_ID_0
 #define RSQ_RING_ID           RING_ID_1
 #define ACK_NAK_RING_ID       RING_ID_2
@@ -1089,12 +1098,15 @@ typedef union header_template_s {
 #define MAX_RQ_RINGS          6
 
 typedef struct rqcb0_s {
-    uint8_t    pad[3];
+    uint8_t     pad;
+    uint16_t    bt_rsq_cindex;
     uint8_t     rsvd1 : 7;
     uint8_t     ring_empty_sched_eval_done : 1;
     uint8_t     header_template_size;
     uint32_t    curr_read_rsp_psn : 24;
-    uint32_t    rsvd0 : 5;
+    uint32_t    rsvd0 : 3;
+    uint32_t    bt_in_progress: 1;
+    uint32_t    bt_lock: 1;
     uint32_t    rq_in_hbm : 1;
     uint32_t    read_rsp_in_progress : 1;
     uint32_t    read_rsp_lock : 1;
@@ -1133,27 +1145,25 @@ typedef struct rqcb1_s {
     uint32_t    current_sge_offset;
     uint64_t    curr_wqe_ptr;
     uint8_t     rsq_pindex;
-    uint32_t    rsvd3 : 8;
+    uint32_t    bt_in_progress : 8;
     uint32_t    cq_id : 24;
     uint16_t    proxy_pindex;
     uint16_t    proxy_cindex;
     uint32_t    header_template_size : 8;
     uint32_t    msn : 24;
-    uint32_t    adjust_rsq_c_index : 8;
+    uint32_t    rsvd3 : 8;
     uint32_t    e_psn : 24;
     uint16_t    spec_cindex;
     uint8_t     rsvd2 : 7;
     uint8_t     in_progress : 1;
-    uint8_t     rsvd1 : 5;
-    uint8_t     rsq_quiesce : 1;
-    uint8_t     adjust_rsq_c_index_in_progress : 1;
+    uint8_t     rsvd1 : 7;
     uint8_t     disable_speculation : 1;
     uint8_t     rsvd0 : 4;
     uint8_t     rq_in_hbm : 1;
     uint8_t     immdt_as_dbell : 1;
     uint8_t     cache : 1;
     uint8_t     srq_enabled : 1;
-    uint8_t     rsq_pindex_prime : 8;
+    uint8_t     rsvd4: 8;
     uint8_t     nxt_to_go_token_id : 8;
     uint8_t     token_id : 8;
     uint32_t    header_template_addr;
@@ -1179,7 +1189,8 @@ typedef struct rqcb1_s {
 
 //rqcb2_t is the 3rd 64B of rqcb
 typedef struct rqcb2_s {
-    uint8_t     pad[56];
+    uint8_t     pad[36];
+    bt_info_t   bt_info;
     rdma_aeth_t aeth;
     uint32_t    ack_nak_psn : 24;
     uint32_t    rsvd0 : 8;

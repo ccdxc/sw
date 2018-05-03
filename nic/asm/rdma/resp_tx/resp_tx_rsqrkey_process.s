@@ -23,11 +23,11 @@ struct key_entry_aligned_t d;
 #define IN_P    t0_s2s_rsqwqe_to_rkey_info
 #define IN_TO_S_P to_s3_dcqcn_info
 
-#define K_XFER_VA CAPRI_KEY_RANGE(IN_P, transfer_va_sbit0_ebit15, transfer_va_sbit32_ebit63)
+#define K_XFER_VA CAPRI_KEY_RANGE(IN_P, transfer_va_sbit0_ebit7, transfer_va_sbit32_ebit63)
 #define K_XFER_BYTES CAPRI_KEY_RANGE(IN_P, transfer_bytes_sbit0_ebit7, transfer_bytes_sbit8_ebit11)
 #define K_HDR_TMP CAPRI_KEY_RANGE(IN_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_HDR_TMP_SZ CAPRI_KEY_RANGE(IN_P, header_template_size_sbit0_ebit3, header_template_size_sbit4_ebit7)
-#define K_DCQCN_CB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, dcqcn_cb_addr_sbit0_ebit31, dcqcn_cb_addr_sbit32_ebit33)
+#define K_DCQCN_CB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, dcqcn_cb_addr_sbit0_ebit15, dcqcn_cb_addr_sbit32_ebit33)
 
 %%
     .param      resp_tx_rsqptseg_process

@@ -39,6 +39,8 @@ def TestCaseStepVerify(tc, step):
     rs = tc.config.rdmasession
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     ring1_mask = (rs.lqp.num_rsq_wqes - 1)
+    ring2_mask = 0xffff
+    ring3_mask = 0xffff
 
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
@@ -65,10 +67,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
-        # verify that busy is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'busy', 0):
-            return False
-
         # verify that rsq p_index and c_index is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'p_index1', ring1_mask, 1):
             return False
@@ -76,13 +74,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask, 1):
             return False
 
-        # verify that adjust_rsq_c_index_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'adjust_rsq_c_index_in_progress', 0):
-            return False
-
-        # verify that rsq_quiesce is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'rsq_quiesce', 0):
-            return False
     
         # verify that read_rsp_lock is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock', 0):
@@ -111,10 +102,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
-        # verify that busy is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'busy', 0):
-            return False
-
         # verify that rsq p_index and c_index is incremented by 0
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'p_index1', ring1_mask, 0):
             return False
@@ -122,14 +109,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask, 0):
             return False
 
-        # verify that adjust_rsq_c_index_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'adjust_rsq_c_index_in_progress', 0):
-            return False
-
-        # verify that rsq_quiesce is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'rsq_quiesce', 0):
-            return False
-    
         # verify that read_rsp_lock is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock', 0):
             return False
@@ -149,16 +128,12 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 0):
             return False
 
-        # verify that token_id is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
+        # verify that token_id is NOT incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 0):
             return False
 
-        # verify that nxt_to_go_token_id is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
-            return False
-
-        # verify that busy is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'busy', 0):
+        # verify that nxt_to_go_token_id is NOT incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 0):
             return False
 
         # verify that rsq p_index and c_index is incremented by 0
@@ -168,14 +143,25 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask, 0):
             return False
 
-        # verify that adjust_rsq_c_index_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'adjust_rsq_c_index_in_progress', 0):
+        # verify that bt p_index and c_index is incremented by 1
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'p_index3', ring1_mask, 1):
             return False
 
-        # verify that rsq_quiesce is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'rsq_quiesce', 0):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index3', ring1_mask, 1):
             return False
-    
+
+        # verify that bt_lock is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'bt_lock', 0):
+            return False
+
+        # verify that rqcb0.bt_in_progress is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'rqcb0_bt_in_progress', 0):
+            return False
+
+        # verify that rqcb1.bt_in_progress is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'rqcb1_bt_in_progress', 0):
+            return False
+
         # verify that read_rsp_lock is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock', 0):
             return False

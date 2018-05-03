@@ -69,18 +69,17 @@ class RdmaRQstate(Packet):
         BitField("read_rsp_lock", 0, 1),
         BitField("read_rsp_in_progress", 0, 1),
         BitField("rq_in_hbm", 0, 1),
-        # though busy is not used in actual asm code, keeping it in 
-        # dol qstate as multiple testcases are still verifying it to be 0
-        BitField("busy", 0, 1), 
-        BitField("rqcb0_rsvd0", 0, 4),
+        BitField("bt_lock", 0, 1),
+        BitField("rqcb0_bt_in_progress", 0, 1),
+        BitField("rqcb0_rsvd0", 0, 3),
 
         X3BytesField("curr_read_rsp_psn", 0),
-        ByteField("p4plus_to_p4_flags", 0),
-
         ByteField("header_template_size", 0),
+
         BitField("ring_empty_sched_eval_done", 0, 1),
         BitField("rqcb0_rsvd1", 0, 7),
-        BitField("rqcb0_pad", 0, 16),
+        ShortField("bt_rsq_cindex", 0),
+        ByteField("pad", 0),
 
         # RQCB1
         ByteField("pc_offset", 0),
@@ -103,7 +102,7 @@ class RdmaRQstate(Packet):
 
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
-        ByteField("rsq_pindex_prime", 0),                                            
+        ByteField("rqcb1_rsvd4", 0),                                            
         BitField("srq_enabled", 0, 1),
         BitField("cache", 0, 1),
         BitField("immdt_as_dbell", 0, 1),
@@ -111,15 +110,13 @@ class RdmaRQstate(Packet):
         BitField("rqcb1_rsvd0", 0, 4),
 
         BitField("disable_speculation", 0, 1),
-        BitField("adjust_rsq_c_index_in_progress", 0, 1),
-        BitField("rsq_quiesce", 0, 1),
-        BitField("rqcb1_rsvd1", 0, 5),
+        BitField("rqcb1_rsvd1", 0, 7),
         BitField("in_progress", 0, 1),
         BitField("rqcb1_rsvd2", 0, 7),
         LEShortField("spec_cindex", 0),
 
         X3BytesField("e_psn", 0),
-        ByteField("adjust_rsq_c_index", 0),
+        ByteField("rqcb1_rsvd3", 0),
 
         X3BytesField("msn", 0),
         ByteField("header_template_size", 0),
@@ -128,7 +125,7 @@ class RdmaRQstate(Packet):
         LEShortField("proxy_pindex", 0),
 
         X3BytesField("cq_id", 0),
-        ByteField("rqcb1_rsvd3", 0),
+        ByteField("rqcb1_bt_in_progress", 0),
 
         ByteField("rsq_pindex", 0),
 
@@ -147,7 +144,14 @@ class RdmaRQstate(Packet):
         ByteField("aeth_syndrome", 0),
         X3BytesField("aeth_msn", 0),
 
-        BitField("rqcb2_pad", 0, 448),
+        BitField("bt_read_or_atomic", 0, 1),
+        BitField("bt_rsvd0", 0, 7),
+        X3BytesField("bt_psn", 0),
+        LongField("bt_va", 0),
+        IntField("bt_r_key", 0),
+        IntField("bt_len", 0),
+
+        BitField("rqcb2_pad", 0, 288),
 
         # RQCB3
         LongField("wrid", 0),

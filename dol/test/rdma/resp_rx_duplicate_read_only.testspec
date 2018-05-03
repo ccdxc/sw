@@ -93,6 +93,7 @@ packets:
                 opcode  : 4 # Send Only
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
+                a       : 1
             payload:
                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 

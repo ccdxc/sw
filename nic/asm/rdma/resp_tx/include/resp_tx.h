@@ -77,6 +77,23 @@ struct resp_tx_phv_t {
     struct phv_ common;
 };
 
+// we still need to retain these structures due to the special nature backtrack logic
+// this structure should be same as header_type resp_tx_to_stage_bt_info_t defined in p4
+// TBD: auto-generate this structure from P4
+
+struct resp_tx_to_stage_bt_info_t {
+    log_rsq_size: 5;
+    log_pmtu: 5;
+    rsq_base_addr: 32;
+    bt_cindex: 16;
+    end_index: 16;
+    search_index: 16;
+    curr_read_rsp_psn: 24;
+    read_rsp_in_progress: 1;
+    bt_in_progress: 1;
+    rsvd: 12;
+};
+ 
 #if 0
 struct resp_tx_phv_global_t {
     struct phv_global_common_t common;

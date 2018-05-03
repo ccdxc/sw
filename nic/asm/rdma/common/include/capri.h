@@ -256,6 +256,11 @@ struct capri_intrinsic_ring_t {
     phvwri    p.common.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_0_VALID(1);
 
+#define CAPRI_NEXT_TABLE0_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
+    phvwrpair p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    CAPRI_SET_TABLE_0_VALID(1);
+
 #define CAPRI_NEXT_TABLE0_READ_PC_C(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
     phvwrpair p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
     phvwri._c   p.common.common_te0_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
@@ -273,9 +278,19 @@ struct capri_intrinsic_ring_t {
     phvwri    p.common.common_te1_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_1_VALID(1);
 
+#define CAPRI_NEXT_TABLE1_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
+    phvwrpair p.{common.common_te1_phv_table_lock_en...common.common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te1_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common.common_te1_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    CAPRI_SET_TABLE_1_VALID(1);
+
 #define CAPRI_NEXT_TABLE2_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
     phvwrpair p.{common.common_te2_phv_table_lock_en...common.common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te2_phv_table_addr, _table_addr_r; \
     phvwri    p.common.common_te2_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    CAPRI_SET_TABLE_2_VALID(1);
+
+#define CAPRI_NEXT_TABLE2_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
+    phvwrpair p.{common.common_te2_phv_table_lock_en...common.common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te2_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common.common_te2_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_2_VALID(1);
 
 #define CAPRI_NEXT_TABLE3_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
@@ -283,10 +298,20 @@ struct capri_intrinsic_ring_t {
     phvwri    p.common.common_te3_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_3_VALID(1);
 
+#define CAPRI_NEXT_TABLE3_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
+    phvwrpair p.{common.common_te3_phv_table_lock_en...common.common_te3_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te3_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common.common_te3_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    CAPRI_SET_TABLE_3_VALID(1);
+
 #define CAPRI_NEXT_TABLE_I_READ(_base_r, _lock_en, _table_read_size, _table_pc_r, _table_addr_r) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
+
+#define CAPRI_NEXT_TABLE_I_READ_E(_base_r, _lock_en, _table_read_size, _table_pc_r, _table_addr_r) \
+    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
+    phvwrp.e _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrp   _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
 
 #define CAPRI_NEXT_TABLE_I_READ_PC_C(_base_r, _lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
@@ -811,6 +836,11 @@ struct capri_dma_cmd_mem2mem_t {
 
 #define DMA_CMD_STATIC_BASE_GET_C(_base_r, _flit_id, _index, _cf) \
 addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FLIT) +  \
+                ((_flit_id+1) << LOG_NUM_BITS_PER_FLIT) - \
+                (((_index & 0x3) + 1) << LOG_DMA_CMD_SIZE_BITS);
+
+#define DMA_CMD_STATIC_BASE_GET_E(_base_r, _flit_id, _index) \
+addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FLIT) +  \
                 ((_flit_id+1) << LOG_NUM_BITS_PER_FLIT) - \
                 (((_index & 0x3) + 1) << LOG_DMA_CMD_SIZE_BITS);
 

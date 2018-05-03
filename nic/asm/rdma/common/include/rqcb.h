@@ -7,14 +7,14 @@
 #define RQ_RING_ID                  0
 #define RSQ_RING_ID                 1
 #define ACK_NAK_RING_ID             2
-#define RSQ_BT_RING_ID              3
+#define BT_RING_ID                  3
 #define DCQCN_RATE_COMPUTE_RING_ID  4
 #define DCQCN_TIMER_RING_ID         5
 
 #define RQ_PRI                      3
 #define RSQ_PRI                     4
 #define ACK_NAK_PRI                 5
-#define RSQ_BT_PRI                  2
+#define BT_PRI                      2
 #define DCQCN_RATE_COMPUTE_PRI      0
 #define DCQCN_TIMER_PRI             1
 
@@ -27,8 +27,8 @@
 #define ACK_NAK_P_INDEX d.{ring2.pindex}.hx
 #define ACK_NAK_C_INDEX d.{ring2.cindex}.hx
 
-#define RSQ_BT_P_INDEX d.{ring3.pindex}.hx
-#define RSQ_BT_C_INDEX d.{ring3.cindex}.hx
+#define BT_P_INDEX d.{ring3.pindex}.hx
+#define BT_C_INDEX d.{ring3.cindex}.hx
 
 #define DCQCN_RATE_COMPUTE_P_INDEX d.{ring4.pindex}.hx
 #define DCQCN_RATE_COMPUTE_C_INDEX d.{ring4.cindex}.hx
@@ -82,14 +82,20 @@ struct rqcb0_t {
     read_rsp_lock: 1;           //Rw by S0 and S4 ?
     read_rsp_in_progress: 1;    //Rw by S0 and S4 ?
     rq_in_hbm: 1;               //Ronly
-    rsvd0: 5;
+    bt_lock: 1;                 //Rw by S0 and Sx
+    bt_in_progress: 1;          //RW by S0 and Sx
+    rsvd0: 3;
 
     curr_read_rsp_psn: 24;      //Rw by S0 ?
 
     header_template_size: 8;    //Ronly
     ring_empty_sched_eval_done: 1;  //rw in S0
     rsvd1: 7;
-    pad: 24;   // 3B
+
+    // store the current backtrack progress
+    bt_rsq_cindex: 16;          //Read by S0, write by Sx
+
+    pad: 8;   // 1B
 };
 
 //Rx only cb
@@ -120,7 +126,7 @@ struct rqcb1_t {
 
     token_id: 8;            //rw by S0
     nxt_to_go_token_id: 8;  // written by S4, read by S0
-    rsq_pindex_prime: 8;    //TBD
+    rsvd4 : 8;
     srq_enabled: 1;         //Ronly
     cache: 1;               //Ronly
     immdt_as_dbell: 1;      //Ronly
@@ -128,16 +134,14 @@ struct rqcb1_t {
     rsvd0: 4;
 
     disable_speculation: 1; //rw by S0
-    adjust_rsq_c_index_in_progress: 1;  //TBD
-    rsq_quiesce: 1; //TBD
-    rsvd1: 5;
+    rsvd1: 7;
     in_progress: 1;         // wirtten by S4, read by S0
     rsvd2: 7;
     spec_cindex: 16;  // cindex used for speculation
                       // rw by S0
                       
     e_psn: 24;        //rw by S0
-    adjust_rsq_c_index: 8;  //TBD
+    rsvd3: 8;
 
     msn:24;                 //rw by S0 ?
     header_template_size: 8;    //Ronly
@@ -149,7 +153,7 @@ struct rqcb1_t {
                        
 
     cq_id: 24;                  //Ronly
-    rsvd3: 8;
+    bt_in_progress: 8;  // set to 1 by rxdma, to 0 by txdma
 
     rsq_pindex: 8;  // written by S0
 
@@ -171,7 +175,9 @@ struct rqcb2_t {
     struct rdma_aeth_t aeth;    //4B
 
     //backtrack info
-    pad: 448;   //56B
+    struct resp_bt_info_t  bt_info;
+
+    pad: 288;   //36B
 };
 
 // Multi-packet write fields used in resp_rx

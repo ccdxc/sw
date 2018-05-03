@@ -55,10 +55,14 @@
 #define tx_table_s1_t0_action   resp_tx_rqcb2_process
 #define tx_table_s1_t0_action1  resp_tx_ack_process
 #define tx_table_s1_t0_action2  resp_tx_rsq_backtrack_adjust_process
+#define tx_table_s1_t0_action3  resp_tx_rqcb2_bt_process
 
-#define tx_table_s2_t0_action resp_tx_rsqwqe_process
+#define tx_table_s2_t0_action   resp_tx_rsqwqe_process
+#define tx_table_s2_t0_action1  resp_tx_rsqwqe_bt_process
 
 #define tx_table_s3_t0_action resp_tx_rsqrkey_process
+
+#define tx_table_s3_t1_action   resp_tx_rqcb0_bt_write_back_process
 
 #define tx_table_s4_t0_action   resp_tx_rsqptseg_process
 #define tx_table_s4_t0_action1  resp_tx_dcqcn_rate_process
@@ -185,6 +189,50 @@ header_type resp_tx_to_stage_dcqcn_info_t {
     }
 }
 
+header_type resp_tx_to_stage_bt_info_t {
+    fields {
+        log_rsq_size                     :    5;
+        log_pmtu                         :    5;
+        rsq_base_addr                    :   32; 
+        bt_cindex                        :   16;
+        end_index                        :   16;
+        search_index                     :   16;
+        curr_read_rsp_psn                :   24;
+        read_rsp_in_progress             :    1;
+        bt_in_progress                   :    1; 
+        rsvd                             :   12;
+    }
+}
+
+header_type resp_tx_bt_info_t {
+    fields {
+        read_or_atomic                   :    1;
+        rsvd                             :    7;
+        psn                              :   24;
+        va                               :   64;
+        r_key                            :   32;
+        len                              :   32;
+    }
+}
+
+header_type resp_tx_rqcb0_bt_write_back_info_t {
+    fields {
+        curr_read_rsp_psn                :   24;
+        read_rsp_in_progress             :    1;
+        bt_in_progress                   :    1;
+        update_read_rsp_in_progress      :    1; 
+        update_rsq_cindex                :    1;
+        update_bt_cindex                 :    1;
+        update_bt_in_progress            :    1;
+        update_bt_rsq_cindex             :    1;
+        rsvd                             :    1;
+        rsq_cindex                       :   16; 
+        bt_cindex                        :   16;
+        bt_rsq_cindex                    :   16;
+        pad                              :   80;
+    }
+}
+
 header_type resp_tx_s6_info_t {
     fields {
         rsvd                             :  128;
@@ -275,15 +323,30 @@ metadata resp_tx_to_stage_dcqcn_info_t to_s1_dcqcn_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_dcqcn_info_t to_s1_dcqcn_info_scr;
 
+@pragma pa_header_union ingress to_stage_1
+metadata resp_tx_to_stage_bt_info_t to_s1_bt_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_bt_info_t to_s1_bt_info_scr;
+
 @pragma pa_header_union ingress to_stage_2
 metadata resp_tx_to_stage_dcqcn_info_t to_s2_dcqcn_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_dcqcn_info_t to_s2_dcqcn_info_scr;
 
+@pragma pa_header_union ingress to_stage_2
+metadata resp_tx_to_stage_bt_info_t to_s2_bt_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_bt_info_t to_s2_bt_info_scr;
+
 @pragma pa_header_union ingress to_stage_3
 metadata resp_tx_to_stage_dcqcn_info_t to_s3_dcqcn_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_dcqcn_info_t to_s3_dcqcn_info_scr;
+
+@pragma pa_header_union ingress to_stage_3
+metadata resp_tx_to_stage_bt_info_t to_s3_bt_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_bt_info_t to_s3_bt_info_scr;
 
 @pragma pa_header_union ingress to_stage_4
 metadata resp_tx_to_stage_dcqcn_info_t to_s4_dcqcn_info;
@@ -331,6 +394,17 @@ metadata resp_tx_rkey_to_ptseg_info_t t0_s2s_rkey_to_ptseg_info_scr;
 metadata resp_tx_rqcb0_write_back_info_t t1_s2s_rqcb0_write_back_info;
 @pragma scratch_metadata
 metadata resp_tx_rqcb0_write_back_info_t t1_s2s_rqcb0_write_back_info_scr;
+
+@pragma pa_header_union ingress common_t1_s2s
+metadata resp_tx_rqcb0_bt_write_back_info_t t1_s2s_rqcb0_bt_write_back_info;
+@pragma scratch_metadata
+metadata resp_tx_rqcb0_bt_write_back_info_t t1_s2s_rqcb0_bt_write_back_info_scr;
+
+@pragma pa_header_union ingress common_t0_s2s
+metadata resp_tx_bt_info_t t0_s2s_bt_info;
+@pragma scratch_metadata
+metadata resp_tx_bt_info_t t0_s2s_bt_info_scr;
+
 
 /*
  * Stage 0 table 0 action
@@ -466,6 +540,37 @@ action resp_tx_rqcb0_write_back_process () {
     modify_field(t1_s2s_rqcb0_write_back_info_scr.pad, t1_s2s_rqcb0_write_back_info.pad);
 
 }
+action resp_tx_rqcb0_bt_write_back_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s3_bt_info_scr.log_rsq_size, to_s3_bt_info.log_rsq_size);
+    modify_field(to_s3_bt_info_scr.log_pmtu, to_s3_bt_info.log_pmtu);
+    modify_field(to_s3_bt_info_scr.rsq_base_addr, to_s3_bt_info.rsq_base_addr);
+    modify_field(to_s3_bt_info_scr.bt_cindex, to_s3_bt_info.bt_cindex);
+    modify_field(to_s3_bt_info_scr.end_index, to_s3_bt_info.end_index);
+    modify_field(to_s3_bt_info_scr.search_index, to_s3_bt_info.search_index);
+    modify_field(to_s3_bt_info_scr.curr_read_rsp_psn, to_s3_bt_info.curr_read_rsp_psn);
+    modify_field(to_s3_bt_info_scr.read_rsp_in_progress, to_s3_bt_info.read_rsp_in_progress);
+    modify_field(to_s3_bt_info_scr.bt_in_progress, to_s3_bt_info.bt_in_progress);
+    modify_field(to_s3_bt_info_scr.rsvd, to_s3_bt_info.rsvd);
+    
+    // stage to stage
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.curr_read_rsp_psn, t1_s2s_rqcb0_bt_write_back_info.curr_read_rsp_psn);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.read_rsp_in_progress, t1_s2s_rqcb0_bt_write_back_info.read_rsp_in_progress);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.bt_in_progress, t1_s2s_rqcb0_bt_write_back_info.bt_in_progress);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_read_rsp_in_progress, t1_s2s_rqcb0_bt_write_back_info.update_read_rsp_in_progress);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_rsq_cindex, t1_s2s_rqcb0_bt_write_back_info.update_rsq_cindex);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_bt_cindex, t1_s2s_rqcb0_bt_write_back_info.update_bt_cindex);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_bt_in_progress, t1_s2s_rqcb0_bt_write_back_info.update_bt_in_progress);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_bt_rsq_cindex, t1_s2s_rqcb0_bt_write_back_info.update_bt_rsq_cindex);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.rsvd, t1_s2s_rqcb0_bt_write_back_info.rsvd);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.rsq_cindex, t1_s2s_rqcb0_bt_write_back_info.rsq_cindex);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.bt_cindex, t1_s2s_rqcb0_bt_write_back_info.bt_cindex);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.bt_rsq_cindex, t1_s2s_rqcb0_bt_write_back_info.bt_rsq_cindex);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.pad, t1_s2s_rqcb0_bt_write_back_info.pad);
+}
 action resp_tx_rqcb2_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -482,6 +587,24 @@ action resp_tx_rqcb2_process () {
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.read_rsp_in_progress, t0_s2s_rqcb_to_rqcb2_info.read_rsp_in_progress);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.pad, t0_s2s_rqcb_to_rqcb2_info.pad);
 
+}
+action resp_tx_rqcb2_bt_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s1_bt_info_scr.log_rsq_size, to_s1_bt_info.log_rsq_size);
+    modify_field(to_s1_bt_info_scr.log_pmtu, to_s1_bt_info.log_pmtu);
+    modify_field(to_s1_bt_info_scr.rsq_base_addr, to_s1_bt_info.rsq_base_addr);
+    modify_field(to_s1_bt_info_scr.bt_cindex, to_s1_bt_info.bt_cindex);
+    modify_field(to_s1_bt_info_scr.end_index, to_s1_bt_info.end_index);
+    modify_field(to_s1_bt_info_scr.search_index, to_s1_bt_info.search_index);
+    modify_field(to_s1_bt_info_scr.curr_read_rsp_psn, to_s1_bt_info.curr_read_rsp_psn);
+    modify_field(to_s1_bt_info_scr.read_rsp_in_progress, to_s1_bt_info.read_rsp_in_progress);
+    modify_field(to_s1_bt_info_scr.bt_in_progress, to_s1_bt_info.bt_in_progress);
+    modify_field(to_s1_bt_info_scr.rsvd, to_s1_bt_info.rsvd);
+
+    // stage to stage
 }
 action resp_tx_rqcb_process () {
     // from ki global
@@ -558,5 +681,29 @@ action resp_tx_rsqwqe_process () {
     modify_field(t0_s2s_rqcb2_to_rsqwqe_info_scr.read_rsp_in_progress, t0_s2s_rqcb2_to_rsqwqe_info.read_rsp_in_progress);
     modify_field(t0_s2s_rqcb2_to_rsqwqe_info_scr.pad, t0_s2s_rqcb2_to_rsqwqe_info.pad);
 
+}
+action resp_tx_rsqwqe_bt_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s2_bt_info_scr.log_rsq_size, to_s2_bt_info.log_rsq_size);
+    modify_field(to_s2_bt_info_scr.log_pmtu, to_s2_bt_info.log_pmtu);
+    modify_field(to_s2_bt_info_scr.rsq_base_addr, to_s2_bt_info.rsq_base_addr);
+    modify_field(to_s2_bt_info_scr.bt_cindex, to_s2_bt_info.bt_cindex);
+    modify_field(to_s2_bt_info_scr.end_index, to_s2_bt_info.end_index);
+    modify_field(to_s2_bt_info_scr.search_index, to_s2_bt_info.search_index);
+    modify_field(to_s2_bt_info_scr.curr_read_rsp_psn, to_s2_bt_info.curr_read_rsp_psn);
+    modify_field(to_s2_bt_info_scr.read_rsp_in_progress, to_s2_bt_info.read_rsp_in_progress);
+    modify_field(to_s2_bt_info_scr.bt_in_progress, to_s2_bt_info.bt_in_progress);
+    modify_field(to_s2_bt_info_scr.rsvd, to_s2_bt_info.rsvd);
+
+    // stage to stage
+    modify_field(t0_s2s_bt_info_scr.read_or_atomic, t0_s2s_bt_info.read_or_atomic);
+    modify_field(t0_s2s_bt_info_scr.rsvd, t0_s2s_bt_info.rsvd);
+    modify_field(t0_s2s_bt_info_scr.psn, t0_s2s_bt_info.psn);
+    modify_field(t0_s2s_bt_info_scr.va, t0_s2s_bt_info.va);
+    modify_field(t0_s2s_bt_info_scr.r_key, t0_s2s_bt_info.r_key);
+    modify_field(t0_s2s_bt_info_scr.len, t0_s2s_bt_info.len);
 }
 

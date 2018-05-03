@@ -81,7 +81,7 @@ process_atomic:
 
 
 process_read:
-    cmov        CURR_PSN, c2, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit15, curr_read_rsp_psn_sbit16_ebit23), d.psn
+    cmov        CURR_PSN, c2, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23), d.psn
 
     /*
       bytes_sent = (cur_psn - rsqwqe_p->psn) * 

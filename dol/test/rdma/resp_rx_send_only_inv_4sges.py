@@ -63,10 +63,6 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
         return False
 
-    # verify that busy is 0
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'busy', 0):
-        return False
-
     ############     CQ VALIDATIONS #################
     if not ValidateRespRxCQChecks(tc):
         return False

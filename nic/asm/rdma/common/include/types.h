@@ -1036,4 +1036,13 @@ struct rdma_pcie_atomic_reg_t {
     rsvd3: 152;
 };
 
+struct resp_bt_info_t {
+    read_or_atomic: 1;
+    rsvd: 7;
+    psn: 24;
+    va: 64;
+    r_key: 32;
+    len: 32;
+};
+
 #endif //__TYPES_H
