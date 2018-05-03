@@ -144,15 +144,15 @@ skip_roce_udp_options:
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
 
-    phvwrpair      p.common.p4_intr_global_tm_iport, TM_PORT_INGRESS, p.common.p4_intr_global_tm_oport, TM_PORT_DMA
-    phvwrpair      p.common.p4_intr_global_tm_iq, 0, p.common.p4_intr_global_lif, K_GLOBAL_LIF
+    phvwrpair      p.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.p4_intr_global.tm_oport, TM_PORT_DMA
+    phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, K_GLOBAL_LIF
     SQCB0_ADDR_GET(r1)
     phvwrpair      p.p4_intr_rxdma.intr_qid, K_GLOBAL_QID, p.p4_intr_rxdma.intr_qstate_addr, r1
-    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET 
+    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
-
+    phvwri         p.p4_to_p4plus.table0_valid, 1
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
 
 exit:

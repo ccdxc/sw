@@ -7,6 +7,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 #define SQCB1_TO_RRQWQE_P t0_s2s_sqcb1_to_rrqwqe_info
 #define ECN_INFO_P t3_s2s_ecn_info
+#define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
 
 %%
 
@@ -49,12 +50,12 @@ req_rx_sqcb1_process:
 process_rx_pkt:
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS
     beqi           r1, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
-    // Get SQCB2 base address 
-    add            r7, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2) // Branch Delay Slot
-
     // initialize cqwqe 
     // Initialize cqwqe to success initially
     phvwrpair      p.cqwqe.status, CQ_STATUS_SUCCESS, p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
+
+    // Get SQCB2 base address 
+    add            r7, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2) 
 
     // remaining_payload_bytes = p4_to_p4plus_rdma_hdr_p->payload_size
     add            r2, CAPRI_APP_DATA_PAYLOAD_LEN, r0
@@ -270,8 +271,8 @@ ud_feedback:
 
     CAPRI_SET_TABLE_0_VALID(0)
 
-    //REQ_RX_CQCB_ADDR_GET(r1, d.cq_id) TODO CQCB needs to be pushed to stage 5
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_cqcb_process, r1)
+    phvwr          CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
     nop.e
     nop

@@ -229,21 +229,9 @@ modules:
         spec    : req_rx_atomic_fetchadd.testspec
         ignore  : False
 
-    #- module:
-    #    name    : RDMA_TX_UD_SEND_ONLY
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_ud_send_only
-    #    spec    : req_tx_ud_send_only.testspec
-    #    ignore  : False
-
-    #- module:
-    #    name    : RDMA_TX_UD_SEND_ONLY_IMM
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_ud_send_only_imm
-    #    spec    : req_tx_ud_send_only_imm.testspec
-    #    ignore  : False
+    # DO NOT add any new testcases between RNR and the prev ATOMIC_FETCH_N_ADD testcase
+    # since RNR does backtrack and might lead to unexpected behavior if previous msgs are 
+    # not ACKed.
     - module:
         name    : RDMA_TX_RNR
         enable  : True
@@ -255,6 +243,22 @@ modules:
         rtl     : False
         selectors:
             maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_UD_SEND_ONLY
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ud_send_only
+        spec    : req_tx_ud_send_only.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_UD_SEND_ONLY_IMM
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ud_send_only_imm
+        spec    : req_tx_ud_send_only_imm.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_TX_NAK_SEQ_ERR
