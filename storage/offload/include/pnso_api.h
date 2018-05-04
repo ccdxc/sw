@@ -166,7 +166,7 @@ struct pnso_init_params {
  * @init_params:	[in]	specifies the initialization parameters for
  *				Pensando Offloaders.
  *
- * Caller is reponsible for allocation and deallocation of memory for input
+ * Caller is responsible for allocation and deallocation of memory for input
  * parameters.
  *
  * Return:
@@ -232,6 +232,8 @@ struct pnso_compression_desc {
 /**
  * struct pnso_decompression_desc - represents the descriptor for decompression
  * operation.
+ * @algo_type: specifies one of the enumerated values of the compressor
+ * algorithm (i.e. pnso_compressor_type) for decompression.
  * @flags: specifies the following applicable descriptor flags to decompression
  * descriptor.
  *	PNSO_DFLAG_HEADER_PRESENT - indicates whether or not the compression
@@ -240,8 +242,8 @@ struct pnso_compression_desc {
  *
  */
 struct pnso_decompression_desc {
+	uint16_t algo_type;
 	uint16_t flags;
-	uint16_t rsvd;
 };
 
 /**
@@ -405,7 +407,7 @@ struct pnso_service_request {
  *
  */
 typedef void (*completion_t) (void *cb_ctx,
-			      struct pnso_service_result *svc_res);
+			      struct pnso_service_result * svc_res);
 
 /**
  * typedef pnso_poll_fn_t: the caller to use this polling function to detect
@@ -413,8 +415,11 @@ typedef void (*completion_t) (void *cb_ctx,
  * @pnso_poll_ctx:	[in]	specifies the context passed as arg to the
  *				polling function.
  *
+ * Return:
+ *	PNSO_OK - on success
+ *	-EAGAIN - on request not done
  */
-typedef void (*pnso_poll_fn_t) (void *pnso_poll_ctx);
+typedef pnso_error_t(*pnso_poll_fn_t) (void *pnso_poll_ctx);
 
 /**
  * pnso_submit_request() - routine that accepts one or more service(s) as a
@@ -424,7 +429,7 @@ typedef void (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  * @svc_req:		[in]	specifies a set of service requests that to be
  *				used to complete the services within the
  *				request.
- * @svc_res:		[in]	specifies a set of service results structures to
+ * @svc_res:		[out]	specifies a set of service results structures to
  *				report the status of each service within a
  *				request upon its completion.
  * @cb:			[in]	specifies the caller-supplied completion
@@ -435,9 +440,10 @@ typedef void (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  *				will use to poll for completion of the request.
  * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
  *
- * Caller is reponsible for allocation and deallocation of memory for input
- * parameters. Caller should keep the memory intact (ex: svc_req/svc_res) until
- * the Pensando accelerator returns the result via completion callback.
+ * Caller is responsible for allocation and deallocation of memory for both
+ * input and output parameters. Caller should keep the memory intact (ex:
+ * svc_req/svc_res) until the Pensando accelerator returns the result via
+ * completion callback.
  *
  * Return:
  *	PNSO_OK - on success
@@ -450,7 +456,8 @@ pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
 				 struct pnso_service_result *svc_res,
 				 completion_t cb,
 				 void *cb_ctx,
-				 void *pnso_poll_fn, void **pnso_poll_ctx);
+				 pnso_poll_fn_t * pnso_poll_fn,
+				 void **pnso_poll_ctx);
 /**
  * pnso_set_key_desc_idx() - sets the key descriptor index.
  * @key1:	[in]	specifies the key that will be used to encrypt the data.
@@ -460,7 +467,7 @@ pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
  *			bytes for AES128 and AES256 respectively.
  * @key_idx:	[in]	specifies the key index in the descriptor table.
  *
- * Caller is reponsible for allocation and deallocation of memory for input
+ * Caller is responsible for allocation and deallocation of memory for input
  * parameters.
  *
  * Return:
@@ -468,8 +475,8 @@ pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
  *	-EINVAL - on invalid input parameters
  *
  */
-pnso_error_t pnso_set_key_desc_idx(void *key1,
-				   void *key2,
+pnso_error_t pnso_set_key_desc_idx(const void *key1,
+				   const void *key2,
 				   uint32_t key_size, uint32_t key_idx);
 
 #endif				/* __PNSO_API_H__ */
