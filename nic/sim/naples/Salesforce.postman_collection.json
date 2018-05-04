@@ -702,9 +702,9 @@
 							"raw": "{\"kind\":\"NatPool\",\"meta\":{\"name\":\"pool-1\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"ip-range\":\"10.100.0.0-10.100.255.255\"}}"
 						},
 						"url": {
-							"raw": "{{node1}}/api/natpools/",
+							"raw": "{{node2}}/api/natpools/",
 							"host": [
-								"{{node1}}"
+								"{{node2}}"
 							],
 							"path": [
 								"api",
