@@ -205,8 +205,8 @@ action pci_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 action pvm_roce_sq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                           total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                           page_size, entry_size, num_entries, rsvd0, roce_msn, 
-                          w_ndx, next_pc, rrq_lif, rrq_qtype,
-                          rrq_qid, rrq_qaddr, rsq_lif, rsq_qtype, rsq_qid, pad) {
+                          w_ndx, next_pc, rrq_lif, rrq_qtype, rrq_qid, rrq_qaddr, 
+                          rsq_lif, rsq_qtype, rsq_qid, rrq_base, post_buf, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   PVM_ROCE_SQ_CB_COPY_STAGE0(pvm_roce_sq_cb_scratch)
@@ -230,6 +230,7 @@ action pvm_roce_sq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     modify_field(storage_kivec0.dst_qtype, rrq_qtype);
     modify_field(storage_kivec0.dst_qid, rrq_qid);
     modify_field(storage_kivec0.dst_qaddr, rrq_qaddr);
+    modify_field(storage_kivec1.device_addr, rrq_base);
 
     // In ASM, derive these from the K+I for stage 0
     modify_field(storage_kivec1.src_qaddr, 0);
@@ -316,8 +317,8 @@ action roce_cq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 action pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                            total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                            page_size, entry_size, num_entries, rsvd0, roce_msn, 
-                           w_ndx, next_pc, rrq_lif, rrq_qtype,
-                           rrq_qid, rrq_qaddr, rsq_lif, rsq_qtype, rsq_qid, pad) {
+                           w_ndx, next_pc, rrq_lif, rrq_qtype, rrq_qid, rrq_qaddr, 
+                           rsq_lif, rsq_qtype, rsq_qid, rrq_base, post_buf, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -396,8 +397,7 @@ action pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 @pragma little_endian p_ndx c_ndx
 action roce_rq_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                     total_rings, host_rings, pid, p_ndx, c_ndx, extra_rings,
-                    base_addr, rsvd0, pmtu, page_size, entry_size, num_entries,
-                    pad) {
+                    base_addr, page_size, entry_size, num_entries, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -735,7 +735,7 @@ action seq_pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel,
                                p_ndx, c_ndx, base_addr, page_size, entry_size, 
                                num_entries, rsvd0, roce_msn, w_ndx, next_pc, 
                                rrq_lif, rrq_qtype, rrq_qid, rrq_qaddr, rsq_lif, 
-                               rsq_qtype, rsq_qid, pad) {
+                               rsq_qtype, rsq_qid, rrq_base, post_buf, pad) {
 
 
   // Store the K+I vector into scratch to get the K+I generated correctly

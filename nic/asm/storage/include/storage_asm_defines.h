@@ -60,6 +60,8 @@
     k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD          \
     k.storage_kivec1_roce_cq_new_cmd
+#define STORAGE_KIVEC1_ROCE_POST_BUF            \
+    k.storage_kivec1_roce_post_buf
 
 #define STORAGE_KIVEC2_SSD_Q_NUM                \
     k.storage_kivec2_ssd_q_num
@@ -566,7 +568,7 @@
 // 2. scheduler bit clear with eval (this would eval p_ndx == c_ndx)
 #define NVME_QUEUE_POP_DOORBELL_CLEAR                                   \
    tblwr d.c_ndx, d.w_ndx;                                              \
-   QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_RESET,                    \
+   QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_EVAL,                     \
                         NVME_KIVEC_GLOBAL_SRC_LIF,                      \
                         NVME_KIVEC_GLOBAL_SRC_QTYPE,                    \
                         NVME_KIVEC_GLOBAL_SRC_QID)                      \
@@ -607,6 +609,13 @@
                              NVME_KIVEC_T0_S2S_DST_LIF,                 \
                              NVME_KIVEC_T0_S2S_DST_QTYPE,               \
                              NVME_KIVEC_T0_S2S_DST_QID)                 \
+
+#define NVME_SEND_STA_FREE_IOB_DOORBELL_RING(_dma_cmd_ptr)              \
+   _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
+                             DOORBELL_UPDATE_NONE, d.p_ndx,             \
+                             NVME_KIVEC_ARM_DST7_ARM_LIF,               \
+                             NVME_KIVEC_ARM_DST7_ARM_QTYPE,             \
+                             NVME_KIVEC_ARM_DST7_ARM_QID)               \
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
@@ -758,7 +767,7 @@
    DMA_ADDR_UPDATE(r7, dma_p2m_1)                                       \
    QUEUE_PUSH(_p_ndx, _num_entries)                                     \
    add      r5, STORAGE_KIVEC0_DST_QID, STORAGE_KIVEC0_SSD_HANDLE;      \
-   _PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3, _p_ndx,                   \
+   _PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_4, _p_ndx,                   \
                                    DOORBELL_SCHED_WR_SET, r5, _pri_vec) \
 
 
@@ -828,12 +837,19 @@
 // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
 // the size, address will be filled by the push operation). 
 //
-#define R2N_BUF_POST_SETUP(_addr)                                       \
-   sub      r4, _addr, R2N_BUF_NVME_BE_CMD_OFFSET;                      \
-   addi     r5, r0, ROCE_RQ_WQE_SIZE;                                   \
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4, r5, r0, r0, dma_m2m_1) \
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_2) \
+#define _R2N_BUF_POST_SETUP(_buf)                                         \
+   addi     r5, r0, ROCE_RQ_WQE_SIZE;                                     \
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, _buf, r5, r0, r0, dma_m2m_1) \
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_2)   \
+
+#define R2N_BUF_POST_SETUP_CMD(_addr)                                     \
+   sub      r4, _addr, R2N_BUF_NVME_BE_CMD_OFFSET;                        \
+   _R2N_BUF_POST_SETUP(r4)                                                \
    
+#define R2N_BUF_POST_SETUP_STATUS(_addr)                                  \
+   sub      r4, _addr, R2N_BUF_STATUS_BUF_OFFSET;                         \
+   _R2N_BUF_POST_SETUP(r4)                                                \
+
 // Setup the compression data buffer DMA based on flat source buffer 
 // and destination SGL (processing one SGL entry in this macro).
 // Notes: These GPRs are used for input/output to/from this macro

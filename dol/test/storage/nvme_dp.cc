@@ -282,15 +282,6 @@ int setup_one_io_buffer(int index) {
   io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64, 32, (uint32_t) data_len); // len
   io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64+32, 32, write_back_rkey); // rkey
 
-  // Write SGE: local side buffer
-  // TODO: Remove the write_data_buf pointer and do this in P4+ in production code
-  //       The reason it can't be done in DOL environment is because the P4+ code
-  //       does not know the VA of the host. In production code, this buffer will be
-  //       setup with the VA:PA identity mapping of the HBM buffer.
-  FillWriteBackLocalBuffer(io_buf_base_addr, write_back_wqe_base);
-  // Increment the Buffer pointers after this back fill
-  IncrTargetRcvBufPtr();
-
   // Form the R2N sequencer doorbell
   uint32_t base_db_bit = (IO_BUF_SEQ_DB_OFFSET + IO_BUF_SEQ_R2N_DB_OFFSET) * 8;
   io_buf_base_addr->write_bit_fields(base_db_bit, 11, queues::get_seq_lif());
@@ -309,8 +300,6 @@ int setup_io_buffers() {
   for (int i = 0; i < (int) io_buf_num_entries-1; i++) {
     setup_one_io_buffer(i);
   }
-  // Reset the target receive buffer pointer
-  ResetTargetRcvBufPtr();
 
   return 0;
 }

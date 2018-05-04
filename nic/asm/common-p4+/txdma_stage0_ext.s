@@ -146,6 +146,21 @@ virtio_tx_stage0:
     nop
 
 .align
+storage_nvme_sq_stage0:
+    nop.e
+    nop
+
+.align
+storage_nvme_r2n_sq_stage0:
+    nop.e
+    nop
+
+.align
+storage_nvme_armq_stage0:
+    nop.e
+    nop
+
+.align
 smbdc_req_tx_stage0:
     j smbdc_req_tx_sqcb_process_ext
     nop

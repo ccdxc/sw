@@ -123,7 +123,8 @@
 #define R2N_BUF_PRP_LIST_OFFSET			64
 #define R2N_BUF_STATUS_BUF_OFFSET		192
 #define R2N_BUF_STATUS_REQ_OFFSET		256
-#define R2N_BUF_PAD_OFFSET			320 // Pad size = 4096 - (128 + 64 + 8) - 320 = 3576
+#define R2N_BUF_WRITE_REQ_LOCAL_OFFSET		320 // One ROCE SGE width == 16 bytes
+#define R2N_BUF_PAD_OFFSET			336 // Pad size = 4096 - (128 + 64 + 8) - 336 = 3560
 #define R2N_BUF_NVME_BE_CMD_OFFSET		3896
 #define R2N_BUF_IO_CTX_ID_OFFSET		4024
 #define R2N_BUF_WRITE_REQ_OFFSET		4032
@@ -136,6 +137,8 @@
 #define R2N_BUF_NVME_CMD_PRP1_OFFSET		(R2N_BUF_NVME_BE_CMD_OFFSET + R2N_BUF_NVME_BE_CMD_HDR_SIZE + NVME_CMD_PRP1_OFFSET)
 #define R2N_BUF_WRITE_REQ_WRID_OFFSET		R2N_BUF_WRITE_REQ_OFFSET
 #define R2N_BUF_WRITE_REQ_SGE0_OFFSET		(R2N_BUF_WRITE_REQ_OFFSET + 32)
+
+#define R2N_BUF_WRITE_REQ_SGE0_SIZE		16
 
 /***********************************************************************************
  * I/O MAP data structure layout

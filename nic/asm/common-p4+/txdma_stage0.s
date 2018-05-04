@@ -38,8 +38,8 @@
     .param      virtio_tx_read_qstate_start
     .param      storage_nvme_check_sq_state_start
     .param      storage_nvme_pop_r2n_sq_start
+    .param      storage_nvme_pop_arm_q_start
     .param      smbdc_req_tx_sqcb_process
-
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -173,6 +173,11 @@ storage_nvme_sq_stage0:
 .align
 storage_nvme_r2n_sq_stage0:
     j storage_nvme_pop_r2n_sq_start
+    nop
+
+.align
+storage_nvme_armq_stage0:
+    j storage_nvme_pop_arm_q_start
     nop
 
 .align

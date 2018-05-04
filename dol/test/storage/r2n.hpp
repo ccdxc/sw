@@ -13,6 +13,13 @@ using namespace dp_mem;
 namespace r2n {
 
 typedef struct {
+  // SGE 0
+  uint64_t va0;                // 256
+  uint32_t len0;               // 320
+  uint32_t l_key0;             // 352
+} __attribute__((packed)) roce_sq_sge_t;
+
+typedef struct {
   uint64_t wrid;               // 0
   uint32_t op_type:4,          // 64
            complete_notify:1,  // 68
@@ -116,7 +123,7 @@ typedef struct r2n_write_desc_ {
 
 typedef struct r2n_pad_ {
   union {
-    uint8_t bytes[3576];
+    uint8_t bytes[3560];
   };
 } r2n_pad_t;
 
@@ -131,6 +138,7 @@ typedef struct r2n_buf_ {
    r2n_prp_list_t	prp_buf;
    nvme_be_sta_t	sta_buf;
    r2n_sta_desc_t	sta_desc;
+   roce_sq_sge_t	write_desc_local;
    r2n_pad_t		pad;
    nvme_be_cmd_t	cmd_buf;
    r2n_iob_ctx_id_t	io_ctx_id;

@@ -1039,8 +1039,8 @@ action roce_r2n_wqe_prep(next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, pad) {
 action pvm_roce_sq_cb_update(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                              total_rings, host_rings, pid, p_ndx, c_ndx, base_addr,
                              page_size, entry_size, num_entries, rsvd0, roce_msn, 
-                             w_ndx, next_pc, rrq_lif, rrq_qtype,
-                             rrq_qid, rrq_qaddr, rsq_lif, rsq_qtype, rsq_qid, pad) {
+                             w_ndx, next_pc, rrq_lif, rrq_qtype, rrq_qid, rrq_qaddr, 
+                             rsq_lif, rsq_qtype, rsq_qid, rrq_base, post_buf, pad) {
 
 
   // Store the K+I vector into scratch to get the K+I generated correctly

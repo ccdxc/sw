@@ -23,7 +23,7 @@ storage_tx_roce_rq_push_start:
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.
-   QUEUE_PUSH_ADDR(d.base_addr, d.p_ndx, d.entry_size)
+   QUEUE_PUSH_ADDR(STORAGE_KIVEC1_DEVICE_ADDR, d.p_ndx, d.entry_size)
 
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_m2m_2)

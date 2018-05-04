@@ -28,8 +28,9 @@ storage_nvme_process_be_status_start:
    phvwr.!c1	p.nvme_kivec_global_oper_status, IO_CTX_OPER_STATUS_BE_ERROR
 #endif
 
-   // Store the I/O context to K+I vector
+   // Store the I/O context to K+I vector and into PHV
    phvwr	p.nvme_kivec_t0_s2s_iob_addr, d.iob_addr
+   phvwr	p.io_ctx_iob_addr, d.iob_addr
 
    // Load the I/O context for processing in the next stage
    add		r7, d.iob_addr, IO_BUF_IO_CTX_OFFSET
