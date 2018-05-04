@@ -1,0 +1,266 @@
+// IPSec model
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "match.proto";
+
+// ---------------------------- IPSec Policy API ----------------------------
+
+// IPSecPolicy API rpc service
+service IPSecPolicyApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "IPSecPolicy",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+    };
+
+    rpc GetIPSecPolicy (api.ObjectMeta) returns (IPSecPolicy) {};
+    rpc ListIPSecPolicies (api.ObjectMeta) returns (IPSecPolicyList) {};
+    rpc WatchIPSecPolicies (api.ObjectMeta) returns (stream IPSecPolicyEvent) {};
+}
+
+// IPSec Policy object
+message IPSecPolicy {
+    api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    IPSecPolicySpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    IPSecPolicyStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+
+// IPSecPolicySpec
+message IPSecPolicySpec {
+    // IPSecRules in a given policy
+    repeated IPSecRule rules = 1   [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
+}
+
+message IPSecRule {
+    enum Type {
+        NONE    = 0;
+        ENCRYPT = 1; // SA Encrypt Association
+        DECRYPT = 2; // SA Decrypt Association
+    }
+    uint64 ID           = 1 [(gogoproto.jsontag) = "id,omitempty"];
+    // IPSec Rule From match selector.
+    MatchSelector Src   = 2 [(gogoproto.jsontag) = "source,omitempty"];
+
+    // IPSec Rule To match selector.
+    MatchSelector Dst   = 3 [(gogoproto.jsontag) = "destination,omitempty"];
+
+    // Security Association Name
+    string SAName       = 4 [(gogoproto.jsontag) = "sa-name,omitempty"];
+
+    // Security Association type
+    string SAType       = 5 [(venice.check) = "StrEnum(IPSecRule.Type)",
+                            (gogoproto.jsontag) = "sa-type,omitempty"];
+}
+
+// IPSecPolicy Status
+message IPSecPolicyStatus {
+    uint64 IPSecPolicyID = 1  [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+// list of IPSecPolicies
+message IPSecPolicyList {
+    repeated IPSecRule IPSecRules = 1;
+}
+
+// IPSecPolicy watch event
+message IPSecPolicyEvent {
+    api.EventType EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    IPSecPolicy IPSecPolicy       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipsec-policy,omitempty"];
+}
+
+// ---------------------------- IPSecSA Encrypt API ----------------------------
+// IPSecSAEncrypt API rpc service
+service IPSecSAEncryptApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "IPSecSAEncrypt",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+    };
+
+    rpc GetIPSecSAEncrypt (api.ObjectMeta) returns (IPSecSAEncrypt) {};
+    rpc ListIPSecPolicies (api.ObjectMeta) returns (IPSecSAEncryptList) {};
+    rpc WatchIPSecPolicies (api.ObjectMeta) returns (stream IPSecSAEncryptEvent) {};
+}
+
+// IPSecSAEncrypt object
+message IPSecSAEncrypt {
+    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    IPSecSAEncryptSpec      Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    IPSecSAEncryptStatus    Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// IPSecSAEncryptSpec
+message IPSecSAEncryptSpec {
+
+    // Name of the IPSec SA Encrypt Request
+    string Name             = 1 [(gogoproto.jsontag) = "name, omitempty"];
+
+    // SA Encrypt protocol
+    string Protocol         = 2 [(venice.check) = "StrEnum(Protocol.Type)",
+                                 (gogoproto.jsontag) = "protocol,omitempty"];
+    // SA Encrypt Auth Algorithm
+    string AuthAlgo         = 3 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
+                                 (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
+
+    // Authentication Key
+    string AuthKey          = 4 [(gogoproto.jsontag) = "authentication-key, omitempty"];
+
+    // SA Encrypt Algorithm
+    string EncryptAlgo      = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+                                 (gogoproto.jsontag) = "encryption-algorithm,omitempty"];
+
+    // Encryption Key
+    string EncryptionKey    = 6 [(gogoproto.jsontag) = "encryption-key,omitempty"];
+
+    // Local Gateway IP
+    string LocalGwIP        = 7 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
+
+    // Remote Gateway IP
+    string RemoteGwIP       = 8 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+
+}
+
+message Protocol{
+    enum Type {
+        NONE = 0;
+        AH   = 1; // Authentication Header Protocol
+        ESP  = 2; // Encap Security Protocol
+    }
+}
+
+message AuthAlgorithm{
+    enum Type {
+        NONE        = 0;
+        AES_GCM     = 1;
+        AES_CCM     = 2;
+        HMAC        = 3;
+        AES_CBC_SHA = 4;
+    }
+}
+
+message EncryptionAlgorithm{
+    enum Type {
+        NONE        = 0;
+        AES_GCM_128 = 1;
+        AES_GCM_256 = 2;
+        AES_CCM_128 = 3;
+        AES_CCM_192 = 4;
+        AES_CCM_256 = 5;
+        AES_CBC_128 = 6;
+        AES_CBC_192 = 7;
+        AES_CBC_256 = 8;
+        DES3        = 9;
+        CHA_CHA     = 10;
+    }
+}
+
+
+// IPSecSAEncrypt Status
+message IPSecSAEncryptStatus {
+    uint64 IPSecSAEncryptID = 1  [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+// list of IPSecSAEncrypt
+message IPSecSAEncryptList {
+    repeated IPSecRule IPSecRules = 1;
+}
+
+// IPSecSAEncrypt watch event
+message IPSecSAEncryptEvent {
+    api.EventType EventType         = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    IPSecSAEncrypt IPSecSAEncrypt   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipsec-sa-encrypt,omitempty"];
+}
+
+// ---------------------------- IPSecSA Decrypt API ----------------------------
+// IPSecSADecrypt API rpc service
+service IPSecSADecryptApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "IPSecSADecrypt",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+    };
+
+    rpc GetIPSecSADecrypt (api.ObjectMeta) returns (IPSecSADecrypt) {};
+    rpc ListIPSecPolicies (api.ObjectMeta) returns (IPSecSADecryptList) {};
+    rpc WatchIPSecPolicies (api.ObjectMeta) returns (stream IPSecSADecryptEvent) {};
+}
+
+// IPSecSADecrypt object
+message IPSecSADecrypt {
+    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    IPSecSADecryptSpec      Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    IPSecSADecryptStatus    Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// IPSecSADecryptSpec
+message IPSecSADecryptSpec {
+
+    // Name of the IPSec SA Decrypt Request
+    string Name                 = 1 [(gogoproto.jsontag) = "name, omitempty"];
+
+    // SA Decrypt protocol
+    string Protocol             = 2 [(venice.check) = "StrEnum(Protocol.Type)",
+                                     (gogoproto.jsontag) = "protocol,omitempty"];
+    // SA Decrypt Auth Algorithm
+    string AuthAlgo             = 3 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
+                                     (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
+
+    // Authentication Key
+    string AuthKey              = 4 [(gogoproto.jsontag) = "authentication-key, omitempty"];
+
+    // SA Decrypt Algorithm
+    string DecryptAlgo          = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+                                     (gogoproto.jsontag) = "decryption-algorithm,omitempty"];
+
+    // Rekey Decrypt Algorithm
+    string RekeyDecryptAlgo     = 6 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+                                     (gogoproto.jsontag) = "rekey-decryption-algorithm,omitempty"];
+
+    // Decryption Key
+    string DecryptionKey        = 7 [(gogoproto.jsontag) = "decryption-key,omitempty"];
+
+    // Rekey Auth Key
+    string RekeyAuthKey         = 8 [(gogoproto.jsontag) = "rekey-auth-key,omitempty"];
+
+    // Rekey Decryption Key
+    string RekeyDecryptionKey   = 9 [(gogoproto.jsontag) = "rekey-decryption-key,omitempty"];
+
+    // Local Gateway IP
+    string LocalGwIP            = 10 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
+
+    // Remote Gateway IP
+    string RemoteGwIP           = 11 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+
+}
+
+
+// IPSecSADecrypt Status
+message IPSecSADecryptStatus {
+    uint64 IPSecSADecryptID = 1  [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+// list of IPSecSADecrypt
+message IPSecSADecryptList {
+    repeated IPSecRule IPSecRules = 1;
+}
+
+// IPSecSADecrypt watch event
+message IPSecSADecryptEvent {
+    api.EventType EventType         = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    IPSecSADecrypt IPSecSADecrypt   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipsec-sa-encrypt,omitempty"];
+}

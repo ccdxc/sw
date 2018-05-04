@@ -13,36 +13,7 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
-
-
-// Namespace Status
-message NamespaceStatus {
-    uint64 NamespaceID  = 1;     // Namespace identifier
-}
-
-// NamespaceSpec captures all the namespace level configuration
-message NamespaceSpec {
-    api.ObjectMeta Meta = 1; // common object meta
-
-}
-
-// Namespace object
-message Namespace {
-    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    NamespaceSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    NamespaceStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-message NamespaceList {
-    repeated Namespace namespaces = 1;
-}
-
-// namespace watch event
-message NamespaceEvent {
-    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    Namespace       Namespace   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "namespace,omitempty"];
-}
+// ---------------------------- Namespace API ----------------------------
 
 // Namespace controller api
 service NamespaceApi {
@@ -56,4 +27,33 @@ service NamespaceApi {
     rpc GetNamespace (api.ObjectMeta) returns (Namespace) {};
     rpc ListNamespaces (api.ObjectMeta) returns (NamespaceList) {};
     rpc WatchNamespaces (api.ObjectMeta) returns (stream NamespaceEvent) {};
+}
+
+// Namespace object
+message Namespace {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    NamespaceSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NamespaceStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// NamespaceSpec captures all the namespace level configuration
+message NamespaceSpec {
+    api.ObjectMeta Meta = 1; // common object meta
+
+}
+// Namespace Status
+message NamespaceStatus {
+    uint64 NamespaceID  = 1;     // Namespace identifier
+}
+
+
+message NamespaceList {
+    repeated Namespace namespaces = 1;
+}
+
+// namespace watch event
+message NamespaceEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Namespace       Namespace   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "namespace,omitempty"];
 }

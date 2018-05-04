@@ -10,6 +10,29 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+// ---------------------------- Network API ----------------------------
+// network controller api
+service NetworkApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Network",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
+    rpc GetNetwork (api.ObjectMeta) returns (Network) {};
+    rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
+    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
+}
+
+// network object
+message Network {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    NetworkSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NetworkStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
 // network spec
 message NetworkSpec {
     string IPv4Subnet  = 1;   // IPv4 subnet CIDR
@@ -28,14 +51,6 @@ message NetworkStatus {
     uint64 NetworkHandle     = 4;  // datapath handle for the network
 }
 
-// network object
-message Network {
-    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    NetworkSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    NetworkStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
 // list of networks
 message NetworkList {
     repeated Network networks = 1;
@@ -49,19 +64,4 @@ message NetworkEvent {
 
 message NetworkEventList {
     repeated NetworkEvent networkEvents = 1;
-}
-
-
-// network controller api
-service NetworkApi {
-    // options for auto generating rest endpoints
-    option(venice.naplesRestService) = {
-        Object: "Network",
-        Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
-    };
-
-	rpc GetNetwork (api.ObjectMeta) returns (Network) {};
-    rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
-    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
 }

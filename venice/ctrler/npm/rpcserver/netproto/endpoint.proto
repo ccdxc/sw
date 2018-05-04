@@ -10,6 +10,32 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+// ---------------------------- Endpoint API ----------------------------
+
+// endpoint controller api
+service EndpointApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Endpoint",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
+    rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
+    rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
+    rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
+    rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
+    rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEvent) {};
+}
+
+// endpoint object
+message Endpoint {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    EndpointSpec   Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    EndpointStatus Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
 
 // endpoint spec
 message EndpointSpec {
@@ -35,13 +61,6 @@ message EndpointStatus {
     uint32 UsegVlan       = 9;
 }
 
-// endpoint object
-message Endpoint {
-    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    EndpointSpec   Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    EndpointStatus Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
 
 // list of endpoints
 message EndpointList {
@@ -52,20 +71,4 @@ message EndpointList {
 message EndpointEvent {
     api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     Endpoint       Endpoint = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "endpoint,omitempty"];
-}
-
-// endpoint controller api
-service EndpointApi {
-    // options for auto generating rest endpoints
-    option(venice.naplesRestService) = {
-        Object: "Endpoint",
-        Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
-    };
-
-    rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
-	rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
-    rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
-    rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
-    rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEvent) {};
 }

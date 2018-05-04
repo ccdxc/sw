@@ -1,0 +1,27 @@
+// IPSec model
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// Common MatchSelector
+message MatchSelector {
+    enum Type
+    {
+        NONE            = 0;
+        IP              = 1; // IP nat rule src/dst selector
+        IPPrefix        = 2; // IP Prefix nat rule src/dst seclector
+        IPRange         = 3; // IP Range nat rule src/dst selector
+        SecurityGroup   = 4; // Security group nat rule src/dst selector
+
+    }
+    string MatchType    = 1 [(venice.check) = "StrEnum(MatchSelector.Type)",
+                            (gogoproto.jsontag) = "match-type"];
+    string Match        = 2 [(gogoproto.jsontag) = "match"];
+}

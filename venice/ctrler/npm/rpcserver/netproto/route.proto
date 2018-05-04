@@ -13,6 +13,29 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+// ---------------------------- Route API ----------------------------
+// Route controller api
+service RouteApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Route",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+    };
+
+    rpc GetRoute (api.ObjectMeta) returns (Route) {};
+    rpc ListRoutes (api.ObjectMeta) returns (RouteList) {};
+    rpc WatchRoutes (api.ObjectMeta) returns (stream RouteEvent) {};
+}
+
+// Route object
+message Route {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    RouteSpec       Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    RouteStatus     Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
 
 // RouteSpec captures all the route configuration
 message RouteSpec {
@@ -29,14 +52,6 @@ message RouteStatus {
     uint64 RouteID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
 }
 
-// Route object
-message Route {
-    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    RouteSpec       Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    RouteStatus     Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
 message RouteList {
     repeated Route routes  = 1;
 }
@@ -45,18 +60,4 @@ message RouteList {
 message RouteEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     Route           Route       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "route,omitempty"];
-}
-
-// Route controller api
-service RouteApi {
-    // options for auto generating rest endpoints
-    option(venice.naplesRestService) = {
-        Object: "Route",
-        Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
-    };
-
-    rpc GetRoute (api.ObjectMeta) returns (Route) {};
-    rpc ListRoutes (api.ObjectMeta) returns (RouteList) {};
-    rpc WatchRoutes (api.ObjectMeta) returns (stream RouteEvent) {};
 }

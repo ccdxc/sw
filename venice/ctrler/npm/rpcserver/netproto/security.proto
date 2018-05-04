@@ -10,7 +10,35 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+// ---------------------------- Security API ----------------------------
+// security group rpc service
+service SecurityApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "SecurityGroup",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
 
+    rpc GetSecurityGroup (api.ObjectMeta) returns (SecurityGroup) {};
+    rpc ListSecurityGroups (api.ObjectMeta) returns (SecurityGroupList) {};
+    rpc WatchSecurityGroups (api.ObjectMeta) returns (stream SecurityGroupEvent) {};
+}
+
+// security group object
+message SecurityGroup {
+    api.TypeMeta   TypeMeta     = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta   = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    SecurityGroupSpec    Spec   = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    SecurityGroupStatus  Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// security group spec
+message SecurityGroupSpec {
+    string SecurityProfile      = 1;  // security profile name
+    // security rules
+    repeated SecurityRule Rules = 2[(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
+}
 // security rule
 message SecurityRule {
     string  Direction = 1;  // direction incoming/outgoing
@@ -29,24 +57,10 @@ message SecurityRule {
     repeated string AppUsers = 8; // List of users
 }
 
-// security group spec
-message SecurityGroupSpec {
-    string SecurityProfile      = 1;  // security profile name
-    // security rules
-    repeated SecurityRule Rules = 2[(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
-}
 
 // security group status
 message SecurityGroupStatus {
     uint64 SecurityGroupID = 1; // security group id
-}
-
-// security group object
-message SecurityGroup {
-    api.TypeMeta   TypeMeta     = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta ObjectMeta   = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    SecurityGroupSpec    Spec   = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    SecurityGroupStatus  Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 // list of security groups
@@ -58,18 +72,4 @@ message SecurityGroupList {
 message SecurityGroupEvent {
     api.EventType EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     SecurityGroup SecurityGroup   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "security-group,omitempty"];
-}
-
-// security group rpc service
-service SecurityApi {
-    // options for auto generating rest endpoints
-    option(venice.naplesRestService) = {
-        Object: "SecurityGroup",
-        Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
-    };
-
-    rpc GetSecurityGroup (api.ObjectMeta) returns (SecurityGroup) {};
-    rpc ListSecurityGroups (api.ObjectMeta) returns (SecurityGroupList) {};
-    rpc WatchSecurityGroups (api.ObjectMeta) returns (stream SecurityGroupEvent) {};
 }

@@ -14,6 +14,46 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
 
+// ---------------------------- Interface API ----------------------------
+// Interface controller api
+service InterfaceApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Interface",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Interface}"
+    };
+
+    rpc GetInterface (api.ObjectMeta) returns (Interface) {};
+    rpc ListInterfaces (api.ObjectMeta) returns (InterfaceList) {};
+    rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEvent) {};
+}
+
+// Interface object
+message Interface {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    InterfaceSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    InterfaceStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// InterfaceSpec captures all the interface level configuration
+message InterfaceSpec {
+    enum IFType {
+        NONE                = 0;
+        ENIC                = 1;
+        LIF                 = 2;
+        UPLINK              = 3;
+    }
+
+    string Type             = 1 [(venice.check) = "StrEnum(InterfaceSpec.IFType)",
+                                (gogoproto.jsontag) = "type,omitempty"];
+    string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
+                                (gogoproto.jsontag) = "admin-status,omitempty"];
+    // The user need to specify the specific LIF in VSS scenarios. If its is not defined, Agent state will pick
+    // one of the available LIFs with equal distribution
+    string LifName          = 3 [(gogoproto.jsontag) = "lif-name,omitempty"];
+}
 
 // Interface Status
 message InterfaceStatus {
@@ -28,37 +68,13 @@ message InterfaceStatus {
     EnicStatus EnicStatus           = 3 [(gogoproto.jsontag) = "enic-status,omitempty"];
 }
 
-// InterfaceSpec captures all the interface level configuration
-message InterfaceSpec {
-    enum IFType {
-        NONE                = 0;
-        ENIC                = 1;
-        LIF                 = 2;
-        UPLINK              = 3;
-    }
 
-    string Type             = 1 [(venice.check) = "StrEnum(InterfaceSpec.IFType)",
-                                 (gogoproto.jsontag) = "type,omitempty"];
-    string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
-                                 (gogoproto.jsontag) = "admin-status,omitempty"];
-    // The user need to specify the specific LIF in VSS scenarios. If its is not defined, Agent state will pick
-    // one of the available LIFs with equal distribution
-    string LifName          = 3 [(gogoproto.jsontag) = "lif-name,omitempty"];
-}
 
 // EnicStatus captures enic configurations.
 message EnicStatus {
     string LifName = 1 [(gogoproto.jsontag) = "lif-name,omitempty"];
     // List of endpoints that this ENIC is mapped to
     repeated string EpName = 2 [(gogoproto.jsontag) = "ep-name,omitempty"];
-}
-
-// Interface object
-message Interface {
-    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    InterfaceSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    InterfaceStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 message InterfaceList {
@@ -71,16 +87,3 @@ message InterfaceEvent {
     Interface       Interface   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "interface,omitempty"];
 }
 
-// Interface controller api
-service InterfaceApi {
-    // options for auto generating rest endpoints
-    option(venice.naplesRestService) = {
-        Object: "Interface",
-        Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Interface}"
-    };
-
-    rpc GetInterface (api.ObjectMeta) returns (Interface) {};
-    rpc ListInterfaces (api.ObjectMeta) returns (InterfaceList) {};
-    rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEvent) {};
-}

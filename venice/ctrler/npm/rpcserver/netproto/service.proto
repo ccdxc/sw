@@ -10,11 +10,14 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
-message HealthCheck {
-    uint32   ProbeInterval     = 1;  // probe interval
-    uint32   ProbesPerInterval = 2;  // number of probes
-    string   Protocol          = 3;  // protocol tcp/udp
-    uint32   Port              = 4;  // port number
+// ---------------------------- Service API ----------------------------
+
+// service backend object
+message ServiceBackend {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    ServiceBackendSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    ServiceBackendStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 // service specification
@@ -25,6 +28,14 @@ message ServiceSpec {
     string SessionAffinity  = 4;  // session affinity
     string Algorithm        = 5;  // load balancing algorithm
     HealthCheck HealthCheck = 6;  // health check parameters
+}
+
+
+message HealthCheck {
+    uint32   ProbeInterval     = 1;  // probe interval
+    uint32   ProbesPerInterval = 2;  // number of probes
+    string   Protocol          = 3;  // protocol tcp/udp
+    uint32   Port              = 4;  // port number
 }
 
 // Service Status
@@ -51,12 +62,4 @@ message ServiceBackendSpec {
 // backend status
 message ServiceBackendStatus {
     string BackendStatus = 1;
-}
-
-// service backend object
-message ServiceBackend {
-    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    ServiceBackendSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    ServiceBackendStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
