@@ -27,23 +27,6 @@ using hal::drop_monitor_rule_t;
 
 namespace hal {
 
-if_t
-*get_if_from_key_or_handle (kh::InterfaceKeyHandle ifid)
-{
-    if_t *ift;
-
-    ift = (ifid.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId)
-        ? find_if_by_id(ifid.interface_id())
-        : find_if_by_handle(ifid.if_handle());
-    if (!ift) {
-        HAL_TRACE_DEBUG("interface id {} not found",
-            (ifid.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) ?
-            ifid.interface_id() : ifid.if_handle());
-        return NULL;
-    }
-    return ift;
-}
-
 hal_ret_t
 mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 {
@@ -80,7 +63,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     case MirrorSessionSpec::kLocalSpanIf: {
         HAL_TRACE_DEBUG("Local Span IF is true");
         ifid = spec.local_span_if();
-        id = get_if_from_key_or_handle(ifid);
+        id = if_lookup_key_or_handle(ifid);
         if (id != NULL) {
             session.dest_if = id;
         } else {
@@ -94,7 +77,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         HAL_TRACE_DEBUG("RSpan IF is true");
         auto rspan = spec.rspan_spec();
         ifid = rspan.intf();
-        session.dest_if = get_if_from_key_or_handle(ifid);
+        session.dest_if = if_lookup_key_or_handle(ifid);
         auto encap = rspan.rspan_encap();
         if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
             session.mirror_destination_u.r_span_dest.vlan = encap.encap_value();
