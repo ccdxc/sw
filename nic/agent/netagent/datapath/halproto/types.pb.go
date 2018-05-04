@@ -376,6 +376,7 @@
 		Key
 		IpsecSAEncrypt
 		IpsecSADecrypt
+		IpsecSAAction
 		IpsecRuleMatchSpec
 		IpsecRuleSpec
 		IpsecRuleRequestMsg

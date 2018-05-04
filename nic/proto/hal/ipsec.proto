@@ -107,14 +107,26 @@ message IpsecSADecrypt {
   uint32                         salt                      = 16;  // Initial Random number - 32 bits (need to be same on peer)
 }
 
+enum IpsecSAActionType {
+  IPSEC_SA_ACTION_TYPE_NONE = 0;
+  IPSEC_SA_ACTION_TYPE_ENCRYPT = 1;
+  IPSEC_SA_ACTION_TYPE_DECRYPT = 2;
+  IPSEC_SA_ACTION_TYPE_DROP = 3;
+}
+ 
+message IpsecSAAction {
+  IpsecSAActionType sa_action_type = 1;
+  oneof sa_handle {
+    kh.IpsecSAEncryptKeyHandle   enc_handle = 2;
+    kh.IpsecSADecryptKeyHandle   dec_handle = 3;
+   }
+}
+    
 message IpsecRuleMatchSpec {
   uint64             rule_id    = 1;    // rule id
   types.RuleMatch    match      = 2;    // match conditions
-  // IPSec security associaton parameters
-  oneof IpSecSAInfo {
-      IpsecSAEncrypt                 enc_security_association      = 10;   // security association parameters
-      IpsecSADecrypt                 dec_security_association      = 11;
-  } 
+  IpsecSAAction      sa_action  = 3;
+
 }
 
 // IpsecRuleSpec is the user intent for the IPSec rule
