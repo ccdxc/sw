@@ -121,6 +121,16 @@
             "features"  : ["lb"]
         },
         {
+            "name"      : "nat",
+            "provider"  : "pensando.io",
+            "lib"       : "nat/libnat.so",
+            "init_func" : "nat_init",
+            "exit_func" : "nat_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["nat"]
+        },
+        {
             "name"      : "dol",
             "provider"  : "pensando.io",
             "lib"       : "dol/libdol.so",
@@ -190,6 +200,7 @@
                 "pensando.io/network:fwding-pre-stage",
                 "pensando.io/network:stage-marker",
                 "pensando.io/lb:lb",
+                "pensando.io/nat:nat",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
@@ -201,6 +212,7 @@
                 "pensando.io/dol:test",
                 "pensando.io/network:ingress-checks",
                 "pensando.io/eplearn:eplearn",
+                "pensando.io/nat:nat",
                 "pensando.io/lb:lb",
                 "pensando.io/proxy:tcp",
                 "pensando.io/proxy:ipsec",
