@@ -998,52 +998,98 @@ pd_ipseccb_decrypt_get_args_init (pd_ipseccb_decrypt_get_args_t *args)
     return;
 }
 
-// ipsec_sa
-typedef struct pd_ipsec_sa_create_args_s {
+// ipsec_sa_encrypt
+typedef struct pd_ipsec_encrypt_create_args_s {
     ipsec_sa_t            *ipsec_sa;
-} __PACK__ pd_ipsec_sa_create_args_t;
+} __PACK__ pd_ipsec_encrypt_create_args_t;
 
 
 static inline void
-pd_ipsec_sa_create_args_init (pd_ipsec_sa_create_args_t *args)
+pd_ipsec_encrypt_create_args_init (pd_ipsec_encrypt_create_args_t *args)
 {
     args->ipsec_sa = NULL;
     return;
 }
 
-typedef struct pd_ipsec_sa_update_args_s {
+typedef struct pd_ipsec_encrypt_update_args_s {
     ipsec_sa_t            *ipsec_sa;
-} __PACK__ pd_ipsec_sa_update_args_t;
+} __PACK__ pd_ipsec_encrypt_update_args_t;
 
 static inline void
-pd_ipsec_sa_update_args_init (pd_ipsec_sa_update_args_t *args)
+pd_ipsec_encrypt_update_args_init (pd_ipsec_encrypt_update_args_t *args)
 {
     args->ipsec_sa = NULL;
     return;
 }
 
-typedef struct pd_ipsec_sa_delete_args_s {
+typedef struct pd_ipsec_encrypt_delete_args_s {
     ipsec_sa_t            *ipsec_sa;
-} __PACK__ pd_ipsec_sa_delete_args_t;
+} __PACK__ pd_ipsec_encrypt_delete_args_t;
 
 static inline void
-pd_ipsec_sa_delete_args_init (pd_ipsec_sa_delete_args_t *args)
+pd_ipsec_encrypt_delete_args_init (pd_ipsec_encrypt_delete_args_t *args)
 {
     args->ipsec_sa = NULL;
     return;
 }
 
-typedef struct pd_ipsec_sa_get_args_s {
+typedef struct pd_ipsec_encrypt_get_args_s {
     ipsec_sa_t            *ipsec_sa;
-} __PACK__ pd_ipsec_sa_get_args_t;
+} __PACK__ pd_ipsec_encrypt_get_args_t;
 
 static inline void
-pd_ipsec_sa_get_args_init (pd_ipsec_sa_get_args_t *args)
+pd_ipsec_encrypt_get_args_init (pd_ipsec_encrypt_get_args_t *args)
 {
     args->ipsec_sa = NULL;
     return;
 }
 
+
+// ipsec_sa_decrypt
+typedef struct pd_ipsec_decrypt_create_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_decrypt_create_args_t;
+
+
+static inline void
+pd_ipsec_decrypt_create_args_init (pd_ipsec_decrypt_create_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
+
+typedef struct pd_ipsec_decrypt_update_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_decrypt_update_args_t;
+
+static inline void
+pd_ipsec_decrypt_update_args_init (pd_ipsec_decrypt_update_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
+
+typedef struct pd_ipsec_decrypt_delete_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_decrypt_delete_args_t;
+
+static inline void
+pd_ipsec_decrypt_delete_args_init (pd_ipsec_decrypt_delete_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
+
+typedef struct pd_ipsec_decrypt_get_args_s {
+    ipsec_sa_t            *ipsec_sa;
+} __PACK__ pd_ipsec_decrypt_get_args_t;
+
+static inline void
+pd_ipsec_decrypt_get_args_init (pd_ipsec_decrypt_get_args_t *args)
+{
+    args->ipsec_sa = NULL;
+    return;
+}
 
 // l4lb
 typedef struct pd_l4lb_create_args_s {
@@ -2710,7 +2756,15 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_L2SEG_GET,                230, "PD_FUNC_ID_L2SEG_GET")\
     ENTRY(PD_FUNC_ID_EP_GET,                   231, "PD_FUNC_ID_EP_GET")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 232, "PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE") \
-    ENTRY(PD_FUNC_ID_MAX,                      233, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE,       233, "PD_FUNC_ID_IPSEC_ENCRYPT_CREATE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE,       234, "PD_FUNC_ID_IPSEC_ENCRYPT_DELETE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE,       235, "PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_GET,          236, "PD_FUNC_ID_IPSEC_ENCRYPT_GET")        \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_CREATE, 237, "PD_FUNC_ID_IPSEC_DECRYPT_CREATE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_DELETE, 238, "PD_FUNC_ID_IPSEC_DECRYPT_DELETE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE, 239, "PD_FUNC_ID_IPSEC_DECRYPT_UPDATE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_GET,    240, "PD_FUNC_ID_IPSEC_DECRYPT_GET")    \
+    ENTRY(PD_FUNC_ID_MAX,                      241, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2827,6 +2881,18 @@ PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_create);
 PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_update);
 PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_delete);
 PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_get);
+
+// ipsec_sa_encrypt calls
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_create);
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_update);
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_delete);
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_get);
+
+// ipsec_sa_decrypt calls
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_create);
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_update);
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_delete);
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_get);
 
 // l4lb
 PD_FUNCP_TYPEDEF(pd_l4lb_create);
@@ -3181,6 +3247,18 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_ipseccb_decrypt_update);
         PD_UNION_FIELD(pd_ipseccb_decrypt_delete);
         PD_UNION_FIELD(pd_ipseccb_decrypt_get);
+
+        // ipsec_sa_encrypt calls
+        PD_UNION_FIELD(pd_ipsec_encrypt_create);
+        PD_UNION_FIELD(pd_ipsec_encrypt_update);
+        PD_UNION_FIELD(pd_ipsec_encrypt_delete);
+        PD_UNION_FIELD(pd_ipsec_encrypt_get);
+
+        // ipseccb_decrypt calls
+        PD_UNION_FIELD(pd_ipsec_decrypt_create);
+        PD_UNION_FIELD(pd_ipsec_decrypt_update);
+        PD_UNION_FIELD(pd_ipsec_decrypt_delete);
+        PD_UNION_FIELD(pd_ipsec_decrypt_get);
 
         // l4lb
         PD_UNION_FIELD(pd_l4lb_create);

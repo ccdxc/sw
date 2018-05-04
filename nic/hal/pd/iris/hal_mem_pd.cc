@@ -30,6 +30,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/internal/crypto_keys_pd.hpp"
 #include "nic/hal/pd/iris/internal/ipseccb_pd.hpp"
+#include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/hal/pd/iris/l4lb/l4lb_pd.hpp"
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"

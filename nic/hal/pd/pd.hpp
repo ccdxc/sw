@@ -29,6 +29,8 @@ typedef struct pd_wring_s pd_wring_t;
 typedef struct pd_wring_meta_s pd_wring_meta_t; 
 typedef struct pd_ipseccb_encrypt_s pd_ipseccb_encrypt_t;
 typedef struct pd_ipseccb_decrypt_s pd_ipseccb_decrypt_t;
+typedef struct pd_ipsec_encrypt_s pd_ipsec_encrypt_t;
+typedef struct pd_ipsec_decrypt_s pd_ipsec_decrypt_t;
 typedef struct pd_l4lb_s pd_l4lb_t;
 typedef struct pd_cpucb_s pd_cpucb_t;
 typedef struct pd_rawrcb_s pd_rawrcb_t;

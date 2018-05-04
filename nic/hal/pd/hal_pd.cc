@@ -164,6 +164,18 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE, pd_ipseccb_decrypt_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_IPSECCB_DECRYPT_GET, pd_ipseccb_decrypt_get);
 
+    // ipsec_sa_encrypt pd calls
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE, pd_ipsec_encrypt_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE, pd_ipsec_encrypt_delete);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE, pd_ipsec_encrypt_update);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_GET, pd_ipsec_encrypt_get);
+
+    // ipsec_sa_decrypt pd calls
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_CREATE, pd_ipsec_decrypt_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_DELETE, pd_ipsec_decrypt_delete);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE, pd_ipsec_decrypt_update);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_GET, pd_ipsec_decrypt_get);
+
     // l4lb
     PD_SYMBOL_LOAD(PD_FUNC_ID_L4LB_CREATE, pd_l4lb_create);
 
@@ -528,6 +540,18 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_IPSECCB_DECRYPT_DELETE, pd_ipseccb_decrypt_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE, pd_ipseccb_decrypt_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_IPSECCB_DECRYPT_GET, pd_ipseccb_decrypt_get);
+
+    // ipsec_sa_encrypt pd calls
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE, pd_ipsec_encrypt_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE, pd_ipsec_encrypt_delete);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE, pd_ipsec_encrypt_update);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_ENCRYPT_GET, pd_ipsec_encrypt_get);
+
+    // ipsec_sa_decrypt pd calls
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_DECRYPT_CREATE, pd_ipsec_decrypt_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_DECRYPT_DELETE, pd_ipsec_decrypt_delete);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE, pd_ipsec_decrypt_update);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IPSEC_DECRYPT_GET, pd_ipsec_decrypt_get);
 
     // l4lb
     PD_SYMBOL_CALL(PD_FUNC_ID_L4LB_CREATE, pd_l4lb_create);

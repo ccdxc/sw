@@ -58,9 +58,9 @@ ipsec_sa_decrypt_compare_handle_key_func (void *key1, void *key2)
 }
 
 //------------------------------------------------------------------------------
-// validate an incoming IPSECCB create request
+// validate an incoming IPSEC-SA create request
 // TODO:
-// 1. check if IPSECCB exists already
+// 1. check if IPSEC-SA exists already
 //------------------------------------------------------------------------------
 static hal_ret_t
 validate_ipsec_sa_decrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
@@ -99,7 +99,7 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t                *ipsec;
-    pd::pd_ipsec_sa_create_args_t    pd_ipsec_sa_args;
+    pd::pd_ipsec_decrypt_create_args_t    pd_ipsec_decrypt_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
@@ -157,16 +157,10 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
 
 
     // allocate all PD resources and finish programming
-    pd::pd_ipsec_sa_create_args_init(&pd_ipsec_sa_args);
-    pd_ipsec_sa_args.ipsec_sa = ipsec;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_CREATE, (void *)&pd_ipsec_sa_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSEC CB create failure, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto cleanup;
-    }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_CREATE,
-                          (void *)&pd_ipsec_sa_args);
+    pd::pd_ipsec_decrypt_create_args_init(&pd_ipsec_decrypt_args);
+    pd_ipsec_decrypt_args.ipsec_sa = ipsec;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_DECRYPT_CREATE,
+                          (void *)&pd_ipsec_decrypt_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSEC CB decrypt create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -197,7 +191,7 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t*               ipsec;
-    pd::pd_ipsec_sa_update_args_t    pd_ipsec_sa_args;
+    pd::pd_ipsec_decrypt_update_args_t    pd_ipsec_decrypt_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
@@ -211,8 +205,8 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
         return HAL_RET_IPSEC_CB_NOT_FOUND;
     }
 
-    pd::pd_ipsec_sa_update_args_init(&pd_ipsec_sa_args);
-    pd_ipsec_sa_args.ipsec_sa = ipsec;
+    pd::pd_ipsec_decrypt_update_args_init(&pd_ipsec_decrypt_args);
+    pd_ipsec_decrypt_args.ipsec_sa = ipsec;
 
     ipsec->iv_salt = spec.salt();
     ipsec->spi = spec.spi();
@@ -245,16 +239,10 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     } else {
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_UPDATE, (void *)&pd_ipsec_sa_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_DECRYPT_UPDATE,
+                          (void *)&pd_ipsec_decrypt_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_HW_FAIL;
-    }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE,
-                          (void *)&pd_ipsec_sa_args);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: {}", ret);
+        HAL_TRACE_ERR("PD IPSEC-SA: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
@@ -273,7 +261,7 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t                ripsec;
     ipsec_sa_t*               ipsec;
-    pd::pd_ipsec_sa_get_args_t    pd_ipsec_sa_args;
+    pd::pd_ipsec_decrypt_get_args_t    pd_ipsec_decrypt_args;
     IpsecSADecryptGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
@@ -286,12 +274,13 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
 
     ipsec_sa_init(&ripsec);
     ripsec.sa_id = ipsec->sa_id;
-    pd::pd_ipsec_sa_get_args_init(&pd_ipsec_sa_args);
-    pd_ipsec_sa_args.ipsec_sa = &ripsec;
+    pd::pd_ipsec_decrypt_get_args_init(&pd_ipsec_decrypt_args);
+    pd_ipsec_decrypt_args.ipsec_sa = &ripsec;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_GET, (void *)&pd_ipsec_sa_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_DECRYPT_GET,
+                          (void *)&pd_ipsec_decrypt_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSECCB: Failed to get, err: {}", ret);
+        HAL_TRACE_ERR("PD Decrypt IPSEC-SA: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
@@ -312,13 +301,6 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
 
     // fill stats of this IPSEC CB
     rsp->set_api_status(types::API_STATUS_OK);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_GET,
-                          (void *)&pd_ipsec_sa_args);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD Decrypt IPSECCB: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_HW_FAIL;
-    }
 
     return HAL_RET_OK;
 }
@@ -331,7 +313,7 @@ ipsec_sadecrypt_delete (ipsec::IpsecSADecryptDeleteRequest& req, ipsec::IpsecSAD
 {
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t*               ipsec;
-    pd::pd_ipsec_sa_delete_args_t    pd_ipsec_sa_args;
+    pd::pd_ipsec_decrypt_delete_args_t    pd_ipsec_decrypt_args;
 
     auto kh = req.key_or_handle();
     ipsec = find_ipsec_sa_by_id(kh.cb_id());
@@ -340,19 +322,13 @@ ipsec_sadecrypt_delete (ipsec::IpsecSADecryptDeleteRequest& req, ipsec::IpsecSAD
         return HAL_RET_OK;
     }
 
-    pd::pd_ipsec_sa_delete_args_init(&pd_ipsec_sa_args);
-    pd_ipsec_sa_args.ipsec_sa = ipsec;
+    pd::pd_ipsec_decrypt_delete_args_init(&pd_ipsec_decrypt_args);
+    pd_ipsec_decrypt_args.ipsec_sa = ipsec;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DELETE, (void *)&pd_ipsec_sa_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_DECRYPT_DELETE,
+                          (void *)&pd_ipsec_decrypt_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_HW_FAIL;
-    }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_DELETE,
-                          (void *)&pd_ipsec_sa_args);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
+        HAL_TRACE_ERR("PD IPSEC-SA: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }

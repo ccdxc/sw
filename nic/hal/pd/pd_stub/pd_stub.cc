@@ -124,6 +124,18 @@ PD_FUNC_STUB(pd_ipseccb_decrypt_update);
 PD_FUNC_STUB(pd_ipseccb_decrypt_delete);
 PD_FUNC_STUB(pd_ipseccb_decrypt_get);
 
+// ipseccb calls
+PD_FUNC_STUB(pd_ipsec_encrypt_create);
+PD_FUNC_STUB(pd_ipsec_encrypt_update);
+PD_FUNC_STUB(pd_ipsec_encrypt_delete);
+PD_FUNC_STUB(pd_ipsec_encrypt_get);
+
+// ipseccb_decrypt calls
+PD_FUNC_STUB(pd_ipsec_decrypt_create);
+PD_FUNC_STUB(pd_ipsec_decrypt_update);
+PD_FUNC_STUB(pd_ipsec_decrypt_delete);
+PD_FUNC_STUB(pd_ipsec_decrypt_get);
+
 // l4lb
 PD_FUNC_STUB(pd_l4lb_create);
 
