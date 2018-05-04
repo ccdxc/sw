@@ -1823,6 +1823,155 @@ func TestNatPolicyOnNonExistentLocalNatPool(t *testing.T) {
 	Assert(t, err != nil, "Nat Policy create with a non existent local nat rule must fail validation. It passed instead")
 }
 
+func TestNatPolicyOnMatchAllDst(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create backing nat pool
+	// create the backing nat pool
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.1.2.1-10.1.2.200",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+
+	// nat policy
+	natPolicy := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					NatPool: "testNatPool",
+					Action:  "SNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err = ag.CreateNatPolicy(&natPolicy)
+	AssertOk(t, err, "Nat Policy create with missing Dst Selector should pass")
+}
+
+func TestNatPolicyOnMatchAllSrc(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create backing nat pool
+	// create the backing nat pool
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.1.2.1-10.1.2.200",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+
+	// nat policy
+	natPolicy := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.0 - 192.168.1.1",
+					},
+					NatPool: "testNatPool",
+					Action:  "SNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err = ag.CreateNatPolicy(&natPolicy)
+	AssertOk(t, err, "Nat Policy create with missing Src Selector should pass")
+}
+
+func TestNatPolicyOnMatchAll(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create backing nat pool
+	// create the backing nat pool
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.1.2.1-10.1.2.200",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+
+	// nat policy
+	natPolicy := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					NatPool: "testNatPool",
+					Action:  "SNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err = ag.CreateNatPolicy(&natPolicy)
+	AssertOk(t, err, "Nat Policy create with missing Src Selector should pass")
+}
+
 func TestNatPolicyOnNonExistentRemoteNatPool(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)

@@ -2082,33 +2082,39 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) (*hal
 	var ruleMatch halproto.RuleMatch
 	var err error
 	// ToDo implement IP, Prefix and SG Match converters
-	switch src.MatchType {
-	case "IPRange":
-		srcIPRange, err = hd.convertIPRange(src.Match)
-		if err != nil {
-			log.Errorf("Could not convert match criteria from Src: {%v}. Err: %v", src, err)
-			return nil, err
+	if src != nil {
+		switch src.MatchType {
+		case "IPRange":
+			srcIPRange, err = hd.convertIPRange(src.Match)
+			if err != nil {
+				log.Errorf("Could not convert match criteria from Src: {%v}. Err: %v", src, err)
+				return nil, err
+			}
+			ruleMatch.SrcAddress = srcIPRange
+		default:
+			log.Errorf("Invalid source match type. %v", src.MatchType)
+			return nil, ErrInvalidMatchType
 		}
-		ruleMatch.SrcAddress = srcIPRange
-	default:
-		log.Errorf("Invalid source match type. %v", src.MatchType)
-		return nil, ErrInvalidMatchType
 	}
 
-	switch dst.MatchType {
-	case "IPRange":
-		dstIPRange, err = hd.convertIPRange(dst.Match)
-		if err != nil {
-			log.Errorf("Could not convert match criteria from Dst: {%v}. Err: %v", dst, err)
-			return nil, err
+	if dst != nil {
+		switch dst.MatchType {
+		case "IPRange":
+			dstIPRange, err = hd.convertIPRange(dst.Match)
+			if err != nil {
+				log.Errorf("Could not convert match criteria from Dst: {%v}. Err: %v", dst, err)
+				return nil, err
+			}
+			ruleMatch.DstAddress = dstIPRange
+		default:
+			log.Errorf("Invalid source match type. %v", dst.MatchType)
+			return nil, ErrInvalidMatchType
 		}
-		ruleMatch.DstAddress = dstIPRange
-	default:
-		log.Errorf("Invalid source match type. %v", dst.MatchType)
-		return nil, ErrInvalidMatchType
-	}
 
-	return &ruleMatch, nil
+		return &ruleMatch, nil
+	}
+	// Default match all criteria
+	return nil, nil
 }
 
 func (hd *Datapath) convertIPRange(sel string) ([]*halproto.IPAddressObj, error) {
