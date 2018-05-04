@@ -270,4 +270,10 @@
 #define RING_STATE_P_NDX_OFFSET	0
 
 
+// IO Status buffer offsets/size
+#define IO_STATUS_BUF_ROCE_DESC_OFFSET		0
+#define IO_STATUS_BUF_BE_STATUS_OFFSET		64
+
+#define IO_STATUS_BUF_BE_STATUS_SIZE		64
+
 #endif     // STORAGE_COMMON_DEFINES_H

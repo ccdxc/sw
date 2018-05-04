@@ -16,9 +16,14 @@ struct phv_ p;
 
 storage_nvme_handle_r2n_wqe_start:
 
+   // Check if WQE needs to be processed. TODO: Status buffer free when 
+   // no processing needs to be done ?
    seq		c1, d.opcode, R2N_OPCODE_PROCESS_WQE
    bcf		[!c1], exit
-   nop
+
+   // Store the IO status buffer post descriptor address in K+I vector 
+   sub		r1, d.handle, IO_STATUS_BUF_BE_STATUS_OFFSET // delay slot
+   phvwr	p.nvme_kivec_rrq_push_rrq_desc_addr, r1
 
    // Process WQE => Set the table and program address for loading the
    // WQE pointer

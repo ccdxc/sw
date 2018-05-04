@@ -227,6 +227,17 @@
 #define NVME_KIVEC_ARM_DST7_ARM_QADDR           \
     k.{nvme_kivec_arm_dst7_arm_qaddr_sbit0_ebit1...nvme_kivec_arm_dst7_arm_qaddr_sbit2_ebit33}
 
+#define NVME_KIVEC_RRQ_PUSH_RRQ_LIF             \
+    k.{nvme_kivec_rrq_push_rrq_lif_sbit0_ebit7...nvme_kivec_rrq_push_rrq_lif_sbit8_ebit10}
+#define NVME_KIVEC_RRQ_PUSH_RRQ_QTYPE           \
+    k.nvme_kivec_rrq_push_rrq_qtype
+#define NVME_KIVEC_RRQ_PUSH_RRQ_QID             \
+    k.{nvme_kivec_rrq_push_rrq_qid_sbit0_ebit1...nvme_kivec_rrq_push_rrq_qid_sbit18_ebit23}
+#define NVME_KIVEC_RRQ_PUSH_RRQ_BASE            \
+    k.{nvme_kivec_rrq_push_rrq_base_sbit0_ebit1...nvme_kivec_rrq_push_rrq_base_sbit2_ebit33}
+#define NVME_KIVEC_RRQ_PUSH_RRQ_DESC_ADDR       \
+    k.{nvme_kivec_rrq_push_rrq_desc_addr_sbit0_ebit31...nvme_kivec_rrq_push_rrq_desc_addr_sbit32_ebit33}
+
 /*
  * Debug flags
  */
@@ -616,6 +627,13 @@
                              NVME_KIVEC_ARM_DST7_ARM_LIF,               \
                              NVME_KIVEC_ARM_DST7_ARM_QTYPE,             \
                              NVME_KIVEC_ARM_DST7_ARM_QID)               \
+
+#define NVME_ROCE_RQ_PUSH_DOORBELL_RING(_dma_cmd_ptr)                   \
+   _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
+                             DOORBELL_UPDATE_NONE, d.p_ndx,             \
+                             NVME_KIVEC_RRQ_PUSH_RRQ_LIF,               \
+                             NVME_KIVEC_RRQ_PUSH_RRQ_QTYPE,             \
+                             NVME_KIVEC_RRQ_PUSH_RRQ_QID)               \
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.

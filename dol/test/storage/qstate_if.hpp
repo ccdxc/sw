@@ -76,6 +76,10 @@ int setup_init_r2n_q_state(int src_lif, int src_qtype, int src_qid,
                            uint16_t num_entries, uint64_t base_addr, 
                            uint64_t entry_size);
 
+int update_nvme_cq_state(int src_lif, int src_qtype, int src_qid,
+                         uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
+                         uint64_t rrq_qaddr, int64_t rrq_base_pa);
+
 }  // namespace qstate_if
 
 #endif

@@ -16,6 +16,7 @@
 #define tx_table_s5_t0		s5_tbl0
 #define tx_table_s6_t0		s6_tbl0
 #define tx_table_s7_t0		s7_tbl0
+#define tx_table_s7_t1		s7_tbl1
 
 #define tx_table_s0_t0_action	check_sq_state
 #define tx_table_s0_t0_action1	pop_r2n_sq
@@ -52,6 +53,7 @@
 #define tx_table_s7_t0_action	push_arm_q
 #define tx_table_s7_t0_action1	push_dst_seq_q
 #define tx_table_s7_t0_action2	send_sta_free_iob
+#define tx_table_s7_t1_action	push_roce_rq
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -84,6 +86,8 @@ metadata nvme_kivec_prp_base_t nvme_kivec_prp_base;
 metadata nvme_kivec_arm_dst_t nvme_kivec_arm_dst6;
 @pragma pa_header_union ingress to_stage_7
 metadata nvme_kivec_arm_dst_t nvme_kivec_arm_dst7;
+@pragma pa_header_union ingress to_stage_7
+metadata nvme_kivec_rrq_push_t nvme_kivec_rrq_push;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -285,6 +289,9 @@ metadata nvme_kivec_prp_base_t nvme_kivec_prp_base_scratch;
 metadata nvme_kivec_arm_dst_t nvme_kivec_arm_dst_scratch;
 
 @pragma scratch_metadata
+metadata nvme_kivec_rrq_push_t nvme_kivec_rrq_push_scratch;
+
+@pragma scratch_metadata
 metadata io_map_entry_t io_map_entry_scratch;
 
 @pragma scratch_metadata
@@ -304,6 +311,9 @@ metadata io_ctx_entry_t io_ctx_scratch;
 
 @pragma scratch_metadata
 metadata iob_addr_t iob_addr_scratch;
+
+@pragma scratch_metadata
+metadata roce_rq_cb_t roce_rq_cb_scratch;
 
 
 /*****************************************************************************
@@ -1139,10 +1149,14 @@ action handle_r2n_wqe(handle, data_size, opcode, status) {
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
 
+  // Store the information needed in the K+I vector for ROCE RQ push
+  modify_field(nvme_kivec_rrq_push.rrq_desc_addr, 
+               r2n_wqe_scratch.handle - IO_STATUS_BUF_BE_STATUS_OFFSET);
+
   // If opcode is set to process WQE
   if (r2n_wqe_scratch.opcode == R2N_OPCODE_PROCESS_WQE) {
     // Load the PVM VF SQ context for the next stage to push the NVME command
-    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, handle,
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, r2n_wqe_scratch.handle,
                           STORAGE_DEFAULT_TBL_LOAD_SIZE, process_be_status_start)
   }
 }
@@ -1344,7 +1358,8 @@ action lookup_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                num_entries, base_addr, entry_size, next_pc,
-               intr_addr, intr_data, intr_en, phase, pad) {
+               intr_addr, intr_data, intr_en, phase, rrq_lif,
+               rrq_qtype, rrq_qid, rrq_qaddr, rrq_base, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
@@ -1356,6 +1371,12 @@ action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 
   // Set the phase bit in the NVME status
   modify_field(nvme_sta.phase, phase);
+
+  // Store the information needed in the K+I vector for ROCE RQ push
+  modify_field(nvme_kivec_rrq_push.rrq_lif, nvme_cq_state_scratch.rrq_lif);
+  modify_field(nvme_kivec_rrq_push.rrq_qtype, nvme_cq_state_scratch.rrq_qtype);
+  modify_field(nvme_kivec_rrq_push.rrq_qid, nvme_cq_state_scratch.rrq_qid);
+  modify_field(nvme_kivec_rrq_push.rrq_base, nvme_cq_state_scratch.rrq_base);
 
   // Check for queue full condition before pushing
   if (QUEUE_FULL(nvme_cq_state_scratch)) {
@@ -1394,6 +1415,10 @@ action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                                0, 0, 0, 0)
       // Fence the DMA command to set the interrupt
     }
+
+    // Load the stage 1 table for pushing the status buffer back to the RQ.
+    CAPRI_LOAD_TABLE_ADDR(common_te1_phv, nvme_cq_state_scratch.rrq_qaddr, 
+                          STORAGE_DEFAULT_TBL_LOAD_SIZE, push_roce_rq_start)
 
     // Load the table and program for reading the destination arm queue
     // state in the next stage for sending command to free the IOB
@@ -1463,6 +1488,66 @@ action send_sta_free_iob(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 
   // Exit the pipeline here 
 }
+
+/*****************************************************************************
+ *  push_roce_rq: Push a ROCE RQ WQE by issuing the DMA commands to write
+ *                the ROCE RQ WQE and incrementing the p_ndx via ringing the 
+ *                doorbell. 
+ *****************************************************************************/
+
+@pragma little_endian p_ndx c_ndx
+action push_roce_rq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
+                    total_rings, host_rings, pid, p_ndx, c_ndx, extra_rings,
+                    base_addr, page_size, entry_size, num_entries, pad) {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t1_s2s_scratch, nvme_kivec_t1_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+  NVME_KIVEC_RRQ_PUSH_USE(nvme_kivec_rrq_push_scratch, nvme_kivec_rrq_push)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  ROCE_RQ_CB_COPY(roce_rq_cb_scratch)
+
+  // Check for queue full condition before pushing
+  if (QUEUE_FULL(roce_rq_cb_scratch)) {
+
+    // Exit pipeline here without error handling for now. This event of 
+    // destination queue being full should never happen with constraints 
+    // imposed by the control path programming.
+    exit();
+
+  } else {
+
+    // Update destination in the mem2mem DMA without touching the source. This wont 
+    // work in P4 as there is no update API for mem2mem DMA. In ASM, there are two APIs.
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 0, 0, 
+                             nvme_kivec_rrq_push_scratch.rrq_base +
+                             (roce_rq_cb_scratch.p_ndx * roce_rq_cb_scratch.entry_size),
+                             0, ROCE_RQ_WQE_SIZE, 0, 0, 0)
+
+
+    // Push the entry to the queue. In ASM tblwr of pndx. 
+    QUEUE_PUSH(roce_rq_cb_scratch)
+
+    // Form the doorbell and setup the DMA command to push the entry by
+    // incrementing p_ndx
+    modify_field(doorbell_addr_scratch.addr,
+                 STORAGE_DOORBELL_ADDRESS(nvme_kivec_rrq_push_scratch.rrq_qtype, 
+                                          nvme_kivec_rrq_push_scratch.rrq_lif,
+                                          DOORBELL_SCHED_WR_SET, 
+                                          DOORBELL_UPDATE_P_NDX));
+    modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
+
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
+                             0,
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             0, 0, 0, 0)
+
+    // Exit the pipeline here 
+  }
+}
+
 
 /*****************************************************************************
  * Storage Tx NVME initiator status processing END
@@ -1802,6 +1887,7 @@ action timeout_io_ctx(iob_addr, pad, oper_status, nvme_data_len, is_read, is_rem
   // Exit the pipeline
 
 }
+
 /*****************************************************************************
  * Storage Tx ARM LIF processing END
  *****************************************************************************/

@@ -93,7 +93,12 @@ header_type nvme_cq_state_t {
     intr_data		: 32;	// MSI-X interrupt data
     intr_en		: 1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
     phase		: 1;	// Phase bit
-    pad			: 210;	// Align to 64 bytes
+    rrq_lif		: 11;	// ROCE RQ LIF number
+    rrq_qtype		: 3;	// ROCE RQ LIF type (within the LIF)
+    rrq_qid		: 24;	// ROCE RQ queue number (within the LIF)
+    rrq_qaddr		: 34;	// ROCE RQ queue state address
+    rrq_base		: 34;	// ROCE RQ queue base address
+    pad			: 104;	// Align to 64 bytes
   }
 }
 
@@ -301,6 +306,17 @@ header_type nvme_kivec_arm_dst_t {
   }
 }
 
+// header union with to_stage_7
+header_type nvme_kivec_rrq_push_t {
+  fields {
+    rrq_lif		: 11;	// ROCE RQ LIF number
+    rrq_qtype		: 3;	// ROCE RQ LIF type (within the LIF)
+    rrq_qid		: 24;	// ROCE RQ queue number (within the LIF)
+    rrq_base		: 34;	// ROCE RQ queue base address
+    rrq_desc_addr	: 34;	// ROCE RQ buffer post descriptor
+  }
+}
+
 
 #define Q_STATE_COPY_INTRINSIC(q_state)			\
   modify_field(q_state.pc_offset, pc_offset);		\
@@ -371,6 +387,11 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(q_state.intr_data, intr_data);		\
   modify_field(q_state.intr_en, intr_en);		\
   modify_field(q_state.phase, phase);			\
+  modify_field(q_state.rrq_lif, rrq_lif);		\
+  modify_field(q_state.rrq_qtype, rrq_qtype);		\
+  modify_field(q_state.rrq_qid, rrq_qid);		\
+  modify_field(q_state.rrq_qaddr, rrq_qaddr);		\
+  modify_field(q_state.rrq_base, rrq_base);		\
 
 #define NVME_CQ_STATE_COPY(q_state)			\
   NVME_CQ_STATE_COPY_STAGE0(q_state)			\
@@ -502,6 +523,13 @@ header_type nvme_kivec_arm_dst_t {
 #define NVME_KIVEC_IOB_RING_USE(scratch, kivec)				\
   modify_field(scratch.base_addr, kivec.base_addr);	                \
 
+#define NVME_KIVEC_RRQ_PUSH_USE(scratch, kivec)				\
+  modify_field(scratch.rrq_lif, kivec.rrq_lif);				\
+  modify_field(scratch.rrq_qtype, kivec.rrq_qtype);			\
+  modify_field(scratch.rrq_qid, kivec.rrq_qid);				\
+  modify_field(scratch.rrq_base, kivec.rrq_base);			\
+  modify_field(scratch.rrq_desc_addr, kivec.rrq_desc_addr);		\
+
 // PRP entry based data xfer marcos from host (for write command)
 // TODO: FIXME: In ASM, use min(remaining_len, PRP_DATA_XFER_SIZE)
 #define NVME_DATA_XFER_FROM_HOST(s2s_kivec, global_kivec, src_dma_cmd,	\
@@ -564,6 +592,7 @@ header_type nvme_kivec_arm_dst_t {
 #define timeout_iob_skip_start		0x81160000
 #define timeout_io_ctx_start		0x81170000
 #define save_iob_addr_start		0x81180000
+#define push_roce_rq_start		0x81190000
 
 
 #endif     // STORAGE_NVME_P4_HDR_H

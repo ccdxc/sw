@@ -319,11 +319,13 @@ const uint16_t kNumCQWQEs = 256;
 dp_mem_t *initiator_cq_va;
 dp_mem_t *initiator_sq_va;
 dp_mem_t *initiator_rq_va;
+uint64_t initiator_rq_va_base;
 uint16_t initiator_cq_cindex = 0;
 
 dp_mem_t *target_cq_va;
 dp_mem_t *target_sq_va;
 dp_mem_t *target_rq_va;
+uint64_t target_rq_va_base;
 uint16_t target_cq_cindex = 0;
 }  // anonymous namespace
 
@@ -352,6 +354,7 @@ void AllocRdmaMem() {
                                  NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
   initiator_rq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
                                  NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+  initiator_rq_va_base = initiator_rq_va->pa();
 
   target_cq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
                               NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
@@ -359,6 +362,8 @@ void AllocRdmaMem() {
                               NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
   target_rq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
                               NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+  target_rq_va_base = target_rq_va->pa();
+  printf("Init RQ PA %lx; Tgt RQ PA %lx \n", initiator_rq_va_base, target_rq_va_base);
 
   target_rcv_buf_va = new dp_mem_t(kR2NNumBufs, kR2NBufSize, DP_MEM_ALIGN_PAGE);
   initiator_rcv_buf_va = new dp_mem_t(kR2NNumBufs, kR2NBufSize, DP_MEM_ALIGN_PAGE);
@@ -555,7 +560,7 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
 }
 
 
-void FillRQWQE(dp_mem_t *rqwqe, dp_mem_t *cmd_buf, uint32_t size) {
+void FillTargetRQWQE(dp_mem_t *rqwqe, dp_mem_t *cmd_buf, uint32_t size) {
   rqwqe->clear();
   // Fill the RQ WQE to post the buffer (at the offset)
   rqwqe->write_bit_fields(64, 8, 1);  // num_sges = 1
@@ -564,6 +569,18 @@ void FillRQWQE(dp_mem_t *rqwqe, dp_mem_t *cmd_buf, uint32_t size) {
   rqwqe->write_bit_fields(256+64+32, 32, kTargetRcvBuf1LKey);  // sge0->l_key
   // wrid passed back in cq is the buffer offset passed in
   rqwqe->write_bit_fields(0, 64, cmd_buf->pa());
+  rqwqe->write_thru();
+}
+
+void FillInitiatorRQWQE(dp_mem_t *rqwqe, dp_mem_t *status_buf, uint32_t size) {
+  rqwqe->clear();
+  // Fill the RQ WQE to post the buffer (at the offset)
+  rqwqe->write_bit_fields(64, 8, 1);  // num_sges = 1
+  rqwqe->write_bit_fields(256, 64, status_buf->va()); // sge0->va 
+  rqwqe->write_bit_fields(256+64, 32, size);  // sge0->len
+  rqwqe->write_bit_fields(256+64+32, 32, kInitiatorRcvBuf1LKey);  // sge0->l_key
+  // wrid passed back in cq is the buffer offset passed in
+  rqwqe->write_bit_fields(0, 64, status_buf->pa());
   rqwqe->write_thru();
 }
 
@@ -579,11 +596,11 @@ void PostTargetRcvBuf1() {
   
   // Fill the WQE to submit here in DOL infra
   dp_mem_t *rqwqe = target_rq_va->fragment_find(0, kRQWQESize);
-  FillRQWQE(rqwqe, cmd_buf, size);
+  FillTargetRQWQE(rqwqe, cmd_buf, size);
 
   // Pre-form the buf post descriptor to post the buffer to via P4+
   dp_mem_t *r2n_buf_rqwqe = target_rcv_buf_va->fragment_find(0, kRQWQESize);
-  FillRQWQE(r2n_buf_rqwqe, cmd_buf, size);
+  FillTargetRQWQE(r2n_buf_rqwqe, cmd_buf, size);
 
 
   // Pre-form the Status descriptor to point to the status buffer
@@ -629,7 +646,10 @@ void PostTargetRcvBuf1() {
   write_desc_local->write_bit_fields(64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
   write_desc_local->write_thru();
 
+  // Advance the line
   target_rq_va->line_advance();
+
+  // Ring the doorbell
   tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 1, 0, target_rq_va->line_get());
 }
 
@@ -667,20 +687,28 @@ void RegisterTargetRcvBufs() {
 
 void PostInitiatorRcvBuf1() {
 
-  printf("Posting initiator buffer of size %d VA %lx wrid %lx \n", 
-         kR2NBufSize, initiator_rcv_buf_va->va(), initiator_rcv_buf_va->pa());
+
+  dp_mem_t *status_buf = initiator_rcv_buf_va->fragment_find(IO_STATUS_BUF_BE_STATUS_OFFSET,
+                                                             IO_STATUS_BUF_BE_STATUS_SIZE);
 
   // Fill the RQ WQE to post the buffer (at the offset)
-  dp_mem_t *rqwqe = initiator_rq_va->fragment_find(0, kRQWQESize);
-  rqwqe->write_bit_fields(64, 8, 1);  // num_sges = 1
-  rqwqe->write_bit_fields(256, 64, initiator_rcv_buf_va->va()); // sge0->va 
-  rqwqe->write_bit_fields(256+64, 32, kR2NBufSize);  // sge0->len
-  rqwqe->write_bit_fields(256+64+32, 32, kInitiatorRcvBuf1LKey);  // sge0->l_key
-  // wrid passed back in cq is the buffer address
-  rqwqe->write_bit_fields(0, 64, initiator_rcv_buf_va->pa());
-  rqwqe->write_thru();
+  uint32_t size = kR2NBufSize - IO_STATUS_BUF_BE_STATUS_OFFSET;
 
+  printf("Posting initiator buffer of size %d VA %lx wrid %lx \n", 
+         kR2NBufSize, status_buf->va(), status_buf->pa());
+
+  // Fill the WQE to submit here in DOL infra
+  dp_mem_t *rqwqe = initiator_rq_va->fragment_find(0, kRQWQESize);
+  FillInitiatorRQWQE(rqwqe, status_buf, size);
+
+  // Pre-form the buf post descriptor to post the buffer to via P4+
+  dp_mem_t *r2n_buf_rqwqe = initiator_rcv_buf_va->fragment_find(0, kRQWQESize);
+  FillInitiatorRQWQE(r2n_buf_rqwqe, status_buf, size);
+
+  // Advance the line
   initiator_rq_va->line_advance();
+
+  // Ring the doorbell
   tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 0, 0, initiator_rq_va->line_get());
 }
 
@@ -1113,6 +1141,26 @@ int rdma_roce_tgt_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t
   return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
 }
 
+int rdma_roce_ini_rq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr, uint64_t *base_pa) {
+  if (!lif || !qtype || !qid || !qaddr || !base_pa) return -1;
+  *lif = g_rdma_hw_lif_id;
+  *qtype = kRQType;
+  *qid = 0; // 0 - initiator; 1 - target
+  *base_pa = initiator_rq_va_base;
+  
+  return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
+}
+
+int rdma_roce_tgt_rq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr, uint64_t *base_pa) {
+  if (!lif || !qtype || !qid || !qaddr || !base_pa) return -1;
+  *lif = g_rdma_hw_lif_id;
+  *qtype = kRQType;
+  *qid = 1; // 0 - initiator; 1 - target
+  *base_pa = target_rq_va_base;
+  
+  return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
+}
+
 uint32_t get_rdma_pvm_roce_init_sq() {
   return g_rdma_pvm_roce_init_sq;
 }
@@ -1293,7 +1341,9 @@ void rdma_uspace_test() {
 }
 
 dp_mem_t *rdma_get_initiator_rcv_buf() {
-  return initiator_rcv_buf_va->fragment_find(0, kR2NDataSize);
+  uint32_t size = kR2NBufSize - IO_STATUS_BUF_BE_STATUS_OFFSET;
+  return initiator_rcv_buf_va->fragment_find(IO_STATUS_BUF_BE_STATUS_OFFSET, 
+                                             size);
 }
 
 dp_mem_t *rdma_get_target_write_data_buf() {

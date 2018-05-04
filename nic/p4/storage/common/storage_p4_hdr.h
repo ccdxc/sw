@@ -149,6 +149,139 @@ header_type iob_addr_t {
     iob_addr		: 34;	// Base address of the I/O buffer
   }
 }
+
+// ROCE CQ CB
+header_type roce_cq_cb_t {
+  fields {
+    pc_offset	: 8;	// Program counter (relative offset)
+    rsvd	: 8;	// Hardware reserved field
+    cosA	: 4;	// Cos value A
+    cosB	: 4;	// Cos value B
+    cos_sel	: 8;	// Cos selector
+    eval_last	: 8;	// Evaluator of "work ready" for ring
+    total_rings	: 4;	// Total number of rings used by this qstate
+    host_rings	: 4;	// Number of host facing rings used by this qstate
+    pid		: 16;	// PID value to be compared with that from host
+    p_ndx	: 16;	// Producer Index
+    c_ndx	: 16;	// Consumer Index
+    base_addr	: 64;	// Base address of queue entries
+    page_size	: 5;	// Size of each page (power of 2 of this value)
+    entry_size	: 5;	// Size of each WQE (power of 2 of this value)
+    num_entries	: 5;	// Number of WQE (power of 2 of this value)
+    rsvd0	: 1;	// ROCE reserved
+    cq_id	: 24;	// Completion queue id
+    eq_id	: 24;	// Event queue id
+    rsvd1	: 64;	// ROCE specific values to end the CQ CB at 32 bytes
+    w_ndx	: 16;	// Working consumer index
+    next_pc	: 28;	// Next program's PC
+    xlate_addr	: 34;	// Address of table to translate ROCE QP to PVM SQ
+    rcq_lif	: 11;	// ROCE's CQ LIF number
+    rcq_qtype	: 3;	// ROCE's CQ LIF type (within the LIF)
+    rcq_qid	: 24;	// ROCE's CQ queue number (within the LIF)
+    pad		: 108;	// Align to 64 bytes
+  }
+}
+
+// ROCE RQ CB
+header_type roce_rq_cb_t {
+  fields {
+    pc_offset	: 8;	// Program counter (relative offset)
+    rsvd	: 8;	// Hardware reserved field
+    cosA	: 4;	// Cos value A
+    cosB	: 4;	// Cos value B
+    cos_sel	: 8;	// Cos selector
+    eval_last	: 8;	// Evaluator of "work ready" for ring
+    total_rings	: 4;	// Total number of rings used by this qstate
+    host_rings	: 4;	// Number of host facing rings used by this qstate
+    pid		: 16;	// PID value to be compared with that from host
+    p_ndx	: 16;	// Producer Index
+    c_ndx	: 16;	// Consumer Index
+    extra_rings	: 160;	// Additional rings used by ROCE RQ
+    base_addr	: 32;	// Base address of queue entries
+    page_size	: 5;	// Size of each page (power of 2 of this value)
+    entry_size	: 5;	// Size of each WQE (power of 2 of this value)
+    num_entries	: 5;	// Number of WQE (power of 2 of this value)
+    pad		: 209;	// Align to 64 bytes
+  }
+}
+
+// PVM's ROCE SQ CB - PVM's altered copy of the ROCE SQ CB. Uses only one ring
+//                    and stores internal addresses which are not part of 
+//                    ROCE CQ CB.
+header_type pvm_roce_sq_cb_t {
+  fields {
+    pc_offset	: 8;	// Program counter (relative offset)
+    rsvd	: 8;	// Hardware reserved field
+    cosA	: 4;	// Cos value A
+    cosB	: 4;	// Cos value B
+    cos_sel	: 8;	// Cos selector
+    eval_last	: 8;	// Evaluator of "work ready" for ring
+    total_rings	: 4;	// Total number of rings used by this qstate
+    host_rings	: 4;	// Number of host facing rings used by this qstate
+    pid		: 16;	// PID value to be compared with that from host
+    p_ndx	: 16;	// Producer Index
+    c_ndx	: 16;	// Consumer Index
+    base_addr	: 64;	// Base address of queue entries
+    page_size	: 5;	// Size of each page (power of 2 of this value)
+    entry_size	: 5;	// Size of each WQE (power of 2 of this value)
+    num_entries	: 5;	// Number of WQE (power of 2 of this value)
+    rsvd0	: 1;	// ROCE reserved
+    roce_msn	: 32;	// ROCE message sequence number
+    w_ndx	: 16;	// Working consumer index
+    next_pc	: 28;	// Next program's PC
+    rrq_lif	: 11;	// ROCE RQ LIF number
+    rrq_qtype	: 3;	// ROCE RQ LIF type (within the LIF)
+    rrq_qid	: 24;	// ROCE RQ queue number (within the LIF)
+    rrq_qaddr	: 34;	// ROCE RQ queue state address
+    rsq_lif	: 11;	// PVM's R2N LIF number
+    rsq_qtype	: 3;	// PVM's R2N LIF type (within the LIF)
+    rsq_qid	: 24;	// PVM's R2N queue number (within the LIF)
+    rrq_base	: 34;	// ROCE RQ queue base address
+    post_buf	: 1;	// Whether a buffer needs to be posted back on ACK
+    pad		: 115;	// Align to 64 bytes
+  }
+}
+
+// WQE format of ROCE CQ. TODO: Is this a 64 byte or 32 byte entry ? Adjust accordingly
+header_type roce_cq_wqe_t {
+  fields {
+    wrid_msn	: 64;	// WRID or MSN depending on op_type
+    op_type	: 8;	// Operation type
+    status	: 8;	// Status code
+    qp		: 24;	// Queue pair id
+    rsvd1	: 152;	// ROCE specific bits
+  }
+}
+
+// WQE format of ROCE SQ
+header_type roce_sq_wqe_t {
+  fields {
+    wrid		: 64;	// Work request id
+    op_type		: 4;	// Operation type
+    complete_notify	: 1;	
+    fence		: 1;
+    solicited_event	: 1;
+    inline_data_vld	: 1;
+    num_sges		: 8;	// Number of SGEs
+    rsvd2		: 16;
+    op_data		: 416;	// Storage P4+ does not interpret this
+  }
+}
+
+// WQE format of ROCE RQ
+header_type roce_rq_wqe_t {
+  fields {
+    wrid		: 64;	// Work request id
+    num_sges		: 8;	// Number of SGEs
+    rsvd0		: 184;
+    sge_va		: 64;	// VA of the buffer
+    sge_len		: 32;	// Length of buffer
+    sge_l_key		: 32;	// L_KEY 
+    rsvd1		: 128;	// Second SGE
+  }
+}
+
+// The entry used to xlate ROCE SQ to PVM SQ for releasing the ROCE SQ entry.
 // Copy macros
 
 #define NVME_CMD_COPY(cmd)			\
@@ -208,6 +341,88 @@ header_type iob_addr_t {
 
 #define IOB_ADDR_COPY(entry)				\
   modify_field(entry.iob_addr, iob_addr);		\
+
+#define ROCE_CQ_CB_COPY_STAGE0(cq_cb)			\
+  Q_STATE_COPY_INTRINSIC(cq_cb)				\
+  modify_field(cq_cb.p_ndx, p_ndx);			\
+  modify_field(cq_cb.c_ndx, c_ndx);			\
+  modify_field(cq_cb.base_addr, base_addr);		\
+  modify_field(cq_cb.page_size, page_size);		\
+  modify_field(cq_cb.entry_size, entry_size);		\
+  modify_field(cq_cb.num_entries, num_entries);		\
+  modify_field(cq_cb.rsvd0, rsvd0);			\
+  modify_field(cq_cb.cq_id, cq_id);			\
+  modify_field(cq_cb.eq_id, eq_id);			\
+  modify_field(cq_cb.rsvd1, rsvd1);			\
+  modify_field(cq_cb.w_ndx, w_ndx);			\
+  modify_field(cq_cb.next_pc, next_pc);			\
+  modify_field(cq_cb.xlate_addr, xlate_addr);		\
+  modify_field(cq_cb.rcq_lif, rcq_lif);			\
+  modify_field(cq_cb.rcq_qtype, rcq_qtype);		\
+  modify_field(cq_cb.rcq_qid, rcq_qid);			\
+
+#define ROCE_CQ_CB_COPY(cq_cb)				\
+  ROCE_CQ_CB_COPY_STAGE0(cq_cb)				\
+  modify_field(cq_cb.pad, pad);				\
+
+#define PVM_ROCE_SQ_CB_COPY_STAGE0(sq_cb)		\
+  Q_STATE_COPY_INTRINSIC(sq_cb)				\
+  modify_field(sq_cb.p_ndx, p_ndx);			\
+  modify_field(sq_cb.c_ndx, c_ndx);			\
+  modify_field(sq_cb.base_addr, base_addr);		\
+  modify_field(sq_cb.page_size, page_size);		\
+  modify_field(sq_cb.entry_size, entry_size);		\
+  modify_field(sq_cb.num_entries, num_entries);		\
+  modify_field(sq_cb.rsvd0, rsvd0);			\
+  modify_field(sq_cb.roce_msn, roce_msn);		\
+  modify_field(sq_cb.w_ndx, w_ndx);			\
+  modify_field(sq_cb.next_pc, next_pc);			\
+  modify_field(sq_cb.rrq_lif, rrq_lif);			\
+  modify_field(sq_cb.rrq_qtype, rrq_qtype);		\
+  modify_field(sq_cb.rrq_qid, rrq_qid);			\
+  modify_field(sq_cb.rrq_qaddr, rrq_qaddr);		\
+  modify_field(sq_cb.rsq_lif, rsq_lif);			\
+  modify_field(sq_cb.rsq_qtype, rsq_qtype);		\
+  modify_field(sq_cb.rsq_qid, rsq_qid);			\
+  modify_field(sq_cb.rrq_base, rrq_base);		\
+  modify_field(sq_cb.post_buf, post_buf);		\
+
+#define PVM_ROCE_SQ_CB_COPY(sq_cb)			\
+  PVM_ROCE_SQ_CB_COPY_STAGE0(sq_cb)			\
+  modify_field(sq_cb.pad, pad);				\
+
+#define ROCE_RQ_CB_COPY_STAGE0(rq_cb)			\
+  Q_STATE_COPY_INTRINSIC(rq_cb)				\
+  modify_field(rq_cb.p_ndx, p_ndx);			\
+  modify_field(rq_cb.c_ndx, c_ndx);			\
+  modify_field(rq_cb.extra_rings, extra_rings);		\
+  modify_field(rq_cb.base_addr, base_addr);		\
+  modify_field(rq_cb.page_size, page_size);		\
+  modify_field(rq_cb.entry_size, entry_size);		\
+  modify_field(rq_cb.num_entries, num_entries);		\
+
+#define ROCE_RQ_CB_COPY(rq_cb)				\
+  ROCE_RQ_CB_COPY_STAGE0(rq_cb)				\
+  modify_field(rq_cb.pad, pad);				\
+
+
+
+// Copy the basic part of R2N WQE - the one sent by PVM
+#define R2N_WQE_BASE_COPY(wqe)					\
+  modify_field(wqe.handle, handle);				\
+  modify_field(wqe.data_size, data_size);			\
+  modify_field(wqe.opcode, opcode);				\
+  modify_field(wqe.status, status);				\
+  modify_field(wqe.db_enable, db_enable);			\
+  modify_field(wqe.db_lif, db_lif);				\
+  modify_field(wqe.db_qtype, db_qtype);				\
+  modify_field(wqe.db_qid, db_qid);				\
+  modify_field(wqe.db_index, db_index);				\
+  modify_field(wqe.is_remote, is_remote);			\
+  modify_field(wqe.dst_lif, dst_lif);				\
+  modify_field(wqe.dst_qtype, dst_qtype);			\
+  modify_field(wqe.dst_qid, dst_qid);				\
+  modify_field(wqe.dst_qaddr, dst_qaddr);			\
 
 // Macro to return the (byte) offset of a field within a PHV. Dummy in the
 // P4 land, implement this in ASM.
@@ -345,7 +560,7 @@ header_type iob_addr_t {
 // incrementing p_ndx. In ASM use the correct index, ring, queue
 // when constructing the data.
 #define QUEUE_PUSH_DOORBELL_UPDATE(_lif, _qtype, _qid, _ring, 	\
-                                   _w_ndx, _dma_cmd)		\				
+                                   _w_ndx, _dma_cmd)		\
   modify_field(doorbell_addr_scratch.addr,			\
         STORAGE_DOORBELL_ADDRESS(_qtype,			\
                                  _lif,				\

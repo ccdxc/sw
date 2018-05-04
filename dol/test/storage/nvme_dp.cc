@@ -366,6 +366,13 @@ int test_setup () {
 
 int config () {
 
+  // Update CQs with ROCE RQ context for buffer posting 
+  if (queues::nvme_dp_update_cqs() < 0) {
+    printf("Failed to update CQs \n");
+    return -1;
+  }
+  printf("Updated CQs\n");
+
   //  Setup IO map for  NSID 1
   if (setup_io_map() < 0) {
     printf("Failed to setup IO MAP (for NSID 1)\n");

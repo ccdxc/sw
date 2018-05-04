@@ -7,6 +7,7 @@
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/nvme.hpp"
+#include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/nvme_dp.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/ssd.hpp"
@@ -555,6 +556,34 @@ nvme_pvm_queues_setup() {
 }
 
 int
+nvme_dp_update_cqs() {
+  int i;
+
+  // ROCE LIF 
+  uint16_t lif;
+  uint8_t qtype;
+  uint32_t qid;
+  uint64_t qaddr;
+  uint64_t base_pa;
+
+  if (rdma_roce_ini_rq_info(&lif, &qtype, &qid, &qaddr, &base_pa) < 0) {
+    printf("Can't get RDMA Initiator RQ info \n");
+    assert(0);
+    return -1;
+  }
+
+  for (i = 0; i < (int) NUM_TO_VAL(NvmeNumCQs); i++) {
+    if (qstate_if::update_nvme_cq_state(nvme_lif, CQ_TYPE, i,
+                                        lif, qtype, qid, qaddr, base_pa) < 0) {
+      printf("Failed to update NVME CQ %d state \n", i);
+      return -1;
+    }
+  }
+
+  return 0;
+}
+ 
+int
 nvme_dp_queues_setup() {
   int i;
 
@@ -609,7 +638,6 @@ nvme_dp_queues_setup() {
 
   return 0;
 }
-
 int
 pvm_queues_setup() {
   int i, j;
