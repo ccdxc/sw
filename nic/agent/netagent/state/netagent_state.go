@@ -43,6 +43,7 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 		namespaceDB:  make(map[string]*netproto.Namespace),
 		enicDB:       make(map[string]*netproto.Interface),
 		natPoolDB:    make(map[string]*netproto.NatPool),
+		natPoolLUT:   make(map[string]*NatPoolRef),
 		natPolicyDB:  make(map[string]*netproto.NatPolicy),
 		natBindingDB: make(map[string]*netproto.NatBinding),
 		hwIfDB:       make(map[string]*netproto.Interface),

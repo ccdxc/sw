@@ -155,14 +155,21 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 		Spec: netproto.NatPolicySpec{
 			Rules: []netproto.NatRule{
 				{
-					Src:     &netproto.MatchSelector{},
-					Dst:     &netproto.MatchSelector{},
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.0 - 192.168.1.1",
+					},
 					NatPool: "preCreatedNatPool",
 					Action:  "SNAT",
 				},
 			},
 		},
 	}
+
 	err = nagent.CreateNatPolicy(&natPolicy)
 	if err != nil {
 		log.Errorf("Failed to create nat policy. {%v}", sg)

@@ -35,6 +35,12 @@ var ErrHALNotOK = errors.New("hal returned non zero error code")
 // ErrIPParse is returned on failing to parse hyphen separated IP Range.
 var ErrIPParse = errors.New("hal datapath could not parse the IP")
 
+// ErrInvalidMatchType is returned on an invalid match type
+var ErrInvalidMatchType = errors.New("invalid match selector type")
+
+// ErrInvalidNatActionType is returned on an invalid NAT Action
+var ErrInvalidNatActionType = errors.New("invalid NAT Action Type")
+
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
 type Kind string
 
@@ -217,9 +223,12 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockNatClient.EXPECT().NatPoolUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockNatClient.EXPECT().NatPoolDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
+	hd.MockClients.MockNatClient.EXPECT().NatPolicyCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockNatClient.EXPECT().NatPolicyUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockNatClient.EXPECT().NatPolicyDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
 	hd.MockClients.MockNatClient.EXPECT().NatMappingCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockNatClient.EXPECT().NatMappingDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	//hd.MockClients.MockNatClient.EXPECT().NatMappingUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil) ToDo uncomment when HAL supports NatMappingUpdate
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
@@ -1479,12 +1488,12 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 		return ErrIPParse
 	}
 
-	startIP := net.ParseIP(ipRange[0])
+	startIP := net.ParseIP(strings.TrimSpace(ipRange[0]))
 	if len(startIP) == 0 {
 		log.Errorf("could not parse IP from {%v}", startIP)
 		return ErrIPParse
 	}
-	endIP := net.ParseIP(ipRange[1])
+	endIP := net.ParseIP(strings.TrimSpace(ipRange[1]))
 	if len(endIP) == 0 {
 		log.Errorf("could not parse IP from {%v}", endIP)
 		return ErrIPParse
@@ -1569,8 +1578,73 @@ func (hd *Datapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 }
 
 // CreateNatPolicy creates a NAT Policy in the datapath
-func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*state.NatPoolRef, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 
+	var natRules []*halproto.NatRuleSpec
+
+	for _, r := range np.Spec.Rules {
+		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		if err != nil {
+			log.Errorf("Could not convert match criteria Err: %v", err)
+			return err
+		}
+		npRef, ok := natPoolLUT[r.NatPool]
+		if !ok {
+			return fmt.Errorf("nat pool not found. {%v}", r.NatPool)
+		}
+
+		natAction, err := hd.convertNatRuleAction(r.Action, npRef.NamespaceID, npRef.PoolID)
+		if err != nil {
+			log.Errorf("Could not convert NAT Action. Action: %v. Err: %v", r.Action, err)
+		}
+
+		rule := &halproto.NatRuleSpec{
+			RuleId: r.ID,
+			Match:  ruleMatch,
+			Action: natAction,
+		}
+		natRules = append(natRules, rule)
+	}
+
+	natPolicyReqMsg := &halproto.NatPolicyRequestMsg{
+		Request: []*halproto.NatPolicySpec{
+			{
+				KeyOrHandle: &halproto.NatPolicyKeyHandle{
+					KeyOrHandle: &halproto.NatPolicyKeyHandle_PolicyKey{
+						PolicyKey: &halproto.NATPolicyKey{
+							NatPolicyId:    np.Status.NatPolicyID,
+							VrfKeyOrHandle: vrfKey,
+						},
+					},
+				},
+				Rules: natRules,
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Natclient.NatPolicyCreate(context.Background(), natPolicyReqMsg)
+		if err != nil {
+			log.Errorf("Error creating nat pool. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Natclient.NatPolicyCreate(context.Background(), natPolicyReqMsg)
+		if err != nil {
+			log.Errorf("Error creating nat pool. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -1999,6 +2073,135 @@ func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetR
 	uplinks.Response = append(uplinks.Response, mockUplinks...)
 
 	return &lifs, &uplinks, nil
+}
+
+func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) (*halproto.RuleMatch, error) {
+	var srcIPRange []*halproto.IPAddressObj
+	var dstIPRange []*halproto.IPAddressObj
+	var ruleMatch halproto.RuleMatch
+	var err error
+	// ToDo implement IP, Prefix and SG Match converters
+	switch src.MatchType {
+	case "IPRange":
+		srcIPRange, err = hd.convertIPRange(src.Match)
+		if err != nil {
+			log.Errorf("Could not convert match criteria from Src: {%v}. Err: %v", src, err)
+			return nil, err
+		}
+		ruleMatch.SrcAddress = srcIPRange
+	default:
+		log.Errorf("Invalid source match type. %v", src.MatchType)
+		return nil, ErrInvalidMatchType
+	}
+
+	switch dst.MatchType {
+	case "IPRange":
+		dstIPRange, err = hd.convertIPRange(dst.Match)
+		if err != nil {
+			log.Errorf("Could not convert match criteria from Dst: {%v}. Err: %v", dst, err)
+			return nil, err
+		}
+		ruleMatch.DstAddress = dstIPRange
+	default:
+		log.Errorf("Invalid source match type. %v", dst.MatchType)
+		return nil, ErrInvalidMatchType
+	}
+
+	return &ruleMatch, nil
+}
+
+func (hd *Datapath) convertIPRange(sel string) ([]*halproto.IPAddressObj, error) {
+
+	ipRange := strings.Split(sel, "-")
+	if len(ipRange) != 2 {
+		log.Errorf("could not parse IP Range from selector. {%v}", sel)
+		return nil, ErrIPParse
+	}
+
+	startIP := net.ParseIP(strings.TrimSpace(ipRange[0]))
+	if len(startIP) == 0 {
+		log.Errorf("could not parse IP from {%v}", ipRange[0])
+		return nil, ErrIPParse
+	}
+	endIP := net.ParseIP(strings.TrimSpace(ipRange[1]))
+	if len(endIP) == 0 {
+		log.Errorf("could not parse IP from {%v}", endIP)
+		return nil, ErrIPParse
+	}
+
+	lowIP := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(startIP),
+		},
+	}
+
+	highIP := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(endIP),
+		},
+	}
+
+	addrRange := &halproto.Address_Range{
+		Range: &halproto.AddressRange{
+			Range: &halproto.AddressRange_Ipv4Range{
+				Ipv4Range: &halproto.IPRange{
+					LowIpaddr:  &lowIP,
+					HighIpaddr: &highIP,
+				},
+			},
+		},
+	}
+
+	addressObj := []*halproto.IPAddressObj{
+		{
+			Formats: &halproto.IPAddressObj_Address{
+				Address: &halproto.Address{
+					Address: addrRange,
+				},
+			},
+		},
+	}
+
+	return addressObj, nil
+}
+
+func (hd *Datapath) convertNatRuleAction(action string, vrfID, poolID uint64) (*halproto.NatRuleAction, error) {
+	// Build the NaT Pool Vrf Key
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: vrfID,
+		},
+	}
+
+	// Build the Nat Pool Key
+	poolKey := &halproto.NatPoolKeyHandle{
+		KeyOrHandle: &halproto.NatPoolKeyHandle_PoolKey{
+			PoolKey: &halproto.NatPoolKey{
+				VrfKh:  vrfKey,
+				PoolId: poolID,
+			},
+		},
+	}
+
+	switch action {
+	case "SNAT":
+		natAction := &halproto.NatRuleAction{
+			SrcNatAction: halproto.NatAction_NAT_TYPE_DYNAMIC_ADDRESS,
+			SrcNatPool:   poolKey,
+		}
+		return natAction, nil
+	case "DNAT":
+		natAction := &halproto.NatRuleAction{
+			DstNatAction: halproto.NatAction_NAT_TYPE_DYNAMIC_ADDRESS,
+			DstNatPool:   poolKey,
+		}
+		return natAction, nil
+	default:
+		log.Errorf("Invalid Nat action. %v", action)
+		return nil, ErrInvalidNatActionType
+	}
 }
 
 func ipv4Touint32(ip net.IP) uint32 {

@@ -158,7 +158,7 @@ import (
                                                                         Match: "192.168.0.1 - 192.168.1.0",
                                                                     },
                                                                  NatPool: "preCreatedNatPool",
-
+                                                                 Action: "SNAT",
                                                                 },
 
                                                             },
@@ -618,13 +618,23 @@ import (
                                        Namespace: "default",
                                        Name: "test{{title .}}{{title $crudObject}}",
                                    },
-                                   Spec:   netproto.{{title $crudObject}}Spec{
+                                   Spec: netproto.{{title $crudObject}}Spec{
                                        Rules: []netproto.NatRule{
-                                        {
-                                            NatPool: "preCreatedNatPool",
+                                           {
+                                            Src: &netproto.MatchSelector{
+                                                    MatchType: "IPRange",
+                                                    Match: "10.0.0.0 - 10.0.1.0",
+                                                },
+                                             Dst: &netproto.MatchSelector{
+                                                    MatchType: "IPRange",
+                                                    Match: "192.168.0.1 - 192.168.1.0",
+                                                },
+                                             NatPool: "preCreatedNatPool",
+                                             Action: "SNAT",
+                                            },
                                         },
-                                       },
-                                   },
+
+                                      },
                                }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natpolicies/", &{{lower .}}Data, &resp)
                                err := netutils.HTTPDelete("http://"+agentRestURL+"/api/natpolicies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)

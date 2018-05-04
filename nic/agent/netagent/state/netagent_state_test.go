@@ -182,7 +182,7 @@ func (dp *mockDatapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespa
 }
 
 // CreateNatPolicy creates a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
+func (dp *mockDatapath) CreateNatPolicy(np *netproto.NatPolicy, npLUT map[string]*NatPoolRef, ns *netproto.Namespace) error {
 
 	return nil
 }
@@ -1649,8 +1649,25 @@ func TestNatPolicyCreateDelete(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// create the backing nat pool
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.1.2.1-10.1.2.200",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+
 	// nat policy
-	np := netproto.NatPolicy{
+	natPolicy := netproto.NatPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
@@ -1668,7 +1685,7 @@ func TestNatPolicyCreateDelete(t *testing.T) {
 						MatchType: "IPRange",
 						Match:     "192.168.0.0 - 192.168.1.1",
 					},
-					NatPool: "preCreatedNatPool",
+					NatPool: "testNatPool",
 					Action:  "SNAT",
 				},
 			},
@@ -1676,14 +1693,14 @@ func TestNatPolicyCreateDelete(t *testing.T) {
 	}
 
 	// create nat policy
-	err := ag.CreateNatPolicy(&np)
+	err = ag.CreateNatPolicy(&natPolicy)
 	AssertOk(t, err, "Error creating nat policy")
-	natPool, err := ag.FindNatPolicy(np.ObjectMeta)
-	AssertOk(t, err, "Nat Pool was not found in DB")
+	natPool, err := ag.FindNatPolicy(natPolicy.ObjectMeta)
+	AssertOk(t, err, "Nat Policy was not found in DB")
 	Assert(t, natPool.Name == "testNatPolicy", "NatPolicy names did not match", natPool)
 
 	// verify duplicate tenant creations succeed
-	err = ag.CreateNatPolicy(&np)
+	err = ag.CreateNatPolicy(&natPolicy)
 	AssertOk(t, err, "Error creating duplicate nat policy")
 
 	// verify list api works.
@@ -1691,14 +1708,168 @@ func TestNatPolicyCreateDelete(t *testing.T) {
 	Assert(t, len(npList) == 1, "Incorrect number of nat policies")
 
 	// delete the nat policy and verify its gone from db
-	err = ag.DeleteNatPolicy(&np)
+	err = ag.DeleteNatPolicy(&natPolicy)
 	AssertOk(t, err, "Error deleting nat policy")
 	_, err = ag.FindNatPolicy(np.ObjectMeta)
 	Assert(t, err != nil, "Nat Pool was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteNatPolicy(&np)
+	err = ag.DeleteNatPolicy(&natPolicy)
 	Assert(t, err != nil, "deleting non-existing nat policy succeeded", ag)
+}
+
+func TestNatPolicyCreateOnRemoteNatPool(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create the backing namespace and nat pool
+	remoteNS := &netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "remoteNS",
+		},
+	}
+
+	err := ag.CreateNamespace(remoteNS)
+	AssertOk(t, err, "could not create remote namespace")
+
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "remoteNS",
+			Name:      "remoteNSNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.1.2.1-10.1.2.200",
+		},
+	}
+
+	// create nat pool
+	err = ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+
+	// nat policy
+	natPolicy := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.0 - 192.168.1.1",
+					},
+					NatPool: "remoteNS/remoteNSNatPool",
+					Action:  "DNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err = ag.CreateNatPolicy(&natPolicy)
+	AssertOk(t, err, "Error creating nat policy")
+	natPool, err := ag.FindNatPolicy(natPolicy.ObjectMeta)
+	AssertOk(t, err, "Nat Policy was not found in DB")
+	Assert(t, natPool.Name == "testNatPolicy", "NatPolicy names did not match", natPool)
+}
+
+func TestNatPolicyOnNonExistentLocalNatPool(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// nat policy
+	natPolicy := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.0 - 192.168.1.1",
+					},
+					NatPool: "localNonExistentNatPool",
+					Action:  "DNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err := ag.CreateNatPolicy(&natPolicy)
+	Assert(t, err != nil, "Nat Policy create with a non existent local nat rule must fail validation. It passed instead")
+}
+
+func TestNatPolicyOnNonExistentRemoteNatPool(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create the backing namespace and nat pool
+	remoteNS := &netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "remoteNS",
+		},
+	}
+
+	err := ag.CreateNamespace(remoteNS)
+	AssertOk(t, err, "could not create remote namespace")
+
+	// nat policy
+	natPolicy := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.0 - 192.168.1.1",
+					},
+					NatPool: "remoteNS/nonExistentRemoteNatPool",
+					Action:  "SNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err = ag.CreateNatPolicy(&natPolicy)
+	Assert(t, err != nil, "Nat Policy creation on non existent remote nat pool should fail validation. It passed instead.")
 }
 
 func TestNatPolicyUpdate(t *testing.T) {
@@ -1707,8 +1878,25 @@ func TestNatPolicyUpdate(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create backing nat pool
+	// create the backing nat pool
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "10.1.2.1-10.1.2.200",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
 	// nat policy
-	np := netproto.NatPolicy{
+	natPolicy := netproto.NatPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
@@ -1726,7 +1914,7 @@ func TestNatPolicyUpdate(t *testing.T) {
 						MatchType: "IPRange",
 						Match:     "192.168.0.0 - 192.168.1.1",
 					},
-					NatPool: "preCreatedNatPool",
+					NatPool: "testNatPool",
 					Action:  "SNAT",
 				},
 			},
@@ -1734,9 +1922,9 @@ func TestNatPolicyUpdate(t *testing.T) {
 	}
 
 	// create nat policy
-	err := ag.CreateNatPolicy(&np)
+	err = ag.CreateNatPolicy(&natPolicy)
 	AssertOk(t, err, "Error creating nat policy")
-	natPool, err := ag.FindNatPolicy(np.ObjectMeta)
+	natPool, err := ag.FindNatPolicy(natPolicy.ObjectMeta)
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, natPool.Name == "testNatPolicy", "Nat Pool names did not match", natPool)
 
@@ -1748,9 +1936,9 @@ func TestNatPolicyUpdate(t *testing.T) {
 		},
 	}
 
-	np.Spec = npSpec
+	natPolicy.Spec = npSpec
 
-	err = ag.UpdateNatPolicy(&np)
+	err = ag.UpdateNatPolicy(&natPolicy)
 	AssertOk(t, err, "Error updating nat policy")
 }
 

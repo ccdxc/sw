@@ -19,6 +19,7 @@ const (
 	InterfaceID     = "interfaceID"
 	NatPoolID       = "natPoolID"
 	NatPolicyID     = "natPolicyID"
+	NatRuleID       = "natRuleID"
 	RouteID         = "routeID"
 	NatBindingID    = "natBindingID"
 )
@@ -27,6 +28,13 @@ const (
 type IntfInfo struct {
 	ContainerIntfName string //  Name of container side of the interface
 	SwitchIntfName    string // Name of switch side of the interface
+}
+
+// NatPoolRef keeps the mapping between a natpool ID and its corresponding NamespaceID.
+// We need this to build a look up table between the natpool name and its refs which can be in non local namespaces
+type NatPoolRef struct {
+	NamespaceID uint64
+	PoolID      uint64
 }
 
 // NetAgent is the network agent instance
@@ -46,6 +54,7 @@ type NetAgent struct {
 	natPolicyDB  map[string]*netproto.NatPolicy     // Nat Policy Object DB
 	natBindingDB map[string]*netproto.NatBinding    // Nat Binding Object DB
 	routeDB      map[string]*netproto.Route         // Route Object DB
+	natPoolLUT   map[string]*NatPoolRef             // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	hwIfDB       map[string]*netproto.Interface     // Has all the Uplinks and Lifs
 }
 
@@ -139,7 +148,7 @@ type NetDatapathAPI interface {
 	CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                          // creates a nat pool in the datapath
 	UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                          // updates a nat pool in the datapath
 	DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                          // deletes a nat pool in the datapath
-	CreateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // creates a nat policy in the datapath
+	CreateNatPolicy(np *netproto.NatPolicy, npLUT map[string]*NatPoolRef, ns *netproto.Namespace) error                                                        // creates a nat policy in the datapath
 	UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // updates a nat policy in the datapath
 	DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // deletes a nat policy in the datapath
 	CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                              // creates a route

@@ -150,6 +150,7 @@ message NatRule {
     // Nat action
     string Action       = 7 [(venice.check) = "StrEnum(NatRule.NatAction)",
                              (gogoproto.jsontag) = "action,omitempty"];
+    uint64 ID           = 8;
 }
 
 message NatPolicySpec {

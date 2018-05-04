@@ -34,6 +34,25 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 		return err
 	}
 
+	for _, rule := range np.Spec.Rules {
+		rule.ID, err = na.store.GetNextID(NatRuleID)
+		natPool, err := na.findNatPool(np.ObjectMeta, rule.NatPool)
+		if err != nil {
+			log.Errorf("could not find nat pool for the rule. Rule: {%v}. Err: %v", rule, err)
+			return err
+		}
+		natPoolNS, err := na.FindNamespace(np.Tenant, natPool.Namespace)
+		if err != nil {
+			log.Errorf("could not find the nat pool namespace. NatPool Namespace: {%v}. Err: %v", natPoolNS, err)
+			return err
+		}
+		poolID := &NatPoolRef{
+			NamespaceID: natPoolNS.Status.NamespaceID,
+			PoolID:      natPool.Status.NatPoolID,
+		}
+		na.natPoolLUT[rule.NatPool] = poolID
+	}
+
 	np.Status.NatPolicyID, err = na.store.GetNextID(NatPolicyID)
 
 	if err != nil {
@@ -42,7 +61,7 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateNatPolicy(np, ns)
+	err = na.datapath.CreateNatPolicy(np, na.natPoolLUT, ns)
 	if err != nil {
 		log.Errorf("Error creating nat policy in datapath. NatPolicy {%+v}. Err: %v", np, err)
 		return err
