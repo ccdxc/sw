@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -589,6 +590,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Event")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgEventWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgEventWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -605,7 +621,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgEventWatchHelper{
+					strEvent := &monitoring.AutoMsgEventWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -618,9 +634,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.Event)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Event", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -647,6 +677,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "EventPolicy")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgEventPolicyWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgEventPolicyWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -663,7 +708,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgEventPolicyWatchHelper{
+					strEvent := &monitoring.AutoMsgEventPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -676,9 +721,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.EventPolicy)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for EventPolicy", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -705,6 +764,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "StatsPolicy")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgStatsPolicyWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgStatsPolicyWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -721,7 +795,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgStatsPolicyWatchHelper{
+					strEvent := &monitoring.AutoMsgStatsPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -734,9 +808,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.StatsPolicy)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for StatsPolicy", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -763,6 +851,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "FwlogPolicy")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgFwlogPolicyWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgFwlogPolicyWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -779,7 +882,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgFwlogPolicyWatchHelper{
+					strEvent := &monitoring.AutoMsgFwlogPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -792,9 +895,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.FwlogPolicy)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for FwlogPolicy", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -821,6 +938,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "FlowExportPolicy")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgFlowExportPolicyWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgFlowExportPolicyWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -837,7 +969,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgFlowExportPolicyWatchHelper{
+					strEvent := &monitoring.AutoMsgFlowExportPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -850,9 +982,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.FlowExportPolicy)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for FlowExportPolicy", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -879,6 +1025,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Alert")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgAlertWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgAlertWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -895,7 +1056,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgAlertWatchHelper{
+					strEvent := &monitoring.AutoMsgAlertWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -908,9 +1069,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.Alert)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Alert", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -937,6 +1112,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "AlertPolicy")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgAlertPolicyWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgAlertPolicyWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -953,7 +1143,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgAlertPolicyWatchHelper{
+					strEvent := &monitoring.AutoMsgAlertPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -966,9 +1156,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.AlertPolicy)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for AlertPolicy", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -995,6 +1199,21 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "AlertDestination")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgAlertDestinationWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgAlertDestinationWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1011,7 +1230,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgAlertDestinationWatchHelper{
+					strEvent := &monitoring.AutoMsgAlertDestinationWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -1024,9 +1243,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						strEvent.Object = i.(*monitoring.AlertDestination)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for AlertDestination", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():

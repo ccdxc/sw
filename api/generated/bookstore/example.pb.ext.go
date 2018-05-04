@@ -191,10 +191,33 @@ func (m *AutoMsgBookWatchHelper) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AutoMsgBookWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
+	for k := range m.Events {
+		if m.Events[k] != nil {
+			ret = ret || m.Events[k].Defaults(ver)
+		}
 	}
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgBookWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgBookWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgBookWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgBookWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgBookWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -219,6 +242,27 @@ func (m *AutoMsgCouponWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgCouponWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgCouponWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgCouponWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgCouponWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgCouponWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgCustomerWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgCustomerWatchHelper
 	var ok bool
@@ -237,10 +281,33 @@ func (m *AutoMsgCustomerWatchHelper) Clone(into interface{}) (interface{}, error
 // Default sets up the defaults for the object
 func (m *AutoMsgCustomerWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
+	for k := range m.Events {
+		if m.Events[k] != nil {
+			ret = ret || m.Events[k].Defaults(ver)
+		}
 	}
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgCustomerWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgCustomerWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgCustomerWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -262,10 +329,33 @@ func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AutoMsgOrderWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
+	for k := range m.Events {
+		if m.Events[k] != nil {
+			ret = ret || m.Events[k].Defaults(ver)
+		}
 	}
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgOrderWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgOrderWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgOrderWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgOrderWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgOrderWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -287,10 +377,33 @@ func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) (interface{}, erro
 // Default sets up the defaults for the object
 func (m *AutoMsgPublisherWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
+	for k := range m.Events {
+		if m.Events[k] != nil {
+			ret = ret || m.Events[k].Defaults(ver)
+		}
 	}
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgPublisherWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgPublisherWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgPublisherWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgPublisherWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgPublisherWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -311,6 +424,27 @@ func (m *AutoMsgStoreWatchHelper) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AutoMsgStoreWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgStoreWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgStoreWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgStoreWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgStoreWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgStoreWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -967,6 +1101,15 @@ func (m *ApplyDiscountReq) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AutoMsgBookWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -977,7 +1120,20 @@ func (m *AutoMsgCouponWatchHelper) Validate(ver string, ignoreStatus bool) bool 
 	return true
 }
 
+func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *AutoMsgCustomerWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -985,6 +1141,15 @@ func (m *AutoMsgCustomerWatchHelper) Validate(ver string, ignoreStatus bool) boo
 }
 
 func (m *AutoMsgOrderWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -992,6 +1157,15 @@ func (m *AutoMsgOrderWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AutoMsgPublisherWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -999,6 +1173,10 @@ func (m *AutoMsgPublisherWatchHelper) Validate(ver string, ignoreStatus bool) bo
 }
 
 func (m *AutoMsgStoreWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -1220,6 +1398,17 @@ func (m *StoreStatus) Validate(ver string, ignoreStatus bool) bool {
 // Transformers
 
 func (m *AutoMsgCustomerWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
 	if m.Object == nil {
 		return nil

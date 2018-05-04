@@ -83,10 +83,33 @@ func (m *AutoMsgMirrorSessionWatchHelper) Clone(into interface{}) (interface{}, 
 // Default sets up the defaults for the object
 func (m *AutoMsgMirrorSessionWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
+	for k := range m.Events {
+		if m.Events[k] != nil {
+			ret = ret || m.Events[k].Defaults(ver)
+		}
 	}
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgMirrorSessionWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgMirrorSessionWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgMirrorSessionWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -338,6 +361,15 @@ func (m *AppProtoSelector) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AutoMsgMirrorSessionWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}

@@ -204,43 +204,67 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
 	// Watch helper message
 	{
 		name := fmt.Sprintf("AutoMsg%sWatchHelper", msg)
+		nestedName := "WatchEvent"
 		autoption := "watchhelper"
 
 		mtype := fmt.Sprintf(".%s.%s", *f.Package, msg)
-		fldname1 := "Type"
-		fldname2 := "Object"
+		nfldname1 := "Type"
+		nfldname2 := "Object"
 
-		var fldnum1 int32 = 1
-		var fldnum2 int32 = 2
+		var nfldnum1 int32 = 1
+		var nfldnum2 int32 = 2
 
-		var fldlabel1 = descriptor.FieldDescriptorProto_LABEL_OPTIONAL
-		var fldlabel2 = descriptor.FieldDescriptorProto_LABEL_OPTIONAL
+		var nfldlabel1 = descriptor.FieldDescriptorProto_LABEL_OPTIONAL
+		var nfldlabel2 = descriptor.FieldDescriptorProto_LABEL_OPTIONAL
 
-		var fldtype1 = descriptor.FieldDescriptorProto_TYPE_STRING
-		var fldtype2 = descriptor.FieldDescriptorProto_TYPE_MESSAGE
+		var nfldtype1 = descriptor.FieldDescriptorProto_TYPE_STRING
+		var nfldtype2 = descriptor.FieldDescriptorProto_TYPE_MESSAGE
 
-		field1 := descriptor.FieldDescriptorProto{
-			Name:   &fldname1,
-			Number: &fldnum1,
-			Label:  &fldlabel1,
-			Type:   &fldtype1,
+		nfield1 := descriptor.FieldDescriptorProto{
+			Name:   &nfldname1,
+			Number: &nfldnum1,
+			Label:  &nfldlabel1,
+			Type:   &nfldtype1,
 		}
-		field2 := descriptor.FieldDescriptorProto{
-			Name:     &fldname2,
-			Number:   &fldnum2,
-			Label:    &fldlabel2,
-			Type:     &fldtype2,
+		nfield2 := descriptor.FieldDescriptorProto{
+			Name:     &nfldname2,
+			Number:   &nfldnum2,
+			Label:    &nfldlabel2,
+			Type:     &nfldtype2,
 			TypeName: &mtype,
 		}
 
-		var fields []*descriptor.FieldDescriptorProto
-		fields = append(fields, &field1)
-		fields = append(fields, &field2)
+		var nestedFields []*descriptor.FieldDescriptorProto
+		nestedFields = append(nestedFields, &nfield1)
+		nestedFields = append(nestedFields, &nfield2)
 
+		nestedMsg := descriptor.DescriptorProto{
+			Name:  &nestedName,
+			Field: nestedFields,
+		}
+		nestedMsgs := []*descriptor.DescriptorProto{
+			&nestedMsg,
+		}
+		var fldname1 = "Events"
+		var fldnum1 int32 = 1
+		var fldlabel1 = descriptor.FieldDescriptorProto_LABEL_REPEATED
+		var fldtype2 = descriptor.FieldDescriptorProto_TYPE_MESSAGE
+		fldtype1 := fmt.Sprintf(".%s.%s.WatchEvent", *f.Package, name)
+		field1 := descriptor.FieldDescriptorProto{
+			Name:     &fldname1,
+			Number:   &fldnum1,
+			Label:    &fldlabel1,
+			Type:     &fldtype2,
+			TypeName: &fldtype1,
+		}
+		fields := []*descriptor.FieldDescriptorProto{
+			&field1,
+		}
 		msg := descriptor.DescriptorProto{
-			Name:    &name,
-			Field:   fields,
-			Options: &descriptor.MessageOptions{},
+			Name:       &name,
+			Field:      fields,
+			NestedType: nestedMsgs,
+			Options:    &descriptor.MessageOptions{},
 		}
 		proto.SetExtension(msg.GetOptions(), autoDesc, &autoption)
 		f.MessageType = append(f.MessageType, &msg)
@@ -421,11 +445,23 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 			msgMap[*m.Name] = m
 		}
 	}
+
+	apiMetaImport := "github.com/pensando/sw/api/meta.proto"
 	glog.V(1).Infof("Got PkgMap as {%+v}", pkgMap)
 	for _, files := range req.GetFileToGenerate() {
 		for _, f := range req.GetProtoFile() {
 			if files != *f.Name {
 				continue
+			}
+			// Add api/meta.prot if it is not in dependencies
+			depFound := false
+			for _, d := range f.GetDependency() {
+				if d == apiMetaImport {
+					depFound = true
+				}
+			}
+			if !depFound {
+				f.Dependency = append(f.Dependency, apiMetaImport)
 			}
 			crudMsgMap := make(map[string]bool)
 			glog.V(1).Infof("File is %s [%s]\n", *f.Name, *f.Package)

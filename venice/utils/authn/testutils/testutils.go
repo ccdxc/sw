@@ -150,5 +150,8 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 // DeleteAuthenticationPolicy deletes an authentication policy
 func DeleteAuthenticationPolicy(apicl apiclient.Services) {
 	// delete authentication policy object in api server
-	apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &api.ObjectMeta{Name: "AuthenticationPolicy"})
+	_, err := apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &api.ObjectMeta{Name: "AuthenticationPolicy"})
+	if err != nil {
+		panic(fmt.Sprintf("Error deleting AuthenticationPolicy: %v", err))
+	}
 }

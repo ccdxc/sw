@@ -9,11 +9,17 @@ The following Messages are defined.
 
   ApplyDiscountReq
   AutoMsgBookWatchHelper
+  AutoMsgBookWatchHelper_WatchEvent
   AutoMsgCouponWatchHelper
+  AutoMsgCouponWatchHelper_WatchEvent
   AutoMsgCustomerWatchHelper
+  AutoMsgCustomerWatchHelper_WatchEvent
   AutoMsgOrderWatchHelper
+  AutoMsgOrderWatchHelper_WatchEvent
   AutoMsgPublisherWatchHelper
+  AutoMsgPublisherWatchHelper_WatchEvent
   AutoMsgStoreWatchHelper
+  AutoMsgStoreWatchHelper_WatchEvent
   Book
   BookEdition
   BookList

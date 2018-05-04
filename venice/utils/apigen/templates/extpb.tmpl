@@ -46,15 +46,15 @@ func (m *{{.Name}})  MakeKey(prefix string) string {
 	obj := {{$type}}{}
 	return obj.MakeKey(prefix)
 } {{end}} {{end}}
-{{range .Messages}}{{if isNestedMessage .}}{{else}}
+{{range .Messages}}{{if isMapEntry .}}{{else}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}
 // Clone clones the object into into or creates one of into is nil
-func (m *{{.Name}}) Clone(into interface{}) (interface{}, error) {
-	var out *{{.Name}}
+func (m *{{getStr 0}}) Clone(into interface{}) (interface{}, error) {
+	var out *{{getStr 0}}
 	var ok bool
 	if into == nil {
-		out = &{{.Name}}{}
+		out = &{{getStr 0}}{}
 	} else {
-		out, ok = into.(*{{.Name}})
+		out, ok = into.(*{{getStr 0}})
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -64,7 +64,7 @@ func (m *{{.Name}}) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *{{.Name}}) Defaults(ver string) bool { {{with index $defaults.Map (derefStr .Name)}}{{if eq (len .Fields) 0}}
+func (m *{{getStr 0}}) Defaults(ver string) bool { {{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}
 	return false {{else}}
 	var ret bool {{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
 	for k := range m.{{$fldk}} { {{if $defval.Pointer}}
@@ -96,8 +96,8 @@ func (m *{{.Name}}) Defaults(ver string) bool { {{with index $defaults.Map (dere
 } {{end}}{{end}}
 {{end}}
 // Validators
-{{range .Messages}}{{if isNestedMessage .}}{{else}}{{$msg := .}}{{$msgname := .Name}}
-func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index $validators.Map (derefStr .Name))}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{if $fldv.Repeated}}
+{{range .Messages}}{{if isMapEntry .}}{{else}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}{{$msg := .}}{{$msgname := (getStr 0)}}
+func (m *{{$msgname}}) Validate(ver string, ignoreStatus bool) bool { {{with (index $validators.Map $msgname)}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{if $fldv.Repeated}}
 	for _, v := range m.{{$fldk}} {
 		 if !v.Validate(ver, ignoreStatus) {
 			 return false
@@ -134,7 +134,7 @@ func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index
 {{if $storageTransformers.Fmap}}
 // Transformers
 
-{{range .Messages}}{{if isNestedMessage .}}{{else}}{{$msg := .}}{{$msgname := .Name}}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}
+{{range .Messages}}{{if isMapEntry .}}{{else}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}{{$msg := .}}{{$msgname := (getStr 0)}}{{with (index $storageTransformers.Map $msgname)}}{{if .HasTransformers}}
 func (m *{{$msgname}}) ApplyStorageTransformer(ctx context.Context, toStorage bool) error { {{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Transformers)}}{{if $fldv.Repeated}}
 	for i, v := range m.{{$fldk}} {
 		 c := *v
@@ -234,7 +234,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("Error instantiating {{.Fn}}StorageTransformer: %v", err)
 	}
-	storageTransformersMap{{getFileName $file.Name}}["{{$msgName}}"] = append(storageTransformersMap{{getFileName $file.Name}}["{{$msgName}}"], 
+	storageTransformersMap{{getFileName $file.Name}}["{{$msgName}}"] = append(storageTransformersMap{{getFileName $file.Name}}["{{$msgName}}"],
 	func(ctx context.Context, i interface{}, toStorage bool) error {
 		var data []byte
 		var err error

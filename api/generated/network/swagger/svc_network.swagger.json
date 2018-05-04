@@ -1187,6 +1187,17 @@
     "networkAutoMsgLbPolicyWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkAutoMsgLbPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "networkAutoMsgLbPolicyWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1198,6 +1209,17 @@
     "networkAutoMsgNetworkWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkAutoMsgNetworkWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "networkAutoMsgNetworkWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1207,6 +1229,17 @@
       }
     },
     "networkAutoMsgServiceWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkAutoMsgServiceWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "networkAutoMsgServiceWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {

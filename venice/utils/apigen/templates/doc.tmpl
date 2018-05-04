@@ -5,12 +5,13 @@ Package {{.GoPkg.Name}} is a auto generated package.
 
 Input file: {{.Name}}
 
-The following Messages are defined. 
-  {{ range .Messages}}{{if isNestedMessage .}}{{else}}
-  {{.Name}}{{end}}{{end}}
+The following Messages are defined.
+  {{ range .Messages}}{{if isMapEntry .}}{{else}}{{if isNestedMessage .}}
+  {{getNestedMsgName .}}{{else}}
+  {{.Name}}{{end}}{{end}}{{end}}
 
 The following Services and Methods are defined.
-{{range .Services}} 
+{{range .Services}}
  Service: {{.Name}}
    {{range .Methods}}{{.Name}}
    {{end}}{{end}}

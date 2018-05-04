@@ -278,6 +278,21 @@ func (s *smonitoringMirrorBackend) regWatchersFunc(ctx context.Context, logger l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "MirrorSession")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgMirrorSessionWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &monitoring.AutoMsgMirrorSessionWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -294,7 +309,7 @@ func (s *smonitoringMirrorBackend) regWatchersFunc(ctx context.Context, logger l
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := monitoring.AutoMsgMirrorSessionWatchHelper{
+					strEvent := &monitoring.AutoMsgMirrorSessionWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -307,9 +322,23 @@ func (s *smonitoringMirrorBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						strEvent.Object = i.(*monitoring.MirrorSession)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for MirrorSession", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():

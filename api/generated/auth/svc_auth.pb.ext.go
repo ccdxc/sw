@@ -110,6 +110,27 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgAuthenticationPolicyWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgAuthenticationPolicyWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgRoleBindingWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgRoleBindingWatchHelper
 	var ok bool
@@ -127,6 +148,27 @@ func (m *AutoMsgRoleBindingWatchHelper) Clone(into interface{}) (interface{}, er
 
 // Default sets up the defaults for the object
 func (m *AutoMsgRoleBindingWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRoleBindingWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRoleBindingWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgRoleBindingWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -152,6 +194,27 @@ func (m *AutoMsgRoleWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRoleWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRoleWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRoleWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgRoleWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRoleWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgUserWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgUserWatchHelper
 	var ok bool
@@ -169,6 +232,27 @@ func (m *AutoMsgUserWatchHelper) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AutoMsgUserWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgUserWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgUserWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgUserWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgUserWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgUserWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -247,6 +331,15 @@ func (m *AuthenticationPolicyList) Validate(ver string, ignoreStatus bool) bool 
 }
 
 func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -257,7 +350,20 @@ func (m *AutoMsgRoleBindingWatchHelper) Validate(ver string, ignoreStatus bool) 
 	return true
 }
 
+func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *AutoMsgRoleWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgRoleWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -265,6 +371,15 @@ func (m *AutoMsgRoleWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AutoMsgUserWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgUserWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}

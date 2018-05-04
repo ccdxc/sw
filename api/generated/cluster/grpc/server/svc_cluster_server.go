@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -361,6 +362,21 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Cluster")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &cluster.AutoMsgClusterWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &cluster.AutoMsgClusterWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -377,7 +393,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := cluster.AutoMsgClusterWatchHelper{
+					strEvent := &cluster.AutoMsgClusterWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -390,9 +406,23 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						strEvent.Object = i.(*cluster.Cluster)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Cluster", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -419,6 +449,21 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Node")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &cluster.AutoMsgNodeWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &cluster.AutoMsgNodeWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -435,7 +480,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := cluster.AutoMsgNodeWatchHelper{
+					strEvent := &cluster.AutoMsgNodeWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -448,9 +493,23 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						strEvent.Object = i.(*cluster.Node)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Node", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -477,6 +536,21 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "SmartNIC")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &cluster.AutoMsgSmartNICWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &cluster.AutoMsgSmartNICWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -493,7 +567,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := cluster.AutoMsgSmartNICWatchHelper{
+					strEvent := &cluster.AutoMsgSmartNICWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -506,9 +580,23 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						strEvent.Object = i.(*cluster.SmartNIC)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for SmartNIC", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -535,6 +623,21 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Tenant")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &cluster.AutoMsgTenantWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &cluster.AutoMsgTenantWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -551,7 +654,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := cluster.AutoMsgTenantWatchHelper{
+					strEvent := &cluster.AutoMsgTenantWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -564,9 +667,23 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						strEvent.Object = i.(*cluster.Tenant)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Tenant", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():

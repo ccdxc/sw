@@ -522,14 +522,25 @@
     "monitoringAutoMsgMirrorSessionWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgMirrorSessionWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "Conditions to start mirroring"
+    },
+    "monitoringAutoMsgMirrorSessionWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
         "Object": {
           "$ref": "#/definitions/monitoringMirrorSession"
         }
-      },
-      "title": "Conditions to start mirroring"
+      }
     },
     "monitoringMatchRule": {
       "type": "object",

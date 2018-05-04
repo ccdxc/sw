@@ -1387,6 +1387,21 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Order")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &bookstore.AutoMsgOrderWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &bookstore.AutoMsgOrderWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1403,7 +1418,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := bookstore.AutoMsgOrderWatchHelper{
+					strEvent := &bookstore.AutoMsgOrderWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -1416,9 +1431,23 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						strEvent.Object = i.(*bookstore.Order)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -1445,6 +1474,21 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Book")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &bookstore.AutoMsgBookWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &bookstore.AutoMsgBookWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1461,7 +1505,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := bookstore.AutoMsgBookWatchHelper{
+					strEvent := &bookstore.AutoMsgBookWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -1474,9 +1518,23 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						strEvent.Object = i.(*bookstore.Book)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Book", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -1503,6 +1561,21 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Publisher")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &bookstore.AutoMsgPublisherWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &bookstore.AutoMsgPublisherWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1519,7 +1592,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := bookstore.AutoMsgPublisherWatchHelper{
+					strEvent := &bookstore.AutoMsgPublisherWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -1532,9 +1605,23 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						strEvent.Object = i.(*bookstore.Publisher)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Publisher", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -1561,6 +1648,21 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Store")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &bookstore.AutoMsgStoreWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &bookstore.AutoMsgStoreWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1577,7 +1679,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := bookstore.AutoMsgStoreWatchHelper{
+					strEvent := &bookstore.AutoMsgStoreWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -1590,9 +1692,23 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						strEvent.Object = i.(*bookstore.Store)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Store", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -1619,6 +1735,21 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Coupon")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &bookstore.AutoMsgCouponWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &bookstore.AutoMsgCouponWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1635,7 +1766,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 
-					strEvent := bookstore.AutoMsgCouponWatchHelper{
+					strEvent := &bookstore.AutoMsgCouponWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -1648,9 +1779,23 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						strEvent.Object = i.(*bookstore.Coupon)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Coupon", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():
@@ -1677,6 +1822,21 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Customer")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &bookstore.AutoMsgCustomerWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &bookstore.AutoMsgCustomerWatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1700,7 +1860,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						obj := txin.(bookstore.Customer)
 						in = &obj
 					}
-					strEvent := bookstore.AutoMsgCustomerWatchHelper{
+					strEvent := &bookstore.AutoMsgCustomerWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -1713,9 +1873,23 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						strEvent.Object = i.(*bookstore.Customer)
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Customer", "error", err)
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
 						return err
 					}
 				case <-nctx.Done():

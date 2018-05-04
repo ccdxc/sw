@@ -104,7 +104,7 @@ func createAPIServer(url string) apiserver.Server {
 	// create api server
 	apiSrv := apisrvpkg.MustGetAPIServer()
 	go apiSrv.Run(apisrvConfig)
-	time.Sleep(time.Millisecond * 100)
+	apiSrv.WaitRunning()
 
 	return apiSrv
 }
@@ -189,20 +189,46 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 	return policydata
 }
 
-func createAuthenticationPolicy(policy *auth.AuthenticationPolicy) *auth.AuthenticationPolicy {
-	return CreateAuthenticationPolicyWithOrder(apicl,
+func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy) *auth.AuthenticationPolicy {
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := authGetter.GetAuthenticationPolicy()
+		return err != nil, nil
+	}, "failed to create AuthenticationPolicy")
+
+	ret := CreateAuthenticationPolicyWithOrder(apicl,
 		policy.Spec.Authenticators.Local,
 		policy.Spec.Authenticators.Ldap,
 		policy.Spec.Authenticators.Radius,
 		policy.Spec.Authenticators.AuthenticatorOrder,
 		secret)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := authGetter.GetAuthenticationPolicy()
+		return err == nil, nil
+	}, "Authentication policy not found after creation")
+	return ret
+}
+
+func deleteAuthenticationPolicy(t *testing.T) {
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := authGetter.GetAuthenticationPolicy()
+		return err == nil, nil
+	}, "did not find AuthenticationPolicy to delete")
+
+	DeleteAuthenticationPolicy(apicl)
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := authGetter.GetAuthenticationPolicy()
+		return err != nil, nil
+	}, "found AuthenticationPolicy after delete")
 }
 
 // TestAuthenticate tests successful authentication for various authentication policies with LDAP and Local Authenticator configured.
 // This tests authentication for different order of the authenticators and if they are enabled or disabled.
 func TestAuthenticate(t *testing.T) {
 	for testtype, policy := range authenticationPoliciesData() {
-		createAuthenticationPolicy(policy)
+		createAuthenticationPolicy(t, policy)
 
 		// authenticate
 		var autheduser *auth.User
@@ -217,14 +243,14 @@ func TestAuthenticate(t *testing.T) {
 		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_LOCAL.String(), fmt.Sprintf("[%v] User returned is not of type LOCAL", testtype))
 		AssertOk(t, err, fmt.Sprintf("[%v] Error authenticating user", testtype))
 
-		DeleteAuthenticationPolicy(apicl)
+		deleteAuthenticationPolicy(t)
 	}
 }
 
 // TestIncorrectPasswordAuthentication tests failed authentication by all authenticators
 func TestIncorrectPasswordAuthentication(t *testing.T) {
 	for testtype, policy := range authenticationPoliciesData() {
-		createAuthenticationPolicy(policy)
+		createAuthenticationPolicy(t, policy)
 
 		// authenticate
 		var autheduser *auth.User
@@ -238,7 +264,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 		Assert(t, autheduser == nil, fmt.Sprintf("[%v] User returned while authenticating with wrong password", testtype))
 		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned while authenticating with wrong password", testtype))
 
-		DeleteAuthenticationPolicy(apicl)
+		deleteAuthenticationPolicy(t)
 	}
 }
 
@@ -263,8 +289,8 @@ func TestNotYetImplementedAuthenticator(t *testing.T) {
 			Secret: secret,
 		},
 	}
-	createAuthenticationPolicy(policy)
-	defer DeleteAuthenticationPolicy(apicl)
+	createAuthenticationPolicy(t, policy)
+	defer deleteAuthenticationPolicy(t)
 
 	var user *auth.User
 	var ok bool
@@ -321,7 +347,7 @@ func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPoli
 // TestAuthenticateWithDisabledAuthenticators test authentication for local user when all authenticators are disabled
 func TestAuthenticateWithDisabledAuthenticators(t *testing.T) {
 	for testtype, policy := range disabledLocalAuthenticatorPolicyData() {
-		createAuthenticationPolicy(policy)
+		createAuthenticationPolicy(t, policy)
 
 		// authenticate
 		var autheduser *auth.User
@@ -334,7 +360,7 @@ func TestAuthenticateWithDisabledAuthenticators(t *testing.T) {
 
 		Assert(t, autheduser == nil, fmt.Sprintf("[%v] User returned with disabled authenticators", testtype))
 		AssertOk(t, err, fmt.Sprintf("[%v] No error should be returned with disabled authenticators", testtype))
-		DeleteAuthenticationPolicy(apicl)
+		deleteAuthenticationPolicy(t)
 	}
 }
 
@@ -357,8 +383,8 @@ func TestAuthnMgrValidateToken(t *testing.T) {
 			Secret: secret,
 		},
 	}
-	createAuthenticationPolicy(policy)
-	defer DeleteAuthenticationPolicy(apicl)
+	createAuthenticationPolicy(t, policy)
+	defer deleteAuthenticationPolicy(t)
 
 	var user *auth.User
 	var ok bool

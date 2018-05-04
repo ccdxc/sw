@@ -394,6 +394,17 @@
     }
   },
   "definitions": {
+    "AutoMsgEndpointWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/workloadEndpoint"
+        }
+      }
+    },
     "apiListMeta": {
       "type": "object",
       "properties": {
@@ -499,11 +510,11 @@
     "workloadAutoMsgEndpointWatchHelper": {
       "type": "object",
       "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "Object": {
-          "$ref": "#/definitions/workloadEndpoint"
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AutoMsgEndpointWatchHelperWatchEvent"
+          }
         }
       }
     },

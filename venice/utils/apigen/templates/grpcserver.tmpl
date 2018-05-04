@@ -236,6 +236,21 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "{{.}}")
 				return err
 			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<- timer.C
+			}
+			running := false
+			events := &{{$pkgname}}.AutoMsg{{.}}WatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &{{$pkgname}}.AutoMsg{{.}}WatchHelper{}
+				return nil
+			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -259,7 +274,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 						obj := txin.({{$pkgname}}.{{$crudname}})
 						in = &obj
 					}{{end}}{{end}}
-					strEvent := {{$pkgname}}.AutoMsg{{.}}WatchHelper{
+					strEvent := &{{$pkgname}}.AutoMsg{{.}}WatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
@@ -272,11 +287,25 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 						}
 						strEvent.Object = i.(*{{$pkgname}}.{{.}})
 					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for {{.}}", "error", err)
-						return err
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
 					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<- timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+						running = false
+						if err = sendToStream(); err != nil {
+							return err
+						}
 				case <-nctx.Done():
 					l.DebugLog("msg", "Context cancelled for {{.}} Watcher")
 					return wstream.Context().Err()

@@ -628,15 +628,17 @@ func (a *grpcObjBookstoreV1Order) Watch(ctx context.Context, options *api.ListWa
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -828,15 +830,17 @@ func (a *grpcObjBookstoreV1Book) Watch(ctx context.Context, options *api.ListWat
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1013,15 +1017,17 @@ func (a *grpcObjBookstoreV1Publisher) Watch(ctx context.Context, options *api.Li
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1182,15 +1188,17 @@ func (a *grpcObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWa
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1367,15 +1375,17 @@ func (a *grpcObjBookstoreV1Coupon) Watch(ctx context.Context, options *api.ListW
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1536,15 +1546,17 @@ func (a *grpcObjBookstoreV1Customer) Watch(ctx context.Context, options *api.Lis
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}

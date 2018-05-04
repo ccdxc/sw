@@ -3,6 +3,7 @@ package apiserver
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -41,6 +42,10 @@ const (
 const (
 	// DefaultKvPoolSize specifies the default size of KV store connection pool.
 	DefaultKvPoolSize = 1000
+	// DefaultWatchBatchSize is the max batch size for watch events
+	DefaultWatchBatchSize = 100
+	// DefaultWatchHoldInterval is the time that the batching logic waits to accumulate events
+	DefaultWatchHoldInterval = time.Millisecond * 10
 )
 
 // ServiceBackend is the interface  satisfied by the module that is responsible for registering

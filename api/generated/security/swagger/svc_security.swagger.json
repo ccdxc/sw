@@ -2251,6 +2251,17 @@
     "securityAutoMsgAppUserGrpWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgAppUserGrpWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "securityAutoMsgAppUserGrpWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2260,6 +2271,17 @@
       }
     },
     "securityAutoMsgAppUserWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgAppUserWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "securityAutoMsgAppUserWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -2273,6 +2295,17 @@
     "securityAutoMsgAppWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgAppWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "securityAutoMsgAppWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2282,6 +2315,17 @@
       }
     },
     "securityAutoMsgCertificateWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgCertificateWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "securityAutoMsgCertificateWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -2295,6 +2339,17 @@
     "securityAutoMsgSecurityGroupWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgSecurityGroupWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "securityAutoMsgSecurityGroupWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2306,6 +2361,17 @@
     "securityAutoMsgSgpolicyWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgSgpolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "securityAutoMsgSgpolicyWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2315,6 +2381,17 @@
       }
     },
     "securityAutoMsgTrafficEncryptionPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "securityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {

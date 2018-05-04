@@ -1282,6 +1282,17 @@
     "clusterAutoMsgClusterWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgClusterWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "clusterAutoMsgClusterWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1291,6 +1302,17 @@
       }
     },
     "clusterAutoMsgNodeWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgNodeWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "clusterAutoMsgNodeWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -1304,6 +1326,17 @@
     "clusterAutoMsgSmartNICWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgSmartNICWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "clusterAutoMsgSmartNICWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1313,6 +1346,17 @@
       }
     },
     "clusterAutoMsgTenantWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgTenantWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "clusterAutoMsgTenantWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {

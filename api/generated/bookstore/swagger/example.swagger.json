@@ -1161,6 +1161,17 @@
     "bookstoreAutoMsgBookWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreAutoMsgBookWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgBookWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1170,6 +1181,17 @@
       }
     },
     "bookstoreAutoMsgCouponWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreAutoMsgCouponWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgCouponWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -1183,6 +1205,17 @@
     "bookstoreAutoMsgCustomerWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreAutoMsgCustomerWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgCustomerWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1192,6 +1225,17 @@
       }
     },
     "bookstoreAutoMsgOrderWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreAutoMsgOrderWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgOrderWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -1205,6 +1249,17 @@
     "bookstoreAutoMsgPublisherWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreAutoMsgPublisherWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgPublisherWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1214,6 +1269,17 @@
       }
     },
     "bookstoreAutoMsgStoreWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreAutoMsgStoreWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgStoreWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {

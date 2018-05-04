@@ -1314,18 +1314,38 @@ func TestGetAutoTypes(t *testing.T) {
 		message_type <
 			name: 'Auto_WatchNest1'
 			field <
-				name: 'meta'
-				label: LABEL_OPTIONAL
+				name: "Events"
+				label: LABEL_REPEATED
 				type: TYPE_MESSAGE
-				type_name: '.example.Nest1'
-				number: 2
+				type_name: '.example.Auto_WatchNest1.WatchEvent'
+				number: 1
 			>
-			field <
-				name: 'Object'
-				label: LABEL_OPTIONAL
-				type: TYPE_MESSAGE
-				type_name: '.example.Nest1'
-				number: 2
+			nested_type: <
+				name: "WatchEvent"
+				field <
+						name: 'meta'
+						label: LABEL_OPTIONAL
+						type: TYPE_MESSAGE
+						type_name: '.example.Nest1'
+						number: 2
+					>
+				field <
+						name: 'Object'
+						label: LABEL_OPTIONAL
+						type: TYPE_MESSAGE
+						type_name: '.example.Nest1'
+						number: 2
+				>
+				nested_type: <
+					name: "DoubleNest"
+					field <
+							name: 'test'
+							label: LABEL_OPTIONAL
+							type: TYPE_MESSAGE
+							type_name: '.example.Nest1'
+							number: 2
+						>
+				>
 			>
 			options:<[venice.objectAutoGen]: "watchhelper">
 		>
@@ -1452,8 +1472,39 @@ func TestGetAutoTypes(t *testing.T) {
 	}
 	t.Logf("Test map_entry message")
 	testmsg, err := r.LookupMsg("", ".example.MapMessage")
-	if !isNestedMessage(testmsg) {
-		t.Errorf("Nested message returned false")
+	if !isMapEntry(testmsg) {
+		t.Errorf("Map entry message returned false")
+	}
+
+	t.Logf("Test Nested message")
+	nmessage, err := r.LookupMsg("", ".example.Auto_WatchNest1.WatchEvent")
+	if err != nil {
+		t.Fatalf("error retrieving nested message (%s)", err)
+	}
+	if !isNestedMessage(nmessage) {
+		t.Errorf("  Nested message returned false")
+	}
+	nname, err := getNestedMsgName(nmessage)
+	if err != nil {
+		t.Fatalf("error retrieving nested message name (%s)", err)
+	}
+	if nname != "Auto_WatchNest1_WatchEvent" {
+		t.Errorf("expecting [Auto_WatchNest1_WatchEvent], got [%s]", nname)
+	}
+
+	nmessage, err = r.LookupMsg("", ".example.Auto_WatchNest1.WatchEvent.DoubleNest")
+	if err != nil {
+		t.Fatalf("error retrieving double nested message (%s)", err)
+	}
+	if !isNestedMessage(nmessage) {
+		t.Errorf("  Nested message returned false")
+	}
+	nname, err = getNestedMsgName(nmessage)
+	if err != nil {
+		t.Fatalf("error retrieving nested message name (%s)", err)
+	}
+	if nname != "Auto_WatchNest1_WatchEvent_DoubleNest" {
+		t.Errorf("expecting [Auto_WatchNest1_WatchEvent_DoubleNest], got [%s]", nname)
 	}
 }
 
@@ -1862,12 +1913,17 @@ func TestScratchVars(t *testing.T) {
 	scratch.setInt(302, 2)
 	scratch.setBool(true, 0)
 	scratch.setBool(false, 1)
+	scratch.setStr("value1", 0)
+	scratch.setStr("value2", 2)
 
 	if scratch.getInt(0) != 100 || scratch.getInt(1) != 201 || scratch.getInt(2) != 302 {
 		t.Errorf("Scratch integer get failed")
 	}
 	if scratch.getBool(0) != true || scratch.getBool(1) != false {
 		t.Errorf("Scratch bool get failed")
+	}
+	if scratch.getStr(0) != "value1" || scratch.getStr(2) != "value2" {
+		t.Errorf("Scratch string get failed")
 	}
 }
 

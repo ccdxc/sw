@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -952,4 +954,149 @@ func TestFilters(t *testing.T) {
 	}
 	wcancel()
 	wwg.Wait()
+}
+
+func TestBatchedWatch(t *testing.T) {
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	ctx := context.Background()
+	// gRPC client
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+	pub := bookstore.Publisher{
+		ObjectMeta: api.ObjectMeta{
+			Name: "batchSahara",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Publisher",
+		},
+		Spec: bookstore.PublisherSpec{
+			Id:      "111",
+			Address: "#1 hilane, timbuktoo",
+			WebAddr: "http://sahara-books.org",
+		},
+	}
+	var pRcvWatchEventsMutex sync.Mutex
+	var pRcvWatchEvents, pExpectWatchEvents []kvstore.WatchEvent
+	var wg sync.WaitGroup
+	wctx, cancel := context.WithCancel(ctx)
+	waitWatch := make(chan bool)
+	wg.Add(1)
+	var fromver uint64
+
+	go func() {
+		opts := api.ListWatchOptions{}
+		watcher, err := apicl.BookstoreV1().Publisher().Watch(wctx, &opts)
+		if err != nil {
+			t.Fatalf("Failed to start watch (%s)\n", err)
+		}
+		close(waitWatch)
+		active := true
+		for active {
+			select {
+			case ev, ok := <-watcher.EventChan():
+				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
+				if ok {
+					t.Logf("  event [%+v]", *ev)
+					p := ev.Object.(*bookstore.Publisher)
+					v, _ := strconv.ParseUint(p.ResourceVersion, 10, 64)
+					if v <= fromver {
+						continue
+					}
+					pRcvWatchEventsMutex.Lock()
+					pRcvWatchEvents = append(pRcvWatchEvents, *ev)
+					pRcvWatchEventsMutex.Unlock()
+				} else {
+					t.Logf("publisher watcher closed")
+					active = false
+				}
+			}
+		}
+		wg.Done()
+	}()
+	// Wait for watches to be established
+	<-waitWatch
+
+	// List all objects and find fromVer
+	{
+		objs, _ := apicl.BookstoreV1().Publisher().List(ctx, &api.ListWatchOptions{})
+		for _, o := range objs {
+			v, _ := strconv.ParseUint(o.ResourceVersion, 10, 64)
+			if v > fromver {
+				fromver = v
+			}
+		}
+	}
+
+	{ // Insert the object and wait on the Watch event.
+		if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub); err != nil {
+			t.Fatalf("failed to create publisher(%s)", err)
+		}
+		evp := pub
+		pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Created)
+
+		AssertEventually(t,
+			func() (bool, interface{}) {
+				defer pRcvWatchEventsMutex.Unlock()
+				pRcvWatchEventsMutex.Lock()
+				return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil
+			},
+			"failed to receive all watch events",
+			"10ms",
+			"3s")
+	}
+	{ // Update full batch sizes
+		for i := 0; i < (apiserver.DefaultWatchBatchSize)*2+2; i++ {
+			if _, err := apicl.BookstoreV1().Publisher().Update(ctx, &pub); err != nil {
+				t.Fatalf("failed to create publisher(%s)", err)
+			}
+			evp := pub
+			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Updated)
+		}
+		AssertEventually(t,
+			func() (bool, interface{}) {
+				defer pRcvWatchEventsMutex.Unlock()
+				pRcvWatchEventsMutex.Lock()
+				return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil
+			},
+			"failed to receive all watch events",
+			"10ms",
+			"3s")
+	}
+
+	{ // Update full batch sizes in bursts
+		for i := 0; i < (apiserver.DefaultWatchBatchSize)*2+2; i++ {
+			if i%(apiserver.DefaultWatchBatchSize/2) == 0 {
+				time.Sleep(3 * apiserver.DefaultWatchHoldInterval)
+			}
+			if _, err := apicl.BookstoreV1().Publisher().Update(ctx, &pub); err != nil {
+				t.Fatalf("failed to create publisher(%s)", err)
+			}
+			evp := pub
+			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Updated)
+		}
+		AssertEventually(t,
+			func() (bool, interface{}) {
+				defer pRcvWatchEventsMutex.Unlock()
+				pRcvWatchEventsMutex.Lock()
+				return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil
+			},
+			"failed to receive all watch events",
+			"10ms",
+			"3s")
+	}
+
+	cancel()
+	wg.Wait()
+	for k := range pExpectWatchEvents {
+		if pExpectWatchEvents[k].Type != pRcvWatchEvents[k].Type {
+			t.Fatalf("mismatched event type expected (%s) got (%s)", pExpectWatchEvents[k].Type, pRcvWatchEvents[k].Type)
+		}
+		if !validateObjectSpec(pExpectWatchEvents[k].Object, pRcvWatchEvents[k].Object) {
+			t.Fatalf("watch event object [%s] does not match \n\t[%+v]\n\t[%+v]", pExpectWatchEvents[k].Type, pExpectWatchEvents[k].Object, pRcvWatchEvents[k].Object)
+		}
+	}
 }

@@ -2762,6 +2762,17 @@
     "monitoringAutoMsgAlertDestinationWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgAlertDestinationWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgAlertDestinationWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2771,6 +2782,17 @@
       }
     },
     "monitoringAutoMsgAlertPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgAlertPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgAlertPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -2784,6 +2806,17 @@
     "monitoringAutoMsgAlertWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgAlertWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgAlertWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2793,6 +2826,17 @@
       }
     },
     "monitoringAutoMsgEventPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgEventPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgEventPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -2806,6 +2850,17 @@
     "monitoringAutoMsgEventWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgEventWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgEventWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2815,6 +2870,17 @@
       }
     },
     "monitoringAutoMsgFlowExportPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -2828,6 +2894,17 @@
     "monitoringAutoMsgFwlogPolicyWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgFwlogPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgFwlogPolicyWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -2837,6 +2914,17 @@
       }
     },
     "monitoringAutoMsgStatsPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgStatsPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgStatsPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {

@@ -343,15 +343,17 @@ func (a *grpcObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWa
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -512,15 +514,17 @@ func (a *grpcObjNetworkV1Service) Watch(ctx context.Context, options *api.ListWa
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -681,15 +685,17 @@ func (a *grpcObjNetworkV1LbPolicy) Watch(ctx context.Context, options *api.ListW
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}

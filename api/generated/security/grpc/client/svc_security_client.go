@@ -643,15 +643,17 @@ func (a *grpcObjSecurityV1SecurityGroup) Watch(ctx context.Context, options *api
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -812,15 +814,17 @@ func (a *grpcObjSecurityV1Sgpolicy) Watch(ctx context.Context, options *api.List
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -981,15 +985,17 @@ func (a *grpcObjSecurityV1App) Watch(ctx context.Context, options *api.ListWatch
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1150,15 +1156,17 @@ func (a *grpcObjSecurityV1AppUser) Watch(ctx context.Context, options *api.ListW
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1319,15 +1327,17 @@ func (a *grpcObjSecurityV1AppUserGrp) Watch(ctx context.Context, options *api.Li
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1488,15 +1498,17 @@ func (a *grpcObjSecurityV1Certificate) Watch(ctx context.Context, options *api.L
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}
@@ -1657,15 +1669,17 @@ func (a *grpcObjSecurityV1TrafficEncryptionPolicy) Watch(ctx context.Context, op
 				close(lw.OutCh)
 				return
 			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			select {
-			case lw.OutCh <- &ev:
-			case <-wstream.Context().Done():
-				close(lw.OutCh)
-				return
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
 			}
 		}
 	}

@@ -1435,6 +1435,17 @@
     "authAutoMsgAuthenticationPolicyWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authAutoMsgAuthenticationPolicyWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "authAutoMsgAuthenticationPolicyWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1444,6 +1455,17 @@
       }
     },
     "authAutoMsgRoleBindingWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authAutoMsgRoleBindingWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "authAutoMsgRoleBindingWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {
@@ -1457,6 +1479,17 @@
     "authAutoMsgRoleWatchHelper": {
       "type": "object",
       "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authAutoMsgRoleWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "authAutoMsgRoleWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
         "Type": {
           "type": "string"
         },
@@ -1466,6 +1499,17 @@
       }
     },
     "authAutoMsgUserWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authAutoMsgUserWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "authAutoMsgUserWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
         "Type": {

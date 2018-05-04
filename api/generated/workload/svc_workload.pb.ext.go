@@ -53,6 +53,27 @@ func (m *AutoMsgEndpointWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgEndpointWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgEndpointWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgEndpointWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgEndpointWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgEndpointWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *EndpointList) Clone(into interface{}) (interface{}, error) {
 	var out *EndpointList
 	var ok bool
@@ -76,6 +97,10 @@ func (m *EndpointList) Defaults(ver string) bool {
 // Validators
 
 func (m *AutoMsgEndpointWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 

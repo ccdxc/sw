@@ -89,6 +89,27 @@ func (m *AutoMsgClusterWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgClusterWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgClusterWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgClusterWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgClusterWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgClusterWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgNodeWatchHelper
 	var ok bool
@@ -106,6 +127,27 @@ func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AutoMsgNodeWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgNodeWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgNodeWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgNodeWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgNodeWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgNodeWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -131,6 +173,27 @@ func (m *AutoMsgSmartNICWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgSmartNICWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgSmartNICWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgSmartNICWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgTenantWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgTenantWatchHelper
 	var ok bool
@@ -148,6 +211,27 @@ func (m *AutoMsgTenantWatchHelper) Clone(into interface{}) (interface{}, error) 
 
 // Default sets up the defaults for the object
 func (m *AutoMsgTenantWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgTenantWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgTenantWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgTenantWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgTenantWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgTenantWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -241,7 +325,20 @@ func (m *AutoMsgClusterWatchHelper) Validate(ver string, ignoreStatus bool) bool
 	return true
 }
 
+func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *AutoMsgNodeWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgNodeWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -249,6 +346,15 @@ func (m *AutoMsgNodeWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AutoMsgSmartNICWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
@@ -256,6 +362,10 @@ func (m *AutoMsgSmartNICWatchHelper) Validate(ver string, ignoreStatus bool) boo
 }
 
 func (m *AutoMsgTenantWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgTenantWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 

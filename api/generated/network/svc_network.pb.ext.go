@@ -77,6 +77,27 @@ func (m *AutoMsgLbPolicyWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgLbPolicyWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgLbPolicyWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgLbPolicyWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgNetworkWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgNetworkWatchHelper
 	var ok bool
@@ -98,6 +119,27 @@ func (m *AutoMsgNetworkWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgNetworkWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgNetworkWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgNetworkWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgNetworkWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgNetworkWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgServiceWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgServiceWatchHelper
 	var ok bool
@@ -115,6 +157,27 @@ func (m *AutoMsgServiceWatchHelper) Clone(into interface{}) (interface{}, error)
 
 // Default sets up the defaults for the object
 func (m *AutoMsgServiceWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgServiceWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgServiceWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgServiceWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgServiceWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgServiceWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -187,11 +250,28 @@ func (m *AutoMsgLbPolicyWatchHelper) Validate(ver string, ignoreStatus bool) boo
 	return true
 }
 
+func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *AutoMsgNetworkWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *AutoMsgNetworkWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *AutoMsgServiceWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgServiceWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}

@@ -72,8 +72,8 @@ func TestGetAuthenticators(t *testing.T) {
 			Secret: secret,
 		},
 	}
-	createAuthenticationPolicy(policy)
-	defer DeleteAuthenticationPolicy(apicl)
+	createAuthenticationPolicy(t, policy)
+	defer deleteAuthenticationPolicy(t)
 	AssertEventually(t, func() (bool, interface{}) {
 		authenticators, err = authGetter.GetAuthenticators()
 		return err == nil && len(authenticators) == 2, nil
@@ -106,8 +106,8 @@ func TestGetTokenManager(t *testing.T) {
 			Secret: secret,
 		},
 	}
-	createAuthenticationPolicy(policy)
-	defer DeleteAuthenticationPolicy(apicl)
+	createAuthenticationPolicy(t, policy)
+	defer deleteAuthenticationPolicy(t)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		tokenMgr, err = authGetter.GetTokenManager()

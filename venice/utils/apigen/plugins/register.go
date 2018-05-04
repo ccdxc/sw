@@ -35,6 +35,7 @@ var (
 type scratchVars struct {
 	B   [3]bool
 	Int [3]int
+	Str [3]string
 }
 
 var scratch scratchVars
@@ -56,6 +57,15 @@ func (s *scratchVars) setInt(val int, id int) int {
 
 func (s *scratchVars) getInt(id int) int {
 	return s.Int[id]
+}
+
+func (s *scratchVars) setStr(val string, id int) string {
+	s.Str[id] = val
+	return val
+}
+
+func (s *scratchVars) getStr(id int) string {
+	return s.Str[id]
 }
 
 func parseStringOptions(val interface{}) (interface{}, error) {
@@ -808,9 +818,13 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 				if _, ok := msgmap[*fld.TypeName]; !ok {
 					msgmap[*fld.TypeName] = checkValidators(file, msgmap, *fld.TypeName)
 				}
+				msgname := *msg.Name
+				if isNestedMessage(msg) {
+					msgname, _ = getNestedMsgName(msg)
+				}
 				if msgmap[*fld.TypeName] == true {
 					if _, ok := ret.Map[*msg.Name]; !ok {
-						ret.Map[*msg.Name] = validateMsg{Fields: make(map[string]validateFields)}
+						ret.Map[msgname] = validateMsg{Fields: make(map[string]validateFields)}
 					}
 					if _, ok := ret.Map[*fld.Name]; !ok {
 						repeated := false
@@ -819,19 +833,19 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 							repeated = true
 						}
 						if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
-							glog.Infof("setting pointer found nullable [%v] for %s]", r, *msg.Name+"/"+*fld.Name)
+							glog.Infof("setting pointer found nullable [%v] for %s]", r, msgname+"/"+*fld.Name)
 							pointer = r.(bool)
 						} else {
 						}
-						glog.Infof("setting pointer to [%v] for {%s]", pointer, *msg.Name+"/"+*fld.Name)
+						glog.Infof("setting pointer to [%v] for {%s]", pointer, msgname+"/"+*fld.Name)
 						// if it is a embedded field, do not use field name rather use type
 						if fld.Embedded {
 							// fld.GetTypeName() -> e.g. ".events.EventAttributes"
 							temp := strings.Split(fld.GetTypeName(), ".")
 							fldType := temp[len(temp)-1]
-							ret.Map[*msg.Name].Fields[fldType] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+							ret.Map[msgname].Fields[fldType] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
 						} else {
-							ret.Map[*msg.Name].Fields[*fld.Name] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+							ret.Map[msgname].Fields[*fld.Name] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
 						}
 					}
 				}
@@ -1243,9 +1257,13 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 				if _, ok := msgmap[*fld.TypeName]; !ok {
 					msgmap[*fld.TypeName] = checkStorageTransformers(file, msgmap, *fld.TypeName)
 				}
+				msgname := *msg.Name
+				if isNestedMessage(msg) {
+					msgname, _ = getNestedMsgName(msg)
+				}
 				if msgmap[*fld.TypeName] == true {
 					if _, ok := ret.Map[*msg.Name]; !ok {
-						ret.Map[*msg.Name] = storageTransformerMsg{
+						ret.Map[msgname] = storageTransformerMsg{
 							Fields:          make(map[string]storageTransformerFields),
 							HasTransformers: true,
 						}
@@ -1257,19 +1275,19 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 							repeated = true
 						}
 						if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
-							glog.Infof("setting pointer found nullable [%v] for %s]", r, *msg.Name+"/"+*fld.Name)
+							glog.Infof("setting pointer found nullable [%v] for %s]", r, msgname+"/"+*fld.Name)
 							pointer = r.(bool)
 						} else {
 						}
-						glog.Infof("setting pointer to [%v] for {%s]", pointer, *msg.Name+"/"+*fld.Name)
+						glog.Infof("setting pointer to [%v] for {%s]", pointer, msgname+"/"+*fld.Name)
 						// if it is a embedded field, do not use field name rather use type
 						if fld.Embedded {
 							// fld.GetTypeName() -> e.g. ".events.EventAttributes"
 							temp := strings.Split(fld.GetTypeName(), ".")
 							fldType := temp[len(temp)-1]
-							ret.Map[*msg.Name].Fields[fldType] = storageTransformerFields{Transformers: make([]storageTransformerField, 0), Repeated: repeated, Pointer: pointer}
+							ret.Map[msgname].Fields[fldType] = storageTransformerFields{Transformers: make([]storageTransformerField, 0), Repeated: repeated, Pointer: pointer}
 						} else {
-							ret.Map[*msg.Name].Fields[*fld.Name] = storageTransformerFields{Transformers: make([]storageTransformerField, 0), Repeated: repeated, Pointer: pointer}
+							ret.Map[msgname].Fields[*fld.Name] = storageTransformerFields{Transformers: make([]storageTransformerField, 0), Repeated: repeated, Pointer: pointer}
 						}
 					}
 				}
@@ -1427,12 +1445,20 @@ func getListType(msg *descriptor.Message, fq bool) (string, error) {
 
 func getWatchType(msg *descriptor.Message, fq bool) (string, error) {
 	for _, f := range msg.Fields {
-		if *f.Name == "Object" {
-			if fq {
-				return strings.TrimPrefix(*f.TypeName, "."), nil
+		if *f.Name == "Events" {
+			nmsg, err := msg.File.Reg.LookupMsg("", f.GetTypeName())
+			if err != nil {
+				return "", errors.New("Object type not found")
 			}
-			parts := strings.Split(*f.TypeName, ".")
-			return parts[len(parts)-1], nil
+			for _, nf := range nmsg.Fields {
+				if *nf.Name == "Object" {
+					if fq {
+						return strings.TrimPrefix(nf.GetTypeName(), "."), nil
+					}
+					parts := strings.Split(nf.GetTypeName(), ".")
+					return parts[len(parts)-1], nil
+				}
+			}
 		}
 	}
 	return "", errors.New("Object item not found")
@@ -1563,14 +1589,34 @@ func isRestMethod(svc *descriptor.Service, oper, object string) bool {
 	return false
 }
 
-// isNestedMessage checks if the message is a nested message
-//  TODO(sanjayt): make this generic for all nested message definitions.
-func isNestedMessage(msg *descriptor.Message) bool {
+// isMapEntry checks if the message is a auto generated map entry message
+func isMapEntry(msg *descriptor.Message) bool {
 	glog.V(1).Infof("Looking for map_entry in %s)", *msg.Name)
 	if opt := msg.GetOptions(); opt != nil {
 		return opt.GetMapEntry()
 	}
 	return false
+}
+
+func isNestedMessage(msg *descriptor.Message) bool {
+	glog.V(1).Infof("Check nested message %s[%v]", *msg.Name, msg.Outers)
+	if len(msg.Outers) != 0 {
+		return true
+	}
+	return false
+}
+
+func getNestedMsgName(msg *descriptor.Message) (string, error) {
+	if len(msg.Outers) == 0 {
+		return "", errors.New("not a nested message")
+	}
+	ret := ""
+	dlmtr := ""
+	for _, n := range msg.Outers {
+		ret = ret + dlmtr + n
+		dlmtr = "_"
+	}
+	return ret + "_" + *msg.Name, nil
 }
 
 func isSpecStatusMessage(msg *descriptor.Message) bool {
@@ -1698,6 +1744,8 @@ func init() {
 	reg.RegisterFunc("isRestExposed", isRestExposed)
 	reg.RegisterFunc("isRestMethod", isRestMethod)
 	reg.RegisterFunc("isNestedMessage", isNestedMessage)
+	reg.RegisterFunc("getNestedMsgName", getNestedMsgName)
+	reg.RegisterFunc("isMapEntry", isMapEntry)
 	reg.RegisterFunc("getFileName", getFileName)
 	reg.RegisterFunc("getGrpcDestination", getGrpcDestination)
 	reg.RegisterFunc("getValidatorManifest", getValidatorManifest)
@@ -1709,6 +1757,8 @@ func init() {
 	reg.RegisterFunc("getBool", scratch.getBool)
 	reg.RegisterFunc("saveInt", scratch.setInt)
 	reg.RegisterFunc("getInt", scratch.getInt)
+	reg.RegisterFunc("saveStr", scratch.setStr)
+	reg.RegisterFunc("getStr", scratch.getStr)
 	reg.RegisterFunc("isAPIServerServed", isAPIServerServed)
 	reg.RegisterFunc("getSvcActionEndpoints", getSvcActionEndpoints)
 	reg.RegisterFunc("getDefaulterManifest", getDefaulterManifest)
