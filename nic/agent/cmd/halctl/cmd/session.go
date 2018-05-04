@@ -1,20 +1,30 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 package cmd
 
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-var sessionVrfID uint64
-var sessionHandle uint64
+var (
+	sessionVrfID        uint64
+	sessionHandle       uint64
+	sessionDetailVrfID  uint64
+	sessionDetailHandle uint64
+)
 
 var sessionShowCmd = &cobra.Command{
 	Use:   "session",
@@ -23,14 +33,24 @@ var sessionShowCmd = &cobra.Command{
 	Run:   sessionShowCmdHandler,
 }
 
+var sessionDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "detail",
+	Long:  "shows session detail",
+	Run:   sessionDetailShowCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(sessionShowCmd)
+	sessionShowCmd.AddCommand(sessionDetailShowCmd)
+
 	sessionShowCmd.Flags().Uint64Var(&sessionVrfID, "id", 1, "Specify vrf-id")
 	sessionShowCmd.Flags().Uint64Var(&sessionHandle, "handle", 2, "Specify session handle")
+	sessionDetailShowCmd.Flags().Uint64Var(&sessionDetailVrfID, "id", 1, "Specify vrf-id")
+	sessionDetailShowCmd.Flags().Uint64Var(&sessionDetailHandle, "handle", 2, "Specify session handle")
 }
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
-
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -42,18 +62,16 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
-	if cmd.Flags().Changed("id") {
-		if cmd.Flags().Changed("handle") {
-			var req *halproto.SessionGetRequest
-			req = &halproto.SessionGetRequest{
-				Meta: &halproto.ObjectMeta{
-					VrfId: sessionVrfID,
-				},
-				SessionHandle: sessionHandle,
-			}
-			sessionGetReqMsg = &halproto.SessionGetRequestMsg{
-				Request: []*halproto.SessionGetRequest{req},
-			}
+	if cmd.Flags().Changed("id") && cmd.Flags().Changed("handle") {
+		var req *halproto.SessionGetRequest
+		req = &halproto.SessionGetRequest{
+			Meta: &halproto.ObjectMeta{
+				VrfId: sessionVrfID,
+			},
+			SessionHandle: sessionHandle,
+		}
+		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+			Request: []*halproto.SessionGetRequest{req},
 		}
 	} else {
 		// Get all Sessions
@@ -81,16 +99,68 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
+func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewSessionClient(c.ClientConn)
+
+	var sessionGetReqMsg *halproto.SessionGetRequestMsg
+
+	if cmd.Flags().Changed("id") {
+		if cmd.Flags().Changed("handle") {
+			var req *halproto.SessionGetRequest
+			req = &halproto.SessionGetRequest{
+				Meta: &halproto.ObjectMeta{
+					VrfId: sessionDetailVrfID,
+				},
+				SessionHandle: sessionDetailHandle,
+			}
+			sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+				Request: []*halproto.SessionGetRequest{req},
+			}
+		}
+	} else {
+		// Get all Sessions
+		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+			Request: []*halproto.SessionGetRequest{},
+		}
+	}
+
+	// HAL call
+	respMsg, err := client.SessionGet(context.Background(), sessionGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting Session failed. %v", err)
+	}
+
+	// Print Sessions
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	}
+}
+
 func sessionShowHeader(cmd *cobra.Command, args []string) {
 	hdrLine := strings.Repeat("-", 115)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-12s%-12s%-14s%-16s%-24s%-24s%-12s\n",
-		"SessionID", "FlowType", "FlowKeyType", "L2SegId|VrfId", "SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType")
+		"SessionHandle", "FlowType", "FlowKeyType", "L2SegId|VrfId", "SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType")
 	fmt.Println(hdrLine)
 }
 
 func sessionShowOneResp(resp *halproto.SessionGetResponse) {
 	spec := resp.GetSpec()
+	status := resp.GetStatus()
 
 	// Get initiator and responder flow
 	initiatorFlow := spec.GetInitiatorFlow()
@@ -98,16 +168,16 @@ func sessionShowOneResp(resp *halproto.SessionGetResponse) {
 
 	if initiatorFlow != nil {
 		flowStr := "initiator"
-		flowShow(spec, initiatorFlow, flowStr)
+		flowShow(spec, status, initiatorFlow, flowStr)
 	}
 
 	if responderFlow != nil {
 		flowStr := "responder"
-		flowShow(spec, responderFlow, flowStr)
+		flowShow(spec, status, responderFlow, flowStr)
 	}
 }
 
-func flowShow(spec *halproto.SessionSpec, flowSpec *halproto.FlowSpec, flowStr string) {
+func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSpec *halproto.FlowSpec, flowStr string) {
 	var (
 		keyType string
 		id      uint64
@@ -201,7 +271,7 @@ func flowShow(spec *halproto.SessionSpec, flowSpec *halproto.FlowSpec, flowStr s
 	}
 
 	fmt.Printf("%-12d%-12s%-14s%-16d%-24s%-24s%-10s\n",
-		spec.GetSessionId(),
+		status.GetSessionHandle(),
 		flowStr, keyType, id,
 		src, dst, ipproto)
 }

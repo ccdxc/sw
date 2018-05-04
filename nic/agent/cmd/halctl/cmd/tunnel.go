@@ -1,11 +1,17 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 package cmd
 
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -13,7 +19,8 @@ import (
 )
 
 var (
-	tunnelID uint64
+	tunnelID       uint64
+	tunnelDetailID uint64
 )
 
 var tunnelShowCmd = &cobra.Command{
@@ -23,14 +30,22 @@ var tunnelShowCmd = &cobra.Command{
 	Run:   tunnelShowCmdHandler,
 }
 
+var tunnelDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "detail",
+	Long:  "shows tunnel detail",
+	Run:   tunnelDetailShowCmdHandler,
+}
+
 func init() {
 	ifShowCmd.AddCommand(tunnelShowCmd)
+	tunnelShowCmd.AddCommand(tunnelDetailShowCmd)
 
 	tunnelShowCmd.Flags().Uint64Var(&tunnelID, "id", 1, "Specify if-id")
+	tunnelDetailShowCmd.Flags().Uint64Var(&tunnelDetailID, "id", 1, "Specify if-id")
 }
 
 func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
-
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -72,6 +87,52 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 			continue
 		}
 		tunnelShowOneResp(resp)
+	}
+	c.Close()
+}
+
+func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	var req *halproto.InterfaceGetRequest
+	if cmd.Flags().Changed("id") {
+		// Get specific if
+		req = &halproto.InterfaceGetRequest{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: tunnelDetailID,
+				},
+			},
+		}
+	} else {
+		// Get all ifs
+		req = &halproto.InterfaceGetRequest{}
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting if failed. %v", err)
+	}
+
+	// Print IFs
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
 	}
 	c.Close()
 }

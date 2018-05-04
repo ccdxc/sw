@@ -1,11 +1,17 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 package cmd
 
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -19,12 +25,19 @@ var nwShowCmd = &cobra.Command{
 	Run:   nwShowCmdHandler,
 }
 
+var nwDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "detail",
+	Long:  "shows network detail",
+	Run:   nwDetailShowCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(nwShowCmd)
+	nwShowCmd.AddCommand(nwDetailShowCmd)
 }
 
 func nwShowCmdHandler(cmd *cobra.Command, args []string) {
-
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -55,6 +68,40 @@ func nwShowCmdHandler(cmd *cobra.Command, args []string) {
 			continue
 		}
 		nwShowOneResp(resp)
+	}
+}
+
+func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	client := halproto.NewNetworkClient(c.ClientConn)
+
+	// Get all Nw
+	req := &halproto.NetworkGetRequest{}
+	networkGetReqMsg := &halproto.NetworkGetRequestMsg{
+		Request: []*halproto.NetworkGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.NetworkGet(context.Background(), networkGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting Network failed. %v", err)
+	}
+
+	// Print NHs
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
 	}
 }
 
