@@ -62,7 +62,7 @@ ipsec_rule_compare_handle_key_func (void *key1, void *key2)
 // TODO:
 // 1. check if IPSECCB exists already
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 validate_ipsec_rule_create (IpsecRuleSpec& spec, IpsecRuleResponse *rsp)
 {
     // must have key-handle set

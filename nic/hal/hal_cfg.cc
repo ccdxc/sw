@@ -63,7 +63,7 @@ hal_cpu_if_create (uint32_t lif_id)
     return HAL_RET_OK;
 }
 
-static hal_ret_t
+static hal_ret_t inline
 hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
 {
     InterfaceSpec        spec;

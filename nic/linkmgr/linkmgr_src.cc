@@ -44,7 +44,7 @@ current_thread (void)
     return sdk::lib::thread::current_thread();
 }
 
-static bool
+static inline bool
 hw_mock (void)
 {
     return linkmgr_cfg.hw_mock;

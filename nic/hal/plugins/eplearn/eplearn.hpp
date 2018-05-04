@@ -28,7 +28,7 @@ typedef struct eplearn_info_s {
     uint32_t            trans_ctx_cnt;
 } eplearn_info_t;
 
-static bool
+static inline bool
 is_broadcast(fte::ctx_t &ctx) {
     const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
     ether_header_t *eth_hdr = (ether_header_t*)(ctx.pkt() + cpu_hdr->l2_offset);

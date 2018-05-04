@@ -135,22 +135,6 @@ end:
     return ret;;
 }
 
-//-----------------------------------------------------------------------------
-// dump route spec
-//-----------------------------------------------------------------------------
-static inline void
-route_dump (RouteSpec& spec)
-{
-    std::string    route_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &route_cfg);
-    HAL_TRACE_DEBUG("Route configuration:");
-    HAL_TRACE_DEBUG("{}", route_cfg.c_str());
-}
-
 //------------------------------------------------------------------------------
 // validate an incoming route create request
 //------------------------------------------------------------------------------
@@ -323,7 +307,7 @@ route_create (RouteSpec& spec, RouteResponse *rsp)
     vrf = vrf_lookup_key_or_handle(kh.route_key().vrf_key_handle());
     if (vrf == NULL) {
         HAL_TRACE_ERR("Route create failure. Unable to find vrf {}",
-                      vrf_lookup_key_or_handle_to_str(kh.route_key().vrf_key_handle()));
+                      vrf_keyhandle_to_str(kh.route_key().vrf_key_handle()));
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
@@ -440,32 +424,6 @@ route_lookup_key_or_handle (RouteKeyHandle& kh)
 
 end:
     return route;
-}
-
-//------------------------------------------------------------------------------
-// Lookup route from key or handle to str
-//------------------------------------------------------------------------------
-const char *
-route_lookup_key_or_handle_to_str (RouteKeyHandle& kh)
-{
-	static thread_local char       if_str[4][50];
-	static thread_local uint8_t    if_str_next = 0;
-	char                           *buf;
-    ip_prefix_t                    pfx;
-
-	buf = if_str[if_str_next++ & 0x3];
-	memset(buf, 0, 50);
-
-    if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
-        ip_pfx_spec_to_pfx(&pfx, kh.route_key().ip_prefix());
-        snprintf(buf, 50, "vrf: %s, pfx: %s",
-                 vrf_lookup_key_or_handle_to_str(kh.route_key().vrf_key_handle()),
-                 ippfx2str(&pfx));
-    } else if (kh.key_or_handle_case() == RouteKeyHandle::kRouteHandle) {
-        snprintf(buf, 50, "route_handle: 0x%lx", kh.route_handle());
-    }
-
-    return buf;
 }
 
 //------------------------------------------------------------------------------
@@ -609,7 +567,7 @@ route_update (RouteSpec& spec, RouteResponse *rsp)
     route = route_lookup_key_or_handle(kh);
     if (route == NULL) {
         HAL_TRACE_ERR("failed to find route {}",
-                      route_lookup_key_or_handle_to_str(kh));
+                      route_keyhandle_to_str(kh));
         ret = HAL_RET_ROUTE_NOT_FOUND;
         goto end;
     }
@@ -887,7 +845,7 @@ route_delete (RouteDeleteRequest& req, RouteDeleteResponse *rsp)
     route = route_lookup_key_or_handle(kh);
     if (route == NULL) {
         HAL_TRACE_ERR("failed to find route {}",
-                      route_lookup_key_or_handle_to_str(kh));
+                      route_keyhandle_to_str(kh));
         ret = HAL_RET_ROUTE_NOT_FOUND;
         goto end;
     }
@@ -924,6 +882,35 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// route from key or handle to str
+//------------------------------------------------------------------------------
+const char *
+route_keyhandle_to_str (RouteKeyHandle& kh)
+{
+	static thread_local char       if_str[4][50];
+	static thread_local uint8_t    if_str_next = 0;
+	char                           *buf;
+    ip_prefix_t                    pfx;
+
+	buf = if_str[if_str_next++ & 0x3];
+	memset(buf, 0, 50);
+
+    if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
+        ip_pfx_spec_to_pfx(&pfx, kh.route_key().ip_prefix());
+        snprintf(buf, 50, "vrf: %s, pfx: %s",
+                 vrf_keyhandle_to_str(kh.route_key().vrf_key_handle()),
+                 ippfx2str(&pfx));
+    } else if (kh.key_or_handle_case() == RouteKeyHandle::kRouteHandle) {
+        snprintf(buf, 50, "route_handle: 0x%lx", kh.route_handle());
+    }
+
+    return buf;
+}
+
+//------------------------------------------------------------------------------
+// PI route to str
+//------------------------------------------------------------------------------
 const char *
 route_to_str (route_t *route)
 {
@@ -938,6 +925,22 @@ route_to_str (route_t *route)
                  ippfx2str(&route->key.pfx), route->nh_handle);
     }
     return buf;
+}
+
+//-----------------------------------------------------------------------------
+// dump route spec
+//-----------------------------------------------------------------------------
+static inline void
+route_spec_dump (RouteSpec& spec)
+{
+    std::string    route_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &route_cfg);
+    HAL_TRACE_DEBUG("Route configuration:");
+    HAL_TRACE_DEBUG("{}", route_cfg.c_str());
 }
 
 hal_ret_t

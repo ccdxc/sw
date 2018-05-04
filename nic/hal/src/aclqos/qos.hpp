@@ -159,7 +159,7 @@ typedef struct qos_class_update_app_ctxt_s {
     bool marking_changed;
 } __PACK__ qos_class_update_app_ctxt_t;
 
-static bool
+static inline bool
 valid_qos_group (qos_group_t qos_group)
 {
     return qos_group < NUM_QOS_GROUPS;

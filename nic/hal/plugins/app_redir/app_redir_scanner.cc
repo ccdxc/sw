@@ -102,7 +102,7 @@ static bool scanner_dlclose()
     return (rc == 0);
 }
 
-static int scanner_get_appid_by_name(const char* app_name)
+static inline int scanner_get_appid_by_name(const char* app_name)
 {
     if (snort_dl.lib_get_app_info) {
         struct SnortAppInfo snort_appinfo;

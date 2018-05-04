@@ -168,7 +168,7 @@ struct ipv4_tuple {
 };
 
 enum {
-    IP_SRC = 0, IP_DST, PORT_SRC, PORT_DST, NUM_FIELDS 
+    IP_SRC = 0, IP_DST, PORT_SRC, PORT_DST, NUM_FIELDS
 };
 
 #define ACL_FLD_DEF(_type, _struct_name, _fld_name) \
@@ -178,7 +178,7 @@ enum {
 acl::acl_config_t nat_ip_acl_config_glbl = {
     num_categories: 1,
     num_fields: NUM_FIELDS,
-    defs:  {  
+    defs:  {
         ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_src),
         ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_dst),
         ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_src),
@@ -188,7 +188,7 @@ acl::acl_config_t nat_ip_acl_config_glbl = {
 
 ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 
-static hal_ret_t
+static inline hal_ret_t
 rule_lib_add (const acl_ctx_t **acl_ctx, ipv4_rule_t *rule)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -200,7 +200,7 @@ rule_lib_add (const acl_ctx_t **acl_ctx, ipv4_rule_t *rule)
     return ret;
 }
 
-static ipv4_rule_t *
+static inline ipv4_rule_t *
 rule_lib_alloc (void)
 {
     ipv4_rule_t *rule = (ipv4_rule_t *)g_hal_state->ipv4_rule_slab()->alloc();

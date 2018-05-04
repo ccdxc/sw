@@ -64,7 +64,7 @@ dev_handle_t* hntap_create_tap_device(tap_endpoint_t type,
 
 void hntap_work_loop(dev_handle_t *dev_handles[], uint32_t max_handles, bool send_recv_parallel = false);
 
-static const char* hntap_type(tap_endpoint_t type) {
+static inline const char* hntap_type(tap_endpoint_t type) {
     switch(type) {
         case TAP_ENDPOINT_HOST:
             return "Host Interface";

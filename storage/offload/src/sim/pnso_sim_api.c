@@ -159,7 +159,7 @@ int pnso_sim_init(uint32_t sess_count, uint8_t * scratch,
 	return rc;
 }
 
-static pnso_error_t svc_exec_memcpy(struct pnso_sim_svc_ctx *ctx,
+static inline pnso_error_t svc_exec_memcpy(struct pnso_sim_svc_ctx *ctx,
 				    void *opaque)
 {
 	uint32_t len = ctx->input.len;

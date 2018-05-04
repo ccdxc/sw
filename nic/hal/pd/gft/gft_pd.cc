@@ -17,7 +17,7 @@ namespace pd {
 //------------------------------------------------------------------------------
 // link GFT exact match profile's PI and PD states
 //------------------------------------------------------------------------------
-static void
+static inline void
 gft_exact_match_profile_link_pi_pd (pd_gft_exact_match_profile_t *pd,
                                     gft_exact_match_profile_t *pi)
 {
@@ -578,7 +578,7 @@ gft_exact_match_flow_entry_link_pi_pd (pd_gft_exact_match_flow_entry_t *pd,
     pi->pd = pd;
 }
 
-static hal_ret_t
+static inline hal_ret_t
 gft_program_rx_xpositions (gft_hdr_group_xposition_t *xpositions,
                            uint32_t num_xpositions, uint32_t index)
 {
@@ -641,19 +641,19 @@ pd_lif_get_lport_id (pd_lif_get_lport_id_args_t *args)
 hal_ret_t
 pd_acl_create (pd_acl_create_args_t *args)
 {
-    return HAL_RET_OK;    
+    return HAL_RET_OK;
 }
 
-hal_ret_t    
-pd_qos_class_create (pd_qos_class_create_args_t *args)    
-{    
-    return HAL_RET_OK;    
+hal_ret_t
+pd_qos_class_create (pd_qos_class_create_args_t *args)
+{
+    return HAL_RET_OK;
 }
 
-hal_ret_t    
-pd_copp_create (pd_copp_create_args_t *args)    
-{    
-    return HAL_RET_OK;    
+hal_ret_t
+pd_copp_create (pd_copp_create_args_t *args)
+{
+    return HAL_RET_OK;
 }
 
 // TODO: this one also doesn't belong here .. we need to get the cpu tx/rx

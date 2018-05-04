@@ -22,18 +22,18 @@ static pd_gft_emp_t *emp_pd_init(pd_gft_emp_t *emp);
 static pd_gft_emp_t *emp_pd_alloc_init();
 static hal_ret_t emp_pd_free(pd_gft_emp_t *emp);
 static hal_ret_t emp_pd_mem_free(pd_gft_emp_t *emp);
-static hal_ret_t emp_pd_alloc_res(pd_gft_emp_t *pd_emp, 
+static hal_ret_t emp_pd_alloc_res(pd_gft_emp_t *pd_emp,
                                   pd_gft_exact_match_profile_args_t *args);
 static hal_ret_t emp_pd_program_hw(pd_gft_emp_t *pd_emp);
 static hal_ret_t emp_pd_deprogram_hw (pd_gft_emp_t *pd_emp);
 
-static void link_pi_pd(pd_gft_emp_t *pd_emp, 
+static void link_pi_pd(pd_gft_emp_t *pd_emp,
                        gft_exact_match_profile_t *pi_emp);
-static void delink_pi_pd(pd_gft_emp_t *pd_emp, 
+static void delink_pi_pd(pd_gft_emp_t *pd_emp,
                          gft_exact_match_profile_t *pi_emp);
 static hal_ret_t emp_pd_cleanup(pd_gft_emp_t *emp_pd);
-static hal_ret_t pd_emp_make_clone(gft_exact_match_profile_t *emp, 
-                                   gft_exact_match_profile_t *clone);
+static hal_ret_t pd_gft_emp_make_clone(
+                        pd_gft_exact_match_profile_make_clone_args_t *args);
 static hal_ret_t emp_pd_rx_keys_program_hw (pd_gft_emp_t *pd_gft_emp);
 static hal_ret_t emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp);
 
@@ -98,17 +98,17 @@ pd_gft_exact_match_profile_delete (pd_gft_exact_match_profile_args_t *args)
 //-----------------------------------------------------------------------------
 // Allocate resources for PD EMP
 //-----------------------------------------------------------------------------
-static hal_ret_t 
-emp_pd_alloc_res (pd_gft_emp_t *pd_gft_emp, 
+static hal_ret_t
+emp_pd_alloc_res (pd_gft_emp_t *pd_gft_emp,
                   pd_gft_exact_match_profile_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;
-    
+
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// De-Allocate resources. 
+// De-Allocate resources.
 //-----------------------------------------------------------------------------
 static hal_ret_t
 emp_pd_dealloc_res (pd_gft_emp_t *emp_pd)
@@ -124,7 +124,7 @@ emp_pd_dealloc_res (pd_gft_emp_t *emp_pd)
 //  - Delink PI <-> PD
 //  - Free PD emp
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -229,7 +229,7 @@ emp_pd_program_hw (pd_gft_emp_t *pd_gft_emp)
             goto end;
         }
     }
-    
+
 end:
     return ret;
 }
@@ -348,7 +348,7 @@ end:
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TRANSPORT_DST_PORT_ ## LAYER ;                            \
         }                                                                   \
-    }                                                                       
+    }
 
 #define RX_KEY_LAYER_FORM_L1L2_TUNNEL_KEY_DATA(LAYER)                       \
     if (gft_hgmp->headers & GFT_HEADER_IP_IN_IP_ENCAP) {                    \
@@ -388,7 +388,7 @@ end:
 
 
 #define RX_KEY_MEMCPY(DST, SRC)                                             \
-    memcpy(&rx_key ## DST, &rx_key ## SRC, sizeof(rx_key1));    
+    memcpy(&rx_key ## DST, &rx_key ## SRC, sizeof(rx_key1));
 
 #define RX_KEY_ACTIONID(ACT)                                                \
     rx_key ## ACT ## _action.actionid = RX_KEY ## ACT ## _RX_KEY ## ACT ## _ID;
@@ -605,7 +605,7 @@ end:
             tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
             MATCH_TRANSPORT_DST_PORT_1 << 16;                               \
         }                                                                   \
-    }                                                                       
+    }
 
 #define TX_KEY_PGM(TBL_ID)                                                  \
     key_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_TX_KEY);                  \
@@ -666,7 +666,7 @@ emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
     // Program Tx Keys
     TX_KEY_PGM(1);
 
-end: 
+end:
     return ret;
 }
 
@@ -674,7 +674,7 @@ end:
 //-----------------------------------------------------------------------------
 // DeProgram HW
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 emp_pd_deprogram_hw (pd_gft_emp_t *pd_gft_emp)
 {
     hal_ret_t                               ret = HAL_RET_OK;
@@ -694,7 +694,7 @@ emp_pd_free (pd_gft_emp_t *emp)
 //-----------------------------------------------------------------------------
 // Freeing emp PD memory. Just frees the memory of PD structure.
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 emp_pd_mem_free (pd_gft_emp_t *emp)
 {
     hal::pd::delay_delete_to_slab(HAL_SLAB_GFT_EMP_PD, emp);
@@ -704,7 +704,7 @@ emp_pd_mem_free (pd_gft_emp_t *emp)
 //-----------------------------------------------------------------------------
 // Linking PI <-> PD
 //-----------------------------------------------------------------------------
-static void 
+static void
 link_pi_pd (pd_gft_emp_t *pd_gft_emp, gft_exact_match_profile_t *pi_emp)
 {
     pd_gft_emp->pi_emp = pi_emp;
@@ -714,7 +714,7 @@ link_pi_pd (pd_gft_emp_t *pd_gft_emp, gft_exact_match_profile_t *pi_emp)
 //-----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 //-----------------------------------------------------------------------------
-static void 
+static void
 delink_pi_pd (pd_gft_emp_t *pd_gft_emp, gft_exact_match_profile_t *pi_emp)
 {
     pd_gft_emp->pi_emp = NULL;
@@ -724,7 +724,7 @@ delink_pi_pd (pd_gft_emp_t *pd_gft_emp, gft_exact_match_profile_t *pi_emp)
 //-----------------------------------------------------------------------------
 // Makes a clone
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_gft_emp_make_clone (pd_gft_exact_match_profile_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -750,7 +750,7 @@ end:
 //-----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_gft_emp_mem_free (pd_gft_exact_match_profile_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;

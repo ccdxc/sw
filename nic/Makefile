@@ -187,7 +187,7 @@ sdk:
 
 DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
 #SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function
-SDK_OPTS = --copt=-Wno-unused-function
+#SDK_OPTS = --copt=-Wno-unused-function
 
 pd_iris:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so

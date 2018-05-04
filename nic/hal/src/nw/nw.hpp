@@ -162,7 +162,7 @@ network_cleanup (network_t *network)
     return network_free(network);
 }
 
-static bool
+static inline bool
 network_get_ht_cb (void *ht_entry, void *ctxt)
 {
     hal_handle_id_ht_entry_t *entry      = (hal_handle_id_ht_entry_t *)ht_entry;

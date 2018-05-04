@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#pragma once 
+#pragma once
 
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void
+static void inline
 hal_initialize (const char c_file[])
 {
     char 			cfg_file[32];
@@ -57,7 +57,7 @@ hal_initialize (const char c_file[])
     printf("HAL Initialized\n");
 }
 
-static void
+static void inline
 hal_uninitialize (void)
 {
     // uninitialize HAL

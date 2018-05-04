@@ -22,18 +22,18 @@ static pd_gft_efe_t *efe_pd_init (pd_gft_efe_t *efe);
 static pd_gft_efe_t *efe_pd_alloc_init ();
 static hal_ret_t efe_pd_free (pd_gft_efe_t *efe);
 static hal_ret_t efe_pd_mem_free (pd_gft_efe_t *efe);
-static hal_ret_t efe_pd_alloc_res(pd_gft_efe_t *pd_efe, 
+static hal_ret_t efe_pd_alloc_res(pd_gft_efe_t *pd_efe,
                                   pd_gft_exact_match_flow_entry_args_t *args);
 static hal_ret_t efe_pd_program_hw(pd_gft_efe_t *pd_efe);
 static hal_ret_t efe_pd_deprogram_hw (pd_gft_efe_t *pd_efe);
-static hal_ret_t efe_pd_populate_response(pd_gft_efe_t *pd_efe, 
+static hal_ret_t efe_pd_populate_response(pd_gft_efe_t *pd_efe,
                                           pd_gft_exact_match_flow_entry_args_t *args);
 
 static void link_pi_pd(pd_gft_efe_t *pd_efe, gft_exact_match_flow_entry_t *pi_efe);
 static void delink_pi_pd(pd_gft_efe_t *pd_efe, gft_exact_match_flow_entry_t *pi_efe);
 static hal_ret_t efe_pd_cleanup(pd_gft_efe_t *efe_pd);
-static hal_ret_t pd_efe_make_clone(gft_exact_match_flow_entry_t *efe, 
-                                   gft_exact_match_flow_entry_t *clone);
+static inline hal_ret_t pd_gft_efe_make_clone(
+                        pd_gft_exact_match_flow_entry_make_clone_args_t *args);
 static hal_ret_t efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe);
 static hal_ret_t efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe);
 static hal_ret_t efe_pd_program_tx_transpositions(pd_gft_efe_t *pd_gft_efe);
@@ -103,16 +103,16 @@ pd_gft_exact_match_flow_entry_delete (pd_gft_exact_match_flow_entry_args_t *args
 //-----------------------------------------------------------------------------
 // Allocate resources for PD EFE
 //-----------------------------------------------------------------------------
-static hal_ret_t 
+static hal_ret_t
 efe_pd_alloc_res(pd_gft_efe_t *pd_gft_efe, pd_gft_exact_match_flow_entry_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;
-    
+
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// De-Allocate resources. 
+// De-Allocate resources.
 //-----------------------------------------------------------------------------
 static hal_ret_t
 efe_pd_dealloc_res(pd_gft_efe_t *efe_pd)
@@ -128,7 +128,7 @@ efe_pd_dealloc_res(pd_gft_efe_t *efe_pd)
 //  - Delink PI <-> PD
 //  - Free PD efe
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -245,7 +245,7 @@ efe_pd_program_hw (pd_gft_efe_t *pd_gft_efe)
 end:
     return ret;
 }
-// xpo ## TBL_ID ## _data.actionid = gft_hgxpos->action;               
+// xpo ## TBL_ID ## _data.actionid = gft_hgxpos->action;
 
 #define RX_XPOSITION_DATA(TBL_ID, LAYER)                                    \
     gft_hgxpos = &gft_efe->transpositions[TBL_ID];                          \
@@ -531,10 +531,10 @@ efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
     gft_hdr_group_xposition_t               *gft_hgxpos;
     gft_hdr_group_exact_match_t             *hgem = NULL;
     uint32_t                                num_xpos = 0;
-    rx_hdr_transpositions0_actiondata       xpo0_data = { 0 }; 
-    rx_hdr_transpositions1_actiondata       xpo1_data = { 0 }; 
-    rx_hdr_transpositions2_actiondata       xpo2_data = { 0 }; 
-    rx_hdr_transpositions3_actiondata       xpo3_data = { 0 }; 
+    rx_hdr_transpositions0_actiondata       xpo0_data = { 0 };
+    rx_hdr_transpositions1_actiondata       xpo1_data = { 0 };
+    rx_hdr_transpositions2_actiondata       xpo2_data = { 0 };
+    rx_hdr_transpositions3_actiondata       xpo3_data = { 0 };
     directmap                               *rx_xpos_tbl = NULL;
 
     gft_efe = (gft_exact_match_flow_entry_t *)pd_gft_efe->pi_efe;
@@ -674,11 +674,11 @@ end:
             gft_key.flow_lkp_metadata_tenant_id_ ## LAYER =                 \
             gft_hgem->encap_or_transport.encap.tenant_id;                   \
         }                                                                   \
-    }                                                                       
+    }
 
 
 //-----------------------------------------------------------------------------
-// Program flow 
+// Program flow
 //-----------------------------------------------------------------------------
 static hal_ret_t
 efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe)
@@ -712,7 +712,7 @@ efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe)
     data.flow_index = pd_gft_efe->flow_idx;
     data.policer_index = pd_gft_efe->policer_idx;
 
-    ret = g_hal_state_pd->flow_table()->insert(&gft_key, 
+    ret = g_hal_state_pd->flow_table()->insert(&gft_key,
                                                &data,
                                                &pd_gft_efe->flow_table_idx);
     if (ret != HAL_RET_OK) {
@@ -1193,10 +1193,10 @@ efe_pd_program_tx_transpositions(pd_gft_efe_t *pd_gft_efe)
     gft_hdr_group_xposition_t               *gft_hgxpos;
     gft_hdr_group_exact_match_t             *hgem = NULL;
     uint32_t                                num_xpos = 0;
-    tx_hdr_transpositions0_actiondata       xpo0_data = { 0 }; 
-    tx_hdr_transpositions1_actiondata       xpo1_data = { 0 }; 
-    tx_hdr_transpositions2_actiondata       xpo2_data = { 0 }; 
-    tx_hdr_transpositions3_actiondata       xpo3_data = { 0 }; 
+    tx_hdr_transpositions0_actiondata       xpo0_data = { 0 };
+    tx_hdr_transpositions1_actiondata       xpo1_data = { 0 };
+    tx_hdr_transpositions2_actiondata       xpo2_data = { 0 };
+    tx_hdr_transpositions3_actiondata       xpo3_data = { 0 };
     directmap                               *tx_xpos_tbl = NULL;
 
     gft_efe = (gft_exact_match_flow_entry_t *)pd_gft_efe->pi_efe;
@@ -1353,7 +1353,7 @@ end:
     }                                                                       \
 
 //-----------------------------------------------------------------------------
-// Program Tx flow 
+// Program Tx flow
 //-----------------------------------------------------------------------------
 static hal_ret_t
 efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
@@ -1385,7 +1385,7 @@ efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
     data.flow_index = pd_gft_efe->flow_idx;
     data.policer_index = pd_gft_efe->policer_idx;
 
-    ret = g_hal_state_pd->tx_flow_table()->insert(&gft_key, 
+    ret = g_hal_state_pd->tx_flow_table()->insert(&gft_key,
                                                &data,
                                                &pd_gft_efe->flow_table_idx);
     if (ret != HAL_RET_OK) {
@@ -1403,7 +1403,7 @@ end:
 // Populate response
 //-----------------------------------------------------------------------------
 hal_ret_t
-efe_pd_populate_response(pd_gft_efe_t *pd_efe, 
+efe_pd_populate_response(pd_gft_efe_t *pd_efe,
                          pd_gft_exact_match_flow_entry_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -1423,7 +1423,7 @@ end:
 //-----------------------------------------------------------------------------
 // DeProgram HW
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 efe_pd_deprogram_hw (pd_gft_efe_t *pd_gft_efe)
 {
     hal_ret_t                               ret = HAL_RET_OK;
@@ -1453,7 +1453,7 @@ efe_pd_mem_free (pd_gft_efe_t *efe)
 //-----------------------------------------------------------------------------
 // Linking PI <-> PD
 //-----------------------------------------------------------------------------
-static void 
+static void
 link_pi_pd (pd_gft_efe_t *pd_gft_efe, gft_exact_match_flow_entry_t *pi_efe)
 {
     pd_gft_efe->pi_efe = pi_efe;
@@ -1463,7 +1463,7 @@ link_pi_pd (pd_gft_efe_t *pd_gft_efe, gft_exact_match_flow_entry_t *pi_efe)
 //-----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 //-----------------------------------------------------------------------------
-static void 
+static void
 delink_pi_pd (pd_gft_efe_t *pd_gft_efe, gft_exact_match_flow_entry_t *pi_efe)
 {
     pd_gft_efe->pi_efe = NULL;
@@ -1473,7 +1473,7 @@ delink_pi_pd (pd_gft_efe_t *pd_gft_efe, gft_exact_match_flow_entry_t *pi_efe)
 //-----------------------------------------------------------------------------
 // Makes a clone
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_gft_efe_make_clone (pd_gft_exact_match_flow_entry_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -1499,7 +1499,7 @@ end:
 //-----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_gft_efe_mem_free (pd_gft_exact_match_flow_entry_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;

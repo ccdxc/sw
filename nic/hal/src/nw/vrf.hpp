@@ -122,7 +122,9 @@ uint32_t vrf_id_compute_hash_func(void *key, uint32_t ht_size);
 bool vrf_id_compare_key_func(void *key1, void *key2);
 vrf_t *vrf_lookup_by_id(vrf_id_t tid);
 vrf_t *vrf_lookup_key_or_handle(const VrfKeyHandle& kh);
-const char *vrf_lookup_key_or_handle_to_str (const VrfKeyHandle& key_handle);
+const char *vrf_keyhandle_to_str (const VrfKeyHandle& key_handle);
+const char *vrf_to_str (vrf_t *vrf);
+void vrf_spec_dump (VrfSpec& spec);
 
 
 hal_ret_t vrf_create(vrf::VrfSpec& spec, vrf::VrfResponse *rsp);

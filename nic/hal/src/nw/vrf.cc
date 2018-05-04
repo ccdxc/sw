@@ -237,22 +237,6 @@ vrf_del_from_db (vrf_t *vrf)
 }
 
 
-//-----------------------------------------------------------------------------
-// print vrf spec
-//-----------------------------------------------------------------------------
-static inline void
-vrf_spec_dump (VrfSpec& spec)
-{
-    std::string    vrf_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &vrf_cfg);
-    HAL_TRACE_DEBUG("VRF configuration:");
-    HAL_TRACE_DEBUG("{}", vrf_cfg.c_str());
-}
-
 //------------------------------------------------------------------------------
 // validate an incoming vrf create request
 // TODO:
@@ -1157,29 +1141,6 @@ vrf_lookup_key_or_handle (const VrfKeyHandle& kh)
 }
 
 //------------------------------------------------------------------------------
-// Lookup vrf from key or handle to str
-//------------------------------------------------------------------------------
-const char *
-vrf_lookup_key_or_handle_to_str (const VrfKeyHandle& key_handle)
-{
-	static thread_local char       if_str[4][50];
-	static thread_local uint8_t    if_str_next = 0;
-	char                           *buf;
-
-	buf = if_str[if_str_next++ & 0x3];
-	memset(buf, 0, 50);
-
-    if (key_handle.key_or_handle_case() == VrfKeyHandle::kVrfId) {
-		snprintf(buf, 50, "vrf_id: %lu", key_handle.vrf_id());
-    }
-    if (key_handle.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
-		snprintf(buf, 50, "vrf_handle: 0x%lx", key_handle.vrf_handle());
-    }
-
-	return buf;
-}
-
-//------------------------------------------------------------------------------
 // 1. PD Call to delete PD and free up resources and deprogram HW
 //------------------------------------------------------------------------------
 static hal_ret_t
@@ -1674,6 +1635,64 @@ vrf_restore_cb (void *obj, uint32_t len)
     }
     vrf_restore_commit(vrf, vrf_info);
     return 0;    // TODO: fix me
+}
+
+//------------------------------------------------------------------------------
+// Lookup vrf from key or handle to str
+//------------------------------------------------------------------------------
+const char *
+vrf_keyhandle_to_str (const VrfKeyHandle& key_handle)
+{
+	static thread_local char       if_str[4][50];
+	static thread_local uint8_t    if_str_next = 0;
+	char                           *buf;
+
+	buf = if_str[if_str_next++ & 0x3];
+	memset(buf, 0, 50);
+
+    if (key_handle.key_or_handle_case() == VrfKeyHandle::kVrfId) {
+		snprintf(buf, 50, "vrf_id: %lu", key_handle.vrf_id());
+    }
+    if (key_handle.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
+		snprintf(buf, 50, "vrf_handle: 0x%lx", key_handle.vrf_handle());
+    }
+
+	return buf;
+}
+
+//------------------------------------------------------------------------------
+// PI vrf to str
+//------------------------------------------------------------------------------
+const char *
+vrf_to_str (vrf_t *vrf)
+{
+    static thread_local char       vrf_str[4][50];
+    static thread_local uint8_t    vrf_str_next = 0;
+    char                           *buf;
+
+    buf = vrf_str[vrf_str_next++ & 0x3];
+    memset(buf, 0, 50);
+    if (vrf) {
+        snprintf(buf, 50, "vrf(id: %lu, handle: %lu)",
+                 vrf->vrf_id, vrf->hal_handle);
+    }
+    return buf;
+}
+
+//-----------------------------------------------------------------------------
+// print vrf spec
+//-----------------------------------------------------------------------------
+void
+vrf_spec_dump (VrfSpec& spec)
+{
+    std::string    vrf_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &vrf_cfg);
+    HAL_TRACE_DEBUG("VRF configuration:");
+    HAL_TRACE_DEBUG("{}", vrf_cfg.c_str());
 }
 
 }    // namespace hal

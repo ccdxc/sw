@@ -157,7 +157,7 @@ hal_ret_t lif_update_trigger_if(lif_t *lif,
                                 bool vlan_insert_en);
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
-static inline void lif_spec_dump (LifSpec& spec);
+void lif_spec_dump (LifSpec& spec);
 
 // SVC APIs
 hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
