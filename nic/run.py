@@ -127,7 +127,7 @@ def run_rtl(args):
     os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]
 
     if args.port_mode == 'nomac':
-        model_test = "core_basic_dol"
+        model_test = "core_basic_dol_2x100_ahbm"
     elif args.port_mode == '2x100':
         model_test = "core_basic_dol_2x100"
     elif args.port_mode == '8x25':
