@@ -1377,10 +1377,9 @@ nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
     }
 
     // look up for the NAT pool
-    pool = find_nat_pool(vrf->vrf_id, spec.nat_pool());
+    pool = find_nat_pool_by_key_or_handle(spec.nat_pool());
     if (!pool) {
-        HAL_TRACE_ERR("NAT pool ({}, {}) not found",
-                      vrf->vrf_id,
+        HAL_TRACE_ERR("NAT pool {} not found",
                       spec.nat_pool().has_pool_key() ?
                           spec.nat_pool().pool_key().pool_id() :
                           spec.nat_pool().pool_handle());

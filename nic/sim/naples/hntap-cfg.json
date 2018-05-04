@@ -8,7 +8,7 @@
   {
     "name"    : "pen-intf2",
     "local"   : false,
-    "port"    : 3,
+    "port"    : 2,
     "lif_id"  : 0
   }
 ]
