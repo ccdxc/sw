@@ -1760,6 +1760,7 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 						},
 					},
 				},
+				NhKeyOrHandle: nextHopKey,
 			},
 		},
 	}
