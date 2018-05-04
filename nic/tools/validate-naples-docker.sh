@@ -57,8 +57,8 @@ function create_routes {
 function create_nat_pools {
   NAT_POOL_URL="$NAPLES_AGENT_IP:9007/api/natpools/"
 
-  curl -d'{"kind":"NatPool","meta":{"name":"kg1-natpool","tenant":"default","namespace":"kg1"},"spec":{"ip-range":"10.1.2.1-10.1.2.200"}}' -X POST -H "Content-Type: application/json" $NAT_POOL_URL
-  validate_get "kg1-natpool" $NAT_POOL_URL
+  curl -d'{"kind":"NatPool","meta":{"name":"kg1-pool-1","tenant":"default","namespace":"kg1"},"spec":{"ip-range":"10.1.2.1-10.1.2.200"}}' -X POST -H "Content-Type: application/json" $NAT_POOL_URL
+  validate_get "kg1-pool-1" $NAT_POOL_URL
 
   echo "All NatPools created"
 }
@@ -66,8 +66,8 @@ function create_nat_pools {
 function create_nat_policies {
   NAT_POLICY_URL="$NAPLES_AGENT_IP:9007/api/natpolicies/"
 
-  curl -d'{"kind":"NatPolicy","meta":{"name":"testNatPolicy","tenant":"default","namespace":"kg1"},"spec":{"rules":[{"from":{"match-type":"IPRange","match":"10.0.0.0 - 10.0.1.0"},"to":{"match-type":"IPRange","match":"192.168.0.0 - 192.168.1.1"},"protocol":"","from-port":"","to-port":"","nat-pool":"preCreatedNatPool","action":"SNAT"}]},"status":{}}' -X POST -H "Content-Type: application/json" $NAT_POLICY_URL
-  validate_get "testNatPolicy" $NAT_POLICY_URL
+  curl -d'{"kind":"NatPolicy","meta":{"name":"kg1-nat-policy","tenant":"default","namespace":"kg2"},"spec":{"rules":[{"nat-pool":"kg1/pool-1","action":"SNAT"}]}}' -X POST -H "Content-Type: application/json" $NAT_POLICY_URL
+  validate_get "kg1-nat-policy" $NAT_POLICY_URL
 
   echo  "All NatPolicies created"
 }
@@ -75,7 +75,7 @@ function create_nat_policies {
 function create_nat_bindings {
   NAT_BINDING_URL="$NAPLES_AGENT_IP:9007/api/natbindings/"
 
-  curl -d'{"Kind":"NatBinding","meta":{"Name":"kg2","Tenant":"default","Namespace":"default"}, "spec":{"nat-pool":"kg1/kg1-natpool", "ip-address":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $NAT_BINDING_URL
+  curl -d'{"Kind":"NatBinding","meta":{"Name":"kg2","Tenant":"default","Namespace":"default"}, "spec":{"nat-pool":"kg1/kg1-pool-1", "ip-address":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $NAT_BINDING_URL
   validate_get "kg1" $NAT_BINDING_URL
 
   echo "All Nat Bindings created"
