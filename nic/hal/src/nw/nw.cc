@@ -1053,8 +1053,6 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     NetworkGetResponse    *response;
     hal_ret_t             ret = HAL_RET_OK;
 
-    response = rsp->add_response();
-
     if (req.has_key_or_handle()) {
         auto kh = req.key_or_handle();
         if (kh.key_or_handle_case() == NetworkKeyHandle::kNwKey) {
@@ -1080,6 +1078,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
                        NetworkKeyHandle::kNwHandle) {
             nw = find_network_by_handle(kh.nw_handle());
         } else {
+            response = rsp->add_response();
             response->set_api_status(types::API_STATUS_INVALID_ARG);
 	        HAL_API_STATS_INC(HAL_API_NETWORK_GET_FAIL);
             return HAL_RET_INVALID_ARG;
@@ -1089,6 +1088,8 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
         HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
         return HAL_RET_OK;
     }
+
+    response = rsp->add_response();
 
     if (nw == NULL) {
         response->set_api_status(types::API_STATUS_NOT_FOUND);

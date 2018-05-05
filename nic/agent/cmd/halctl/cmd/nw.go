@@ -106,10 +106,10 @@ func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func nwShowHeader() {
-	hdrLine := strings.Repeat("-", 60)
+	hdrLine := strings.Repeat("-", 86)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-24s%-24s\n",
-		"VrfId", "NWHandle", "Router MAC", "SGHandle")
+	fmt.Printf("%-10s%-10s%-18s%-24s%-24s\n",
+		"VrfId", "NWHandle", "GatewayIP", "Router MAC", "SGHandle")
 	fmt.Println(hdrLine)
 }
 
@@ -129,9 +129,10 @@ func nwShowOneResp(resp *halproto.NetworkGetResponse) {
 		}
 	}
 
-	fmt.Printf("%-10d%-10d%-24s%-24s\n",
+	fmt.Printf("%-10d%-10d%-18s%-24s%-24s\n",
 		spec.GetKeyOrHandle().GetNwKey().GetVrfKeyHandle().GetVrfId(),
 		status.GetNwHandle(),
+		utils.IPAddrToStr(spec.GetGatewayIp()),
 		utils.MactoStr(spec.GetRmac()),
 		sgKhStr)
 }
