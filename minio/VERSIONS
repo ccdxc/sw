@@ -2,6 +2,6 @@
 third_party_libs 1.1.48
 lkl_libs 1.1.2
 openssl_libs 1.1.0
-asic_libs d94c35405012018
-ncc_tools d94c35405012018
-pbc_config d94c35405012018
+asic_libs 870a14a
+ncc_tools 870a14a
+pbc_config 870a14a
