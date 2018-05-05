@@ -11,16 +11,18 @@ cc_library(
     ],
     includes = [
         "include",
-        "src/sim"
+        "src/sim",
+        "src/osal"
     ],
     deps = [ "//nic:openssl-native" ],
     copts = [
         "-xc"
     ],
     hdrs = [
-        "include/pnso_sim_api.h",
+        "include/pnso_api.h",
         "include/pnso_wafl.h"
     ],
+    alwayslink = 1
 )
 
 cc_library(

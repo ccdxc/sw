@@ -1,4 +1,7 @@
 
+#define WAFL_WPBH_MAGIC 0x12345678
+#define WAFL_WPBH_VERSION 1
+
 typedef struct wafl_packed_blk_header_s {
 	uint32_t wpbh_magic;
 	uint32_t wpbh_version:4;
