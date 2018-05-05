@@ -219,6 +219,14 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 			Interface: "default-uplink-1",
 		},
 	}
+
+	err = nagent.CreateRoute(&rt)
+	if err != nil {
+		log.Errorf("Failed to create Route. {%v}", rt)
+		return
+
+	}
+
 	nb := netproto.NatBinding{
 		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
 		ObjectMeta: api.ObjectMeta{
@@ -238,11 +246,92 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 		return
 	}
 
-	err = nagent.CreateRoute(&rt)
+	ipSecEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+		},
+	}
+	err = nagent.CreateIPSecSAEncrypt(&ipSecEncrypt)
 	if err != nil {
-		log.Errorf("Failed to create Route. {%v}", rt)
+		log.Errorf("Failed to create IPSec Encrypt SA. {%v}", ns)
 		return
+	}
 
+	ipSecDecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedIPSecSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			DecryptAlgo:   "AES_GCM_256",
+			DecryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+		},
+	}
+	err = nagent.CreateIPSecSADecrypt(&ipSecDecrypt)
+	if err != nil {
+		log.Errorf("Failed to create IPSec Decrypt SA. {%v}", ns)
+		return
+	}
+
+	ipSecPolicy := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedIPSecPolicy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.1 - 192.168.1.0",
+					},
+					SAName: "preCreatedIPSecSAEncrypt",
+					SAType: "ENCRYPT",
+				},
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.1 - 192.168.1.0",
+					},
+					SAName: "preCreatedIPSecSADecrypt",
+					SAType: "DECRYPT",
+				},
+			},
+		},
+	}
+	err = nagent.CreateIPSecPolicy(&ipSecPolicy)
+	if err != nil {
+		log.Errorf("Failed to create IPSec Policy. {%v}", ns)
+		return
 	}
 
 	lif := netproto.Interface{

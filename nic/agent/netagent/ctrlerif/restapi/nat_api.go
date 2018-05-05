@@ -20,21 +20,21 @@ import (
 // addNatBindingAPIRoutes adds NatBinding routes
 func addNatBindingAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natbindingListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listNatBindingHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natbindingPostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNatBindingHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natbindingPutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNatBindingHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natbindingDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNatBindingHandler))
 
 }
 
-func (s *RestServer) natbindingListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listNatBindingHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListNatBinding(), nil
 }
 
-func (s *RestServer) natbindingPostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postNatBindingHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -46,7 +46,7 @@ func (s *RestServer) natbindingPostHandler(r *http.Request) (interface{}, error)
 
 }
 
-func (s *RestServer) natbindingPutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putNatBindingHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -58,7 +58,7 @@ func (s *RestServer) natbindingPutHandler(r *http.Request) (interface{}, error) 
 
 }
 
-func (s *RestServer) natbindingDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteNatBindingHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -73,21 +73,21 @@ func (s *RestServer) natbindingDeleteHandler(r *http.Request) (interface{}, erro
 // addNatPolicyAPIRoutes adds NatPolicy routes
 func addNatPolicyAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natpolicyListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listNatPolicyHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natpolicyPostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNatPolicyHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natpolicyPutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNatPolicyHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natpolicyDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNatPolicyHandler))
 
 }
 
-func (s *RestServer) natpolicyListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listNatPolicyHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListNatPolicy(), nil
 }
 
-func (s *RestServer) natpolicyPostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postNatPolicyHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -99,7 +99,7 @@ func (s *RestServer) natpolicyPostHandler(r *http.Request) (interface{}, error) 
 
 }
 
-func (s *RestServer) natpolicyPutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putNatPolicyHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -111,7 +111,7 @@ func (s *RestServer) natpolicyPutHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) natpolicyDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteNatPolicyHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -126,21 +126,21 @@ func (s *RestServer) natpolicyDeleteHandler(r *http.Request) (interface{}, error
 // addNatPoolAPIRoutes adds NatPool routes
 func addNatPoolAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natpoolListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listNatPoolHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natpoolPostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNatPoolHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natpoolPutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNatPoolHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natpoolDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNatPoolHandler))
 
 }
 
-func (s *RestServer) natpoolListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listNatPoolHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListNatPool(), nil
 }
 
-func (s *RestServer) natpoolPostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postNatPoolHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -152,7 +152,7 @@ func (s *RestServer) natpoolPostHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) natpoolPutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putNatPoolHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -164,7 +164,7 @@ func (s *RestServer) natpoolPutHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) natpoolDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteNatPoolHandler(r *http.Request) (interface{}, error) {
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

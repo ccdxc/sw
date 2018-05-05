@@ -20,11 +20,11 @@ import (
             {{$methods := .Methods}}
             {{range $methods}}
                 {{if strEq . "list"}}
-                    r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{lower $crudObject}}{{title .}}Handler))
+                    r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{lower .}}{{title $crudObject}}Handler))
                 {{else if strEq . "post"}}
-                    r.Methods("{{upper .}}").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{lower $crudObject}}{{title .}}Handler))
+                    r.Methods("{{upper .}}").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{lower .}}{{title $crudObject}}Handler))
                 {{else}}
-                    r.Methods("{{upper .}}").Subrouter().HandleFunc("{{$pattern}}", httputils.MakeHTTPHandler(srv.{{ lower $crudObject}}{{title .}}Handler))
+                    r.Methods("{{upper .}}").Subrouter().HandleFunc("{{$pattern}}", httputils.MakeHTTPHandler(srv.{{ lower .}}{{title $crudObject}}Handler))
                 {{end}}
             {{end}}
             }
@@ -35,11 +35,11 @@ import (
            {{$methods := .Methods}}
            {{range $methods}}
                 {{if strEq . "list"}}
-                    func (s *RestServer) {{lower $crudObject}}{{title .}}Handler(r *http.Request) (interface{}, error){
+                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
                         return s.agent.List{{title $crudObject}}(), nil
                     }
                 {{else if and (strEq $crudObject "Endpoint") (strEq . "post")}}
-                    func (s *RestServer) {{lower $crudObject}}{{title .}}Handler(r *http.Request) (interface{}, error){
+                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
                         var o netproto.{{title $crudObject}}
                         b, _ := ioutil.ReadAll(r.Body)
                         err := json.Unmarshal(b, &o)
@@ -50,7 +50,7 @@ import (
                         return nil, err
                     }
                 {{else}}
-                    func (s *RestServer) {{lower $crudObject}}{{title .}}Handler(r *http.Request) (interface{}, error){
+                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
                         var o netproto.{{title $crudObject}}
                         b, _ := ioutil.ReadAll(r.Body)
                         err := json.Unmarshal(b, &o)

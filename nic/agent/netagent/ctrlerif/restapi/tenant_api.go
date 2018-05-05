@@ -20,21 +20,21 @@ import (
 // addTenantAPIRoutes adds Tenant routes
 func addTenantAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.tenantListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listTenantHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.tenantPostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postTenantHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}", httputils.MakeHTTPHandler(srv.tenantDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}", httputils.MakeHTTPHandler(srv.deleteTenantHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}", httputils.MakeHTTPHandler(srv.tenantPutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}", httputils.MakeHTTPHandler(srv.putTenantHandler))
 
 }
 
-func (s *RestServer) tenantListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listTenantHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListTenant(), nil
 }
 
-func (s *RestServer) tenantPostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postTenantHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -46,7 +46,7 @@ func (s *RestServer) tenantPostHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) tenantDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteTenantHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -58,7 +58,7 @@ func (s *RestServer) tenantDeleteHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) tenantPutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putTenantHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

@@ -20,21 +20,21 @@ import (
 // addInterfaceAPIRoutes adds Interface routes
 func addInterfaceAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.interfaceListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listInterfaceHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.interfacePostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postInterfaceHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Interface}", httputils.MakeHTTPHandler(srv.interfaceDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Interface}", httputils.MakeHTTPHandler(srv.deleteInterfaceHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Interface}", httputils.MakeHTTPHandler(srv.interfacePutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Interface}", httputils.MakeHTTPHandler(srv.putInterfaceHandler))
 
 }
 
-func (s *RestServer) interfaceListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listInterfaceHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListInterface(), nil
 }
 
-func (s *RestServer) interfacePostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postInterfaceHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -46,7 +46,7 @@ func (s *RestServer) interfacePostHandler(r *http.Request) (interface{}, error) 
 
 }
 
-func (s *RestServer) interfaceDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteInterfaceHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -58,7 +58,7 @@ func (s *RestServer) interfaceDeleteHandler(r *http.Request) (interface{}, error
 
 }
 
-func (s *RestServer) interfacePutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putInterfaceHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

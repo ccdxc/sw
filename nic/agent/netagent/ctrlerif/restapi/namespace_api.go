@@ -20,21 +20,21 @@ import (
 // addNamespaceAPIRoutes adds Namespace routes
 func addNamespaceAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.namespaceListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listNamespaceHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.namespacePostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNamespaceHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}", httputils.MakeHTTPHandler(srv.namespaceDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}", httputils.MakeHTTPHandler(srv.deleteNamespaceHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}", httputils.MakeHTTPHandler(srv.namespacePutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}", httputils.MakeHTTPHandler(srv.putNamespaceHandler))
 
 }
 
-func (s *RestServer) namespaceListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listNamespaceHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListNamespace(), nil
 }
 
-func (s *RestServer) namespacePostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postNamespaceHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -46,7 +46,7 @@ func (s *RestServer) namespacePostHandler(r *http.Request) (interface{}, error) 
 
 }
 
-func (s *RestServer) namespaceDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -58,7 +58,7 @@ func (s *RestServer) namespaceDeleteHandler(r *http.Request) (interface{}, error
 
 }
 
-func (s *RestServer) namespacePutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putNamespaceHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

@@ -20,21 +20,21 @@ import (
 // addSecurityGroupAPIRoutes adds SecurityGroup routes
 func addSecurityGroupAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.securitygroupListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listSecurityGroupHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.securitygroupPostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postSecurityGroupHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.securitygroupPutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putSecurityGroupHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.securitygroupDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteSecurityGroupHandler))
 
 }
 
-func (s *RestServer) securitygroupListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listSecurityGroupHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListSecurityGroup(), nil
 }
 
-func (s *RestServer) securitygroupPostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postSecurityGroupHandler(r *http.Request) (interface{}, error) {
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -46,7 +46,7 @@ func (s *RestServer) securitygroupPostHandler(r *http.Request) (interface{}, err
 
 }
 
-func (s *RestServer) securitygroupPutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putSecurityGroupHandler(r *http.Request) (interface{}, error) {
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -58,7 +58,7 @@ func (s *RestServer) securitygroupPutHandler(r *http.Request) (interface{}, erro
 
 }
 
-func (s *RestServer) securitygroupDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteSecurityGroupHandler(r *http.Request) (interface{}, error) {
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

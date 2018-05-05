@@ -20,21 +20,21 @@ import (
 // addNetworkAPIRoutes adds Network routes
 func addNetworkAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.networkListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listNetworkHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.networkPostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNetworkHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.networkPutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNetworkHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.networkDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNetworkHandler))
 
 }
 
-func (s *RestServer) networkListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listNetworkHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListNetwork(), nil
 }
 
-func (s *RestServer) networkPostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postNetworkHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Network
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -46,7 +46,7 @@ func (s *RestServer) networkPostHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) networkPutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putNetworkHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Network
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -58,7 +58,7 @@ func (s *RestServer) networkPutHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) networkDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteNetworkHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Network
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

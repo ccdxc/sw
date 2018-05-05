@@ -20,21 +20,21 @@ import (
 // addRouteAPIRoutes adds Route routes
 func addRouteAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.routeListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listRouteHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.routePostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postRouteHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.routeDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteRouteHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.routePutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putRouteHandler))
 
 }
 
-func (s *RestServer) routeListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listRouteHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListRoute(), nil
 }
 
-func (s *RestServer) routePostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postRouteHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -46,7 +46,7 @@ func (s *RestServer) routePostHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) routeDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteRouteHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -58,7 +58,7 @@ func (s *RestServer) routeDeleteHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) routePutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putRouteHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

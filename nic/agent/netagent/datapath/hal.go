@@ -1893,6 +1893,51 @@ func (hd *Datapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Names
 	return nil
 }
 
+// CreateIPSecPolicy creates an IPSec Policy in the datapath
+func (hd *Datapath) CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+	return nil
+}
+
+// UpdateIPSecPolicy updates an IPSec Policy in the datapath
+func (hd *Datapath) UpdateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+	return nil
+}
+
+// DeleteIPSecPolicy deletes an IPSec Policy in the datapath
+func (hd *Datapath) DeleteIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+	return nil
+}
+
+// CreateIPSecSAEncrypt creates an IPSecSA encrypt rule in the datapath
+func (hd *Datapath) CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+	return nil
+}
+
+// UpdateIPSecSAEncrypt updates an IPSecSA encrypt rule in the datapath
+func (hd *Datapath) UpdateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+	return nil
+}
+
+// DeleteIPSecSAEncrypt deletes an IPSecSA encrypt rule in the datapath
+func (hd *Datapath) DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+	return nil
+}
+
+// CreateIPSecSADecrypt creates an IPSecSA decrypt rule in the datapath
+func (hd *Datapath) CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+	return nil
+}
+
+// UpdateIPSecSADecrypt updates an IPSecSA decrypt rule in the datapath
+func (hd *Datapath) UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+	return nil
+}
+
+// DeleteIPSecSADecrypt deletes an IPSecSA decrypt rule in the datapath
+func (hd *Datapath) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+	return nil
+}
+
 // ListInterfaces returns the lisg of lifs and uplinks from the datapath
 func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
 	if hd.Kind == "hal" {

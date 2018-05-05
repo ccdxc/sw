@@ -317,6 +317,81 @@ func (ag *fakeAgent) DeleteNatBinding(np *netproto.NatBinding) error {
 	return nil
 }
 
+// CreateIPSecPolicy creates a IPSec Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateIPSecPolicy(np *netproto.IPSecPolicy) error {
+	return nil
+}
+
+// FindIPSecPolicy finds a IPSec Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy, error) {
+	return nil, nil
+}
+
+// ListIPSecPolicy lists a IPSec Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListIPSecPolicy() []*netproto.IPSecPolicy {
+	return nil
+}
+
+// UpdateIPSecPolicy updates a IPSec Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateIPSecPolicy(np *netproto.IPSecPolicy) error {
+	return nil
+}
+
+// DeleteIPSecPolicy deletes a IPSec Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteIPSecPolicy(np *netproto.IPSecPolicy) error {
+	return nil
+}
+
+// CreateIPSecSAEncrypt creates a IPSec SA Encrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt) error {
+	return nil
+}
+
+// FindIPSecSAEncrypt finds a IPSec SA Encrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEncrypt, error) {
+	return nil, nil
+}
+
+// ListIPSecSAEncrypt lists a IPSec SA Encrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt {
+	return nil
+}
+
+// UpdateIPSecSAEncrypt updates a IPSec SA Encrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt) error {
+	return nil
+}
+
+// DeleteIPSecSAEncrypt deletes a IPSec SA Encrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt) error {
+	return nil
+}
+
+// CreateIPSecSADecrypt creates a IPSec SA Decrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt) error {
+	return nil
+}
+
+// FindIPSecSADecrypt finds a IPSec SA Decrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindIPSecSADecrypt(meta api.ObjectMeta) (*netproto.IPSecSADecrypt, error) {
+	return nil, nil
+}
+
+// ListIPSecSADecrypt lists a IPSec SA Decrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListIPSecSADecrypt() []*netproto.IPSecSADecrypt {
+	return nil
+}
+
+// UpdateIPSecSADecrypt updates a IPSec SA Decrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt) error {
+	return nil
+}
+
+// DeleteIPSecSADecrypt deletes a IPSec SA Decrypt. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

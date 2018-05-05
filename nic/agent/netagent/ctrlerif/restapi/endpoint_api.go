@@ -20,21 +20,21 @@ import (
 // addEndpointAPIRoutes adds Endpoint routes
 func addEndpointAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.endpointListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listEndpointHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.endpointPostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postEndpointHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.endpointPutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putEndpointHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.endpointDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteEndpointHandler))
 
 }
 
-func (s *RestServer) endpointListHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) listEndpointHandler(r *http.Request) (interface{}, error) {
 	return s.agent.ListEndpoint(), nil
 }
 
-func (s *RestServer) endpointPostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postEndpointHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -45,7 +45,7 @@ func (s *RestServer) endpointPostHandler(r *http.Request) (interface{}, error) {
 	return nil, err
 }
 
-func (s *RestServer) endpointPutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putEndpointHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -57,7 +57,7 @@ func (s *RestServer) endpointPutHandler(r *http.Request) (interface{}, error) {
 
 }
 
-func (s *RestServer) endpointDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteEndpointHandler(r *http.Request) (interface{}, error) {
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)

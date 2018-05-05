@@ -104,32 +104,28 @@ message IPSecSAEncrypt {
 
 // IPSecSAEncryptSpec
 message IPSecSAEncryptSpec {
-
-    // Name of the IPSec SA Encrypt Request
-    string Name             = 1 [(gogoproto.jsontag) = "name, omitempty"];
-
     // SA Encrypt protocol
-    string Protocol         = 2 [(venice.check) = "StrEnum(Protocol.Type)",
+    string Protocol         = 1 [(venice.check) = "StrEnum(Protocol.Type)",
                                  (gogoproto.jsontag) = "protocol,omitempty"];
     // SA Encrypt Auth Algorithm
-    string AuthAlgo         = 3 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
+    string AuthAlgo         = 2 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
                                  (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
 
     // Authentication Key
-    string AuthKey          = 4 [(gogoproto.jsontag) = "authentication-key, omitempty"];
+    string AuthKey          = 3 [(gogoproto.jsontag) = "authentication-key, omitempty"];
 
     // SA Encrypt Algorithm
-    string EncryptAlgo      = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+    string EncryptAlgo      = 4 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
                                  (gogoproto.jsontag) = "encryption-algorithm,omitempty"];
 
     // Encryption Key
-    string EncryptionKey    = 6 [(gogoproto.jsontag) = "encryption-key,omitempty"];
+    string EncryptionKey    = 5 [(gogoproto.jsontag) = "encryption-key,omitempty"];
 
     // Local Gateway IP
-    string LocalGwIP        = 7 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
+    string LocalGwIP        = 6 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
 
     // Remote Gateway IP
-    string RemoteGwIP       = 8 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+    string RemoteGwIP       = 7 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
 
 }
 
@@ -210,41 +206,38 @@ message IPSecSADecrypt {
 // IPSecSADecryptSpec
 message IPSecSADecryptSpec {
 
-    // Name of the IPSec SA Decrypt Request
-    string Name                 = 1 [(gogoproto.jsontag) = "name, omitempty"];
-
     // SA Decrypt protocol
-    string Protocol             = 2 [(venice.check) = "StrEnum(Protocol.Type)",
+    string Protocol             = 1 [(venice.check) = "StrEnum(Protocol.Type)",
                                      (gogoproto.jsontag) = "protocol,omitempty"];
     // SA Decrypt Auth Algorithm
-    string AuthAlgo             = 3 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
+    string AuthAlgo             = 2 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
                                      (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
 
     // Authentication Key
-    string AuthKey              = 4 [(gogoproto.jsontag) = "authentication-key, omitempty"];
+    string AuthKey              = 3 [(gogoproto.jsontag) = "authentication-key, omitempty"];
 
     // SA Decrypt Algorithm
-    string DecryptAlgo          = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+    string DecryptAlgo          = 4 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
                                      (gogoproto.jsontag) = "decryption-algorithm,omitempty"];
 
     // Rekey Decrypt Algorithm
-    string RekeyDecryptAlgo     = 6 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+    string RekeyDecryptAlgo     = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
                                      (gogoproto.jsontag) = "rekey-decryption-algorithm,omitempty"];
 
     // Decryption Key
-    string DecryptionKey        = 7 [(gogoproto.jsontag) = "decryption-key,omitempty"];
+    string DecryptionKey        = 6 [(gogoproto.jsontag) = "decryption-key,omitempty"];
 
     // Rekey Auth Key
-    string RekeyAuthKey         = 8 [(gogoproto.jsontag) = "rekey-auth-key,omitempty"];
+    string RekeyAuthKey         = 7 [(gogoproto.jsontag) = "rekey-auth-key,omitempty"];
 
     // Rekey Decryption Key
-    string RekeyDecryptionKey   = 9 [(gogoproto.jsontag) = "rekey-decryption-key,omitempty"];
+    string RekeyDecryptionKey   = 8 [(gogoproto.jsontag) = "rekey-decryption-key,omitempty"];
 
     // Local Gateway IP
-    string LocalGwIP            = 10 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
+    string LocalGwIP            = 9 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
 
     // Remote Gateway IP
-    string RemoteGwIP           = 11 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+    string RemoteGwIP           = 10 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
 
 }
 
