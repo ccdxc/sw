@@ -32,9 +32,6 @@ tls_enc_rx_serq_process:
     phvwr.c1    p.ccm_header_with_aad_B_0_nonce_salt, d.salt
     CAPRI_OPERAND_DEBUG(d.salt)
 
-    addi            r5, r0, TLS_PHV_DMA_COMMANDS_START
-    phvwr           p.p4_txdma_intr_dma_cmd_ptr, r5
-
     /* TODO: Verify queue full condition */
 
     add             r5, r0, d.recq_pi
@@ -43,7 +40,7 @@ tls_enc_rx_serq_process:
 
     phvwr           p.bsq_slot_desc, k.to_s2_idesc
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r4, bsq_slot_desc, bsq_slot_desc)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_bsq_slot_dma_cmd, r4, bsq_slot_desc, bsq_slot_desc)
 
     tblmincri       d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
 

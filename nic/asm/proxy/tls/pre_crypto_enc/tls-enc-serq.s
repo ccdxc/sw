@@ -26,6 +26,7 @@ tls_enc_pre_crypto_process:
     phvwr       p.to_s4_debug_dol, d.u.read_tls_stg0_d.debug_dol
 
     phvwr       p.to_s3_debug_dol, d.u.read_tls_stg0_d.debug_dol
+    phvwr       p.to_s1_debug_dol, d.u.read_tls_stg0_d.debug_dol
     CAPRI_OPERAND_DEBUG(d.u.read_tls_stg0_d.debug_dol)
 
     /*

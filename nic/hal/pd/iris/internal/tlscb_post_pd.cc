@@ -18,7 +18,7 @@ namespace pd {
 hal_ret_t 
 p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
 {
-    tx_table_s7_t2_d                   data = {0};
+    tx_table_s7_t3_d                   data = {0};
     hal_ret_t                          ret = HAL_RET_OK;
 
     // hardware index for this entry

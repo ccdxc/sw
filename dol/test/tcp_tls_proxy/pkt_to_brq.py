@@ -122,7 +122,10 @@ def TestCaseVerify(tc):
         print("enc_requests not as expected %d %d" %(tlscb_cur.enc_requests, tlscb.enc_requests))
         return False
 
-    if (tlscb_cur.pre_debug_stage0_7_thread != 0x157711):
+    # Assumes bypass Barco
+    stage0_7_thread = 0x151111
+
+    if (tlscb_cur.pre_debug_stage0_7_thread != stage0_7_thread):
         print("pre_debug_stage0_7_thread not as expected %x" % tlscb_cur.pre_debug_stage0_7_thread)
         return False
 
@@ -158,39 +161,7 @@ def TestCaseVerify(tc):
         return False
     print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
 
-    # 6. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
-        print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
-        return False
-    print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
 
-    # 7. Verify PI for TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi+1):
-        print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
-        return False
-    print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
-
-    # 8. Verify descriptor
-    print("BRQ: Current PI %d" % brq_cur.pi)
-    print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[brq_cur.pi].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[brq_cur.pi].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].status_addr)
-    # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
-    # this when this offset is removed.
-    #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
-    if ((rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi].ilist_addr - 0x40)) and (maxflows != 2)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi].ilist_addr))
-        return False
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi].ilist_addr))
-
-    # 3. Verify page
-    #if rnmpr.ringentries[rnmdr.pi].handle != brq_cur.swdre_list[0].Addr1:
-    #    print("Page handle not as expected in brq_cur.swdre_list")
-    #    #return False
 
     return True
 

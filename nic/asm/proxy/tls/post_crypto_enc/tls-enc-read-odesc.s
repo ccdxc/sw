@@ -19,9 +19,12 @@ struct phv_                 p;
     .param      tls_enc_post_crypto_stats_process
     .param	    tls_enc_queue_sesq_process
     .param      tls_enc_read_aad_process
+    .param      tls_enc_gc_setup
 
 tls_enc_post_read_odesc:
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s7_debug_stage4_7_thread, CAPRI_MPU_STAGE_6, CAPRI_MPU_TABLE_0)
+
+    smeqb       c1, k.{to_s6_debug_dol_sbit0_ebit6...to_s6_debug_dol_sbit7_ebit7}, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
 
     /*
      * If its the post-encrypt of AES-CBC-HMAC-SHA2, the output page is
@@ -45,7 +48,7 @@ tls_enc_post_read_odesc:
     add         r1, r0, d.{u.tls_read_odesc_d.A0}.dx
     add         r1, r1, d.{u.tls_read_odesc_d.O0}.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r1, tls_hdr_tls_hdr_type, tls_hdr_tls_iv)    
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_tls_hdr_dma_cmd, r1, tls_hdr_tls_hdr_type, tls_hdr_tls_iv)    
 
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, tls_enc_read_aad_process,
                            r1, TABLE_SIZE_512_BITS)
@@ -54,9 +57,15 @@ tls_enc_post_read_odesc:
                                  k.tls_global_phv_qstate_addr,
                                  TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 
-	CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS, tls_enc_post_crypto_stats_process,
+	CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_enc_post_crypto_stats_process,
 	                    k.tls_global_phv_qstate_addr,
 	                    TLS_TCB_POST_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
+
+    bcf         [c1], tls_enc_post_read_odesc_done
+    nop
+
+    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_enc_gc_setup,
+                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
 
 
 tls_enc_post_read_odesc_done:
@@ -86,7 +95,7 @@ tls_enc_post_read_odesc_do_ccm:
     phvwrpair   p.odesc_O0, r3.wx, p.odesc_L0, r1.wx
     add         r2, r3, d.{u.tls_read_odesc_d.A0}.dx
 	
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r2, tls_hdr_tls_hdr_type, tls_hdr_tls_iv)    
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_tls_hdr_dma_cmd, r2, tls_hdr_tls_hdr_type, tls_hdr_tls_iv)    
 
     /*
      * We will set the next table-read from the AAD offset inside the CCM header we currently
@@ -101,9 +110,18 @@ tls_enc_post_read_odesc_do_ccm:
                                  k.tls_global_phv_qstate_addr,
                                  TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 
-	CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS, tls_enc_post_crypto_stats_process,
+	CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_enc_post_crypto_stats_process,
 	                    k.tls_global_phv_qstate_addr,
 	                    TLS_TCB_POST_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
+
+    bcf         [c1], tls_enc_post_read_odesc_do_ccm_done
+    nop
+
+    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_enc_gc_setup,
+                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
+
+
+tls_enc_post_read_odesc_do_ccm_done:
 
     nop.e
     nop
@@ -132,10 +150,17 @@ tls_enc_post_read_odesc_do_cbc:
                                  k.tls_global_phv_qstate_addr,
                                  TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 
-	CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS, tls_enc_post_crypto_stats_process,
+	CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_enc_post_crypto_stats_process,
 	                    k.tls_global_phv_qstate_addr,
 	                    TLS_TCB_POST_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
 
+    bcf         [c1], tls_enc_post_read_odesc_do_cbc_done
+    nop
+
+    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_enc_gc_setup,
+                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
+
+tls_enc_post_read_odesc_do_cbc_done:
     nop.e
     nop
     

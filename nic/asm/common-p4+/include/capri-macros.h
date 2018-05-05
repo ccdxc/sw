@@ -360,6 +360,8 @@
 #define RNMDR_GC_TABLE_BASE             hbm_rnmdr_gc_table_base
 #define TNMDR_GC_TABLE_BASE             hbm_tnmdr_gc_table_base
 
+#define RNMDR_TLS_GC_TABLE_BASE         hbm_rnmdr_tls_gc_table_base
+
 #define RNMDR_GC_PRODUCER_TCP           CAPRI_RNMDR_GC_TCP_RING_PRODUCER
 #define RNMDR_GC_PRODUCER_ARM           CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER
 #define RNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT
@@ -569,6 +571,8 @@
 #define CAPRI_DMA_CMD_STOP(_dma_cmd_prefix)                                                     \
         phvwri      p.##_dma_cmd_prefix##_eop, 1;                                               \
 
+#define CAPRI_DMA_CMD_FENCE(_dma_cmd_prefix)                                                    \
+        phvwri      p.##_dma_cmd_prefix##_wr_fence, 1
 
 // Timers
 #define CAPRI_FAST_TIMER_ADDR(_lif) \

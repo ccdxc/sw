@@ -138,6 +138,12 @@ header_type tls_global_phv_t {
     }
 }
 
+header_type to_stage_1_phv_t {
+    fields {
+        debug_dol                       : 8;
+    }
+}
+
 header_type to_stage_2_phv_t {
     fields {
         serq_ci                         : 16;
@@ -236,6 +242,9 @@ metadata tls_stage_queue_brq_d_t tls_queue_brq_d;
 @pragma scratch_metadata
 metadata tls_stage_pre_crypto_stats_d_t tls_pre_crypto_stats_d;
 
+@pragma pa_header_union ingress to_stage_1
+metadata to_stage_1_phv_t to_s1;
+
 @pragma pa_header_union ingress to_stage_2
 metadata to_stage_2_phv_t to_s2;
 
@@ -287,26 +296,28 @@ metadata crypto_iv_t crypto_iv;
 metadata ccm_header_t ccm_header_with_aad;
 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd0;
+metadata dma_cmd_phv2mem_t dma_cmd_bsq_slot;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd1;
+metadata dma_cmd_phv2mem_t dma_cmd_odesc;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_phv2mem_t dma_cmd_aad;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
+metadata dma_cmd_phv2mem_t dma_cmd_iv;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd4;
+metadata dma_cmd_phv2mem_t dma_cmd_brq_slot;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd5;
+metadata dma_cmd_phv2mem_t dma_cmd_idesc;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd6;
+metadata dma_cmd_phv2mem_t dma_cmd_idesc_meta;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7;
+metadata dma_cmd_phv2mem_t dma_cmd_dbell;
 
 
 
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
+@pragma scratch_metadata
+metadata to_stage_1_phv_t to_s1_scratch;
 @pragma scratch_metadata
 metadata to_stage_2_phv_t to_s2_scratch;
 @pragma scratch_metadata
@@ -344,6 +355,8 @@ metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 action read_tls_stg1_7(TLSCB_1_PARAMS) {
 
     GENERATE_GLOBAL_K
+
+    modify_field(to_s1_scratch.debug_dol, to_s1.debug_dol);
 
     GENERATE_TLSCB_1_D
 }

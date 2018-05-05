@@ -40,6 +40,15 @@ table_read_rx_serq_enc:
 	                    k.tls_global_phv_qstate_addr, TLS_TCB_CRYPT_OFFSET,
                         TABLE_SIZE_512_BITS)
 
+table_read_idesc:
+	CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_DIS, tls_enc_pkt_descriptor_process,
+	                    r2, TABLE_SIZE_512_BITS)
+
+    /* Skip allocating the descriptor and the page when we are bypassing Barco offload */
+    smeqb   c1, k.to_s1_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    bcf     [c1], tls_enc_read_serq_entry_process_done
+    nop
+
 table_read_TNMDR_ALLOC_IDX:
     addi    r3, r0, TNMDR_ALLOC_IDX
 	CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tls_enc_alloc_tnmdr_process,
@@ -49,10 +58,9 @@ table_read_TNMPR_ALLOC_IDX:
 	addi 	r3, r0, TNMPR_ALLOC_IDX
 	CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tls_enc_alloc_tnmpr_process,
 	                    r3, TABLE_SIZE_64_BITS)
+
+tls_enc_read_serq_entry_process_done:
         
-table_read_idesc:
-	CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_DIS, tls_enc_pkt_descriptor_process,
-	                    r2, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 	

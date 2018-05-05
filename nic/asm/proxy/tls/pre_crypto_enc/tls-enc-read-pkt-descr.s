@@ -44,7 +44,7 @@ tls_enc_pkt_descriptor_process:
     /* Setup PHV2MEM for AAD */
     add         r1, r0, d.{u.tls_read_pkt_descr_aol_d.A0}.dx
     add         r1, r1, r2
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_dma_cmd, r1,
                                 s2_s5_t0_phv_aad_seq_num, s2_s5_t0_phv_aad_length)
 
     /* Setup odesc length */
@@ -88,7 +88,7 @@ tls_enc_pkt_descriptor_ccm_process:
 
 
     add         r2, r2, d.{u.tls_read_pkt_descr_aol_d.A0}.dx
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r2,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_dma_cmd, r2,
                                 ccm_header_with_aad_B_0_flags, ccm_header_with_aad_B_1_zero_pad)
 
     phvwrpair   p.ccm_header_with_aad_B_0_length, r6,   \

@@ -60,7 +60,6 @@ tls_enc_rx_bsq_enc_process_do_cbc:
 
     add		r3, r0, d.qhead
     phvwr   p.to_s3_idesc, r3
-    phvwr   p.to_s5_idesc, r3
     add             r3, r0, d.{recq_base}.wx
     /* Dummy read */
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_recq, r3, TABLE_SIZE_512_BITS)

@@ -125,9 +125,9 @@ tls_enc_queue_to_brq_mpp_ring:
     smeqb       c4, k.to_s4_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
     bcf         [!c4], tls_enc_bsq_doorbell_skip
     nop
-    CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd7_dma_cmd, LIF_TLS, 0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6,
+    CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd_dbell_dma_cmd, LIF_TLS, 0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6,
                                        crypto_iv_explicit_iv)
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd7_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd_dbell_dma_cmd)
 
 tls_enc_bsq_doorbell_skip:	
     addi        r3, r0, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX

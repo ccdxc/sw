@@ -1,6 +1,6 @@
 /*
  * 	Construct the barco request in this stage
- *  Stage 7, Table 2
+ *  Stage 7, Table 3
  */
 
 #include "tls-constants.h"
@@ -11,15 +11,13 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 	
-struct tx_table_s7_t2_k     k;
+struct tx_table_s7_t3_k     k;
 struct phv_                 p;
-struct tx_table_s7_t2_tls_post_crypto_stats5_d d	;
+struct tx_table_s7_t3_tls_post_crypto_stats5_d d	;
 	
 %%
     .align
 tls_enc_post_crypto_stats_process:
-    CAPRI_SET_DEBUG_STAGE4_7(p.to_s7_debug_stage4_7_thread, CAPRI_MPU_STAGE_7, CAPRI_MPU_TABLE_2)
-    CAPRI_CLEAR_TABLE0_VALID
     CAPRI_OPERAND_DEBUG(k.to_s7_rnmdr_free)
     CAPRI_OPERAND_DEBUG(k.to_s7_rnmpr_free)
     CAPRI_OPERAND_DEBUG(k.to_s7_enc_completions)

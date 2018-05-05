@@ -378,6 +378,19 @@ header_type semaphore_t {
     modify_field(SEMAPHORE_SCRATCH.ring_full, ring_full);                                               \
     modify_field(SEMAPHORE_SCRATCH.pad, pad);
 
+/* Support of a 32 bit token (auto increment) */
+header_type token_t {
+    fields {
+        token                           : 32;
+        pad                             : 480;
+    }
+}
+#define TOKEN_ACTION_PARAMS token, pad
+#define TOKEN_SCRATCH   token_scratch
+#define GENERATE_TOKEN_D                                                                                \
+    modify_field(TOKEN_SCRATCH.token, token);                                                           \
+    modify_field(TOKEN_SCRATCH.pad, pad);
+
 #define PKT_DESCR_AOL_ACTION_PARAMS                                                                     \
 A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt 
 #define PKT_DESCR_AOL_SCRATCH  pkt_descr_aol_d 

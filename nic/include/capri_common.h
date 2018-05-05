@@ -68,6 +68,7 @@
 #define CAPRI_SEM_ARQ_TX_0_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 4)
 #define CAPRI_SEM_ARQ_TX_1_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 5)
 #define CAPRI_SEM_ARQ_TX_2_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 6)
+#define CAPRI_SEM_TLS_RNMDR_IDX_ADDR        (CAPRI_MEM_SINGLE_SEMA_START + 8 * 7)
 
 //#define CAPRI_RNMDR_RING_SIZE               16384
 //#define CAPRI_RNMDR_RING_SHIFT              14
@@ -197,6 +198,11 @@
                 (CAPRI_SEM_ARQ_RX_IDX_ADDR(_queue_id) + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_ARQ_RX_IDX_INC_ADDR(_queue_id) \
                 (CAPRI_SEM_ARQ_RX_IDX_ADDR(_queue_id) + CAPRI_SEM_INC_OFFSET)
+
+// TLS Semaphores
+#define CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR    \
+        (CAPRI_SEM_TLS_RNMDR_IDX_ADDR + CAPRI_SEM_INC_OFFSET)
+
 // TxDMA
 #define CAPRI_SEM_ARQ_TX_IDX_ADDR(_queue_id) \
         (CAPRI_SEM_ARQ_TX_0_IDX_ADDR + 8 * _queue_id)

@@ -390,8 +390,8 @@ def TestCaseVerify(tc):
             return False
         if tc.pvtdata.bypass_barco:
             if rnmdr_cur.ci != rnmdr.ci + tc.pvtdata.pkt_free:
-                print("rnmdr cur %d pi does not match expected %d" % \
-                        (rnmdr_cur.pi, rnmdr.pi + tc.pvtdata.pkt_free))
+                print("rnmdr cur %d ci does not match expected %d" % \
+                        (rnmdr_cur.ci, rnmdr.ci + tc.pvtdata.pkt_free))
                 return False
             if rnmpr_cur.ci != rnmpr.ci + tc.pvtdata.pkt_free:
                 print("rnmpr cur ci %d does not match expected %d" % \

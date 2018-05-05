@@ -24,8 +24,11 @@
 #define tx_table_s7_t0_action       tls_queue_sesq
 
 #define tx_table_s7_t1_action       tls_read_aad
+#
+#define tx_table_s7_t2_action       tls_gc_setup
 
-#define tx_table_s7_t2_action       tls_post_crypto_stats5
+#define tx_table_s7_t3_action       tls_post_crypto_stats5
+
 
 #include "../../common-p4+/common_txdma.p4"
 #include "tls_txdma_common.p4"
@@ -57,6 +60,7 @@ header_type read_rnmpr_free_pi_d_t {
         rnmpr_free_pi              : 16;
     }
 }
+
 
 
 #define GENERATE_GLOBAL_K                                                                               \
@@ -94,24 +98,23 @@ header_type to_stage_3_phv_t {
 
 header_type to_stage_5_phv_t {
     fields {
-        idesc                           : HBM_ADDRESS_WIDTH;
-        ipage                           : HBM_ADDRESS_WIDTH;
         odesc                           : HBM_ADDRESS_WIDTH;
-        next_idesc                      : HBM_ADDRESS_WIDTH;
     }
 }
 
 #define GENERATE_TO_S5_K                                                                                \
-    modify_field(to_s5_scratch.idesc, to_s5.idesc);                                                     \
     modify_field(to_s5_scratch.odesc, to_s5.odesc);                                                     \
-    modify_field(to_s5_scratch.ipage, to_s5.ipage);                                                     \
-    modify_field(to_s5_scratch.next_idesc, to_s5.next_idesc);
 
 header_type to_stage_6_phv_t {
     fields {
         do_post_ccm_enc                 : 1;
+        debug_dol                       : 8;
     }
 }
+
+#define GENERATE_TO_S6_K                                                                                \
+    modify_field(to_s6_scratch.do_post_ccm_enc, to_s6.do_post_ccm_enc);                                 \
+    modify_field(to_s6_scratch.debug_dol, to_s6.debug_dol);
 
 header_type to_stage_7_phv_t {
     fields {
@@ -135,6 +138,15 @@ header_type to_stage_7_phv_t {
     modify_field(to_s7_scratch.enc_completions, to_s7.enc_completions);                                 \
     modify_field(to_s7_scratch.debug_stage0_3_thread, to_s7.debug_stage0_3_thread);                     \
     modify_field(to_s7_scratch.debug_stage4_7_thread, to_s7.debug_stage4_7_thread);
+
+header_type s2s_t2_phv_t {
+    fields {
+        idesc                           : HBM_ADDRESS_WIDTH;
+    }
+}
+
+#define GENERATE_S2S_T2_K                                                                               \
+    modify_field(s2s_t2_scratch.idesc, s2s_t2.idesc);
 
 header_type doorbell_data_pad_t {
     fields {
@@ -184,6 +196,12 @@ metadata to_stage_6_phv_t to_s6_scratch;
 @pragma scratch_metadata
 metadata to_stage_7_phv_t to_s7_scratch;
 
+@pragma scratch_metadata
+metadata s2s_t2_phv_t   s2s_t2_scratch;
+
+@pragma scratch_metadata
+metadata token_t        TOKEN_SCRATCH;
+
 
 @pragma pa_header_union ingress to_stage_3
 metadata to_stage_3_phv_t to_s3;
@@ -201,6 +219,9 @@ metadata to_stage_7_phv_t to_s7;
 @pragma pa_header_union ingress common_global
 metadata tls_global_phv_t tls_global_phv;
 
+@pragma pa_header_union ingress common_t2_s2s
+metadata s2s_t2_phv_t s2s_t2;
+
 
 @pragma dont_trim
 metadata pkt_descr_aol_t odesc; 
@@ -212,24 +233,27 @@ metadata ring_entry_t ring_entry;
 metadata doorbell_data_raw_t db_data;
 @pragma dont_trim
 metadata tls_header_t tls_hdr;
+
 @pragma dont_trim
-metadata doorbell_data_pad_t db_pad;
+metadata doorbell_data_t gc_db_data;
+
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd0;
+metadata ring_entry_t gc_ring_entry;
+
+
+@pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd1;
+metadata dma_cmd_phv2mem_t dma_cmd_gc_slot;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_phv2mem_t dma_cmd_gc_dbell;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
+metadata dma_cmd_phv2mem_t dma_cmd_tls_hdr;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd4;
+metadata dma_cmd_phv2mem_t dma_cmd_odesc;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd5;
+metadata dma_cmd_phv2mem_t dma_cmd_sesq_slot;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd6;
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7;
+metadata dma_cmd_phv2mem_t dma_cmd_sesq_dbell;
 
 
 
@@ -320,7 +344,7 @@ action read_rnmpr_free_pi(rnmpr_free_pi) {
 action tls_read_odesc(PKT_DESCR_AOL_ACTION_PARAMS) {
     GENERATE_GLOBAL_K
 
-    modify_field(to_s6_scratch.do_post_ccm_enc, to_s6.do_post_ccm_enc);
+    GENERATE_TO_S6_K
 
     GENERATE_PKT_DESCR_AOL_D
 }
@@ -346,6 +370,15 @@ action tls_read_aad(AAD_ACTION_PARAMS) {
 }
 
 /* Stage 7 Table 2 action */
+
+action tls_gc_setup(TOKEN_ACTION_PARAMS) {
+
+    GENERATE_S2S_T2_K
+
+    GENERATE_TOKEN_D
+}
+
+/* Stage 7 Table 3 action */
 action tls_post_crypto_stats5(STG_POST_CRYPTO_STATS_ACTION_PARAMS) {
 
     GENERATE_GLOBAL_K
@@ -354,3 +387,4 @@ action tls_post_crypto_stats5(STG_POST_CRYPTO_STATS_ACTION_PARAMS) {
 
     GENERATE_STG_POST_CRYPTO_STATS_D
 }
+

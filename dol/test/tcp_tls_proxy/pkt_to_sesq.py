@@ -107,11 +107,11 @@ def TestCaseVerify(tc):
         return False
 
     # 1. Verify threading
-    if (tlscb_cur.pre_debug_stage0_7_thread != 0x157711):
+    if (tlscb_cur.pre_debug_stage0_7_thread != 0x151111):
         print("pre crypto pipeline threading was not ok")
         return False
 
-    if (tlscb_cur.post_debug_stage0_7_thread != 0x1191111):
+    if (tlscb_cur.post_debug_stage0_7_thread != 0x1111111):
         print("post crypto pipeline threading was not ok")
         return False
 
@@ -150,11 +150,6 @@ def TestCaseVerify(tc):
         return False
 
     
-    # 5. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
-        print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
-        return False
-
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = tc.pvtdata.db[sesqid]
     sesq_cur = tc.infra_data.ConfigStore.objects.db[sesqid]
