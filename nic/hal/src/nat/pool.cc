@@ -67,6 +67,7 @@ nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
         nat_addr->af = IP_AF_IPV4;
         nat_addr->addr.v4_addr =
             addr_range->ip_range.vx_range[0].v4_range.ip_lo + free_idx;
+        pool->addr_bmap->set(free_idx);
         HAL_TRACE_DEBUG("Allocated NAT IP {} from pool ({}, {})",
                         ipaddr2str(nat_addr),
                         pool->key.vrf_id, pool->key.pool_id);

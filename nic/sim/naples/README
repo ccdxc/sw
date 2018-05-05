@@ -182,3 +182,57 @@ curl localhost:9007/api/natpolicies/ | jq .
 
     [vagrant@node1 ~] docker run  -it --rm --net=kg1 networkstatic/iperf3 -c 10.100.2.2
 
+NOTE:
+
+1. To check NAPLES container health, please do "docker ps" and look at the
+   STATUS column
+
+2. If STATUS is reported as "unhealthy", please do:
+
+   "docker inspect --format "{{json .State.Health }}"  <container-id> | jq
+
+   This should show the reason for bad health in case container is "unhealthy"
+
+    For example:
+
+    [root@d34a71a8b0a2 nic]# docker ps
+    CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS                    NAMES
+    386c47101e22        naples:v1           "/naples/nic/tools/s…"   22 minutes ago      Up 22 minutes (unhealthy)   0.0.0.0:9007->9007/tcp   naples-v1
+
+    [root@d34a71a8b0a2 nic]# docker inspect --format "{{json .State.Health }}"  386c47101e22 | jq
+    {
+      "Status": "unhealthy",
+      "FailingStreak": 9,
+      "Log": [
+        {
+          "Start": "2018-05-04T17:22:56.281835588-07:00",
+          "End": "2018-05-04T17:22:56.345817966-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:24:56.354681048-07:00",
+          "End": "2018-05-04T17:24:56.417479099-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:26:56.424463273-07:00",
+          "End": "2018-05-04T17:26:57.865418911-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:28:57.894402864-07:00",
+          "End": "2018-05-04T17:28:58.472318062-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:30:59.218133046-07:00",
+          "End": "2018-05-04T17:30:59.286270659-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        }
+      ]
+    }
