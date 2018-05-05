@@ -21,14 +21,14 @@ set -x
 # starting the processes from log directory so that cores are saved there
 cd $LOG_DIR
 
-echo "Starting NAPLES model ..."
+echo "Starting CAPRI model ..."
 $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
 PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
 if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start NAPLES model"
+    echo "Failed to start CAPRI model"
     #exit $?
 else
-    echo "NAPLES model started, pid is $PID"
+    echo "CAPRI model started, pid is $PID"
 fi
 
 echo "Starting HAL ..."

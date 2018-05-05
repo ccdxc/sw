@@ -12,6 +12,7 @@ nic/tools/start-hal-zebu.sh                                      /nic/tools/
 nic/tools/start-model-zebu.sh                                    /nic/tools/
 nic/sim/naples/start-naples.sh                                   /nic/tools/
 nic/sim/naples/stop-naples.sh                                    /nic/tools/
+nic/sim/naples/health-check.sh                                   /nic/tools/
 /lib64/libstdc++.so.6                                            /nic/lib64/
 /usr/lib64/libltdl.so.7                                          /nic/lib64/
 /usr/lib64/libJudy.so.1                                          /nic/lib64/

@@ -23,4 +23,6 @@ RUN pip3 install click click_repl
 ADD nic.tgz /naples/
 COPY bashrc_sim /root/.bashrc
 
+HEALTHCHECK --interval=2m --timeout=5s --start-period=5m --retries=3 CMD /naples/nic/tools/health-check.sh || exit 1
+
 CMD ["/naples/nic/tools/start-naples.sh"]
