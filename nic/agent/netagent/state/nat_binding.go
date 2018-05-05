@@ -58,7 +58,7 @@ func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateNatBinding(nb, np, natPoolNS.Status.NamespaceID, ns)
+	nb, err = na.datapath.CreateNatBinding(nb, np, natPoolNS.Status.NamespaceID, ns)
 	if err != nil {
 		log.Errorf("Error creating nat binding in datapath. NatBinding {%+v}. Err: %v", nb, err)
 		return err

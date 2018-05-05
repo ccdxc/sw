@@ -1792,7 +1792,7 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 }
 
 // CreateNatBinding creates a NAT Binding in the datapath
-func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) (*netproto.NatBinding, error) {
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -1802,7 +1802,7 @@ func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPo
 	natBindingIP := net.ParseIP(nb.Spec.IPAddress)
 	if len(natBindingIP) == 0 {
 		log.Errorf("could not parse IP from {%v}", natBindingIP)
-		return ErrIPParse
+		return nil, ErrIPParse
 	}
 
 	ipAddr := &halproto.IPAddress{
@@ -1848,21 +1848,25 @@ func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPo
 		resp, err := hd.Hal.Natclient.NatMappingCreate(context.Background(), natBindingReqMsg)
 		if err != nil {
 			log.Errorf("Error creating nat pool. Err: %v", err)
-			return err
+			return nb, err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
 
-			return ErrHALNotOK
+			return nb, ErrHALNotOK
 		}
-	} else {
-		_, err := hd.Hal.Natclient.NatMappingCreate(context.Background(), natBindingReqMsg)
-		if err != nil {
-			log.Errorf("Error creating nat pool. Err: %v", err)
-			return err
-		}
+		ipv4Int := resp.Response[0].Status.MappedIp.GetV4Addr()
+		ip := intToIPv4(ipv4Int)
+		nb.Status.NatIP = ip.String()
+		return nb, nil
 	}
-	return nil
+	_, err := hd.Hal.Natclient.NatMappingCreate(context.Background(), natBindingReqMsg)
+	if err != nil {
+		log.Errorf("Error creating nat pool. Err: %v", err)
+		return nb, err
+	}
+	return nb, nil
+
 }
 
 // UpdateRoute updates a Route in the datapath
@@ -2220,4 +2224,10 @@ func ipv4Touint32(ip net.IP) uint32 {
 		return binary.BigEndian.Uint32(ip[12:16])
 	}
 	return binary.BigEndian.Uint32(ip)
+}
+
+func intToIPv4(intIP uint32) net.IP {
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, intIP)
+	return ip
 }

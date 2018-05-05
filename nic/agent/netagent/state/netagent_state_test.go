@@ -206,9 +206,9 @@ func (dp *mockDatapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) 
 }
 
 // CreateNatBinding creates a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) error {
+func (dp *mockDatapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) (*netproto.NatBinding, error) {
 
-	return nil
+	return nb, nil
 }
 
 // UpdateRoute updates a Route in the datapath. Stubbed out to satisfy the interface
