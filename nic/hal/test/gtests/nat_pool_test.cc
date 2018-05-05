@@ -368,6 +368,7 @@ TEST_F(nat_pool_test, test1)
     nat_mapping_spec.mutable_key_or_handle()->mutable_svc()->mutable_ip_addr()->set_ip_af(types::IP_AF_INET);
     nat_mapping_spec.mutable_key_or_handle()->mutable_svc()->mutable_ip_addr()->set_v4_addr(0x14000001);
     nat_mapping_spec.mutable_nat_pool()->mutable_pool_key()->set_pool_id(1);
+    nat_mapping_spec.mutable_nat_pool()->mutable_pool_key()->mutable_vrf_kh()->set_vrf_id(1);
     nat_mapping_spec.set_bidir(1);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -375,7 +376,6 @@ TEST_F(nat_pool_test, test1)
     hal::hal_cfg_db_close();
     
     EXPECT_EQ(ret, HAL_RET_OK);
-
 
 
 

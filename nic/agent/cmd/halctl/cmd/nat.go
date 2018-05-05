@@ -258,8 +258,8 @@ func natpoolShowOneResp(resp *halproto.NatPoolGetResponse) {
 func natmappingShowHeader() {
 	hdrLine := strings.Repeat("-", 80)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-24s%-15s%-10s%-10s\n",
-		"vrfId", "SvcIP:Port", "MappedIP", "NatPoolId", "BiDir")
+	fmt.Printf("%-10s%-24s%-15s%-10s%-12s%-10s\n",
+		"vrfId", "SvcIP:Port", "MappedIP", "NatPool", "MappingDir", "BiDir")
 	fmt.Println(hdrLine)
 }
 
@@ -273,9 +273,16 @@ func natmappingShowOneResp(resp *halproto.NatMappingGetResponse) {
 
 	mappedIP := utils.IPAddrToStr(status.GetMappedIp())
 
-	fmt.Printf("%-10d%-24s%-15s%-10d%-10t\n",
+	natPoolStr := fmt.Sprintf("(%d, %d)", spec.GetNatPool().GetPoolKey().GetVrfKh().GetVrfId(), spec.GetNatPool().GetPoolKey().GetPoolId())
+
+	dir := "Fwd"
+	if status.GetHandle() == 0 {
+		dir = "Rev"
+	}
+
+	fmt.Printf("%-10d%-24s%-15s%-10s%-12s%-10t\n",
 		svc.GetVrfKh().GetVrfId(),
 		ipPortStr, mappedIP,
-		spec.GetNatPool().GetPoolKey().GetPoolId(),
+		natPoolStr, dir,
 		spec.GetBidir())
 }

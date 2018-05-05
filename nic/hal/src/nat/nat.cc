@@ -1678,7 +1678,10 @@ nat_mapping_get_ht_cb (void *ht_entry, void *ctxt)
 
     mapping = (addr_entry_t *)hal_handle_get_obj(entry->handle_id);
     nat_mapping_process_get(mapping, response);
-
+    if (mapping->bidir) {
+        response = rsp->add_response();
+        nat_mapping_process_get(mapping->rentry, response);
+    }
     // return false here, so that we don't terminate the walk
     return false;
 }
@@ -1706,6 +1709,10 @@ nat_mapping_get (NatMappingGetRequest& req, NatMappingGetResponseMsg *rsp)
             return HAL_RET_NAT_MAPPING_NOT_FOUND;
         }
         nat_mapping_process_get(mapping, response);
+        if (mapping->bidir) {
+            response = rsp->add_response();
+            nat_mapping_process_get(mapping->rentry, response);
+        }
     }
 
     HAL_API_STATS_INC(HAL_API_NAT_MAPPING_GET_SUCCESS);
