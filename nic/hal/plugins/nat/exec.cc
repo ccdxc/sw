@@ -44,11 +44,13 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         if (ctx.key().flow_type == FLOW_TYPE_V4) {
             if (addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, svrf_id, addr_entry->tgt_vrf_id);
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, addr_entry->tgt_vrf_id);
             }
             HEADER_SET_FLD(flowupd.header_rewrite, ipv4, sip, addr_entry->tgt_ip_addr.addr.v4_addr);
         } else {
             if (addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv6, svrf_id, addr_entry->tgt_vrf_id);
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, addr_entry->tgt_vrf_id);
             }
             HEADER_SET_FLD(flowupd.header_rewrite, ipv6, sip, addr_entry->tgt_ip_addr.addr.v6_addr);
         }
@@ -58,6 +60,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         nat_info->nat_dip.addr = ctx.key().sip;
         if (addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
             nat_info->nat_dvrf = ctx.key().svrf_id;
+            nat_info->nat_svrf = ctx.key().dvrf_id;
         }
 
         // TODO  port nat not supported yet

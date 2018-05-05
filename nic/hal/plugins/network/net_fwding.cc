@@ -30,8 +30,12 @@ update_rewrite_info(fte::ctx_t&ctx)
         smac = hal::ep_get_rmac(ctx.dep(), ctx.dl2seg());
 
         flowupd.header_rewrite.flags.dec_ttl = true;
-        HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
-        HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
+        if (*dmac) {
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
+        }
+        if (*smac) {
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
+        }
     }
 
     // VLAN rewrite
@@ -121,7 +125,7 @@ update_fwding_info(fte::ctx_t&ctx)
     } 
 
     if (dif == NULL) {
-        ret = route_lookup(&ctx.get_key(), &flowupd.fwding.dep,
+        ret = route_lookup(&ctx.key(), &flowupd.fwding.dep,
                            &flowupd.fwding.dif, &flowupd.fwding.dl2seg);
         dif = flowupd.fwding.dif;
         if (ret != HAL_RET_OK){

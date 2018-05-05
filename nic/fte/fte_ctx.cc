@@ -678,18 +678,16 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     ipvx_addr_t dip;
 
     if (header.valid_flds.dvrf_id) {
-        uint32_t dvrf_id;
-        
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-            dvrf_id = header.ipv4.dvrf_id;
+            key_.dvrf_id = header.ipv4.dvrf_id;
         } else {
-            dvrf_id = header.ipv6.dvrf_id;
+            key_.dvrf_id = header.ipv6.dvrf_id;
         }
 
-        dvrf_ =  hal::vrf_lookup_by_id(dvrf_id);
-        
+        dvrf_ =  hal::vrf_lookup_by_id(key_.dvrf_id);
+
         if (dvrf_ == NULL) {
-            HAL_TRACE_ERR("DNAT vrf not found vrf={}", dvrf_id);
+            HAL_TRACE_ERR("DNAT vrf not found vrf={}", key_.dvrf_id);
             return HAL_RET_VRF_NOT_FOUND;
         }
     }
@@ -705,6 +703,11 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
             dep_ = hal::find_ep_by_v6_key(dvrf_->vrf_id, &addr);
             dip.v6_addr = header.ipv6.dip;
         }
+
+        if (!this->protobuf_request()) {
+            key_.dip = dip;
+        }
+
     } else if (dep_ == NULL && header.valid_flds.dmac && sl2seg_ != NULL) {
         /* L2 DSR - lookup EP using mac */
         dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id,
@@ -713,14 +716,12 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
         return HAL_RET_OK;
     }
 
-    if (dep_ == NULL) {
-        return HAL_RET_EP_NOT_FOUND;
+    if (dep_) {
+        dep_handle_ = dep_->hal_handle;
+        dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
+        dif_ = hal::find_if_by_handle(dep_->if_handle);
+        HAL_ASSERT(dif_ != NULL);
     }
-
-    dep_handle_ = dep_->hal_handle;
-    dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
-    dif_ = hal::find_if_by_handle(dep_->if_handle);
-    HAL_ASSERT(dif_ != NULL);
 
     // If we are doing dnat on iflow, update the rflow's key
     if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_ &&  header.valid_flds.dip) {
@@ -729,8 +730,9 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
             rkey = rflow_[i]->key();
             if (!this->protobuf_request()) {
                 rkey.sip = dip;
+                rkey.svrf_id = dvrf_->vrf_id;
             }
-            rkey.dir = (dep_->ep_flags & EP_FLAGS_LOCAL) ?
+            rkey.dir = (dep_ && dep_->ep_flags & EP_FLAGS_LOCAL) ?
                 FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
             rflow_[i]->set_key(rkey);
         }
@@ -1371,12 +1373,16 @@ std::ostream& operator<<(std::ostream& os, const header_rewrite_info_t& val)
     case FTE_HEADER_ipv4:
         HEADER_FORMAT_IPV4_FLD(out, val, ipv4, sip);
         HEADER_FORMAT_IPV4_FLD(out, val, ipv4, dip);
+        HEADER_FORMAT_FLD(out, val, ipv4, svrf_id);
+        HEADER_FORMAT_FLD(out, val, ipv4, dvrf_id);
         HEADER_FORMAT_FLD(out, val, ipv4, ttl);
         HEADER_FORMAT_FLD(out, val, ipv4, dscp);
         break;
     case FTE_HEADER_ipv6:
         HEADER_FORMAT_FLD(out, val, ipv6, sip);
         HEADER_FORMAT_FLD(out, val, ipv6, dip);
+        HEADER_FORMAT_FLD(out, val, ipv6, svrf_id);
+        HEADER_FORMAT_FLD(out, val, ipv6, dvrf_id);
         HEADER_FORMAT_FLD(out, val, ipv6, ttl);
         HEADER_FORMAT_FLD(out, val, ipv6, dscp);
         break;
