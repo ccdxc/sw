@@ -654,6 +654,8 @@ private:
     void invoke_completion_handlers(bool fail);
     hal_ret_t update_for_dnat(hal::flow_role_t role,
                               const header_rewrite_info_t& header);
+    hal_ret_t update_for_snat(hal::flow_role_t role,
+                              const header_rewrite_info_t& header);
 };
 
 } // namespace fte

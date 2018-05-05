@@ -31,6 +31,10 @@ function setup_intf1()
             ip link add link $INTF1 name $subif type vlan id $LOCAL_SUBNET_VLAN
             ip link set up dev $subif
 
+            #set ip/mac address
+            ip link set dev $subif address 00:22:22:22:22:23
+            ip addr add dev $subif 10.100.255.255/16
+
             #interface route for NAT gateway IP
             ip route add $NAT_GWIP/32 dev $subif
             

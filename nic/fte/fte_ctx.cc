@@ -742,6 +742,53 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 }
 
 //------------------------------------------------------------------------------
+// Update the src key  on snat change
+//------------------------------------------------------------------------------
+hal_ret_t
+ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& header)
+{
+    if (this->protobuf_request()) {
+        return HAL_RET_OK;
+    }
+
+    if (header.valid_flds.svrf_id) {
+        if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
+            key_.svrf_id = header.ipv4.svrf_id;
+        } else {
+            key_.svrf_id = header.ipv6.svrf_id;
+        }
+
+        svrf_ =  hal::vrf_lookup_by_id(key_.svrf_id);
+
+        if (svrf_ == NULL) {
+            HAL_TRACE_ERR("SNAT vrf not found vrf={}", key_.svrf_id);
+            return HAL_RET_VRF_NOT_FOUND;
+        }
+    }
+
+    if (header.valid_flds.sip) {
+        if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
+            key_.sip.v4_addr = header.ipv4.sip;
+        } else {
+            key_.sip.v6_addr = header.ipv6.sip;
+        }
+    }
+
+    // If we are doing snat on iflow, update the rflow's key
+    if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_) {
+        hal::flow_key_t rkey = {};
+        for (int i = 0; i < MAX_STAGES; i++) {
+            rkey = rflow_[i]->key();
+            rkey.dip = key_.sip;
+            rkey.dvrf_id = svrf_->vrf_id;
+            rflow_[i]->set_key(rkey);
+        }
+    }
+
+    return  HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // Initialize the flow entries in the context
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -979,6 +1026,9 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             LOG_FLOW_UPDATE(header_rewrite);
             // check if dep needs to be updated
             ret = update_for_dnat(role, flowupd.header_rewrite);
+            if (ret == HAL_RET_OK){
+                ret = update_for_snat(role, flowupd.header_rewrite);
+            }
         }
         break;
 

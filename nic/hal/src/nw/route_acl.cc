@@ -180,6 +180,7 @@ route_acl_add_route(route_t *route)
 
     route_rule = route_acl_rule_alloc(route->hal_handle);
     route_rule->field[ROUTE_TUPLE_VRF_ID].value.u32 = route->key.vrf_id;
+    route_rule->field[ROUTE_TUPLE_VRF_ID].mask_range.u32 = 0xFFFFFFFF;
     // TODO: Extend for v6
     route_rule->field[ROUTE_TUPLE_IP_PREFIX].value.u32 = route->key.pfx.addr.addr.v4_addr;
     route_rule->field[ROUTE_TUPLE_IP_PREFIX].mask_range.u32 = route->key.pfx.len;
@@ -209,6 +210,7 @@ route_acl_del_route(route_t *route)
 
     route_rule = route_acl_rule_alloc(route->hal_handle);
     route_rule->field[ROUTE_TUPLE_VRF_ID].value.u32 = route->key.vrf_id;
+    route_rule->field[ROUTE_TUPLE_VRF_ID].mask_range.u32 = 0xFFFFFFFF;
     // TODO: Extend for v6
     route_rule->field[ROUTE_TUPLE_IP_PREFIX].value.u32 = route->key.pfx.addr.addr.v4_addr;
     route_rule->field[ROUTE_TUPLE_IP_PREFIX].mask_range.u32 = route->key.pfx.len;
