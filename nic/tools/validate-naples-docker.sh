@@ -119,7 +119,7 @@ fi
 echo "HAL running"
 
 # give sometime for HAL & model to initialize
-sleep 60
+sleep 90
 PROC_FOUND="$(docker top $NAPLES_CID | grep netagent)"
 if [ "PROC_FOUND" == "" ]; then
     echo "Agent not running"
@@ -142,5 +142,7 @@ create_namespaces
 # create_nat_pools
 # create_nat_bindings
 # create_nat_policies
+
+source /sw/nic/sim/naples/stop-naples-docker.sh
 
 exit 0
