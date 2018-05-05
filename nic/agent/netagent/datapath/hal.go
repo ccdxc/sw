@@ -783,6 +783,7 @@ func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 // CreateNetwork creates a l2 segment in datapath if vlan id is specified and a network if IPSubnet is specified.
 // ToDo Investigate if HAL needs network updates and deletes.
 func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
+	var nwKey halproto.NetworkKeyHandle
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -811,7 +812,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		}
 		prefixLen, _ := net.Mask.Size()
 
-		nwKey := &halproto.NetworkKeyHandle{
+		nwKey = halproto.NetworkKeyHandle{
 			KeyOrHandle: &halproto.NetworkKeyHandle_NwKey{
 				NwKey: &halproto.NetworkKey{
 					IpPrefix: &halproto.IPPrefix{
@@ -829,7 +830,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		}
 
 		halNw := halproto.NetworkSpec{
-			KeyOrHandle: nwKey,
+			KeyOrHandle: &nwKey,
 			GatewayIp:   halGwIP,
 		}
 
@@ -871,6 +872,9 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			EncapValue: nw.Spec.VlanID,
 		},
 		VrfKeyHandle: vrfKey,
+		NetworkKeyHandle: []*halproto.NetworkKeyHandle{
+			&nwKey,
+		},
 	}
 	segReq := halproto.L2SegmentRequestMsg{
 		Request: []*halproto.L2SegmentSpec{&seg},
