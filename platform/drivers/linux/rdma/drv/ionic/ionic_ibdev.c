@@ -813,6 +813,14 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 
 	admin.cmd.create_ah.hdr_info = hdr_dma;
 
+	/* XXX for HAPS: side-data */
+	if (ionic_xxx_haps) {
+#ifndef ADMINQ
+		admin.side_data = hdr_buf;
+		admin.side_data_len = round_up(hdr_len, sizeof(u32));
+#endif
+	}
+
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
 		goto err_cmd;
@@ -1575,6 +1583,14 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 
 		admin.cmd.modify_qp.header_template = hdr_dma;
 		admin.cmd.modify_qp.header_template_size = hdr_len;
+
+		/* XXX for HAPS: side-data */
+		if (ionic_xxx_haps) {
+#ifndef ADMINQ
+			admin.side_data = hdr_buf;
+			admin.side_data_len = round_up(hdr_len, sizeof(u32));
+#endif
+		}
 	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
