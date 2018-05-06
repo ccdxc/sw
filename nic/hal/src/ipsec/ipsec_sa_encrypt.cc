@@ -119,6 +119,19 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
 
     ipsec->sa_id = spec.key_or_handle().cb_id();
 
+    if ((spec.encryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
+        (spec.authentication_algorithm() != ipsec::AUTHENTICATION_AES_GCM)) {
+        HAL_TRACE_DEBUG("Unsupported Encyption or Authentication Algo. EncAlgo {} AuthAlgo{}", spec.encryption_algorithm(), spec.authentication_algorithm());
+        goto cleanup;
+    }
+
+    ipsec->iv_size = 8;
+    ipsec->block_size = 16;
+    ipsec->icv_size = 16;
+    ipsec->esn_hi = ipsec->esn_lo = 0;
+
+    ipsec->barco_enc_cmd = IPSEC_BARCO_ENCRYPT_AES_GCM_256;
+
     ipsec->iv = spec.iv();
     ipsec->iv_salt = spec.salt();
     ipsec->spi = spec.spi();
@@ -202,6 +215,18 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_IPSEC_CB_NOT_FOUND;
     }
+    if ((spec.encryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
+        (spec.authentication_algorithm() != ipsec::AUTHENTICATION_AES_GCM)) {
+        HAL_TRACE_DEBUG("Unsupported Encyption or Authentication Algo. EncAlgo {} AuthAlgo{}", spec.encryption_algorithm(), spec.authentication_algorithm());
+        return HAL_RET_IPSEC_ALGO_NOT_SUPPORTED;
+    }
+
+    ipsec->iv_size = 8;
+    ipsec->block_size = 16;
+    ipsec->icv_size = 16;
+    ipsec->esn_hi = ipsec->esn_lo = 0;
+
+    ipsec->barco_enc_cmd = IPSEC_BARCO_ENCRYPT_AES_GCM_256;
 
     pd::pd_ipsec_encrypt_update_args_init(&pd_ipsec_encrypt_args);
     pd_ipsec_encrypt_args.ipsec_sa = ipsec;

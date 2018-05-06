@@ -55,6 +55,8 @@ using ipsec::IpsecSADecryptGetResponseMsg;
 
 namespace hal {
 
+#define MAX_IPSEC_KEY_SIZE  32
+
 typedef struct ipsec_sa_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     ipsec_sa_id_t         sa_id;                   // CB id
@@ -64,7 +66,9 @@ typedef struct ipsec_sa_s {
     uint8_t               icv_size;
     uint8_t               block_size;
     uint32_t              key_index;
+    uint8_t               key[MAX_IPSEC_KEY_SIZE];
     uint32_t              new_key_index;
+    uint8_t               new_key[MAX_IPSEC_KEY_SIZE];
     uint32_t              barco_enc_cmd;
     uint64_t              iv;
     uint32_t              iv_salt;
@@ -103,6 +107,8 @@ typedef struct ipsec_rule_s {
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_IPSECCB                           4
+#define IPSEC_BARCO_ENCRYPT_AES_GCM_256           0x30000000
+#define IPSEC_BARCO_DECRYPT_AES_GCM_256           0x30100000
 
 // allocate a ipsec_sament instance
 static inline ipsec_sa_t *
