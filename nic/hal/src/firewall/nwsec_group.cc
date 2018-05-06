@@ -1181,11 +1181,10 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
     acl_deref(app_ctx->acl_ctx);
 
-    HAL_TRACE_DEBUG("policy handle {}", hal_handle);
+    HAL_TRACE_DEBUG("SFW policy handle {}", hal_handle);
     ret = add_nwsec_policy_to_db(policy);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to add policy to db"
-                      "err : {}", ret);
+        HAL_TRACE_ERR("Failed to add policy to db, err : {}", ret);
         goto end;
     }
 

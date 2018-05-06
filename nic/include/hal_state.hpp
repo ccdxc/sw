@@ -199,6 +199,7 @@ public:
     ht *nwsec_profile_id_ht(void) const { return nwsec_profile_id_ht_; }
     ht *nwsec_policy_cfg_ht(void) const { return nwsec_policy_cfg_ht_; }
     ht *nwsec_policy_ht(void) const { return nwsec_policy_ht_; }
+    ht *nat_policy_ht(void) const { return nat_policy_ht_; }
     ht *nwsec_group_ht(void) const { return nwsec_group_ht_; }
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
@@ -269,6 +270,7 @@ private:
     ht    *nwsec_profile_id_ht_;
     ht    *nwsec_policy_cfg_ht_;
     ht    *nwsec_policy_ht_;
+    ht    *nat_policy_ht_;
     ht    *nwsec_group_ht_;
     ht    *l2seg_id_ht_;
     ht    *ep_l2_ht_;
@@ -383,6 +385,7 @@ public:
     slab *nwsec_policy_appid_slab(void) const { return cfg_db_->nwsec_policy_appid_slab(); }
     ht   *nwsec_policy_cfg_ht(void) const { return oper_db_->nwsec_policy_cfg_ht(); }
     ht   *nwsec_policy_ht(void) const { return oper_db_->nwsec_policy_ht(); }
+    ht   *nat_policy_ht(void) const { return oper_db_->nat_policy_ht(); }
     ht   *nwsec_group_ht(void) const { return oper_db_->nwsec_group_ht(); }
 
     // get APIs for dos policy related state

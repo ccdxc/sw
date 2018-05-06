@@ -1026,18 +1026,25 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
     HAL_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
 
     HAL_HT_CREATE("nwsec-policy-cfg", nwsec_policy_cfg_ht_,
-                  HAL_MAX_NW_SEC_POLICY_CFG >> 1,
+                  HAL_MAX_VRFS >> 1,
                   hal::nwsec_policy_cfg_get_key_func,
                   hal::nwsec_policy_cfg_compute_hash_func,
                   hal::nwsec_policy_cfg_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
 
     HAL_HT_CREATE("sfw policy", nwsec_policy_ht_,
-                  HAL_MAX_NW_SEC_POLICY_CFG >> 1,
+                  HAL_MAX_VRFS >> 1,
                   hal::nwsec_policy_get_key_func,
                   hal::nwsec_policy_compute_hash_func,
                   hal::nwsec_policy_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
+
+    HAL_HT_CREATE("nat policy", nat_policy_ht_,
+                  HAL_MAX_VRFS >> 1,
+                  hal::nat_policy_get_key_func,
+                  hal::nat_policy_compute_hash_func,
+                  hal::nat_policy_compare_key_func);
+    HAL_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
 
     return true;
 }
@@ -1079,13 +1086,14 @@ hal_oper_db::hal_oper_db()
     mc_key_ht_ = NULL;
     lif_id_ht_ = NULL;
     if_id_ht_ = NULL;
-    session_hal_handle_ht_ = NULL;
-    session_hal_iflow_ht_  = NULL;
-    session_hal_rflow_ht_  = NULL;
+    session_hal_handle_ht_= NULL;
+    session_hal_iflow_ht_ = NULL;
+    session_hal_rflow_ht_ = NULL;
     l4lb_ht_ = NULL;
-    nwsec_policy_cfg_ht_  = NULL;
-    nwsec_policy_ht_      = NULL;
-    nwsec_group_ht_       = NULL;
+    nwsec_policy_cfg_ht_ = NULL;
+    nwsec_policy_ht_ = NULL;
+    nat_policy_ht_ = NULL;
+    nwsec_group_ht_ = NULL;
     qos_class_ht_ = NULL;
     qos_cmap_pcp_bmp_ = NULL;
     qos_cmap_dscp_bmp_ = NULL;
@@ -1157,6 +1165,7 @@ hal_oper_db::~hal_oper_db()
     proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
     nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
+    nat_policy_ht_ ? ht::destroy(nat_policy_ht_) : HAL_NOP;
     nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
     nat_pool_ht_ ? ht::destroy(nat_pool_ht_) : HAL_NOP;
     nat_mapping_ht_ ? ht::destroy(nat_mapping_ht_) : HAL_NOP;

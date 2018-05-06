@@ -101,6 +101,7 @@ typedef struct nat_cfg_pol_s {
     nat_cfg_pol_key_t    key;
     dllist_ctxt_t        rule_list;
     dllist_ctxt_t        list_ctxt;
+    ht_ctxt_t            ht_ctxt;
 
     // operational
     hal_spinlock_t       slock;
@@ -110,6 +111,10 @@ typedef struct nat_cfg_pol_s {
 //-----------------------------------------------------------------------------
 // Function prototypes
 //-----------------------------------------------------------------------------
+
+void *nat_policy_get_key_func(void *entry);
+uint32_t nat_policy_compute_hash_func(void *key, uint32_t ht_size);
+bool nat_policy_compare_key_func(void *key1, void *key2);
 
 // pol.cc
 void nat_cfg_pol_dump(nat::NatPolicySpec& spec);

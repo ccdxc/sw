@@ -19,6 +19,40 @@ using acl::acl_ctx_t;
 
 namespace hal {
 
+void *
+nat_policy_get_key_func (void *entry)
+{
+    hal_handle_id_ht_entry_t *ht_entry;
+    nat_cfg_pol_t *policy = NULL;
+
+    HAL_ASSERT(entry != NULL);
+    ht_entry = (hal_handle_id_ht_entry_t *)entry;
+    if (ht_entry == NULL) {
+        return NULL;
+    }
+    policy = (nat_cfg_pol_t *)hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(policy->key);
+}
+
+uint32_t
+nat_policy_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(nat_cfg_pol_key_t)) % ht_size;
+}
+
+bool
+nat_policy_compare_key_func (void *key1, void *key2)
+{
+    dllist_ctxt_t    lentry;
+
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(nat_cfg_pol_key_t))) {
+        return true;
+    }
+    return false;
+}
+
 static inline nat_cfg_pol_t *
 nat_cfg_pol_alloc (void)
 {
@@ -36,6 +70,7 @@ nat_cfg_pol_init (nat_cfg_pol_t *pol)
 {
     HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&pol->rule_list);
+    pol->ht_ctxt.reset();
     pol->hal_hdl = HAL_HANDLE_INVALID;
 }
 
@@ -80,6 +115,34 @@ static inline void
 nat_cfg_pol_db_del (nat_cfg_pol_t *pol)
 {
     dllist_del(&pol->list_ctxt);
+}
+
+static inline hal_ret_t
+add_nat_cfg_pol_to_db (nat_cfg_pol_t *policy)
+{
+    hal_ret_t ret;
+    sdk_ret_t sdk_ret;
+    hal_handle_id_ht_entry_t *entry;
+
+    entry =
+        (hal_handle_id_ht_entry_t *)
+            g_hal_state->hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        HAL_TRACE_ERR("Failed to add NAT policy to cfg db, no memory");
+        return HAL_RET_OOM;
+    }
+
+    entry->handle_id = policy->hal_hdl;
+    sdk_ret = g_hal_state->nat_policy_ht()->insert_with_key(&policy->key,
+                                                            entry,
+                                                            &policy->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to add NAT policy ({}, {}) to cfg db, err : {}",
+                      policy->key.vrf_id, policy->key.pol_id, ret);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+    }
+    return ret;
 }
 
 static hal_ret_t
@@ -232,7 +295,11 @@ static inline hal_ret_t
 nat_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t ret = HAL_RET_INVALID_ARG;
+    nat_cfg_pol_t *policy;
     nat_cfg_pol_create_app_ctxt_t *app_ctx = NULL;
+    hal_handle_t hal_handle;
+    dllist_ctxt_t *lnode;
+    dhl_entry_t *dhl_entry;
 
     if (!cfg_ctxt || !cfg_ctxt->app_ctxt)
         goto end;
@@ -244,7 +311,21 @@ nat_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl_deref(app_ctx->acl_ctx);
 
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    hal_handle = dhl_entry->handle;
+    policy = (nat_cfg_pol_t *) dhl_entry->obj;
+    HAL_TRACE_DEBUG("policy key ({}, {}), handle {}",
+                    policy->key.vrf_id, policy->key.pol_id, hal_handle);
+    ret = add_nat_cfg_pol_to_db(policy);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add NAT policy ({}, {}) to db, err : {}",
+                      policy->key.vrf_id, policy->key.pol_id, ret);
+        goto end;
+    }
+
 end:
+
     if (ret != HAL_RET_OK) {
         //todo: free resources
     }

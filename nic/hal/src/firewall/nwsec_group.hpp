@@ -258,12 +258,7 @@ nwsec_policy_cfg_compute_hash_func (void *key, uint32_t ht_size);
 extern bool
 nwsec_policy_cfg_compare_key_func (void *key1, void *key2);
 
-// max. number of SGs supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_NW_SEC_POLICY_CFG  16536
-#define HAL_MAX_NW_SEC_POLICY      256
-
 // nwsec_policy_cfg related functions
-
 static inline nwsec_policy_cfg_t *
 nwsec_policy_cfg_alloc(void)
 {
@@ -495,14 +490,9 @@ get_nw_list_for_security_group(uint32_t sg_id);
 extern acl::acl_config_t             ip_acl_config;
 
 
-void *
-nwsec_policy_get_key_func (void *entry);
-
-uint32_t
-nwsec_policy_compute_hash_func (void *key, uint32_t ht_size);
-
-bool
-nwsec_policy_compare_key_func (void *key1, void *key2);
+void *nwsec_policy_get_key_func(void *entry);
+uint32_t nwsec_policy_compute_hash_func(void *key, uint32_t ht_size);
+bool nwsec_policy_compare_key_func(void *key1, void *key2);
 
 void *
 nwsec_rule_get_key_func (void *entry);
@@ -685,7 +675,7 @@ add_nwsec_policy_to_db (nwsec_policy_t *policy)
                                                               &policy->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("Failed to security policy  {} to policy db,"
+        HAL_TRACE_ERR("Failed to add security policy  {} to policy db,"
                       "err : {}", policy->key.policy_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
