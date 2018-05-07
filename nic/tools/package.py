@@ -39,16 +39,13 @@ for input_file in files:
             print (cmd)
             call(cmd, shell=True)
 
-for root, dirs, files in os.walk(output_dir):
-    for file in files:
-        if '.so' in file or 'hal' in file or 'linkmgr' in file:
-            non_stripped = os.path.join(root, file)
-            call(['chmod', '755', non_stripped])
-            if arm_pkg == 0:
-                call(['objcopy', '--only-keep-debug', non_stripped, non_stripped + '.debug'])
-                call(['strip', non_stripped])
-                call(['objcopy', '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
-            else:
+# strip the libs and binaries only for arm packaging
+if arm_pkg == 1:
+    for root, dirs, files in os.walk(output_dir):
+        for file in files:
+            if '.so' in file or 'hal' in file or 'linkmgr' in file:
+                non_stripped = os.path.join(root, file)
+                call(['chmod', '755', non_stripped])
                 call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy', '--only-keep-debug', non_stripped, non_stripped + '.debug'])
                 call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-strip', non_stripped])
                 call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy', '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
