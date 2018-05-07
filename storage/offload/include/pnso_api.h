@@ -298,24 +298,35 @@ struct pnso_decompaction_desc {
 
 /*
  * SHA512 and SHA256 hash need 64 and 32 bytes respectively.  Checksum need a
- * maximum of 4 bytes.
+ * maximum of 4 or 8 bytes.
  *
  * Depending on the hash and checksum algorithm, Pensando accelerator can
- * produce either 64 or 32-byte hash, and 4-byte checksums for every 4KB block.
+ * produce either 64 or 32-byte hash, and 4-byte or 8-byte checksums for every
+ * 4KB block.
  *
  * NOTE: Netapp will specify a max of 32KB buffer per request, so will require
- * space for maximum of only 8 hashes.
+ * space for maximum of only 8 hashes or checksums.
  *
  */
-#define PNSO_HASH_OR_CHKSUM_TAG_LEN	64
+#define PNSO_HASH_TAG_LEN	64
+#define PNSO_CHKSUM_TAG_LEN	8
 
 /**
- * struct pnso_hash_or_chksum_tag - represents the SHA or checksum tag.
- * @hash_or_chksum: specifies an array of either hashes or checksums.
+ * struct pnso_hash_tag - represents the SHA hash tag.
+ * @hash_tag: specifies a hash tag.
  *
  */
-struct pnso_hash_or_chksum_tag {
-	uint8_t hash_or_chksum[PNSO_HASH_OR_CHKSUM_TAG_LEN];
+struct pnso_hash_tag {
+	uint8_t hash_tag[PNSO_HASH_TAG_LEN];
+};
+
+/**
+ * struct pnso_chksum_tag - represents the checksum tag.
+ * @chksum_tag: specifies a checksum tag.
+ *
+ */
+struct pnso_chksum_tag {
+	uint8_t chksum_tag[PNSO_CHKSUM_TAG_LEN];
 };
 
 /**
@@ -339,10 +350,13 @@ struct pnso_service_status {
 	pnso_error_t err;
 	uint16_t svc_type;
 	uint16_t num_tags;
-	struct pnso_hash_or_chksum_tag *tags;
+	union {
+		struct pnso_hash_tag *hashes;
+		struct pnso_chksum_tag *chksums;
+	} tags;
 	uint32_t output_data_len;
 	struct pnso_buffer_list *output_buf;
-};
+} __attribute__ ((__packed__));
 
 /**
  * struct pnso_service_result - represents the result of the request upon
