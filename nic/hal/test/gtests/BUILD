@@ -329,6 +329,13 @@ cc_test(
 )
 
 cc_test(
+    name = "nat_policy_test",
+    srcs = ["nat_policy_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)
+cc_test(
     name = "offload_sim_test",
     srcs = [
         "offload_sim_test.cc",

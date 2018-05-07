@@ -173,18 +173,22 @@ nat_cfg_pol_data_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
 static hal_ret_t
 nat_cfg_pol_key_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_key_t *key)
 {
+    vrf_t *vrf;
+
     key->pol_id = spec.key_or_handle().policy_key().nat_policy_id();
 
     if (spec.key_or_handle().policy_key().
         vrf_key_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
         key->vrf_id = spec.key_or_handle().policy_key().
             vrf_key_or_handle().vrf_id();
+
+        if ((vrf = vrf_lookup_by_id(key->vrf_id)) == NULL)
+            return  HAL_RET_VRF_NOT_FOUND;
     } else {
-        vrf_t *vrf = vrf_lookup_by_handle(
-            spec.key_or_handle().policy_key().
-            vrf_key_or_handle().vrf_handle());
-        if (!vrf)
-            return HAL_RET_HANDLE_INVALID;
+        if ((vrf = vrf_lookup_by_handle(spec.key_or_handle().policy_key().
+                vrf_key_or_handle().vrf_handle())) == NULL)
+            return HAL_RET_VRF_NOT_FOUND;
+
         key->vrf_id = vrf->vrf_id;
     }
     return HAL_RET_OK;
@@ -223,6 +227,21 @@ nat_cfg_pol_dump (nat::NatPolicySpec& spec)
 static hal_ret_t
 nat_cfg_pol_spec_validate (nat::NatPolicySpec& spec)
 {
+    if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("{}: nat policy id or handle not set in request",
+                      __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return HAL_RET_OK;
+#if 0
+    if (spec.key_or_handle_case() != NatPolicyKeyHandle::kNatPolicyId) {
+        // key-handle field set, but nat policy-id not provided
+        HAL_TRACE_ERR("{}: security group id not set in"
+                      "request", __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+#endif
     return HAL_RET_OK;
 }
 

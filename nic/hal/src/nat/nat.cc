@@ -810,8 +810,8 @@ nat_pool_get (NatPoolGetRequest& req, NatPoolGetResponseMsg *rsp)
 hal_ret_t
 nat_policy_create (NatPolicySpec& spec, NatPolicyResponse *rsp)
 {
-    hal_ret_t        ret;
-    nat_cfg_pol_t    *pol;
+    hal_ret_t ret;
+    nat_cfg_pol_t *pol = NULL;
 
     nat_cfg_pol_dump(spec);
     if ((ret = nat_cfg_pol_create_cfg_handle(spec, &pol)) != HAL_RET_OK) {
@@ -823,9 +823,8 @@ nat_policy_create (NatPolicySpec& spec, NatPolicyResponse *rsp)
     }
 
 end:
-
-    nat_cfg_pol_rsp_build(rsp, ret, pol->hal_hdl);
-    return HAL_RET_OK;
+    nat_cfg_pol_rsp_build(rsp, ret, pol ? pol->hal_hdl : HAL_HANDLE_INVALID);
+    return ret;
 }
 
 hal_ret_t
