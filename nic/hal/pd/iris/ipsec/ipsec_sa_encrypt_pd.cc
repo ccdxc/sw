@@ -391,7 +391,7 @@ err:
 
 static
 hal_ret_t
-p4pd_get_ipseccb_entry(pd_ipsec_encrypt_t* ipseccb_pd) 
+p4pd_get_ipsec_sa_entry(pd_ipsec_encrypt_t* ipseccb_pd) 
 {
     hal_ret_t                   ret = HAL_RET_OK;
     
@@ -511,7 +511,7 @@ pd_ipsec_encrypt_update (pd_ipsec_encrypt_update_args_t *args)
 hal_ret_t
 pd_ipsec_encrypt_delete (pd_ipsec_encrypt_delete_args_t *args)
 {
-    hal_ret_t               ret;
+    hal_ret_t                  ret;
     pd_crypto_free_key_args_t  free_key_args;
  
     if(!args) {
@@ -519,18 +519,19 @@ pd_ipsec_encrypt_delete (pd_ipsec_encrypt_delete_args_t *args)
     }
 
     ipsec_sa_t*                ipsec_sa = args->ipsec_sa;
-    pd_ipsec_encrypt_t*             ipsec_sa_pd = (pd_ipsec_encrypt_t*)ipsec_sa->pd;
+    pd_ipsec_encrypt_t*        ipsec_sa_pd = (pd_ipsec_encrypt_t*)ipsec_sa->pd;
 
     HAL_TRACE_DEBUG("IPSECCB pd delete");
 
+    free_key_args.key_idx = ipsec_sa->key_index;
     ret = pd_crypto_free_key(&free_key_args);    
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete ipsec key at key_index {}", ipsec_sa->key_index); 
     }
-    // program ipseccb
+    // program ipsec_sa
     ret = p4pd_add_or_del_ipsec_entry(ipsec_sa_pd, true);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete ipseccb entry"); 
+        HAL_TRACE_ERR("Failed to delete ipsec_sa entry"); 
     }
     
     del_ipsec_pd_from_db(ipsec_sa_pd);
@@ -544,22 +545,22 @@ hal_ret_t
 pd_ipsec_encrypt_get (pd_ipsec_encrypt_get_args_t *args)
 {
     hal_ret_t               ret;
-    pd_ipsec_encrypt_t              ipseccb_pd;
+    pd_ipsec_encrypt_t              ipsec_sa_pd;
 
     HAL_TRACE_DEBUG("IPSECCB pd get for id: {}", args->ipsec_sa->sa_id);
 
-    // allocate PD ipseccb state
-    ipsec_pd_encrypt_init(&ipseccb_pd);
-    ipseccb_pd.ipsec_sa = args->ipsec_sa;
+    // allocate PD ipsec_sa state
+    ipsec_pd_encrypt_init(&ipsec_sa_pd);
+    ipsec_sa_pd.ipsec_sa = args->ipsec_sa;
     
     // get hw-id for this IPSECCB
-    ipseccb_pd.hw_id = pd_ipsec_encrypt_get_base_hw_index(&ipseccb_pd);
-    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", ipseccb_pd.hw_id);
+    ipsec_sa_pd.hw_id = pd_ipsec_encrypt_get_base_hw_index(&ipsec_sa_pd);
+    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", ipsec_sa_pd.hw_id);
 
-    // get hw ipseccb entry
-    ret = p4pd_get_ipseccb_entry(&ipseccb_pd);
+    // get hw ipsec_sa entry
+    ret = p4pd_get_ipsec_sa_entry(&ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", ipseccb_pd.ipsec_sa->sa_id);
+        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", ipsec_sa_pd.ipsec_sa->sa_id);
     }
     return ret;
 }

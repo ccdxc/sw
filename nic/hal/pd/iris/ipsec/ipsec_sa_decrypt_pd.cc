@@ -355,38 +355,83 @@ hal_ret_t
 pd_ipsec_decrypt_create (pd_ipsec_decrypt_create_args_t *args)
 {
     hal_ret_t               ret;
-    pd_ipsec_decrypt_s      *ipseccb_pd;
+    pd_ipsec_decrypt_s      *ipsec_sa_pd;
+    ipsec_sa_t*             ipsec_sa = args->ipsec_sa;
+ 
+    pd_crypto_alloc_key_args_t key_index_args;
+    pd_crypto_write_key_args_t write_key_args;
+    crypto_key_t crypto_key;
 
     HAL_TRACE_DEBUG("Creating pd state for IPSEC CB.");
 
-    // allocate PD ipseccb state
-    ipseccb_pd = ipsec_pd_decrypt_alloc_init();
-    if (ipseccb_pd == NULL) {
+    // allocate PD ipsec_sa state
+    ipsec_sa_pd = ipsec_pd_decrypt_alloc_init();
+    if (ipsec_sa_pd == NULL) {
         return HAL_RET_OOM;
     }
     HAL_TRACE_DEBUG("Alloc done");
-    ipseccb_pd->ipsec_sa = args->ipsec_sa;
+    ipsec_sa_pd->ipsec_sa = args->ipsec_sa;
     // get hw-id for this IPSECCB
-    ipseccb_pd->hw_id = pd_ipsec_decrypt_get_base_hw_index(ipseccb_pd);
-    
-    // program ipseccb
-    ret = p4pd_add_or_del_ipsec_decrypt_entry(ipseccb_pd, false);
+    ipsec_sa_pd->hw_id = pd_ipsec_decrypt_get_base_hw_index(ipsec_sa_pd);
+
+    //Orig Key
+    key_index_args.key_idx = &ipsec_sa->key_index;
+
+    ret = pd_crypto_alloc_key(&key_index_args);    
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create key index");
+        goto cleanup;    
+    }
+    ipsec_sa_pd->ipsec_sa->key_index = *(key_index_args.key_idx);
+    crypto_key.key_type = ipsec_sa->key_type;
+    crypto_key.key_size = ipsec_sa->key_size;
+    memcpy(crypto_key.key, ipsec_sa->key, ipsec_sa->key_size);
+    write_key_args.key_idx = ipsec_sa->key_index;
+    write_key_args.key = &crypto_key;
+    ret = pd_crypto_write_key(&write_key_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to write key at index");
+        goto cleanup;    
+    }
+
+    //New Key
+    key_index_args.key_idx = &ipsec_sa->new_key_index;
+
+    ret = pd_crypto_alloc_key(&key_index_args);    
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create key index");
+        goto cleanup;    
+    }
+    ipsec_sa_pd->ipsec_sa->new_key_index = *(key_index_args.key_idx);
+    crypto_key.key_type = ipsec_sa->new_key_type;
+    crypto_key.key_size = ipsec_sa->new_key_size;
+    memcpy(crypto_key.key, ipsec_sa->new_key, ipsec_sa->new_key_size);
+    write_key_args.key_idx = ipsec_sa->new_key_index;
+    write_key_args.key = &crypto_key;
+    ret = pd_crypto_write_key(&write_key_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to write key at index");
+        goto cleanup;    
+    } 
+ 
+    // program ipsec_sa
+    ret = p4pd_add_or_del_ipsec_decrypt_entry(ipsec_sa_pd, false);
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }
     // add to db
-    ret = add_ipsec_pd_decrypt_to_db(ipseccb_pd);
+    ret = add_ipsec_pd_decrypt_to_db(ipsec_sa_pd);
     if (ret != HAL_RET_OK) {
        goto cleanup;
     }
-    args->ipsec_sa->pd_decrypt = ipseccb_pd;
+    args->ipsec_sa->pd_decrypt = ipsec_sa_pd;
 
     return HAL_RET_OK;
 
 cleanup:
 
-    if (ipseccb_pd) {
-        ipsec_pd_decrypt_free(ipseccb_pd);
+    if (ipsec_sa_pd) {
+        ipsec_pd_decrypt_free(ipsec_sa_pd);
     }
     return ret;
 }
@@ -395,20 +440,55 @@ hal_ret_t
 pd_ipsec_decrypt_update (pd_ipsec_decrypt_update_args_t *args)
 {
     hal_ret_t               ret;
-    
+
+    pd_crypto_write_key_args_t write_key_args;
+    pd_crypto_alloc_key_args_t key_index_args;
+    crypto_key_t crypto_key;    
+
     if(!args) {
        return HAL_RET_INVALID_ARG; 
     }
 
-    ipsec_sa_t*                ipseccb = args->ipsec_sa;
-    pd_ipsec_decrypt_t*        ipseccb_pd = (pd_ipsec_decrypt_t*)ipseccb->pd_decrypt;
+    ipsec_sa_t*                ipsec_sa = args->ipsec_sa;
+    pd_ipsec_decrypt_t*        ipsec_sa_pd = (pd_ipsec_decrypt_t*)ipsec_sa->pd_decrypt;
 
     HAL_TRACE_DEBUG("IPSECCB pd update");
     
-    // program ipseccb
-    ret = p4pd_add_or_del_ipsec_decrypt_entry(ipseccb_pd, false);
+    crypto_key.key_type = ipsec_sa->key_type;
+    crypto_key.key_size = ipsec_sa->key_size;
+    memcpy(crypto_key.key, ipsec_sa->key, ipsec_sa->key_size);
+    write_key_args.key_idx = ipsec_sa->key_index;
+    write_key_args.key = &crypto_key;
+
+    ret = pd_crypto_write_key(&write_key_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to update ipseccb");
+        HAL_TRACE_ERR("Failed to write key at index{}", ipsec_sa->key_index);
+       return HAL_RET_INVALID_ARG; 
+    }
+    //New Key
+    key_index_args.key_idx = &ipsec_sa->new_key_index;
+
+    ret = pd_crypto_alloc_key(&key_index_args);    
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create key index");
+        return HAL_RET_INVALID_ARG; 
+    }
+    ipsec_sa_pd->ipsec_sa->new_key_index = *(key_index_args.key_idx);
+    crypto_key.key_type = ipsec_sa->new_key_type;
+    crypto_key.key_size = ipsec_sa->new_key_size;
+    memcpy(crypto_key.key, ipsec_sa->new_key, ipsec_sa->new_key_size);
+    write_key_args.key_idx = ipsec_sa->new_key_index;
+    write_key_args.key = &crypto_key;
+    ret = pd_crypto_write_key(&write_key_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to write key at index");
+        return HAL_RET_INVALID_ARG; 
+    } 
+ 
+    // program ipsec_sa
+    ret = p4pd_add_or_del_ipsec_decrypt_entry(ipsec_sa_pd, false);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update ipsec_sa");
     }
     return ret;
 }
@@ -417,25 +497,43 @@ hal_ret_t
 pd_ipsec_decrypt_delete (pd_ipsec_decrypt_delete_args_t *args)
 {
     hal_ret_t               ret;
+    pd_crypto_free_key_args_t  free_key_args;
     
     if(!args) {
        return HAL_RET_INVALID_ARG; 
     }
 
-    ipsec_sa_t*                ipseccb = args->ipsec_sa;
-    pd_ipsec_decrypt_t*       ipseccb_pd = (pd_ipsec_decrypt_t*)ipseccb->pd_decrypt;
+    ipsec_sa_t*                ipsec_sa = args->ipsec_sa;
+    pd_ipsec_decrypt_t*       ipsec_sa_pd = (pd_ipsec_decrypt_t*)ipsec_sa->pd_decrypt;
 
     HAL_TRACE_DEBUG("IPSECCB pd delete");
-    
-    // program ipseccb
-    ret = p4pd_add_or_del_ipsec_decrypt_entry(ipseccb_pd, true);
+  
+    free_key_args.key_idx = ipsec_sa->key_index;
+
+    ret = pd_crypto_free_key(&free_key_args);    
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete ipseccb entry"); 
+        HAL_TRACE_ERR("Failed to delete ipsec key at key_index {}", ipsec_sa->key_index); 
     }
     
-    del_ipsec_pd_decrypt_from_db(ipseccb_pd);
 
-    ipsec_pd_decrypt_free(ipseccb_pd);
+    if (ipsec_sa->new_key_index != 0) { 
+        free_key_args.key_idx = ipsec_sa->new_key_index;
+
+        ret = pd_crypto_free_key(&free_key_args);    
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete ipsec key at key_index {}", ipsec_sa->new_key_index); 
+        }
+    }
+ 
+    // program ipsec_sa
+    ret = p4pd_add_or_del_ipsec_decrypt_entry(ipsec_sa_pd, true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete ipsec_sa entry"); 
+    }
+    
+    del_ipsec_pd_decrypt_from_db(ipsec_sa_pd);
+
+    ipsec_pd_decrypt_free(ipsec_sa_pd);
 
     return ret;
 }
@@ -444,22 +542,22 @@ hal_ret_t
 pd_ipsec_decrypt_get (pd_ipsec_decrypt_get_args_t *args)
 {
     hal_ret_t               ret;
-    pd_ipsec_decrypt_t      ipseccb_pd;
+    pd_ipsec_decrypt_t      ipsec_sa_pd;
 
     HAL_TRACE_DEBUG("IPSECCB pd get for id: {}", args->ipsec_sa->sa_id);
 
-    // allocate PD ipseccb state
-    ipsec_pd_decrypt_init(&ipseccb_pd);
-    ipseccb_pd.ipsec_sa = args->ipsec_sa;
+    // allocate PD ipsec_sa state
+    ipsec_pd_decrypt_init(&ipsec_sa_pd);
+    ipsec_sa_pd.ipsec_sa = args->ipsec_sa;
     
     // get hw-id for this IPSECCB
-    ipseccb_pd.hw_id = pd_ipsec_decrypt_get_base_hw_index(&ipseccb_pd);
-    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", ipseccb_pd.hw_id);
+    ipsec_sa_pd.hw_id = pd_ipsec_decrypt_get_base_hw_index(&ipsec_sa_pd);
+    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", ipsec_sa_pd.hw_id);
 
-    // get hw ipseccb entry
-    ret = p4pd_get_ipsec_decrypt_entry(&ipseccb_pd);
+    // get hw ipsec_sa entry
+    ret = p4pd_get_ipsec_decrypt_entry(&ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", ipseccb_pd.ipsec_sa->sa_id);
+        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", ipsec_sa_pd.ipsec_sa->sa_id);
     }
     return ret;
 }

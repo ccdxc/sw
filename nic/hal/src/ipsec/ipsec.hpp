@@ -65,11 +65,13 @@ typedef struct ipsec_sa_s {
     uint8_t               iv_size;
     uint8_t               icv_size;
     uint8_t               block_size;
-    uint32_t              key_index;
+    int32_t               key_index;
     types::CryptoKeyType  key_type;
     uint32_t              key_size;
     uint8_t               key[MAX_IPSEC_KEY_SIZE];
-    uint32_t              new_key_index;
+    int32_t               new_key_index;
+    types::CryptoKeyType  new_key_type;
+    uint32_t              new_key_size;
     uint8_t               new_key[MAX_IPSEC_KEY_SIZE];
     uint32_t              barco_enc_cmd;
     uint64_t              iv;

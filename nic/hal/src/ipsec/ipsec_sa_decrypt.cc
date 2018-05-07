@@ -135,8 +135,12 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec->iv_salt = spec.salt();
     ipsec->spi = spec.spi();
     ipsec->new_spi = spec.rekey_spi();
-    //ipsec->key_index = spec.key_index();
-    //ipsec->new_key_index = spec.new_key_index();
+    ipsec->key_size = 32;
+    ipsec->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
+    memcpy((uint8_t*)ipsec->key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
+    ipsec->new_key_size = 32;
+    ipsec->new_key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
+    memcpy((uint8_t*)ipsec->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
 
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
@@ -232,6 +236,12 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec->esn_hi = ipsec->esn_lo = 0;
 
     ipsec->barco_enc_cmd = IPSEC_BARCO_DECRYPT_AES_GCM_256;
+    ipsec->key_size = 32;
+    ipsec->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
+    memcpy((uint8_t*)ipsec->key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
+    ipsec->new_key_size = 32;
+    ipsec->new_key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
+    memcpy((uint8_t*)ipsec->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
 
     pd::pd_ipsec_decrypt_update_args_init(&pd_ipsec_decrypt_args);
     pd_ipsec_decrypt_args.ipsec_sa = ipsec;
