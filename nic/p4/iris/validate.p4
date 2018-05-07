@@ -54,24 +54,28 @@ action malformed_packet() {
     drop_packet();
 }
 
+// Same IP check for src and dst only when IP Normalizaiton is enabled.
 action validate_ipv4_flow_key() {
     if (((flow_lkp_metadata.lkp_src & 0xff000000) == 0x7f000000) or
         ((flow_lkp_metadata.lkp_src & 0xf0000000) == 0xe0000000) or
         (flow_lkp_metadata.lkp_src == 0xffffffff) or
         (flow_lkp_metadata.lkp_dst == 0) or
         ((flow_lkp_metadata.lkp_dst & 0xff000000) == 0x7f000000) or
-        (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst)) {
+        ((l4_metadata.ip_normalization_en == TRUE) and 
+         (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst))) {
         malformed_packet();
     }
 }
 
+// Same IP check for src and dst only when IP Normalizaiton is enabled.
 action validate_ipv6_flow_key() {
     if ((flow_lkp_metadata.lkp_src == 0x00000000000000000000000000000001) or
         ((flow_lkp_metadata.lkp_src & 0xff000000000000000000000000000000) ==
          0xff000000000000000000000000000000) or
         (flow_lkp_metadata.lkp_dst == 0x00000000000000000000000000000000) or
         (flow_lkp_metadata.lkp_dst == 0x00000000000000000000000000000001) or
-        (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst)) {
+        ((l4_metadata.ip_normalization_en == TRUE) and 
+         (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst))) {
         malformed_packet();
     }
 }

@@ -199,6 +199,7 @@ validate_ipv4_flow_key:
   seq           c4, k.flow_lkp_metadata_lkp_dst[31:0], r0
   seq           c5, k.flow_lkp_metadata_lkp_dst[31:24], 0x7f
   seq           c6, r6[31:0], k.flow_lkp_metadata_lkp_dst[31:0]
+  seq.c6        c6, k.l4_metadata_ip_normalization_en, TRUE
   bcf           [c1|c2|c3|c4|c5|c6], malformed_flow_key
   nop
   b             flow_miss_common
@@ -224,8 +225,8 @@ validate_ipv6_flow_key:
   andcf         c2, [c3]
   seq           c3, r2[63:56], 0xff
   seq           c4, r2, r4
-  seq           c5, r3, r5
-  andcf         c4, [c5]
+  seq.c4        c4, r3, r5
+  seq.c4        c4, k.l4_metadata_ip_normalization_en, TRUE
   bcf           [c1|c2|c3|c4], malformed_flow_key
   nop
   b             flow_miss_common
