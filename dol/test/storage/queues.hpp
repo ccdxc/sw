@@ -25,6 +25,8 @@ int nvme_pvm_queues_setup();
 
 int nvme_dp_queues_setup();
 
+int nvme_dp_update_cqs();
+
 int pvm_queues_setup();
 
 int seq_queues_setup();

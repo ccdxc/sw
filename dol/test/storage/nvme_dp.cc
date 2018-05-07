@@ -20,11 +20,18 @@ namespace nvme_dp {
 
 #define IO_BUF_SEQ_R2N_DB_OFFSET                384
 
+#define IO_BUF_SEQ_QADDR_OFFSET                 3072  // Size == 64 bytes (supports 8 doorbells * 34 bit address)
+
+#define IO_BUF_SEQ_R2N_QADDR_BIT_OFFSET                 204
+
 #define IO_BUF_NVME_BE_CMD_OFFSET               3896
 
 #define IO_BUF_WRITE_REQ_OFFSET                 4032
 
 #define IO_BUF_DATA_OFFSET                      4096
+
+
+
 
 
 
@@ -289,6 +296,9 @@ int setup_one_io_buffer(int index) {
   io_buf_base_addr->write_bit_fields(base_db_bit+14, 24, seq_roce_q);
   io_buf_base_addr->write_bit_fields(base_db_bit+38, 34, seq_roce_qaddr);
 
+  uint32_t base_qaddr_bit = (IO_BUF_SEQ_QADDR_OFFSET * 8);
+  io_buf_base_addr->write_bit_fields(base_qaddr_bit+IO_BUF_SEQ_R2N_QADDR_BIT_OFFSET, 34, seq_roce_qaddr);
+
   // Commit to HBM
   io_buf_base_addr->write_thru();
   printf("IOB buffer %d setup, PA: %lx \n", index, io_buf_base_addr->pa());
@@ -365,6 +375,13 @@ int test_setup () {
 }
 
 int config () {
+
+  // Update CQs with ROCE RQ context for buffer posting 
+  if (queues::nvme_dp_update_cqs() < 0) {
+    printf("Failed to update CQs \n");
+    return -1;
+  }
+  printf("Updated CQs\n");
 
   //  Setup IO map for  NSID 1
   if (setup_io_map() < 0) {

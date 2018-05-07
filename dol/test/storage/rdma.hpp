@@ -18,6 +18,9 @@ using namespace dp_mem;
 #define RDMA_OP_TYPE_BIND_MW        10
 #define RDMA_OP_TYPE_SEND_INV_IMM   11
 
+#define IO_STATUS_BUF_BE_STATUS_OFFSET          64
+#define IO_STATUS_BUF_BE_STATUS_SIZE            64
+
 // Define the desired Send op_type;
 // Valid choices are RDMA_OP_TYPE_SEND or RDMA_OP_TYPE_SEND_IMM
 const uint8_t  kRdmaSendOpType = RDMA_OP_TYPE_SEND_IMM;
@@ -62,6 +65,8 @@ void IncrInitiatorRcvBufPtr();
 
 int rdma_roce_ini_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr);
 int rdma_roce_tgt_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr);
+int rdma_roce_ini_rq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr, uint64_t *base_pa);
+int rdma_roce_tgt_rq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr, uint64_t *base_pa);
 uint32_t get_rdma_pvm_roce_init_sq();
 uint32_t get_rdma_pvm_roce_init_cq();
 uint32_t get_rdma_pvm_roce_tgt_sq();

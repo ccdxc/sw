@@ -14,6 +14,7 @@ struct s6_tbl0_push_cq_d d;
 struct phv_ p;
 
 %%
+   .param storage_nvme_push_roce_rq_start
    .param storage_nvme_send_sta_free_iob_start
 
 storage_nvme_push_cq_start:
@@ -32,6 +33,13 @@ storage_nvme_push_cq_start:
    // Push the entry to the queue (this increments p_ndx and writes to table)
    QUEUE_PUSH(d.p_ndx, d.num_entries)
 
+   // Store the ROCR RQ information in the K+I vector for releasing the
+   // IO status buffer
+   phvwrpair	p.nvme_kivec_t1_s2s_dst_lif, d.rrq_lif,	\
+		p.nvme_kivec_t1_s2s_dst_qtype, d.rrq_qtype
+   phvwrpair	p.nvme_kivec_t1_s2s_dst_qid, d.rrq_qid,	\
+		p.nvme_kivec_t1_s2s_dst_qaddr, d.rrq_base
+
    // Delay slot to check the interrupt enable bit (since reading p_ndx 
    // straight after writing takes a one cycle stall)
    seq		c2, d.intr_en, 1
@@ -48,6 +56,13 @@ storage_nvme_push_cq_start:
    PCI_RAISE_INTERRUPT(dma_p2m_6)
 
 skip_intr:
+   // Load table 1 and program for pushing the status buffer back to the RQ.
+   LOAD_TABLE1_FOR_ADDR34_PC_IMM(d.rrq_qaddr,
+                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                                 storage_nvme_push_roce_rq_start)
+
+   // Load table 0 and program for reading the destination arm queue
+   // state in the next stage for sending command to free the IOB.
    LOAD_TABLE_FOR_ADDR34_PC_IMM(NVME_KIVEC_ARM_DST6_ARM_QADDR,
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_nvme_send_sta_free_iob_start)

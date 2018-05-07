@@ -63,6 +63,10 @@ DEFINE_string(acc_scale_verify_method, "full",
 DEFINE_bool(with_rtl_skipverify, false,
             "Test being run under RTL with --skipverify in effect");
 
+// Number of iterations for NVME scale testing
+DEFINE_uint64(nvme_scale_iters, 4,
+              "Number of iterations for NVME scale testing (0 = infinite)");
+
 bool run_nvme_dp_tests = false;
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
@@ -88,6 +92,9 @@ std::vector<tests::TestEntry> nvme_dp_tests = {
   {&tests::test_run_nvme_dp_write_cmd, "NVME Datapath write command", false},
   {&tests::test_run_nvme_dp_read_cmd, "NVME Datapath read command", false},
   {&tests::test_run_nvme_dp_e2e_test, "NVME Datapath E2E test", false},
+  {&tests::test_run_nvme_dp_write_scale, "NVME Datapath write scale", false},
+  {&tests::test_run_nvme_dp_read_scale, "NVME Datapath read scale", false},
+  {&tests::test_run_nvme_dp_e2e_scale, "NVME Datapath E2E scale", false},
 };
 
 std::vector<tests::TestEntry> unit_tests = {

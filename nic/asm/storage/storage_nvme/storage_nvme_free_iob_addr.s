@@ -20,5 +20,6 @@ storage_nvme_free_iob_addr_start:
    phvwr	p.io_ctx_iob_addr, d.iob_addr
 
    // Load the IOB for the next stage to cleanup
-   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.iob_addr, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+   add		r7, d.iob_addr, IO_BUF_SEQ_QADDR_OFFSET
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_nvme_cleanup_iob_start)

@@ -668,4 +668,37 @@ int setup_init_r2n_q_state(int src_lif, int src_qtype, int src_qid,
          qaddr, src_lif, src_qtype, src_qid, base_addr);
   return 0;
 }
+
+int update_nvme_cq_state(int src_lif, int src_qtype, int src_qid,
+                         uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
+                         uint64_t rrq_qaddr, int64_t rrq_base_pa) {
+
+  uint8_t q_state[64];
+
+  // Get the qstate
+  if (hal_if::get_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("Pri Q state GET FAILED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    return -1;
+  } else {
+    printf("Pri Q state GET SUCCEEDED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    //utils::dump(q_state);
+  }
+
+  // Update the weights and counters
+  utils::write_bit_fields(q_state, 302, 11, rrq_lif);
+  utils::write_bit_fields(q_state, 313, 3, rrq_qtype);
+  utils::write_bit_fields(q_state, 316, 24, rrq_qid);
+  utils::write_bit_fields(q_state, 340, 34, rrq_qaddr);
+  utils::write_bit_fields(q_state, 374, 34, rrq_base_pa);
+
+  // Write the qstate back
+  if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("Failed to set lif_qstate addr \n");
+    return -1;
+  }
+  return 0;
+}
+
 }  // namespace qstate_if
