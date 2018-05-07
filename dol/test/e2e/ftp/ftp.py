@@ -10,6 +10,9 @@ def Setup(infra, module):
     return
 
 def TestCaseSetup(tc):
+    from pyftpdlib import handlers
+    handlers.PassiveDTP.timeout = None
+    handlers.ActiveDTP.timeout = None
     pass
 
 def TestCaseTeardown(tc):

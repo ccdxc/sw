@@ -57,11 +57,14 @@ protected:
     }
     
     static hal_handle_t client_eph, server_eph;
+
+public:
+    static void ftp_session_create(void *);
 };
 
 hal_handle_t ftp_test::client_eph, ftp_test::server_eph;
 
-TEST_F(ftp_test, ftp_session)
+void ftp_test::ftp_session_create (void *ptr)
 {
     SessionGetRequest  req;
     SessionGetResponse rsp;
@@ -126,6 +129,12 @@ TEST_F(ftp_test, ftp_session)
     EXPECT_EQ(rsp.status().alg(), nwsec::APP_SVC_FTP);
     EXPECT_TRUE(rsp.status().has_ftp_info());
     EXPECT_EQ(rsp.status().ftp_info().parse_error(), 0);
+}
+
+TEST_F(ftp_test, ftp_session)
+{
+    fte_softq_enqueue(FTE_ID, ftp_session_create, NULL);
+    sleep(1);
 }
 
 TEST_F(ftp_test, app_sess_force_delete) {

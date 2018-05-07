@@ -71,6 +71,9 @@ class LoggerSink:
         self.sink.flush()
         return
 
+    def isatty(self):
+        return True
+
 StdoutLoggerSink = LoggerSink(stdout = True)
 sys.stdout = StdoutLoggerSink
 sys.stderr = StdoutLoggerSink

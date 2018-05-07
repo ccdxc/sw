@@ -223,7 +223,7 @@ static int __parse_port_cmd(const char *data, uint32_t dlen,
                              (array[1] << 8) | array[0]);
     ftp_info->dport = htons((array[5] << 8) | array[4]);
     ftp_info->add_exp_flow = true;
-    ftp_info->sport = FTP_DATA_PORT;
+    //ftp_info->sport = FTP_DATA_PORT;
     return length;
 }
 
@@ -288,7 +288,7 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
         incr_parse_error(ftp_info);
 
     ftp_info->add_exp_flow = true;
-    ftp_info->sport = FTP_DATA_PORT;
+    //ftp_info->sport = FTP_DATA_PORT;
 
     return ret;
 }

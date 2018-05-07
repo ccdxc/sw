@@ -6,6 +6,7 @@
 #include <tins/tins.h>
 
 using namespace hal::plugins::alg_rtsp;
+using namespace fte;
 
 class rtsp_test : public fte_base_test {
 protected:
@@ -52,11 +53,14 @@ protected:
     }
     
     static hal_handle_t client_eph, server_eph;
+
+public:
+    static void rtsp_session_create(void *);
 };
 
 hal_handle_t rtsp_test::client_eph, rtsp_test::server_eph;
 
-TEST_F(rtsp_test, rtsp_session)
+void rtsp_test::rtsp_session_create (void *ptr)
 {
     hal_ret_t ret;
 
@@ -124,5 +128,10 @@ TEST_F(rtsp_test, rtsp_session)
     CHECK_DENY_UDP(client_eph, server_eph, 6257 ,4589, "s:4589 -> c:6257");
     CHECK_DENY_UDP(server_eph, client_eph, 4588, 6256, "s:4588 <- c:6256");
     CHECK_DENY_UDP(server_eph, client_eph, 4589, 6257, "s:4589 <- c:6257");
- }
+}
 
+TEST_F(rtsp_test, rtsp_session)
+{
+    fte_softq_enqueue(FTE_ID, rtsp_session_create, NULL);
+    sleep(1);
+}

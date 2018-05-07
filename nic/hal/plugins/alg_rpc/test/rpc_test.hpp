@@ -57,4 +57,8 @@ protected:
     }
 
     static hal_handle_t client_eph, server_eph;
+
+public:
+    static void sunrpc_session_create(void *);
+    static void msrpc_session_create(void *);
 };

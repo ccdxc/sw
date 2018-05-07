@@ -52,6 +52,7 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	#$(CMD_OPTS) ./nic/hal/plugins/alg_rtsp/alg_rtsp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_rtsp_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/offload_sim_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/offload_sim_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/network/network_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/network_test.xml"
+	$(CMD_OPTS) ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	$(CMD_OPTS) ./nic/utils/agent_api/agent_api_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/agent_api_test.xml"
 	@# PI Utils gtests
 	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
@@ -59,7 +60,6 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	cd ../bazel-bin && ./nic/utils/pt/pt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/pt_test.xml"
 	cd ../bazel-bin && ./nic/utils/block_list/block_list_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/block_list_test.xml"
 	cd ../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
-	cd ../bazel-bin && ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	@# PD Utils gtests
 	$(PD_CMD_OPTS) ./nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
 	@# Removed because of randomization

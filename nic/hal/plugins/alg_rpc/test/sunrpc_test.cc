@@ -11,7 +11,7 @@ using namespace fte;
 
 hal_handle_t rpc_test::client_eph, rpc_test::server_eph;
 
-TEST_F(rpc_test, sunrpc_session)
+void rpc_test::sunrpc_session_create (void *ptr)
 {
     SessionGetRequest  req;
     SessionGetResponse rsp;
@@ -130,6 +130,11 @@ TEST_F(rpc_test, sunrpc_session)
     EXPECT_TRUE(rsp.status().has_rpc_info());
     EXPECT_EQ(rsp.status().rpc_info().num_exp_flows(), 14);
     EXPECT_EQ(rsp.status().rpc_info().num_data_sess(), 2);
+}
+
+TEST_F(rpc_test, sunrpc_session) {
+    fte_softq_enqueue(FTE_ID, sunrpc_session_create, NULL);
+    sleep(1);
 }
 
 TEST_F(rpc_test, sunrpc_exp_flow_timeout) {

@@ -659,8 +659,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
 
-    if (!getenv("CAPRI_MOCK_MODE") &&
-        !getenv("DISABLE_FTE") &&
+    if (!getenv("DISABLE_FTE") &&
         !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)) {
         // start fte threads
         for (uint32_t i = 0; (i < hal_cfg->num_data_threads &&

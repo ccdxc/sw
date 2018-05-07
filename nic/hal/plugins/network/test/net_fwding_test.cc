@@ -2,8 +2,11 @@
 #include "nic/fte/test/fte_base_test.hpp"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/fte.hpp"
 
 #include <tins/tins.h>
+
+using namespace fte;
 
 class fwding_test : public fte_base_test {
 protected:
@@ -41,12 +44,15 @@ protected:
     }
     
     static hal_handle_t eph_, gwh_, vrfh_, nwh_, l2segh1_, l2segh2_, intfh1_, intfh2_;
+
+public:
+    static void route_lookup_test(void *ptr);
 };
 
 hal_handle_t fwding_test::eph_, fwding_test::gwh_, fwding_test::vrfh_, fwding_test::nwh_,
     fwding_test::l2segh1_, fwding_test::l2segh2_, fwding_test::intfh1_, fwding_test::intfh2_;
 
-TEST_F (fwding_test, route_lookup)
+void fwding_test::route_lookup_test (void *ptr)
 {
     hal_ret_t ret;
 
@@ -74,4 +80,10 @@ TEST_F (fwding_test, route_lookup)
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.lport, args.lport_id); 
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_sa_rewrite, 1);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_da_rewrite, 1);
+}
+
+TEST_F (fwding_test, route_lookup)
+{
+    fte_softq_enqueue(FTE_ID, route_lookup_test, NULL);
+    sleep(1);
 }

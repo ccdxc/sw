@@ -8,6 +8,8 @@
 #include "nic/include/fte_ctx.hpp"
 #include <tins/tins.h>
 
+#define FTE_ID 0
+
 class fte_base_test : public hal_base_test {
 public:
     static hal_handle_t add_vrf();
