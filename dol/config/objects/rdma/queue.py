@@ -151,7 +151,10 @@ class RdmaRQstate(Packet):
         IntField("bt_r_key", 0),
         IntField("bt_len", 0),
 
-        BitField("rqcb2_pad", 0, 288),
+        BitField("rnr_timeout", 0, 5),
+        BitField("rqcb2_rsvd1", 0, 3),
+
+        BitField("rqcb2_pad", 0, 280),
 
         # RQCB3
         LongField("wrid", 0),

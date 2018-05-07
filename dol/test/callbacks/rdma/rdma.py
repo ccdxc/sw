@@ -147,6 +147,11 @@ def GetNakSyndrome(tc, pkt, args):
     syndrome = ((3 << 5) | args.nak_code) 
     return syndrome
 
+def GetRnrNakSyndrome(tc, pkt, args):
+    # AETH_CODE_RNR << AETH_SYNDROME_CODE_SHIFT | rnr_timeout
+    syndrome = ((1 << 5) | args.rnr_timeout)
+    return syndrome
+
 def GetUDPacketPayload(tc, packet, args):
     srcpacket = tc.packets.Get(args.pktid) 
     slicer = PacketSlicer(srcpacket, args)

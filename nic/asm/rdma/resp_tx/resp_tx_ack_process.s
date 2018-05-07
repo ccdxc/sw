@@ -15,6 +15,12 @@ struct resp_tx_s1_t0_k k;
 
 resp_tx_ack_process:
 
+	// check if rnr and update the syndrome
+	seq          c7, d.aeth.syndrome[7:5], AETH_CODE_RNR
+	// c7 is set if syndrome code is RNR
+    AETH_RNR_SYNDROME_GET_C(r6, d.rnr_timeout, c7) 
+    tblwr.c7    d.aeth.syndrome, r6
+
     // prepare aeth
     phvwrpair   p.aeth.syndrome, d.aeth.syndrome, p.aeth.msn, d.aeth.msn
     phvwr       p.bth.psn, d.ack_nak_psn

@@ -1189,7 +1189,9 @@ typedef struct rqcb1_s {
 
 //rqcb2_t is the 3rd 64B of rqcb
 typedef struct rqcb2_s {
-    uint8_t     pad[36];
+    uint8_t     pad[35];
+    uint8_t     rsvd1 : 3;
+    uint8_t     rnr_timeout : 5;
     bt_info_t   bt_info;
     rdma_aeth_t aeth;
     uint32_t    ack_nak_psn : 24;

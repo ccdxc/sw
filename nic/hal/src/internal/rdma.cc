@@ -1015,6 +1015,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.ring_header.pc = offset >> 6;
     rqcb.rqcb1.pc = offset >> 6;
 
+    rqcb.rqcb2.rnr_timeout = 0xb;
+
     stage0_resp_tx_prog_addr(&offset_verify);
     HAL_ASSERT(offset == offset_verify);
 
@@ -1026,6 +1028,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // Convert data before writting to HBM
     memrev((uint8_t*)&rqcb.rqcb0, sizeof(rqcb0_t));
     memrev((uint8_t*)&rqcb.rqcb1, sizeof(rqcb1_t));
+    memrev((uint8_t*)&rqcb.rqcb2, sizeof(rqcb2_t));
     //TODO: rqcb2
 
     // write to hardware

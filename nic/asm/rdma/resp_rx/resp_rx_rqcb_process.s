@@ -169,6 +169,9 @@ process_send_write_fml:
     bcf.c7      [c1|c2], inv_req_nak
     
     // increment msn if it is a last packet
+    /* TODO below instructions can be optimized using tblmincri
+       and delaying the subsequent phvwr by a few instructions
+     */
     add         r1, r0, d.msn   //BD Slot
     mincr.c3    r1, 24, 1
     tblwr.c3    d.msn, r1
@@ -187,8 +190,12 @@ process_send_write_fml:
      
 /****** Slow path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
+	// check if rnr case for Write Last with Immdt
+	seq 		c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
+    bcf.c7      [c6 & c3], process_rnr
+
     // load rqcb3
-    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3) //BD Slot
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     // only first packet has reth header
@@ -232,12 +239,17 @@ wr_skip_immdt_as_dbell:
 
 /****** Slow path: SEND FIRST/MIDDLE/LAST ******/
 process_send:
-    // if SEND_FIRST, we simply need to checkout a descriptor
-    bcf         [c1], rc_checkout
+
+	// check if rnr case for Send First
+	seq 		c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
+    bcf.c7      [c1], process_rnr
+    
     crestore [c7, c6, c5], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)   //BD Slot
     // c7: completion, c6: inv_rkey, c5: immdt
 
-    setcf       c4, [c6 | c5]
+    // if SEND_FIRST, we simply need to checkout a descriptor
+    bcf         [c1], rc_checkout 
+    setcf       c4, [c6 | c5] // BD Slot
 
     // if SEND_MIDDLE OR immediate/inv_rkey is not present, 
     // we simply need to go to in_progress path
@@ -311,6 +323,9 @@ skip_token_id_check:
     blt         r1, REM_PYLD_BYTES, inv_req_nak
 
     // increment msn
+    /* TODO below instructions can be optimized using tblmincri
+       and delaying the subsequent phvwr by a few instructions
+     */
     add         r1, r0, d.msn   //BD Slot
     mincr       r1, 24, 1
     tblwr       d.msn, r1
@@ -334,8 +349,12 @@ skip_token_id_check:
 /******  Logic for SEND_ONLY packets ******/
 process_send_only:
     
+	// check if rnr case for Send Only
+	seq 		c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
+    bcf			[c7], process_rnr
+
     // handle immdiate data and inv_r_key
-    crestore    [c7, c6], r7, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)
+    crestore    [c7, c6], r7, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT) // BD Slot
     // c7: inv_rkey, c6: immdt
     bcf         [!c7 & !c6], rc_checkout
     phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD //BD Slot
@@ -379,8 +398,13 @@ send_only_skip_immdt_as_dbell:
 process_write_only:
     crestore    [c6], r7, (RESP_RX_FLAG_IMMDT)
     
+	// check if rnr case for Write Only with Immdt
+	seq 		c5, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
+    seq         c7, d.immdt_as_dbell, 1
+    bcf.c5      [c6 & !c7], process_rnr
+
     // load rqcb3
-    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3) // BD Slot
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     CAPRI_RESET_TABLE_1_ARG()
@@ -389,7 +413,6 @@ process_write_only:
     bcf             [!c6], exit
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot
 
-    seq         c7, d.immdt_as_dbell, 1
     bcf         [!c7], wr_only_skip_immdt_as_dbell
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(IMM_DATA, c0)
 
@@ -578,6 +601,19 @@ inv_req_nak:
 seq_err_nak:
     b           nak
     phvwr       p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR)    //BD Slot
+
+process_rnr:
+    ARE_ALL_FLAGS_SET(c7, r7, RESP_RX_FLAG_SEND|RESP_RX_FLAG_FIRST)
+
+    // decrement msn if not Send First
+    add         r1, r0, -1 //BD Slot
+    tblmincr.!c7   d.msn, 24, r1
+
+    // decrement e_psn
+    tblmincr      d.e_psn, 24, r1
+
+    b           nak
+    phvwr       p.ack_info.aeth.syndrome, AETH_RNR_SYNDROME_INLINE_GET(RNR_NAK_TIMEOUT)    //BD Slot
 
 nak: 
     phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, d.msn

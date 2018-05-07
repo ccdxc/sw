@@ -177,7 +177,11 @@ struct rqcb2_t {
     //backtrack info
     struct resp_bt_info_t  bt_info;
 
-    pad: 288;   //36B
+    // rnr
+    rnr_timeout: 5;
+    rsvd1: 3;
+
+    pad: 280;   //35B
 };
 
 // Multi-packet write fields used in resp_rx

@@ -142,9 +142,14 @@ struct rdma_atomiceth_t {
 #define AETH_CODE_RSVD  2
 #define AETH_CODE_NAK   3
 
+#define RNR_NAK_TIMEOUT 0 // this will be popluted by HAL in rqcb2
+
 #define AETH_SYNDROME_CODE_SHIFT    5
 #define AETH_SYNDROME_GET(_dst, _code, _val) \
     or  _dst, _val, _code, AETH_SYNDROME_CODE_SHIFT
+
+#define AETH_SYNDROME_GET_C(_dst, _code, _val, _c) \
+    or._c  _dst, _val, _code, AETH_SYNDROME_CODE_SHIFT
 
 #define AETH_NAK_SYNDROME_GET(_dst, _nak_code) \
     AETH_SYNDROME_GET(_dst, AETH_CODE_NAK, _nak_code)
@@ -157,7 +162,13 @@ struct rdma_atomiceth_t {
     AETH_SYNDROME_GET(_dst, AETH_CODE_ACK, _credits)
 
 #define AETH_RNR_SYNDROME_GET(_dst, _t) \
-    AETH_SYNDROME_GET(_dst, AETH_CODE_NAK, _t)
+    AETH_SYNDROME_GET(_dst, AETH_CODE_RNR, _t)
+
+#define AETH_RNR_SYNDROME_GET_C(_dst, _t, _c) \
+    AETH_SYNDROME_GET_C(_dst, AETH_CODE_RNR, _t, _c)
+
+#define AETH_RNR_SYNDROME_INLINE_GET(_t) \
+    ((AETH_CODE_RNR << AETH_SYNDROME_CODE_SHIFT) | (_t))
 
 //TODO perform log(credits) * 2 
 #define RQ_CREDITS_GET(_credits, _tmp, _tmp_c) \
@@ -170,7 +181,6 @@ struct rdma_atomiceth_t {
     clz.!_tmp_c     _credits, _credits; \
     sub.!_tmp_c     _credits, 63, _credits; \
     sll.!_tmp_c     _credits, _credits, 1;
-
 
 struct rdma_cnp_rsvd_t {
     rsvd        : 128;

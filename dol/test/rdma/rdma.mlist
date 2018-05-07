@@ -559,3 +559,36 @@ modules:
         spec    : resp_rx_send_first_mid_last_inv_4sges.testspec
         ignore  : False
 
+    # RNR testcases
+    - module:
+        name    : RDMA_RX_SEND_ONLY_RNR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_rnr
+        spec    : resp_rx_send_only_rnr.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_RNR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_rnr
+        spec    : resp_rx_send_first_rnr.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_IMM_RNR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_imm_rnr
+        spec    : resp_rx_write_only_imm_rnr.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_FIRST_MID_LAST_IMM_RNR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_first_mid_last_imm_rnr
+        spec    : resp_rx_write_first_mid_last_imm_rnr.testspec
+        ignore  : False
+
