@@ -35,10 +35,10 @@ storage_nvme_push_cq_start:
 
    // Store the ROCR RQ information in the K+I vector for releasing the
    // IO status buffer
-   phvwrpair	p.nvme_kivec_rrq_push_rrq_lif, d.rrq_lif,	\
-		p.nvme_kivec_rrq_push_rrq_qtype, d.rrq_qtype
-   phvwrpair	p.nvme_kivec_rrq_push_rrq_qid, d.rrq_qid,	\
-		p.nvme_kivec_rrq_push_rrq_base, d.rrq_base
+   phvwrpair	p.nvme_kivec_t1_s2s_dst_lif, d.rrq_lif,	\
+		p.nvme_kivec_t1_s2s_dst_qtype, d.rrq_qtype
+   phvwrpair	p.nvme_kivec_t1_s2s_dst_qid, d.rrq_qid,	\
+		p.nvme_kivec_t1_s2s_dst_qaddr, d.rrq_base
 
    // Delay slot to check the interrupt enable bit (since reading p_ndx 
    // straight after writing takes a one cycle stall)
@@ -56,11 +56,6 @@ storage_nvme_push_cq_start:
    PCI_RAISE_INTERRUPT(dma_p2m_6)
 
 skip_intr:
-   // Copy the stage to stage table 0 K+I vector to that of table 1
-   // before invoking the table 1
-   phvwr	p.{nvme_kivec_t0_s2s_w_ndx...nvme_kivec_t0_s2s_punt_to_arm},	\
-		k.{nvme_kivec_t0_s2s_w_ndx...nvme_kivec_t0_s2s_punt_to_arm}
-
    // Load table 1 and program for pushing the status buffer back to the RQ.
    LOAD_TABLE1_FOR_ADDR34_PC_IMM(d.rrq_qaddr,
                                  STORAGE_DEFAULT_TBL_LOAD_SIZE,

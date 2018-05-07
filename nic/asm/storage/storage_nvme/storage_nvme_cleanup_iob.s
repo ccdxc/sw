@@ -18,64 +18,63 @@ storage_nvme_cleanup_iob_start:
 
 
    // Form the fields needed to be cleaned up in the doorbell q_state
-   // in the PHV. p_ndx needs to be set to 1, c_ndx and w_ndx need to
-   // be set to 0 (which is the default value of the PHV).
-   phvwr	p.doorbell_cleanup_q_state_p_ndx, 1
+   // in the PHV. p_ndx, c_ndx and w_ndx need to be set to 0 (which 
+   // is the default value of the PHV).
 
    // Issue PHV2MEM DMA commands to cleanup the queue states of various doorbells
+   // TODO: Enable the ones under if 0 as and when they are setup for use
 
-   // First save the p_ndx offset of first sequencer doorbell in the I/O buffer 
-   // into GPR r6. Then for each sequencer add the relative offsets.
-   add		r6, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_SEQ_DB_OFFSET
-   add		r6, r6, DOORBELL_CLEANUP_Q_STATE_OFFSET
-
+#if 0
    // Sequencer for Barco XTS encryption doorbell
-   add		r7, r6, IO_BUF_SEQ_BARCO_XTS_ENC_DB_OFFSET
+   add		r7, d.xts_enc, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_1)
 
    // Sequencer for Barco XTS decryption doorbell
-   add		r7, r6, IO_BUF_SEQ_BARCO_XTS_DEC_DB_OFFSET
+   add		r7, d.xts_dec, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_2)
 
    // Sequencer for compression request doorbell
-   add		r7, r6, IO_BUF_SEQ_COMP_DB_OFFSET
+   add		r7, d.comp, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_3)
 
    // Sequencer for decompression request doorbell
-   add		r7, r6, IO_BUF_SEQ_DECOMP_DB_OFFSET
+   add		r7, d.decomp, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_4)
 
    // Sequencer for integrity tag generation doorbell
-   add		r7, r6, IO_BUF_SEQ_INT_TAG_DB_OFFSET
+   add		r7, d.int_tag, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_5)
 
    // Sequencer for dedup tag generation doorbell
-   add		r7, r6, IO_BUF_SEQ_DEDUP_TAG_DB_OFFSET
+   add		r7, d.dedup_tag, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_6)
+#endif
 
    // Sequencer for R2N WQE xfer doorbell
-   add		r7, r6, IO_BUF_SEQ_R2N_DB_OFFSET
+   add		r7, d.r2n, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_7)
 
+#if 0
    // Sequencer for PDMA doorbell
-   add		r7, r6, IO_BUF_SEQ_PDMA_DB_OFFSET
+   add		r7, d.pdma, DOORBELL_CLEANUP_Q_STATE_OFFSET
    DMA_PHV2MEM_SETUP_ADDR34(doorbell_cleanup_q_state_p_ndx,
                             doorbell_cleanup_q_state_w_ndx, 
                             r7, dma_p2m_8)
+#endif
 
    // Load the IO context for the next stage to modify oper status with table locking
    add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_IO_CTX_OFFSET

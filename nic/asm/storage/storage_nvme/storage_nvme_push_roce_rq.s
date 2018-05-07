@@ -21,14 +21,15 @@ storage_nvme_push_roce_rq_start:
    QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, exit)
 
    // Calculate the address to which the entry to be pushed has to be 
-   // written to in the destination queue. Output will be stored in GPR r7.
-   QUEUE_PUSH_ADDR(NVME_KIVEC_RRQ_PUSH_RRQ_BASE, d.p_ndx, d.entry_size)
+   // written to in the destination queue. RRQ Base address is stored in 
+   // table 1's dst_qaddr for lack of space. Output will be stored in GPR r7.
+   QUEUE_PUSH_ADDR(NVME_KIVEC_T1_S2S_DST_QADDR, d.p_ndx, d.entry_size)
 
    // Setup the DMA of the ROCE RQ descriptor
    // Src: Is set up by an earlier stage in K+I vector
    // Dst: Calculated by the Queue Push Address and stored in r7
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, 
-                     NVME_KIVEC_RRQ_PUSH_RRQ_DESC_ADDR, 
+                     NVME_KIVEC_ARM_DST7_RRQ_DESC_ADDR, 
                      ROCE_RQ_WQE_SIZE, r0, r0, dma_m2m_9)
    DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r7, 
                               ROCE_RQ_WQE_SIZE, r0, r0, dma_m2m_10)

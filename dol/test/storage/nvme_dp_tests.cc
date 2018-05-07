@@ -19,6 +19,8 @@
 #include "nic/model_sim/include/lib_model_client.h"
 
 
+DECLARE_uint64(nvme_scale_iters);
+
 
 namespace tests {
 
@@ -256,4 +258,44 @@ int test_run_nvme_dp_e2e_test() {
 
   return rc;
 }
+
+int test_run_nvme_dp_write_scale() {
+  printf("Starting NVME Datapath WRITE scale test \n");
+  for (int i = 0; i < (int) FLAGS_nvme_scale_iters; i++) {
+    if (test_run_nvme_dp_write_cmd() < 0) {
+      printf("Iteration %d FAILED \n", i);
+      return -1;
+    } else {
+      printf("Iteration %d SUCCEEDED \n", i);
+    }
+  }
+  return 0;
+}
+
+int test_run_nvme_dp_read_scale() {
+  printf("Starting NVME Datapath READ scale test \n");
+  for (int i = 0; i < (int) FLAGS_nvme_scale_iters; i++) {
+    if (test_run_nvme_dp_read_cmd() < 0) {
+      printf("Iteration %d FAILED \n", i);
+      return -1;
+    } else {
+      printf("Iteration %d SUCCEEDED \n", i);
+    }
+  }
+  return 0;
+}
+
+int test_run_nvme_dp_e2e_scale() {
+  printf("Starting NVME Datapath E2E scale test \n");
+  for (int i = 0; i < (int) FLAGS_nvme_scale_iters; i++) {
+    if (test_run_nvme_dp_e2e_test() < 0) {
+      printf("Iteration %d FAILED \n", i);
+      return -1;
+    } else {
+      printf("Iteration %d SUCCEEDED \n", i);
+    }
+  }
+  return 0;
+}
+
 }  // namespace tests

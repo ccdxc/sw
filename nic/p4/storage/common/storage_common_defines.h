@@ -205,6 +205,16 @@
 // Size of each sequencer descriptor
 #define IO_BUF_SEQ_DB_SIZE			64 
 
+// Offsets in bits of Qstate address 
+#define IO_BUF_SEQ_BARCO_XTS_ENC_QADDR_BIT_OFFSET	0
+#define IO_BUF_SEQ_BARCO_XTS_DEC_QADDR_BIT_OFFSET	34
+#define IO_BUF_SEQ_COMP_QADDR_BIT_OFFSET		68
+#define IO_BUF_SEQ_DECOMP_QADDR_BIT_OFFSET		102
+#define IO_BUF_SEQ_INT_TAG_QADDR_BIT_OFFSET		136
+#define IO_BUF_SEQ_DEDUP_TAG_QADDR_BIT_OFFSET		170
+#define IO_BUF_SEQ_R2N_QADDR_BIT_OFFSET			204
+#define IO_BUF_SEQ_PDMA_QADDR_BIT_OFFSET		238
+
 // Offsets into the I/O buffer in bytes
 #define IO_BUF_IO_CTX_OFFSET			0
 #define IO_BUF_WRITE_R2N_WQE_OFFSET		64
@@ -217,7 +227,8 @@
 #define IO_BUF_IO_MAP_DESC_OFFSET		1024  // Size == IO_MAP_ENTRY_SIZE_BYTES Size = 1024 bytes
 #define IO_BUF_SEQ_DESC_OFFSET			2048  // Size == IO_BUF_SEQ_DESC_TOTAL_SIZE Size = 512 bytes
 #define IO_BUF_SEQ_DB_OFFSET			2560  // Size == IO_BUF_SEQ_DB_TOTAL_SIZE Size = 512 bytes
-#define IO_BUF_PAD1_OFFSET			3072  // Pad size = 4096 - (128 + 64 + 8) - 3072 = 824 bytes
+#define IO_BUF_SEQ_QADDR_OFFSET			3072  // Size == 64 bytes (supports 8 doorbells * 34 bit address)
+#define IO_BUF_PAD1_OFFSET			3136  // Pad size = 4096 - (128 + 64 + 8) - 3136 = 760 bytes
 // Keep the following offset the same as the NVME_BE_CMD_OFFSET in R2N Buffer using pad above
 #define IO_BUF_NVME_BE_CMD_OFFSET		3896
 #define IO_BUF_IO_CTX_ID_OFFSET			4024

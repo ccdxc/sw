@@ -242,6 +242,20 @@ header_type nvme_prp_list_t {
   }
 }
 
+// List of all sequencer qstate addresses
+header_type iob_seq_qaddr_t {
+  fields {
+    xts_enc		: 34;
+    xts_dec		: 34;
+    comp		: 34;
+    decomp		: 34;
+    int_tag		: 34;
+    dedup_tag		: 34;
+    r2n			: 34;
+    pdma		: 34;
+  }
+}
+
 // Storage K+I vectors
 
 // header union with stage_2_stage for table 0 and table 1
@@ -303,6 +317,7 @@ header_type nvme_kivec_arm_dst_t {
     arm_qtype		: 3;	// ARM Q LIF type (within the LIF)
     arm_qid		: 24;	// ARM Q queue number (within the LIF)
     arm_qaddr		: 34;	// ARM Q queue state address
+    rrq_desc_addr	: 34;	// ROCE RQ buffer post descriptor
   }
 }
 
@@ -313,7 +328,6 @@ header_type nvme_kivec_rrq_push_t {
     rrq_qtype		: 3;	// ROCE RQ LIF type (within the LIF)
     rrq_qid		: 24;	// ROCE RQ queue number (within the LIF)
     rrq_base		: 34;	// ROCE RQ queue base address
-    rrq_desc_addr	: 34;	// ROCE RQ buffer post descriptor
   }
 }
 
@@ -479,6 +493,16 @@ header_type nvme_kivec_rrq_push_t {
   modify_field(list.entry6, entry6);			\
   modify_field(list.entry7, entry7);			\
 
+#define IOB_SEQ_QADDR_COPY(entry)			\
+  modify_field(entry.xts_enc, xts_enc);			\
+  modify_field(entry.xts_dec, xts_dec);			\
+  modify_field(entry.comp, comp);			\
+  modify_field(entry.decomp, decomp);			\
+  modify_field(entry.int_tag, int_tag);			\
+  modify_field(entry.dedup_tag, dedup_tag);		\
+  modify_field(entry.r2n, r2n);				\
+  modify_field(entry.pdma, pdma);			\
+
 #define R2N_WQE_BASE_COPY(wqe)				\
   modify_field(wqe.handle, handle);			\
   modify_field(wqe.data_size, data_size);		\
@@ -491,7 +515,7 @@ header_type nvme_kivec_rrq_push_t {
   modify_field(scratch.dst_qtype, kivec.dst_qtype);			\
   modify_field(scratch.dst_qid, kivec.dst_qid);				\
   modify_field(scratch.dst_qaddr, kivec.dst_qaddr);			\
-  modify_field(scratch.iob_addr, kivec.iob_addr);		\
+  modify_field(scratch.iob_addr, kivec.iob_addr);			\
   modify_field(scratch.io_map_base_addr, kivec.io_map_base_addr);	\
   modify_field(scratch.prp_assist, kivec.prp_assist);			\
   modify_field(scratch.is_remote, kivec.is_remote);			\
@@ -519,16 +543,10 @@ header_type nvme_kivec_rrq_push_t {
   modify_field(scratch.arm_qtype, kivec.arm_qtype);			\
   modify_field(scratch.arm_qid, kivec.arm_qid);				\
   modify_field(scratch.arm_qaddr, kivec.arm_qaddr);			\
+  modify_field(scratch.rrq_desc_addr, kivec.rrq_desc_addr);		\
 
 #define NVME_KIVEC_IOB_RING_USE(scratch, kivec)				\
   modify_field(scratch.base_addr, kivec.base_addr);	                \
-
-#define NVME_KIVEC_RRQ_PUSH_USE(scratch, kivec)				\
-  modify_field(scratch.rrq_lif, kivec.rrq_lif);				\
-  modify_field(scratch.rrq_qtype, kivec.rrq_qtype);			\
-  modify_field(scratch.rrq_qid, kivec.rrq_qid);				\
-  modify_field(scratch.rrq_base, kivec.rrq_base);			\
-  modify_field(scratch.rrq_desc_addr, kivec.rrq_desc_addr);		\
 
 // PRP entry based data xfer marcos from host (for write command)
 // TODO: FIXME: In ASM, use min(remaining_len, PRP_DATA_XFER_SIZE)

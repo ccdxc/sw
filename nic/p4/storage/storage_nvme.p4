@@ -86,8 +86,6 @@ metadata nvme_kivec_prp_base_t nvme_kivec_prp_base;
 metadata nvme_kivec_arm_dst_t nvme_kivec_arm_dst6;
 @pragma pa_header_union ingress to_stage_7
 metadata nvme_kivec_arm_dst_t nvme_kivec_arm_dst7;
-@pragma pa_header_union ingress to_stage_7
-metadata nvme_kivec_rrq_push_t nvme_kivec_rrq_push;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -134,6 +132,9 @@ metadata nvme_be_cmd_hdr_t nvme_be_cmd_hdr;
 @pragma pa_header_union ingress nvme_be_cmd_hdr
 metadata nvme_be_sta_hdr_t nvme_be_sta_hdr;
 
+// Push doorbells for table 1
+@pragma dont_trim
+metadata storage_doorbell_data_t qpush_doorbell_data_1;
 
 // DMA commands metadata
 @pragma dont_trim
@@ -289,9 +290,6 @@ metadata nvme_kivec_prp_base_t nvme_kivec_prp_base_scratch;
 metadata nvme_kivec_arm_dst_t nvme_kivec_arm_dst_scratch;
 
 @pragma scratch_metadata
-metadata nvme_kivec_rrq_push_t nvme_kivec_rrq_push_scratch;
-
-@pragma scratch_metadata
 metadata io_map_entry_t io_map_entry_scratch;
 
 @pragma scratch_metadata
@@ -314,6 +312,9 @@ metadata iob_addr_t iob_addr_scratch;
 
 @pragma scratch_metadata
 metadata roce_rq_cb_t roce_rq_cb_scratch;
+
+@pragma scratch_metadata
+metadata iob_seq_qaddr_t iob_seq_qaddr_scratch;
 
 
 /*****************************************************************************
@@ -1150,7 +1151,7 @@ action handle_r2n_wqe(handle, data_size, opcode, status) {
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
 
   // Store the information needed in the K+I vector for ROCE RQ push
-  modify_field(nvme_kivec_rrq_push.rrq_desc_addr, 
+  modify_field(nvme_kivec_arm_dst7.rrq_desc_addr, 
                r2n_wqe_scratch.handle - IO_STATUS_BUF_BE_STATUS_OFFSET);
 
   // If opcode is set to process WQE
@@ -1373,10 +1374,10 @@ action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   modify_field(nvme_sta.phase, phase);
 
   // Store the information needed in the K+I vector for ROCE RQ push
-  modify_field(nvme_kivec_rrq_push.rrq_lif, nvme_cq_state_scratch.rrq_lif);
-  modify_field(nvme_kivec_rrq_push.rrq_qtype, nvme_cq_state_scratch.rrq_qtype);
-  modify_field(nvme_kivec_rrq_push.rrq_qid, nvme_cq_state_scratch.rrq_qid);
-  modify_field(nvme_kivec_rrq_push.rrq_base, nvme_cq_state_scratch.rrq_base);
+  modify_field(nvme_kivec_t1_s2s.dst_lif, nvme_cq_state_scratch.rrq_lif);
+  modify_field(nvme_kivec_t1_s2s.dst_qtype, nvme_cq_state_scratch.rrq_qtype);
+  modify_field(nvme_kivec_t1_s2s.dst_qid, nvme_cq_state_scratch.rrq_qid);
+  modify_field(nvme_kivec_t1_s2s.dst_qaddr, nvme_cq_state_scratch.rrq_base);
 
   // Check for queue full condition before pushing
   if (QUEUE_FULL(nvme_cq_state_scratch)) {
@@ -1503,7 +1504,7 @@ action push_roce_rq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t1_s2s_scratch, nvme_kivec_t1_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
-  NVME_KIVEC_RRQ_PUSH_USE(nvme_kivec_rrq_push_scratch, nvme_kivec_rrq_push)
+  NVME_KIVEC_ARM_DST_USE(nvme_kivec_arm_dst_scratch, nvme_kivec_arm_dst7)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   ROCE_RQ_CB_COPY(roce_rq_cb_scratch)
@@ -1521,7 +1522,7 @@ action push_roce_rq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     // Update destination in the mem2mem DMA without touching the source. This wont 
     // work in P4 as there is no update API for mem2mem DMA. In ASM, there are two APIs.
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 0, 0, 
-                             nvme_kivec_rrq_push_scratch.rrq_base +
+                             nvme_kivec_t1_s2s_scratch.dst_qaddr +
                              (roce_rq_cb_scratch.p_ndx * roce_rq_cb_scratch.entry_size),
                              0, ROCE_RQ_WQE_SIZE, 0, 0, 0)
 
@@ -1532,16 +1533,16 @@ action push_roce_rq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     // Form the doorbell and setup the DMA command to push the entry by
     // incrementing p_ndx
     modify_field(doorbell_addr_scratch.addr,
-                 STORAGE_DOORBELL_ADDRESS(nvme_kivec_rrq_push_scratch.rrq_qtype, 
-                                          nvme_kivec_rrq_push_scratch.rrq_lif,
+                 STORAGE_DOORBELL_ADDRESS(nvme_kivec_t1_s2s_scratch.dst_qtype, 
+                                          nvme_kivec_t1_s2s_scratch.dst_lif,
                                           DOORBELL_SCHED_WR_SET, 
                                           DOORBELL_UPDATE_P_NDX));
     modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
 
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
                              0,
-                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
-                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             PHV_FIELD_OFFSET(qpush_doorbell_data_1.data),
+                             PHV_FIELD_OFFSET(qpush_doorbell_data_1.data),
                              0, 0, 0, 0)
 
     // Exit the pipeline here 
@@ -1642,7 +1643,7 @@ action free_iob_addr(iob_addr) {
   modify_field(io_ctx.iob_addr, iob_addr_scratch.iob_addr);
 
   // Load the IOB for the next stage to cleanup
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr_scratch.iob_addr,
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr_scratch.iob_addr + IO_BUF_SEQ_QADDR_OFFSET,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, cleanup_iob_start)
 }
 
@@ -1651,11 +1652,11 @@ action free_iob_addr(iob_addr) {
  *               various sequencer doorbells.
  *****************************************************************************/
 
-action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote,
-                   nvme_sq_qaddr) {
+action cleanup_iob(xts_enc, xts_dec, comp, decomp, int_tag, dedup_tag, r2n, pdma) {
+
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+  IOB_SEQ_QADDR_COPY(iob_seq_qaddr_scratch)
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
@@ -1670,9 +1671,8 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
   // Issue PHV2MEM DMA commands to cleanup the queue states of various doorbells
  
   // Sequencer for Barco XTS encryption doorbell
-  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_BARCO_XTS_ENC_DB_OFFSET +
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1, 
+                           iob_seq_qaddr_scratch.xts_enc + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
@@ -1680,8 +1680,7 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
 
   // Sequencer for Barco XTS decryption doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_BARCO_XTS_DEC_DB_OFFSET +
+                           iob_seq_qaddr_scratch.xts_dec + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
@@ -1689,8 +1688,7 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
 
   // Sequencer for compression request doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_COMP_DB_OFFSET +
+                           iob_seq_qaddr_scratch.comp + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
@@ -1698,8 +1696,7 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
 
   // Sequencer for decompression request doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_4,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_DECOMP_DB_OFFSET +
+                           iob_seq_qaddr_scratch.decomp + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
@@ -1707,8 +1704,7 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
 
   // Sequencer for integrity tag generation doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_5,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_INT_TAG_DB_OFFSET +
+                           iob_seq_qaddr_scratch.int_tag + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
@@ -1716,8 +1712,7 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
 
   // Sequencer for dedup tag generation doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_6,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_DEDUP_TAG_DB_OFFSET +
+                           iob_seq_qaddr_scratch.dedup_tag + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
@@ -1725,8 +1720,7 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
 
   // Sequencer for R2N WQE xfer doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_7,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_R2N_DB_OFFSET +
+                           iob_seq_qaddr_scratch.r2n + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
@@ -1734,8 +1728,7 @@ action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote
 
   // Sequencer for PDMA doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_8,
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
-                           IO_BUF_SEQ_PDMA_DB_OFFSET +
+                           iob_seq_qaddr_scratch.pdma + 
                            DOORBELL_CLEANUP_Q_STATE_OFFSET,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),

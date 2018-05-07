@@ -216,6 +216,8 @@
     k.{nvme_kivec_arm_dst6_arm_qid_sbit0_ebit1...nvme_kivec_arm_dst6_arm_qid_sbit18_ebit23}
 #define NVME_KIVEC_ARM_DST6_ARM_QADDR           \
     k.{nvme_kivec_arm_dst6_arm_qaddr_sbit0_ebit1...nvme_kivec_arm_dst6_arm_qaddr_sbit2_ebit33}
+#define NVME_KIVEC_ARM_DST6_RRQ_DESC_ADDR       \
+    k.{nvme_kivec_arm_dst6_rrq_desc_addr_sbit0_ebit31...nvme_kivec_arm_dst6_rrq_desc_addr_sbit32_ebit33}
 
 
 #define NVME_KIVEC_ARM_DST7_ARM_LIF             \
@@ -226,17 +228,9 @@
     k.{nvme_kivec_arm_dst7_arm_qid_sbit0_ebit1...nvme_kivec_arm_dst7_arm_qid_sbit18_ebit23}
 #define NVME_KIVEC_ARM_DST7_ARM_QADDR           \
     k.{nvme_kivec_arm_dst7_arm_qaddr_sbit0_ebit1...nvme_kivec_arm_dst7_arm_qaddr_sbit2_ebit33}
+#define NVME_KIVEC_ARM_DST7_RRQ_DESC_ADDR       \
+    k.{nvme_kivec_arm_dst7_rrq_desc_addr_sbit0_ebit31...nvme_kivec_arm_dst7_rrq_desc_addr_sbit32_ebit33}
 
-#define NVME_KIVEC_RRQ_PUSH_RRQ_LIF             \
-    k.{nvme_kivec_rrq_push_rrq_lif_sbit0_ebit7...nvme_kivec_rrq_push_rrq_lif_sbit8_ebit10}
-#define NVME_KIVEC_RRQ_PUSH_RRQ_QTYPE           \
-    k.nvme_kivec_rrq_push_rrq_qtype
-#define NVME_KIVEC_RRQ_PUSH_RRQ_QID             \
-    k.{nvme_kivec_rrq_push_rrq_qid_sbit0_ebit1...nvme_kivec_rrq_push_rrq_qid_sbit18_ebit23}
-#define NVME_KIVEC_RRQ_PUSH_RRQ_BASE            \
-    k.{nvme_kivec_rrq_push_rrq_base_sbit0_ebit1...nvme_kivec_rrq_push_rrq_base_sbit2_ebit33}
-#define NVME_KIVEC_RRQ_PUSH_RRQ_DESC_ADDR       \
-    k.{nvme_kivec_rrq_push_rrq_desc_addr_sbit0_ebit31...nvme_kivec_rrq_push_rrq_desc_addr_sbit32_ebit33}
 
 /*
  * Debug flags
@@ -587,11 +581,10 @@
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 
 #define _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, _sched, _upd, _p_ndx,   \
-                                  _lif, _qtype, _qid)                   \
-   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx, r0, _qid, r0)  \
+                                 _lif, _qtype, _qid, _db_data)          \
+   DOORBELL_DATA_SETUP(_db_data, _p_ndx, r0, _qid, r0)                  \
    DOORBELL_ADDR_SETUP(_lif, _qtype, _sched, _upd)                      \
-   DMA_PHV2MEM_SETUP(qpush_doorbell_data_data,qpush_doorbell_data_data, \
-                     r7, _dma_cmd_ptr)                                  \
+   DMA_PHV2MEM_SETUP(_db_data, _db_data, r7, _dma_cmd_ptr)              \
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)                                      \
 
 #define QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)                          \
@@ -599,19 +592,22 @@
                              DOORBELL_UPDATE_NONE, d.p_ndx,             \
                              STORAGE_KIVEC0_DST_LIF,                    \
                              STORAGE_KIVEC0_DST_QTYPE,                  \
-                             STORAGE_KIVEC0_DST_QID)                    \
+                             STORAGE_KIVEC0_DST_QID,                    \
+                             qpush_doorbell_data_data)                  \
 
 #define QUEUE_PUSH_DOORBELL_UPDATE_RING(_dma_cmd_ptr, _p_ndx)           \
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
                              DOORBELL_UPDATE_P_NDX, _p_ndx,             \
                              STORAGE_KIVEC0_DST_LIF,                    \
                              STORAGE_KIVEC0_DST_QTYPE,                  \
-                             STORAGE_KIVEC0_DST_QID)                    \
+                             STORAGE_KIVEC0_DST_QID,                    \
+                             qpush_doorbell_data_data)                  \
 
 #define ROCE_QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)                     \
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
                              DOORBELL_UPDATE_P_NDX, d.p_ndx,            \
-                             d.rsq_lif, d.rsq_qtype, d.rsq_qid)         \
+                             d.rsq_lif, d.rsq_qtype, d.rsq_qid,         \
+                             qpush_doorbell_data_data)                  \
 
 
 #define NVME_SEQ_QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)                 \
@@ -619,21 +615,24 @@
                              DOORBELL_UPDATE_NONE, d.p_ndx,             \
                              NVME_KIVEC_T0_S2S_DST_LIF,                 \
                              NVME_KIVEC_T0_S2S_DST_QTYPE,               \
-                             NVME_KIVEC_T0_S2S_DST_QID)                 \
+                             NVME_KIVEC_T0_S2S_DST_QID,                 \
+                             qpush_doorbell_data_data)                  \
 
 #define NVME_SEND_STA_FREE_IOB_DOORBELL_RING(_dma_cmd_ptr)              \
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
                              DOORBELL_UPDATE_NONE, d.p_ndx,             \
                              NVME_KIVEC_ARM_DST7_ARM_LIF,               \
                              NVME_KIVEC_ARM_DST7_ARM_QTYPE,             \
-                             NVME_KIVEC_ARM_DST7_ARM_QID)               \
+                             NVME_KIVEC_ARM_DST7_ARM_QID,               \
+                             qpush_doorbell_data_data)                  \
 
 #define NVME_ROCE_RQ_PUSH_DOORBELL_RING(_dma_cmd_ptr)                   \
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
                              DOORBELL_UPDATE_NONE, d.p_ndx,             \
-                             NVME_KIVEC_RRQ_PUSH_RRQ_LIF,               \
-                             NVME_KIVEC_RRQ_PUSH_RRQ_QTYPE,             \
-                             NVME_KIVEC_RRQ_PUSH_RRQ_QID)               \
+                             NVME_KIVEC_T1_S2S_DST_LIF,                 \
+                             NVME_KIVEC_T1_S2S_DST_QTYPE,               \
+                             NVME_KIVEC_T1_S2S_DST_QID,                 \
+                             qpush_doorbell_data_1_data)                \
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
