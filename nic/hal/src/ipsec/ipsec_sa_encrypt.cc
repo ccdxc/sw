@@ -131,11 +131,14 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ipsec->esn_hi = ipsec->esn_lo = 0;
 
     ipsec->barco_enc_cmd = IPSEC_BARCO_ENCRYPT_AES_GCM_256;
-
+    ipsec->key_size = 32;
+    ipsec->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
+   
     ipsec->iv = spec.iv();
     ipsec->iv_salt = spec.salt();
     ipsec->spi = spec.spi();
-    //ipsec->key_index = spec.key_index();
+    
+    memcpy((uint8_t*)ipsec->key, (uint8_t*)spec.encryption_key().key().c_str(), 32);
 
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
