@@ -193,6 +193,7 @@ table input_mapping_native {
 action input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
                         flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
                         dst_lport, src_lport, allow_flood, bounce_vnid,
+                        mirror_on_drop_en, mirror_on_drop_session_id,
                         clear_promiscuous_repl) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
@@ -206,6 +207,9 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.allow_flood, allow_flood);
     modify_field(flow_miss_metadata.tunnel_vnid, bounce_vnid);
+    modify_field(control_metadata.mirror_on_drop_en, mirror_on_drop_en);
+    modify_field(control_metadata.mirror_on_drop_session_id,
+                 mirror_on_drop_session_id);
     modify_field(control_metadata.clear_promiscuous_repl, clear_promiscuous_repl);
 
     // write nic mode (table constant)
@@ -261,7 +265,8 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  l4_profile_idx, dst_lport, src_lport,
                                  allow_flood, rewrite_index,
                                  tunnel_rewrite_index, tunnel_vnid,
-                                 tunnel_originate) {
+                                 tunnel_originate, mirror_on_drop_en,
+                                 mirror_on_drop_session_id) {
     adjust_lkp_fields();
 
     // if table is a miss, return. do not perform rest of the actions.
@@ -284,7 +289,8 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
     input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
                      flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
-                     dst_lport, src_lport, allow_flood, tunnel_vnid, 0);
+                     dst_lport, src_lport, allow_flood, tunnel_vnid,
+                     mirror_on_drop_en, mirror_on_drop_session_id, 0);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);

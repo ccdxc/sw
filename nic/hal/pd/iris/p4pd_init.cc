@@ -387,7 +387,6 @@ p4pd_flow_info_init (void)
 
     // common flow hit & drop entry
     data.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
-    data.flow_info_action_u.flow_info_flow_hit_drop.flow_index = 0;
     data.flow_info_action_u.flow_info_flow_hit_drop.start_timestamp = 0;
     sdk_ret = dm->insert_withid(&data, FLOW_INFO_DROP_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

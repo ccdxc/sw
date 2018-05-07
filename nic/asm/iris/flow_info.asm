@@ -64,6 +64,11 @@ f_flow_info_thread_1:
                     p.capri_intrinsic_tm_cpu, d.u.flow_info_d.log_en
   phvwr         p.control_metadata_egress_mirror_session_id, \
                     d.u.flow_info_d.egress_mirror_session_id
+  seq           c1, d.u.flow_info_d.mirror_on_drop_overwrite, 1
+  phvwr.c1      p.{control_metadata_mirror_on_drop_en, \
+                   control_metadata_mirror_on_drop_session_id}, \
+                    d.{u.flow_info_d.mirror_on_drop_en, \
+                       u.flow_info_d.mirror_on_drop_session_id}
 
   /* Commenting this to bring down the # of phvwr done in this table */
   /* ttl change detected */
@@ -150,6 +155,11 @@ flow_miss_tcp_non_syn_first_pkt_drop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_hit_drop:
+  seq           c1, d.u.flow_hit_drop_d.mirror_on_drop_overwrite, 1
+  phvwr.c1      p.{control_metadata_mirror_on_drop_en, \
+                   control_metadata_mirror_on_drop_session_id}, \
+                    d.{u.flow_hit_drop_d.mirror_on_drop_en, \
+                       u.flow_hit_drop_d.mirror_on_drop_session_id}
   /* set drop bit */
   phvwr.e       p.control_metadata_drop_reason[DROP_FLOW_HIT], 1
   phvwr         p.capri_intrinsic_drop, 1

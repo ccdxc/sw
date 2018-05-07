@@ -45,8 +45,14 @@ table ingress_tx_stats {
 /* Drop accounting per reason code                                           */
 /*****************************************************************************/
 action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
-    if (mirror_en == TRUE) {
-        modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
+    /* mirror on drop */
+    if (control_metadata.mirror_on_drop_en == TRUE) {
+            modify_field(capri_intrinsic.tm_span_session,
+                         control_metadata.mirror_on_drop_session_id);
+    } else {
+        if (mirror_en == TRUE) {
+            modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
+        }
     }
 
     // force tm_oport to EGRESS when packet is being dropped
@@ -155,8 +161,14 @@ table drop_stats {
 /* Egress Drop accounting per reason code                                    */
 /*****************************************************************************/
 action egress_drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
-    if (mirror_en == TRUE) {
-        modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
+    /* mirror on drop */
+    if (control_metadata.mirror_on_drop_en == TRUE) {
+            modify_field(capri_intrinsic.tm_span_session,
+                         control_metadata.mirror_on_drop_session_id);
+    } else {
+        if (mirror_en == TRUE) {
+            modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
+        }
     }
 
     // force tm_oport to DMA when packet is being dropped

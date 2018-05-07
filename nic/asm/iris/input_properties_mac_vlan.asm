@@ -42,14 +42,14 @@ input_properties_mac_vlan:
                     k.{capri_intrinsic_lif_sbit0_ebit2, \
                        capri_intrinsic_lif_sbit3_ebit10}
   bcf           [c1&!c2], dejavu_check_failed
-  phvwr         p.control_metadata_src_lif, \
+  phvwrpair     p.control_metadata_src_lif[10:0], \
                     k.{capri_intrinsic_lif_sbit0_ebit2, \
-                       capri_intrinsic_lif_sbit3_ebit10}
+                       capri_intrinsic_lif_sbit3_ebit10}, \
+                    p.control_metadata_flow_miss_idx, \
+                    d.input_properties_mac_vlan_d.flow_miss_idx
 
   phvwr         p.flow_miss_metadata_tunnel_originate, \
                     d.input_properties_mac_vlan_d.tunnel_originate
-  phvwr         p.control_metadata_flow_miss_idx, \
-                    d.input_properties_mac_vlan_d.flow_miss_idx
   phvwrpair     p.flow_miss_metadata_tunnel_rewrite_index, \
                     d.input_properties_mac_vlan_d.tunnel_rewrite_index, \
                     p.flow_miss_metadata_tunnel_vnid, \
@@ -70,12 +70,10 @@ input_properties_mac_vlan:
                     d.input_properties_mac_vlan_d.ipsg_enable
   phvwr         p.control_metadata_allow_flood, \
                     d.input_properties_mac_vlan_d.allow_flood
-#if 0
-  phvwrpair     p.control_metadata_ipsg_enable, \
-                    d.input_properties_mac_vlan_d.ipsg_enable, \
-                    p.control_metadata_allow_flood, \
-                    d.input_properties_mac_vlan_d.allow_flood
-#endif /* 0 */
+  phvwr         p.{control_metadata_mirror_on_drop_en, \
+                   control_metadata_mirror_on_drop_session_id}, \
+                    d.{input_properties_mac_vlan_d.mirror_on_drop_en, \
+                       input_properties_mac_vlan_d.mirror_on_drop_session_id}
   phvwr.e       p.flow_lkp_metadata_lkp_dir, \
                     d.input_properties_mac_vlan_d.dir
   phvwr.f       p.l4_metadata_profile_idx, d.input_properties_mac_vlan_d.l4_profile_idx

@@ -111,6 +111,8 @@ header_type control_metadata_t {
         parser_payload_offset          : 16;
         udp_opt_bytes                  : 8;
         same_if_check_failed           : 1;
+        mirror_on_drop_en              : 1;
+        mirror_on_drop_session_id      : 8;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;

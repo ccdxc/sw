@@ -105,14 +105,21 @@ action flow_miss() {
     }
 }
 
-action flow_hit_drop(flow_index, start_timestamp) {
-    modify_field(flow_info_metadata.flow_index, flow_index);
+action flow_hit_drop(start_timestamp, mirror_on_drop_overwrite,
+                     mirror_on_drop_en, mirror_on_drop_session_id) {
+    /* mirror on drop */
+    if (mirror_on_drop_overwrite == TRUE) {
+        modify_field(control_metadata.mirror_on_drop_en, mirror_on_drop_en);
+        modify_field(control_metadata.mirror_on_drop_session_id,
+                     mirror_on_drop_session_id);
+    }
 
     /* set the drop flag */
     modify_field(control_metadata.drop_reason, DROP_FLOW_HIT);
     drop_packet();
 
     /* dummy ops to keep compiler happy */
+    modify_field(scratch_metadata.flag, mirror_on_drop_overwrite);
     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);
 }
 
@@ -124,6 +131,8 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Change all timestamps to be 48 bit.
 action flow_info(dst_lport, multicast_ptr, multicast_en, qtype,
                  ingress_mirror_session_id, egress_mirror_session_id,
+                 mirror_on_drop_overwrite, mirror_on_drop_en,
+                 mirror_on_drop_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
                  qid_en, log_en, rewrite_flags,
@@ -160,6 +169,11 @@ action flow_info(dst_lport, multicast_ptr, multicast_en, qtype,
     modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
     modify_field(control_metadata.egress_mirror_session_id,
                  egress_mirror_session_id);
+    if (mirror_on_drop_overwrite == TRUE) {
+        modify_field(control_metadata.mirror_on_drop_en, mirror_on_drop_en);
+        modify_field(control_metadata.mirror_on_drop_session_id,
+                     mirror_on_drop_session_id);
+    }
 
     /* logging - need to create a copy */
     if (log_en == TRUE) {
@@ -193,6 +207,7 @@ action flow_info(dst_lport, multicast_ptr, multicast_en, qtype,
     modify_field(rewrite_metadata.tunnel_vnid, tunnel_vnid);
 
     /* dummy ops to keep compiler happy */
+    modify_field(scratch_metadata.flag, mirror_on_drop_overwrite);
     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);
     modify_field(scratch_metadata.qid_en, qid_en);
     modify_field(scratch_metadata.qos_class_en, qos_class_en);
