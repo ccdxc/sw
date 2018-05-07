@@ -26,8 +26,7 @@ tls_dec_write_arq:
     bcf         [!c1], tls_dec_write_arq_done
     nop
 
-  	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
-	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r5
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd_aad_dma_cmd_type) / 16)
 
 
     smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_LEAVE_IN_ARQ, TLS_DDOL_LEAVE_IN_ARQ
@@ -55,7 +54,7 @@ dma_cmd_cpu_hdr:
     add         r4, k.s5_s6_t1_s2s_arq_opage, k.to_s6_next_tls_hdr_offset
     subi        r3, r4, NIC_CPU_HDR_SIZE_BYTES
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window_1)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window_1)
 
 dma_cmd_descr:    
     /* Set the DMA_WRITE CMD for descr */
@@ -76,7 +75,7 @@ dma_cmd_descr:
     phvwri      p.idesc_O2, 0
     phvwri      p.idesc_L2, 0
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, idesc_A0, idesc_next_pkt)    
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_bsq_slot_dma_cmd, r1, idesc_A0, idesc_next_pkt)    
 
 dma_cmd_arq_slot:
 #ifdef DO_NOT_USE_CPU_SEM
@@ -91,7 +90,7 @@ dma_cmd_arq_slot:
                    r6,
                    k.s5_s6_t1_s2s_arq_base,
                    ring_entry_descr_addr,
-                   dma_cmd2_dma_cmd, 
+                   dma_cmd_odesc_dma_cmd, 
                    1, 
                    1, 
                    c1)  

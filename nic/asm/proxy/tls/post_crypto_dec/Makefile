@@ -30,6 +30,7 @@ SRC_FILES := \
 	$(SRC_DIR)/tls-dec-queue-l7q.s \
 	$(SRC_DIR)/tls-dec-read-recq.s \
 	$(SRC_DIR)/tls-dec-rx-bsq-dec-dummy.s \
+	$(SRC_DIR)/tls-dec-gc-setup.s \
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

@@ -23,16 +23,14 @@ struct tx_table_s7_t0_d     d;
 
 tls_dec_queue_sesq_process:
     CAPRI_CLEAR_TABLE0_VALID
-	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
-	add		    r4, r5, r0
-	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd_gc_slot_dma_cmd_type) / 16)
 
 
 tls_dec_odesc_write:
     add         r3, r0, k.to_s7_odesc
     addi        r3, r3, PKT_DESC_AOL_OFFSET
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, odesc_A0, odesc_next_pkt)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_odesc_dma_cmd, r3, odesc_A0, odesc_next_pkt)
 
 dma_cmd_sesq_slot:
 	add		    r5, r0, d.u.tls_queue_sesq_d.sw_sesq_pi
@@ -50,7 +48,7 @@ dma_cmd_sesq_slot:
     phvwr       p.ring_entry_descr_addr, r3.dx
 #endif
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_sesq_slot_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
 
     smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
@@ -63,19 +61,19 @@ tls_sesq_produce:
     add.!c1     r7, k.to_s7_other_fid, r0
 
     tblmincri   d.u.tls_queue_sesq_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
-    CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd2_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
+    CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd_sesq_dbell_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
                                 d.u.tls_queue_sesq_d.sw_sesq_pi, db_data_data)
                               
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     bcf         [c1], tls_queue_sesq_process_done
     nop
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd2_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd_sesq_dbell_dma_cmd)
     b           tls_queue_sesq_process_done
     nop
 tls_sesq_produce_skip:
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
-    phvwri.!c1  p.dma_cmd1_dma_cmd_eop, 1
-    phvwri.!c1  p.dma_cmd1_dma_cmd_wr_fence, 1
+    phvwri.!c1  p.dma_cmd_sesq_slot_dma_cmd_eop, 1
+    phvwri.!c1  p.dma_cmd_sesq_slot_dma_cmd_wr_fence, 1
         
 tls_queue_sesq_process_done:
 	nop.e

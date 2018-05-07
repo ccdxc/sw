@@ -384,21 +384,21 @@ metadata bsq_slot_t bsq_slot;
 metadata pad_to_dma_cmds_t pad_to_dma_cmds;
 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd0;
+metadata dma_cmd_phv2mem_t dma_cmd_aad;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd1;
+metadata dma_cmd_phv2mem_t dma_cmd_bsq_slot;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_phv2mem_t dma_cmd_odesc;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
+metadata dma_cmd_phv2mem_t dma_cmd_iv;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd4;
+metadata dma_cmd_phv2mem_t dma_cmd_brq_slot;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd5;
+metadata dma_cmd_phv2mem_t dma_cmd_idesc;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd6;
+metadata dma_cmd_phv2mem_t dma_cmd_idesc_meta;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7;
+metadata dma_cmd_phv2mem_t dma_cmd_dbell;
 
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;

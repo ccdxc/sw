@@ -24,7 +24,7 @@
 #define tx_table_s7_t0_action       tls_queue_sesq
 
 #define tx_table_s7_t1_action       tls_read_aad
-#
+
 #define tx_table_s7_t2_action       tls_gc_setup
 
 #define tx_table_s7_t3_action       tls_post_crypto_stats5

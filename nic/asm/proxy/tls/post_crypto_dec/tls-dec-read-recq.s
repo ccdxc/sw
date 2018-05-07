@@ -29,7 +29,7 @@ tls_dec_read_recq:
 
     add     r3, r0, d.u.tls_read_recq_d.desc
 
-    phvwr   p.to_s5_idesc, r3
+    phvwr   p.s2s_t2_idesc, r3
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_desc_process, r3, TABLE_SIZE_128_BITS)
 

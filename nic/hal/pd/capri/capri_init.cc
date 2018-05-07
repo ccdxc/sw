@@ -825,6 +825,13 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
         CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE * CAPRI_HBM_RNMDR_ENTRY_SIZE * CAPRI_RNMDR_GC_TLS_RING_PRODUCER;
     i++;
 
+    symbols[i].name = "tls-dec-gc-setup.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = RNMDR_TLS_GC_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC) +
+        CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE * CAPRI_HBM_RNMDR_ENTRY_SIZE * CAPRI_RNMDR_GC_TLS_RING_PRODUCER;
+    i++;
+
     HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

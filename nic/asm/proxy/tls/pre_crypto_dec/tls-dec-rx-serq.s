@@ -31,14 +31,12 @@ tls_dec_rx_serq_process:
         phvwr.c1    p.ccm_header_with_aad_B_0_nonce_salt, D.salt
 dma_cmd_dec_desc_entry_last:
         
-        addi            r5, r0, TLS_PHV_DMA_COMMANDS_START
-        phvwr           p.p4_txdma_intr_dma_cmd_ptr, r5
 
         add             r5, r0, D.recq_pi
         sll             r4, r5, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
         add             r4, r4, d.{u.tls_serq_process_d.recq_base}.wx
         phvwr           p.bsq_slot_desc, k.to_s2_idesc
-        CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r4, bsq_slot_desc, bsq_slot_desc)
+        CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_bsq_slot_dma_cmd, r4, bsq_slot_desc, bsq_slot_desc)
         tblmincri       D.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
 
 no_dma_cmd:     

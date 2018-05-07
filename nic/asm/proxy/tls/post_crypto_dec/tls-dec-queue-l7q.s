@@ -19,9 +19,7 @@ struct tx_table_s7_t1_d     d;
 
 tls_dec_queue_l7q_process:
     CAPRI_CLEAR_TABLE1_VALID
-    addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
-	add		    r4, r5, r0
-	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd_gc_slot_dma_cmd_type) / 16)
 
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     bcf         [!c1], tls_queue_l7q_process_done
@@ -35,7 +33,7 @@ dma_cmd_l7_desc_redir:
     // redir: dma odesc as desc
     add         r3, r0, k.to_s7_odesc
     addi        r3, r3, PKT_DESC_AOL_OFFSET
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, odesc_A0, odesc_next_pkt)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_odesc_dma_cmd, r3, odesc_A0, odesc_next_pkt)
 
     phvwr       p.l7_ring_entry_descr_addr, k.to_s7_odesc
     b           dma_cmd_l7q_slot

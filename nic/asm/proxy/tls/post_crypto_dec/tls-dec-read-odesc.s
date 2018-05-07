@@ -19,10 +19,13 @@ struct phv_                 p;
     .param      tls_dec_queue_sesq_process
     .param      tls_dec_post_crypto_stats_process
     .param      tls_dec_queue_l7q_process
+    .param      tls_dec_gc_setup
 
 tls_dec_post_read_odesc:
     CAPRI_SET_DEBUG_STAGE4_7(p.stats_debug_stage4_7_thread, CAPRI_MPU_STAGE_6, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
+    smeqb       c5, k.{to_s6_debug_dol_sbit0_ebit6...to_s6_debug_dol_sbit7_ebit7}, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     sne         c2, k.tls_global_phv_l7_proxy_type_span, r0
     
@@ -51,6 +54,14 @@ tls_dec_post_read_odesc:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_queue_sesq_process,
                            k.tls_global_phv_qstate_addr,
                        	   TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+
+    bcf         [c5], tls_dec_post_read_odesc_skip_gc
+    nop
+
+    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_dec_gc_setup,
+                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
+
+tls_dec_post_read_odesc_skip_gc:
 
 	CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_dec_post_crypto_stats_process,
 	                    k.tls_global_phv_qstate_addr,

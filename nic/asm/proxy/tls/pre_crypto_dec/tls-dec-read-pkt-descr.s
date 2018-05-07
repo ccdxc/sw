@@ -46,7 +46,7 @@ tls_dec_pkt_descriptor_process:
     /* Setup DMA command to write the AAD */
     add     r3, r5.dx, r6.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, s4_s6_t0_phv_aad_seq_num,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_dma_cmd, r3, s4_s6_t0_phv_aad_seq_num,
                                 s4_s6_t0_phv_aad_length)
 
     /* Setup barco command authentication tag address */
@@ -81,7 +81,7 @@ tls_dec_pkt_descriptor_ccm_process:
     /* Setup DMA command to write the AAD */
     add     r3, r1, d.{u.tls_read_pkt_descr_aol_d.A0}.dx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, ccm_header_with_aad_B_0_flags,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_dma_cmd, r3, ccm_header_with_aad_B_0_flags,
                                 ccm_header_with_aad_B_1_zero_pad)
 
     /* Setup barco command authentication tag address */

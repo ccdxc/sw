@@ -27,6 +27,15 @@ tls_dec_read_serq_entry_process:
     phvwrpair   p.to_s5_idesc, d.u.read_serq_entry_d.idesc[31:0], \
                 p.to_s6_idesc, d.u.read_serq_entry_d.idesc[31:0]
 
+tls_dec_serq_consume:
+    CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_dec_serq_consume_process,
+   	                         k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET,
+                                 TABLE_SIZE_512_BITS)
+
+    /* Skip allocating the descriptor and the page when we are bypassing Barco offload */
+    smeqb   c1, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    bcf     [c1], tls_dec_pkt_descriptor_process
+    nop
 
 table_read_TNMDR_ALLOC_IDX:
     addi        r3, r0, TNMDR_ALLOC_IDX
@@ -38,11 +47,6 @@ table_read_TNMPR_ALLOC_IDX:
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tls_dec_alloc_tnmpr_process,
                           r3, TABLE_SIZE_16_BITS)
 
-tls_dec_serq_consume:
-    CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_dec_serq_consume_process,
-   	                         k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET,
-                                 TABLE_SIZE_512_BITS)
-	
 tls_dec_pkt_descriptor_process:
     add         r5, r0, d.{u.read_serq_entry_d.A0}
     add         r6, r0, d.{u.read_serq_entry_d.O0}
@@ -69,7 +73,7 @@ tls_dec_pkt_descriptor_process:
     /* Setup DMA command to write the AAD */
     add         r3, r5.dx, r6.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, s4_s6_t0_phv_aad_seq_num,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_dma_cmd, r3, s4_s6_t0_phv_aad_seq_num,
                                 s4_s6_t0_phv_aad_length)
 
     /* Setup barco command authentication tag address */
@@ -104,7 +108,7 @@ tls_dec_pkt_descriptor_ccm_process:
     /* Setup DMA command to write the AAD */
     add         r3, r1, d.{u.read_serq_entry_d.A0}.dx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, ccm_header_with_aad_B_0_flags,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_dma_cmd, r3, ccm_header_with_aad_B_0_flags,
                                 ccm_header_with_aad_B_1_zero_pad)
 
     /* Setup barco command authentication tag address */

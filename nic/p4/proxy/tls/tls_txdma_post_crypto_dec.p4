@@ -16,11 +16,14 @@
 
 #define tx_table_s5_t0_action       tls_bsq_consume
 #define tx_table_s5_t3_action       tls_l7_desc_alloc
-#
+
 #define tx_table_s6_t0_action       tls_read_odesc
 
 #define tx_table_s7_t0_action       tls_queue_sesq
 #define tx_table_s7_t1_action       tls_queue_l7q
+
+#define tx_table_s7_t2_action       tls_gc_setup
+
 #define tx_table_s7_t3_action       tls_post_crypto_stats5
 
 #include "../../common-p4+/common_txdma.p4"
@@ -85,24 +88,22 @@ header_type tls_global_phv_t {
 
 header_type to_stage_5_phv_t {
     fields {
-        idesc                           : HBM_ADDRESS_WIDTH;
         odesc                           : HBM_ADDRESS_WIDTH;
-        ipage                           : HBM_ADDRESS_WIDTH;
     }
 }
 
 #define GENERATE_TO_S5_K                                                                                \
-    modify_field(to_s5_scratch.idesc, to_s5.idesc);                                                     \
-    modify_field(to_s5_scratch.odesc, to_s5.odesc);                                                     \
-    modify_field(to_s5_scratch.ipage, to_s5.ipage);
+    modify_field(to_s5_scratch.odesc, to_s5.odesc);
 
 header_type to_stage_6_phv_t {
     fields {
         do_post_ccm_dec                 : 1;
+        debug_dol                       : 8;
     }
 }
 #define GENERATE_TO_S6                                                              \
-    modify_field(to_s6_scratch.do_post_ccm_dec, to_s6.do_post_ccm_dec);
+    modify_field(to_s6_scratch.do_post_ccm_dec, to_s6.do_post_ccm_dec);             \
+    modify_field(to_s6_scratch.debug_dol, to_s6.debug_dol);
 
 header_type to_stage_7_phv_t {
     fields {
@@ -129,6 +130,15 @@ header_type stats_phv_t {
         debug_stage4_7_thread           : 16;
     }
 }
+
+header_type s2s_t2_phv_t {
+    fields {
+        idesc                           : HBM_ADDRESS_WIDTH;
+    }
+}
+
+#define GENERATE_S2S_T2_K                                                                               \
+    modify_field(s2s_t2_scratch.idesc, s2s_t2.idesc);
 
 #define GENERATE_STATS_K                                                            \
     modify_field(stats_scratch.rnmdr_free, stats.rnmdr_free);                       \
@@ -189,6 +199,12 @@ metadata to_stage_6_phv_t to_s6_scratch;
 metadata to_stage_7_phv_t to_s7_scratch;
 
 @pragma scratch_metadata
+metadata s2s_t2_phv_t   s2s_t2_scratch;
+
+@pragma scratch_metadata
+metadata token_t        TOKEN_SCRATCH;
+
+@pragma scratch_metadata
 metadata stats_phv_t stats_scratch;
 
 /* *** PHV Unionization Begin *** */
@@ -205,6 +221,9 @@ metadata to_stage_7_phv_t to_s7;
 
 @pragma pa_header_union ingress common_global
 metadata tls_global_phv_t tls_global_phv;
+
+@pragma pa_header_union ingress common_t2_s2s
+metadata s2s_t2_phv_t s2s_t2;
 
 @pragma pa_header_union ingress common_te3_phv
 metadata stats_phv_t stats;
@@ -223,14 +242,27 @@ metadata ring_entry_t l7_ring_entry;
 metadata doorbell_data_raw_t db_data;
 @pragma dont_trim
 metadata doorbell_data_raw_t l7_db_data;
+
 @pragma dont_trim
 metadata doorbell_data_pad_t db_pad;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd0;
+metadata doorbell_data_t gc_db_data;
+
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd1;
+metadata ring_entry_t gc_ring_entry;
+@pragma pa_align 128
+
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_phv2mem_t dma_cmd_gc_slot;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_gc_dbell;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_odesc;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_sesq_slot;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_sesq_dbell;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd3;
 @pragma dont_trim
@@ -343,6 +375,17 @@ action tls_queue_l7q(TLSCB_1_PARAMS) {
 
     GENERATE_TLSCB_1_D
 }
+
+
+/* Stage 7 Table 2 action */
+
+action tls_gc_setup(TOKEN_ACTION_PARAMS) {
+
+    GENERATE_S2S_T2_K
+
+    GENERATE_TOKEN_D
+}
+
 
 /* Stage 7 Table 3 action */
 action tls_post_crypto_stats5(STG_POST_CRYPTO_STATS_ACTION_PARAMS) {

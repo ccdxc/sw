@@ -23,7 +23,7 @@ struct tx_table_s7_t2_d     d;
     .align
     .param          RNMDR_TLS_GC_TABLE_BASE
 
-tls_enc_gc_setup:
+tls_dec_gc_setup:
     CAPRI_CLEAR_TABLE_VALID(3)
 
     phvwr           p.gc_ring_entry_descr_addr , k.s2s_t2_idesc
