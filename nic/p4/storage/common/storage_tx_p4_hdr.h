@@ -335,6 +335,7 @@ header_type seq_comp_status_desc1_t {
     aol_pad_en     :  1;
     sgl_pad_hash_en:  1;
     sgl_pdma_en         :  1;
+    sgl_pdma_pad_only   :  1;
     copy_src_dst_on_error: 1;
   }
 }
@@ -544,8 +545,8 @@ header_type storage_kivec5_t {
     aol_pad_en          :  1;
     sgl_pad_hash_en     :  1;
     sgl_pdma_en         :  1;
-    copy_src_dst_on_error: 1;
     sgl_pdma_pad_only   :  1;
+    copy_src_dst_on_error: 1;
   }
 }
 

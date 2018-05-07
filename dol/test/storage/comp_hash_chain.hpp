@@ -340,6 +340,7 @@ private:
     dp_mem_t        *uncomp_buf;
     dp_mem_t        *comp_buf1;
     dp_mem_t        *comp_buf2;
+    dp_mem_t        *comp_dst_sgl_vec;
     dp_mem_t        *seq_sgl_pdma;
 
     dp_mem_t        *comp_status_buf1;
@@ -367,6 +368,8 @@ private:
     cp_desc_t       cp_desc;
     comp_queue_t    *comp_queue;
     comp_queue_t    *hash_queue;
+    comp_queue_push_t push_type;
+    uint32_t        seq_comp_qid;
 
     uint32_t        last_cp_output_data_len;
 

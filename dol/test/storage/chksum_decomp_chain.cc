@@ -38,7 +38,10 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
     caller_opaque_data(0),
     chksum_queue(nullptr),
     decomp_queue(nullptr),
-    push_type(COMP_QUEUE_PUSH_SEQUENCER),
+    chksum_push_type(COMP_QUEUE_PUSH_INVALID),
+    decomp_push_type(COMP_QUEUE_PUSH_INVALID),
+    seq_chksum_qid(0),
+    seq_decomp_qid(0),
     destructor_free_buffers(params.destructor_free_buffers_),
     suppress_info_log(params.suppress_info_log_),
     success(false)
@@ -98,7 +101,6 @@ chksum_decomp_chain_t::pre_push(chksum_decomp_chain_pre_push_params_t params)
 int 
 chksum_decomp_chain_t::push(chksum_decomp_chain_push_params_t params)
 {
-    comp_queue_push_t   curr_push_type;
     int                 actual_hash_blks;
     uint32_t            block_no;
 
@@ -204,14 +206,17 @@ chksum_decomp_chain_t::push(chksum_decomp_chain_push_params_t params)
     /*
      * With multi checksum blocks, use deferred push if possible.
      */
-    curr_push_type = push_type == COMP_QUEUE_PUSH_SEQUENCER ?
-                     COMP_QUEUE_PUSH_SEQUENCER_DEFER : push_type;
+    chksum_push_type = params.push_type_ == COMP_QUEUE_PUSH_SEQUENCER ?
+                       COMP_QUEUE_PUSH_SEQUENCER_DEFER : params.push_type_;
+    seq_chksum_qid = params.seq_chksum_qid_;
     for (block_no = 0; block_no < num_hash_blks; block_no++) {
-        chksum_queue->push(chksum_setup(block_no), curr_push_type,
-                           params.seq_chksum_qid_);
+        chksum_queue->push(chksum_setup(block_no), chksum_push_type,
+                           seq_chksum_qid);
     }
 
-    decomp_queue->push(decomp_setup(), push_type,  params.seq_decomp_qid_);
+    decomp_push_type = params.push_type_;
+    seq_decomp_qid = params.seq_decomp_qid_;
+    decomp_queue->push(decomp_setup(), decomp_push_type,  seq_decomp_qid);
     return 0;
 }
 
@@ -222,8 +227,10 @@ chksum_decomp_chain_t::push(chksum_decomp_chain_push_params_t params)
 void
 chksum_decomp_chain_t::post_push(void)
 {
+    chksum_queue->reentrant_tuple_set(chksum_push_type, seq_chksum_qid);
     chksum_queue->post_push();
-    if (decomp_queue != chksum_queue) {
+    if (seq_chksum_qid != seq_decomp_qid) {
+        decomp_queue->reentrant_tuple_set(decomp_push_type, seq_decomp_qid);
         decomp_queue->post_push();
     }
 }

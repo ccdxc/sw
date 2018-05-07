@@ -453,16 +453,35 @@ struct capri_dma_cmd_mem2mem_t {
   add       r1, r3, _table_base;                                        \
   LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)                              \
 
-// Used to set table 1 valid bit 
-#define SET_TABLE1                                                      \
-  phvwri    p.app_header_table1_valid, 1;   				\
+// Used to set/clear table N valid bit 
+#define SET_TABLE0                                                      \
+  phvwri    p.app_header_table0_valid, 1;                               \
 
-// Used to clear table 1 valid bit 
+#define CLEAR_TABLE0                                                    \
+  phvwri    p.app_header_table0_valid, 0;                               \
+
+#define CLEAR_TABLE0_e                                                  \
+  phvwri.e  p.app_header_table0_valid, 0;                               \
+  nop;                                                                  \
+
+#define SET_TABLE1                                                      \
+  phvwri    p.app_header_table1_valid, 1;                               \
+
 #define CLEAR_TABLE1                                                    \
-  phvwri    p.app_header_table1_valid, 0;   				\
+  phvwri    p.app_header_table1_valid, 0;                               \
 
 #define CLEAR_TABLE1_e                                                  \
-  phvwri.e  p.app_header_table1_valid, 0;   				\
+  phvwri.e  p.app_header_table1_valid, 0;                               \
+  nop;                                                                  \
+
+#define SET_TABLE2                                                      \
+  phvwri    p.app_header_table2_valid, 1;                               \
+
+#define CLEAR_TABLE2                                                    \
+  phvwri    p.app_header_table2_valid, 0;                               \
+
+#define CLEAR_TABLE2_e                                                  \
+  phvwri.e  p.app_header_table2_valid, 0;                               \
   nop;                                                                  \
 
 // Used to clear all table valid bits and exit the pipeline
@@ -536,6 +555,25 @@ struct capri_dma_cmd_mem2mem_t {
    add      r1, r0, _addr;                                              \
    DMA_MEM2MEM_SETUP_REG_ADDR(_type, r1, _size, _use_override_lif,      \
                               _override_lif, _dma_cmd_X)                \
+   
+// Mem2Mem DMA setup via pointer:
+// assume no LIF override
+// _addr is 64 bits
+#define DMA_MEM2MEM_PTR_SETUP_ADDR(_type, _addr, _size)                 \
+   DMA_M2M_PTR_WRITE(mem2mem_type, _type)                               \
+   DMA_M2M_PTR_WRITE(cmdtype, CAPRI_DMA_MEM2MEM)                        \
+   DMA_M2M_PTR_WRITE(size, _size)                                       \
+   DMA_M2M_PTR_WRITE(addr, _addr)                                       \
+   DMA_M2M_PTR_WRITE(host_addr, _addr[63])                              \
+
+// Mem2Mem DMA setup via pointer:
+// assume no LIF override
+// _addr is 34 bits
+#define DMA_MEM2MEM_PTR_SETUP_ADDR34(_type, _addr, _size)               \
+   DMA_M2M_PTR_WRITE(mem2mem_type, _type)                               \
+   DMA_M2M_PTR_WRITE(cmdtype, CAPRI_DMA_MEM2MEM)                        \
+   DMA_M2M_PTR_WRITE(size, _size)                                       \
+   DMA_M2M_PTR_WRITE(addr, _addr)                                       \
    
 // DMA fence update: Set the fence bit for the MEM2MEM DMA command
 #define DMA_MEM2MEM_FENCE(_dma_cmd_X)                                   \
@@ -999,6 +1037,18 @@ struct capri_dma_cmd_mem2mem_t {
         nop;
 #else
 #define STORAGE_COMP_SGL_PDMA_XFER_ERROR_TRAP()                         \
+        nop;
+#endif
+
+/*
+ * Compression SGL PDMA pad-only error
+ */
+#if STORAGE_COMP_SGL_PDMA_PAD_ONLY_DEBUG
+#define STORAGE_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()                     \
+        illegal;                                                        \
+        nop;
+#else
+#define STORAGE_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()                     \
         nop;
 #endif
 

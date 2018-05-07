@@ -252,6 +252,13 @@ dp_mem_t *queue_consume_entry(queues_t *queue, uint16_t *index) {
 }
 
 
+dp_mem_t *queue_consumed_entry_get(queues_t *queue, uint16_t *index) {
+  if (!queue->mem || !index) return nullptr;
+  *index = queue->mem->next_line_get();
+  return queue->mem;
+}
+
+
 void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
 
     // Make adjustment for the number of seq SQs needed for PDMA testing.
@@ -1184,6 +1191,11 @@ dp_mem_t *pvm_sq_consume_entry(uint16_t qid, uint16_t *index) {
 dp_mem_t *seq_sq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(SeqNumSQs)) return nullptr;
   return queue_consume_entry(&seq_sqs[qid], index);
+}
+
+dp_mem_t * seq_sq_consumed_entry_get(uint16_t qid, uint16_t *index) {
+  if (qid >= NUM_TO_VAL(SeqNumSQs)) return nullptr;
+  return queue_consumed_entry_get(&seq_sqs[qid], index);
 }
 
 dp_mem_t *nvme_cq_consume_entry(uint16_t qid, uint16_t *index) {

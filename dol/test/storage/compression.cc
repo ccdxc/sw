@@ -150,6 +150,39 @@ int run_dc_test(cp_desc_t& desc,
                 comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
                 uint32_t seq_comp_qid = 0);
 
+/*
+ * Format a sparse SGL vector where only the addr0/len0 chunk is filled.
+ * Leaving addr1/len1/addr2/len2 unused is somewhat wasteful in terms of
+ * descriptor memory usage but makes it easier for P4+ and also comsumes
+ * less P4+ TxDMA descriptors.
+ */
+void
+comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
+                     dp_mem_t *comp_buf,
+                     uint32_t blk_size,
+                     uint32_t num_blks)
+{
+    cp_sgl_t    *comp_sgl;
+    uint64_t    comp_buf_pa;
+    uint32_t    block_no;
+
+    assert(comp_sgl_vec->num_lines_get() >= num_blks);
+    comp_buf_pa = comp_buf->pa();
+    for (block_no = 0; block_no < num_blks; block_no++) {
+        comp_sgl_vec->line_set(block_no);
+        comp_sgl_vec->clear();
+
+        comp_sgl = (cp_sgl_t *)comp_sgl_vec->read();
+        comp_sgl->addr0 = comp_buf_pa;
+        comp_sgl->len0 = blk_size;
+        if (block_no < (num_blks - 1)) {
+            comp_sgl->link = comp_sgl_vec->pa() + sizeof(*comp_sgl);
+        }
+        comp_sgl_vec->write_thru();
+        comp_buf_pa += blk_size;
+    }
+}
+
 bool
 comp_status_poll(dp_mem_t *status,
                  const cp_desc_t& desc,
@@ -416,6 +449,21 @@ comp_queue_t::push(const cp_desc_t& src_desc,
         assert(0);
         break;
     }
+}
+
+// comp_queue_t is non-reentrant in that the tuple {curr_push_type,
+// curr_seq_comp_qid} serves a single user at a time. When there multiple
+// users with deferred operations pending, (e.g., as in the case of
+// accelerator scaled tests), each user must re-establish its tuple before
+// calling post_push().
+void
+comp_queue_t::reentrant_tuple_set(comp_queue_push_t push_type,
+                                  uint32_t seq_comp_qid)
+{
+    curr_push_type = push_type;
+    curr_seq_comp_qid = seq_comp_qid;
+    queues::seq_sq_consumed_entry_get(curr_seq_comp_qid,
+                                      &curr_seq_comp_pd_idx);
 }
 
 // Execute any deferred push() on the given comp_queue.

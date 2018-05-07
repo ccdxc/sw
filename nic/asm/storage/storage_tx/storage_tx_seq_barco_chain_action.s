@@ -35,4 +35,4 @@ storage_tx_seq_barco_chain_action_start:
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_11_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
-   LOAD_NO_TABLES
+   CLEAR_TABLE_VALID_e(0)

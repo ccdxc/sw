@@ -146,6 +146,8 @@ public:
     void push(const cp_desc_t& src_desc,
               comp_queue_push_t push_type,
               uint32_t seq_comp_qid);
+    void reentrant_tuple_set(comp_queue_push_t push_type,
+                             uint32_t seq_comp_qid);
     void post_push(void);
 
     uint32_t q_size_get(void)
@@ -205,6 +207,10 @@ extern comp_queue_t *dc_hotq;
 
 extern dp_mem_t *comp_pad_buf;
 
+void comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
+                          dp_mem_t *comp_buf,
+                          uint32_t blk_size,
+                          uint32_t num_blks);
 bool comp_status_poll(dp_mem_t *status,
                       const cp_desc_t &d,
                       bool suppress_log = false);

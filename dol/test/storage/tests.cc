@@ -2637,7 +2637,8 @@ int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
   seq_status_desc->write_bit_fields(512 + 407, 1, chain_ent.aol_pad_en);
   seq_status_desc->write_bit_fields(512 + 408, 1, chain_ent.sgl_pad_hash_en);
   seq_status_desc->write_bit_fields(512 + 409, 1, chain_ent.sgl_pdma_en);
-  seq_status_desc->write_bit_fields(512 + 410, 1, chain_ent.copy_src_dst_on_error);
+  seq_status_desc->write_bit_fields(512 + 410, 1, chain_ent.sgl_pdma_pad_only);
+  seq_status_desc->write_bit_fields(512 + 411, 1, chain_ent.copy_src_dst_on_error);
   seq_status_desc->write_thru();
 
   return 0;

@@ -35,6 +35,8 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     caller_hash_opaque_data(0),
     comp_queue(nullptr),
     hash_queue(nullptr),
+    push_type(COMP_QUEUE_PUSH_INVALID),
+    seq_comp_qid(0),
     last_cp_output_data_len(0),
     destructor_free_buffers(params.destructor_free_buffers_),
     suppress_info_log(params.suppress_info_log_),
@@ -87,6 +89,9 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     hash_desc_vec = new dp_mem_t(max_hash_blks, sizeof(cp_desc_t),
                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                  sizeof(cp_desc_t));
+    comp_dst_sgl_vec = new dp_mem_t(max_hash_blks, sizeof(cp_sgl_t),
+                                    DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                    sizeof(cp_sgl_t));
     hash_sgl_vec = new dp_mem_t(max_hash_blks, sizeof(cp_sgl_t),
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(cp_sgl_t));
@@ -121,6 +126,7 @@ comp_hash_chain_t::~comp_hash_chain_t()
         delete comp_status_buf1;
         delete comp_opaque_buf;
         delete hash_desc_vec;
+        delete comp_dst_sgl_vec;
         delete hash_sgl_vec;
         delete seq_sgl_pdma;
     }
@@ -231,8 +237,32 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     comp_queue = params.comp_queue_;
     hash_queue = params.hash_queue_;
     success = false;
-    compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf1,
-                     comp_status_buf1, comp_buf1, app_blk_size);
+
+    /*
+     * Use different destination format depending on whether the final
+     * compressed data go to a different buffer (i.e., comp_buf2) from comp_buf1. 
+     */
+    if (comp_buf1 == comp_buf2) {
+
+        /*
+         * This is the case where Comp engine writes output data to comp_buf1
+         * according to info in comp_dst_sgl_vec, after which P4+ will append the
+         * pad data. The comp_dst_sgl_vec is to describe per-block buffers exactly
+         * the same as for hash_sgl_vec, except that for comp_dst_sgl_vec each SGL
+         * will link to the next.
+         */
+        comp_sgl_sparse_fill(comp_dst_sgl_vec, comp_buf1,
+                             app_hash_size, num_hash_blks);
+        comp_dst_sgl_vec->line_set(0);
+        compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_dst_sgl_vec,
+                         comp_status_buf1, comp_buf1, app_blk_size);
+        cp_desc.cmd_bits.dst_is_list = 1;
+        chain_params.chain_ent.sgl_pdma_pad_only = 1;
+    } else {
+        compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf1,
+                         comp_status_buf1, comp_buf1, app_blk_size);
+    }
+
     /*
      * point barco_desc_addr to the first of the descriptors vector,
      * and do the same for the hash SGL vector
@@ -272,23 +302,6 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
         chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
     }
 
-    /*
-     * P4+ is capable of initiating chained hash operation simultaneous
-     * with PDMA transfer of the comp data. So activate that if the caller
-     * had requested it.
-     */
-    if (comp_buf1 != comp_buf2) {
-        seq_sgl_pdma->clear();
-        sgl_pdma_entry = (cp_sq_ent_sgl_t *)seq_sgl_pdma->read();
-        sgl_pdma_entry->addr[0] = comp_buf2->pa();
-        sgl_pdma_entry->len[0] = comp_buf2->line_size_get();
-        seq_sgl_pdma->write_thru();
-
-        chain_params.chain_ent.dst_hbm_pa = comp_buf1->pa();
-        chain_params.chain_ent.sgl_pdma_out_pa = seq_sgl_pdma->pa();
-        chain_params.chain_ent.sgl_pdma_en = 1;
-    }
-
     chain_params.chain_ent.pad_buf_pa = caller_comp_pad_buf->pa();
     chain_params.chain_ent.stop_chain_on_error = 1;
     chain_params.chain_ent.sgl_pad_hash_en = 1;
@@ -312,6 +325,29 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
         hash_setup(block_no, chain_params);
     }
 
+    /*
+     * P4+ is capable of initiating chained hash operation simultaneous
+     * with PDMA transfer of the comp data. So activate that if the caller
+     * had requested it.
+     *
+     * Note: this mode has a limitation in P4+ in terms of the number of
+     * TxDMA descriptors P4+ has at its disposal for doing the transfer.
+     * This translates to the number of "chunks" in the SGL. The limitation
+     * could be as low as just 1 chunk, depending on how many other
+     * chaining features are also enabled in the current chain.
+     */
+    if (comp_buf1 != comp_buf2) {
+        seq_sgl_pdma->clear();
+        sgl_pdma_entry = (cp_sq_ent_sgl_t *)seq_sgl_pdma->read();
+        sgl_pdma_entry->addr[0] = comp_buf2->pa();
+        sgl_pdma_entry->len[0] = comp_buf2->line_size_get();
+        seq_sgl_pdma->write_thru();
+
+        chain_params.chain_ent.dst_hbm_pa = comp_buf1->pa();
+        chain_params.chain_ent.sgl_pdma_out_pa = seq_sgl_pdma->pa();
+    }
+    chain_params.chain_ent.sgl_pdma_en = 1;
+
     if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
         printf("test_setup_seq_acc_chain_entry failed\n");
         return -1;
@@ -321,7 +357,10 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     cp_desc.doorbell_addr = chain_params.ret_doorbell_addr;
     cp_desc.doorbell_data = chain_params.ret_doorbell_data;
     cp_desc.cmd_bits.doorbell_on = 1;
-    comp_queue->push(cp_desc, params.push_type_, params.seq_comp_qid_);
+
+    push_type = params.push_type_;
+    seq_comp_qid = params.seq_comp_qid_;
+    comp_queue->push(cp_desc, params.push_type_, seq_comp_qid);
     return 0;
 }
 
@@ -332,6 +371,7 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
 void
 comp_hash_chain_t::post_push(void)
 {
+    comp_queue->reentrant_tuple_set(push_type, seq_comp_qid);
     comp_queue->post_push();
 }
 

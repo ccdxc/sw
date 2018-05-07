@@ -95,21 +95,16 @@ possible_padding_apply:
    nop
 
    // MEM2MEM source is pad buffer, assumed to be a 34-bit HBM address
-   DMA_M2M_PTR_WRITE(mem2mem_type, CAPRI_DMA_M2M_TYPE_SRC)
-   DMA_M2M_PTR_WRITE(cmdtype, CAPRI_DMA_MEM2MEM)
-   DMA_M2M_PTR_WRITE(size, r_pad_len)
-   DMA_M2M_PTR_WRITE(addr, STORAGE_KIVEC3ACC_PAD_BUF_ADDR)
+   DMA_MEM2MEM_PTR_SETUP_ADDR34(CAPRI_DMA_M2M_TYPE_SRC,
+                                STORAGE_KIVEC3ACC_PAD_BUF_ADDR, r_pad_len)
    
    // MEM2MEM destination
    // Note: PHV flit memory is in big endian layout, so the next adjacent TxDMA
    // descriptor is at a LOWER address! Hence, the subi instruction below.
    
    subi         r_next_dma_cmd_ptr, r_next_dma_cmd_ptr, sizeof(DMA_CMD_MEM2MEM_T)
-   DMA_M2M_PTR_WRITE(mem2mem_type, CAPRI_DMA_M2M_TYPE_DST)
-   DMA_M2M_PTR_WRITE(cmdtype, CAPRI_DMA_MEM2MEM)
-   DMA_M2M_PTR_WRITE(size, r_pad_len)
-   DMA_M2M_PTR_WRITE(addr, r_dst_addr)
-   DMA_M2M_PTR_WRITE(host_addr, r_dst_addr[63])
+   DMA_MEM2MEM_PTR_SETUP_ADDR(CAPRI_DMA_M2M_TYPE_DST,
+                              r_dst_addr, r_pad_len)
    
 complete_dma:
    // Setup the start and end DMA pointers
@@ -117,7 +112,7 @@ complete_dma:
                  p4_txdma_intr_dma_cmd_ptr)
 
    // Exit the pipeline here
-   LOAD_NO_TABLES
+   CLEAR_TABLE1_e
 
 limited_sgl_case:
    // Only has enough dma_m2m for one, two, or three transfers

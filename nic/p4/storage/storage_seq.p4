@@ -321,7 +321,7 @@ action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_pdma_in_pa, sgl
                                      sgl_vec_pa, pad_buf_pa,
                                      data_len, pad_len_shift, stop_chain_on_error,
 				     data_len_from_desc, aol_pad_en, sgl_pad_hash_en,
-				     sgl_pdma_en, copy_src_dst_on_error) {
+				     sgl_pdma_en, sgl_pdma_pad_only, copy_src_dst_on_error) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
@@ -340,6 +340,7 @@ action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_pdma_in_pa, sgl
   modify_field(seq_comp_status_desc1_scratch.aol_pad_en, aol_pad_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pad_hash_en, sgl_pad_hash_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
+  modify_field(seq_comp_status_desc1_scratch.sgl_pdma_pad_only, sgl_pdma_pad_only);
   modify_field(seq_comp_status_desc1_scratch.copy_src_dst_on_error, copy_src_dst_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
@@ -350,6 +351,7 @@ action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_pdma_in_pa, sgl
   modify_field(storage_kivec5.aol_pad_en, seq_comp_status_desc1_scratch.aol_pad_en);
   modify_field(storage_kivec5.sgl_pad_hash_en, seq_comp_status_desc1_scratch.sgl_pad_hash_en);
   modify_field(storage_kivec5.sgl_pdma_en, seq_comp_status_desc1_scratch.sgl_pdma_en);
+  modify_field(storage_kivec5.sgl_pdma_pad_only, seq_comp_status_desc1_scratch.sgl_pdma_pad_only);
   modify_field(storage_kivec5.copy_src_dst_on_error, seq_comp_status_desc1_scratch.copy_src_dst_on_error);
 }
 
@@ -552,6 +554,13 @@ action seq_comp_sgl_pad_only(addr0, len0, rsvd0,
                              barco_sgl_scratch.addr0 + 
   			       ((1 << storage_kivec5.pad_len_shift) - storage_kivec3acc.pad_len),
                              0, storage_kivec3acc.pad_len,
+                             0, 0, 0)
+  }
+  if (barco_sgl_scratch.len1 > 0) {
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_2, dma_m2m_3, 
+                             barco_sgl_scratch.addr1, 0,
+                             barco_sgl_scratch.addr0 + barco_sgl_scratch.len0,
+                             0, barco_sgl_scratch.len1,
                              0, 0, 0)
   }
 

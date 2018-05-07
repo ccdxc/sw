@@ -167,7 +167,11 @@ possible_sgl_pdma_xfer:
     bbeq        STORAGE_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop
     
-    // PDMA only padding data to the last user buffer specified in SGL
+    // sgl_pad_hash_en must have been enabled, the result of which
+    // is referenced here for PDMA transfer of the pad data.
+    
+    bbeq        STORAGE_KIVEC5_SGL_PAD_HASH_EN, 0, pdma_pad_only_error
+    nop
     LOAD_TABLE2_FOR_ADDR_PC_IMM(r_last_sgl_p, 
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_tx_seq_comp_sgl_pad_only)
@@ -191,7 +195,7 @@ possible_barco_push:
 
     // Barco push not applicable so we're done if SGL PDMA was launched
     nop.c4.e
-    nop
+    CLEAR_TABLE0  // delay slot
     
 all_dma_complete:
 
@@ -242,4 +246,14 @@ possible_stop_chain:
     PCI_SET_INTERRUPT_ADDR_DMA(STORAGE_KIVEC5_INTR_ADDR, dma_p2m_11)
     b           all_dma_complete
     nop
-      
+
+pdma_pad_only_error:
+
+   // PDMA pad-only requires sgl_pad_hash_en to also be enabled
+   // (the sgl_pad_hash_en operation provides the necessary SGL
+   // for the calculation and resulting PDMA transfer of the pad data)
+   
+   STORAGE_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()
+   b            possible_barco_push
+   nop
+

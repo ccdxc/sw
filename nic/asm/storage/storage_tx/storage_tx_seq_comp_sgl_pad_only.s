@@ -32,7 +32,7 @@ storage_tx_seq_comp_sgl_pad_only:
     // actual padding length in STORAGE_KIVEC3ACC_PAD_LEN, we can calculate
     // how much HW has already written to d.addr0, i.e.
     //     written_len = block_size - pad_len
-    //     pad_dest = d.addr0 + written_len
+    //     dst_addr to apply padding = d.addr0 + written_len
     
     add         r_pad_len, STORAGE_KIVEC3ACC_PAD_LEN, r0
     beq         r_pad_len, r0, exit
@@ -52,5 +52,5 @@ exit:
                  p4_txdma_intr_dma_cmd_ptr)
 
    // Exit the pipeline here
-   LOAD_NO_TABLES
+   CLEAR_TABLE2_e
 

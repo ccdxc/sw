@@ -291,7 +291,6 @@ std::vector<acc_scale_test_name_t> acc_scale_test_names = {
     {"encrypt-only", ACC_SCALE_TEST_ENCRYPT_ONLY},
 };
 
-// Parse and convert the argument string into a bitmap of recognized tests
 void acc_scale_test_help_print(void)
 {
     printf("Available accelerator scale tests: ");
@@ -639,8 +638,8 @@ int main(int argc, char**argv) {
   // Add accelerator scale tests
   if (run_acc_scale_tests_map) {
     test_suite.push_back({&tests::acc_scale_tests_push,
-                          "Accelerator scale tests", false});
-    printf("Added accelerator scale tests \n");
+                          "Accelerator chaining scale tests", false});
+    printf("Added accelerator chaining scale tests \n");
   }
 
   printf("Formed test suite with %d cases \n", (int) test_suite.size());
