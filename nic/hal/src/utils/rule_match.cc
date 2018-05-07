@@ -10,6 +10,20 @@
 
 namespace hal {
 
+acl::acl_config_t ip_acl_config_glbl = {
+    num_categories: 1,
+    num_fields: NUM_FIELDS,
+    defs:  {    RULE_FLD_DEF(acl::ACL_FIELD_TYPE_EXACT, ipv4_tuple, proto),
+
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_src),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_dst),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_src),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_dst),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, src_sg),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, dst_sg),
+           }
+};
+
 //-----------------------------------------------------------------------------
 // No alloc or free functions for rule_match as it is user managed. 
 // This allows the structure encompassing rule_match_t to be allocated 
@@ -274,5 +288,142 @@ end:
 
     return ret;
 }
+
+
+// rule_lib_alloc function allocates data type ipv4_rule_t to be added to
+// acl_lib
+rule_data_t *
+rule_data_alloc_init()
+{
+    rule_data_t *data = (rule_data_t *)g_hal_state->rule_data_slab()->alloc();
+    ref_init(&data->ref_count, [] (const ref_t * ref_count) {
+        rule_data_t *rule  = (rule_data_t *)acl_rule_from_ref(ref_count);
+        rule->data_free(rule->userdata);
+        g_hal_state->rule_data_slab()->free((void *)acl_rule_from_ref(ref_count));
+    });
+    return data;
+}
+
+void
+rule_lib_init_config(acl_config_t *cfg)
+{
+    memcpy(cfg, &ip_acl_config_glbl, sizeof(acl_config_t));
+    return;
+}
+
+const acl_ctx_t *
+rule_lib_init(const char *name, acl_config_t *cfg)
+{
+    rule_lib_init_config(cfg);
+    return acl_create(name, (const acl_config_t *)cfg);
+}
+
+
+// rule_lib_alloc function allocates data type ipv4_rule_t to be added to
+// acl_lib
+ipv4_rule_t *
+rule_lib_alloc()
+{
+    ipv4_rule_t *rule = (ipv4_rule_t *)g_hal_state->ipv4_rule_slab()->alloc();
+    rule->data.category_mask = 0x01;
+    ref_init(&rule->ref_count, [] (const ref_t * ref_count) {
+
+        ipv4_rule_t *rule  = (ipv4_rule_t *)acl_rule_from_ref(ref_count);
+        ref_dec(&((ipv4_rule_t *)rule->data.userdata)->ref_count);
+        g_hal_state->ipv4_rule_slab()->free((void *)acl_rule_from_ref(ref_count));
+    });
+    return rule;
+}
+
+// rule_match_rule_add api adds the rules to the acl library.
+// As of today type of fields that are instantiated in acl_lib
+// (pkt_classify_lib) will be of type ipv4_rule_t across plugins that use
+// types.RuleMatch 
+// 
+hal_ret_t
+rule_match_rule_add (const acl_ctx_t **acl_ctx,
+                     rule_match_t     *match,
+                     int               rule_prio,
+                     rule_data_t      *data)
+{
+    ipv4_rule_t       *rule;
+    rule_match_app_t  *app_match = &match->app;
+    hal_ret_t         ret = HAL_RET_OK;
+    addr_list_elem_t  *src_addr, *dst_addr;
+    port_list_elem_t  *dst_port, *src_port;
+    dllist_ctxt_t     *sa_entry, *da_entry, *dp_entry, *sp_entry;
+    int               src_addr_len = 1, dst_addr_len = 1, dst_port_len = 1, src_port_len = 1;
+
+
+    if (!dllist_empty(&match->src_addr_list)) {
+        src_addr_len = dllist_count(&match->src_addr_list);
+    }
+
+    if (!dllist_empty(&match->dst_addr_list)) {
+        dst_addr_len = dllist_count(&match->dst_addr_list);
+    }
+
+    if (!dllist_empty(&app_match->l4dstport_list)) {
+        dst_port_len = dllist_count(&app_match->l4dstport_list);
+    }
+
+    if (!dllist_empty(&app_match->l4srcport_list)) {
+        src_port_len = dllist_count(&app_match->l4srcport_list);
+    }
+
+    sa_entry = match->src_addr_list.next;
+    da_entry = match->dst_addr_list.next;
+    dp_entry = app_match->l4dstport_list.next;
+    sp_entry = app_match->l4srcport_list.next;
+
+
+    // ToDo: lseshan: Explore and Make below loop efficient
+    for (int src_addr_idx =0; src_addr_idx < src_addr_len; src_addr_idx++) {
+        src_addr = RULE_MATCH_GET_ADDR(sa_entry);
+        sa_entry = sa_entry->next;
+        for (int dst_addr_idx = 0; dst_addr_idx < dst_addr_len; dst_addr_idx++) {
+            dst_addr = RULE_MATCH_GET_ADDR(da_entry);
+            da_entry = da_entry->next;
+            for (int src_port_idx = 0; src_port_idx < src_port_len; src_port_idx++) {
+                src_port = RULE_MATCH_GET_PORT(sp_entry);
+                sp_entry = sp_entry->next;
+                for (int dst_port_idx = 0; dst_port_idx < dst_port_len; dst_port_idx++) {
+                    dst_port = RULE_MATCH_GET_PORT(dp_entry);
+                    dp_entry = dp_entry->next;
+
+                    rule  = rule_lib_alloc();
+                    rule->field[PROTO].value.u32 = 0;
+                    if (!dllist_empty(&match->src_addr_list)) {
+                        rule->field[IP_SRC].value.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_lo;
+                        rule->field[IP_SRC].mask_range.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_hi;
+                    }
+                    if (!dllist_empty(&match->dst_addr_list)) {
+                        rule->field[IP_DST].value.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_lo;
+                        rule->field[IP_DST].mask_range.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_hi;
+                    }
+                    if (!dllist_empty(&app_match->l4srcport_list)) {
+                        rule->field[PORT_SRC].value.u32 = src_port->port_range.port_lo;
+                        rule->field[PORT_SRC].mask_range.u32 = src_port->port_range.port_hi;
+                    }
+                    if (!dllist_empty(&app_match->l4dstport_list)) {
+                        rule->field[PORT_DST].value.u32 = dst_port->port_range.port_lo;
+                        rule->field[PORT_DST].mask_range.u32 = dst_port->port_range.port_hi;
+                    }
+                    rule->data.priority = rule_prio;
+                    rule->data.userdata = (void *)data;
+                    ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Unable to create the acl rules");
+                        return ret;
+                    }
+                }//  << push it to the vector of ipv4_rule_t >>>
+            }
+        }
+    }
+    //Added rule - lets increment the ref
+    ref_inc(&data->ref_count);
+    return ret;
+}
+
 
 } //end namespace hal

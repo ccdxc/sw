@@ -7,11 +7,17 @@
 #ifndef __RULES_HPP__
 #define __RULES_HPP__
 #include "nic/include/base.h"
+#include "nic/fte/acl/acl.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "addr_list.hpp"
 #include "port_list.hpp"
 
 using types::IPProtocol;
+using acl::acl_rule_data_t;
+using acl::acl_field_t;
+using acl::acl_rule_t;
+using acl::acl_field_type_t;
+using acl::acl_ctx_t;
 namespace hal {
 
 typedef struct rule_match_app_s {
@@ -31,6 +37,36 @@ typedef struct rule_match_s {
     rule_match_app_t      app;
 } __PACK__ rule_match_t;
 
+typedef void (*userdata_free)(void *);
+typedef struct rule_data_s {
+    void          *userdata;
+    userdata_free data_free;
+    acl::ref_t    ref_count;
+} rule_data_t;
+
+// ipv4_rules_t definition 
+// into the library using acl_* calls
+struct ipv4_tuple {
+    uint8_t   proto;
+    uint32_t  ip_src;
+    uint32_t  ip_dst;
+    uint32_t  port_src;
+    uint32_t  port_dst;
+    uint32_t  src_sg;
+    uint32_t  dst_sg;
+};
+
+enum {
+    PROTO = 0, IP_SRC, IP_DST, PORT_SRC, PORT_DST, SRC_SG, DST_SG,
+    NUM_FIELDS
+};
+
+ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
+
+#define RULE_FLD_DEF(typ, struct_name, fld_name)      \
+    {typ, sizeof(((struct_name*)0)->fld_name),   \
+            offsetof(struct_name, fld_name) }
+
 #define RULE_MATCH_GET_ADDR(addr_entry)  \
     dllist_entry(addr_entry, addr_list_elem_t, list_ctxt)
 
@@ -45,7 +81,14 @@ hal_ret_t rule_match_spec_extract(
     const types::RuleMatch& spec, rule_match_t *match);
 void rule_match_cleanup(rule_match_t *match);
 
+hal_ret_t rule_match_rule_add (const acl_ctx_t **acl_ctx,
+                               rule_match_t     *match,
+                               int              rule_prio,
+                               rule_data_t      *data);
+const acl_ctx_t *rule_lib_init(const char *name, acl_config_t *cfg);
 
+rule_data_t *
+rule_data_alloc_init();
 
 } // namespace hal
 

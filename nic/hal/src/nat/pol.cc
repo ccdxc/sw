@@ -337,17 +337,17 @@ nat_cfg_pol_rule_oper_handle (
     nat_cfg_pol_t *pol, nat_cfg_pol_create_app_ctxt_t *app_ctxt)
 {
     hal_ret_t ret = HAL_RET_OK;
-#if 0
     nat_cfg_rule_t *rule;
     dllist_ctxt_t *entry;
+    uint32_t       prio=0;
 
     dllist_for_each(entry, &pol->rule_list) {
         rule = dllist_entry(entry, nat_cfg_rule_t, list_ctxt);
+        rule->prio = prio++;
         if ((ret = nat_cfg_rule_create_oper_handle(
-               rule, app_ctxt)) != HAL_RET_OK)
+               rule, app_ctxt->acl_ctx)) != HAL_RET_OK)
             return ret;
     }
-#endif
     return ret;
 }
 

@@ -56,23 +56,13 @@ typedef struct nat_sg_range_s {
     uint32_t    sg_hi;
 } nat_sg_range_t;
 
+
 typedef struct nat_cfg_rule_action_s {
     nat::NatAction    src_nat_action;
-    hal_handle        src_nat_pool;
+    hal_handle_t        src_nat_pool;
     nat::NatAction    dst_nat_action;
-    hal_handle        dst_nat_pool;
+    hal_handle_t        dst_nat_pool;
 } nat_cfg_rule_action_t;
-
-#if 0
-typedef struct nat_cfg_rule_match_s {
-    dllist_ctxt_t    src_addr_list;
-    dllist_ctxt_t    dst_addr_list;
-    dllist_ctxt_t    src_port_list;
-    dllist_ctxt_t    dst_port_list;
-    dllist_ctxt_t    src_sg_list;
-    dllist_ctxt_t    dst_sg_list;
-} nat_cfg_rule_match_t;
-#endif
 
 typedef struct nat_cfg_rule_key_s {
     rule_id_t    rule_id;
@@ -84,8 +74,8 @@ typedef struct nat_cfg_rule_s {
     nat_cfg_rule_action_t    action;
 
     // operational
+    uint32_t                 prio;
     dllist_ctxt_t            list_ctxt;
-    acl::ref_t               ref_count;
 } nat_cfg_rule_t;
 
 typedef struct nat_cfg_pol_key_s {
@@ -130,7 +120,7 @@ hal_ret_t nat_cfg_pol_get_cfg_handle(
 hal_ret_t nat_cfg_rule_spec_handle(
     const nat::NatRuleSpec& spec, dllist_ctxt_t *head);
 hal_ret_t nat_cfg_rule_create_oper_handle(
-    nat_cfg_rule_t *rule, nat_cfg_pol_create_app_ctxt_t *app_ctxt);
+    nat_cfg_rule_t *rule, const acl_ctx_t *acl_ctxt);
 const acl::acl_ctx_t * nat_cfg_pol_create_app_ctxt_init(nat_cfg_pol_t *pol);
 
 }  // namespace hal

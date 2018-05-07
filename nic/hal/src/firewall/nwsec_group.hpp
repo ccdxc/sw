@@ -12,7 +12,7 @@
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
-//#include "nic/include/fte_lib/acl.hpp"
+#include "nic/fte/acl/acl.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 
@@ -802,38 +802,6 @@ nwsec_rule_lookup_by_key(nwsec_policy_t *policy, nwsec_rule_t *rule)
 
 }
 
-static inline hal_ret_t
-nwsec_rule_free(nwsec_rule_t *rule)
-{
-    return  HAL_RET_OK;
-}
-
-
-// Rule DD related
-// nwsec_rules_t rules are expanded to rules of type ipv4_rules and are inserted
-// into the library using acl_* calls
-
-struct ipv4_tuple {
-    uint8_t   proto;
-    uint32_t  ip_src;
-    uint32_t  ip_dst;
-    uint32_t  port_src;
-    uint32_t  port_dst;
-    uint32_t  src_sg;
-    uint32_t  dst_sg;
-};
-
-enum {
-    PROTO = 0, IP_SRC, IP_DST, PORT_SRC, PORT_DST, SRC_SG, DST_SG,
-    NUM_FIELDS
-};
-
-
-
-#define ACL_FLD_DEF(typ, struct_name, fld_name)      \
-    {typ, sizeof(((struct_name*)0)->fld_name),   \
-            offsetof(struct_name, fld_name) }
-
 /* Expanded field defs
 struct nwsec_flow_field_def flow_defs[5] = {
     {
@@ -865,8 +833,6 @@ struct nwsec_flow_field_def flow_defs[5] = {
     },
 
 }*/
-
-ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 
 hal_ret_t nwsec_policy_init();
 

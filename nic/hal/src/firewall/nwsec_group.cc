@@ -34,19 +34,7 @@ using types::ICMPMsgType;
 using nwsec::FirewallAction;
 using nwsec::ALGName;
 
-// Globals used in nwsec
-acl::acl_config_t ip_acl_config_glbl = {
-    num_categories: 1,
-    num_fields: NUM_FIELDS,
-    defs:  { ACL_FLD_DEF(ACL_FIELD_TYPE_EXACT, ipv4_tuple, proto),
-              ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_src),
-              ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_dst),
-              ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_src),
-              ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_dst),
-              ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, src_sg),
-              ACL_FLD_DEF(ACL_FIELD_TYPE_RANGE, ipv4_tuple, dst_sg),
-             }
-};
+acl::acl_config_t nwsec_rule_config_glbl = { };
 
 nwsec_group_t *
 nwsec_group_lookup_key_or_handle(const kh::SecurityGroupKeyHandle& key_or_handle)
@@ -936,87 +924,28 @@ rule_lib_add(const acl_ctx_t **acl_ctx, ipv4_rule_t *rule)
     return ret;
 }
 
-ipv4_rule_t *
-rule_lib_alloc()
-{
-    ipv4_rule_t *rule = (ipv4_rule_t *)g_hal_state->ipv4_rule_slab()->alloc();
-    rule->data.category_mask = 0x01;
-    ref_init(&rule->ref_count, [] (const ref_t * ref_count) {
-
-        ipv4_rule_t *rule  = (ipv4_rule_t *)acl_rule_from_ref(ref_count);
-        ref_dec(&((nwsec_rule_t *)rule->data.userdata)->ref_count);
-
-             g_hal_state->ipv4_rule_slab()->free((void *)acl_rule_from_ref(ref_count));
-    });
-    return rule;
-}
-
-hal_ret_t
+/*hal_ret_t
 security_rule_add(const acl_ctx_t **acl_ctx, nwsec_rule_t *nwsec_rule)
 {
-    ipv4_rule_t       *rule;
-    rule_match_t      *match = &nwsec_rule->fw_rule_match;
-    rule_match_app_t  *app_match = &APP_MATCH(nwsec_rule->fw_rule_match);
-    hal_ret_t         ret = HAL_RET_OK;
-    addr_list_elem_t  *src_addr, *dst_addr;
-    port_list_elem_t  *dst_port;
-    dllist_ctxt_t     *sa_entry, *da_entry, *dp_entry;
-    int               src_addr_len = 1, dst_addr_len = 1, dst_port_len = 1;
-
-    if (!dllist_empty(&match->src_addr_list)) {
-        src_addr_len = dllist_count(&match->src_addr_list);
-    }
-
-    if (!dllist_empty(&match->dst_addr_list)) {
-        dst_addr_len = dllist_count(&match->dst_addr_list);
-    }
-
-    if (!dllist_empty(&app_match->l4dstport_list)) {
-        dst_port_len = dllist_count(&app_match->l4dstport_list);
-    }
-
-    sa_entry = match->src_addr_list.next;
-    da_entry = match->dst_addr_list.next;
-    dp_entry = app_match->l4dstport_list.next;
-
-    for (int src_addr_idx =0; src_addr_idx < src_addr_len; src_addr_idx++){
-        src_addr = RULE_MATCH_GET_ADDR(sa_entry);
-        sa_entry = sa_entry->next;
-        for (int dst_addr_idx = 0; dst_addr_idx < dst_addr_len; dst_addr_idx++) {
-            dst_addr = RULE_MATCH_GET_ADDR(da_entry);
-            da_entry = da_entry->next;
-            for (int dst_port_idx = 0; dst_port_idx < dst_port_len; dst_port_idx++) {
-                dst_port = RULE_MATCH_GET_PORT(dp_entry);
-                dp_entry = dp_entry->next;
-
-                rule  = rule_lib_alloc();
-                rule->field[PROTO].value.u32 = 0;
-                if (!dllist_empty(&match->src_addr_list)) {
-                    rule->field[IP_SRC].value.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_lo;
-                    rule->field[IP_SRC].mask_range.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_hi;
-                }
-                if (!dllist_empty(&match->dst_addr_list)) {
-                    rule->field[IP_DST].value.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_lo;
-                    rule->field[IP_DST].mask_range.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_hi;
-                }
-                if (!dllist_empty(&app_match->l4dstport_list)) {
-                    rule->field[PORT_DST].value.u32 = dst_port->port_range.port_lo;
-                    rule->field[PORT_DST].mask_range.u32 = dst_port->port_range.port_hi;
-                }
-                rule->data.priority = nwsec_rule->priority;
-                rule->data.userdata = (void *)nwsec_rule;
-                ret = rule_lib_add(acl_ctx, rule);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Unable to create the acl rules");
-                    return ret;
-                }
-                //  << push it to the vector of ipv4_rule_t >>>
-            }
-        }
+    hal_ret_t ret = HAL_RET_OK;
+    ret = rule_match_rule_add(acl_ctx,
+                              &nwsec_rule->fw_rule_match,
+                              nwsec_rule->priority,
+                              nwsec_rule);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to add rule");
+        return ret;
     }
     return ret;
-}
+}*/
 
+
+
+void
+nwsec_rule_free(void *rule)
+{
+    return;
+}
 uint32_t
 calculate_hash_value(void *key, uint32_t keylen, uint32_t hv)
 {
@@ -1069,13 +998,17 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
 {
     hal_ret_t ret = HAL_RET_OK;
     nwsec_rule_t    *rule;
+    rule_data_t     *rule_data;
 
     for (uint32_t rule_index = 0; rule_index < policy->rule_len; rule_index++) {
         rule = policy->dense_rules[rule_index];
         if (rule == NULL) {
             return HAL_RET_ERR;
         }
-        ret = security_rule_add(acl_ctx, rule);
+        rule_data = rule_data_alloc_init();
+        rule_data->userdata = rule;
+        rule_data->data_free     = nwsec_rule_free; 
+        ret = rule_match_rule_add(acl_ctx, &rule->fw_rule_match, rule->priority, rule_data);
     }
     return ret;
 }
@@ -1325,7 +1258,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
     // Create lib acl ctx
     ctx_name = nwsec_acl_ctx_name(nwsec_policy->key.vrf_id);
     HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
-    app_ctxt.acl_ctx= acl::acl_create(ctx_name, &ip_acl_config_glbl);
+    app_ctxt.acl_ctx= hal::rule_lib_init(ctx_name, &nwsec_rule_config_glbl);
 
     // Fill nwsec group in the dense rules  with rule id as index.
     // This will be used in comparison and find between insert / delete
@@ -1480,7 +1413,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
 
     ctx_name = nwsec_acl_ctx_name(policy_clone->key.vrf_id);
     HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
-    app_ctx.acl_ctx_clone = acl::acl_create(ctx_name, &ip_acl_config_glbl);
+    app_ctx.acl_ctx_clone = acl::acl_create(ctx_name, &nwsec_rule_config_glbl);
 
     ret = security_policy_add_to_ruledb(policy_clone, &app_ctx.acl_ctx_clone);
     if (ret != HAL_RET_OK) {

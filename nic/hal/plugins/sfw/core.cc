@@ -169,6 +169,7 @@ static hal_ret_t
 net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
 {
     hal_ret_t ret;
+    rule_data_t *rule_data;
     hal::ipv4_tuple acl_key = {};
 
     const hal::nwsec_rule_t *nwsec_rule;
@@ -225,7 +226,9 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
         goto end;
     }
 
-    nwsec_rule = (const hal::nwsec_rule_t *)rule->data.userdata;
+
+    rule_data = ( hal::rule_data_t *)rule->data.userdata;
+    nwsec_rule = (const hal::nwsec_rule_t *)rule_data->userdata;
 
     HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",
                     nwsec_rule->rule_id, nwsec_rule->fw_rule_action.sec_action, nwsec_rule->fw_rule_action.alg);

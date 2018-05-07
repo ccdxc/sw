@@ -111,6 +111,7 @@ public:
     slab *nwsec_group_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_GROUP]); }
     slab *nwsec_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE]); }
     slab *ipv4_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPV4_RULE]); }
+    slab *rule_data_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RULE_DATA]); }
     slab *nwsec_policy_rules_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_RULES]); }
     slab *nwsec_policy_cfg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_CFG]); }
     slab *nwsec_policy_svc_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_SVC]); }
@@ -379,6 +380,7 @@ public:
     slab *nwsec_group_slab(void) const { return cfg_db_->nwsec_group_slab(); }
     slab *nwsec_rule_slab(void) const { return cfg_db_->nwsec_rule_slab(); }
     slab *ipv4_rule_slab(void) const { return cfg_db_->ipv4_rule_slab(); }
+    slab *rule_data_slab(void) const { return cfg_db_->rule_data_slab(); }
     slab *nwsec_policy_rules_slab(void) const { return cfg_db_->nwsec_policy_rules_slab(); }
     slab *nwsec_policy_cfg_slab(void) const { return cfg_db_->nwsec_policy_cfg_slab(); }
     slab *nwsec_policy_svc_slab(void) const { return cfg_db_->nwsec_policy_svc_slab(); }
