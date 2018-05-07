@@ -34,6 +34,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/github.com/golang/lint/golint \
 							./vendor/github.com/golang/dep/cmd/dep \
 							./asset-build/... \
+							./nic/delphi/compiler/... \
 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver vchub pen-npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr

@@ -9,12 +9,7 @@ cc_binary(
         "//nic/delphi/utils",
         "//nic/delphi/messanger",
         "//nic/delphi/hub:delphi_server",
-
-    ],
-    linkopts = [
-#        "-lprotobuf",
-        "-lev",
-        "-L/usr/local/lib",
+        "@third_party//:libev",
     ],
 )
 
@@ -29,6 +24,7 @@ cc_library(
     deps = [
         "//nic/delphi/utils",
         "//nic/delphi/messanger",
+        "@third_party//:libev_includes",
     ],
 )
 
@@ -39,8 +35,6 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",
@@ -48,6 +42,7 @@ cc_test(
         "//nic/delphi/messanger:messanger",
         "//nic/delphi/hub:delphi_server",
         "//nic/delphi/sdk",
+        "@third_party//:libev",
     ],
     timeout="short",
 )
@@ -59,8 +54,6 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",

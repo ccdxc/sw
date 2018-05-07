@@ -34,11 +34,8 @@ cc_binary(
     deps = [
         ":example_lib",
         "//nic/delphi/sdk",
-    ],
-    linkopts = [
-#        "-lprotobuf",
-        "-lev",
-        "-L/usr/local/lib",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
 )
 
@@ -50,13 +47,13 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",
         ":example_lib",
         "//nic/delphi/sdk",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
     timeout="short",
 )

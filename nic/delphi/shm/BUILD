@@ -13,10 +13,6 @@ cc_library(
     deps = [
         "//nic/delphi/utils",
     ],
-    linkopts = [
-        "-lev",
-        "-L/usr/local/lib",
-    ],
 )
 
 cc_test(
@@ -26,14 +22,14 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
         "-lrt",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",
         ":shm",
         "//nic/delphi/utils",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
     timeout="short",
 )
@@ -45,14 +41,14 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
         "-lrt",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",
         ":shm",
         "//nic/delphi/utils",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
     timeout="short",
 )
@@ -64,14 +60,14 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
         "-lrt",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",
         ":shm",
         "//nic/delphi/utils",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
     timeout="short",
 )
@@ -83,12 +79,12 @@ cc_binary(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
         "-lrt",
-        "-L/usr/local/lib",
     ],
     deps = [
         ":shm",
         "//nic/delphi/utils",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
 )

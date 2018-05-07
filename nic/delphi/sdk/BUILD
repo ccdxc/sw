@@ -16,10 +16,8 @@ cc_library(
     deps = [
         "//nic/delphi/utils",
         "//nic/delphi/messanger",
-    ],
-    linkopts = [
-        "-lev",
-        "-L/usr/local/lib",
+        "@third_party//:libev_includes",
+        "@third_party//:libev",
     ],
 )
 
@@ -30,14 +28,13 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",
         "//nic/delphi/utils",
         "//nic/delphi/messanger:messanger",
         "//nic/delphi/sdk",
+        "@third_party//:libev",
     ],
     timeout="short",
 )

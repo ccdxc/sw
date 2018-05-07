@@ -15,3 +15,5 @@ nic/hal/third-party/snort3/export/x86_64/*
 nic/hal/third-party/snort3/export/aarch64/*
 
 storage/offload/third-party/spdk/export/x86_64/*
+
+nic/third-party/libev/*

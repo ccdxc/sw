@@ -6,15 +6,14 @@ cc_test(
         "messanger_test.cc",
     ],
     linkopts = [
-#        "-lprotobuf",
         "-lpthread",
-        "-lev",
-        "-L/usr/local/lib",
     ],
     deps = [
         "//:gtest",
         "//nic/delphi/utils",
         "//nic/delphi/messanger:messanger",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
     timeout="short",
 )
@@ -32,6 +31,8 @@ cc_library(
     deps = [
         "//nic/delphi/utils",
         "//nic/delphi/messanger/proto:types_cc_proto",
+        "@third_party//:libev_includes",
+        "@third_party//:libev",
     ],
 )
 
@@ -44,11 +45,11 @@ cc_test(
         "//:gtest",
         "//nic/delphi/utils",
         "//nic/delphi/messanger:messanger",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
     linkopts = [
         "-lpthread",
-        "-lev",
-        "-L/usr/local/lib",
     ],
     timeout="short",
 )
