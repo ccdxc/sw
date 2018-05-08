@@ -50,6 +50,21 @@ protected:
     }
 };
 
+#define NAT_CFG_MAX_ENTRIES 10
+
+typedef struct nat_cfg_pol_test_s {
+    int               pol_id;
+    int               vrf_id;
+    hal_handle_t      hal_hdl;
+    ip_range_t        src_ip[NAT_CFG_MAX_ENTRIES];
+    ip_range_t        dst_ip[NAT_CFG_MAX_ENTRIES];
+    port_range_t      src_port[NAT_CFG_MAX_ENTRIES];
+    port_range_t      dst_port[NAT_CFG_MAX_ENTRIES];
+    nat::NatAction    src_nat_action;
+    hal_handle_t      src_nat_pool;
+    nat::NatAction    dst_nat_action;
+    hal_handle_t      dst_nat_pool;
+} nat_cfg_pol_test_t;
 
 static inline void
 nat_cfg_pol_rule_spec_build (nat::NatPolicySpec& spec)
@@ -63,45 +78,111 @@ nat_cfg_pol_data_spec_build (nat::NatPolicySpec& spec)
 }
 
 static inline void
-nat_cfg_pol_key_spec_build (nat::NatPolicySpec& spec)
+nat_cfg_pol_key_spec_build (nat::NatPolicySpec& spec, nat_cfg_pol_test_t *pol)
 {
-    spec.mutable_key_or_handle()->mutable_policy_key()->
-        set_nat_policy_id(10);
-    spec.mutable_key_or_handle()->mutable_policy_key()->
-        mutable_vrf_key_or_handle()->set_vrf_id(0);
+    if (pol->hal_hdl != HAL_HANDLE_INVALID)
+        spec.mutable_key_or_handle()->set_policy_handle(pol->hal_hdl);
+
+    if (pol->vrf_id != -1)
+        spec.mutable_key_or_handle()->mutable_policy_key()->
+            mutable_vrf_key_or_handle()->set_vrf_id(pol->vrf_id);
+
+    if (pol->pol_id != -1)
+        spec.mutable_key_or_handle()->mutable_policy_key()->
+            set_nat_policy_id(pol->pol_id);
 }
 
 static inline void
-nat_cfg_pol_spec_build (nat::NatPolicySpec& spec)
+nat_cfg_pol_spec_build (nat::NatPolicySpec& spec, nat_cfg_pol_test_t *pol)
 {
-    nat_cfg_pol_key_spec_build(spec);
+    nat_cfg_pol_key_spec_build(spec, pol);
     nat_cfg_pol_data_spec_build(spec);
+}
+
+static inline hal_ret_t
+nat_cfg_pol_create (nat::NatPolicySpec& spec, nat::NatPolicyResponse *rsp)
+{
+    hal_ret_t ret;
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nat_policy_create(spec, rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+static inline void
+nat_cfg_vrf_create ()
+{
+#define TEST_VRF_ID 1
+    hal_ret_t ret;
+    VrfSpec spec;
+    VrfResponse rsp;
+
+    spec.mutable_key_or_handle()->set_vrf_id(TEST_VRF_ID);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 TEST_F(nat_policy_test, create_pol_without_key_or_handle)
 {
     hal_ret_t ret;
-    NatPolicySpec pol_spec;
-    NatPolicyResponse pol_rsp;
+    NatPolicySpec spec;
+    NatPolicyResponse rsp;
 
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::nat_policy_create(pol_spec, &pol_rsp);
-    hal::hal_cfg_db_close();
+    ret = nat_cfg_pol_create(spec, &rsp);
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == HAL_HANDLE_INVALID);
+}
+
+TEST_F(nat_policy_test, create_pol_with_handle)
+{
+    hal_ret_t ret;
+    NatPolicySpec spec;
+    NatPolicyResponse rsp;
+    nat_cfg_pol_test_t pol;
+
+    memset(&pol, 0, sizeof(nat_cfg_pol_test_t));
+    pol.hal_hdl = 0x10000; pol.vrf_id = -1; pol.pol_id = -1;
+
+    nat_cfg_pol_key_spec_build(spec, &pol);
+    ret = nat_cfg_pol_create(spec, &rsp);
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == HAL_HANDLE_INVALID);
 }
 
 TEST_F(nat_policy_test, create_pol_without_vrf)
 {
     hal_ret_t ret;
-    NatPolicySpec pol_spec;
-    NatPolicyResponse pol_rsp;
+    NatPolicySpec spec;
+    NatPolicyResponse rsp;
+    nat_cfg_pol_test_t pol;
 
-    nat_cfg_pol_spec_build(pol_spec);
+    memset(&pol, 0, sizeof(nat_cfg_pol_test_t));
+    pol.hal_hdl = HAL_HANDLE_INVALID; pol.vrf_id = -1; pol.pol_id = 10;
 
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::nat_policy_create(pol_spec, &pol_rsp);
-    hal::hal_cfg_db_close();
+    nat_cfg_pol_key_spec_build(spec, &pol);
+    ret = nat_cfg_pol_create(spec, &rsp);
     ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
+    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == HAL_HANDLE_INVALID);
+}
+
+TEST_F(nat_policy_test, create_pol_with_no_rules)
+{
+    hal_ret_t ret;
+    NatPolicySpec spec;
+    NatPolicyResponse rsp;
+    nat_cfg_pol_test_t pol;
+
+    memset(&pol, 0, sizeof(nat_cfg_pol_test_t));
+    pol.hal_hdl = HAL_HANDLE_INVALID; pol.vrf_id = TEST_VRF_ID; pol.pol_id = 10;
+
+    nat_cfg_vrf_create();
+    nat_cfg_pol_key_spec_build(spec, &pol);
+    ret = nat_cfg_pol_create(spec, &rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() != HAL_HANDLE_INVALID);
 }
 
 int main (int argc, char **argv) {

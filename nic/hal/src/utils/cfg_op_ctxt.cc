@@ -80,7 +80,8 @@ cfg_op_ctxt_hal_hdl_add_handle (cfg_op_ctxt_t *cfg_ctxt, hal_obj_id_t obj_id,
     hal_ret_t ret;
     hal_handle_t hal_hdl;
 
-    if ((hal_hdl = cfg_op_ctxt_hal_hdl_alloc_init(obj_id)) = HAL_HANDLE_INVALID)
+    if ((hal_hdl = cfg_op_ctxt_hal_hdl_alloc_init(obj_id)) ==
+            HAL_HANDLE_INVALID)
         return HAL_RET_HANDLE_INVALID;
 
     if ((ret = cfg_op_ctxt_hal_hdl_db_add(cfg_ctxt, obj_id,

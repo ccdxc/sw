@@ -1049,9 +1049,9 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
 
     HAL_HT_CREATE("nat policy", nat_policy_ht_,
                   HAL_MAX_VRFS >> 1,
-                  hal::nat_policy_get_key_func,
-                  hal::nat_policy_compute_hash_func,
-                  hal::nat_policy_compare_key_func);
+                  hal::nat_cfg_pol_key_func_get,
+                  hal::nat_cfg_pol_hash_func_compute,
+                  hal::nat_cfg_pol_key_func_compare);
     HAL_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
 
     return true;

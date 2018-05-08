@@ -19,39 +19,9 @@ using acl::acl_ctx_t;
 
 namespace hal {
 
-void *
-nat_policy_get_key_func (void *entry)
-{
-    hal_handle_id_ht_entry_t *ht_entry;
-    nat_cfg_pol_t *policy = NULL;
-
-    HAL_ASSERT(entry != NULL);
-    ht_entry = (hal_handle_id_ht_entry_t *)entry;
-    if (ht_entry == NULL) {
-        return NULL;
-    }
-    policy = (nat_cfg_pol_t *)hal_handle_get_obj(ht_entry->handle_id);
-    return (void *)&(policy->key);
-}
-
-uint32_t
-nat_policy_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key,
-               sizeof(nat_cfg_pol_key_t)) % ht_size;
-}
-
-bool
-nat_policy_compare_key_func (void *key1, void *key2)
-{
-    dllist_ctxt_t    lentry;
-
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(nat_cfg_pol_key_t))) {
-        return true;
-    }
-    return false;
-}
+//-----------------------------------------------------------------------------
+// NAT config alloc and init routines
+//-----------------------------------------------------------------------------
 
 static inline nat_cfg_pol_t *
 nat_cfg_pol_alloc (void)
@@ -102,47 +72,109 @@ nat_cfg_pol_uninit_free (nat_cfg_pol_t *pol)
 }
 
 //-----------------------------------------------------------------------------
-// Configuration handling
+// NAT config object to its corresponding HAL handle management routines
 //-----------------------------------------------------------------------------
 
-static inline void
-nat_cfg_pol_db_add (dllist_ctxt_t *head, nat_cfg_pol_t *pol)
+static inline hal_handle_id_ht_entry_t *
+hal_handle_id_ht_entry_alloc (void)
 {
-    dllist_add_tail(head, &pol->list_ctxt);
+    return ((hal_handle_id_ht_entry_t *)g_hal_state->
+                hal_handle_id_ht_entry_slab()->alloc());
 }
 
 static inline void
-nat_cfg_pol_db_del (nat_cfg_pol_t *pol)
+hal_handle_id_ht_entry_free (hal_handle_id_ht_entry_t *entry)
 {
-    dllist_del(&pol->list_ctxt);
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+}
+
+static inline void
+hal_handle_id_ht_entry_init (hal_handle_id_ht_entry_t *entry,
+                             hal_handle_t hal_hdl)
+{
+    entry->handle_id = hal_hdl;
+}
+
+static inline void
+hal_handle_id_ht_entry_uninit (hal_handle_id_ht_entry_t *entry)
+{
+}
+
+static inline hal_handle_id_ht_entry_t *
+hal_handle_id_ht_entry_alloc_init (hal_handle_t hal_hdl)
+{
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_alloc()) == NULL)
+        return NULL;
+
+    hal_handle_id_ht_entry_init(entry, hal_hdl);
+    return entry;
+}
+
+static inline void
+hal_handle_id_ht_entry_uninit_free (hal_handle_id_ht_entry_t *entry)
+{
+    if (entry) {
+        hal_handle_id_ht_entry_uninit(entry);
+        hal_handle_id_ht_entry_free(entry);
+    }
 }
 
 static inline hal_ret_t
-add_nat_cfg_pol_to_db (nat_cfg_pol_t *policy)
+hal_handle_id_ht_entry_db_add (ht *root, ht_ctxt_t *ht_ctxt, void *key,
+                               hal_handle_id_ht_entry_t *entry)
 {
-    hal_ret_t ret;
     sdk_ret_t sdk_ret;
-    hal_handle_id_ht_entry_t *entry;
 
-    entry =
-        (hal_handle_id_ht_entry_t *)
-            g_hal_state->hal_handle_id_ht_entry_slab()->alloc();
-    if (entry == NULL) {
-        HAL_TRACE_ERR("Failed to add NAT policy to cfg db, no memory");
-        return HAL_RET_OOM;
-    }
+    sdk_ret = g_hal_state->nat_policy_ht()->insert_with_key(
+        key, entry, ht_ctxt);
 
-    entry->handle_id = policy->hal_hdl;
-    sdk_ret = g_hal_state->nat_policy_ht()->insert_with_key(&policy->key,
-                                                            entry,
-                                                            &policy->ht_ctxt);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    hal_ret_t ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("Failed to add NAT policy ({}, {}) to cfg db, err : {}",
-                      policy->key.vrf_id, policy->key.pol_id, ret);
-        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+        hal_handle_id_ht_entry_uninit_free(entry);
+        return ret;
     }
     return ret;
+}
+
+static inline hal_ret_t
+nat_cfg_pol_db_add (hal_handle_id_ht_entry_t *entry, nat_cfg_pol_t *pol)
+{
+    return hal_handle_id_ht_entry_db_add(
+        g_hal_state->nat_policy_ht(), &pol->ht_ctxt, &pol->key, entry);
+}
+
+static inline hal_ret_t
+nat_cfg_pol_create_db_handle (nat_cfg_pol_t *pol)
+{
+    hal_ret_t ret;
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_alloc_init(pol->hal_hdl)) == NULL)
+        return HAL_RET_OOM;
+
+    if ((ret = nat_cfg_pol_db_add(entry, pol)) != HAL_RET_OK)
+        return ret;
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Configuration handling
+//-----------------------------------------------------------------------------
+
+void
+nat_cfg_pol_dump (nat::NatPolicySpec& spec)
+{
+    std::string pol_str;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)
+        return;
+
+    google::protobuf::util::MessageToJsonString(spec, &pol_str);
+    HAL_TRACE_DEBUG("NAT policy configuration:");
+    HAL_TRACE_DEBUG("{}", pol_str.c_str());
 }
 
 static hal_ret_t
@@ -152,7 +184,7 @@ nat_cfg_pol_rule_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
 
     for (int i = 0; i < spec.rules_size(); i++) {
         if ((ret = nat_cfg_rule_spec_handle(
-               spec.rules(i), &pol->list_ctxt)) != HAL_RET_OK)
+               spec.rules(i), &pol->rule_list)) != HAL_RET_OK)
             return ret;
     }
 
@@ -208,40 +240,32 @@ nat_cfg_pol_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
     return ret;
 }
 
-//-----------------------------------------------------------------------------
-// dump nat policy spec
-//-----------------------------------------------------------------------------
-void
-nat_cfg_pol_dump (nat::NatPolicySpec& spec)
+static inline hal_ret_t
+nat_cfg_pol_create_spec_validate (nat::NatPolicySpec& spec)
 {
-    std::string    nat_pol_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &nat_pol_cfg);
-    HAL_TRACE_DEBUG("NAT policy configuration:");
-    HAL_TRACE_DEBUG("{}", nat_pol_cfg.c_str());
-}
-
-static hal_ret_t
-nat_cfg_pol_spec_validate (nat::NatPolicySpec& spec)
-{
-    if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}: nat policy id or handle not set in request",
-                      __FUNCTION__);
+    if (spec.key_or_handle().policy_handle() != HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("{}: handle set for create request", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
-#if 0
-    if (spec.key_or_handle_case() != NatPolicyKeyHandle::kNatPolicyId) {
-        // key-handle field set, but nat policy-id not provided
-        HAL_TRACE_ERR("{}: security group id not set in"
-                      "request", __FUNCTION__);
+}
+
+static hal_ret_t
+nat_cfg_pol_spec_validate (nat::NatPolicySpec& spec, bool create)
+{
+    hal_ret_t ret;
+
+    if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("{}: no key information set in request", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
-#endif
+
+    if (create) {
+        if ((ret = nat_cfg_pol_create_spec_validate(spec)) != HAL_RET_OK)
+            return ret;
+    }
+
     return HAL_RET_OK;
 }
 
@@ -252,7 +276,7 @@ nat_cfg_pol_create_cfg_handle (nat::NatPolicySpec& spec,
     hal_ret_t ret = HAL_RET_OK;
     nat_cfg_pol_t *pol;
 
-    if ((ret = nat_cfg_pol_spec_validate(spec)) != HAL_RET_OK)
+    if ((ret = nat_cfg_pol_spec_validate(spec, true)) != HAL_RET_OK)
         return ret;
 
     if ((pol = nat_cfg_pol_alloc_init()) == NULL)
@@ -272,7 +296,6 @@ nat_cfg_pol_rsp_build (nat::NatPolicyResponse *rsp, hal_ret_t ret,
     if (ret == HAL_RET_OK)
         rsp->mutable_policy_status()->set_nat_policy_handle(hal_handle);
     rsp->set_api_status(hal_prepare_rsp(ret));
-    return;
 }
 
 static hal_ret_t
@@ -336,7 +359,7 @@ nat_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     policy = (nat_cfg_pol_t *) dhl_entry->obj;
     HAL_TRACE_DEBUG("policy key ({}, {}), handle {}",
                     policy->key.vrf_id, policy->key.pol_id, hal_handle);
-    ret = add_nat_cfg_pol_to_db(policy);
+    ret = nat_cfg_pol_create_db_handle(policy);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to add NAT policy ({}, {}) to db, err : {}",
                       policy->key.vrf_id, policy->key.pol_id, ret);

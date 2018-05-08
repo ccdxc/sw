@@ -59,9 +59,9 @@ typedef struct nat_sg_range_s {
 
 typedef struct nat_cfg_rule_action_s {
     nat::NatAction    src_nat_action;
-    hal_handle_t        src_nat_pool;
+    hal_handle_t      src_nat_pool;
     nat::NatAction    dst_nat_action;
-    hal_handle_t        dst_nat_pool;
+    hal_handle_t      dst_nat_pool;
 } nat_cfg_rule_action_t;
 
 typedef struct nat_cfg_rule_key_s {
@@ -90,7 +90,7 @@ typedef struct nat_cfg_pol_create_app_ctxt_s {
 typedef struct nat_cfg_pol_s {
     nat_cfg_pol_key_t    key;
     dllist_ctxt_t        rule_list;
-    dllist_ctxt_t        list_ctxt;
+//    dllist_ctxt_t        list_ctxt;
     ht_ctxt_t            ht_ctxt;
 
     // operational
@@ -99,12 +99,43 @@ typedef struct nat_cfg_pol_s {
 } nat_cfg_pol_t;
 
 //-----------------------------------------------------------------------------
-// Function prototypes
+// Inline functions
 //-----------------------------------------------------------------------------
 
-void *nat_policy_get_key_func(void *entry);
-uint32_t nat_policy_compute_hash_func(void *key, uint32_t ht_size);
-bool nat_policy_compare_key_func(void *key1, void *key2);
+inline void *
+nat_cfg_pol_key_func_get (void *entry)
+{
+    nat_cfg_pol_t *pol = NULL;
+    hal_handle_id_ht_entry_t *ht_entry;
+
+    HAL_ASSERT(entry != NULL);
+    if ((ht_entry = (hal_handle_id_ht_entry_t *)entry) == NULL)
+        return NULL;
+
+    pol = (nat_cfg_pol_t *)hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(pol->key);
+}
+
+inline uint32_t
+nat_cfg_pol_hash_func_compute (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(nat_cfg_pol_key_t)) % ht_size;
+}
+
+inline bool
+nat_cfg_pol_key_func_compare (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(nat_cfg_pol_key_t)))
+        return true;
+
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// Function prototypes
+//-----------------------------------------------------------------------------
 
 // pol.cc
 void nat_cfg_pol_dump(nat::NatPolicySpec& spec);
