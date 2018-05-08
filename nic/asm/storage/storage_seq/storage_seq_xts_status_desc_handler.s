@@ -13,9 +13,9 @@ struct s1_tbl_seq_xts_status_desc_handler_d d;
 struct phv_ p;
 
 %%
-   .param storage_tx_seq_xts_status_handler_start
+   .param storage_seq_xts_status_handler
 
-storage_tx_seq_xts_status_desc_handler_start:
+storage_tx_seq_xts_status_desc_handler:
 
    // Order of evaluation of next doorbell and interrupts
    // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
@@ -27,7 +27,7 @@ storage_tx_seq_xts_status_desc_handler_start:
    
    // Check if next doorbell is to be enabled
    bbeq		d.next_db_en, 0, intr_check
-   phvwr 	p.{storage_kivec5_status_dma_en...storage_kivec5_stop_chain_on_error}, \
+   phvwr 	p.{seq_kivec5_status_dma_en...seq_kivec5_stop_chain_on_error}, \
    	        d.{status_dma_en...stop_chain_on_error} // delay slot
 
    // if doorbell is actually a Barco push action, handle accordingly
@@ -36,34 +36,34 @@ storage_tx_seq_xts_status_desc_handler_start:
                 
    // Setup the source of the mem2mem DMA into DMA cmd 1.
    // Note: next_db_data doubles as barco_desc_addr in this case
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.next_db_data, r7,
-                     r0, r0, dma_m2m_9)
+   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.next_db_data, r7,
+                            SEQ_DMA_XTS_CHAIN_BARCO_M2M_SRC)
 
    // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
    // the size).
-   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, r7,
-                              r0, r0, dma_m2m_10)
+   DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, r7,
+                                     SEQ_DMA_XTS_CHAIN_BARCO_M2M_DST)
 
    // Copy the data for the doorbell into the PHV and setup a DMA command
    // to ring it. Form the doorbell DMA command in this stage as opposed 
    // the push stage (as is the norm) to avoid carrying the doorbell address 
    // in K+I vector.
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
-                            d.barco_pndx_addr, dma_p2m_11)
-   DMA_PHV2MEM_FENCE(dma_p2m_11)
+                            d.barco_pndx_addr, SEQ_DMA_XTS_CHAIN_BARCO_P2M_DB)
+   DMA_PHV2MEM_FENCE(SEQ_DMA_XTS_CHAIN_BARCO_P2M_DB)
    
    // Note that d.next_db_addr in this case is really d.barco_ring_addr
    // phvwrpair limits destination p[] to 64 bits per.
-   phvwrpair	p.storage_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
-                p.{storage_kivec4_barco_pndx_shadow_addr...storage_kivec4_barco_ring_size}, \
+   phvwrpair	p.seq_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
+                p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_ring_size}, \
                 d.{barco_pndx_shadow_addr...barco_ring_size}
    b            status_dma_setup
-   phvwri       p.storage_kivec4_barco_num_descs, 1     // delay slot
+   phvwri       p.seq_kivec4_barco_num_descs, 1     // delay slot
                 
 next_db_ring:
 
    // Ring the sequencer doorbell based on addr/data provided in the descriptor
-   SEQUENCER_DOORBELL_RING(dma_p2m_11)
+   SEQUENCER_DOORBELL_RING(SEQ_DMA_XTS_CHAIN_BARCO_P2M_DB)
 
 status_dma_setup:
 
@@ -72,16 +72,16 @@ status_dma_setup:
    add          r3, r0, d.status_len    // delay slot
    
    // Set up the status DMA:
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_hbm_addr, 
-                     r3, 0, 0, dma_m2m_0)
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_host_addr, 
-                     r3, 0, 0, dma_m2m_1)
+   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_addr1, 
+                            r3, SEQ_DMA_XTS_CHAIN_STATUS_M2M_SRC)
+   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_addr2, 
+                            r3, SEQ_DMA_XTS_CHAIN_STATUS_M2M_DST)
 
 tbl_load:
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PC_IMM(d.status_hbm_addr, STORAGE_TBL_LOAD_SIZE_64_BITS,
-                              storage_tx_seq_xts_status_handler_start)
+   LOAD_TABLE_FOR_ADDR_PC_IMM(d.status_addr1, STORAGE_TBL_LOAD_SIZE_64_BITS,
+                              storage_seq_xts_status_handler)
 
 intr_check:
    // Check if interrupt is enabled
@@ -89,7 +89,7 @@ intr_check:
    nop
 
    // Raise interrupt based on addr/data provided in descriptor
-   PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, dma_p2m_11)
+   PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, SEQ_DMA_XTS_CHAIN_BARCO_P2M_DB)
    b            status_dma_setup
    nop
 
