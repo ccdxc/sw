@@ -178,12 +178,10 @@ func TestNatPolicyPost(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
 					NatPool: "preCreatedNatPool",
 					Action:  "SNAT",
@@ -262,12 +260,10 @@ func TestNatPolicyDelete(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
 					NatPool: "preCreatedNatPool",
 					Action:  "SNAT",

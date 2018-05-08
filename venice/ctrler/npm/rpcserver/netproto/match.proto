@@ -10,18 +10,26 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
-// Common MatchSelector
+
+
+// Common MatchSelector. ToDo Add ICMP Match criteria
 message MatchSelector {
     enum Type
     {
         NONE            = 0;
-        IP              = 1; // IP nat rule src/dst selector
-        IPPrefix        = 2; // IP Prefix nat rule src/dst seclector
-        IPRange         = 3; // IP Range nat rule src/dst selector
-        SecurityGroup   = 4; // Security group nat rule src/dst selector
-
+        L4PORT          = 1; // Automatically interpret as an individual port, a comma separted ports or a hyphen separated port range
+        ESP             = 2; // ESP  Security Parameter Index Match
     }
-    string MatchType    = 1 [(venice.check) = "StrEnum(MatchSelector.Type)",
-                            (gogoproto.jsontag) = "match-type"];
-    string Match        = 2 [(gogoproto.jsontag) = "match"];
+    // Automatically interpret the string as an octet, a CIDR or an hyphen separated range
+    string Address          = 1 [(gogoproto.jsontag) = "address,omitempty"];
+
+    // Match on the security group
+    string SeurityGroup     = 2 [(gogoproto.jsontag) = "security-group,omitempty"];
+
+    // Match on the App info
+    string App              = 3 [(venice.check) = "StrEnum(MatchSelector.Type)",
+                                 (gogoproto.jsontag) = "app"];
+    string AppConfig        = 4 [(venice.check) = "StrEnum(MatchSelector.AppType)",
+                                (gogoproto.jsontag) = "app-config"];
+
 }

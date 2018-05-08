@@ -1723,12 +1723,10 @@ func TestNatPolicyCreateDelete(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.0 - 192.168.1.1",
+						Address: "192.168.0.0 - 192.168.1.1",
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -1809,12 +1807,10 @@ func TestNatPolicyCreateOnRemoteNatPool(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.0 - 192.168.1.1",
+						Address: "192.168.0.0 - 192.168.1.1",
 					},
 					NatPool: "remoteNS/remoteNSNatPool",
 					Action:  "DNAT",
@@ -1849,12 +1845,10 @@ func TestNatPolicyOnNonExistentLocalNatPool(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.0 - 192.168.1.1",
+						Address: "192.168.0.0 - 192.168.1.1",
 					},
 					NatPool: "localNonExistentNatPool",
 					Action:  "DNAT",
@@ -1904,8 +1898,7 @@ func TestNatPolicyOnMatchAllDst(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -1955,8 +1948,7 @@ func TestNatPolicyOnMatchAllSrc(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.0 - 192.168.1.1",
+						Address: "192.168.0.0 - 192.168.1.1",
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -2047,12 +2039,10 @@ func TestNatPolicyOnNonExistentRemoteNatPool(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.0 - 192.168.1.1",
+						Address: "192.168.0.0 - 192.168.1.1",
 					},
 					NatPool: "remoteNS/nonExistentRemoteNatPool",
 					Action:  "SNAT",
@@ -2101,12 +2091,10 @@ func TestNatPolicyUpdate(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.0 - 192.168.1.1",
+						Address: "192.168.0.0 - 192.168.1.1",
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -2490,24 +2478,28 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address:   "192.168.0.1 - 192.168.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address:   "192.168.0.1 - 192.168.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					SAName: "testIPSecSADecrypt",
 					SAType: "DECRYPT",
@@ -2515,6 +2507,7 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			},
 		},
 	}
+
 	// create IPSec policy
 	err = ag.CreateIPSecPolicy(&ipSecPolicy)
 	AssertOk(t, err, "Error creating IPSec policy")
@@ -2601,24 +2594,20 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
 					SAName: "testIPSecSADecrypt",
 					SAType: "DECRYPT",
@@ -2674,28 +2663,6 @@ func TestIPSecSAEncryptCreateDelete(t *testing.T) {
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
-
-	//saDecrypt := netproto.IPSecSADecrypt{
-	//	TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
-	//	ObjectMeta: api.ObjectMeta{
-	//		Tenant:    "default",
-	//		Namespace: "default",
-	//		Name:      "testIPSecSADecrypt",
-	//	},
-	//	Spec: netproto.IPSecSADecryptSpec{
-	//		Protocol:           "ESP",
-	//		AuthAlgo:           "AES_GCM",
-	//		AuthKey:            "someRandomString",
-	//		DecryptAlgo:        "AES_GCM_256",
-	//		DecryptionKey:      "someRandomKey",
-	//		RekeyDecryptAlgo:   "DES3",
-	//		RekeyDecryptionKey: "someRandomString",
-	//		LocalGwIP:          "10.0.0.1",
-	//		RemoteGwIP:         "192.168.1.1",
-	//	},
-	//}
-	//err = ag.CreateIPSecSADecrypt(&saDecrypt)
-	//AssertOk(t, err, "Error creating IPSec SA Decrypt rule")
 
 	foundIPSecSA, err := ag.FindIPSecSAEncrypt(saEncrypt.ObjectMeta)
 	AssertOk(t, err, "IPSec SA  ecnrypt was not found in DB")

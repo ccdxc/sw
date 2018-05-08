@@ -52,24 +52,28 @@ func TestIPSecPolicyPost(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address:   "192.168.0.1 - 192.168.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					SAName: "preCreatedEncryptSA",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address:   "192.168.0.1 - 192.168.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					SAName: "preCreatedDecryptSA",
 					SAType: "DECRYPT",
@@ -148,24 +152,28 @@ func TestIPSecPolicyDelete(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address:   "192.168.0.1 - 192.168.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					SAName: "preCreatedEncryptSA",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "10.0.0.0 - 10.0.1.0",
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					Dst: &netproto.MatchSelector{
-						MatchType: "IPRange",
-						Match:     "192.168.0.1 - 192.168.1.0",
+						Address:   "192.168.0.1 - 192.168.1.0",
+						App:       "ESP",
+						AppConfig: "1",
 					},
 					SAName: "preCreatedDecryptSA",
 					SAType: "DECRYPT",
