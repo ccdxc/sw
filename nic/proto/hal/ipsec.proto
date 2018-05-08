@@ -107,6 +107,57 @@ message IpsecSADecrypt {
   uint32                         salt                      = 16;  // Initial Random number - 32 bits (need to be same on peer)
 }
 
+
+message IPSecSAEncryptGetSpec {
+  types.ObjectMeta               meta                      = 1;    // common object meta
+  kh.IpsecSAEncryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  IpsecProtocol                  protocol                  = 3;    // ESP or AH
+  AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
+  Key                            authentication_key        = 5;   // authenticaion key
+  EncryptionAlgorithm            encryption_algorithm      = 6;   // encryption algorithm
+  Key                            encryption_key            = 7;   // encryption key
+  types.IPAddress                local_gateway_ip          = 8;   // local VPN GW IP, helps derive local MAC as well
+  types.IPAddress                remote_gateway_ip         = 9;   // remote VPN GW IP, derive remote MAC using ARP database
+  uint32                         spi                       = 10;   // security parameters index
+  uint32                         nat_traversal_port        = 11;   // NAT-T port, if non-zero - NAT-T header is added.
+  uint32                         salt                      = 12;  // Initial Random number - 32 bits (need to be same on peer)
+  uint64                         iv                        = 13;  // Initial Random number that goes in packet - can be assigned from top or generated locally
+  uint32                         key_index                 = 14;
+  uint32                         iv_size                   = 15;
+  uint32                         icv_size                  = 16;
+  uint64                         seq_no                    = 17;
+  uint64                         total_pkts                = 18;
+  uint64                         total_bytes               = 19;
+  uint64                         total_drops               = 20;
+}
+
+message IPSecSADecryptGetSpec {
+  types.ObjectMeta               meta                      = 1;    // common object meta
+  kh.IpsecSADecryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  IpsecProtocol                  protocol                  = 3;    // ESP or AH
+  AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
+  Key                            authentication_key        = 5;   // authenticaion key
+  EncryptionAlgorithm            decryption_algorithm      = 6;   // encryption algorithm
+  EncryptionAlgorithm            rekey_dec_algorithm       = 7;   // encryption algorithm
+  Key                            decryption_key            = 8;   // encryption key
+  Key                            rekey_authentication_key  = 9;   // authenticaion key
+  Key                            rekey_decryption_key      = 10;   // encryption key
+  types.IPAddress                local_gateway_ip          = 11;   // local VPN GW IP, helps derive local MAC as well
+  types.IPAddress                remote_gateway_ip         = 12;   // remote VPN GW IP, derive remote MAC using ARP database
+  uint32                         spi                       = 13;   // security parameters index
+  uint32                         rekey_active              = 14;
+  uint32                         rekey_spi                 = 15;  // Valid when rekey is active - part of update 
+  uint32                         salt                      = 16;  // Initial Random number - 32 bits (need to be same on peer)
+  uint32                         key_index                 = 17;
+  uint32                         new_key_index             = 18;
+  uint32                         iv_size                   = 19;
+  uint32                         icv_size                  = 20;
+  uint64                         seq_no                    = 21;
+  uint64                         total_pkts                = 22;
+  uint64                         total_bytes               = 23;
+  uint64                         total_drops               = 24;
+}
+
 enum IpsecSAActionType {
   IPSEC_SA_ACTION_TYPE_NONE = 0;
   IPSEC_SA_ACTION_TYPE_ENCRYPT = 1;
@@ -237,7 +288,7 @@ message IpsecSAEncryptGetRequestMsg {
 
 message IpsecSAEncryptGetResponse {
   types.ApiStatus        api_status = 1;
-  IpsecSAEncrypt         spec       = 2;
+  IPSecSAEncryptGetSpec  spec       = 2;
   IpsecSAEncryptStatus   status     = 3;
 }
 
@@ -295,7 +346,7 @@ message IpsecSADecryptGetRequestMsg {
 
 message IpsecSADecryptGetResponse {
   types.ApiStatus        api_status = 1;
-  IpsecSADecrypt         spec       = 2;
+  IPSecSADecryptGetSpec  spec       = 2;
   IpsecSADecryptStatus   status     = 3;
 }
 
