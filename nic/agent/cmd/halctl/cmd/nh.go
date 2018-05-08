@@ -136,6 +136,10 @@ func nhDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func nhShowHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Id:       Next Hop Id         Handle: Next Hop HAL Handle\n")
+	fmt.Printf("EPHandle: EP's Handle\n")
+	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 30)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s\n",

@@ -19,7 +19,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "halctl",
 	Short: "HAL cli",
-	Long:  "HAL cli:\n--------\nExample: show vrf",
+	Long:  "\n----------------------\n Pensando HAL CLI \n----------------------\n",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -46,4 +46,11 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	rootCmd.GenBashCompletionFile("out.sh")
+}
+
+// NewHalctlCommand exports the rootCmd for bash-completion
+func NewHalctlCommand() *cobra.Command {
+	return rootCmd
 }

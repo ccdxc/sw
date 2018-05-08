@@ -1641,13 +1641,13 @@ vrf_restore_cb (void *obj, uint32_t len)
 // Lookup vrf from key or handle to str
 //------------------------------------------------------------------------------
 const char *
-vrf_keyhandle_to_str (const VrfKeyHandle& key_handle)
+vrf_spec_keyhandle_to_str (const VrfKeyHandle& key_handle)
 {
-	static thread_local char       if_str[4][50];
-	static thread_local uint8_t    if_str_next = 0;
+	static thread_local char       vrf_str[4][50];
+	static thread_local uint8_t    vrf_str_next = 0;
 	char                           *buf;
 
-	buf = if_str[if_str_next++ & 0x3];
+	buf = vrf_str[vrf_str_next++ & 0x3];
 	memset(buf, 0, 50);
 
     if (key_handle.key_or_handle_case() == VrfKeyHandle::kVrfId) {
@@ -1664,7 +1664,7 @@ vrf_keyhandle_to_str (const VrfKeyHandle& key_handle)
 // PI vrf to str
 //------------------------------------------------------------------------------
 const char *
-vrf_to_str (vrf_t *vrf)
+vrf_keyhandle_to_str (vrf_t *vrf)
 {
     static thread_local char       vrf_str[4][50];
     static thread_local uint8_t    vrf_str_next = 0;

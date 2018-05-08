@@ -1157,7 +1157,7 @@ find_ep (EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status)
             vrf = vrf_lookup_key_or_handle(ep_l3_key.vrf_key_handle());
             if (vrf == NULL) {
                 HAL_TRACE_ERR("Failed to find vrf {}",
-                              vrf_keyhandle_to_str(ep_l3_key.vrf_key_handle()));
+                              vrf_spec_keyhandle_to_str(ep_l3_key.vrf_key_handle()));
                 return HAL_RET_VRF_NOT_FOUND;
 
             }

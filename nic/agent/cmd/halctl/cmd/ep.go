@@ -154,10 +154,15 @@ func epDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func epShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("EPHandle:  EP's Handle                       L2SegID: EP's L2seg ID\n")
+	fmt.Printf("Mac:       EP's Mac                          IfId:    IF on which EP was learnt\n")
+	fmt.Printf("IsLocal:   EP's location                     #IPs:    EP's IPs\n")
+	fmt.Printf("IPs:       EP's IPs\n")
 	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-12s%-12s%-24s%-10s%-10s%-10s%-20s\n",
-		"EPHandle", "L2SegID", "Mac", "IfId", "IsLocal", "NumIPs", "IPs")
+		"EPHandle", "L2SegID", "Mac", "IfId", "IsLocal", "#IPs", "IPs")
 	fmt.Println(hdrLine)
 }
 
@@ -182,6 +187,9 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 }
 
 func epPdShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("EPHandle:  EP's Handle                       L2SegID: EP's L2seg ID\n")
+	fmt.Printf("MacTblIdx: Registered MAC table Idx.         RwTblIdx: Rewrite table Idx.\n")
 	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-12s%-12s%-12s%-36s\n",
@@ -203,6 +211,10 @@ func epPdShowOneResp(resp *halproto.EndpointGetResponse) {
 		} else {
 			rwTblStr += fmt.Sprintf(", %d", val)
 		}
+	}
+
+	if len(rwTblStr) == 0 {
+		rwTblStr += "-"
 	}
 
 	regMacTblIdx := epd.GetRegMacTblIdx()

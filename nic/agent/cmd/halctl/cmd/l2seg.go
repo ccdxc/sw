@@ -195,10 +195,16 @@ func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func l2segShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:     L2seg's ID                              Handle:   L2seg Handle\n")
+	fmt.Printf("vrfId:  L2segs's VRF Id                         weT:      Wire encap type\n")
+	fmt.Printf("weV:    Wire encap value                        teT:      Tunnel encap type\n")
+	fmt.Printf("teV:    Tunnel encap value                      MFP:      Multicast fwd. policy\n")
+	fmt.Printf("BFP:    Broadcast fwd. policy                   #EPs:     Num. of EPs in L2seg\n")
 	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "Handle", "vrfId", "weT", "weV", "teT", "teV", "MFP", "BFP", "numEPs")
+		"Id", "Handle", "vrfId", "weT", "weV", "teT", "teV", "MFP", "BFP", "#EPs")
 	fmt.Println(hdrLine)
 }
 
@@ -218,6 +224,12 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 }
 
 func l2segPdShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:         L2seg's ID                       Handle:     L2seg Handle\n")
+	fmt.Printf("vrfId:      L2segs's VRF Id                  HwId:       L2seg's Hwid used in flow lookup\n")
+	fmt.Printf("LookupId:   L2seg's Lookup Id                CPUVlan:    Pkt's Vlan from CPU on this L2seg\n")
+	fmt.Printf("InpPropCPU: Input Prop. table idx from CPU   InpProp.1q: Inp. Prop table indices for IFs\n")
+	fmt.Printf("InpPropPr:  Inp. Prop table indices for IFs\n")
 	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-12s%-12s%-12s\n",

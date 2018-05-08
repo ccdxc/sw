@@ -106,6 +106,10 @@ func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func nwShowHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("VrfId:	     NW's Vrf Id                       NWHandle: Network Handle\n")
+	fmt.Printf("GatewayIP:   Gateway IP                        Router MAC:  Router MAC for of IF in this NW\n")
+	fmt.Printf("SGHandle:    Security Group Handles\n")
 	hdrLine := strings.Repeat("-", 86)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-18s%-24s%-24s\n",
@@ -127,6 +131,9 @@ func nwShowOneResp(resp *halproto.NetworkGetResponse) {
 		} else {
 			sgKhStr += fmt.Sprintf(", %d", sgKh.GetSecurityGroupHandle())
 		}
+	}
+	if len(sgKhStr) == 0 {
+		sgKhStr += "-"
 	}
 
 	fmt.Printf("%-10d%-10d%-18s%-24s%-24s\n",

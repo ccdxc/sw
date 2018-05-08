@@ -138,10 +138,18 @@ func uplinkPcDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func uplinkPcShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:       Interface ID                        Handle: IF's handle\n")
+	fmt.Printf("Ifype:    Interface type                      \n")
+	fmt.Printf("UpNL2seg: Uplink's Native L2seg               #L2Segs: Number of L2segs\n")
+	fmt.Printf("LportId:  Lport Id                            HwLifId: Hw Lif ID\n")
+	fmt.Printf("UpIdx:    Uplink Idx used in L2seg            #Mbrs: Num. of member uplinks\n")
+	fmt.Printf("Mbrs:     Uplink Members\n")
+	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "Handle", "IfType", "NatL2seg", "NL2Segs", "LportId", "HwLifId", "UpIdx", "NMbrs", "Mbrs")
+		"Id", "Handle", "IfType", "NatL2seg", "#L2Segs", "LportId", "HwLifId", "UpIdx", "NMbrs", "Mbrs")
 	fmt.Println(hdrLine)
 }
 
@@ -164,6 +172,9 @@ func uplinkPcShowOneResp(resp *halproto.InterfaceGetResponse) {
 
 	for _, mbr := range mbrs {
 		fmt.Printf("%-5d", mbr.GetInterfaceId())
+	}
+	if len(mbrs) == 0 {
+		fmt.Printf("%-5s", "-")
 	}
 	fmt.Printf("\n")
 }

@@ -2139,4 +2139,61 @@ l2seg_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// spec's keyhandle to str
+//------------------------------------------------------------------------------
+const char *
+l2seg_spec_keyhandle_to_str (const L2SegmentKeyHandle& key_handle)
+{
+	static thread_local char       l2seg_str[4][50];
+	static thread_local uint8_t    l2seg_str_next = 0;
+	char                           *buf;
+
+	buf = l2seg_str[l2seg_str_next++ & 0x3];
+	memset(buf, 0, 50);
+
+    if (key_handle.key_or_handle_case() == L2SegmentKeyHandle::kSegmentId) {
+		snprintf(buf, 50, "l2seg_id: %lu", key_handle.segment_id());
+    }
+    if (key_handle.key_or_handle_case() == L2SegmentKeyHandle::kL2SegmentHandle) {
+		snprintf(buf, 50, "l2seg_handle: 0x%lx", key_handle.l2segment_handle());
+    }
+
+	return buf;
+}
+
+//------------------------------------------------------------------------------
+// PI l2seg's keyhandle to str
+//------------------------------------------------------------------------------
+const char *
+l2seg_keyhandle_to_str (l2seg_t *l2seg)
+{
+    static thread_local char       l2seg_str[4][50];
+    static thread_local uint8_t    l2seg_str_next = 0;
+    char                           *buf;
+
+    buf = l2seg_str[l2seg_str_next++ & 0x3];
+    memset(buf, 0, 50);
+    if (l2seg) {
+        snprintf(buf, 50, "l2seg(id: %lu, handle: %lu)",
+                 l2seg->seg_id, l2seg->hal_handle);
+    }
+    return buf;
+}
+
+//-----------------------------------------------------------------------------
+// print l2seg spec
+//-----------------------------------------------------------------------------
+void
+l2seg_spec_dump (L2SegmentSpec& spec)
+{
+    std::string    l2seg_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &l2seg_cfg);
+    HAL_TRACE_DEBUG("L2Seg configuration:");
+    HAL_TRACE_DEBUG("{}", l2seg_cfg.c_str());
+}
 }    // namespace hal

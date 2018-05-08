@@ -138,6 +138,13 @@ func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func tunnelShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:       Interface ID                Handle:  IF's handle\n")
+	fmt.Printf("Ifype:    Interface type              EncType: Tunnel Encap type\n")
+	fmt.Printf("LTep:     Local Tep IP                RTep:    Remote TEP IP\n")
+	fmt.Printf("IMNative: Input Map. Native Idx       IMTunnel: Input Map. Tunnel Idx\n")
+	fmt.Printf("RWIdx:    Rewrite Index\n")
+	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",

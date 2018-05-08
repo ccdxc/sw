@@ -307,7 +307,7 @@ route_create (RouteSpec& spec, RouteResponse *rsp)
     vrf = vrf_lookup_key_or_handle(kh.route_key().vrf_key_handle());
     if (vrf == NULL) {
         HAL_TRACE_ERR("Route create failure. Unable to find vrf {}",
-                      vrf_keyhandle_to_str(kh.route_key().vrf_key_handle()));
+                      vrf_spec_keyhandle_to_str(kh.route_key().vrf_key_handle()));
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
@@ -899,7 +899,7 @@ route_keyhandle_to_str (RouteKeyHandle& kh)
     if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
         ip_pfx_spec_to_pfx(&pfx, kh.route_key().ip_prefix());
         snprintf(buf, 50, "vrf: %s, pfx: %s",
-                 vrf_keyhandle_to_str(kh.route_key().vrf_key_handle()),
+                 vrf_spec_keyhandle_to_str(kh.route_key().vrf_key_handle()),
                  ippfx2str(&pfx));
     } else if (kh.key_or_handle_case() == RouteKeyHandle::kRouteHandle) {
         snprintf(buf, 50, "route_handle: 0x%lx", kh.route_handle());

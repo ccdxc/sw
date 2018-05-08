@@ -315,7 +315,7 @@ nexthop_create (NexthopSpec& spec, NexthopResponse *rsp)
         if (hal_if == NULL) {
             ret = HAL_RET_IF_NOT_FOUND;
             HAL_TRACE_ERR("Unable to find if {}",
-                          if_lookup_key_or_handle_to_str(if_key_or_handle));
+                          if_spec_keyhandle_to_str(if_key_or_handle));
             goto end;
         }
     }

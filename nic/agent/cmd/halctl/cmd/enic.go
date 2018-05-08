@@ -138,6 +138,12 @@ func enicDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func enicShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:     Interface ID         Handle: IF's handle\n")
+	fmt.Printf("Ifype:  Interface type       EType:  Enic type\n")
+	fmt.Printf("EL2seg: Enic's l2seg         Emac:   Enic's mac\n")
+	fmt.Printf("Encap:  Enic's encap         ELif:   Enic's Lif\n")
+	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-20s%-10s%-10s\n",

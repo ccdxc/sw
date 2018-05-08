@@ -138,6 +138,10 @@ func cpuDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func cpuShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:    Interface ID         Handle:  IF's handle\n")
+	fmt.Printf("Ifype: Interface type       LportId: IF's Lport\n")
+	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 40)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s\n",

@@ -138,6 +138,9 @@ func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func ifShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:    Interface ID         Handle: IF's handle\n")
+	fmt.Printf("Ifype: Interface type\n")
 	hdrLine := strings.Repeat("-", 30)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s\n",

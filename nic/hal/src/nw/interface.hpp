@@ -48,11 +48,19 @@ using intf::InterfaceL2SegmentRequestMsg;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponseMsg;
 using intf::InterfaceL2SegmentResponse;
+using intf::QStateGetReq;
+using intf::QStateGetResp;
+using intf::QStateSetReq;
+using intf::QStateSetResp;
 using intf::GetQStateRequestMsg;
 using intf::GetQStateResponseMsg;
 using intf::SetQStateRequestMsg;
 using intf::SetQStateResponseMsg;
 using intf::IfType;
+using intf::IfStatus;
+using intf::IfEnicType;
+using intf::IfEnicInfo;
+using intf::IfTunnelEncapType;
 
 namespace hal {
 
@@ -79,14 +87,14 @@ DEFINE_ENUM(if_acl_ref_type_t, IF_ACL_REF_TYPE)
 typedef struct if_s {
     hal_spinlock_t      slock;                      // lock to protect this structure
     if_id_t             if_id;                      // interface id
-    intf::IfType        if_type;                    // interface type
-    intf::IfStatus      if_admin_status;            // admin status
+    IfType        if_type;                          // interface type
+    IfStatus      if_admin_status;                  // admin status
     vrf_id_t            tid;                        // vrf id (TODO: what is this for ?)
 
     union {
         // enic interface info
         struct {
-            intf::IfEnicType    enic_type;          // type of ENIC
+            IfEnicType    enic_type;                // type of ENIC
             hal_handle_t        lif_handle;         // handle to corresponding LIF
             hal_handle_t        l2seg_handle;       // handle to l2seg
             mac_addr_t          mac_addr;           // EP's MAC addr
@@ -118,7 +126,7 @@ typedef struct if_s {
         } __PACK__;
         // tunnel interface info
         struct {
-            intf::IfTunnelEncapType encap_type;     // type of Encap
+            IfTunnelEncapType encap_type;           // type of Encap
             hal_handle_t rtep_ep_handle;            // Remote TEP EP's handle
             // TODO: have to add back ref from ep
             union {
@@ -142,7 +150,7 @@ typedef struct if_s {
     // operational state of interface
     hal_handle_t        hal_handle;             // HAL allocated handle
     uint32_t            num_ep;                 // no. of endpoints
-    intf::IfStatus      if_op_status;           // operational status
+    IfStatus            if_op_status;           // operational status
 
     // forward references
     block_list          *mbr_if_list;           // list of member ports for uplink PC
@@ -276,60 +284,62 @@ hal_ret_t enicif_cleanup_l2seg_entry_list(dllist_ctxt_t **list);
 bool l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle,
                              if_l2seg_entry_t **l2seg_entry);
 
-hal_ret_t enic_if_create(intf::InterfaceSpec& spec,
-                         intf::InterfaceResponse *rsp,
+hal_ret_t enic_if_create(InterfaceSpec& spec,
+                         InterfaceResponse *rsp,
                          if_t *hal_if);
-hal_ret_t uplink_if_create(intf::InterfaceSpec& spec,
-                           intf::InterfaceResponse *rsp,
+hal_ret_t uplink_if_create(InterfaceSpec& spec,
+                           InterfaceResponse *rsp,
                            if_t *hal_if);
-hal_ret_t uplink_pc_create(intf::InterfaceSpec& spec,
-                           intf::InterfaceResponse *rsp,
+hal_ret_t uplink_pc_create(InterfaceSpec& spec,
+                           InterfaceResponse *rsp,
                            if_t *hal_if);
-hal_ret_t cpu_if_create(intf::InterfaceSpec& spec,
-                        intf::InterfaceResponse *rsp,
+hal_ret_t cpu_if_create(InterfaceSpec& spec,
+                        InterfaceResponse *rsp,
                         if_t *hal_if);
-hal_ret_t app_redir_if_create(intf::InterfaceSpec& spec,
-                              intf::InterfaceResponse *rsp,
+hal_ret_t app_redir_if_create(InterfaceSpec& spec,
+                              InterfaceResponse *rsp,
                               if_t *hal_if);
-hal_ret_t uplink_if_update(intf::InterfaceSpec& spec,
-                           intf::InterfaceResponse *rsp,
+hal_ret_t uplink_if_update(InterfaceSpec& spec,
+                           InterfaceResponse *rsp,
                            if_t *hal_if, void *if_args);
-hal_ret_t uplink_pc_update(intf::InterfaceSpec& spec,
-                           intf::InterfaceResponse *rsp,
+hal_ret_t uplink_pc_update(InterfaceSpec& spec,
+                           InterfaceResponse *rsp,
                            if_t *hal_if,
                            void *if_args);
-hal_ret_t tunnel_if_create(intf::InterfaceSpec& spec,
-                           intf::InterfaceResponse *rsp,
+hal_ret_t tunnel_if_create(InterfaceSpec& spec,
+                           InterfaceResponse *rsp,
                            if_t *hal_if);
-hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec,
-                                     intf::InterfaceResponse *rsp,
+hal_ret_t get_lif_handle_for_enic_if(InterfaceSpec& spec,
+                                     InterfaceResponse *rsp,
                                      if_t *hal_if);
-hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec,
-                                    intf::InterfaceResponse *rsp,
+hal_ret_t get_lif_handle_for_cpu_if(InterfaceSpec& spec,
+                                    InterfaceResponse *rsp,
                                     if_t *hal_if);
-hal_ret_t get_lif_handle_for_app_redir_if(intf::InterfaceSpec& spec,
-                                          intf::InterfaceResponse *rsp,
+hal_ret_t get_lif_handle_for_app_redir_if(InterfaceSpec& spec,
+                                          InterfaceResponse *rsp,
                                           if_t *hal_if);
-if_t *if_lookup_key_or_handle(const kh::InterfaceKeyHandle& key_handle);
-const char *if_lookup_key_or_handle_to_str (const kh::InterfaceKeyHandle& key_handle);
+if_t *if_lookup_key_or_handle(const InterfaceKeyHandle& key_handle);
+const char *if_spec_keyhandle_to_str(const InterfaceKeyHandle& key_handle);
+const char *if_keyhandle_to_str(if_t *hal_if);
+void if_spec_dump(InterfaceSpec& spec);
 
-void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
-void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
+void LifGetQState(const QStateGetReq &req, QStateGetResp *resp);
+void LifSetQState(const QStateSetReq &req, QStateSetResp *resp);
 
-hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp,
+hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
                      lif_hal_info_t *lif_hal_info);
-hal_ret_t interface_create(intf::InterfaceSpec& spec,
-                           intf::InterfaceResponse *rsp);
-hal_ret_t interface_update(intf::InterfaceSpec& spec,
-                           intf::InterfaceResponse *rsp);
-hal_ret_t interface_delete(intf::InterfaceDeleteRequest& req,
-                           intf::InterfaceDeleteResponse *rsp);
-hal_ret_t interface_get(intf::InterfaceGetRequest& spec,
-                        intf::InterfaceGetResponseMsg *rsp);
-hal_ret_t add_l2seg_on_uplink(intf::InterfaceL2SegmentSpec& spec,
-                              intf::InterfaceL2SegmentResponse *rsp);
-hal_ret_t del_l2seg_on_uplink(intf::InterfaceL2SegmentSpec& spec,
-                              intf::InterfaceL2SegmentResponse *rsp);
+hal_ret_t interface_create(InterfaceSpec& spec,
+                           InterfaceResponse *rsp);
+hal_ret_t interface_update(InterfaceSpec& spec,
+                           InterfaceResponse *rsp);
+hal_ret_t interface_delete(InterfaceDeleteRequest& req,
+                           InterfaceDeleteResponse *rsp);
+hal_ret_t interface_get(InterfaceGetRequest& spec,
+                        InterfaceGetResponseMsg *rsp);
+hal_ret_t add_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
+                              InterfaceL2SegmentResponse *rsp);
+hal_ret_t del_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
+                              InterfaceL2SegmentResponse *rsp);
 
 hal_ret_t if_marshall_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 

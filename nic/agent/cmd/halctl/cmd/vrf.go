@@ -195,10 +195,15 @@ func vrfDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func vrfShowHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Id:         Vrf's ID                                Handle:     Vrf Handle\n")
+	fmt.Printf("Type:       Vrf's Type                              #L2Segs:    Num. of L2Segments\n")
+	fmt.Printf("#SGs:       Num. of Security Groups                 #EPs:       Num. of EPs\n")
+	fmt.Printf("#LBSVCs:    Num. of L4 LB Services\n")
 	hdrLine := strings.Repeat("-", 70)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"VrfId", "VrfHandle", "VrfType", "NumL2Segs", "NumSGs", "NumEPs", "NumLBSvcs")
+		"Id", "Handle", "Type", "#L2Segs", "#SGs", "#EPs", "#LBSVCs")
 	fmt.Println(hdrLine)
 }
 
@@ -220,6 +225,12 @@ func vrfPdShowHeader(resp *halproto.VrfGetResponse) {
 }
 
 func vrfEPdShowHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Id:         Vrf's ID                                Handle:     Vrf Handle\n")
+	fmt.Printf("Type:       (Infra/Tenant)                          HwId:       Vrf's Lookup ID\n")
+	fmt.Printf("FlowLkupId: Vrf's Flow Lookup ID (l2seg part as 0)  CPUVlan:    Pkt's Vlan from CPU on this VRF\n")
+	fmt.Printf("InpProp:    Inp. Prop. table idx for CPU traffic    GIPoIMN:	Input Mapping Native indices for GIPo\n")
+	fmt.Printf("GIPoIMT:    Input Mapping Tunnel indices for GIPo\n")
 	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",

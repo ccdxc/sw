@@ -122,15 +122,15 @@ uint32_t vrf_id_compute_hash_func(void *key, uint32_t ht_size);
 bool vrf_id_compare_key_func(void *key1, void *key2);
 vrf_t *vrf_lookup_by_id(vrf_id_t tid);
 vrf_t *vrf_lookup_key_or_handle(const VrfKeyHandle& kh);
-const char *vrf_keyhandle_to_str (const VrfKeyHandle& key_handle);
-const char *vrf_to_str (vrf_t *vrf);
-void vrf_spec_dump (VrfSpec& spec);
+const char *vrf_spec_keyhandle_to_str(const VrfKeyHandle& key_handle);
+const char *vrf_keyhandle_to_str(vrf_t *vrf);
+void vrf_spec_dump(VrfSpec& spec);
 
 
-hal_ret_t vrf_create(vrf::VrfSpec& spec, vrf::VrfResponse *rsp);
-hal_ret_t vrf_update(vrf::VrfSpec& spec, vrf::VrfResponse *rsp);
-hal_ret_t vrf_delete(vrf::VrfDeleteRequest& req, vrf::VrfDeleteResponse *rsp);
-hal_ret_t vrf_get(vrf::VrfGetRequest& req, vrf::VrfGetResponseMsg *rsp);
+hal_ret_t vrf_create(VrfSpec& spec, VrfResponse *rsp);
+hal_ret_t vrf_update(VrfSpec& spec, VrfResponse *rsp);
+hal_ret_t vrf_delete(VrfDeleteRequest& req, VrfDeleteResponse *rsp);
+hal_ret_t vrf_get(VrfGetRequest& req, VrfGetResponseMsg *rsp);
 
 hal_ret_t vrf_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t vrf_restore_cb(void *obj, uint32_t len);

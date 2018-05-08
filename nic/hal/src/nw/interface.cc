@@ -273,44 +273,19 @@ if_del_from_db (if_t *hal_if)
 // get if from either id or handle
 //------------------------------------------------------------------------------
 if_t *
-if_lookup_key_or_handle (const kh::InterfaceKeyHandle& key_handle)
+if_lookup_key_or_handle (const InterfaceKeyHandle& key_handle)
 {
     if (key_handle.key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kInterfaceId) {
+            InterfaceKeyHandle::kInterfaceId) {
         return find_if_by_id(key_handle.interface_id());
     }
     if (key_handle.key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kIfHandle) {
+            InterfaceKeyHandle::kIfHandle) {
         return find_if_by_handle(key_handle.if_handle());
     }
 
     return NULL;
 
-}
-
-//------------------------------------------------------------------------------
-// get if from either id or handle
-//------------------------------------------------------------------------------
-const char *
-if_lookup_key_or_handle_to_str (const kh::InterfaceKeyHandle& key_handle)
-{
-	static thread_local char       if_str[4][50];
-	static thread_local uint8_t    if_str_next = 0;
-	char                           *buf;
-
-	buf = if_str[if_str_next++ & 0x3];
-	memset(buf, 0, 50);
-
-    if (key_handle.key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kInterfaceId) {
-		snprintf(buf, 50, "if_id: %lu", key_handle.interface_id());
-    }
-    if (key_handle.key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kIfHandle) {
-		snprintf(buf, 50, "if_handle: 0x%lx", key_handle.if_handle());
-    }
-
-	return buf;
 }
 
 //-----------------------------------------------------------------------------
@@ -335,7 +310,7 @@ interface_dump (InterfaceSpec& spec)
 static hal_ret_t
 validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
-    intf::IfType if_type;
+    IfType if_type;
     hal_ret_t ret = HAL_RET_OK;
 
     // key-handle field must be set
@@ -381,9 +356,9 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         if (spec.if_enic_info().enic_type() == intf::IF_ENIC_TYPE_CLASSIC) {
             // enic type info has to be classic
             if (spec.if_enic_info().enic_type_info_case() !=
-                    intf::IfEnicInfo::ENIC_TYPE_INFO_NOT_SET &&
+                    IfEnicInfo::ENIC_TYPE_INFO_NOT_SET &&
                     spec.if_enic_info().enic_type_info_case() !=
-                    intf::IfEnicInfo::kClassicEnicInfo) {
+                    IfEnicInfo::kClassicEnicInfo) {
                 // info is set but its not valid
                 HAL_TRACE_ERR(" wrong enic info being passed for "
                               "classic enic err : {}",
@@ -394,9 +369,9 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         } else{
             // enic type info has to be non classic
             if (spec.if_enic_info().enic_type_info_case() !=
-                    intf::IfEnicInfo::ENIC_TYPE_INFO_NOT_SET &&
+                    IfEnicInfo::ENIC_TYPE_INFO_NOT_SET &&
                     spec.if_enic_info().enic_type_info_case() !=
-                    intf::IfEnicInfo::kEnicInfo) {
+                    IfEnicInfo::kEnicInfo) {
                 // info is set but its not valid
                 HAL_TRACE_ERR("wrong enic info being passed "
                               "for non-classic enic err : {}",
@@ -2098,7 +2073,7 @@ static if_t *
 fetch_if_ifl2seg (InterfaceL2SegmentSpec& spec)
 {
     if (spec.if_key_handle().key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kInterfaceId) {
+            InterfaceKeyHandle::kInterfaceId) {
         return find_if_by_id(spec.if_key_handle().interface_id());
     } else {
         return find_if_by_handle(spec.if_key_handle().if_handle());
@@ -2115,7 +2090,7 @@ fetch_l2seg_ifl2seg (InterfaceL2SegmentSpec& spec)
 {
 
     if (spec.l2segment_key_or_handle().key_or_handle_case() ==
-            kh::L2SegmentKeyHandle::kSegmentId) {
+            L2SegmentKeyHandle::kSegmentId) {
         return find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id());
     } else {
         return l2seg_lookup_by_handle(spec.l2segment_key_or_handle().l2segment_handle());
@@ -2139,14 +2114,14 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
     // L2 segment has to exist
     if (spec.l2segment_key_or_handle().key_or_handle_case() ==
-            kh::L2SegmentKeyHandle::kSegmentId &&
+            L2SegmentKeyHandle::kSegmentId &&
             !find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id())) {
         HAL_TRACE_ERR("Failed to find l2seg with id : {}",
                       spec.l2segment_key_or_handle().segment_id());
         return HAL_RET_L2SEG_NOT_FOUND;
     }
     if (spec.l2segment_key_or_handle().key_or_handle_case() ==
-            kh::L2SegmentKeyHandle::kL2SegmentHandle &&
+            L2SegmentKeyHandle::kL2SegmentHandle &&
             !l2seg_lookup_by_handle(spec.l2segment_key_or_handle().l2segment_handle())) {
         HAL_TRACE_ERR("Failed to find l2seg with handle : {}",
                       spec.l2segment_key_or_handle().l2segment_handle());
@@ -2161,14 +2136,14 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
     // uplink has to exist
     if (spec.if_key_handle().key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kInterfaceId &&
+            InterfaceKeyHandle::kInterfaceId &&
             !find_if_by_id(spec.if_key_handle().interface_id())) {
         HAL_TRACE_ERR("Failed to find interface with id : {}",
                       spec.if_key_handle().interface_id());
         return HAL_RET_IF_NOT_FOUND;
     }
     if (spec.if_key_handle().key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kIfHandle &&
+            InterfaceKeyHandle::kIfHandle &&
             !find_if_by_handle(spec.if_key_handle().if_handle())) {
         HAL_TRACE_ERR("Failed to find interface with handle : {}",
                       spec.if_key_handle().if_handle());
@@ -2853,7 +2828,7 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
         if (mbr_if == NULL || mbr_if->if_type != intf::IF_TYPE_UPLINK) {
             HAL_TRACE_ERR("Unable to add non-uplinkif. "
                           "Skipping if : {} , {}",
-                          if_lookup_key_or_handle_to_str(mbr_if_key_handle),
+                          if_spec_keyhandle_to_str(mbr_if_key_handle),
 						  (mbr_if == NULL) ? "Not Present" :
                           "Not Uplink If");
             ret = HAL_RET_IF_INFO_INVALID;
@@ -3378,7 +3353,7 @@ get_lif_handle_for_enic_if (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     // fetch the lif associated with this interface
     auto lif_kh = spec.if_enic_info().lif_key_or_handle();
-    if (lif_kh.key_or_handle_case() == kh::LifKeyHandle::kLifId) {
+    if (lif_kh.key_or_handle_case() == LifKeyHandle::kLifId) {
         lif_id = lif_kh.lif_id();
         lif = find_lif_by_id(lif_id);
     } else {
@@ -3415,7 +3390,7 @@ get_lif_handle_for_cpu_if (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     // fetch the lif associated with this interface
     auto lif_kh = spec.if_cpu_info().lif_key_or_handle();
-    if (lif_kh.key_or_handle_case() == kh::LifKeyHandle::kLifId) {
+    if (lif_kh.key_or_handle_case() == LifKeyHandle::kLifId) {
         lif_id = lif_kh.lif_id();
         lif = find_lif_by_id(lif_id);
     } else {
@@ -3452,7 +3427,7 @@ get_lif_handle_for_app_redir_if (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     // fetch the lif associated with this interface
     auto lif_kh = spec.if_app_redir_info().lif_key_or_handle();
-    if (lif_kh.key_or_handle_case() == kh::LifKeyHandle::kLifId) {
+    if (lif_kh.key_or_handle_case() == LifKeyHandle::kLifId) {
         lif_id = lif_kh.lif_id();
         lif = find_lif_by_id(lif_id);
     } else {
@@ -4292,4 +4267,65 @@ if_del_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
 end:
     return ret;
 }
+
+//------------------------------------------------------------------------------
+// if spec's keyhandle to str
+//------------------------------------------------------------------------------
+const char *
+if_spec_keyhandle_to_str (const InterfaceKeyHandle& key_handle)
+{
+	static thread_local char       if_str[4][50];
+	static thread_local uint8_t    if_str_next = 0;
+	char                           *buf;
+
+	buf = if_str[if_str_next++ & 0x3];
+	memset(buf, 0, 50);
+
+    if (key_handle.key_or_handle_case() ==
+            InterfaceKeyHandle::kInterfaceId) {
+		snprintf(buf, 50, "if_id: %lu", key_handle.interface_id());
+    }
+    if (key_handle.key_or_handle_case() ==
+            InterfaceKeyHandle::kIfHandle) {
+		snprintf(buf, 50, "if_handle: 0x%lx", key_handle.if_handle());
+    }
+
+	return buf;
+}
+
+//------------------------------------------------------------------------------
+// PI vrf to str
+//------------------------------------------------------------------------------
+const char *
+if_keyhandle_to_str (if_t *hal_if)
+{
+    static thread_local char       if_str[4][50];
+    static thread_local uint8_t    if_str_next = 0;
+    char                           *buf;
+
+    buf = if_str[if_str_next++ & 0x3];
+    memset(buf, 0, 50);
+    if (hal_if) {
+        snprintf(buf, 50, "hal_if(id: %lu, handle: %lu)",
+                 hal_if->if_id, hal_if->hal_handle);
+    }
+    return buf;
+}
+
+//-----------------------------------------------------------------------------
+// print if spec
+//-----------------------------------------------------------------------------
+void
+if_spec_dump (InterfaceSpec& spec)
+{
+    std::string    if_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &if_cfg);
+    HAL_TRACE_DEBUG("Interface configuration:");
+    HAL_TRACE_DEBUG("{}", if_cfg.c_str());
+}
+
 }    // namespace hal

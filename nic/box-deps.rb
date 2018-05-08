@@ -14,6 +14,7 @@ run "ln -s /usr/bin/python3.6 /usr/bin/python3"
 run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
 run "yum install -y epel-release"
 run "yum install -y nfs-utils nfs-utils-lib"
+run "yum install -y epel-release.noarch bash-completion.noarch" # For halctl bash-completion
 
 PIP2_PACKAGES = %w[
   ply==3.9

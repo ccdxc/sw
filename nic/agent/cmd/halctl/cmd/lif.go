@@ -76,7 +76,6 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Errorf("Getting Lif failed. %v", err)
 	}
-	fmt.Printf("Received %v of responses. err: %v\n", len(respMsg.Response), err)
 
 	// Print Header
 	lifShowHeader(cmd, args)
@@ -139,6 +138,12 @@ func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	c.Close()
 }
 func lifShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:          Lif Id                                Handle:  Lif's HAL Handle\n")
+	fmt.Printf("PktFilter:   Packet Filters (ALL-MC, BC, Prom)     VStrip:  Vlan Strip Enable\n")
+	fmt.Printf("VIns:        Vlan Insert Enable                    PUplink: Pinned Uplink IF Id\n")
+	fmt.Printf("RdmaEn:      RDMA Enable\n")
+	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 70)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",

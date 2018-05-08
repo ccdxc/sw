@@ -138,10 +138,17 @@ func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func uplinkShowHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:       Interface ID                        Handle: IF's handle\n")
+	fmt.Printf("Ifype:    Interface type                      UpPort: Uplink's Port\n")
+	fmt.Printf("UpNL2seg: Uplink's Native L2seg               #L2Segs: Number of L2segs\n")
+	fmt.Printf("LportId:  Lport Id                            HwLifId: Hw Lif ID\n")
+	fmt.Printf("UpIdx:    Uplink Idx used in L2seg\n")
+	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "Handle", "IfType", "UpPort", "UpNL2seg", "NL2Segs", "LportId", "HwLifId", "UpIdx")
+		"Id", "Handle", "IfType", "UpPort", "UpNL2seg", "#L2Segs", "LportId", "HwLifId", "UpIdx")
 	fmt.Println(hdrLine)
 }
 
