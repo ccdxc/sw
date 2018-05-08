@@ -21,7 +21,7 @@ service InterfaceApi {
     option(venice.naplesRestService) = {
         Object: "Interface",
         Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Interface}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc GetInterface (api.ObjectMeta) returns (Interface) {};

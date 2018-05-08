@@ -24,9 +24,9 @@ func addEndpointAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postEndpointHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putEndpointHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putEndpointHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteEndpointHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteEndpointHandler))
 
 }
 

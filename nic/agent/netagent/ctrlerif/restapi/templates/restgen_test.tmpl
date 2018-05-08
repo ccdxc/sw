@@ -345,7 +345,7 @@ import (
                                     },
                                     Spec:  updated{{title $crudObject}}Spec,
                                 }
-                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                 AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
                                 getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
@@ -614,7 +614,7 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                 AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
                                 getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/sgs/", &{{lower $crudObject}}List )
@@ -647,7 +647,7 @@ import (
                                         IPv4Address:    "10.1.1.0/24",
                                     },
                                 }
-                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                 AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
                                 getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/endpoints/", &{{lower $crudObject}}List )
@@ -706,7 +706,7 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/{{lower $crudObject}}s/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                 AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
                                 getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
@@ -742,7 +742,7 @@ import (
                                 },
                             }
                             postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
-                            err := netutils.HTTPDelete("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            err := netutils.HTTPDelete("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
                         {{else if strEq $crudObject "NatPool"}}
                                {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -933,7 +933,7 @@ import (
                                 },
                             }
                             postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &postData, &resp)
-                            err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/test{{title .}}{{title $crudObject}}", &postData, &resp)
+                            err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/default/test{{title .}}{{title $crudObject}}", &postData, &resp)
                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/sgs/", &{{lower $crudObject}}List )
                         {{else if strEq $crudObject "Endpoint"}}
                             {{lower .}}Data := netproto.Endpoint{
@@ -954,7 +954,7 @@ import (
                                 },
                             }
                             postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &{{lower .}}Data, &resp)
-                            err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/endpoints/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/endpoints/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
                          {{else if strEq $crudObject "Tenant"}}
                              {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -994,7 +994,7 @@ import (
                                                       },
                               }
                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &{{lower .}}Data, &resp)
-                              err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/interfaces/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                              err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/interfaces/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
                         {{end}}
                         AssertOk(t, postErr, "Error posting {{lower $crudObject}} to REST Server")

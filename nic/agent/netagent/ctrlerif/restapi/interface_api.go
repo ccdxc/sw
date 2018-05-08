@@ -24,9 +24,9 @@ func addInterfaceAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postInterfaceHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Interface}", httputils.MakeHTTPHandler(srv.deleteInterfaceHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteInterfaceHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Interface}", httputils.MakeHTTPHandler(srv.putInterfaceHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putInterfaceHandler))
 
 }
 

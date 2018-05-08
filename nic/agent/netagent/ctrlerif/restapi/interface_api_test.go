@@ -92,7 +92,7 @@ func TestInterfaceDelete(t *testing.T) {
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/interfaces/testDeleteInterface", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/interfaces/default/default/testDeleteInterface", &deleteData, &resp)
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/interfaces/", &interfaceList)
 
 	AssertOk(t, postErr, "Error posting interface to REST Server")
@@ -129,7 +129,7 @@ func TestInterfaceUpdate(t *testing.T) {
 		},
 		Spec: updatedInterfaceSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/interfaces/preCreatedInterface", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/interfaces/default/default/preCreatedInterface", &putData, &resp)
 	AssertOk(t, err, "Error updating interface to REST Server")
 
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/interfaces/", &interfaceList)

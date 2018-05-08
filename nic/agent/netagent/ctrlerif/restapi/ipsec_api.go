@@ -77,9 +77,9 @@ func addIPSecSADecryptAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postIPSecSADecryptHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putIPSecSADecryptHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putIPSecSADecryptHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteIPSecSADecryptHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteIPSecSADecryptHandler))
 
 }
 

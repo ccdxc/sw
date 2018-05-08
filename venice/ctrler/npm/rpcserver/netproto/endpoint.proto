@@ -18,7 +18,7 @@ service EndpointApi {
     option(venice.naplesRestService) = {
         Object: "Endpoint",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc CreateEndpoint (Endpoint) returns (Endpoint) {};

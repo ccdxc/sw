@@ -89,7 +89,7 @@ func TestNetworkUpdate(t *testing.T) {
 		},
 		Spec: updatedNetworkSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/networks/default/preCreatedNetwork", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/networks/default/default/preCreatedNetwork", &putData, &resp)
 	AssertOk(t, err, "Error updating network to REST Server")
 
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/networks/", &networkList)
@@ -123,7 +123,7 @@ func TestNetworkDelete(t *testing.T) {
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/networks/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/networks/default/testDeleteNetwork", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/networks/default/default/testDeleteNetwork", &deleteData, &resp)
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/networks/", &networkList)
 
 	AssertOk(t, postErr, "Error posting network to REST Server")

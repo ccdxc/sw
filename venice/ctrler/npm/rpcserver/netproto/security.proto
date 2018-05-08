@@ -17,7 +17,7 @@ service SecurityApi {
     option(venice.naplesRestService) = {
         Object: "SecurityGroup",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc GetSecurityGroup (api.ObjectMeta) returns (SecurityGroup) {};

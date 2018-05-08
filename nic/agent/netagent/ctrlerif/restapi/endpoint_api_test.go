@@ -99,7 +99,7 @@ func TestEndpointUpdate(t *testing.T) {
 			IPv4Address: "10.1.1.0/24",
 		},
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/preCreatedEndpoint", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/default/preCreatedEndpoint", &putData, &resp)
 	AssertOk(t, err, "Error updating endpoint to REST Server")
 
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/endpoints/", &endpointList)
@@ -139,7 +139,7 @@ func TestEndpointDelete(t *testing.T) {
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/endpoints/default/testDeleteEndpoint", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/endpoints/default/default/testDeleteEndpoint", &deleteData, &resp)
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/endpoints/", &endpointList)
 
 	AssertOk(t, postErr, "Error posting endpoint to REST Server")

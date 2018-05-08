@@ -24,9 +24,9 @@ func addNamespaceAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNamespaceHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}", httputils.MakeHTTPHandler(srv.deleteNamespaceHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNamespaceHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}", httputils.MakeHTTPHandler(srv.putNamespaceHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNamespaceHandler))
 
 }
 

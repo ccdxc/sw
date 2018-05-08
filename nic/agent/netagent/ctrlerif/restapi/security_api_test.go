@@ -101,7 +101,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 		},
 		Spec: updatedSecurityGroupSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/preCreatedSecurityGroup", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/default/preCreatedSecurityGroup", &putData, &resp)
 	AssertOk(t, err, "Error updating securitygroup to REST Server")
 
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/sgs/", &securitygroupList)
@@ -142,7 +142,7 @@ func TestSecurityGroupDelete(t *testing.T) {
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &postData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/testDeleteSecurityGroup", &postData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/default/testDeleteSecurityGroup", &postData, &resp)
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/sgs/", &securitygroupList)
 
 	AssertOk(t, postErr, "Error posting securitygroup to REST Server")

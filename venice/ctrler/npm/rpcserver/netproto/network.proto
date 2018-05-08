@@ -17,7 +17,7 @@ service NetworkApi {
     option(venice.naplesRestService) = {
         Object: "Network",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc GetNetwork (api.ObjectMeta) returns (Network) {};

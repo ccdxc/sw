@@ -50,7 +50,7 @@ service TenantApi {
     option(venice.naplesRestService) = {
         Object: "Tenant",
         Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Tenant}"
+        Pattern: "/{ObjectMeta.Name}"
     };
 
     rpc GetTenant (api.ObjectMeta) returns (Tenant) {};

@@ -24,9 +24,9 @@ func addTenantAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postTenantHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}", httputils.MakeHTTPHandler(srv.deleteTenantHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteTenantHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}", httputils.MakeHTTPHandler(srv.putTenantHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putTenantHandler))
 
 }
 

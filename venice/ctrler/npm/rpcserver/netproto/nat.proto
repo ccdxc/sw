@@ -121,7 +121,7 @@ service NatPolicyApi {
     option(venice.naplesRestService) = {
         Object: "NatPolicy",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc GetNatPolicy (api.ObjectMeta) returns (NatPolicy) {};
