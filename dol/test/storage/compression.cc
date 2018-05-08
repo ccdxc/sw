@@ -1599,9 +1599,10 @@ int _compress_clear_insert_header(comp_queue_push_t push_type,
 
   /* flat 64K buf in hbm */
   compress_cp_desc_template_fill(d, uncompressed_buf, compressed_buf,
-                                 status_buf, compressed_buf, kUncompressedDataSize);
+                                 status_buf, compressed_buf,
+                                 kUncompressedDataSize);
 
-  /* reset the bit not to insert the header */
+  /* reset the bit to not to insert the header */
   d.cmd_bits.insert_header = 0;
 
   if (run_cp_test(d, compressed_buf, status_buf, push_type, seq_comp_qid) < 0) {
@@ -1630,7 +1631,7 @@ int _decompress_clear_header_present(comp_queue_push_t push_type,
 
   /* flat 64K buf in hbm */
   decompress_cp_desc_template_fill(d, compressed_buf, uncompressed_buf,
-                                   status_buf, compressed_data_size,
+                                   status_buf, last_cp_output_data_len,
                                    kUncompressedDataSize);
 
   /* reset the bit to indicate header is not present */
