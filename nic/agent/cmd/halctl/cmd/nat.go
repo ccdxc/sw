@@ -25,35 +25,35 @@ var (
 
 var natShowCmd = &cobra.Command{
 	Use:   "nat",
-	Short: "nat",
-	Long:  "shows nat information",
+	Short: "show NAT information",
+	Long:  "show NAT object information",
 }
 
 var natpoolShowCmd = &cobra.Command{
 	Use:   "pool",
-	Short: "pool",
-	Long:  "shows nat pool",
+	Short: "show NAT pool objects",
+	Long:  "show NAT pool object information",
 	Run:   natpoolShowCmdHandler,
 }
 
 var natpoolDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows nat pool detail",
+	Short: "show detailed NAT pool information",
+	Long:  "show detailed information about NAT pool objects",
 	Run:   natpoolDetailShowCmdHandler,
 }
 
 var natmappingShowCmd = &cobra.Command{
 	Use:   "mapping",
-	Short: "mapping",
-	Long:  "shows nat mapping",
+	Short: "show NAT mapping objects",
+	Long:  "show NAT mapping object information",
 	Run:   natmappingShowCmdHandler,
 }
 
 var natmappingDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows nat mapping detail",
+	Short: "show detailed NAT mapping information",
+	Long:  "show detailed information about NAT mapping objects",
 	Run:   natmappingDetailShowCmdHandler,
 }
 

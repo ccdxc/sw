@@ -28,15 +28,15 @@ var (
 
 var sessionShowCmd = &cobra.Command{
 	Use:   "session",
-	Short: "session",
-	Long:  "shows session",
+	Short: "show session information",
+	Long:  "show session object information",
 	Run:   sessionShowCmdHandler,
 }
 
 var sessionDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows session detail",
+	Short: "show detailed session information",
+	Long:  "show detailed information about session objects",
 	Run:   sessionDetailShowCmdHandler,
 }
 

@@ -20,15 +20,15 @@ import (
 
 var nwShowCmd = &cobra.Command{
 	Use:   "network",
-	Short: "nw",
-	Long:  "shows network",
+	Short: "show network objects",
+	Long:  "show network object information",
 	Run:   nwShowCmdHandler,
 }
 
 var nwDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows network detail",
+	Short: "show detailed network information",
+	Long:  "show detailed information about network objects",
 	Run:   nwDetailShowCmdHandler,
 }
 

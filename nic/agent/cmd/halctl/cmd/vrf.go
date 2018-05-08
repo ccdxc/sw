@@ -28,8 +28,8 @@ var (
 
 var vrfShowCmd = &cobra.Command{
 	Use:   "vrf",
-	Short: "vrf",
-	Long:  "shows vrf",
+	Short: "show VRF information",
+	Long:  "show VRF object information",
 	Run:   vrfShowCmdHandler,
 }
 
@@ -42,8 +42,8 @@ var vrfPdShowCmd = &cobra.Command{
 
 var vrfDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows vrf detail",
+	Short: "show detailed vrf information",
+	Long:  "show detailed information about VRF objects",
 	Run:   vrfDetailShowCmdHandler,
 }
 

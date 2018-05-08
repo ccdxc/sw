@@ -28,8 +28,8 @@ var (
 
 var l2segShowCmd = &cobra.Command{
 	Use:   "l2seg",
-	Short: "l2seg",
-	Long:  "shows l2seg",
+	Short: "show L2 segment objects",
+	Long:  "show L2 segment object information",
 	Run:   l2segShowCmdHandler,
 }
 
@@ -42,8 +42,8 @@ var l2segPdShowCmd = &cobra.Command{
 
 var l2segDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows l2seg detail",
+	Short: "show detailed L2 segment information",
+	Long:  "show detailed information about L2 segments",
 	Run:   l2segDetailShowCmdHandler,
 }
 

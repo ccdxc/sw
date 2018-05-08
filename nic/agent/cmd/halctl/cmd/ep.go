@@ -19,9 +19,9 @@ import (
 )
 
 var epShowCmd = &cobra.Command{
-	Use:   "ep",
-	Short: "ep",
-	Long:  "shows ep",
+	Use:   "endpoint",
+	Short: "show endpoint information",
+	Long:  "show endpoint object information",
 	Run:   epShowCmdHandler,
 }
 
@@ -34,8 +34,8 @@ var epPdShowCmd = &cobra.Command{
 
 var epDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows ep detail",
+	Short: "show detailed endpoint information",
+	Long:  "show detailed information about endpoint objects",
 	Run:   epDetailShowCmdHandler,
 }
 

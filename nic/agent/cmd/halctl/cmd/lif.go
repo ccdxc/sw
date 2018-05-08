@@ -25,15 +25,15 @@ var (
 
 var lifShowCmd = &cobra.Command{
 	Use:   "lif",
-	Short: "lif",
-	Long:  "shows lif",
+	Short: "show logical interface (lif) information",
+	Long:  "shows logical interface (lif) object information",
 	Run:   lifShowCmdHandler,
 }
 
 var lifDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows lif detail",
+	Short: "show detailed logical interface (lif) information",
+	Long:  "shows detailed information about logical interface (lif) objects",
 	Run:   lifDetailShowCmdHandler,
 }
 

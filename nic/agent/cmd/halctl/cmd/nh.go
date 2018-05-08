@@ -25,15 +25,15 @@ var (
 
 var nhShowCmd = &cobra.Command{
 	Use:   "nexthop",
-	Short: "nh",
-	Long:  "shows nexthop",
+	Short: "show nexthop objects",
+	Long:  "show nexthop object information",
 	Run:   nhShowCmdHandler,
 }
 
 var nhDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows nexthop detail",
+	Short: "show detailed nexthop information",
+	Long:  "shows detailed information about nexthop objects",
 	Run:   nhDetailShowCmdHandler,
 }
 

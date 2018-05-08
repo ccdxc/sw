@@ -20,15 +20,15 @@ import (
 
 var routeShowCmd = &cobra.Command{
 	Use:   "route",
-	Short: "route",
-	Long:  "shows route",
+	Short: "show route objects",
+	Long:  "show route object infromation",
 	Run:   routeShowCmdHandler,
 }
 
 var routeDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows route detail",
+	Short: "show detailed route information",
+	Long:  "shows detailed information about route objects",
 	Run:   routeDetailShowCmdHandler,
 }
 
