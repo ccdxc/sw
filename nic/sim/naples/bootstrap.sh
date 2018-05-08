@@ -33,7 +33,7 @@ function setup_intf1()
 
             #set ip/mac address
             ip link set dev $subif address 00:22:22:22:22:23
-            ip addr add dev $subif 10.100.255.255/16
+            ip addr add dev $subif 10.0.2.1/32
 
             #interface route for NAT gateway IP
             ip route add $NAT_GWIP/32 dev $subif

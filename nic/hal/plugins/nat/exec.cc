@@ -66,9 +66,9 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         // TODO  port nat not supported yet
         // if (addr_entry->tgt_port) {
         //     nat_info->nat_dport = ctx.key().sport;
-        //     if (ctx.key().proto == types::IPPROTO_TCP) {
+        //     if (ctx.key().proto == IPPROTO_TCP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, tcp, sport, addr_entry->tgt_port);
-        //     } else {
+        //     } else (ctx.key().proto == IPPROTO_UDP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, udp, sport, addr_entry->tgt_port);
         //     }
         // }
@@ -107,9 +107,9 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         // TODO port nat not supported yet
         // if (addr_entry->tgt_port) {
         //     nat_info->nat_sport = ctx.key().dport;
-        //     if (ctx.key().proto == types::IPPROTO_TCP) {
+        //     if (ctx.key().proto == IPPROTO_TCP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, tcp, dport, addr_entry->tgt_port);
-        //     } else {
+        //     } else if (ctx.key().proto == IPPROTO_UDP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, udp, dport, addr_entry->tgt_port);
         //     }
         // }
@@ -130,30 +130,32 @@ update_rflow_from_nat_info (fte::ctx_t& ctx)
 
     // snat
     if (!ip_addr_is_zero(&nat_info->nat_sip)) {
-        if (nat_info->nat_sip.af == types::IP_AF_INET) {
+        if (nat_info->nat_sip.af == IP_AF_IPV4) {
             if (nat_info->nat_svrf) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, svrf_id, nat_info->nat_svrf);
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, nat_info->nat_svrf);
             }
             HEADER_SET_FLD(flowupd.header_rewrite, ipv4, sip, nat_info->nat_sip.addr.v4_addr);
         } else {
             if (nat_info->nat_svrf) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv6, svrf_id, nat_info->nat_svrf);
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, nat_info->nat_svrf);
             }
             HEADER_SET_FLD(flowupd.header_rewrite, ipv6, sip, nat_info->nat_sip.addr.v6_addr);
         }
     }
 
     if (nat_info->nat_sport) {
-        if (ctx.key().proto == types::IPPROTO_TCP) {
+        if (ctx.key().proto == IPPROTO_TCP) {
             HEADER_SET_FLD(flowupd.header_rewrite, tcp, sport, nat_info->nat_sport);
-        } else {
+        } else if (ctx.key().proto == IPPROTO_UDP) {
             HEADER_SET_FLD(flowupd.header_rewrite, udp, sport, nat_info->nat_sport);
         }
     }
 
     // dnat
     if (!ip_addr_is_zero(&nat_info->nat_dip)) {
-        if (nat_info->nat_dip.af == types::IP_AF_INET) {
+        if (nat_info->nat_dip.af == IP_AF_IPV4) {
             if (nat_info->nat_dvrf) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, nat_info->nat_dvrf);
             }
@@ -167,14 +169,14 @@ update_rflow_from_nat_info (fte::ctx_t& ctx)
     }
 
     if (nat_info->nat_dport) {
-        if (ctx.key().proto == types::IPPROTO_TCP) {
+        if (ctx.key().proto == IPPROTO_TCP) {
             HEADER_SET_FLD(flowupd.header_rewrite, tcp, dport, nat_info->nat_dport);
-        } else {
+        } else if (ctx.key().proto == IPPROTO_UDP) {
             HEADER_SET_FLD(flowupd.header_rewrite, udp, dport, nat_info->nat_dport);
         }
     }
 
-    return HAL_RET_OK;
+    return ctx.update_flow(flowupd);
 }
 
 /*

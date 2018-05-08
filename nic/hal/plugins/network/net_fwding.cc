@@ -30,10 +30,10 @@ update_rewrite_info(fte::ctx_t&ctx)
         smac = hal::ep_get_rmac(ctx.dep(), ctx.dl2seg());
 
         flowupd.header_rewrite.flags.dec_ttl = true;
-        if (*dmac) {
+        if (MAC_TO_UINT64(*dmac) != 0) {
             HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
         }
-        if (*smac) {
+        if (MAC_TO_UINT64(*smac) != 0) {
             HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
         }
     }

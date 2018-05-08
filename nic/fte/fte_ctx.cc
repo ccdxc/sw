@@ -675,7 +675,7 @@ ctx_t::update_flow_table()
 hal_ret_t
 ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& header)
 {
-    ipvx_addr_t dip;
+    ipvx_addr_t dip = {};
 
     if (header.valid_flds.dvrf_id) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
