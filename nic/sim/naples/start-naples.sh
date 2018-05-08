@@ -14,6 +14,9 @@ ulimit -c unlimited
 
 # create directory for logs/traces
 mkdir -p $LOG_DIR
+if [ -f /tmp/naples-netagent.db ]; then
+    rm -f /tmp/naples-netagent.db
+fi
 exec > $LOG_DIR/start-naples.log
 exec 2>&1
 set -x

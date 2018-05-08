@@ -236,3 +236,8 @@ NOTE:
         }
       ]
     }
+
+3. There is no session aging in this release as the this is CAPRI s/w model, so
+   in case flow keys are reused across sessions, data path state (e.g., NAT
+   bindings etc.) will be reused in the data plane as well. If this is not
+   intended, NAPLES container should be restarted.
