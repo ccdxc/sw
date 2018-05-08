@@ -12,7 +12,7 @@ INTF2=pen-intf2
 #naples host interface
 HOST0=pen-host0
 
-LOGDIR=/var/naples/logs
+LOGDIR=/var/run/naples/logs
 
 ########################################################################
 # Setup intf1 (redirect all the traffic detined to NAT_SUBNET via intf1)
@@ -32,14 +32,14 @@ function setup_intf1()
             ip link set up dev $subif
 
             #set ip/mac address
-            ip link set dev $subif address 00:22:22:22:22:23
+            ip link set dev $subif address 00:22:0a:00:02:01
             ip addr add dev $subif 10.0.2.1/32
 
             #interface route for NAT gateway IP
             ip route add $NAT_GWIP/32 dev $subif
             
             #static ARP for NAT gateway IP
-            ip neigh add 10.101.0.1 lladdr 00:0c:ba:ba:ba:ba dev $subif
+            ip neigh add 10.101.0.1 lladdr 00:22:0a:65:00:01 dev $subif
             
             #static route for NAT subnet
             ip route add $NAT_SUBNET via $NAT_GWIP

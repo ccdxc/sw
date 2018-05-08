@@ -1,20 +1,17 @@
 {
-	"variables": [],
 	"info": {
+		"_postman_id": "cefa854d-7291-44bc-a02b-e3df81d4dda9",
 		"name": "Salesforce",
-		"_postman_id": "c62fa4a0-9f1b-5143-d920-7ffe94430b3a",
-		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
 	"item": [
 		{
 			"name": "node1",
-			"description": "",
+			"description": null,
 			"item": [
 				{
 					"name": "tenant/default",
 					"request": {
-						"url": "{{node1}}/api/tenants/",
 						"method": "POST",
 						"header": [
 							{
@@ -26,14 +23,13 @@
 							"mode": "raw",
 							"raw": "{\"kind\": \"Tenant\", \"meta\":{\"Name\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/tenants/"
 					},
 					"response": []
 				},
 				{
 					"name": "namespace/kg1",
 					"request": {
-						"url": "{{node1}}/api/namespaces/",
 						"method": "POST",
 						"header": [
 							{
@@ -45,14 +41,13 @@
 							"mode": "raw",
 							"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/namespaces/"
 					},
 					"response": []
 				},
 				{
 					"name": "namespace/kg2",
 					"request": {
-						"url": "{{node1}}/api/namespaces/",
 						"method": "POST",
 						"header": [
 							{
@@ -64,14 +59,13 @@
 							"mode": "raw",
 							"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/namespaces/"
 					},
 					"response": []
 				},
 				{
 					"name": "namespace/public",
 					"request": {
-						"url": "{{node1}}/api/namespaces/",
 						"method": "POST",
 						"header": [
 							{
@@ -83,74 +77,67 @@
 							"mode": "raw",
 							"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/namespaces/"
 					},
 					"response": []
 				},
 				{
 					"name": "network/kg1",
 					"request": {
-						"url": "{{node1}}/api/networks/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"IPv4Subnet\": \"10.1.1.0/24\", \"IPv4Gateway\":\"10.1.1.1\", \"VlanID\":100}}"
+							"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"IPv4Subnet\": \"10.0.0.0/16\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":100}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/networks/"
 					},
 					"response": []
 				},
 				{
-					"name": "network/kg2-temp",
+					"name": "network/kg2",
 					"request": {
-						"url": "{{node1}}/api/networks/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"IPv4Subnet\": \"10.0.2.0/24\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":300}}"
+							"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"IPv4Subnet\": \"10.0.0.0/16\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":300}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/networks/"
 					},
 					"response": []
 				},
 				{
 					"name": "network/public",
 					"request": {
-						"url": "{{node1}}/api/networks/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"IPv4Subnet\": \"20.1.1.0/24\", \"IPv4Gateway\":\"20.1.1.1\", \"VlanID\":200}}"
+							"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"IPv4Subnet\": \"20.0.0.0/16\", \"IPv4Gateway\":\"20.1.1.1\", \"VlanID\":200}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/networks/"
 					},
 					"response": []
 				},
 				{
 					"name": "endpoint/kg1-router",
 					"request": {
-						"url": "{{node1}}/api/endpoints/",
 						"method": "POST",
 						"header": [
 							{
@@ -160,56 +147,33 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg1-router\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"},\"spec\":{\"NetworkName\":\"kg1\",\"Interface\":\"default-uplink-0\"},\"status\":{\"IPv4Address\":\"10.1.1.1/24\",\"MacAddress\":\"00:22:22:22:22:22\",\"NodeUUID\":\"GWUUID\"}}"
+							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg1-router\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"},\"spec\":{\"NetworkName\":\"kg1\",\"Interface\":\"default-uplink-0\"},\"status\":{\"IPv4Address\":\"10.0.2.1/16\",\"MacAddress\":\"00:22:0A:00:02:01\",\"NodeUUID\":\"GWUUID\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/endpoints/"
 					},
 					"response": []
 				},
 				{
-					"name": "endpoint/kg1-router-temp",
+					"name": "endpoint/kg2-router",
 					"request": {
-						"url": "{{node1}}/api/endpoints/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg1-router-temp\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"},\"spec\":{\"NetworkName\":\"kg1\",\"Interface\":\"default-uplink-0\"},\"status\":{\"IPv4Address\":\"10.0.2.1/24\",\"MacAddress\":\"00:22:22:22:22:23\",\"NodeUUID\":\"GWUUID\"}}"
+							"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg2-router\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"},\"spec\":{\"NetworkName\":\"kg2\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"10.0.2.1/16\",\"MacAddress\":\"00:22:0A:00:02:01\",\"NodeUUID\":\"GWUUID\"}}"
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "endpoint/kg2-router-temp",
-					"request": {
-						"url": "{{node1}}/api/endpoints/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg2-router\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"},\"spec\":{\"NetworkName\":\"kg2\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"10.0.2.1/24\",\"MacAddress\":\"00:22:22:22:22:23\",\"NodeUUID\":\"GWUUID\"}}"
-						},
-						"description": ""
+						"url": "{{node1}}/api/endpoints/"
 					},
 					"response": []
 				},
 				{
 					"name": "endpoint/public-router",
 					"request": {
-						"url": "{{node1}}/api/endpoints/",
 						"method": "POST",
 						"header": [
 							{
@@ -219,16 +183,15 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"},\"spec\":{\"NetworkName\":\"public\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"20.1.1.1/24\",\"MacAddress\":\"00:33:33:33:33:33\",\"NodeUUID\":\"GWUUID\"}}"
+							"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"},\"spec\":{\"NetworkName\":\"public\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"20.1.1.1/16\",\"MacAddress\":\"00:22:14:01:01:01\",\"NodeUUID\":\"GWUUID\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/endpoints/"
 					},
 					"response": []
 				},
 				{
 					"name": "route/kg1",
 					"request": {
-						"url": "{{node1}}/api/routes/",
 						"method": "POST",
 						"header": [
 							{
@@ -238,75 +201,15 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\": \"10.1.1.0/24\", \"interface\":\"default-uplink-0\", \"gateway-ip\":\"10.1.1.1\"}}"
+							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"interface\":\"default-uplink-0\", \"gateway-ip\":\"10.0.2.1\"}}"
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "route/kg1-temp",
-					"request": {
-						"url": "{{node1}}/api/routes/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1-temp\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\": \"10.0.2.0/24\", \"interface\":\"default-uplink-0\", \"gateway-ip\":\"10.0.2.1\"}}"
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "route/public",
-					"request": {
-						"url": "{{node1}}/api/routes/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.1.1.0/24\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.1\"}}"
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "route/kg2-tmp",
-					"request": {
-						"url": "{{node1}}/api/routes/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2-tmp\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"ip-prefix\":\"10.0.2.0/24\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"10.0.2.1\"}}"
-						},
-						"description": ""
+						"url": "{{node1}}/api/routes/"
 					},
 					"response": []
 				},
 				{
 					"name": "route/kg2",
 					"request": {
-						"url": "{{node1}}/api/routes/",
 						"method": "POST",
 						"header": [
 							{
@@ -316,16 +219,33 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"IPPrefix\": \"0.0.0.0/0\", \"Interface\":\"kg2-IPSecTunnel\"}}"
+							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"interface\":\"default-uplink-1\", \"gateway-ip\":\"10.0.2.1\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/routes/"
+					},
+					"response": []
+				},
+				{
+					"name": "route/public",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/16\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.1\"}}"
+						},
+						"url": "{{node1}}/api/routes/"
 					},
 					"response": []
 				},
 				{
 					"name": "natpool",
 					"request": {
-						"url": "{{node1}}/api/natpools/",
 						"method": "POST",
 						"header": [
 							{
@@ -337,47 +257,25 @@
 							"mode": "raw",
 							"raw": "{\"kind\":\"NatPool\",\"meta\":{\"name\":\"pool-1\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"ip-range\":\"10.100.0.0-10.100.255.255\"}}"
 						},
-						"description": ""
+						"url": "{{node1}}/api/natpools/"
 					},
 					"response": []
 				},
 				{
 					"name": "natbinding/svc1",
 					"request": {
-						"url": "{{node1}}/api/natbindings/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"NatBinding\",\"meta\":{\"Name\":\"svc1\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"nat-pool\":\"kg1/pool-1\", \"ip-address\":\"10.0.2.16\"}}"
+							"raw": "{\"Kind\":\"NatBinding\",\"meta\":{\"Name\":\"svc1\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"nat-pool\":\"kg1/pool-1\", \"ip-address\":\"10.0.2.15\"}}"
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "nat-policy",
-					"request": {
-						"url": "{{node1}}/api/natpolicies/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"kind\": \"NatPolicy\",\n    \"meta\": {\n        \"name\": \"kg1-nat-policy\",\n        \"tenant\": \"default\",\n        \"namespace\": \"kg2\"\n    },\n    \"spec\": {\n        \"rules\": [{\n            \"nat-pool\": \"kg1/pool-1\",\n            \"action\": \"SNAT\"\n        }]\n    }\n}"
-						},
-						"description": ""
+						"url": "{{node1}}/api/natbindings/"
 					},
 					"response": []
 				}
@@ -385,12 +283,11 @@
 		},
 		{
 			"name": "node2",
-			"description": "",
+			"description": null,
 			"item": [
 				{
 					"name": "tenant/default",
 					"request": {
-						"url": "{{node2}}/api/tenants/",
 						"method": "POST",
 						"header": [
 							{
@@ -402,14 +299,13 @@
 							"mode": "raw",
 							"raw": "{\"kind\": \"Tenant\", \"meta\":{\"Name\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/tenants/"
 					},
 					"response": []
 				},
 				{
 					"name": "namespace/kg1",
 					"request": {
-						"url": "{{node2}}/api/namespaces/",
 						"method": "POST",
 						"header": [
 							{
@@ -421,14 +317,13 @@
 							"mode": "raw",
 							"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/namespaces/"
 					},
 					"response": []
 				},
 				{
 					"name": "namespace/kg2",
 					"request": {
-						"url": "{{node2}}/api/namespaces/",
 						"method": "POST",
 						"header": [
 							{
@@ -440,14 +335,13 @@
 							"mode": "raw",
 							"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/namespaces/"
 					},
 					"response": []
 				},
 				{
 					"name": "namespace/public",
 					"request": {
-						"url": "{{node2}}/api/namespaces/",
 						"method": "POST",
 						"header": [
 							{
@@ -459,74 +353,85 @@
 							"mode": "raw",
 							"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/namespaces/"
+					},
+					"response": []
+				},
+				{
+					"name": "network/kg1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"IPv4Subnet\": \"10.0.0.0/16\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":300}}"
+						},
+						"url": "{{node2}}/api/networks/"
 					},
 					"response": []
 				},
 				{
 					"name": "network/kg2",
 					"request": {
-						"url": "{{node2}}/api/networks/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"IPv4Subnet\": \"10.1.1.0/24\", \"IPv4Gateway\":\"10.1.1.1\", \"VlanID\":100}}"
+							"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"IPv4Subnet\": \"10.0.0.0/16\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":100}}"
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "network/kg1-temp",
-					"request": {
-						"url": "{{node2}}/api/networks/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg1-temp\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"IPv4Subnet\": \"10.0.2.0/24\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":300}}"
-						},
-						"description": ""
+						"url": "{{node2}}/api/networks/"
 					},
 					"response": []
 				},
 				{
 					"name": "network/public",
 					"request": {
-						"url": "{{node2}}/api/networks/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"IPv4Subnet\": \"20.1.1.0/24\", \"IPv4Gateway\":\"20.1.1.2\", \"VlanID\":200}}"
+							"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"IPv4Subnet\": \"20.0.0.0/16\", \"IPv4Gateway\":\"20.1.1.1\", \"VlanID\":200}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/networks/"
+					},
+					"response": []
+				},
+				{
+					"name": "endpoint/kg1-router",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg1-router\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"},\"spec\":{\"NetworkName\":\"kg1\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"10.0.2.1/16\",\"MacAddress\":\"00:22:0A:00:02:01\",\"NodeUUID\":\"GWUUID\"}}"
+						},
+						"url": "{{node2}}/api/endpoints/"
 					},
 					"response": []
 				},
 				{
 					"name": "endpoint/kg2-router",
 					"request": {
-						"url": "{{node2}}/api/endpoints/",
 						"method": "POST",
 						"header": [
 							{
@@ -536,56 +441,15 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg2-router\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"},\"spec\":{\"NetworkName\":\"kg2\",\"Interface\":\"default-uplink-0\"},\"status\":{\"IPv4Address\":\"10.1.1.1/24\",\"MacAddress\":\"00:22:22:22:22:22\",\"NodeUUID\":\"GWUUID\"}}"
+							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg2-router\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"},\"spec\":{\"NetworkName\":\"kg2\",\"Interface\":\"default-uplink-0\"},\"status\":{\"IPv4Address\":\"10.0.2.1/16\",\"MacAddress\":\"00:22:0A:00:02:01\",\"NodeUUID\":\"GWUUID\"}}"
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "endpoint/kg2-router-temp",
-					"request": {
-						"url": "{{node2}}/api/endpoints/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg2-router-temp\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"},\"spec\":{\"NetworkName\":\"kg2\",\"Interface\":\"default-uplink-0\"},\"status\":{\"IPv4Address\":\"10.0.2.1/24\",\"MacAddress\":\"00:22:22:22:22:23\",\"NodeUUID\":\"GWUUID\"}}"
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "endpoint/kg1-router-temp",
-					"request": {
-						"url": "{{node2}}/api/endpoints/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg1-router-temp\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"},\"spec\":{\"NetworkName\":\"kg1-temp\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"10.0.2.1/24\",\"MacAddress\":\"00:22:22:22:22:23\",\"NodeUUID\":\"GWUUID\"}}"
-						},
-						"description": ""
+						"url": "{{node2}}/api/endpoints/"
 					},
 					"response": []
 				},
 				{
 					"name": "endpoint/public-router",
 					"request": {
-						"url": "{{node2}}/api/endpoints/",
 						"method": "POST",
 						"header": [
 							{
@@ -595,16 +459,15 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"},\"spec\":{\"NetworkName\":\"public\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"20.1.1.2/24\",\"MacAddress\":\"00:33:33:33:33:33\",\"NodeUUID\":\"GWUUID\"}}"
+							"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"},\"spec\":{\"NetworkName\":\"public\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"20.1.1.1/16\",\"MacAddress\":\"00:22:14:01:01:01\",\"NodeUUID\":\"GWUUID\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/endpoints/"
 					},
 					"response": []
 				},
 				{
 					"name": "route/kg2",
 					"request": {
-						"url": "{{node2}}/api/routes/",
 						"method": "POST",
 						"header": [
 							{
@@ -614,16 +477,15 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"ip-prefix\": \"10.1.1.0/24\", \"interface\":\"default-uplink-0\", \"gateway-ip\":\"10.1.1.1\"}}"
+							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"interface\":\"default-uplink-0\", \"gateway-ip\":\"10.0.2.1\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/routes/"
 					},
 					"response": []
 				},
 				{
 					"name": "route/kg1",
 					"request": {
-						"url": "{{node2}}/api/routes/",
 						"method": "POST",
 						"header": [
 							{
@@ -633,16 +495,15 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"IPPrefix\": \"0.0.0.0/0\", \"Interface\":\"kg1-IPSecTunnel\"}}"
+							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"Interface\":\"default-uplink-1\", \"gateway-ip\":\"10.0.2.1\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/routes/"
 					},
 					"response": []
 				},
 				{
 					"name": "route/public",
 					"request": {
-						"url": "{{node2}}/api/routes/",
 						"method": "POST",
 						"header": [
 							{
@@ -652,109 +513,45 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.1.1.0/24\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.2\"}}"
+							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/16\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.1\"}}"
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "route/kg1-temp",
-					"request": {
-						"url": "{{node2}}/api/routes/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1-temp\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\":\"10.0.2.0/24\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"10.0.2.1\"}}"
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "route/kg2-temp",
-					"request": {
-						"url": "{{node2}}/api/routes/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2-temp\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"ip-prefix\":\"10.0.2.0/24\", \"interface\":\"default-uplink-0\",\"gateway-ip\":\"10.0.2.1\"}}"
-						},
-						"description": ""
+						"url": "{{node2}}/api/routes/"
 					},
 					"response": []
 				},
 				{
 					"name": "natpool",
 					"request": {
-						"url": "{{node2}}/api/natpools/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\"kind\":\"NatPool\",\"meta\":{\"name\":\"pool-1\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"ip-range\":\"10.100.0.0-10.100.255.255\"}}"
 						},
-						"description": ""
+						"url": "{{node2}}/api/natpools/"
 					},
 					"response": []
 				},
 				{
-					"name": "natbinding/svc1",
+					"name": "natbinding/client",
 					"request": {
-						"url": "{{node2}}/api/natbindings/",
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"Kind\":\"NatBinding\",\"meta\":{\"Name\":\"svc1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"nat-pool\":\"kg2/pool-1\", \"ip-address\":\"10.0.2.15\"}}"
+							"raw": "{\"Kind\":\"NatBinding\",\"meta\":{\"Name\":\"client\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"nat-pool\":\"kg2/pool-1\", \"ip-address\":\"10.0.2.1\"}}"
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "nat-policy",
-					"request": {
-						"url": "{{node2}}/api/natpolicies/",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"kind\": \"NatPolicy\",\n    \"meta\": {\n        \"name\": \"kg2-nat-policy\",\n        \"tenant\": \"default\",\n        \"namespace\": \"kg1\"\n    },\n    \"spec\": {\n        \"rules\": [{\n            \"nat-pool\": \"kg2/pool-1\",\n            \"action\": \"SNAT\"\n        }]\n    }\n}"
-						},
-						"description": ""
+						"url": "{{node2}}/api/natbindings/"
 					},
 					"response": []
 				}
