@@ -2,7 +2,6 @@
 #include "pnso_sim.h"
 
 /* Copy a buffer list into a flat buffer.
- * Assumes the flat buffer has been initialized with available length, or 0 for PNSO_MAX_BUFFER_LEN.
  * Return count of bytes copied.
  */
 uint32_t pnso_memcpy_list_to_flat_buf(struct pnso_flat_buffer *dst,
@@ -10,8 +9,7 @@ uint32_t pnso_memcpy_list_to_flat_buf(struct pnso_flat_buffer *dst,
 				      *src_list)
 {
 	const struct pnso_flat_buffer *src;
-	uint32_t cpy_len, max_len =
-	    dst->len ? dst->len : PNSO_MAX_BUFFER_LEN;
+	uint32_t cpy_len, max_len = dst->len;
 	size_t buf_i;
 
 	dst->len = 0;
@@ -45,7 +43,7 @@ uint32_t pnso_memcpy_flat_buf_to_list(struct pnso_buffer_list * dst_list,
 	for (buf_i = 0; buf_i < dst_list->count && total < src->len;
 	     buf_i++) {
 		dst = &dst_list->buffers[buf_i];
-		cpy_len = dst->len ? dst->len : PNSO_DEFAULT_BLOCK_SZ;
+		cpy_len = dst->len;
 		if (cpy_len > src->len - total) {
 			cpy_len = src->len - total;
 		}

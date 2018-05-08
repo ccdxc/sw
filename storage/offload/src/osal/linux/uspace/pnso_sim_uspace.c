@@ -1,14 +1,11 @@
 #include <pthread.h>
 #include <stdatomic.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
 
-#include "../../../sim/pnso_sim.h"
-#include "../../pnso_sim_osal.h"
-
-#ifndef PNSO_ASSERT
-extern void abort();
-#define PNSO_ASSERT(x)  if (!(x)) { abort(); }
-#endif
+#include "pnso_sim.h"
+#include "pnso_sim_osal.h"
 
 /* using exactly 64k simplifies wrapping case */
 struct {
@@ -41,21 +38,21 @@ static pnso_sim_req_id_t req_free_q_dequeue()
  * - all enqueue operations for a given session happen on a single thread
  * - all dequeue operations for a given session happen on a single thread
  */
-#define PNSO_SQ_DEPTH 16
 struct pnso_sim_q {
 	pthread_t thread;
+	uint16_t depth;
 	uint16_t head;
 	uint16_t tail;
 	volatile atomic_ulong num_processed;
 	volatile atomic_ushort num_entries;
 	volatile atomic_ushort num_batches;
 	volatile bool stop_worker;
-	pnso_sim_req_id_t ids[PNSO_SQ_DEPTH];
+	pnso_sim_req_id_t ids[0];
 };
 
-static const uint32_t g_req_entries_count = PNSO_MAX_SESSIONS * PNSO_SQ_DEPTH * 2;	/* TODO */
-static struct pnso_sim_q_request g_req_entries[PNSO_MAX_SESSIONS *
-					       PNSO_SQ_DEPTH * 2];
+static const uint32_t g_req_entries_count = PNSO_SIM_MAX_SESSIONS * PNSO_SIM_DEFAULT_SQ_DEPTH * 2;	/* TODO */
+
+static struct pnso_sim_q_request g_req_entries[PNSO_SIM_MAX_SESSIONS * PNSO_SIM_DEFAULT_SQ_DEPTH * 2];
 
 static inline struct pnso_sim_q_request *req_id_to_entry(pnso_sim_req_id_t
 							 id)
@@ -73,26 +70,43 @@ static inline pnso_sim_req_id_t req_entry_to_id(struct pnso_sim_q_request
 				    1);
 }
 
-static struct pnso_sim_q g_req_queues[PNSO_MAX_SESSIONS];
+/* Thread local storage */
+static _Thread_local struct pnso_sim_worker_ctx t_worker_ctx = { NULL, NULL };
 
-static inline bool is_q_stopped(uint32_t sess_id)
+struct pnso_sim_worker_ctx *pnso_sim_get_worker_ctx()
 {
-	return g_req_queues[sess_id].stop_worker;
+	return &t_worker_ctx;
 }
 
-void pnso_sim_init_queues()
+static inline bool is_q_stopped(struct pnso_sim_q *q)
 {
-	struct pnso_sim_q *q;
-	size_t i;
+	return q->stop_worker;
+}
 
-	/* initialize submission q */
-	for (i = 0; i < PNSO_MAX_SESSIONS; i++) {
-		q = &g_req_queues[i];
-		memset(q, 0, sizeof(*q));
-		atomic_init(&q->num_processed, 0);
-		atomic_init(&q->num_entries, 0);
-		atomic_init(&q->num_batches, 0);
+bool pnso_sim_is_worker_running()
+{
+	if (!t_worker_ctx.req_q) {
+		return false;
 	}
+
+	return !t_worker_ctx.req_q->stop_worker;
+}
+
+/* OSAL wrapper for malloc/free */
+void *pnso_sim_alloc(size_t sz)
+{
+	return malloc(sz);
+}
+
+void pnso_sim_free(void *ptr)
+{
+	free(ptr);
+}
+
+/* Global initialization */
+void pnso_sim_init_req_pool()
+{
+	size_t i;
 
 	/* initialize free q */
 	for (i = 0; i < 64 * 1024; i++) {
@@ -106,32 +120,75 @@ void pnso_sim_init_queues()
 	atomic_init(&g_req_free_q.tail, 0);
 }
 
-//void pnso_sim_sq_enqueue(uint32_t sess_id,
+/* Per-thread initialization, called outside worker. */
+pnso_error_t pnso_sim_init_req_queue(uint16_t depth)
+{
+	struct pnso_sim_q *q;
+	uint32_t qsize = sizeof(struct pnso_sim_q) + ((uint32_t) depth * sizeof(pnso_sim_req_id_t));
 
-pnso_error_t pnso_sim_sq_enqueue(uint32_t sess_id,
-				 enum pnso_batch_request batch_req,
+	if (depth < 1) {
+		return EINVAL;
+	}
+
+	if (t_worker_ctx.req_q != NULL) {
+		return EEXIST;
+	}
+
+	/* allocate queue */
+	q = pnso_sim_alloc(qsize);
+	if (!q) {
+		return ENOMEM;
+	}
+
+	/* initialize */
+	memset(q, 0, sizeof(*q));
+	q->depth = depth;
+	atomic_init(&q->num_processed, 0);
+	atomic_init(&q->num_entries, 0);
+	atomic_init(&q->num_batches, 0);
+
+	t_worker_ctx.req_q = q;
+
+	return PNSO_OK;
+}
+
+/* Per-thread cleanup, called outside worker. */
+void pnso_sim_finit_req_queue()
+{
+	struct pnso_sim_q *q = t_worker_ctx.req_q;
+
+	/* deallocate */
+	if (q) {
+		t_worker_ctx.req_q = NULL;
+		pnso_sim_free(q);
+	}
+}
+
+pnso_error_t pnso_sim_sq_enqueue(enum pnso_batch_request batch_req,
 				 struct pnso_service_request *svc_req,
 				 struct pnso_service_result *svc_res,
 				 completion_t cb,
 				 void *cb_ctx, void **poll_ctx)
 {
-	struct pnso_sim_q *q = &g_req_queues[sess_id];
+	struct pnso_sim_q *q = pnso_sim_get_worker_ctx()->req_q;
 	pnso_sim_req_id_t id;
 	struct pnso_sim_q_request *entry;
 	uint16_t temp;
 
+	PNSO_ASSERT(q);
+
 	/* Assumes check for not-full was already done */
 
 	temp = atomic_fetch_add(&q->num_entries, 1);
-	if (temp > PNSO_SQ_DEPTH) {
+	if (temp >= q->depth) {
 		/* TODO: error */
 		atomic_fetch_sub(&q->num_entries, 1);
-		return -1;
+		return EAGAIN;
 	}
 
 	id = req_free_q_dequeue();
 	q->ids[q->head++] = id;
-	if (q->head == PNSO_SQ_DEPTH) {
+	if (q->head >= q->depth) {
 		q->head = 0;
 	}
 
@@ -155,12 +212,11 @@ pnso_error_t pnso_sim_sq_enqueue(uint32_t sess_id,
 		atomic_fetch_add(&q->num_batches, 1);
 	}
 
-	return 0;
+	return PNSO_OK;
 }
 
-struct pnso_sim_q_request *pnso_sim_sq_dequeue(uint32_t sess_id)
+struct pnso_sim_q_request *pnso_sim_q_dequeue(struct pnso_sim_q *q)
 {
-	struct pnso_sim_q *q = &g_req_queues[sess_id];
 	pnso_sim_req_id_t id;
 	struct pnso_sim_q_request *entry;
 
@@ -168,7 +224,7 @@ struct pnso_sim_q_request *pnso_sim_sq_dequeue(uint32_t sess_id)
 
 	id = q->ids[q->tail++];
 	entry = req_id_to_entry(id);
-	if (q->tail == PNSO_SQ_DEPTH) {
+	if (q->tail >= q->depth) {
 		q->tail = 0;
 	}
 
@@ -181,58 +237,52 @@ struct pnso_sim_q_request *pnso_sim_sq_dequeue(uint32_t sess_id)
 	return entry;
 }
 
-bool pnso_sim_sq_is_empty(uint32_t sess_id)
+bool pnso_sim_q_is_empty(struct pnso_sim_q *q)
 {
-	struct pnso_sim_q *q = &g_req_queues[sess_id];
-
 	return atomic_load(&q->num_entries) == 0;
 }
 
-bool pnso_sim_sq_is_full(uint32_t sess_id)
+bool pnso_sim_q_is_full(struct pnso_sim_q *q)
 {
-	struct pnso_sim_q *q = &g_req_queues[sess_id];
-
-	return atomic_load(&q->num_entries) >= PNSO_SQ_DEPTH;
+	return atomic_load(&q->num_entries) >= q->depth;
 }
 
-bool pnso_sim_sq_is_batch_done(uint32_t sess_id)
+bool pnso_sim_q_is_batch_done(struct pnso_sim_q *q)
 {
-	struct pnso_sim_q *q = &g_req_queues[sess_id];
-
 	return atomic_load(&q->num_batches) > 0;
 }
 
-void pnso_sim_sq_wait_for_not_full(uint32_t sess_id)
+void pnso_sim_q_wait_for_not_full(struct pnso_sim_q *q)
 {
 	/* TODO: spinlock or condition variable */
 
-	while (pnso_sim_sq_is_full(sess_id)) {
+	while (pnso_sim_q_is_full(q)) {
 		usleep(1);
-		if (is_q_stopped(sess_id)) {
+		if (is_q_stopped(q)) {
 			break;
 		}
 	}
 }
 
-void pnso_sim_sq_wait_for_not_empty(uint32_t sess_id)
+void pnso_sim_q_wait_for_not_empty(struct pnso_sim_q *q)
 {
 	/* TODO: spinlock or condition variable */
 
-	while (pnso_sim_sq_is_empty(sess_id)) {
+	while (pnso_sim_q_is_empty(q)) {
 		usleep(1);
-		if (is_q_stopped(sess_id)) {
+		if (is_q_stopped(q)) {
 			break;
 		}
 	}
 }
 
-void pnso_sim_sq_wait_for_batch_done(uint32_t sess_id)
+void pnso_sim_q_wait_for_batch_done(struct pnso_sim_q *q)
 {
 	/* TODO: spinlock or condition variable */
 
-	while (!pnso_sim_sq_is_batch_done(sess_id)) {
+	while (!pnso_sim_q_is_batch_done(q)) {
 		usleep(1);
-		if (is_q_stopped(sess_id)) {
+		if (is_q_stopped(q)) {
 			break;
 		}
 	}
@@ -240,9 +290,9 @@ void pnso_sim_sq_wait_for_batch_done(uint32_t sess_id)
 
 /*
  * Poll for completion of a particular request.
- * Returns true if request has been processed.
+ * Returns PNSO_OK if request has been processed, else EAGAIN.
  */
-bool pnso_sim_poll(uint32_t sess_id, void *poll_ctx)
+pnso_error_t pnso_sim_poll(void *poll_ctx)
 {
 	struct pnso_sim_q_request *entry;
 
@@ -254,7 +304,7 @@ bool pnso_sim_poll(uint32_t sess_id, void *poll_ctx)
 		}
 		/* Restore entry to free list */
 		req_free_q_enqueue(id);
-		return true;
+		return PNSO_OK;
 	}
 #if 0
 	size_t rc = atomic_load(&q->num_processed);
@@ -264,27 +314,43 @@ bool pnso_sim_poll(uint32_t sess_id, void *poll_ctx)
 	}
 #endif
 
-	return false;
+	return EAGAIN;
 }
 
-void pnso_sim_run_worker_once(uint32_t sess_id)
+/*
+ * Poll for completion of a particular request.
+ * Does not return until request has been processed.
+ */
+pnso_error_t pnso_sim_poll_wait(void *poll_ctx)
 {
-	struct pnso_sim_q *q = &g_req_queues[sess_id];
+	pnso_error_t rc;
+
+	while (EAGAIN == (rc = pnso_sim_poll(poll_ctx))) {
+		if (!pnso_sim_is_worker_running()) {
+			return ENODEV; /* TODO */
+		}
+		usleep(1);
+	}
+	return rc;
+}
+
+void pnso_sim_run_worker_once(struct pnso_sim_worker_ctx *worker_ctx)
+{
+	struct pnso_sim_q *q = worker_ctx->req_q;
 	struct pnso_sim_q_request *req;
 	bool end_of_batch = false;
 
-	if (!pnso_sim_sq_is_batch_done(sess_id)) {
+	if (!pnso_sim_q_is_batch_done(q)) {
 		return;
 	}
 
 	while (!end_of_batch) {
 		/* Get next request */
-		req = pnso_sim_sq_dequeue(sess_id);
+		req = pnso_sim_q_dequeue(q);
 		end_of_batch = req->end_of_batch;
 
 		/* Execute request */
-		pnso_sim_execute_request(sess_id,
-					 req->svc_req, req->svc_res,
+		pnso_sim_execute_request(worker_ctx, req->svc_req, req->svc_res,
 					 req->cb, req->cb_ctx);
 
 		atomic_fetch_add(&q->num_processed, 1);
@@ -304,40 +370,48 @@ void pnso_sim_run_worker_once(uint32_t sess_id)
 
 void *pnso_sim_run_worker_loop(void *opaque)
 {
-	uint32_t sess_id = (uint32_t) (uint64_t) opaque;
+	struct pnso_sim_worker_ctx *worker_ctx = (struct pnso_sim_worker_ctx *) opaque;
+	struct pnso_sim_q *q = worker_ctx->req_q;
 
 	while (1) {
-		if (is_q_stopped(sess_id)) {
+		if (is_q_stopped(q)) {
 			break;
 		}
 
-		pnso_sim_sq_wait_for_batch_done(sess_id);
-		pnso_sim_run_worker_once(sess_id);
+		pnso_sim_q_wait_for_batch_done(q);
+		pnso_sim_run_worker_once(worker_ctx);
 	}
 
 	return NULL;
 }
 
-void pnso_sim_start_worker_thread(uint32_t sess_id)
+pnso_error_t pnso_sim_start_worker_thread()
 {
-	pthread_t *t = &g_req_queues[sess_id].thread;
+	pnso_error_t rc;
 
-	g_req_queues[sess_id].stop_worker = false;
-
-	if (0 !=
-	    pthread_create(t, NULL, pnso_sim_run_worker_loop,
-			   (void *) (uint64_t) sess_id)) {
-		PNSO_ASSERT(0);
+	rc = pnso_sim_init_req_queue(g_init_params.per_core_qdepth);
+	if (rc != PNSO_OK) {
+		return rc;
 	}
+
+	t_worker_ctx.req_q->stop_worker = false;
+
+	rc = pthread_create(&t_worker_ctx.req_q->thread, NULL, pnso_sim_run_worker_loop,
+			    (void *) &t_worker_ctx);
+	return rc;
 }
 
-void pnso_sim_stop_worker_thread(uint32_t sess_id)
+void pnso_sim_stop_worker_thread()
 {
 	void *ret;
-	struct pnso_sim_q *q = &g_req_queues[sess_id];
+	struct pnso_sim_q *q = t_worker_ctx.req_q;
+
+	PNSO_ASSERT(q);
+
 	q->stop_worker = true;
 
-	pthread_join(g_req_queues[sess_id].thread, &ret);
+	pthread_join(q->thread, &ret);
+	pnso_sim_finit_req_queue();
 }
 
 struct slab_desc {

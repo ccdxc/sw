@@ -8,6 +8,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Pensando offloaders for storage and security
  *
@@ -97,6 +101,9 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_XTS_AXI_ERROR			30003
 #define PNSO_ERR_XTS_AXI_STATUS_ERROR		30004
 #define PNSO_ERR_XTS_AOL_DESC_ERROR		30005
+
+/* Error codes for hash/cksum */
+#define PNSO_ERR_SHA_FAILED			40001
 
 /**
  * struct pnso_flat_buffer - describes a buffer with 'address and length'.
@@ -419,7 +426,7 @@ typedef void (*completion_t) (void *cb_ctx,
  *	PNSO_OK - on success
  *	-EAGAIN - on request not done
  */
-typedef pnso_error_t(*pnso_poll_fn_t) (void *pnso_poll_ctx);
+typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
 
 /**
  * pnso_submit_request() - routine that accepts one or more service(s) as a
@@ -456,8 +463,9 @@ pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
 				 struct pnso_service_result *svc_res,
 				 completion_t cb,
 				 void *cb_ctx,
-				 pnso_poll_fn_t * pnso_poll_fn,
+				 pnso_poll_fn_t *pnso_poll_fn,
 				 void **pnso_poll_ctx);
+
 /**
  * pnso_set_key_desc_idx() - sets the key descriptor index.
  * @key1:	[in]	specifies the key that will be used to encrypt the data.
@@ -479,4 +487,8 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 				   const void *key2,
 				   uint32_t key_size, uint32_t key_idx);
 
-#endif				/* __PNSO_API_H__ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __PNSO_API_H__ */

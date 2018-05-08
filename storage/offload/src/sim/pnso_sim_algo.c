@@ -75,9 +75,6 @@ uint32_t algo_gen_adler32(unsigned char *msg, size_t bytes)
 const uint32_t PRIME_BASE = 65521;
 uint32_t algo_gen_madler(uint64_t * data, size_t len)
 {
-	return 0;
-/* TODO: find where uint128_t is defined */
-#if 1
 	uint128_t sumA = 1;
 	uint128_t sumB = 0;
 
@@ -92,7 +89,6 @@ uint32_t algo_gen_madler(uint64_t * data, size_t len)
 	uint32_t sumB_mod = sumB % PRIME_BASE;
 
 	return (sumB_mod << 16) | sumA_mod;
-#endif
 }
 
 #define XTS_IV_SIZE 16
