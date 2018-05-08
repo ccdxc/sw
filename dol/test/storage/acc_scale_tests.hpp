@@ -37,6 +37,7 @@ public:
 
     // Pure virtual functions.
     virtual int push(void) = 0;
+    virtual int post_push(void) = 0;
     virtual int completion_check(void) = 0;
     virtual int fast_verify(void) = 0;
     virtual int full_verify(void) = 0;
@@ -126,6 +127,7 @@ public:
     void push_params_set(comp_encrypt_chain_push_params_t params);
 
     virtual int push(void);
+    virtual int post_push(void);
     virtual int completion_check(void);
     virtual int fast_verify(void);
     virtual int full_verify(void);
@@ -210,6 +212,7 @@ public:
     void push_params_set(comp_hash_chain_push_params_t params);
 
     virtual int push(void);
+    virtual int post_push(void);
     virtual int completion_check(void);
     virtual int fast_verify(void);
     virtual int full_verify(void);
@@ -293,6 +296,7 @@ public:
     void push_params_set(chksum_decomp_chain_push_params_t params);
 
     virtual int push(void);
+    virtual int post_push(void);
     virtual int completion_check(void);
     virtual int fast_verify(void);
     virtual int full_verify(void);
@@ -371,6 +375,7 @@ public:
     void push_params_set(decrypt_decomp_chain_push_params_t params);
 
     virtual int push(void);
+    virtual int post_push(void);
     virtual int completion_check(void);
     virtual int fast_verify(void);
     virtual int full_verify(void);
@@ -447,6 +452,7 @@ public:
     void push_params_set(encrypt_only_push_params_t params);
 
     virtual int push(void);
+    virtual int post_push(void);
     virtual int completion_check(void);
     virtual int fast_verify(void);
     virtual int full_verify(void);

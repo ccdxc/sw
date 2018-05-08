@@ -222,7 +222,10 @@ private:
 
     comp_queue_t        *chksum_queue;
     comp_queue_t        *decomp_queue;
-    comp_queue_push_t   push_type;
+    comp_queue_push_t   chksum_push_type;
+    comp_queue_push_t   decomp_push_type;
+    uint32_t            seq_chksum_qid;
+    uint32_t            seq_decomp_qid;
 
     bool                destructor_free_buffers;
     bool                suppress_info_log;

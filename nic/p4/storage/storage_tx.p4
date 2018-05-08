@@ -17,6 +17,7 @@
 #define tx_table_s1_t1		s1_tbl1
 #define tx_table_s2_t1		s2_tbl1
 #define tx_table_s3_t1		s3_tbl1
+#define tx_table_s3_t2		s3_tbl2
 
 #define tx_table_s0_t0_action	q_state_pop
 #define tx_table_s0_t0_action1	pri_q_state_pop
@@ -62,6 +63,7 @@
 #define tx_table_s3_t0_action6	seq_barco_chain_action
 
 #define tx_table_s3_t1_action	seq_comp_sgl_handler
+#define tx_table_s3_t2_action	seq_comp_sgl_pad_only
 
 #define tx_table_s4_t0_action	nvme_be_wqe_save
 #define tx_table_s4_t0_action1	nvme_be_wqe_release
@@ -98,6 +100,8 @@ metadata storage_kivec2_t storage_kivec2;
 metadata storage_kivec2acc_t storage_kivec2acc;
 @pragma pa_header_union ingress to_stage_3
 metadata storage_kivec3_t storage_kivec3;
+@pragma pa_header_union ingress to_stage_3
+metadata storage_kivec3acc_t storage_kivec3acc;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -290,6 +294,9 @@ metadata storage_kivec2acc_t storage_kivec2acc_scratch;
 metadata storage_kivec3_t storage_kivec3_scratch;
 
 @pragma scratch_metadata
+metadata storage_kivec3acc_t storage_kivec3acc_scratch;
+
+@pragma scratch_metadata
 metadata storage_kivec4_t storage_kivec4_scratch;
 
 @pragma scratch_metadata
@@ -336,6 +343,9 @@ metadata seq_comp_status_t seq_comp_status_scratch;
 
 @pragma scratch_metadata
 metadata seq_comp_sgl_t seq_comp_sgl_scratch;
+
+@pragma scratch_metadata
+metadata barco_sgl_t barco_sgl_scratch;
 
 @pragma scratch_metadata
 metadata seq_xts_status_desc_t seq_xts_status_desc_scratch;

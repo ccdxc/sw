@@ -55,6 +55,8 @@ dp_mem_t *nvme_cq_consume_entry(uint16_t qid, uint16_t *index);
 
 dp_mem_t *pvm_cq_consume_entry(uint16_t qid, uint16_t *index);
 
+dp_mem_t * seq_sq_consumed_entry_get(uint16_t qid, uint16_t *index);
+
 uint16_t get_nvme_lif();
 
 uint16_t get_pvm_lif();

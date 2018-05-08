@@ -117,7 +117,7 @@ comp_encrypt_chain_scale_t::push_params_set(comp_encrypt_chain_push_params_t par
 
 /*
  * Accelerator compression to XTS-encrypt chaining scale
- * Initiate the test
+ * Set up the test
  */
 int 
 comp_encrypt_chain_scale_t::push(void)
@@ -140,12 +140,29 @@ comp_encrypt_chain_scale_t::push(void)
         push_params.seq_comp_status_qid_++;
     }
 
-    // Only need to call post_push() once since all submissions went
-    // to the same comp_queue.
-    comp_encrypt_chain_vec[i - 1]->post_push();
-
     push_params.seq_comp_status_qid_ = initial_status_sq;
-    run_count++;
+    return 0;
+}
+
+
+/*
+ * Accelerator compression to XTS-encrypt chaining scale
+ * Initiate the test
+ */
+int 
+comp_encrypt_chain_scale_t::post_push(void)
+{
+    uint32_t    num_submissions = comp_encrypt_chain_vec.size();
+
+    /*
+     * Only need to call post_push() once since all submissions went
+     * to the same comp_queue.
+     */
+    assert(num_submissions);
+    if (num_submissions) {
+        comp_encrypt_chain_vec[num_submissions - 1]->post_push();
+        run_count++;
+    }
     return 0;
 }
 
@@ -302,7 +319,7 @@ decrypt_decomp_chain_scale_t::push_params_set(decrypt_decomp_chain_push_params_t
 
 /*
  * Accelerator XTS-decrypt to decompression chaining scale
- * Initiate the test
+ * Set up the test
  */
 int 
 decrypt_decomp_chain_scale_t::push(void)
@@ -325,12 +342,29 @@ decrypt_decomp_chain_scale_t::push(void)
         push_params.seq_xts_status_qid_++;
     }
 
-    // Only need to call post_push() once since all submissions went
-    // to the same XTS sequencer queue.
-    decrypt_decomp_chain_vec[i - 1]->post_push();
-
     push_params.seq_xts_status_qid_ = initial_status_sq;
-    run_count++;
+    return 0;
+}
+
+
+/*
+ * Accelerator XTS-decrypt to decompression chaining scale
+ * Initiate the test
+ */
+int 
+decrypt_decomp_chain_scale_t::post_push(void)
+{
+    uint32_t    num_submissions = decrypt_decomp_chain_vec.size();
+
+    /*
+     * Only need to call post_push() once since all submissions went
+     * to the same XTS sequencer queue.
+     */
+    assert(num_submissions);
+    if (num_submissions) {
+        decrypt_decomp_chain_vec[num_submissions - 1]->post_push();
+        run_count++;
+    }
     return 0;
 }
 
@@ -503,7 +537,7 @@ comp_hash_chain_scale_t::push_params_set(comp_hash_chain_push_params_t params)
 
 /*
  * Accelerator compression to hash chaining scale
- * Initiate the test
+ * Set up the test
  */
 int 
 comp_hash_chain_scale_t::push(void)
@@ -522,12 +556,29 @@ comp_hash_chain_scale_t::push(void)
         push_params.seq_comp_status_qid_++;
     }
 
-    // Only need to call post_push() once since all submissions went
-    // to the same comp_queue.
-    comp_hash_chain_vec[i - 1]->post_push();
-
     push_params.seq_comp_status_qid_ = initial_status_sq;
-    run_count++;
+    return 0;
+}
+
+
+/*
+ * Accelerator compression to hash chaining scale
+ * Initiate the test
+ */
+int 
+comp_hash_chain_scale_t::post_push(void)
+{
+    uint32_t    num_submissions = comp_hash_chain_vec.size();
+
+    /*
+     * Only need to call post_push() once since all submissions went
+     * to the same comp_queue.
+     */
+    assert(num_submissions);
+    if (num_submissions) {
+        comp_hash_chain_vec[num_submissions - 1]->post_push();
+        run_count++;
+    }
     return 0;
 }
 
@@ -727,7 +778,7 @@ chksum_decomp_chain_scale_t::push_params_set(chksum_decomp_chain_push_params_t p
 
 /*
  * Accelerator checksum to decompression chaining scale
- * Initiate the test
+ * Set up the test
  */
 int 
 chksum_decomp_chain_scale_t::push(void)
@@ -745,12 +796,28 @@ chksum_decomp_chain_scale_t::push(void)
          */
         chksum_decomp_chain_vec[i]->push(push_params);
     }
+    return 0;
+}
 
-    // Only need to call post_push() once since all submissions went
-    // to the same comp_queue.
-    chksum_decomp_chain_vec[i - 1]->post_push();
 
-    run_count++;
+/*
+ * Accelerator checksum to decompression chaining scale
+ * Initiate the test
+ */
+int 
+chksum_decomp_chain_scale_t::post_push(void)
+{
+    uint32_t    num_submissions = chksum_decomp_chain_vec.size();
+
+    /*
+     * Only need to call post_push() once since all submissions went
+     * to the same comp_queue.
+     */
+    assert(num_submissions);
+    if (num_submissions) {
+        chksum_decomp_chain_vec[num_submissions - 1]->post_push();
+        run_count++;
+    }
     return 0;
 }
 
@@ -926,7 +993,7 @@ encrypt_only_scale_t::push_params_set(encrypt_only_push_params_t params)
 
 /*
  * Accelerator XTS encrypt only chaining chaining scale
- * Initiate the test
+ * Set up the test
  */
 int 
 encrypt_only_scale_t::push(void)
@@ -939,12 +1006,28 @@ encrypt_only_scale_t::push(void)
     for (i = 0; i < encrypt_only_vec.size(); i++) {
         encrypt_only_vec[i]->push(push_params);
     }
+    return 0;
+}
 
-    // Only need to call post_push() once since all submissions went
-    // to the same comp_queue.
-    encrypt_only_vec[i - 1]->post_push();
 
-    run_count++;
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Initiate the test
+ */
+int 
+encrypt_only_scale_t::post_push(void)
+{
+    uint32_t    num_submissions = encrypt_only_vec.size();
+
+    /*
+     * Only need to call post_push() once since all submissions went
+     * to the same XTS sequencer queue.
+     */
+    assert(num_submissions);
+    if (num_submissions) {
+        encrypt_only_vec[num_submissions - 1]->post_push();
+        run_count++;
+    }
     return 0;
 }
 
@@ -1279,6 +1362,7 @@ acc_scale_tests_push(void)
         acc_scale_tests_t *seed_test_chain = seed_tests_vec[v];
 
         seed_test_chain->push();
+        seed_test_chain->post_push();
 
         /*
          * Poll for completion of seed data generation
@@ -1377,11 +1461,19 @@ acc_scale_tests_list_t::post_push(const char *test_name)
     int                 verify_result = 0;
 
     /*
-     * Start the tests
+     * Start the tests:
+     *
+     * Note: to facilitate overlapped operations in RTL, we inititate the
+     * tests in 2 steps: 1- push, which sets up the tests (i.e., descriptor
+     * writes, etc.), and 2- post_push which rings doorbells.
      */
     for (it = tests_list.begin(); it != tests_list.end(); it++) {
         scale_test = *it;
         scale_test->push();
+    }
+    for (it = tests_list.begin(); it != tests_list.end(); it++) {
+        scale_test = *it;
+        scale_test->post_push();
     }
 
     /*
@@ -1413,6 +1505,7 @@ acc_scale_tests_list_t::post_push(const char *test_name)
                 // restart the current test
                 push(scale_test);
                 scale_test->push();
+                scale_test->post_push();
             }
             it = compl_list.erase(it);
         }

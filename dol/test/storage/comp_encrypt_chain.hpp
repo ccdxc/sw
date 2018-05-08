@@ -269,6 +269,8 @@ private:
     cp_desc_t       cp_desc;
     XtsCtx          xts_ctx;
     comp_queue_t    *comp_queue;
+    comp_queue_push_t push_type;
+    uint32_t        seq_comp_qid;
 
     uint32_t        last_cp_output_data_len;
     uint32_t        last_encrypt_output_data_len;

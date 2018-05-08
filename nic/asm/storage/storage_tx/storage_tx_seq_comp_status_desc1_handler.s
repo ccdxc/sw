@@ -33,6 +33,7 @@ struct barco_aol_le_t {
  */
 #define r_aol_field_p               r1  // pointer to an AOL field
 #define r_aol_l1_addr               r2  // pointer to AOL L1
+#define r_pad_buf_addr              r3  // pointer to pad buffer
 
 %%
 
@@ -42,8 +43,10 @@ storage_tx_seq_comp_status_desc1_handler_start:
    	        d.{data_len...pad_len_shift}, \
                 p.{storage_kivec5_stop_chain_on_error...storage_kivec5_copy_src_dst_on_error}, \
    	        d.{stop_chain_on_error...copy_src_dst_on_error}
-   phvwr	p.storage_kivec3_data_addr, d.dst_hbm_pa
-   phvwr	p.acc_chain_pad_buf_addr, d.pad_buf_pa
+   add		r_pad_buf_addr, d.pad_buf_pa, r0
+   phvwrpair	p.storage_kivec3acc_data_addr, d.dst_hbm_pa, \
+                p.storage_kivec3acc_pad_buf_addr, r_pad_buf_addr
+   phvwr	p.acc_chain_pad_buf_addr, r_pad_buf_addr.dx
 
    bbeq		d.aol_pad_en, 0, exit
    phvwrpair	p.storage_kivec2acc_sgl_pdma_out_addr, d.sgl_pdma_out_pa, \
@@ -59,21 +62,21 @@ storage_tx_seq_comp_status_desc1_handler_start:
    // A1/O1/L1: pad buffer, length to be modified with r_pad_len
    add          r_aol_field_p, d.sgl_pdma_in_pa, \
                 SIZE_IN_BYTES(offsetof(struct barco_aol_le_t, L0))
-   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_data_len, acc_chain_data_len, r_aol_field_p, dma_p2m_2)
+   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_data_len, acc_chain_data_len, r_aol_field_p, dma_p2m_5)
    
    add          r_aol_field_p, d.sgl_pdma_in_pa, \
                 SIZE_IN_BYTES(offsetof(struct barco_aol_le_t, A1))
-   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_buf_addr, acc_chain_pad_buf_addr, r_aol_field_p, dma_p2m_3)
+   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_buf_addr, acc_chain_pad_buf_addr, r_aol_field_p, dma_p2m_6)
    
    add          r_aol_field_p, d.sgl_pdma_in_pa, \
                 SIZE_IN_BYTES(offsetof(struct barco_aol_le_t, L1))
-   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_len, acc_chain_pad_len, r_aol_field_p, dma_p2m_4)
+   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_len, acc_chain_pad_len, r_aol_field_p, dma_p2m_7)
 
    // And output AOL has exactly one entry to be modified
    add          r_aol_field_p, d.sgl_pdma_out_pa, \
                 SIZE_IN_BYTES(offsetof(struct barco_aol_le_t, L0))
-   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_total_len, acc_chain_total_len, r_aol_field_p, dma_p2m_5)
-   DMA_PHV2MEM_FENCE(dma_p2m_5)
+   DMA_PHV2MEM_SETUP_ADDR64(acc_chain_total_len, acc_chain_total_len, r_aol_field_p, dma_p2m_8)
+   DMA_PHV2MEM_FENCE(dma_p2m_8)
    
 exit:
    CLEAR_TABLE_VALID_e(1)

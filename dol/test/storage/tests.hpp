@@ -118,7 +118,12 @@ typedef struct acc_chain_entry {
   // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
            aol_pad_en           :1, // enable AOL length padding
            sgl_pad_hash_en      :1, // enable SGL length padding for multi-block hash
-           sgl_pdma_en          :1; // enable data transfer from src_hbm_pa to sgl_pa
+           sgl_pdma_en          :1, // enable data transfer from src_hbm_pa to sgl_pa
+           sgl_pdma_pad_only    :1; // enable pad-only fill mode, i.e., Comp engine writes
+                                    // compressed output according to SGL, P4+ will fill
+                                    // the last block with the right amount of pad data.
+                                    // This mode requires sgl_pad_hash_en as P4+ will glean
+                                    // the buffers info from the supplied sgl_vec_pa.
 } acc_chain_entry_t;
 
 typedef struct cq_sq_ent_sgl {

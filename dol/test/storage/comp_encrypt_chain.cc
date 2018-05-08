@@ -33,6 +33,8 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     caller_xts_opaque_buf(nullptr),
     caller_xts_opaque_data(0),
     comp_queue(nullptr),
+    push_type(COMP_QUEUE_PUSH_INVALID),
+    seq_comp_qid(0),
     last_cp_output_data_len(0),
     last_encrypt_output_data_len(0),
     destructor_free_buffers(params.destructor_free_buffers_),
@@ -217,7 +219,10 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     cp_desc.doorbell_addr = chain_params.ret_doorbell_addr;
     cp_desc.doorbell_data = chain_params.ret_doorbell_data;
     cp_desc.cmd_bits.doorbell_on = 1;
-    comp_queue->push(cp_desc, params.push_type_, params.seq_comp_qid_);
+
+    push_type = params.push_type_;
+    seq_comp_qid = params.seq_comp_qid_;
+    comp_queue->push(cp_desc, params.push_type_, seq_comp_qid);
     return 0;
 }
 
@@ -228,6 +233,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 void
 comp_encrypt_chain_t::post_push(void)
 {
+    comp_queue->reentrant_tuple_set(push_type, seq_comp_qid);
     comp_queue->post_push();
 }
 
