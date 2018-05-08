@@ -340,8 +340,8 @@ struct pnso_chksum_tag {
  * hashes or checksums.  When 'num_tags' is 0, this parameter is NULL.
  * @output_data_len: specifies the length of the output buffer processed in
  * bytes depending on the service type.
- * @output_buf: specifies a temporary scatter/gather buffer list that to be used
- * as output buffer for this service. Valid only for non-last services.
+ * @dst_buf: specifies a scatter/gather buffer list that to be used
+ * as output buffer for this service.
  *
  * Note: Hash or checksum tags will be packed one after another.
  *
@@ -355,7 +355,7 @@ struct pnso_service_status {
 		struct pnso_chksum_tag *chksums;
 	} tags;
 	uint32_t output_data_len;
-	struct pnso_buffer_list *output_buf;
+	struct pnso_buffer_list *dst_buf;
 } __attribute__ ((__packed__));
 
 /**
@@ -404,7 +404,6 @@ struct pnso_service {
  * struct pnso_service_request - represents an array of services that are to be
  * handled in a request.
  * @src_buf: specifies input buffer on which the request will operate on.
- * @dst_buf: specifies output buffer on which the request will operate on.
  * @num_services: specifies the number of services in the input service request.
  * @svc: specifies the information about each service within the service
  * request.
@@ -412,7 +411,6 @@ struct pnso_service {
  */
 struct pnso_service_request {
 	struct pnso_buffer_list *src_buf;
-	struct pnso_buffer_list *dst_buf;
 	uint32_t num_services;
 	struct pnso_service svc[0];
 };
