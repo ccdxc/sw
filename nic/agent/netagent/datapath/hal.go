@@ -906,17 +906,21 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			}
 			ifL2SegReqMsg.Request = append(ifL2SegReqMsg.Request, &ifL2SegReq)
 		}
-		// Perform batched Add
-		l2SegAddResp, err := hd.Hal.Ifclient.AddL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
-		if err != nil {
-			log.Errorf("Error adding l2 segments on uplinks. Err: %v", err)
-			return err
-		}
-		for _, r := range l2SegAddResp.Response {
-			if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				log.Errorf("HAL returned non OK status. Err: %v", err)
-				return ErrHALNotOK
+		// Perform batched Add only if uplinks exist
+		if len(uplinks) != 0 {
+			l2SegAddResp, err := hd.Hal.Ifclient.AddL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
+			if err != nil {
+				log.Errorf("Error adding l2 segments on uplinks. Err: %v", err)
+				return err
 			}
+			for _, r := range l2SegAddResp.Response {
+				if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					log.Errorf("HAL returned non OK status. Err: %v", err)
+					return ErrHALNotOK
+				}
+			}
+		} else {
+			log.Errorf("Could not find uplinks.")
 		}
 
 	} else {
