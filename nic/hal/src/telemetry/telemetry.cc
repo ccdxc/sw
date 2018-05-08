@@ -297,46 +297,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
 {
     hal_ret_t ret = HAL_RET_OK;
     
-    if (spec.source_mac() != 0) {
-        MAC_UINT64_TO_ADDR(rule->src_mac, spec.source_mac());
-        rule->src_mac_valid = TRUE;
-    }
-    if (spec.dest_mac() != 0) {
-        MAC_UINT64_TO_ADDR(rule->dst_mac, spec.dest_mac());
-        rule->dst_mac_valid = TRUE;
-    }
-    if (spec.ethertype() != 0) {
-        rule->ethertype = spec.ethertype();
-        rule->ethertype_valid = TRUE;
-    }
-    if (spec.protocol() != 0) {
-        rule->proto = spec.protocol();
-        rule->proto_valid = TRUE;
-    }
-    if (spec.has_source_ip()) {
-        ip_pfx_spec_to_pfx(&rule->sip, spec.source_ip());
-        rule->sip_valid = TRUE;
-    }
-    if (spec.has_dest_ip()) {
-        ip_pfx_spec_to_pfx(&rule->dip, spec.dest_ip());
-        rule->dip_valid = TRUE;
-    }
-    if (spec.source_l4_port() != 0) {
-        rule->sport = spec.source_l4_port();
-        rule->sport_valid = TRUE;
-    }
-    if (spec.dest_l4_port() != 0) {
-        rule->dport = spec.dest_l4_port();
-        rule->dport_valid = TRUE;
-    }
-    if (spec.source_groupid() != 0) {
-        rule->src_groupid = spec.source_groupid();
-        rule->src_groupid_valid = TRUE;
-    }
-    if (spec.dest_groupid() != 0) {
-        rule->dst_groupid = spec.dest_groupid();
-        rule->dst_groupid_valid = TRUE;
-    }
+    //TODO: Handle the match rules using the library
     if (spec.has_action()) {
         int n = spec.action().ms_key_handle_size();
         for (int i = 0; i < n; i++) {

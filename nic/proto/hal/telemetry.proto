@@ -240,17 +240,9 @@ message FlowMonitorRuleSpec {
   types.ObjectMeta  meta                    = 1; // Common object meta
   kh.FlowMonitorRuleKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""]; // FlowMonitor key or handle
   kh.ExportControlKeyHandle   ec_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // ExportControl key or handle
-  uint64            source_mac              = 4; // Source MAC of the tuple to match
-  uint64            dest_mac                = 5; // Destination MAC to match
-  uint32            ethertype               = 6; // EtherType to match
-  types.IPProtocol  protocol                = 7; // IP Protocol to match
-  types.IPPrefix    source_ip               = 8; // Source IP prefix to match
-  types.IPPrefix    dest_ip                 = 9; // Destination IP prefix to match
-  uint32            source_l4_port          = 10; // Souce L4 port 
-  uint32            dest_l4_port            = 11; // Destination L4 port
-  uint64            source_groupid          = 12; // Source Workload GroupID to match
-  uint64            dest_groupid            = 13; // Destination Workload GroupID to match
-  MonitorAction     action                  = 14; // Action for flows that meet the match criteria
+  // TODO: Add smac, dmac, etype to RuleMatch object
+  types.RuleMatch             match         = 4; // match conditions 
+  MonitorAction               action        = 5; // Action for flows that meet the match criteria
 }
 
 // FlowMonitorRuleStatus is the operational status of the rule
