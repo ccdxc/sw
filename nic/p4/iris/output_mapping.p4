@@ -43,13 +43,14 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                     egress_port5, egress_port6, egress_port7, egress_port8) {
     if (nports == 1) {
         modify_field(capri_intrinsic.tm_oport, egress_port1);
-        // Set the Output queue to use
-        modify_field(capri_intrinsic.tm_oq, control_metadata.dest_tm_oq);
     } else {
         // use entropy hash to choose the destination port
         modify_field(scratch_metadata.entropy_hash,
                      rewrite_metadata.entropy_hash);
     }
+
+    // set the output queue to use
+    modify_field(capri_intrinsic.tm_oq, control_metadata.dest_tm_oq);
 
     if ((egress_mirror_en == TRUE) and
         (control_metadata.span_copy == FALSE)) {

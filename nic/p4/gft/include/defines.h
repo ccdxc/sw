@@ -143,14 +143,13 @@
 #define P4PLUS_APPTYPE_RDMA            2
 #define P4PLUS_APPTYPE_TCPTLS          3
 #define P4PLUS_APPTYPE_IPSEC           4
-#define P4PLUS_APPTYPE_NDE             5
-#define P4PLUS_APPTYPE_STORAGE         6
-#define P4PLUS_APPTYPE_TELEMETRY       7
-#define P4PLUS_APPTYPE_CPU             8
-#define P4PLUS_APPTYPE_RAW_REDIR       9
-#define P4PLUS_APPTYPE_P4PT            10
-#define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_DEFAULT
-#define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_P4PT
+#define P4PLUS_APPTYPE_STORAGE         5
+#define P4PLUS_APPTYPE_TELEMETRY       6
+#define P4PLUS_APPTYPE_CPU             7
+#define P4PLUS_APPTYPE_RAW_REDIR       8
+#define P4PLUS_APPTYPE_P4PT            9
+#define P4PLUS_APPTYPE_MIN             P4PLUS_APPTYPE_DEFAULT
+#define P4PLUS_APPTYPE_MAX             P4PLUS_APPTYPE_P4PT
 
 /*****************************************************************************/
 /* P4+ to P4 flags                                                           */

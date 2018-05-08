@@ -17,6 +17,7 @@
 #include "qos.p4"
 #include "roce.p4"
 #include "stats.p4"
+#include "mirror.p4"
 #include "tunnel.p4"
 #include "classic.p4"
 #include "policer.p4"

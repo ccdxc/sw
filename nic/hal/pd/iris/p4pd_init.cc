@@ -612,7 +612,7 @@ p4pd_p4plus_app_init (void)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
     HAL_ASSERT(dm != NULL);
 
-    for (int i = P4PLUS_APP_TYPE_MIN; i <= P4PLUS_APP_TYPE_MAX; i++) {
+    for (int i = P4PLUS_APPTYPE_MIN; i <= P4PLUS_APPTYPE_MAX; i++) {
         switch(i) {
             case P4PLUS_APPTYPE_DEFAULT:
                 data.actionid = P4PLUS_APP_P4PLUS_APP_DEFAULT_ID;
@@ -628,8 +628,6 @@ p4pd_p4plus_app_init (void)
                 break;
             case P4PLUS_APPTYPE_IPSEC:
                 data.actionid = P4PLUS_APP_P4PLUS_APP_IPSEC_ID;
-                break;
-            case P4PLUS_APPTYPE_NDE:
                 break;
             case P4PLUS_APPTYPE_STORAGE:
                 break;

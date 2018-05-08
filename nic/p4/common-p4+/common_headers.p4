@@ -20,17 +20,6 @@
 #define RAW_TABLE_SIZE_64   6
 #define RAW_TABLE_SIZE_128  7
 
-//shall we move the below to intrinsic.p4 ??
-#define P4PLUS_APPTYPE_CLASSIC_NIC  1
-#define P4PLUS_APPTYPE_RDMA         2
-#define P4PLUS_APPTYPE_TCPTLS       3
-#define P4PLUS_APPTYPE_IPSEC        4
-#define P4PLUS_APPTYPE_NDE          5
-#define P4PLUS_APPTYPE_STORAGE      6
-#define P4PLUS_APPTYPE_TELEMETRY    7
-#define P4PLUS_APPTYPE_CPU          8
-#define P4PLUS_APPTYPE_P4PT         10
-
 #define LIF_TABLE_SIZE 2048
 #define EGRESS_RATE_LIMITER_TABLE_SIZE 2048
 

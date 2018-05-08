@@ -1,7 +1,7 @@
 #include "./common_headers.p4"
+#include "../iris/include/defines.h"
 
-
-// Please do not modify the order of the below PHV definitions lines - rameshp        
+// Please do not modify the order of the below PHV definitions lines - rameshp
 @pragma dont_trim
 metadata cap_phv_intr_global_t p4_intr_global;
 @pragma dont_trim
@@ -107,54 +107,51 @@ metadata p4plus_common_raw_table_engine_phv_t te3_scratch;
 
 @pragma scratch_metadata
 metadata p4plus_common_to_stage_t te_scratch;
- 
 
 #define SET_RAW_TABLE0_SCRATCH \
     modify_field(te0_scratch.table_pc, common_te0_phv.table_pc); \
     modify_field(te0_scratch.table_raw_table_size, common_te0_phv.table_raw_table_size); \
     modify_field(te0_scratch.table_lock_en, common_te0_phv.table_lock_en); \
-    modify_field(te0_scratch.table_addr, common_te0_phv.table_addr); 
+    modify_field(te0_scratch.table_addr, common_te0_phv.table_addr);
 
 #define SET_RAW_TABLE1_SCRATCH \
     modify_field(te1_scratch.table_pc, common_te1_phv.table_pc); \
     modify_field(te1_scratch.table_raw_table_size, common_te1_phv.table_raw_table_size); \
     modify_field(te1_scratch.table_lock_en, common_te1_phv.table_lock_en); \
-    modify_field(te1_scratch.table_addr, common_te1_phv.table_addr); 
+    modify_field(te1_scratch.table_addr, common_te1_phv.table_addr);
 
 #define SET_RAW_TABLE2_SCRATCH \
     modify_field(te2_scratch.table_pc, common_te2_phv.table_pc); \
     modify_field(te2_scratch.table_raw_table_size, common_te2_phv.table_raw_table_size); \
     modify_field(te2_scratch.table_lock_en, common_te2_phv.table_lock_en); \
-    modify_field(te2_scratch.table_addr, common_te2_phv.table_addr); 
+    modify_field(te2_scratch.table_addr, common_te2_phv.table_addr);
 
 #define SET_RAW_TABLE3_SCRATCH \
     modify_field(te3_scratch.table_pc, common_te3_phv.table_pc); \
     modify_field(te3_scratch.table_raw_table_size, common_te3_phv.table_raw_table_size); \
     modify_field(te3_scratch.table_lock_en, common_te3_phv.table_lock_en); \
-    modify_field(te3_scratch.table_addr, common_te3_phv.table_addr); 
+    modify_field(te3_scratch.table_addr, common_te3_phv.table_addr);
 
 #define SET_GLOBAL_SCRATCH \
     modify_field(global_scratch.global_data, common_global.global_data);
 
 #define SET_S2S_SCRATCH0 \
-    modify_field(s2s_scratch0.s2s_data, common_t0_s2s.s2s_data); 
+    modify_field(s2s_scratch0.s2s_data, common_t0_s2s.s2s_data);
 
 #define SET_S2S_SCRATCH1 \
-    modify_field(s2s_scratch0.s2s_data, common_t1_s2s.s2s_data); 
+    modify_field(s2s_scratch0.s2s_data, common_t1_s2s.s2s_data);
 
 #define SET_S2S_SCRATCH2 \
-    modify_field(s2s_scratch0.s2s_data, common_t2_s2s.s2s_data); 
+    modify_field(s2s_scratch0.s2s_data, common_t2_s2s.s2s_data);
 
 #define SET_S2S_SCRATCH3 \
-    modify_field(s2s_scratch0.s2s_data, common_t3_s2s.s2s_data); 
+    modify_field(s2s_scratch0.s2s_data, common_t3_s2s.s2s_data);
 
 @pragma scratch_metadata
 metadata scratch_metadata_t scratch_metadata1;
 
-// dummy action function 
-action rx_table_dummy_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
+// dummy action function
+action rx_table_dummy_action(data0, data1, data2, data3, data4, data5,
                              data6, data7)
 {
     SCRATCH_METADATA_INIT_7(scratch_metadata1)
@@ -163,11 +160,9 @@ action rx_table_dummy_action(data0, data1,
 action common_p4plus_stage0_app_header_table_action_dummy_default() {
 }
 
-//stage 7 action functions 
-action rx_table_s7_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+//stage 7 action functions
+action rx_table_s7_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE3_SCRATCH
@@ -176,10 +171,8 @@ action rx_table_s7_t3_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_7.to_stage_data);
 }
 
-action rx_table_s7_t2_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s7_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE2_SCRATCH
@@ -188,10 +181,8 @@ action rx_table_s7_t2_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_7.to_stage_data);
 }
 
-action rx_table_s7_t1_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s7_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE1_SCRATCH
@@ -200,10 +191,8 @@ action rx_table_s7_t1_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_7.to_stage_data);
 }
 
-action rx_table_s7_t0_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s7_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE0_SCRATCH
@@ -212,11 +201,9 @@ action rx_table_s7_t0_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_7.to_stage_data);
 }
 
-//stage 6 action functions 
-action rx_table_s6_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+//stage 6 action functions
+action rx_table_s6_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE3_SCRATCH
@@ -225,10 +212,8 @@ action rx_table_s6_t3_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_6.to_stage_data);
 }
 
-action rx_table_s6_t2_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s6_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE2_SCRATCH
@@ -237,10 +222,8 @@ action rx_table_s6_t2_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_6.to_stage_data);
 }
 
-action rx_table_s6_t1_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s6_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE1_SCRATCH
@@ -249,10 +232,8 @@ action rx_table_s6_t1_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_6.to_stage_data);
 }
 
-action rx_table_s6_t0_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s6_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE0_SCRATCH
@@ -261,11 +242,9 @@ action rx_table_s6_t0_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_6.to_stage_data);
 }
 
-//stage 5 action functions 
-action rx_table_s5_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+//stage 5 action functions
+action rx_table_s5_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE3_SCRATCH
@@ -274,10 +253,8 @@ action rx_table_s5_t3_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_5.to_stage_data);
 }
 
-action rx_table_s5_t2_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s5_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE2_SCRATCH
@@ -286,10 +263,8 @@ action rx_table_s5_t2_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_5.to_stage_data);
 }
 
-action rx_table_s5_t1_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s5_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE1_SCRATCH
@@ -298,10 +273,8 @@ action rx_table_s5_t1_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_5.to_stage_data);
 }
 
-action rx_table_s5_t0_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s5_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE0_SCRATCH
@@ -310,11 +283,9 @@ action rx_table_s5_t0_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_5.to_stage_data);
 }
 
-//stage 4 action functions 
-action rx_table_s4_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+//stage 4 action functions
+action rx_table_s4_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE3_SCRATCH
@@ -323,10 +294,8 @@ action rx_table_s4_t3_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_4.to_stage_data);
 }
 
-action rx_table_s4_t2_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s4_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE2_SCRATCH
@@ -335,10 +304,8 @@ action rx_table_s4_t2_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_4.to_stage_data);
 }
 
-action rx_table_s4_t1_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s4_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE1_SCRATCH
@@ -347,10 +314,8 @@ action rx_table_s4_t1_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_4.to_stage_data);
 }
 
-action rx_table_s4_t0_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s4_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE0_SCRATCH
@@ -359,11 +324,9 @@ action rx_table_s4_t0_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_4.to_stage_data);
 }
 
-//stage 3 action functions 
-action rx_table_s3_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+//stage 3 action functions
+action rx_table_s3_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE3_SCRATCH
@@ -372,10 +335,8 @@ action rx_table_s3_t3_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_3.to_stage_data);
 }
 
-action rx_table_s3_t2_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s3_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE2_SCRATCH
@@ -384,10 +345,8 @@ action rx_table_s3_t2_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_3.to_stage_data);
 }
 
-action rx_table_s3_t1_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s3_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE1_SCRATCH
@@ -396,10 +355,8 @@ action rx_table_s3_t1_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_3.to_stage_data);
 }
 
-action rx_table_s3_t0_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s3_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE0_SCRATCH
@@ -409,11 +366,9 @@ action rx_table_s3_t0_cfg_action(data0, data1,
 }
 
 
-//stage 2 action functions 
-action rx_table_s2_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+//stage 2 action functions
+action rx_table_s2_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE3_SCRATCH
@@ -422,10 +377,8 @@ action rx_table_s2_t3_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_2.to_stage_data);
 }
 
-action rx_table_s2_t2_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s2_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE2_SCRATCH
@@ -434,10 +387,8 @@ action rx_table_s2_t2_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_2.to_stage_data);
 }
 
-action rx_table_s2_t1_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s2_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE1_SCRATCH
@@ -446,10 +397,8 @@ action rx_table_s2_t1_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_2.to_stage_data);
 }
 
-action rx_table_s2_t0_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s2_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE0_SCRATCH
@@ -459,10 +408,8 @@ action rx_table_s2_t0_cfg_action(data0, data1,
 }
 
 //stage 1 action functions
-action rx_table_s1_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s1_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE3_SCRATCH
@@ -471,10 +418,8 @@ action rx_table_s1_t3_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_1.to_stage_data);
 }
 
-action rx_table_s1_t2_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s1_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE2_SCRATCH
@@ -483,10 +428,8 @@ action rx_table_s1_t2_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_1.to_stage_data);
 }
 
-action rx_table_s1_t1_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s1_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE1_SCRATCH
@@ -495,10 +438,8 @@ action rx_table_s1_t1_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_1.to_stage_data);
 }
 
-action rx_table_s1_t0_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, 
-                             data6, data7)
+action rx_table_s1_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     SET_RAW_TABLE0_SCRATCH
@@ -507,17 +448,13 @@ action rx_table_s1_t0_cfg_action(data0, data1,
     modify_field(te_scratch.to_stage_data, to_stage_1.to_stage_data);
 }
 
-
-
-
 //stage 0 action functions
 // add d-arguments here if required
 // the below action function code is just to generate a fixed 512 bit d-vector.
 // each program may have its own definition of k, d vectors.
 // referencing them makes sure they are not "removed" by NCC
-action rx_table_s0_t3_cfg_action(data0, data1,
-                             data2, data3,
-                             data4, data5, data6, data7)
+action rx_table_s0_t3_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     //te3
@@ -525,10 +462,10 @@ action rx_table_s0_t3_cfg_action(data0, data1,
     SET_GLOBAL_SCRATCH
     SET_S2S_SCRATCH3
     modify_field(te_scratch.to_stage_data, to_stage_0.to_stage_data);
-
 }
 
-action rx_table_s0_t2_cfg_action(data0, data1, data2, data3, data4, data5, data6, data7)
+action rx_table_s0_t2_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     //te2
@@ -536,10 +473,10 @@ action rx_table_s0_t2_cfg_action(data0, data1, data2, data3, data4, data5, data6
     SET_GLOBAL_SCRATCH
     SET_S2S_SCRATCH2
     modify_field(te_scratch.to_stage_data, to_stage_0.to_stage_data);
-
 }
 
-action rx_table_s0_t1_cfg_action(data0, data1, data2, data3, data4, data5, data6, data7)
+action rx_table_s0_t1_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
     //te1
@@ -547,19 +484,18 @@ action rx_table_s0_t1_cfg_action(data0, data1, data2, data3, data4, data5, data6
     SET_GLOBAL_SCRATCH
     SET_S2S_SCRATCH1
     modify_field(te_scratch.to_stage_data, to_stage_0.to_stage_data);
-
 }
 
-action rx_table_s0_t0_cfg_action(data0, data1, data2, data3, data4, data5, data6, data7)
+action rx_table_s0_t0_cfg_action(data0, data1, data2, data3, data4, data5,
+                                 data6, data7)
 {
     SCRATCH_METADATA_INIT(scratch_metadata0)
-    //te0 
+    //te0
     SET_RAW_TABLE0_SCRATCH
     SET_GLOBAL_SCRATCH
     SET_S2S_SCRATCH0
     modify_field(te_scratch.to_stage_data, to_stage_0.to_stage_data);
 }
-
 
 // stage 7
 @pragma stage 7
@@ -1002,15 +938,15 @@ parser start {
     return ingress;
 }
 
-action rx_stage0_load_rdma_params(rdma_en_qtype_mask, 
-                                  pt_base_addr_page_id, 
-                                  log_num_pt_entries, 
-                                  cqcb_base_addr_hi, 
+action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
+                                  pt_base_addr_page_id,
+                                  log_num_pt_entries,
+                                  cqcb_base_addr_hi,
                                   log_num_cq_entries,
                                   prefetch_pool_base_addr_page_id,
                                   log_num_prefetch_pool_entries,
                                   sq_qtype,
-                                  rq_qtype, 
+                                  rq_qtype,
                                   reserved) {
 
     if (p4_intr.recirc == 0) {
@@ -1024,9 +960,9 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
             modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
             modify_field(scratch_rdma.cqcb_base_addr_hi, cqcb_base_addr_hi);
             modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
-            modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
+            modify_field(scratch_rdma.prefetch_pool_base_addr_page_id,
                          prefetch_pool_base_addr_page_id);
-            modify_field(scratch_rdma.log_num_prefetch_pool_entries, 
+            modify_field(scratch_rdma.log_num_prefetch_pool_entries,
                          log_num_prefetch_pool_entries);
             modify_field(scratch_rdma.sq_qtype, sq_qtype);
             modify_field(scratch_rdma.rq_qtype, rq_qtype);
@@ -1050,10 +986,8 @@ table rx_stage0_load_rdma_params {
     size : LIF_TABLE_SIZE;
 }
 
-action common_p4plus_stage0_app_header_table_action(data0, data1,
-                             data2, data3,
-                             data4, data5,
-                             data6) {
+action common_p4plus_stage0_app_header_table_action(data0, data1, data2, data3,
+                                                    data4, data5, data6) {
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_intr_scratch.recirc_count, p4_intr.recirc_count);
@@ -1101,7 +1035,7 @@ action common_p4plus_stage0_app_header_table_action(data0, data1,
 @pragma raw_index_table
 @pragma table_write
 table common_p4plus_stage0_app_header_table {
-    reads { 
+    reads {
         COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
     }
     actions {
@@ -1113,7 +1047,7 @@ table common_p4plus_stage0_app_header_table {
 @pragma raw_index_table
 //@pragma table_write
 table common_p4plus_stage0_app_header_ext_table {
-    reads { 
+    reads {
         COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
     }
     actions {
@@ -1121,12 +1055,11 @@ table common_p4plus_stage0_app_header_ext_table {
     }
 }
 
-
 @pragma stage 0
 @pragma raw_index_table
 @pragma table_write
 table common_p4plus_stage0_app_header_table_offset_64 {
-    reads { 
+    reads {
         COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
     }
     actions {
@@ -1138,7 +1071,7 @@ table common_p4plus_stage0_app_header_table_offset_64 {
 @pragma raw_index_table
 //@pragma table_write
 table common_p4plus_stage0_app_header_table_ext_offset_64 {
-    reads { 
+    reads {
         COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
     }
     actions {
@@ -1156,7 +1089,6 @@ header_type eth_rx_rss_params {
 
 @pragma scratch_metadata
 metadata eth_rx_rss_params eth_rx_rss_params_scratch;
-
 
 header_type p4_to_p4plus_classic_nic_header_ext_t {
     fields {
@@ -1348,7 +1280,7 @@ table rx_table_cpu_hash {
     actions {
         rx_table_cpu_hash_action;
     }
-    size : 0;    
+    size : 0;
 }
 
 control common_p4plus_stage0 {
@@ -1380,7 +1312,7 @@ control common_p4plus_stage0 {
         apply(rx_stage0_load_rdma_params);
         // apply(rx_table_s0_t0);
         // apply(rx_table_s0_t1);
-        // apply(rx_table_s0_t2); 
+        // apply(rx_table_s0_t2);
         if (app_header.table3_valid == 1) {
             apply(rx_table_s0_t3);
         }
