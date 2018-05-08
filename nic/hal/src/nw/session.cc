@@ -522,6 +522,9 @@ flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
 static void
 flow_to_flow_spec(flow_t *flow, FlowSpec *spec)
 {
+    spec->mutable_flow_key()->set_src_vrf_id(flow->config.key.svrf_id);
+    spec->mutable_flow_key()->set_dst_vrf_id(flow->config.key.dvrf_id);
+
     if (flow->config.key.flow_type == FLOW_TYPE_L2) {
         FlowKeyL2 *l2_key = spec->mutable_flow_key()->mutable_l2_key();
         l2_key->set_smac(MAC_TO_UINT64(flow->config.key.smac));

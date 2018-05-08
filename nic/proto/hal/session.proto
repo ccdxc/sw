@@ -69,10 +69,12 @@ message FlowKeyV6 {
 
 // FlowKey is the key for uni-directional flow
 message FlowKey {
+ fixed64         src_vrf_id    = 1;    // Flow Src Vrf Id
+ fixed64         dst_vrf_id    = 2;    // Flow Dst Vrf Id
  oneof flow_key {
-    FlowKeyL2    l2_key    = 1;    // L2 key
-    FlowKeyV4    v4_key    = 2;    // IPv4 key
-    FlowKeyV6    v6_key    = 3;    // IPv6 key
+    FlowKeyL2    l2_key    = 3;    // L2 key
+    FlowKeyV4    v4_key    = 4;    // IPv4 key
+    FlowKeyV6    v6_key    = 5;    // IPv6 key
   }
 }
 

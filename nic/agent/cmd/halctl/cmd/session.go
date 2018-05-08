@@ -151,10 +151,10 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func sessionShowHeader(cmd *cobra.Command, args []string) {
-	hdrLine := strings.Repeat("-", 115)
+	hdrLine := strings.Repeat("-", 132)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-12s%-12s%-14s%-16s%-24s%-24s%-12s\n",
-		"SessionHandle", "FlowType", "FlowKeyType", "L2SegId|VrfId", "SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType")
+	fmt.Printf("%-14s%-12s%-14s%-12s%-10s%-10s%-24s%-24s%-12s\n",
+		"SessionHandle", "FlowType", "FlowKeyType", "L2SegId", "SrcVrfID", "DstVrfID", "SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType")
 	fmt.Println(hdrLine)
 }
 
@@ -179,11 +179,14 @@ func sessionShowOneResp(resp *halproto.SessionGetResponse) {
 
 func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSpec *halproto.FlowSpec, flowStr string) {
 	var (
-		keyType string
-		id      uint64
-		src     string
-		dst     string
-		ipproto string
+		keyType   string
+		id        uint64
+		sessionID uint64
+		srcID     uint64
+		dstID     uint64
+		src       string
+		dst       string
+		ipproto   string
 	)
 	flowKey := flowSpec.GetFlowKey()
 
@@ -198,7 +201,15 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 	case *halproto.FlowKey_V4Key:
 		keyType = "IPv4"
 		v4Key := flowKey.GetV4Key()
-		id = spec.GetMeta().GetVrfId()
+		sessionID = spec.GetMeta().GetVrfId()
+		srcID = flowKey.GetSrcVrfId()
+		dstID = flowKey.GetDstVrfId()
+		if srcID == 0 {
+			srcID = sessionID
+		}
+		if dstID == 0 {
+			dstID = sessionID
+		}
 		src = Uint32IPAddrToStr(v4Key.GetSip())
 		dst = Uint32IPAddrToStr(v4Key.GetDip())
 		l4 := v4Key.GetL4Fields()
@@ -232,7 +243,15 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 	case *halproto.FlowKey_V6Key:
 		keyType = "IPv6"
 		v6Key := flowKey.GetV6Key()
-		id = spec.GetMeta().GetVrfId()
+		sessionID = spec.GetMeta().GetVrfId()
+		srcID = flowKey.GetSrcVrfId()
+		dstID = flowKey.GetDstVrfId()
+		if srcID == 0 {
+			srcID = sessionID
+		}
+		if dstID == 0 {
+			dstID = sessionID
+		}
 		src = utils.IPAddrToStr(v6Key.GetSip())
 		dst = utils.IPAddrToStr(v6Key.GetDip())
 		l4 := v6Key.GetL4Fields()
@@ -268,11 +287,14 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 		src = "UNK"
 		dst = "UNK"
 		id = 0
+		srcID = 0
+		dstID = 0
 	}
 
-	fmt.Printf("%-12d%-12s%-14s%-16d%-24s%-24s%-10s\n",
+	fmt.Printf("%-14d%-12s%-14s%-12d%-10d%-10d%-24s%-24s%-12s\n",
 		status.GetSessionHandle(),
 		flowStr, keyType, id,
+		srcID, dstID,
 		src, dst, ipproto)
 }
 
