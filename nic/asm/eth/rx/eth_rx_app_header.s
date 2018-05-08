@@ -77,8 +77,8 @@ eth_rx_rss_input:
     phvwri        p.{app_header_table0_valid...app_header_table3_valid}, 0
 
   .brcase 7
-    phvwri.e      p.p4_intr_global_drop, 1
-    phvwri.f      p.{app_header_table0_valid...app_header_table3_valid}, 0
+    b             eth_rx_rss_none
+    phvwri        p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
 
 .brend
 

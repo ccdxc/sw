@@ -48,32 +48,34 @@
  */
 
 #define MODIFY_ETH_TX_GLOBAL \
-    modify_field(eth_tx_global_scratch.num_desc, eth_tx_global.num_desc); \
     modify_field(eth_tx_global_scratch.dma_cur_flit, eth_tx_global.dma_cur_flit); \
-    modify_field(eth_tx_global_scratch.dma_cur_index, eth_tx_global.dma_cur_index); \
+    modify_field(eth_tx_global_scratch.dma_cur_index, eth_tx_global.dma_cur_index);
 
 #define MODIFY_ETH_TX_T0_S2S \
-    modify_field(eth_tx_t0_s2s_scratch.lif, eth_tx_t0_s2s.lif); \
-    modify_field(eth_tx_t0_s2s_scratch.qtype, eth_tx_t0_s2s.qtype); \
-    modify_field(eth_tx_t0_s2s_scratch.qid, eth_tx_t0_s2s.qid); \
-    modify_field(eth_tx_t0_s2s_scratch.c_index0, eth_tx_t0_s2s.c_index0);
+    modify_field(eth_tx_t0_s2s_scratch.num_todo, eth_tx_t0_s2s.num_todo); \
+    modify_field(eth_tx_t0_s2s_scratch.num_desc, eth_tx_t0_s2s.num_desc); \
+    modify_field(eth_tx_t0_s2s_scratch.sg_start, eth_tx_t0_s2s.sg_start); \
+    modify_field(eth_tx_t0_s2s_scratch.__pad, eth_tx_t0_s2s.__pad); \
+    modify_field(eth_tx_t0_s2s_scratch.cq_desc_addr, eth_tx_t0_s2s.cq_desc_addr); \
+    modify_field(eth_tx_t0_s2s_scratch.intr_assert_addr, eth_tx_t0_s2s.intr_assert_addr); \
+    modify_field(eth_tx_t0_s2s_scratch.intr_assert_data, eth_tx_t0_s2s.intr_assert_data);
 
 #define MODIFY_ETH_TX_T1_S2S \
     modify_field(eth_tx_t1_s2s_scratch.sg_desc_addr, eth_tx_t1_s2s.sg_desc_addr); \
     modify_field(eth_tx_t1_s2s_scratch.sg_in_progress, eth_tx_t1_s2s.sg_in_progress); \
     modify_field(eth_tx_t1_s2s_scratch.num_sg_elems, eth_tx_t1_s2s.num_sg_elems);
 
-#define MODIFY_ETH_TX_T3_S2S \
-    modify_field(eth_tx_t3_s2s_scratch.cq_desc_addr, eth_tx_t3_s2s.cq_desc_addr); \
-    modify_field(eth_tx_t3_s2s_scratch.intr_assert_addr, eth_tx_t3_s2s.intr_assert_addr); \
-    modify_field(eth_tx_t3_s2s_scratch.intr_assert_data, eth_tx_t3_s2s.intr_assert_data);
-
 #define MODIFY_ETH_TX_TO_S1 \
-    modify_field(eth_tx_to_s1_scratch.qstate_addr, eth_tx_to_s1.qstate_addr); \
-    modify_field(eth_tx_to_s1_scratch.sg_desc_addr, eth_tx_to_s1.sg_desc_addr);
+    modify_field(eth_tx_to_s1_scratch.qstate_addr, eth_tx_to_s1.qstate_addr);
 
 #define MODIFY_ETH_TX_TO_S2 \
-    MODIFY_TX_DESC_KEY(to_s2, 0)
+    modify_field(eth_tx_to_s2_scratch.lif, eth_tx_to_s2.lif); \
+    modify_field(eth_tx_to_s2_scratch.qtype, eth_tx_to_s2.qtype); \
+    modify_field(eth_tx_to_s2_scratch.qid, eth_tx_to_s2.qid); \
+    modify_field(eth_tx_to_s2_scratch.my_ci, eth_tx_to_s2.my_ci);
+
+#define MODIFY_ETH_TX_TO_S3 \
+    MODIFY_TX_DESC_KEY(to_s3, 0)
 
 #define PARAM_TX_DESC(n) \
     addr_lo##n, rsvd##n, addr_hi##n, opcode##n, num_sg_elems##n, \

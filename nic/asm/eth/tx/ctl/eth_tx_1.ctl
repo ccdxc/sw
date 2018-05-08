@@ -1,14 +1,14 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "INGRESS_tx_table_s2_t1_k.h"
+#include "INGRESS_tx_table_s3_t0_k.h"
 
 #include "../../asm/eth/tx/defines.h"
 #include "../../p4/iris/include/defines.h"
 
 struct phv_ p;
-struct tx_table_s2_t1_k_ k;
-struct tx_table_s2_t1_eth_tx_d d;
+struct tx_table_s3_t0_k_ k;
+
 
 p = {
     app_header_table0_valid = 0;
@@ -27,10 +27,10 @@ p = {
 };
 
 k = {
-    eth_tx_global_num_desc = 0x2;
+    eth_tx_t0_s2s_num_desc = 0x1;
     eth_tx_global_dma_cur_flit = 0x8;
     eth_tx_global_dma_cur_index = 0x0;
-    eth_tx_to_s2_addr_lo0 = 0xbabadeadbeef;
-    eth_tx_to_s2_addr_hi0 = 0x1;
-    eth_tx_to_s2_len0 = 0x6e;
+    eth_tx_to_s3_addr_lo0 = 0xbabadeadbeef;
+    eth_tx_to_s3_addr_hi0 = 0x1;
+    eth_tx_to_s3_len0 = 0x6e;
 };

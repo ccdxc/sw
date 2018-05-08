@@ -105,17 +105,12 @@ struct mem2pkt {
     add         _r_tmp, _s0, _e0, sizeof(struct phv2pkt.start); \
     phvwrp      _r, offsetof(struct phv2pkt, start), SIZEOF_FIELD_RANGE(struct phv2pkt, end, start), _r_tmp;
 
-//  phvwrp      _r, offsetof(struct phv2pkt, cmd_type), sizeof(struct phv2pkt.cmd_type), CAPRI_DMA_COMMAND_PHV_TO_PKT; \
-//  phvwrp      _r, offsetof(struct phv2pkt, cmd_size), sizeof(struct phv2pkt.cmd_size), 1; \
-
 #define DMA_PHV2PKT_2(_r, _s0, _e0, _s1, _e1, _r_tmp) \
     phvwrp      _r, offsetof(struct phv2pkt, cmd_type), SIZEOF_FIELD_RANGE(struct phv2pkt, cmd_size, cmd_type), (1 << offsetof(struct phv2pkt, cmd_size)) | (CAPRI_DMA_COMMAND_PHV_TO_PKT << offsetof(struct phv2pkt, cmd_type)); \
     add         _r_tmp, _s0, _e0, sizeof(struct phv2pkt.start); \
     phvwrp      _r, offsetof(struct phv2pkt, start), SIZEOF_FIELD_RANGE(struct phv2pkt, end, start), _r_tmp; \
     add         _r_tmp, _s1, _e1, sizeof(struct phv2pkt.start1); \
     phvwrp      _r, offsetof(struct phv2pkt, start1), SIZEOF_FIELD_RANGE(struct phv2pkt, end1, start1), _r_tmp;
-
-//  phvwrp      _r, offsetof(struct phv2pkt, cmd_type), SIZEOF_FIELD_RANGE(struct phv2pkt, cmd_type, cmd_size), (2 << offsetof(struct phv2pkt, cmd_size)) | (CAPRI_DMA_COMMAND_PHV_TO_PKT << offsetof(struct phv2pkt, cmd_type)); \
 
 #define DMA_PHV2PKT_3(_r, _s0, _e0, _s1, _e1, _s2, _e2, _r_tmp) \
     phvwrp      _r, offsetof(struct phv2pkt, cmd_type), sizeof(struct phv2pkt.cmd_type), CAPRI_DMA_COMMAND_PHV_TO_PKT; \
@@ -126,8 +121,6 @@ struct mem2pkt {
     phvwrp      _r, offsetof(struct phv2pkt, start1), SIZEOF_FIELD_RANGE(struct phv2pkt, end1, start1), _r_tmp; \
     add         _r_tmp, _s2, _e2, sizeof(struct phv2pkt.start2); \
     phvwrp      _r, offsetof(struct phv2pkt, start2), SIZEOF_FIELD_RANGE(struct phv2pkt, end2, start2), _r_tmp;
-
-//  phvwrp      _r, offsetof(struct phv2pkt, cmd_type), SIZEOF_FIELD_RANGE(struct phv2pkt, cmd_size, cmd_type), (3 << offsetof(struct phv2pkt, cmd_size)) | (CAPRI_DMA_COMMAND_PHV_TO_PKT << offsetof(struct phv2pkt, cmd_type)); \
 
 #define DMA_PHV2PKT_4(_r, _s0, _e0, _s1, _e1, _s2, _e2, _s3, _e3, _r_tmp) \
     phvwrp      _r, offsetof(struct phv2pkt, cmd_type), sizeof(struct phv2pkt.cmd_type), CAPRI_DMA_COMMAND_PHV_TO_PKT; \

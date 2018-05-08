@@ -9,16 +9,16 @@
 #define tx_table_s0_t0_action eth_tx_fetch_desc
 #define tx_table_s1_t0_action eth_tx_prep
 #define tx_table_s2_t0_action eth_tx_commit
-#define tx_table_s2_t1_action eth_tx
-#define tx_table_s3_t3_action eth_tx_completion
+#define tx_table_s3_t0_action eth_tx
+#define tx_table_s3_t1_action eth_tx_sg
+//#define tx_table_s3_t2_action eth_tx_tso
+#define tx_table_s7_t0_action eth_tx_completion
 
 #include "../common-p4+/common_txdma.p4"
 #include "eth_txdma.p4"
-//#include "defines.h"
 
 /******************************************************************************
  * Action functions
- * - These action functions are used to generate k+i and d structures.
  *****************************************************************************/
 
 action eth_tx_dummy(data0, data1, data2, data3, data4, data5, data6, data7)
@@ -28,22 +28,22 @@ action eth_tx_dummy(data0, data1, data2, data3, data4, data5, data6, data7)
 
 action eth_tx_fetch_desc(
         rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-        p_index0, c_index0, comp_index, spec_index,
+        p_index0, c_index0, comp_index, ci_fetch,
         enable, color, rsvd1,
         ring_base, ring_size, cq_ring_base, intr_assert_addr,
         spurious_db_cnt, sg_ring_base)
 {
-    // For K+I struct generation
+    // K+I
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
 
-    // For D-struct generation
+    // D
     MODIFY_QSTATE_INTRINSIC(eth_tx_qstate)
     modify_field(eth_tx_qstate.comp_index, comp_index);
-    modify_field(eth_tx_qstate.spec_index, spec_index);
+    modify_field(eth_tx_qstate.ci_fetch, ci_fetch);
     modify_field(eth_tx_qstate.enable, enable);
     modify_field(eth_tx_qstate.color, color);
     modify_field(eth_tx_qstate.rsvd1, rsvd1);
@@ -62,12 +62,12 @@ action eth_tx_prep(
     PARAM_TX_DESC(3)
 )
 {
-    // For K+I struct generation
+    // K+I
     MODIFY_ETH_TX_GLOBAL
     MODIFY_ETH_TX_T0_S2S
     MODIFY_ETH_TX_TO_S1
 
-    // For D-struct generation
+    // D
     MODIFY_TX_DESC(0)
     MODIFY_TX_DESC(1)
     MODIFY_TX_DESC(2)
@@ -76,20 +76,21 @@ action eth_tx_prep(
 
 action eth_tx_commit(
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, comp_index, spec_index,
+    p_index0, c_index0, comp_index, ci_fetch,
     enable, color, rsvd1,
     ring_base, ring_size, cq_ring_base, intr_assert_addr,
     spurious_db_cnt, sg_ring_base)
 {
-    // For K+I struct generation
+    // K+I
     MODIFY_ETH_TX_GLOBAL
     MODIFY_ETH_TX_T0_S2S
+    MODIFY_ETH_TX_TO_S2
 
-    // For D-struct generation
+    // D
     modify_field(eth_tx_qstate.pc, pc);
     MODIFY_QSTATE_INTRINSIC(eth_tx_qstate)
     modify_field(eth_tx_qstate.comp_index, comp_index);
-    modify_field(eth_tx_qstate.spec_index, spec_index);
+    modify_field(eth_tx_qstate.ci_fetch, ci_fetch);
     modify_field(eth_tx_qstate.enable, enable);
     modify_field(eth_tx_qstate.color, color);
     modify_field(eth_tx_qstate.rsvd1, rsvd1);
@@ -101,19 +102,27 @@ action eth_tx_commit(
     modify_field(eth_tx_qstate.sg_ring_base, sg_ring_base);
 }
 
-action eth_tx(
+action eth_tx()
+{
+    // K+I
+    MODIFY_ETH_TX_GLOBAL
+    MODIFY_ETH_TX_T0_S2S
+    MODIFY_ETH_TX_TO_S3
+}
+
+action eth_tx_sg(
     PARAM_TX_SG_ELEM(0),
     PARAM_TX_SG_ELEM(1),
     PARAM_TX_SG_ELEM(2),
     PARAM_TX_SG_ELEM(3)
 )
 {
-    // For K+I struct generation
+    // K+I
     MODIFY_ETH_TX_GLOBAL
     MODIFY_ETH_TX_T1_S2S
-    MODIFY_ETH_TX_TO_S2
+    MODIFY_ETH_TX_TO_S3
 
-    // For D-struct generation
+    // D
     MODIFY_TX_SG_ELEM(0)
     MODIFY_TX_SG_ELEM(1)
     MODIFY_TX_SG_ELEM(2)
@@ -122,9 +131,7 @@ action eth_tx(
 
 action eth_tx_completion()
 {
-    // For K+I struct generation
+    // K+I
     MODIFY_ETH_TX_GLOBAL
-    MODIFY_ETH_TX_T3_S2S
-
-    // For D-struct generation
+    MODIFY_ETH_TX_T0_S2S
 }

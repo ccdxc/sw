@@ -1,0 +1,115 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 1
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : 1400
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                flags   : ack
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : callback://eth/callbacks/GetPayload/size=1400
+
+    - packet:
+        id          : PKT1 # Base packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            qtag    :
+                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+            tcp:
+                flags: ack
+
+    - packet:
+        id          : EXP_PKT # Base packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag:
+                vlan: ref://testcase/config/dst/segment/vlan_id
+                prio: ref://testcase/config/flow/txqos/cos
+            ipv4:
+                tos : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc  : ref://testcase/config/flow/txqos/dscp
+            tcp:
+                flags: ack
+
+buffers:
+    - buffer:
+        id      : BUF1 # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields  :
+            bind: True
+            size : ref://testcase/packets/id=PKT1/size
+            data : ref://testcase/packets/id=PKT1/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX
+
+    - callback: callback://eth/callbacks/InitEthTxSgDescriptor/desc=DESC1,buf=BUF1,pkt=PKT1,nfrags=7
+
+    - descriptor:
+        id      : EXP_DESC1 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status : 0x0
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetL2UcExpectedPacket
+            port    : callback://networking/fwmode/GetTxExpectedPorts

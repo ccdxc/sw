@@ -51,4 +51,4 @@ eth_tx_cq_wrap:
 	$(CAPSIM) $(INC_DIRS) -P eth_tx_prep=0xffffffff eth_tx_cq_wrap.ctl $(BINDIR)/eth_tx_fetch_desc.bin
 
 eth_tx_1:
-	$(CAPSIM) $(INC_DIRS) -P eth_tx_start=0xffffffff -P eth_tx_completion=0xffffffff eth_tx_1.ctl $(BINDIR)/eth_tx.bin
+	$(CAPSIM) $(INC_DIRS) -P eth_tx_completion=0xffffffff eth_tx_1.ctl $(BINDIR)/eth_tx.bin

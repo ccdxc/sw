@@ -69,7 +69,7 @@ header_type eth_tx_qstate_d {
         p_index0   : 16;
         c_index0   : 16;
         comp_index : 16;
-        spec_index : 16;
+        ci_fetch   : 16;
 
         enable : 1;
         color : 1;
@@ -135,7 +135,6 @@ header_type eth_tx_sg_desc_d {
 
 header_type eth_tx_global_k {
     fields {
-        num_desc : 4;
         dma_cur_flit : 4;
         dma_cur_index : 2;
     }
@@ -143,17 +142,13 @@ header_type eth_tx_global_k {
 
 header_type eth_tx_t0_s2s_k {
     fields {
-        lif : 11;
-        qtype : 3;
-        qid : 24;
-        c_index0 : 16;
-    }
-}
-
-header_type eth_tx_to_s1_k {
-    fields {
-        qstate_addr : 64;
-        sg_desc_addr : 64;
+        num_todo : 4;
+        num_desc : 4;
+        sg_start : 1;
+        __pad : 7;
+        cq_desc_addr : 64;
+        intr_assert_addr : 32;
+        intr_assert_data : 32;   // Should be byte-aligned for PHV2MEM
     }
 }
 
@@ -165,38 +160,44 @@ header_type eth_tx_t1_s2s_k {
     }
 }
 
-header_type eth_tx_t3_s2s_k {
+header_type eth_tx_to_s1_k {
     fields {
-        cq_desc_addr : 64;
-        intr_assert_addr : 32;
-        intr_assert_data : 32;
+        qstate_addr : 64;
     }
 }
 
 header_type eth_tx_to_s2_k {
     fields {
-        HEADER_TX_DESC(0)
+        lif : 11;
+        qtype : 3;
+        qid : 24;
+        my_ci : 16;
     }
 }
 
 header_type eth_tx_to_s3_k {
     fields {
-        HEADER_TX_DESC(1)
+        HEADER_TX_DESC(0)
     }
 }
 
 header_type eth_tx_to_s4_k {
     fields {
-        HEADER_TX_DESC(2)
+        HEADER_TX_DESC(1)
     }
 }
 
 header_type eth_tx_to_s5_k {
     fields {
-        HEADER_TX_DESC(3)
+        HEADER_TX_DESC(2)
     }
 }
 
+header_type eth_tx_to_s6_k {
+    fields {
+        HEADER_TX_DESC(3)
+    }
+}
 
 /*****************************************************************************
  *  D-vector
@@ -248,18 +249,17 @@ metadata eth_tx_to_s4_k eth_tx_to_s4_scratch;
 metadata eth_tx_to_s5_k eth_tx_to_s5;
 @pragma scratch_metadata
 metadata eth_tx_to_s5_k eth_tx_to_s5_scratch;
-/*
+
 @pragma pa_header_union ingress to_stage_6
 metadata eth_tx_to_s6_k eth_tx_to_s6;
 @pragma scratch_metadata
 metadata eth_tx_to_s6_k eth_tx_to_s6_scratch;
-
+/*
 @pragma pa_header_union ingress to_stage_7
 metadata eth_tx_to_s7_k eth_tx_to_s7;
 @pragma scratch_metadata
 metadata eth_tx_to_s7_k eth_tx_to_s7_scratch;
 */
-
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s;
@@ -275,12 +275,12 @@ metadata eth_tx_t1_s2s_k eth_tx_t1_s2s_scratch;
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
-*/
+
 @pragma pa_header_union ingress common_t3_s2s
 metadata eth_tx_t3_s2s_k eth_tx_t3_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t3_s2s_k eth_tx_t3_s2s_scratch;
-
+*/
 
 /*****************************************************************************
  * P-vector
@@ -298,11 +298,11 @@ metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr0;
 // Additional APP Headers for other packets
 @pragma dont_trim
 @pragma pa_align 512
-metadata p4plus_to_p4_header_t eth_tx_app_hdr1;
+metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr1;
 @pragma dont_trim
-metadata p4plus_to_p4_header_t eth_tx_app_hdr2;
+metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr2;
 @pragma dont_trim
-metadata p4plus_to_p4_header_t eth_tx_app_hdr3;
+metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr3;
 
 @pragma pa_align 512
 @pragma dont_trim
