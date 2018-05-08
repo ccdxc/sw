@@ -57,7 +57,7 @@ function create_routes {
 function create_nat_pools {
   NAT_POOL_URL="$NAPLES_AGENT_IP:9007/api/natpools/"
 
-  curl -d'{"kind":"NatPool","meta":{"name":"kg1-pool-1","tenant":"default","namespace":"kg1"},"spec":{"ip-range":"10.1.2.1-10.1.2.200"}}' -X POST -H "Content-Type: application/json" $NAT_POOL_URL
+  curl -d'{"kind":"NatPool","meta":{"name":"pool-1","tenant":"default","namespace":"kg1"},"spec":{"ip-range":"10.1.2.1-10.1.2.200"}}' -X POST -H "Content-Type: application/json" $NAT_POOL_URL
   validate_get "kg1-pool-1" $NAT_POOL_URL
 
   echo "All NatPools created"
@@ -66,6 +66,7 @@ function create_nat_pools {
 function create_nat_policies {
   NAT_POLICY_URL="$NAPLES_AGENT_IP:9007/api/natpolicies/"
 
+  curl -d'{"kind":"NatPolicy","meta":{"name":"kg2","tenant":"default","namespace":"kg2"},"spec":{"rules":[{ "source": {"address": "10.0.0.0-10.0.255.255"}, "nat-pool":"kg1/pool-1","action":"SNAT"}]}}'  -X POST -H "Content-Type: application/json" $NAT_POLICY_URL
   curl -d'{"kind":"NatPolicy","meta":{"name":"kg1-nat-policy","tenant":"default","namespace":"kg2"},"spec":{"rules":[{"nat-pool":"kg1/pool-1","action":"SNAT"}]}}' -X POST -H "Content-Type: application/json" $NAT_POLICY_URL
   validate_get "kg1-nat-policy" $NAT_POLICY_URL
 
