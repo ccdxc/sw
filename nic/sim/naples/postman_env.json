@@ -1,0 +1,23 @@
+{
+  "id": "30b4233d-4c24-46a7-9112-3792cae11488",
+  "name": "salesforce",
+  "values": [
+    {
+      "key": "node1",
+      "value": "localhost:9007",
+      "description": "",
+      "type": "text",
+      "enabled": true
+    },
+    {
+      "key": "node2",
+      "value": "localhost:9007",
+      "description": "",
+      "type": "text",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2018-05-08T05:39:12.677Z",
+  "_postman_exported_using": "Postman/6.0.10"
+}

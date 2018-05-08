@@ -27,6 +27,14 @@ Vagrant.configure("2") do |config|
 
       #agent port forwarding
       subconfig.vm.network  "forwarded_port", guest: AGENT_PORT, host: 9000+i+11
+
+      # Copy postman scripts
+      subconfig.vm.provision "file",
+                             source: "SF-Kingdom#{i+1}.postman_collection.json",
+                             destination: "$HOME/postman_collection.json"
+      subconfig.vm.provision "file",
+                             source: "postman_env.json",
+                             destination: "$HOME/postman_env.json"
     end
   end
   
@@ -42,11 +50,15 @@ Vagrant.configure("2") do |config|
   end
 
   # one time setup
-  config.vm.provision "shell", inline: "yum install -y bridge-utils tcpdump net-tools"
-  config.vm.provision "shell", inline: "mkdir -p #{NAPLES_DATA_DIR}"
-  config.vm.provision "shell", inline: "docker images purge"
-  config.vm.provision "shell", inline: "docker rmi -f #{NAPLES_IMAGE}"
-  config.vm.provision "shell", inline: "docker load --input /vagrant/#{NAPLES_IMAGE_FILE}"
+  config.vm.provision "shell", inline: <<-SCRIPT
+      yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      yum install -y bridge-utils tcpdump net-tools nodejs npm
+      npm install -g newman
+      mkdir -p #{NAPLES_DATA_DIR}
+      docker images purge
+      docker rmi -f #{NAPLES_IMAGE}
+      docker load --input /vagrant/#{NAPLES_IMAGE_FILE}
+  SCRIPT
 
   # bringup naples container
   config.vm.provision "docker" do |d|
