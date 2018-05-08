@@ -330,18 +330,33 @@ struct pnso_chksum_tag {
 };
 
 /**
+ * struct pnso_output_buf - represents the output buffer of a specific
+ * service.
+ * @data_len: specifies the length of the output data
+ * @buf_list: specifies a scatter/gather buffer list that to be used
+ * as output buffer.
+ *
+ */
+struct pnso_output_buf {
+	uint32_t data_len;
+	struct pnso_buffer_list *buf_list;
+};
+
+/**
  * struct pnso_service_status - represents the result of a specific service
  * within a request.
  * @err: specifies the error code of a service within the service request.
  * @svc_type: specifies one of the enumerated values for the accelerator service
  * type.
- * @num_tags: specifies number of SHAs or checksums.
- * @tags: specifies a pointer to an allocated memory for number of 'num_tags'
- * hashes or checksums.  When 'num_tags' is 0, this parameter is NULL.
- * @output_data_len: specifies the length of the output buffer processed in
- * bytes depending on the service type.
- * @dst_buf: specifies a scatter/gather buffer list that to be used
- * as output buffer for this service.
+ * @num_outputs: specifies number of SHAs or checksums or destination buffer.
+ * @hashes: specifies a pointer to an allocated memory for number of
+ * 'num_outputs' for hashes.  When 'num_outputs' is 0, this parameter is NULL.
+ * @chksums: specifies a pointer to an allocated memory for number of 
+ * 'num_outputs' for the checksums.  When 'num_outputs' is 0, this parameter is
+ * NULL.
+ * @output_buf: specifies a scatter/gather buffer list that to be used
+ * as output buffer for this service and 'num_outputs' will be set to 1.  When
+ * 'num_outputs' is set to 0, 'output_buf' is NULL.
  *
  * Note: Hash or checksum tags will be packed one after another.
  *
@@ -349,13 +364,12 @@ struct pnso_chksum_tag {
 struct pnso_service_status {
 	pnso_error_t err;
 	uint16_t svc_type;
-	uint16_t num_tags;
+	uint16_t num_outputs;
 	union {
 		struct pnso_hash_tag *hashes;
 		struct pnso_chksum_tag *chksums;
-	} tags;
-	uint32_t output_data_len;
-	struct pnso_buffer_list *dst_buf;
+		struct pnso_output_buf *output_buf;
+	} o;
 } __attribute__ ((__packed__));
 
 /**
