@@ -296,6 +296,36 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 		flowStr, keyType, id,
 		srcID, dstID,
 		src, dst, ipproto)
+
+	flowInfo := flowSpec.GetFlowData().GetFlowInfo()
+
+	natType := flowInfo.GetNatType()
+	snat := false
+	dnat := false
+
+	switch natType {
+	case halproto.NatType_NAT_TYPE_SNAT:
+		snat = true
+	case halproto.NatType_NAT_TYPE_DNAT:
+		dnat = true
+	case halproto.NatType_NAT_TYPE_TWICE_NAT:
+		snat = true
+		dnat = true
+	}
+
+	if snat {
+		nsStr := utils.IPAddrToStr(flowInfo.GetNatSip())
+		nsStr += fmt.Sprintf(":%d", flowInfo.GetNatSport())
+		fmt.Printf("%-24s%-8s%-40s%-4s%-40s\n",
+			"", "SNAT", src, "->", nsStr)
+	}
+
+	if dnat {
+		ndStr := utils.IPAddrToStr(flowInfo.GetNatDip())
+		ndStr += fmt.Sprintf(":%d", flowInfo.GetNatDport())
+		fmt.Printf("%-24s%-8s%-40s%-4s%-40s\n",
+			"", "DNAT", dst, "->", ndStr)
+	}
 }
 
 // Uint32IPAddrToStr converts uint32 IP address to string
