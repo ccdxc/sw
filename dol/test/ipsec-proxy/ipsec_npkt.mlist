@@ -1,0 +1,30 @@
+feature:
+    id          : ipsec_npkt 
+    sub         : ipsec_npkt 
+    package     : test.ipsec-proxy
+    module      : None
+    enable      : True
+    ignore      : False
+    rtl         : False
+
+modules:
+    - module:
+        name    : MULTI_PKT_TCP 
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : multi_pkt_tcp 
+        spec    : multi_pkt_tcp.testspec
+        ignore  : True 
+        rtl     : True 
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : MULTI_PKT_TCP_DECRYPT 
+        enable  : False 
+        package : test.ipsec-proxy
+        module  : multi_pkt_tcp_decrypt
+        spec    : multi_pkt_tcp_decrypt.testspec
+        ignore  : True 
+        rtl     : True 
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
