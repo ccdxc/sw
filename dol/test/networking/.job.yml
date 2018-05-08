@@ -1,0 +1,13 @@
+---
+targets:
+  networking:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo up2up --feature networking ; ret=$? ; make sanity_logs ; exit $ret" ]
+  vxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo vxlan --feature vxlan ; ret=$? ; make sanity_logs ; exit $ret" ]
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+rebase: true
+logfiles:
+  - /sw/nic/nic_sanity_logs.tar.gz

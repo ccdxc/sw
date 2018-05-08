@@ -6,6 +6,7 @@ rebase: true
 references:
   - nic
   - dol
+  - dol/test/networking
   - venice
   - api
   - platform
@@ -18,5 +19,6 @@ references:
   - storage/offload
 dependencies:
   dol: nic
+  dol/test/networking : nic
   nic/agent: venice
   venice: test
