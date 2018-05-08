@@ -17,48 +17,129 @@ static inline hal_ret_t
 update_iflow_from_nat_rules (fte::ctx_t& ctx)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
-    hal::utils::nat::addr_entry_key_t addr_key;
-    hal::utils::nat::addr_entry_t *addr_entry;
+    hal::utils::nat::addr_entry_key_t  src_addr_key, dst_addr_key;
+    hal::utils::nat::addr_entry_t     *src_addr_entry, *dst_addr_entry;
+    const nat_cfg_rule_t              *nat_cfg;
+    hal::rule_data_t                  *rule_data;
+    hal::ipv4_tuple                    acl_key = {};
+    const hal::ipv4_rule_t            *rule = NULL;
+    hal_ret_t                          ret = HAL_RET_OK;
+    const acl::acl_ctx_t              *acl_ctx = NULL;
 
+    const char *ctx_name = nat_acl_ctx_name(ctx.key().svrf_id);
+    acl_ctx = acl::acl_get(ctx_name);
+    if (acl_ctx == NULL) {
+        HAL_TRACE_DEBUG("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
+        return ret;
+    }
     // fte state to store the original vrf/ip/port for rflow
     nat_info_t *nat_info = (nat_info_t *)ctx.feature_state();
-
     if (ctx.key().flow_type == FLOW_TYPE_V4) {
-        addr_key.ip_addr.af = IP_AF_IPV4;
+        src_addr_key.ip_addr.af = IP_AF_IPV4;
+        dst_addr_key.ip_addr.af = IP_AF_IPV4;
     } else if (ctx.key().flow_type == FLOW_TYPE_V6){
-        addr_key.ip_addr.af = IP_AF_IPV6;
+        src_addr_key.ip_addr.af = IP_AF_IPV6;
+        dst_addr_key.ip_addr.af = IP_AF_IPV6;
     } else {
-        return HAL_RET_OK; 
+        return HAL_RET_OK;
     }
 
     // snat 
-    addr_key.vrf_id = ctx.key().svrf_id;
-    addr_key.ip_addr.addr = ctx.key().sip;
-    addr_entry = hal::utils::nat::addr_entry_get(&addr_key);
+    src_addr_key.vrf_id = ctx.key().svrf_id;
+    src_addr_key.ip_addr.addr = ctx.key().sip;
+    src_addr_entry = hal::utils::nat::addr_entry_get(&src_addr_key);
 
-    if (!addr_entry) {
-        // TODO lookup nat policy and allocate NAT entry
+    // dnat
+    dst_addr_key.vrf_id = ctx.key().dvrf_id;
+    dst_addr_key.ip_addr.addr = ctx.key().dip;
+    dst_addr_entry = hal::utils::nat::addr_entry_get(&dst_addr_key);
+
+    if (!src_addr_entry || !dst_addr_entry) {
+        acl_key.proto = ctx.key().proto;
+        acl_key.ip_src = ctx.key().sip.v4_addr;
+        acl_key.ip_dst = ctx.key().dip.v4_addr;
+        switch ( ctx.key().proto) {
+        case types::IPPROTO_ICMP:
+        case types::IPPROTO_ICMPV6:
+            acl_key.port_src =  ctx.key().icmp_id;
+            acl_key.port_dst = ((ctx.key().icmp_type << 8) |  ctx.key().icmp_code);
+            break;
+        case types::IPPROTO_ESP:
+            acl_key.port_src = ctx.key().spi >> 16 & 0xFFFF;
+            acl_key.port_dst = ctx.key().spi & 0xFFFF;
+            break;
+        case types::IPPROTO_TCP:
+        case types::IPPROTO_UDP:
+            acl_key.port_src = ctx.key().sport;
+            acl_key.port_dst = ctx.key().dport;
+            break;
+        default:
+            HAL_ASSERT(true);
+            ret = HAL_RET_FTE_RULE_NO_MATCH;
+            return ret;
+        }
+        ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("nat::rule lookup failed ret={}", ret);
+            return ret;
+        }
+        if (rule) {
+            rule_data = (hal::rule_data_t *) rule->data.userdata;
+            nat_cfg = (const hal::nat_cfg_rule_t *)rule_data->userdata;
+            // Handle for each NatAction: None, Static address, Dynamic address
+            if (!src_addr_entry) {
+                if (nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {
+                    nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.src_nat_pool);
+                    if (nat_pool) {
+                        ret = nat_pool_address_alloc(nat_pool, &src_addr_entry->tgt_ip_addr);
+                        if (ret != HAL_RET_OK) {
+                            HAL_TRACE_DEBUG("failed to allocate src nat ip");
+                            return ret;
+                        }
+                    } else {
+                        HAL_TRACE_DEBUG("unable to find src nat pool for the handle = {}", nat_cfg->action.src_nat_pool);
+                        return HAL_RET_ERR;
+                    }
+                }
+            }
+
+            if (!dst_addr_entry) {
+                if (nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {
+                    nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.dst_nat_pool);
+                    if (nat_pool) {
+                        ret = nat_pool_address_alloc(nat_pool, &dst_addr_entry->tgt_ip_addr);
+                        if (ret != HAL_RET_OK) {
+                            HAL_TRACE_DEBUG("failed to allocate dst nat ip");
+                            return ret;
+                        }
+                    } else {
+                        HAL_TRACE_DEBUG("unable to find dst nat pool for the handle = {}", nat_cfg->action.dst_nat_pool);
+                        return HAL_RET_ERR;
+                    }
+                }
+            }
+        }
     }
 
-    if (addr_entry) {
+    if (src_addr_entry) {
         if (ctx.key().flow_type == FLOW_TYPE_V4) {
-            if (addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, svrf_id, addr_entry->tgt_vrf_id);
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, addr_entry->tgt_vrf_id);
+            if (src_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, svrf_id, src_addr_entry->tgt_vrf_id);
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, src_addr_entry->tgt_vrf_id);
             }
-            HEADER_SET_FLD(flowupd.header_rewrite, ipv4, sip, addr_entry->tgt_ip_addr.addr.v4_addr);
+            HEADER_SET_FLD(flowupd.header_rewrite, ipv4, sip, src_addr_entry->tgt_ip_addr.addr.v4_addr);
         } else {
-            if (addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, svrf_id, addr_entry->tgt_vrf_id);
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, addr_entry->tgt_vrf_id);
+            if (src_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, svrf_id, src_addr_entry->tgt_vrf_id);
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, src_addr_entry->tgt_vrf_id);
             }
-            HEADER_SET_FLD(flowupd.header_rewrite, ipv6, sip, addr_entry->tgt_ip_addr.addr.v6_addr);
+            HEADER_SET_FLD(flowupd.header_rewrite, ipv6, sip,src_addr_entry->tgt_ip_addr.addr.v6_addr);
         }
 
         // Store the original info for rflow dnat
-        nat_info->nat_dip.af = addr_key.ip_addr.af;
+        nat_info->nat_dip.af = src_addr_key.ip_addr.af;
         nat_info->nat_dip.addr = ctx.key().sip;
-        if (addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
+        if (src_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
             nat_info->nat_dvrf = ctx.key().svrf_id;
             nat_info->nat_svrf = ctx.key().dvrf_id;
         }
@@ -75,32 +156,23 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
 
     }
 
-    // dnat
-    addr_key.vrf_id = ctx.key().dvrf_id;
-    addr_key.ip_addr.addr = ctx.key().dip;
-    addr_entry = hal::utils::nat::addr_entry_get(&addr_key);
-
-    if (!addr_entry) {
-        // TODO lookup nat policy and allocate NAT entry
-    }
-
-    if (addr_entry) {
+    if (dst_addr_entry) {
         if (ctx.key().flow_type == FLOW_TYPE_V4) {
-            if (addr_entry->tgt_vrf_id != ctx.key().dvrf_id) {
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, addr_entry->tgt_vrf_id);
+            if (dst_addr_entry->tgt_vrf_id != ctx.key().dvrf_id) {
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, dst_addr_entry->tgt_vrf_id);
             }
-            HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dip, addr_entry->tgt_ip_addr.addr.v4_addr);
+            HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dip, dst_addr_entry->tgt_ip_addr.addr.v4_addr);
         } else {
-            if (addr_entry->tgt_vrf_id != ctx.key().dvrf_id) {
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, addr_entry->tgt_vrf_id);
+            if (dst_addr_entry->tgt_vrf_id != ctx.key().dvrf_id) {
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, dst_addr_entry->tgt_vrf_id);
             }
-            HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dip, addr_entry->tgt_ip_addr.addr.v6_addr);
+            HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dip, dst_addr_entry->tgt_ip_addr.addr.v6_addr);
         }
 
         // Store the original info for rflow snat
-        nat_info->nat_sip.af = addr_key.ip_addr.af;
+        nat_info->nat_sip.af = dst_addr_key.ip_addr.af;
         nat_info->nat_sip.addr = ctx.key().dip;
-        if (addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
+        if (dst_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
             nat_info->nat_svrf = ctx.key().dvrf_id;
         }
 

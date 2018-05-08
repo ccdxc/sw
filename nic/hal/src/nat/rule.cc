@@ -15,6 +15,7 @@ using acl::acl_ctx_t;
 using acl::acl_config_t;
 using acl::ref_t;
 using namespace acl;
+using kh::NatPoolKeyHandle;
 
 namespace hal {
 
@@ -27,13 +28,27 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
                                   nat_cfg_rule_action_t *action)
 {
     hal_ret_t ret = HAL_RET_OK;
+    NatPoolKeyHandle kh;
 
     action->src_nat_action = spec.src_nat_action();
     action->dst_nat_action = spec.dst_nat_action();
-    // TODO - check for pools
-    // action->src_nat_pool = spec.src_nat_pool();
-    // action->dst_nat_pool = spec.src_nat_pool();
+    kh = spec.src_nat_pool();
+    if (kh.key_or_handle_case() == NatPoolKeyHandle::kPoolHandle) {
+        action->src_nat_pool = kh.pool_handle();
+    } else {
+        HAL_TRACE_ERR("handle is not present for src_nat_pool");
+        ret  = HAL_RET_ERR;
+        return ret;
+    }
 
+    kh = spec.dst_nat_pool();
+    if (kh.key_or_handle_case() == kh::NatPoolKeyHandle::kPoolHandle) {
+        action->dst_nat_pool = kh.pool_handle();
+    } else {
+        HAL_TRACE_ERR("handle is not present for src_nat_pool");
+        ret  = HAL_RET_ERR;
+        return ret;
+    }
     return ret;
 }
 
@@ -162,7 +177,7 @@ nat_cfg_rule_spec_handle (const nat::NatRuleSpec& spec, dllist_ctxt_t *head)
 
 acl_config_t nat_ip_acl_config_glbl;
 
-static inline const char *
+const char *
 nat_acl_ctx_name (vrf_id_t vrf_id)
 {
     thread_local static char name[ACL_NAMESIZE];

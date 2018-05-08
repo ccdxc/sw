@@ -84,6 +84,7 @@ hal_ret_t nat_mapping_get(NatMappingGetRequest& req,
 hal_ret_t hal_nat_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_nat_cleanup_cb(void);
 
+const char * nat_acl_ctx_name(vrf_id_t vrf_id);
 }    // namespace hal
 
 #endif    // __NAT_HPP__

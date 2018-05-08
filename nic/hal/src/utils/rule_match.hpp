@@ -18,6 +18,8 @@ using acl::acl_field_t;
 using acl::acl_rule_t;
 using acl::acl_field_type_t;
 using acl::acl_ctx_t;
+using acl::ref_t;
+using acl::acl_config_t;
 namespace hal {
 
 typedef struct rule_match_app_s {
