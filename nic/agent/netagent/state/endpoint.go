@@ -213,12 +213,14 @@ func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	// check if we have the endpoint
 	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
-	_, ok := na.endpointDB[key]
+	ep, ok := na.endpointDB[key]
 	na.Unlock()
 	if !ok {
 		log.Errorf("Endpoint %#v was not found", key)
 		return ErrEndpointNotFound
 	}
+
+	fmt.Println("BALERION IN EP: ", ep)
 
 	// call the datapath
 	if ep.Status.NodeUUID == na.nodeUUID {
