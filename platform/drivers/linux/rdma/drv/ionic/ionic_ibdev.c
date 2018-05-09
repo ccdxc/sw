@@ -2880,6 +2880,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 {
 	struct ionic_netdev_work *work =
 		container_of(ws, struct ionic_netdev_work, ws);
+	struct net_device *ndev = work->ndev;
 	struct ionic_ibdev *dev;
 	int rc;
 
@@ -2888,22 +2889,22 @@ static void ionic_netdev_work(struct work_struct *ws)
 	switch (work->event) {
 	case NETDEV_REGISTER:
 		if (dev) {
-			dev_dbg(&work->ndev->dev, "already registered\n");
+			dev_dbg(&ndev->dev, "already registered\n");
 			break;
 		}
 
-		dev_dbg(&work->ndev->dev, "register ibdev\n");
+		dev_dbg(&ndev->dev, "register ibdev\n");
 
-		dev = ionic_create_ibdev(work->lif, work->ndev);
+		dev = ionic_create_ibdev(work->lif, ndev);
 		if (IS_ERR(dev)) {
-			dev_dbg(&work->ndev->dev, "error register ibdev %d\n",
+			dev_dbg(&ndev->dev, "error register ibdev %d\n",
 				(int)PTR_ERR(dev));
 			break;
 		}
 
 		rc = ionic_api_set_private(work->lif, dev, IONIC_RDMA_PRIVATE);
 		if (rc) {
-			dev_dbg(&work->ndev->dev, "error set private %d\n", rc);
+			dev_dbg(&ndev->dev, "error set private %d\n", rc);
 			ionic_destroy_ibdev(dev);
 		}
 
@@ -2911,11 +2912,11 @@ static void ionic_netdev_work(struct work_struct *ws)
 
 	case NETDEV_UNREGISTER:
 		if (!dev) {
-			dev_dbg(&work->ndev->dev, "not registered\n");
+			dev_dbg(&ndev->dev, "not registered\n");
 			break;
 		}
 
-		dev_dbg(&work->ndev->dev, "unregister ibdev\n");
+		dev_dbg(&ndev->dev, "unregister ibdev\n");
 
 		ionic_api_set_private(work->lif, NULL, IONIC_RDMA_PRIVATE);
 		ionic_destroy_ibdev(dev);
@@ -2926,31 +2927,31 @@ static void ionic_netdev_work(struct work_struct *ws)
 		if (!dev)
 			break;
 
-		dev_dbg(&work->ndev->dev, "TODO up event\n");
+		dev_dbg(&ndev->dev, "TODO up event\n");
 		break;
 
 	case NETDEV_DOWN:
 		if (!dev)
 			break;
 
-		dev_dbg(&work->ndev->dev, "TODO down event\n");
+		dev_dbg(&ndev->dev, "TODO down event\n");
 		break;
 
 	case NETDEV_CHANGE:
 		if (!dev)
 			break;
 
-		dev_dbg(&work->ndev->dev, "TODO change event\n");
+		dev_dbg(&ndev->dev, "TODO change event\n");
 		break;
 
 	default:
 		if (!dev)
 			break;
 
-		dev_dbg(&work->ndev->dev, "unhandled event %lu\n", work->event);
+		dev_dbg(&ndev->dev, "unhandled event %lu\n", work->event);
 	}
 
-	dev_put(work->ndev);
+	dev_put(ndev);
 	kfree(work);
 
 	module_put(THIS_MODULE);
