@@ -165,7 +165,7 @@ public:
     sdk_ret_t insert(void *key, void *data, uint32_t *index,
                      void *key_mask = NULL, bool direct_to_otcam = FALSE);
     sdk_ret_t insert_withid(void *key, void *data, uint32_t index,
-                            void *key_mask);
+                            void *key_mask = NULL);
     sdk_ret_t update(uint32_t index, void *data);
     sdk_ret_t remove(uint32_t index);
     sdk_ret_t retrieve(uint32_t index, void *key, void *data);

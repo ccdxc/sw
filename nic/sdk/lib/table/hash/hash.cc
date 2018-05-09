@@ -238,12 +238,13 @@ end:
 sdk_ret_t
 hash::insert_withid(void *key, void *data, uint32_t index, void *key_mask)
 {
-    sdk_ret_t       rs       = SDK_RET_OK;
-    p4pd_error_t    pd_err   = P4PD_SUCCESS;
-    void            *hwkey   = NULL;
-    uint32_t        dleft_id = 0, dleft_index_key = 0;
-    uint32_t        otcam_id = 0;
-    hash_entry_t    *he      = NULL;
+    sdk_ret_t       rs            = SDK_RET_OK;
+    p4pd_error_t    pd_err        = P4PD_SUCCESS;
+    void            *hwkey        = NULL;
+    uint32_t        dleft_id      = 0, dleft_index_key = 0;
+    uint32_t        otcam_id      = 0;
+    hash_entry_t    *he           = NULL;
+    bool            key_mask_free = false;
 
     if (is_dleft(index)) {
         // get hash dleft table index from index
@@ -295,7 +296,19 @@ hash::insert_withid(void *key, void *data, uint32_t index, void *key_mask)
         if (otcam_) {
             otcam_id = get_otcam_id_from_hash_idx_(index);
             SDK_TRACE_DEBUG("otcam insert at: {}", otcam_id);
+            if (key_mask == NULL) {
+                key_mask = SDK_MALLOC(SDK_MEM_ALLOC_HASH_SW_KEY_MASK_INS,
+                                      swkey_len_);
+                memset(key_mask, ~0, swkey_len_);
+                key_mask_free = true;
+            }
             rs = otcam_->insert_withid(key, key_mask, data, otcam_id);
+            if (key_mask_free) {
+                SDK_FREE(SDK_MEM_ALLOC_HASH_SW_KEY_MASK_INS, key_mask);
+            }
+            if (rs == SDK_RET_OK) {
+                stats_incr(STATS_NUM_TCAM);
+            }
         } else {
             // invalid index. table doesn't have otcam.
             rs = SDK_RET_INVALID_ARG;

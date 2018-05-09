@@ -18,12 +18,15 @@ hal_ret_t vrf_pd_dealloc_res(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_cleanup(pd_vrf_t *vrf_pd);
 void link_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten);
 void delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten);
-hal_ret_t vrf_pd_program_hw(pd_vrf_t *vrf_pd);
-hal_ret_t vrf_pd_pgm_inp_prop_tbl(pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_program_hw(pd_vrf_t *vrf_pd,
+                            bool is_upgrade = false);
+hal_ret_t vrf_pd_pgm_inp_prop_tbl(pd_vrf_t *vrf_pd,
+                                  bool is_upgrade);
 hal_ret_t vrf_pd_deprogram_hw(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_depgm_inp_prop_tbl(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
-                                     ip_prefix_t *gipo_prefix);
+                                     ip_prefix_t *gipo_prefix,
+                                     bool is_upgrade = false);
 hal_ret_t vrf_pd_deprogram_gipo_prefix(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_alloc_cpuid(pd_vrf_t *pd_vrf);
 hal_ret_t vrf_pd_dealloc_cpuid(pd_vrf_t *vrf_pd);
@@ -223,16 +226,13 @@ pd_vrf_restore (pd_vrf_restore_args_t *args)
     }
 
 
-    // TODO: Eventually call table program hw and hw calls will be
-    //       a NOOP in p4pd code
-#if 0
-    // program hw
-    ret = vrf_pd_program_hw(vrf_pd);
+    // This call will just populate table libs and calls to HW will be
+    // a NOOP in p4pd code
+    ret = vrf_pd_program_hw(vrf_pd, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to program hw");
         goto end;
     }
-#endif
 
     // add to flow lookup id ht
     ret = vrf_pd_add_to_db(vrf_pd, ((vrf_t *)(vrf_pd->vrf))->hal_handle);
@@ -367,19 +367,19 @@ vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
 // program HW
 //----------------------------------------------------------------------------
 hal_ret_t
-vrf_pd_program_hw (pd_vrf_t *vrf_pd)
+vrf_pd_program_hw (pd_vrf_t *vrf_pd, bool is_upgrade)
 {
     hal_ret_t            ret;
 
     // program input properties table, for cpu traffic
-    ret = vrf_pd_pgm_inp_prop_tbl(vrf_pd);
+    ret = vrf_pd_pgm_inp_prop_tbl(vrf_pd, is_upgrade);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     // program input mapping native & tunnel tables: For MyTep Termination
     if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
         ret = vrf_pd_program_gipo_prefix(vrf_pd,
                                          &((vrf_t*)(vrf_pd->vrf))->
-                                         gipo_prefix);
+                                         gipo_prefix, is_upgrade);
     }
 
     return ret;
@@ -389,7 +389,7 @@ vrf_pd_program_hw (pd_vrf_t *vrf_pd)
 // program input propterties table for cpu tx traffic
 //----------------------------------------------------------------------------
 hal_ret_t
-vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
+vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd, bool is_upgrade)
 {
     hal_ret_t                   ret           = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
@@ -412,8 +412,14 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
     inp_prop.flow_miss_idx    = 0;
     inp_prop.allow_flood      = 0;
 
-    // insert
-    sdk_ret = inp_prop_tbl->insert(&key, &data, &vrf_pd->inp_prop_tbl_cpu_idx);
+    if (is_upgrade) {
+        // insert
+        sdk_ret = inp_prop_tbl->insert_withid(&key, &data,
+                                              vrf_pd->inp_prop_tbl_cpu_idx);
+    } else {
+        // insert
+        sdk_ret = inp_prop_tbl->insert(&key, &data, &vrf_pd->inp_prop_tbl_cpu_idx);
+    }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to program from_cpu_entry input properties");
@@ -436,7 +442,8 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
                                    bool inner_v4_vld,
                                    bool inner_v6_vld,
                                    uint8_t actionid,
-                                   p4pd_table_id tbl_id, uint32_t *idx)
+                                   p4pd_table_id tbl_id, uint32_t *idx,
+                                   bool is_upgrade)
 {
     hal_ret_t                           ret      = HAL_RET_OK;
     sdk_ret_t                           sdk_ret;
@@ -444,7 +451,6 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
     input_mapping_native_swkey_mask_t   mask     = {0};
     input_mapping_native_actiondata     data     = {0};
     tcam                                *tcam;
-    uint32_t                            ret_idx;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);
@@ -477,7 +483,11 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
         memrev(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, IP6_ADDR8_LEN);
     }
     data.actionid = actionid;
-    sdk_ret       = tcam->insert(&key, &mask, &data, &ret_idx);
+    if (is_upgrade) {
+        sdk_ret       = tcam->insert_withid(&key, &mask, &data, *idx);
+    } else {
+        sdk_ret       = tcam->insert(&key, &mask, &data, idx);
+    }
     ret           = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
@@ -485,13 +495,12 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
     } else {
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Input mapping table failure, idx : {}, err : {}",
-                          ret_idx, ret);
+                          *idx, ret);
             return ret;
         }
     }
     HAL_TRACE_DEBUG("Input mapping table tcam for prefix:{}, idx :{}, ret:{}",
-                    ippfx2str(ip_prefix), ret_idx, ret);
-    *idx = (int) ret_idx;
+                    ippfx2str(ip_prefix), *idx, ret);
     return ret;
 }
 
@@ -559,9 +568,9 @@ vrf_pd_deprogram_gipo_prefix(pd_vrf_t *vrf_pd)
 //-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
-                           ip_prefix_t *gipo_prefix)
+                           ip_prefix_t *gipo_prefix,
+                           bool is_upgrade)
 {
-    uint32_t     idx;
     hal_ret_t    ret = HAL_RET_OK;
 
     if (gipo_prefix->len == 0) {
@@ -575,30 +584,30 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                              true, false,
                                              INPUT_MAPPING_NATIVE_NOP_ID,
                                              P4TBL_ID_INPUT_MAPPING_NATIVE,
-                                             &idx);
+                                             &vrf_pd->gipo_imn_idx[0],
+                                             is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    vrf_pd->gipo_imn_idx[0] = idx;
     /* Entry 2 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                              INGRESS_TUNNEL_TYPE_VXLAN,
                                              false, true,
                                              INPUT_MAPPING_NATIVE_NOP_ID,
                                              P4TBL_ID_INPUT_MAPPING_NATIVE,
-                                             &idx);
+                                             &vrf_pd->gipo_imn_idx[1],
+                                             is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    vrf_pd->gipo_imn_idx[1] = idx;
     /* Entry 3 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                              INGRESS_TUNNEL_TYPE_VXLAN,
                                              false, false,
                                              INPUT_MAPPING_NATIVE_NOP_ID,
                                              P4TBL_ID_INPUT_MAPPING_NATIVE,
-                                             &idx);
+                                             &vrf_pd->gipo_imn_idx[2],
+                                             is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    vrf_pd->gipo_imn_idx[2] = idx;
 
     /* We program 3 entries in the INPUT_MAPPING_TUNNELED Table for the GIPo Entry */
     /* Entry 1 */
@@ -607,30 +616,30 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                              true, false,
                                              INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID,
                                              P4TBL_ID_INPUT_MAPPING_TUNNELED,
-                                             &idx);
+                                             &vrf_pd->gipo_imt_idx[0],
+                                             is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    vrf_pd->gipo_imt_idx[0] = idx;
     /* Entry 2 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                     INGRESS_TUNNEL_TYPE_VXLAN,
                                     false, true,
                                     INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID,
                                     P4TBL_ID_INPUT_MAPPING_TUNNELED,
-                                    &idx);
+                                    &vrf_pd->gipo_imt_idx[1],
+                                    is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    vrf_pd->gipo_imt_idx[1] = idx;
     /* Entry 3 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                     INGRESS_TUNNEL_TYPE_VXLAN,
                                     false, false,
                                     INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID,
                                     P4TBL_ID_INPUT_MAPPING_TUNNELED,
-                                    &idx);
+                                    &vrf_pd->gipo_imt_idx[2],
+                                    is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    vrf_pd->gipo_imt_idx[2] = idx;
 
     return HAL_RET_OK;
 
