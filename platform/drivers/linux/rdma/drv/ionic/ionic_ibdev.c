@@ -19,6 +19,9 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define DRIVER_DESCRIPTION "Pensando Capri RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
 
+#define PHYS_STATE_UP 5
+#define PHYS_STATE_DOWN 3
+
 /* XXX remove this section for release */
 static bool ionic_xxx_haps = false;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
@@ -376,11 +379,16 @@ static int ionic_query_port(struct ib_device *ibdev, u8 port,
 			    struct ib_port_attr *attr)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+	int rc;
 
 	if (port != 1)
 		return -EINVAL;
 
 	*attr = dev->port_attr;
+
+	rc = ib_get_eth_speed(ibdev, port,
+			      &attr->active_speed,
+			      &attr->active_width);
 
 	return 0;
 }
@@ -2139,6 +2147,17 @@ static const struct cpumask *ionic_get_vector_affinity(struct ib_device *ibdev,
 	return &dev->eq_vec[comp_vector]->cpumask;
 }
 
+static void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event)
+{
+	struct ib_event ev;
+
+	ev.device = &dev->ibdev;
+	ev.element.port_num = 1;
+	ev.event = event;
+
+	ib_dispatch_event(&ev);
+}
+
 static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 {
 	struct ib_event ibev;
@@ -2628,14 +2647,21 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_pkeys = 1;
 
 	/* XXX hardcode values, intentionally low, should come from identify */
-	dev->port_attr.subnet_prefix = 0;
-	dev->port_attr.state = IB_PORT_ACTIVE;
+	if (netif_running(ndev) && netif_carrier_ok(ndev)) {
+		dev->port_attr.state = IB_PORT_ACTIVE;
+		dev->port_attr.phys_state = PHYS_STATE_UP;
+	} else {
+		dev->port_attr.state = IB_PORT_DOWN;
+		dev->port_attr.phys_state = PHYS_STATE_DOWN;
+	}
 	dev->port_attr.max_mtu = ib_mtu_int_to_enum(ndev->max_mtu);
 	dev->port_attr.active_mtu = ib_mtu_int_to_enum(ndev->mtu);
 	dev->port_attr.gid_tbl_len = 4096; /* XXX same as max_ah, or unlimited? */
 	dev->port_attr.port_cap_flags = IB_PORT_IP_BASED_GIDS;
 	dev->port_attr.max_msg_sz = 0x80000000;
 	dev->port_attr.pkey_tbl_len = 1;
+	dev->port_attr.max_vl_num = 1;
+	dev->port_attr.subnet_prefix = 0xfe80000000000000ull;
 
 	/* XXX workarounds and overrides, remove for release */
 	if (ident->dev.ndbpgs_per_lif < 2)
@@ -2927,21 +2953,44 @@ static void ionic_netdev_work(struct work_struct *ws)
 		if (!dev)
 			break;
 
-		dev_dbg(&ndev->dev, "TODO up event\n");
+		dev->port_attr.state = IB_PORT_ACTIVE;
+		dev->port_attr.phys_state = PHYS_STATE_UP;
+		ionic_port_event(dev, IB_EVENT_PORT_ACTIVE);
+
 		break;
 
 	case NETDEV_DOWN:
 		if (!dev)
 			break;
 
-		dev_dbg(&ndev->dev, "TODO down event\n");
+		dev->port_attr.state = IB_PORT_DOWN;
+		dev->port_attr.phys_state = PHYS_STATE_DOWN;
+		ionic_port_event(dev, IB_EVENT_PORT_ERR);
+
 		break;
 
 	case NETDEV_CHANGE:
 		if (!dev)
 			break;
 
-		dev_dbg(&ndev->dev, "TODO change event\n");
+		if (netif_running(ndev) && netif_carrier_ok(ndev)) {
+			dev->port_attr.state = IB_PORT_ACTIVE;
+			dev->port_attr.phys_state = PHYS_STATE_UP;
+			ionic_port_event(dev, IB_EVENT_PORT_ACTIVE);
+		} else {
+			dev->port_attr.state = IB_PORT_DOWN;
+			dev->port_attr.phys_state = PHYS_STATE_DOWN;
+			ionic_port_event(dev, IB_EVENT_PORT_ERR);
+		}
+
+		break;
+
+	case NETDEV_CHANGEMTU:
+		if (!dev)
+			break;
+
+		dev->port_attr.active_mtu = ib_mtu_int_to_enum(ndev->mtu);
+
 		break;
 
 	default:
