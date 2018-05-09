@@ -642,7 +642,7 @@ class ${table}():
                 print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
                 return;
 
-            print ('Index: %d' % i)
+            print ('Index: %d' % (index + i))
             self.print_entry();
             print ('')
 

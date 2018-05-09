@@ -185,6 +185,11 @@ def list_register(ctx,file_name):
     backend.populate_register(config)
     pass
 
+# exit
+@dbg_cli.command(name="exit")
+def exit():
+    os._exit(0)
+
 # debug hardware table write
 @dbg_cli.group()
 @click.pass_context
