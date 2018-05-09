@@ -2589,7 +2589,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	/* XXX hardcode values, intentionally low, should come from identify */
 	dev->dev_attr.fw_ver = 0;
 	dev->dev_attr.sys_image_guid = 0;
-	dev->dev_attr.max_mr_size = 0x800000; /* XXX ident->dev.pgtbl_size*PAGE_SIZE */
+	dev->dev_attr.max_mr_size = 0x10000 * PAGE_SIZE; /* XXX ident->dev.pgtbl_size*PAGE_SIZE */
 	dev->dev_attr.page_size_cap = 0x1000;
 	dev->dev_attr.vendor_id = 0;
 	dev->dev_attr.vendor_part_id = 0;
