@@ -259,8 +259,14 @@ cmd_add(int argc, char *argv[])
     name = NULL;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "d:D:I:L:i:n:p:P:")) != -1) {
+    while ((opt = getopt(argc, argv, "c:C:d:D:I:L:i:n:p:P:")) != -1) {
         switch (opt) {
+        case 'c':
+            r.cmbsz = strtoull(optarg, NULL, 0);
+            break;
+        case 'C':
+            r.cmbpa = strtoull(optarg, NULL, 0);
+            break;
         case 'd':
             r.devcmdpa = strtoull(optarg, NULL, 0);
             break;

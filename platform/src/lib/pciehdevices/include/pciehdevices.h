@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #ifndef __PCIEHDEVICES_H__
@@ -26,6 +26,8 @@ typedef struct pciehdevice_resources_s {
     u_int32_t nlifs;            /* number of lifs */
     u_int64_t devcmdpa;         /* devcmd region physical address */
     u_int64_t devcmddbpa;       /* devcmd doorbell physical address */
+    u_int32_t cmbsz;            /* controller memory buffer bar size */
+    u_int64_t cmbpa;            /* controller memory buffer physical address */
 } pciehdevice_resources_t;
 
 pciehdev_t *pciehdev_eth_new(const char *name,

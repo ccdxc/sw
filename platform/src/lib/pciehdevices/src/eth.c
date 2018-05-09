@@ -136,6 +136,22 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         pciehbar_add_reg(&pbar, &preg);
     }
     pciehbars_add_bar(pbars, &pbar);
+
+    /* optional controller memory bar - mem64 */
+    if (pres->cmbsz) {
+        memset(&pbar, 0, sizeof(pbar));
+        pbar.type = PCIEHBARTYPE_MEM64;
+        {
+            /* Controller Memory region */
+            memset(&preg, 0, sizeof(preg));
+            preg.regtype = PCIEHBARREGT_RES;
+            preg.flags = PCIEHBARREGF_RW;
+            preg.paddr = pres->cmbpa;
+            preg.size = pres->cmbsz;
+            pciehbar_add_reg(&pbar, &preg);
+        }
+        pciehbars_add_bar(pbars, &pbar);
+    }
 }
 
 static void
