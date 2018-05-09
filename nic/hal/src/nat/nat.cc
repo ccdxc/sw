@@ -186,7 +186,7 @@ find_nat_pool_by_handle (hal_handle_t handle)
 //------------------------------------------------------------------------------
 // lookup a NAT pool by key-handle spec
 //------------------------------------------------------------------------------
-static inline nat_pool_t *
+inline nat_pool_t *
 find_nat_pool_by_key_or_handle (const NatPoolKeyHandle& kh)
 {
     nat_pool_key_t    key;

@@ -291,6 +291,26 @@
 				"description": ""
 			},
 			"response": []
+		},
+		{
+			"name": "natpolicy",
+			"request": {
+				"url": "{{node1}}/api/natpolicies/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"NatPolicy\",\"meta\":{\"name\":\"kg2\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"rules\":[{\"nat-pool\":\"kg1/pool-1\",\"action\":\"SNAT\"}]}}"
+				},
+				"description": ""
+			},
+			"response": []
 		}
 	]
 }
