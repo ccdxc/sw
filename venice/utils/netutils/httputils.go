@@ -207,7 +207,7 @@ func HTTPDelete(url string, req interface{}, resp interface{}) error {
 
 	request, err := http.NewRequest(http.MethodDelete, url, strings.NewReader(string(jsonStr)))
 	if err != nil {
-		log.Errorf("Error during http PUT. Err: %v", err)
+		log.Errorf("Error during http DELETE. Err: %v", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(request)
@@ -215,7 +215,7 @@ func HTTPDelete(url string, req interface{}, resp interface{}) error {
 	// Perform HTTP POST operation
 	//res, err := http.Post(url, "application/json", strings.NewReader(string(jsonStr)))
 	if err != nil {
-		log.Errorf("Error during http PUT. Err: %v", err)
+		log.Errorf("Error during http DELETE. Err: %v", err)
 		return err
 	}
 

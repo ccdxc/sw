@@ -11,7 +11,12 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
-const retryCount = 3
+const (
+	retryCount          = 10
+	crudLoopCount       = 50
+	addDelSleepDuration = time.Microsecond * 100
+	agentPkgName        = "github.com/pensando/sw/nic/agent/cmd/netagent"
+)
 
 func TestAgentStandalone(t *testing.T) {
 	RegisterFailHandler(Fail)
