@@ -203,7 +203,7 @@ static pnso_error_t execute_service(struct pnso_sim_session *session,
 	PNSO_ASSERT(session->funcs[ctx->cmd.svc_type]);
 	rc = session->funcs[ctx->cmd.svc_type](ctx, opaque);
 
-	ctx->status.output_data_len = ctx->output.len;
+	ctx->status.num_outputs = 1;
 	ctx->status.svc_type = ctx->cmd.svc_type;
 	ctx->status.err = rc;
 
@@ -221,6 +221,8 @@ pnso_error_t pnso_sim_execute_request(struct pnso_sim_worker_ctx *worker_ctx,
 	struct pnso_sim_svc_ctx svc_ctxs[2];
 	struct pnso_sim_svc_ctx *cur_svc = &svc_ctxs[0];
 	struct pnso_sim_svc_ctx *prev_svc = NULL;
+	struct pnso_service_status *status;
+	struct pnso_output_buf *output_buf;
 
 	PNSO_ASSERT(svc_req->num_services == svc_res->num_services);
 	PNSO_ASSERT(svc_req->num_services >= 1);
@@ -269,10 +271,13 @@ pnso_error_t pnso_sim_execute_request(struct pnso_sim_worker_ctx *worker_ctx,
 		rc = execute_service(sess, cur_svc, NULL /* TODO */ );
 
 		/* Store result */
-		if (cur_svc->status.output_buf) {
-			/* Intermediate buffer */
-			pnso_memcpy_flat_buf_to_list(cur_svc->status.output_buf,
-						     &cur_svc->output);
+		status = &cur_svc->status;
+		if (status->num_outputs) {
+			output_buf = status->o.output_buf;
+			if (output_buf && output_buf->buf_list)
+				/* Intermediate buffer */
+				pnso_memcpy_flat_buf_to_list(output_buf->buf_list,
+						&cur_svc->output);
 		}
 		svc_res->svc[svc_i] = cur_svc->status;
 
@@ -284,10 +289,7 @@ pnso_error_t pnso_sim_execute_request(struct pnso_sim_worker_ctx *worker_ctx,
 		prev_svc = cur_svc;
 	}
 
-	/* Copy final result from scratch buffer to request buffer */
-	pnso_memcpy_flat_buf_to_list(svc_req->dst_buf, &cur_svc->output);
-
-      error:
+error:
 	return rc;
 }
 
@@ -442,6 +444,8 @@ static pnso_error_t svc_exec_compress(struct pnso_sim_svc_ctx *ctx,
 		rc = EINVAL;
 		break;
 	}
+	
+	ctx->status.o.output_buf->data_len = ctx->output.len;
 
 	if (rc == PNSO_OK) {
 		/* Check that it was compressed enough */
@@ -478,6 +482,8 @@ static pnso_error_t svc_exec_decompress(struct pnso_sim_svc_ctx *ctx,
 		break;
 	}
 
+	ctx->status.o.output_buf->data_len = ctx->output.len;
+
 	return rc;
 }
 
@@ -505,6 +511,9 @@ static pnso_error_t svc_exec_encrypt(struct pnso_sim_svc_ctx *ctx,
 				  &ctx->output.len)) {
 		return PNSO_ERR_XTS_AXI_ERROR;
 	}
+
+	ctx->status.o.output_buf->data_len = ctx->output.len;
+
 	return PNSO_OK;
 }
 
@@ -532,6 +541,9 @@ static pnso_error_t svc_exec_decrypt(struct pnso_sim_svc_ctx *ctx,
 				  &ctx->output.len)) {
 		return PNSO_ERR_XTS_AXI_ERROR;
 	}
+
+	ctx->status.o.output_buf->data_len = ctx->output.len;
+
 	return PNSO_OK;
 }
 
@@ -571,7 +583,7 @@ static pnso_error_t svc_exec_hash_one_block(struct pnso_sim_svc_ctx *ctx,
 
 	(*call_count)++;
 
-	PNSO_ASSERT(ctx->status.num_tags > block_idx);
+	PNSO_ASSERT(ctx->status.num_outputs > block_idx);
 
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
 
@@ -579,7 +591,7 @@ static pnso_error_t svc_exec_hash_one_block(struct pnso_sim_svc_ctx *ctx,
 	case PNSO_HASH_TYPE_SHA2_256:
 		if (!algo_sha_gen
 		    (ctx->sess->scratch.cmd,
-		     ctx->status.tags[block_idx].hash_or_chksum,
+		     ctx->status.o.hashes[block_idx].hash_tag,
 		     (uint8_t *) block->buf, block->len, 256)) {
 			rc = PNSO_ERR_SHA_FAILED;
 		}
@@ -587,7 +599,7 @@ static pnso_error_t svc_exec_hash_one_block(struct pnso_sim_svc_ctx *ctx,
 	case PNSO_HASH_TYPE_SHA2_512:
 		if (!algo_sha_gen
 		    (ctx->sess->scratch.cmd,
-		     ctx->status.tags[block_idx].hash_or_chksum,
+		     ctx->status.o.hashes[block_idx].hash_tag,
 		     (uint8_t *) block->buf, block->len, 512)) {
 			rc = PNSO_ERR_SHA_FAILED;
 		}
@@ -608,7 +620,7 @@ static pnso_error_t svc_exec_hash(struct pnso_sim_svc_ctx *ctx,
 	    svc_iterate_blocks(ctx, svc_exec_hash_one_block,
 			       &opaque_counter);
 
-	ctx->status.num_tags = opaque_counter;
+	ctx->status.num_outputs= opaque_counter;
 
 	/* Zero-copy output */
 	ctx->output = ctx->input;
@@ -628,9 +640,9 @@ static pnso_error_t svc_exec_chksum_one_block(struct pnso_sim_svc_ctx *ctx,
 
 	(*call_count)++;
 
-	PNSO_ASSERT(ctx->status.num_tags > block_idx);
+	PNSO_ASSERT(ctx->status.num_outputs> block_idx);
 
-	hash_buf = ctx->status.tags[block_idx].hash_or_chksum;
+	hash_buf = ctx->status.o.chksums[block_idx].chksum_tag;
 
 	switch (ctx->cmd.d.chksum_desc.algo_type) {
 	case PNSO_CHKSUM_TYPE_NONE:
@@ -677,7 +689,7 @@ static pnso_error_t svc_exec_chksum(struct pnso_sim_svc_ctx *ctx,
 	    svc_iterate_blocks(ctx, svc_exec_chksum_one_block,
 			       &opaque_counter);
 
-	ctx->status.num_tags = opaque_counter;
+	ctx->status.num_outputs= opaque_counter;
 
 	/* Zero-copy output */
 	ctx->output = ctx->input;
@@ -746,6 +758,9 @@ static pnso_error_t svc_exec_decompact(struct pnso_sim_svc_ctx *ctx,
 				       wafl_data->wpd_len);
 				ctx->output.len = wafl_data->wpd_len;
 			}
+			
+			ctx->status.o.output_buf->data_len = ctx->output.len;
+
 			return PNSO_OK;
 		}
 	}
