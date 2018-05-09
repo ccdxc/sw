@@ -22,10 +22,13 @@ MODULE_LICENSE("Dual BSD/GPL");
 /* XXX remove this section for release */
 static bool ionic_xxx_haps = false;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
-MODULE_PARM_DESC(xxx_haps, "XXX Enable workarounds for HAPS.");
+MODULE_PARM_DESC(xxx_haps, "XXX Misc workarounds for HAPS.");
 static bool ionic_xxx_limits = false;
 module_param_named(xxx_limits, ionic_xxx_limits, bool, 0444);
 MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
+static bool ionic_xxx_kdbid = false;
+module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0444);
+MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
 /* XXX remove above section for release */
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
@@ -492,8 +495,8 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	ctx->fallback = req.fallback > 1;
 	if (!ctx->fallback) {
 		/* try to allocate dbid for user ctx */
-		if (ionic_xxx_haps)
-			ctx->dbid = dev->dbid; /* XXX HAPS: kernel dbid in user space */
+		if (ionic_xxx_kdbid)
+			ctx->dbid = dev->dbid; /* XXX kernel dbid in user space */
 		else
 			ctx->dbid = ionic_api_get_dbid(dev->lif);
 		if (ctx->dbid < 0) {
@@ -530,7 +533,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	return &ctx->ibctx;
 
 err_resp:
-	if (!ionic_xxx_haps)
+	if (!ionic_xxx_kdbid)
 		ionic_api_put_dbid(dev->lif, ctx->dbid);
 err_dbid:
 	kfree(ctx);
@@ -548,7 +551,7 @@ static int ionic_dealloc_ucontext(struct ib_ucontext *ibctx)
 	if (WARN_ON(!list_empty(&ctx->mmap_list)))
 		list_del(&ctx->mmap_list);
 
-	if (!ionic_xxx_haps)
+	if (!ionic_xxx_kdbid)
 		ionic_api_put_dbid(dev->lif, ctx->dbid);
 	kfree(ctx);
 
@@ -2633,6 +2636,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->port_attr.pkey_tbl_len = 1;
 
 	/* XXX workarounds and overrides, remove for release */
+	if (ident->dev.ndbpgs_per_lif < 2)
+		ionic_xxx_kdbid = true;
 	if (ionic_xxx_limits) {
 		dev->dev_attr.max_qp = 20;
 		dev->dev_attr.max_cq = 40;
