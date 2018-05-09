@@ -156,7 +156,6 @@ std::vector<tests::TestEntry> local_e2e_tests = {
 
 std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
-  {&tests::compress_same_src_and_dst, "Compress with same src and dst", false},
   {&tests::decompress_to_flat_64K_buf, "Decompress Host->Host to flat 64K buf", false},
   {&tests::compress_odd_size_buf, "Compress Host->Host to flat odd size buf", false},
   {&tests::decompress_odd_size_buf, "Decompress Host->Host to flat odd size buf", false},
@@ -178,13 +177,11 @@ std::vector<tests::TestEntry> comp_tests = {
 
 std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_compress_flat_64K_buf, "Sequencer Compress Host->Host flat 64K buf", false},
-  {&tests::seq_compress_same_src_and_dst, "Sequencer Compress with same src and dst", false},
   {&tests::seq_decompress_to_flat_64K_buf, "Sequencer Decompress Host->Host to flat 64K buf", false},
   {&tests::seq_compress_host_sgl_to_host_sgl, "Sequencer Compress Host->Host using SGLs", false},
   {&tests::seq_decompress_host_sgl_to_host_sgl, "Sequencer Decompress Host->Host using SGLs", false},
   {&tests::seq_compress_flat_64K_buf_in_hbm, "Sequencer Compress HBM->HBM flat 64K buf", false},
   {&tests::seq_decompress_to_flat_64K_buf_in_hbm, "Sequencer Decompress HBM->HBM to flat 64K buf", false},
-  {&tests::seq_compress_output_through_sequencer, "Sequencer Compress and pull data from HBM through sequencer", false},
   {&tests::seq_compress_dualq_flat_4K_buf, "Sequencer Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_dualq_flat_4K_buf_in_hbm, "Sequencer Compress HBM-HBM flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_output_encrypt_app_min_size, "Sequencer Compress->XTS encrypt chaining: app min block size", false},
@@ -201,8 +198,11 @@ std::vector<tests::TestEntry> comp_seq_tests = {
 std::vector<tests::TestEntry> comp_perf_tests = {
   {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
+  {&tests::compress_same_src_and_dst, "Compress with same src and dst", false},
   {&tests::max_data_rate, "Test max data rate", false},
   {&tests::seq_max_data_rate, "Sequencer Test max data rate", false},
+  {&tests::seq_compress_same_src_and_dst, "Sequencer Compress with same src and dst", false},
+  {&tests::seq_compress_output_through_sequencer, "Sequencer Compress and pull data from HBM through sequencer", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
@@ -388,8 +388,8 @@ int main(int argc, char**argv) {
       run_nvme_be_tests = true;
       run_nvme_wrr_tests = false;		// Never enable this for RTL sanity
       run_local_e2e_tests = true;
-      run_comp_tests = false;       // Enable after s/w debugging 
-      run_comp_seq_tests = false;		// Enable after s/w debugging
+      run_comp_tests = true;
+      run_comp_seq_tests = true;
       run_xts_tests = true;
       run_rdma_tests = true;
       run_rdma_lif_override_tests = false;	// Enable after h/w model changes
@@ -397,7 +397,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = false;		// Never enable this for RTL sanity
       run_comp_perf_tests = false;		// Never enable this for RTL sanity
       run_pdma_tests = false;			// Never enable this for RTL sanity
-      run_acc_scale_tests_map = ACC_SCALE_TEST_NONE;
+      run_acc_scale_tests_map = ACC_SCALE_TEST_ALL;
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
