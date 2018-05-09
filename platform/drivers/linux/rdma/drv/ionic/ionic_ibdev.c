@@ -2535,6 +2535,8 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_destroy_eqvec(dev);
 
+	ionic_dbgfs_rm_dev(dev);
+
 	kfree(dev->inuse_qpid);
 	kfree(dev->inuse_cqid);
 	kfree(dev->inuse_pgtbl);
@@ -2848,6 +2850,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 err_register:
 	ionic_destroy_eqvec(dev);
 err_eqvec:
+	ionic_dbgfs_rm_dev(dev);
 	kfree(dev->inuse_pgtbl);
 err_pgtbl:
 	kfree(dev->inuse_qpid);
