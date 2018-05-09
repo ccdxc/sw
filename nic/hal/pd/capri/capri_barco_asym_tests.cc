@@ -469,7 +469,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt_test(void)
     hal_ret_t           ret = HAL_RET_OK;
     uint8_t             out_m[256];
 
-    ret = capri_barco_asym_rsa2k_crt_decrypt(rsa_p, rsa_q, rsa_dp,
+    ret = capri_barco_asym_rsa2k_crt_decrypt(-1, rsa_p, rsa_q, rsa_dp,
             rsa_dq, rsa_qinv, out_c, out_m);
 
     return ret;

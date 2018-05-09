@@ -724,13 +724,30 @@ proxy_flow_handle_tls_config(types::ProxyType proxy_type,
     }
 
     pfi->u.tlsproxy.cert_id = tls_flow_config.cert_id();
-    pfi->u.tlsproxy.key_id = tls_flow_config.key_id();
+    HAL_TRACE_DEBUG("Received ciphers: {}", tls_flow_config.ciphers());
+    if(tls_flow_config.ciphers().length() > 0) {
+        pfi->u.tlsproxy.ciphers = tls_flow_config.ciphers();
+    }
+    pfi->u.tlsproxy.key_type = tls_flow_config.key_type();
+    switch(tls_flow_config.key_type()) {
+    case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:
+        pfi->u.tlsproxy.u.ecdsa_keys.sign_key_id = 
+            tls_flow_config.ecdsa_keys().sign_key_idx();
+        break;
+    case types::CRYPTO_ASYM_KEY_TYPE_RSA:
+        pfi->u.tlsproxy.u.rsa_keys.sign_key_id = 
+            tls_flow_config.rsa_keys().sign_key_idx();
+        pfi->u.tlsproxy.u.rsa_keys.decrypt_key_id = 
+            tls_flow_config.rsa_keys().decrypt_key_idx();
+        break;
+    default:
+        HAL_TRACE_ERR("Unknown key type: {}", tls_flow_config.key_type());
+    }
     pfi->u.tlsproxy.is_valid = true;
 
-    HAL_TRACE_DEBUG("TLS proxy config for qid: {}, cert: {}, key: {}",
+    HAL_TRACE_DEBUG("TLS proxy config for qid: {}, cert: {}",
                     pfi->qid1,
-                    pfi->u.tlsproxy.cert_id,
-                    pfi->u.tlsproxy.key_id);
+                    pfi->u.tlsproxy.cert_id);
 
     return HAL_RET_OK;
 }

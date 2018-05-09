@@ -353,6 +353,16 @@ def main():
                 'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
                 'client_dir': DIR_NET
              },
+             {
+                 'id': 9, 'name': "TLS Server Proxy - RSA", 'port': 86, 'bypass_tls': 0,
+                 'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
+                 'client_dir': DIR_NET
+             },
+             {
+                 'id': 10, 'name': "TLS Server Proxy - GCM", 'port': 87, 'bypass_tls': 0,
+                 'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
+                 'client_dir': DIR_NET
+             },
             ]
 
     for test in TESTS:

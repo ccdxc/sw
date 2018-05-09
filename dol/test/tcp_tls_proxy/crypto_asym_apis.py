@@ -747,13 +747,14 @@ def rsa2k_decrypt_test():
             return True
 
 # RSA 2K CRT Decrypt
-def rsa2k_crt_decrypt(rsa_p, rsa_q, rsa_dp, rsa_dq, rsa_qinv, cipher_text):
+def rsa2k_crt_decrypt(key_idx, rsa_p, rsa_q, rsa_dp, rsa_dq, rsa_qinv, cipher_text):
     stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
     req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
     req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_CRT_DECRYPT
     req_spec.rsa_crt_decrypt.KeySize = 256
+    req_spec.rsa_crt_decrypt.key_idx = key_idx
     req_spec.rsa_crt_decrypt.p = rsa_p
     req_spec.rsa_crt_decrypt.q = rsa_q
     req_spec.rsa_crt_decrypt.dp = rsa_dp
@@ -787,7 +788,7 @@ def rsa2k_crt_decrypt_test():
     global cipher_text
 
 
-    ret, computed_plain_text = rsa2k_crt_decrypt(rsa_p, rsa_q, rsa_dp,\
+    ret, computed_plain_text = rsa2k_crt_decrypt(-1, rsa_p, rsa_q, rsa_dp,\
             rsa_dq, rsa_qinv, cipher_text)
     if (ret != types_pb2.API_STATUS_OK):
         print("API rsa2k_crt_decrypt failed with error")

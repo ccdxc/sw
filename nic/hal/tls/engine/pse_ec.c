@@ -509,7 +509,7 @@ pse_ec_get_evp_key(ENGINE* engine, PSE_KEY *key,
     }
 
     EVP_PKEY_set1_EC_KEY(pkey, eckey);
-    pse_ec_set_ex_data(eckey, key->index);
+    pse_ec_set_ex_data(eckey, key->u.ec_key.key_id);
 
     return pkey;
 

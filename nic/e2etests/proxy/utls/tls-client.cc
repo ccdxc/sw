@@ -9,7 +9,45 @@ bool from_localhost=true;
 pthread_t server_thread;
 
 void *main_server(void*);
+
 int main_tls_client(void);
+#define WHERE_INFO(ssl, w, flag, msg) { \
+    if(w & flag) { \
+      TLOG("\t"); \
+      TLOG(msg); \
+      TLOG(" - %s ", SSL_state_string(ssl)); \
+      TLOG(" - %s ", SSL_state_string_long(ssl)); \
+      TLOG("\n"); \
+    }\
+ } 
+
+// INFO CALLBACK
+void dummy_ssl_info_callback(const SSL* ssl, int where, int ret) {
+  if(ret == 0) {
+    TLOG("ssl error occured.\n");
+    return;
+  }
+  WHERE_INFO(ssl, where, SSL_CB_LOOP, "LOOP");
+  WHERE_INFO(ssl, where, SSL_CB_EXIT, "EXIT");
+  WHERE_INFO(ssl, where, SSL_CB_READ, "READ");
+  WHERE_INFO(ssl, where, SSL_CB_WRITE, "WRITE");
+  WHERE_INFO(ssl, where, SSL_CB_ALERT, "ALERT");
+  WHERE_INFO(ssl, where, SSL_CB_HANDSHAKE_DONE, "HANDSHAKE DONE");
+}
+
+// MSG CALLBACK
+void dummy_ssl_msg_callback(
+                            int writep
+                            ,int version
+                            ,int contentType
+                            ,const void* buf
+                            ,size_t len
+                            ,SSL* ssl
+                            ,void *arg
+                            ) 
+{
+    TLOG("\tMessage callback with length: %zu\n", len);
+}
 
 static void 
 usage() 
@@ -115,11 +153,11 @@ int create_socket() {
     TLOG("Client: Connect failed - %s", strerror(errno));
     exit(-1);
   }
-
+  TLOG("Client: TCP Connected - %s", strerror(errno));
   return sockfd;
 }
 
-void test_tls(SSL *ssl)
+void test_tls(SSL *ssl, int transport_fd)
 {
   clock_t start, end;
   double cpu_time_used;
@@ -132,6 +170,16 @@ void test_tls(SSL *ssl)
 
   int res = 0;
   int total_recv = 0;
+  struct timeval tv;
+  int do_nb_recv = 0;
+
+  tv.tv_sec = 300;
+  tv.tv_usec = 0;
+  res = setsockopt(transport_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(struct timeval));
+  if (res < 0) {
+      TLOG("Error setting timeout for recv() %s, will do non-blocking\n", strerror(errno));
+      do_nb_recv = 1;
+  }
 
   start = clock();
 
@@ -146,23 +194,36 @@ void test_tls(SSL *ssl)
     totalbytes += bytes;
     if (bytes > 0) {
       SSL_write(ssl, buf, bytes);
-      TLOG("Sent bytes so far %i\n", totalbytes);
+      TLOG("Sent bytes so far %i - %s\n", totalbytes, buf);
     } else {
       break;
     }
-    res = SSL_read(ssl, buf, 1);
+
+    do {
+        memset(buf, 0, sizeof(buf));
+        res = SSL_read(ssl, buf, sizeof(buf));
+        if(res < 0) {
+            int ssl_err = SSL_get_error(ssl, res);
+            TLOG("Client: TLS read error: %i, %i\n", res, ssl_err);
+            if(ssl_err == SSL_ERROR_WANT_READ || ssl_err == SSL_ERROR_WANT_WRITE) {
+                sleep(5);
+            } else {
+                exit(-1);
+                break;
+            }
+        }
+    } while (do_nb_recv--);
+
     total_recv += res;
     if (res < 0) {
-      TLOG("SSL Read error: %i\n", res);
+        TLOG("SSL Read error: %i\n", res, SSL_get_error(ssl, res));
     } else {
-      TLOG("Received openssl test data: %i %i\n", res, total_recv);
+        TLOG("Received openssl test data: %i %i, %s\n", res, total_recv, buf);
     }
 	
   } while(bytes > 0);
 
   close(filefd);
-
-
   end = clock();
   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
@@ -176,34 +237,33 @@ int main_tls_client()
   int transport_fd = 0;
 
 
-  if ( (ctx = SSL_CTX_new(SSLv23_client_method())) == NULL)
+  if ( (ctx = SSL_CTX_new(TLS_client_method())) == NULL)
     TLOG("Unable to create a new SSL context structure.\n");
-
-  SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
-  // Force gcm(aes) mode
-  SSL_CTX_set_cipher_list(ctx, "ECDH-ECDSA-AES128-GCM-SHA256");
+  
+  SSL_CTX_set_info_callback(ctx, dummy_ssl_info_callback); 
+  SSL_CTX_set_msg_callback(ctx, dummy_ssl_msg_callback);
 
   ssl = SSL_new(ctx);
+  SSL_set_connect_state(ssl);
 
   transport_fd = create_socket();
+  TLOG("Client: TCP socket created, starting SSL...\n");
 
   SSL_set_fd(ssl, transport_fd);
 
-  if ( SSL_connect(ssl) != 1 ) {
-    TLOG("Error: Could not build a SSL session\n");
-    exit(-1);
+  int ret = SSL_connect(ssl);
+  if ( ret != 1 ) {
+      TLOG("Error: Failure in SSL Connect: %d, err: %d\n", ret, SSL_get_error(ssl, ret));
+      exit(-1);
   }
 
   TLOG("Client: Connected ! - transport fd %d\n", transport_fd);
 
 
   // Start tests
-  test_tls(ssl);
-
-  while(1) {
-   sleep(5);
-  }
-
+  test_tls(ssl, transport_fd);
+  sleep(1);
+  
   SSL_free(ssl);
   close(transport_fd);
   SSL_CTX_free(ctx);

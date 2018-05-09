@@ -247,6 +247,12 @@ enum ProxyType {
   PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN = 11;
 }
 
+// Types of Cryptographic Asymmetric keys
+enum CryptoAsymKeyType {
+    CRYPTO_ASYM_KEY_TYPE_ECDSA  = 0;
+    CRYPTO_ASYM_KEY_TYPE_RSA    = 1;
+}
+
 // Types of Cryptographic keys
 enum CryptoKeyType {
     CRYPTO_KEY_TYPE_AES128      = 0;

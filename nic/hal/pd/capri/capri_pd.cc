@@ -150,16 +150,16 @@ pd_capri_barco_asym_ecc_point_mul_p256 (pd_capri_barco_asym_ecc_point_mul_p256_a
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecdsa_p256_setup_private_key(pd_capri_barco_asym_ecdsa_p256_setup_private_key_args_s *args)
+pd_capri_barco_asym_ecdsa_p256_setup_priv_key(pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_s *args)
 {
-    return capri_barco_asym_ecdsa_p256_setup_private_key(args->p,
-                                               args->n,
-                                               args->xg,
-                                               args->yg,
-                                               args->a,
-                                               args->b,
-                                               args->da,
-                                               args->key_idx);
+    return capri_barco_asym_ecdsa_p256_setup_priv_key(args->p,
+                                                      args->n,
+                                                      args->xg,
+                                                      args->yg,
+                                                      args->a,
+                                                      args->b,
+                                                      args->da,
+                                                      args->key_idx);
 }
 
 hal_ret_t
@@ -216,7 +216,8 @@ pd_capri_barco_asym_rsa2k_decrypt (pd_capri_barco_asym_rsa2k_decrypt_args_t *arg
 hal_ret_t
 pd_capri_barco_asym_rsa2k_crt_decrypt (pd_capri_barco_asym_rsa2k_crt_decrypt_args_t *args)
 {
-    return capri_barco_asym_rsa2k_crt_decrypt(args->p,
+    return capri_barco_asym_rsa2k_crt_decrypt(args->key_idx, 
+                                              args->p,
                                               args->q,
                                               args->dp,
                                               args->dq,
@@ -226,12 +227,22 @@ pd_capri_barco_asym_rsa2k_crt_decrypt (pd_capri_barco_asym_rsa2k_crt_decrypt_arg
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_setup_private_key (pd_capri_barco_asym_rsa2k_setup_private_key_args_t *args)
+pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key (pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t *args)
 {
-    return capri_barco_asym_rsa2k_setup_private_key(
-                                          args->n, 
-                                          args->d,
-                                          args->key_idx);
+    return capri_barco_asym_rsa2k_setup_sig_gen_priv_key(args->n, 
+                                                         args->d,
+                                                         args->key_idx);
+}
+
+hal_ret_t
+pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t *args)
+{
+    return capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(args->p, 
+                                                             args->q,
+                                                             args->dp,
+                                                             args->dq,
+                                                             args->qinv,
+                                                             args->key_idx);
 }
 
 hal_ret_t

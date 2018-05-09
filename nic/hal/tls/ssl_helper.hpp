@@ -22,6 +22,8 @@ class SSLHelper;
 typedef uint32_t conn_id_t;
 
 typedef struct hs_out_args_s {
+    bool            is_v4_flow;
+    bool            is_server;
     uint32_t        read_key_index;
     uint32_t        write_key_index;
     unsigned char   *read_iv;
@@ -34,12 +36,14 @@ typedef struct ssl_conn_args_s {
     conn_id_t              id;            // Identifier for the connection
     conn_id_t              oflow_id;      // Identifier for the other flow 
     bool                   is_v4_flow;    // true if this is ipv4 flow
+    bool                   is_server_ctxt; // true if SSL server context 
     tls_proxy_flow_info_t  *tls_flow_cfg;  // TLS proxy config for the flow   
 } ssl_conn_args_t;
 
 // Callbacks
 typedef hal_ret_t (*nw_send_cb)(conn_id_t id, uint8_t* data, size_t len);
-typedef hal_ret_t (*hs_done_cb)(conn_id_t id, conn_id_t oflowid, hal_ret_t ret, hs_out_args_t* args, bool is_v4_flow);
+typedef hal_ret_t (*hs_done_cb)(conn_id_t id, conn_id_t oflowid, hal_ret_t ret,
+                                hs_out_args_t* args);
 typedef hal_ret_t (*key_prog_cb)(conn_id_t id, const uint8_t* key, size_t key_len,
                                  uint32_t* key_hw_index);
 
@@ -55,12 +59,14 @@ public:
     hal_ret_t   process_nw_data(uint8_t* data, size_t len);
     
     conn_id_t   get_id() const {return id;};
-    conn_id_t   get_oflowid() const {return oflowid;}
-    void set_oflowid(conn_id_t oflowid_) {oflowid = oflowid_; }
-    bool get_flow_type() const {return is_v4_flow;}
-    void set_flow_type(bool type) {is_v4_flow = type;}
-    void ssl_msg_cb(int writep, int version, int contentType,
-                    const void* buf, size_t len, SSL* ssl, void *arg);
+    conn_id_t   get_oflowid() const {return oflowid;};
+    void        set_oflowid(conn_id_t oflowid_) {oflowid = oflowid_; };
+    bool        get_flow_type() const {return is_v4_flow;};
+    void        set_flow_type(bool type) {is_v4_flow = type;};
+    void        set_is_server(bool is_server_) {is_server = is_server_;};
+    bool        get_is_server() const {return is_server;};
+    void        ssl_msg_cb(int writep, int version, int contentType,
+                           const void* buf, size_t len, SSL* ssl, void *arg);
 private:
     hal_ret_t       handle_ssl_ret(int ret);
     hal_ret_t       transmit_pending_data();
@@ -78,6 +84,7 @@ private:
     conn_id_t       id;
     conn_id_t       oflowid;
     bool            is_v4_flow;
+    bool            is_server;
     SSL             *ssl;
     BIO*            ibio;   // Internal BIO towards SSL
     BIO*            nbio;   // BIO towards the network

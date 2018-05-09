@@ -140,20 +140,34 @@ message CryptoAsymApiReqRSACRTDecrypt {
   bytes                             dq                  = 5;
   bytes                             qinv                = 6;
   bytes                             cipher_text         = 7;
+  int32                             key_idx             = 8;
 }
 
 message CryptoAsymApiRespRSACRTDecrypt {
   bytes                             plain_text         = 1;
 }
 
-// RSA Private Key Setup
-// Temp API as a workaround until secure mon is ready
+// Asymmetric Private Key Setup
+// Temp API as a workaround until securemon is ready
 message CryptoAsymApiReqSetupPrivateKey {
     string                          key                 = 1;
 }
 
+message CryptoAsymApiRespECDSAKeyInfo {
+    int32                           sign_key_idx        = 1;
+}
+
+message CryptoAsymApiRespRSAKeyInfo {
+    int32                           sign_key_idx        = 1;
+    int32                           decrypt_key_idx     = 2;
+}
+
 message CryptoAsymApiRespSetupPrivateKey {
-    int32                           key_idx             = 1;
+    types.CryptoAsymKeyType             key_type            = 1;
+    oneof KeyInfo {
+        CryptoAsymApiRespECDSAKeyInfo   ecdsa_key_info  = 2;
+        CryptoAsymApiRespRSAKeyInfo     rsa_key_info    = 3;
+    }
 }
 
 // Certificate Setup

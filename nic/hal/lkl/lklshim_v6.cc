@@ -269,9 +269,9 @@ lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb,
      */
     if (!hal::tls::proxy_tls_bypass_mode) {
         if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
-            hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid, false, flow->pfi);
+            hal::tls::tls_api_start_connection(flow->iqid, flow->rqid, false, false, flow->pfi);
         } else {
-            hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid, false, flow->pfi);
+            hal::tls::tls_api_start_connection(flow->rqid, flow->iqid, false, true, flow->pfi);
         }
     } else {
 

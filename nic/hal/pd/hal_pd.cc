@@ -385,14 +385,15 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, pd_capri_barco_symm_req_descr_get);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_RING_META_GET, pd_capri_barco_ring_meta_get);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, pd_capri_barco_asym_ecc_point_mul_p256);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_private_key);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, pd_capri_barco_asym_ecdsa_p256_sig_gen);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, pd_capri_barco_asym_ecdsa_p256_sig_verify);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, pd_capri_barco_asym_rsa2k_decrypt);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, pd_capri_barco_asym_rsa2k_crt_decrypt);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
-                        pd_capri_barco_asym_rsa2k_setup_private_key);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_ASYM_RSA2K_SETUP_SIG_GEN_PRIV_KEY, pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
+
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
@@ -763,13 +764,13 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_RING_META_GET, pd_capri_barco_ring_meta_get);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, pd_capri_barco_asym_ecc_point_mul_p256);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, pd_capri_barco_asym_ecdsa_p256_sig_gen);
-    PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_private_key);
+    PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, pd_capri_barco_asym_ecdsa_p256_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, pd_capri_barco_asym_rsa2k_decrypt);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, pd_capri_barco_asym_rsa2k_crt_decrypt);
-    PD_SYMBOL_CALL(PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
-                         pd_capri_barco_asym_rsa2k_setup_private_key);
+    PD_SYMBOL_CALL(PD_FUNC_ID_ASYM_RSA2K_SETUP_SIG_GEN_PRIV_KEY, pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
+    PD_SYMBOL_CALL(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
@@ -1017,6 +1018,28 @@ pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
     args.s = s;
 
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, (void*)&args);
+    if (ret != HAL_RET_OK) {
+        return -1;
+    }
+    return 1;
+}
+
+extern "C" int 
+pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *dp,
+                              uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_capri_barco_asym_rsa2k_crt_decrypt_args_t args = {0};
+    args.key_idx = key_idx;
+    args.p = p;
+    args.q = q;
+    args.dp = dp;
+    args.dq = dq;
+    args.qinv = qinv;
+    args.c = c;
+    args.m = m;
+
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, (void*)&args);
     if (ret != HAL_RET_OK) {
         return -1;
     }

@@ -268,7 +268,7 @@ cleanup:
 }
 
 hal_ret_t
-capri_barco_asym_ecdsa_p256_setup_private_key(uint8_t *p, uint8_t *n,
+capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
                                               uint8_t *xg, uint8_t *yg,
                                               uint8_t *a, uint8_t *b,
                                               uint8_t *da, int32_t *key_idx) 
@@ -456,7 +456,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
 
     if(key_idx < 0) {
         ret =
-            capri_barco_asym_ecdsa_p256_setup_private_key(p, n, xg, yg,
+            capri_barco_asym_ecdsa_p256_setup_priv_key(p, n, xg, yg,
                                                           a, b, da,
                                                           &ecc_p256_key_idx);
         if(ret != HAL_RET_OK) {
@@ -960,8 +960,8 @@ cleanup:
     return ret;
 }
 
-hal_ret_t capri_barco_asym_rsa2k_setup_private_key(uint8_t *n, uint8_t *d, 
-                                                   int32_t *key_idx)
+hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d, 
+                                                          int32_t *key_idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    key_dma_descr_addr = 0;
@@ -1662,31 +1662,27 @@ cleanup:
     return ret;
 }
 
-hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp,
-        uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m)
+hal_ret_t 
+capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_t *dp,
+                                                     uint8_t *dq, uint8_t *qinv, int32_t* key_idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
     uint64_t                    key_dma_descr_addr1 = 0, key_dma_descr_addr2 = 0, key_dma_descr_addr3 = 0;
-    uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, curr_ptr = 0;
+    uint64_t                    curr_ptr = 0;
     uint64_t                    key_param_addr1 = 0, key_param_addr2 = 0, key_param_addr3 = 0;
-    barco_asym_descriptor_t     asym_req_descr;
-    barco_asym_dma_descriptor_t ilist_dma_descr, olist_dma_descr;
     barco_asym_dma_descriptor_t key_dma_descr;
-    int32_t                     ecc_p256_key_idx = -1;
     crypto_asym_key_t           asym_key;
-    uint32_t                    req_tag = 0;
-    uint32_t                    status = 0;
 
 #undef CAPRI_BARCO_API_NAME
-#define CAPRI_BARCO_API_NAME "RSA 2K CRT Decrypt: "
+#define CAPRI_BARCO_API_NAME "RSA 2K CRT Key setup: "
 
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"p", (char *)p, 256);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"q", (char *)q, 256);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"dp", (char *)dp, 256);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"dq", (char *)dq, 256);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"qinv", (char *)qinv, 256);
-    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"c", (char *)c, 256);
+
+    *key_idx = -1;
 
     /* Key Param fragment 1 */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -1838,14 +1834,13 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
     }
 
     pd_crypto_asym_alloc_key_args_t args;
-    args.key_idx = &ecc_p256_key_idx;
+    args.key_idx = key_idx;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
-    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx); 
 
     asym_key.key_param_list = key_dma_descr_addr1;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
@@ -1853,16 +1848,114 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
                             CAPRI_BARCO_ASYM_CMD_RSA_CRT_DECRYPT);
                                 
     pd_crypto_asym_write_key_args_t w_args;
-    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key_idx = *key_idx;
     w_args.key = &asym_key;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
-    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", *key_idx);
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx); 
 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", *key_idx);
+    return ret;
+
+cleanup:
+    if (*key_idx != -1) {
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = *key_idx;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
+        }
+    }
+
+    if (key_dma_descr_addr3) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr3);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+                    key_dma_descr_addr3);
+        }
+    }
+
+    if (key_dma_descr_addr2) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr2);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+                    key_dma_descr_addr2);
+        }
+    }
+
+    if (key_dma_descr_addr1) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr1);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+                    key_dma_descr_addr1);
+        }
+    }
+
+    if (key_param_addr3) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr3);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+                    key_param_addr3);
+        }
+    }
+
+    if (key_param_addr2) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr2);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+                    key_param_addr2);
+        }
+    }
+
+    if (key_param_addr1) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr1);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+                    key_param_addr1);
+        }
+    }
+    
+    return ret;
+}
+
+hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *dp,
+                                             uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
+    uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, curr_ptr = 0;
+    barco_asym_descriptor_t     asym_req_descr;
+    barco_asym_dma_descriptor_t ilist_dma_descr, olist_dma_descr;
+    int32_t                     ecc_p256_key_idx = -1;
+    uint32_t                    req_tag = 0;
+    uint32_t                    status = 0;
+
+#undef CAPRI_BARCO_API_NAME
+#define CAPRI_BARCO_API_NAME "RSA 2K CRT Decrypt: "
+
+    HAL_TRACE_DEBUG("key_idx: {}", key_idx);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"c", (char *)c, 256);
+
+    if(key_idx < 0) {
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"p", (char *)p, 256);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"q", (char *)q, 256);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"dp", (char *)dp, 256);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"dq", (char *)dq, 256);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"qinv", (char *)qinv, 256);
+        
+        ret = capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(p, q, dp, dq, qinv, &ecc_p256_key_idx);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to setup private key");
+            goto cleanup;
+        }
+    } else {
+        ecc_p256_key_idx = key_idx;
+    }
+
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ {:x}", ecc_p256_key_idx); 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &ilist_dma_descr_addr);
@@ -2021,64 +2114,6 @@ cleanup:
         }
     }
 
-    if (ecc_p256_key_idx != -1) {
-        pd_crypto_asym_free_key_args_t f_args;
-        f_args.key_idx = ecc_p256_key_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
-        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
-        }
-    }
-
-    if (key_dma_descr_addr3) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr3);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
-                    key_dma_descr_addr3);
-        }
-    }
-
-    if (key_dma_descr_addr2) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr2);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
-                    key_dma_descr_addr2);
-        }
-    }
-
-    if (key_dma_descr_addr1) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr1);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
-                    key_dma_descr_addr1);
-        }
-    }
-
-    if (key_param_addr3) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr3);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :{:x}",
-                    key_param_addr3);
-        }
-    }
-
-    if (key_param_addr2) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr2);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :{:x}",
-                    key_param_addr2);
-        }
-    }
-
-    if (key_param_addr1) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr1);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :{:x}",
-                    key_param_addr1);
-        }
-    }
-
     if (status)
         ret = HAL_RET_ERR;
 
@@ -2105,7 +2140,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
 
     if(key_idx < 0) {
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"d", (char *)d, 256);
-        ret = capri_barco_asym_rsa2k_setup_private_key(n, d, &ecc_p256_key_idx);
+        ret = capri_barco_asym_rsa2k_setup_sig_gen_priv_key(n, d, &ecc_p256_key_idx);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to setup private key");
             goto cleanup;

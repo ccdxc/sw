@@ -14,11 +14,14 @@ typedef struct pse_buffer_s {
 } PSE_BUFFER;
 
 typedef struct PSE_rsa_key_st {
+    uint32_t    sign_key_id;    // index where key is stored
+    uint32_t    decrypt_key_id; // index where key is stored
     PSE_BUFFER  rsa_n;
     PSE_BUFFER  rsa_e;
 } PSE_RSA_KEY;
 
 typedef struct PSE_ec_key_st {
+    uint32_t         key_id;    // index where key is stored
     const EC_GROUP   *group;
     const EC_POINT   *point;
 } PSE_EC_KEY;
@@ -27,7 +30,6 @@ typedef struct PSE_ec_key_st {
 typedef struct PSE_key_st {
     const char       *label;    // Label to identify the key
     int              type;      // Underlying type of the KEY from openssl
-    uint32_t         index;     // index where key is stored (e.g. hw)
     union {
         PSE_RSA_KEY  rsa_key;   // Public parameters for RSA
         PSE_EC_KEY   ec_key;    // Public parameters for EC

@@ -1,0 +1,10 @@
+# TLS Proxy Parameters for a Server Session
+meta:
+    id: TLS_PROXY_SESS_PROFILE_RSA_SERVER
+    feature_set:
+        - iris
+
+id              : 0
+cert_file       : file://../nic/conf/openssl/certs/rsa/server.crt
+key_file        : file://../nic/conf/openssl/certs/rsa/server.key 
+ciphers         : AES128-GCM-SHA256

@@ -72,6 +72,10 @@ SSLConnection::get_pse_key_rsa(PSE_KEY &pse_key,
                                const hal::tls_proxy_flow_info_t &tls_flow_cfg,
                                const hal::crypto_cert_t &cert) const
 {
+    pse_key.type = EVP_PKEY_RSA;
+    pse_key.u.rsa_key.sign_key_id = tls_flow_cfg.u.rsa_keys.sign_key_id;
+    pse_key.u.rsa_key.decrypt_key_id = tls_flow_cfg.u.rsa_keys.decrypt_key_id;
+
     // n
     pse_key.u.rsa_key.rsa_n.len = cert.pub_key.u.rsa_params.mod_n_len;
     pse_key.u.rsa_key.rsa_n.data = (uint8_t *)cert.pub_key.u.rsa_params.mod_n;
@@ -98,20 +102,15 @@ SSLConnection::get_pse_key(PSE_KEY &pse_key,
         return HAL_RET_OK;
     }
     
-    pse_key.type = cert->pub_key.key_type;
-    // Key idx
-    pse_key.index = tls_flow_cfg->key_id;
-
-    HAL_TRACE_DEBUG("Received key type: {} index: {}",
-                    pse_key.type, pse_key.index);
-     
-    switch(cert->pub_key.key_type) {
-
-    case EVP_PKEY_RSA:
+    switch(tls_flow_cfg->key_type) {
+    
+    case types::CRYPTO_ASYM_KEY_TYPE_RSA:
         ret = get_pse_key_rsa(pse_key, *tls_flow_cfg, *cert);
         break;
-       
-    case EVP_PKEY_EC:
+
+    case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:
+        pse_key.type = EVP_PKEY_EC;
+        pse_key.u.ec_key.key_id = tls_flow_cfg->u.ecdsa_keys.sign_key_id;
         pse_key.u.ec_key.group = cert->pub_key.u.ec_params.group;
         pse_key.u.ec_key.point = cert->pub_key.u.ec_params.point;
         break;
@@ -140,6 +139,12 @@ SSLConnection::load_certs_key(const tls_proxy_flow_info_t *tls_flow_cfg) const
         return HAL_RET_OK;
     }
      
+    // set cipher list
+    if(tls_flow_cfg->ciphers.length() > 0) {
+        HAL_TRACE_DEBUG("Setting cipher for the server: {}", tls_flow_cfg->ciphers);
+        SSL_set_cipher_list(ssl, tls_flow_cfg->ciphers.c_str());
+    }
+
     // Read the cert
     cert = find_cert_by_id(tls_flow_cfg->cert_id);
     if(!cert) {
@@ -208,7 +213,8 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx,
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("SSL: Init connection for id: {} ", _id);
+    HAL_TRACE_DEBUG("SSL: Init connection for id: {} as {}", _id,
+                    (is_server ? "server" : "client"));
     helper = _helper;
     ctx = _ctx;
     id = _id;
@@ -227,9 +233,12 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx,
         return HAL_RET_NO_RESOURCE;
     }
     SSL_set_bio(ssl, ibio, ibio);
-    // TBD figure out of this needs to be CLIENT or Server
-    // Init to client for now
-    SSL_set_connect_state(ssl);
+
+    if(is_server) {
+        SSL_set_accept_state(ssl);
+    } else {
+        SSL_set_connect_state(ssl);
+    }
 
     return HAL_RET_OK;
 }
@@ -245,6 +254,8 @@ SSLConnection::terminate()
 void
 SSLConnection::get_hs_args(hs_out_args_t& args)
 {
+    args.is_v4_flow = is_v4_flow;
+    args.is_server = is_server;
     args.read_key_index = read_key_index;
     args.write_key_index = write_key_index;
     args.read_iv = read_iv;
@@ -273,7 +284,7 @@ SSLConnection::do_handshake()
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SSL: handshake failed for id: {}", id);
         if(helper && helper->get_hs_done_cb()) {
-            helper->get_hs_done_cb()(id, oflowid, ret, NULL, is_v4_flow);
+            helper->get_hs_done_cb()(id, oflowid, ret, NULL);
         }
         return ret;
     }
@@ -283,7 +294,7 @@ SSLConnection::do_handshake()
         HAL_TRACE_DEBUG("SSL: handshake complete");
         if(helper && helper->get_hs_done_cb()) {
             get_hs_args(hsargs);
-            helper->get_hs_done_cb()(id, oflowid, ret, &hsargs, is_v4_flow);
+            helper->get_hs_done_cb()(id, oflowid, ret, &hsargs);
         }
     }
 
@@ -518,15 +529,13 @@ SSLHelper::init_ssl_ctxt()
 
     HAL_TRACE_DEBUG("SSL: Initializing SSL Context");
     // Client
-    client_ctx =  SSL_CTX_new(SSLv23_client_method());
+    client_ctx =  SSL_CTX_new(TLS_client_method());
     HAL_ASSERT(client_ctx != NULL);
     SSL_CTX_set_info_callback(client_ctx, ssl_info_callback);
 
     // Server
-    server_ctx = SSL_CTX_new(SSLv23_server_method());
+    server_ctx = SSL_CTX_new(TLS_server_method());
     HAL_ASSERT(server_ctx != NULL);
-    SSL_CTX_set_options(server_ctx, SSL_OP_NO_SSLv2);
-    SSL_CTX_set_cipher_list(server_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
     SSL_CTX_set_info_callback(server_ctx, ssl_info_callback);
     return HAL_RET_OK;
 }
@@ -534,6 +543,8 @@ SSLHelper::init_ssl_ctxt()
 hal_ret_t
 SSLHelper::start_connection(const ssl_conn_args_t &args)
 {
+    hal_ret_t ret = HAL_RET_OK;
+
     if(!client_ctx || !server_ctx) {
         HAL_TRACE_ERR("SSL client/server context not initialized");
         return HAL_RET_INVALID_ARG;
@@ -541,10 +552,17 @@ SSLHelper::start_connection(const ssl_conn_args_t &args)
     HAL_TRACE_DEBUG("SSL: Starting SSL handshake for id: {}", args.id);
 
     // Initialize connection
-    conn[args.id].init(this, args.id, client_ctx, args.tls_flow_cfg);
     conn[args.id].set_oflowid(args.oflow_id);
     conn[args.id].set_flow_type(args.is_v4_flow);
-    return conn[args.id].do_handshake();
+    conn[args.id].set_is_server(args.is_server_ctxt);
+
+    if(args.is_server_ctxt) {
+        conn[args.id].init(this, args.id, server_ctx, args.tls_flow_cfg);
+    } else {
+        conn[args.id].init(this, args.id, client_ctx, args.tls_flow_cfg);
+        ret = conn[args.id].do_handshake();
+    }
+    return ret;
 }
 
 hal_ret_t

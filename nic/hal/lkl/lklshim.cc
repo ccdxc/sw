@@ -331,10 +331,17 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
      * release the client syn and establish session for the original flow.
      */
     if (!hal::tls::proxy_tls_bypass_mode) {
+        HAL_TRACE_DEBUG("lklshim: flow dir: {}, iqid: {}, rqid: {}", flow->itor_dir, flow->iqid, flow->rqid);
         if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
-            hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid, true, flow->pfi);
+            hal::tls::tls_api_start_connection(flow->iqid, flow->rqid, true, false, flow->pfi);
         } else {
-            hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid, true, flow->pfi);
+            hal::tls::tls_api_start_connection(flow->rqid, flow->iqid, true, true, flow->pfi);
+            HAL_TRACE_DEBUG("lklshim: TLS server connection setup done: release client syn for daddr={}, saddr={}, "
+                            "dport={}, sport={}, seqno={}, ackseqno={} ", 
+                            ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq),
+                            ntohl(tcp->ack_seq));
+            // Inform LKL  
+            lklshim_release_client_syn(flow->iqid);
         }
     } else {
 

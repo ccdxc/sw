@@ -24,6 +24,24 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("Service List for %s" % self.GID())
         return
+        
+    def PrepareHalTlsProxyFlowConfigSpec(self, spec):
+        spec.cert_id = self.tls_sess_profile.cert.id
+        logger.info("proxy cert id %d" % self.tls_sess_profile.cert.id)
+        
+        if hasattr(self.tls_sess_profile, 'ciphers'):
+            spec.ciphers = self.tls_sess_profile.ciphers
+
+        spec.key_type = self.tls_sess_profile.key.key_type
+        if spec.key_type == 0:
+            spec.ecdsa_keys.sign_key_idx = self.tls_sess_profile.key.ecdsa_sign_key_idx
+            logger.info("proxy key id sign %d" % (spec.ecdsa_keys.sign_key_idx))
+        else:
+            spec.rsa_keys.sign_key_idx = self.tls_sess_profile.key.rsa_sign_key_idx
+            spec.rsa_keys.decrypt_key_idx = self.tls_sess_profile.key.rsa_decrypt_key_idx
+            logger.info("proxy key id sign %d, decrypt: %d" % \
+                        (spec.rsa_keys.sign_key_idx, spec.rsa_keys.decrypt_key_idx))
+        return
 
     def PrepareHALRequestSpec(self, req_spec):
         logger.info("Configuring proxy for the flow with label: " + self.session.iflow.label)
@@ -36,10 +54,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True
                 if hasattr(self, 'tls_sess_profile'):
-                    req_spec.tls_proxy_config.cert_id = self.tls_sess_profile.cert.id
-                    req_spec.tls_proxy_config.key_id = self.tls_sess_profile.key.key_idx
-                    logger.info("proxy cert id %d" % self.tls_sess_profile.cert.id)
-                    logger.info("proxy key id %d" % self.tls_sess_profile.key.key_idx)
+                    self.PrepareHalTlsProxyFlowConfigSpec(req_spec.tls_proxy_config)
 
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'RAW-REDIR' or self.session.iflow.label == 'RAW-REDIR-FLOW-MISS' or \

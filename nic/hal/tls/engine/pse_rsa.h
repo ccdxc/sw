@@ -4,7 +4,8 @@
 #include <openssl/ossl_typ.h>
 
 typedef struct pse_rsa_ex_data_s {
-    uint32_t  hw_key_index;
+    uint32_t  sig_gen_key_id;
+    uint32_t  decrypt_key_id;
 } PSE_RSA_EX_DATA;
 
 RSA_METHOD* pse_get_RSA_methods(void);

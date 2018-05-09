@@ -107,9 +107,24 @@ message IpsecFlowConfig {
     session.FlowKey     esp_flow_key    = 2;    
 }
 
+message TlsProxyECDSAKeys {
+    uint32                  sign_key_idx    = 1;
+}
+
+message TlsProxyRSAKeys {
+    uint32                  sign_key_idx    = 1;
+    uint32                  decrypt_key_idx = 2;
+}
+
 message TlsProxyFlowConfig {
-    uint32              cert_id         = 1;    // Certificate info
-    uint32              key_id          = 2;    // Key associated with the cert    
+    uint32                  cert_id         = 1;    // Certificate info
+    uint32                  trust_root_id   = 2;    // Id of the Trust Root Cert used for verification
+    string                  ciphers         = 3;    // List of ciphers for TLS handshake (':' separated)
+    types.CryptoAsymKeyType key_type        = 4;    // Asymmetric Key type
+    oneof Keys {
+        TlsProxyECDSAKeys   ecdsa_keys      = 5;    // ECDSA private key info
+        TlsProxyRSAKeys     rsa_keys        = 6;    // RSA private key info
+    }
 }
 
 message ProxyFlowConfigRequest {

@@ -123,10 +123,24 @@ typedef struct ipsec_flow_info_s {
     } u;
 } ipsec_flow_info_t;
 
+typedef struct tls_proxy_flow_info_ecdsa_keys_s {
+    uint32_t                 sign_key_id;
+} tls_proxy_flow_info_ecdsa_keys_t;
+
+typedef struct tls_proxy_flow_info_rsa_keys_s {
+    uint32_t                 sign_key_id;
+    uint32_t                 decrypt_key_id;
+} tls_proxy_flow_info_rsa_keys_t;
+
 typedef struct tls_proxy_flow_info_s {
-    bool                    is_valid;
-    uint32_t                cert_id;
-    uint32_t                key_id;
+    bool                     is_valid;
+    uint32_t                 cert_id;
+    std::string              ciphers;
+    types::CryptoAsymKeyType key_type;
+    union {
+        tls_proxy_flow_info_ecdsa_keys_t ecdsa_keys;
+        tls_proxy_flow_info_rsa_keys_t   rsa_keys;
+    } u;
 } tls_proxy_flow_info_t;
 
 typedef struct proxy_flow_info_s {
@@ -142,7 +156,7 @@ typedef struct proxy_flow_info_s {
 
     proxy_t*            proxy;                   // proxy service
     ht_ctxt_t           flow_ht_ctxt;            // Hash table for flow info
-} __PACK__ proxy_flow_info_t;
+} proxy_flow_info_t;
 
 
 static inline proxy_flow_info_t*

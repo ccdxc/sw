@@ -106,10 +106,19 @@ class CryptoAsymKeyObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         if resp_spec.__class__.__name__ == 'CryptoApiResponse':
-            logger.info("CRYPTO_KEY Get %s = %s" %\
-                       (resp_spec.setup_priv_key.key_idx, \
+            logger.info("CRYPTO_KEY Get key type %s = %s" %\
+                       (resp_spec.setup_priv_key.key_type, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
-            self.key_idx = resp_spec.setup_priv_key.key_idx
+            self.key_type = resp_spec.setup_priv_key.key_type
+            if self.key_type == 0:
+                # ECDSA key
+                self.ecdsa_sign_key_idx = resp_spec.setup_priv_key.ecdsa_key_info.sign_key_idx
+                logger.info("CRYPTO_KEY sign_key_idx: %s" % (self.ecdsa_sign_key_idx))
+            elif self.key_type == 1:
+                self.rsa_sign_key_idx = resp_spec.setup_priv_key.rsa_key_info.sign_key_idx
+                self.rsa_decrypt_key_idx = resp_spec.setup_priv_key.rsa_key_info.decrypt_key_idx
+                logger.info("CRYPTO_KEY sign_key_idx: %s, decrypt_key_idx %s" % \
+                            (self.rsa_sign_key_idx, self.rsa_decrypt_key_idx))
         return
 
 # Helper Class to Generate/Configure/Manage CryptoCertObject Objects

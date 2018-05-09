@@ -1,0 +1,10 @@
+# TLS Proxy Parameters for a SERVER Session
+meta:
+    id: TLS_PROXY_SESS_PROFILE_ECDSA_SERVER
+    feature_set:
+        - iris
+
+id              : 0
+cert_file       : file://../nic/conf/openssl/certs/ecdsa/server.crt
+key_file        : file://../nic/conf/openssl/certs/ecdsa/server.key 
+ciphers         : ECDHE-ECDSA-AES128-GCM-SHA256

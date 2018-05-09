@@ -22,8 +22,6 @@ static EVP_PKEY* pse_load_privkey(ENGINE* engine, const char *key_id,
         WARN("No key found");
         return NULL;
     }
-    INFO("key: index: %d, label: %s\n", key->index, key->label);
-   
     switch(key->type) {
     case EVP_PKEY_RSA:
         pkey = pse_rsa_get_evp_key(engine, key, ui_method, callback_data);

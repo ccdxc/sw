@@ -18,6 +18,9 @@ int pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c);
 int pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
                               uint8_t *h, uint8_t *s);
 
+int pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *dp,
+                                  uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

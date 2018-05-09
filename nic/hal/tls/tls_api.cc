@@ -25,7 +25,7 @@ static int port = 56789;
  * Global to indicate bypass mode for TLS proxy for all
  * flows, and perform tcp-proxy only.
  */
-bool proxy_tls_bypass_mode = true;
+bool proxy_tls_bypass_mode = false;
 
 #define TLS_DDOL_BYPASS_BARCO           1    /* Enqueue the request to BRQ, but bypass updating the PI of barco and
                                               * ring BSQ doorbell
@@ -182,7 +182,8 @@ tls_api_update_cb(uint32_t id,
 }
 
 hal_ret_t
-tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* args, bool is_v4_flow)
+tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret,
+                   hs_out_args_t* args)
 {
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SSL Handshake failed, err: {}", ret);
@@ -215,11 +216,13 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
         return ret;
     }
 
-    // Inform LKL
-    if (is_v4_flow)
-        lklshim_release_client_syn(id);
-    else
-        lklshim_release_client_syn6(id);
+    if(!args->is_server) {
+        // Inform LKL
+        if (args->is_v4_flow)
+            lklshim_release_client_syn(id);
+        else
+            lklshim_release_client_syn6(id);
+    }
 
     return ret;
 }
@@ -297,7 +300,7 @@ tls_api_init(void)
     g_ssl_helper.set_key_prog_cb(&tls_api_key_prog_cb);
 #ifdef  TLS_TEST_BYPASS_MODEL
     tcpfd = create_socket();
-    tls_api_start_handshake(100, 101, true, NULL);
+    tls_api_start_connection(100, 101, true, false, NULL);
 #endif
 
     return ret;
@@ -328,24 +331,25 @@ tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 }
 
 hal_ret_t
-tls_api_start_handshake(uint32_t enc_qid,
-                        uint32_t dec_qid,
-                        bool is_v4_flow,
-                        proxy_flow_info_t *pfi)
+tls_api_start_connection(uint32_t enc_qid,
+                         uint32_t dec_qid,
+                         bool is_v4_flow,
+                         bool is_server_ctxt,
+                         proxy_flow_info_t *pfi)
 {
     ssl_conn_args_t     conn_args = {0};
-    // Start handskake towards decrypt
+    // Start connection towards decrypt
     // register this qid to send context
     hal::pd::pd_cpupkt_register_tx_queue_args_t args;
     args.ctxt = asesq_ctx;
     args.type = types::WRING_TYPE_ASESQ;
     args.queue_id = dec_qid;
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&args);
-    // hal::pd::cpupkt_register_tx_queue(asesq_ctx, types::WRING_TYPE_ASESQ, dec_qid);
 
     conn_args.id = dec_qid;
     conn_args.oflow_id = enc_qid;
     conn_args.is_v4_flow = is_v4_flow;
+    conn_args.is_server_ctxt = is_server_ctxt;
     if(pfi && pfi->u.tlsproxy.is_valid) {
         conn_args.tls_flow_cfg =
             &pfi->u.tlsproxy;

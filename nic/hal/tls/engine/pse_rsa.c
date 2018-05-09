@@ -70,7 +70,7 @@ PSE_RSA_EX_DATA* pse_rsa_get_ex_data(RSA *rsa)
 }
 
 static int 
-pse_rsa_set_ex_data(RSA *rsa, uint32_t hw_key_index)
+pse_rsa_set_ex_data(RSA *rsa, uint32_t sig_gen_key_id, uint32_t decrypt_key_id)
 {
     PSE_RSA_EX_DATA *ex_data = PSE_MALLOC(sizeof(PSE_RSA_EX_DATA));
     if(!ex_data) {
@@ -78,7 +78,8 @@ pse_rsa_set_ex_data(RSA *rsa, uint32_t hw_key_index)
         return -1;
     }
 
-    ex_data->hw_key_index = hw_key_index;
+    ex_data->sig_gen_key_id = sig_gen_key_id;
+    ex_data->decrypt_key_id = decrypt_key_id;
     RSA_set_ex_data(rsa, pse_rsa_ex_data_index, ex_data);
     return 1;
 }
@@ -223,7 +224,7 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
         goto cleanup;
     }
     INFO("flen %d, rsa_len = %d, padding %d, key_idx: %d", 
-                    flen, rsa_len, padding, ex_data->hw_key_index);
+                    flen, rsa_len, padding, ex_data->sig_gen_key_id);
 
     switch (padding) {
     case RSA_PKCS1_PADDING:
@@ -264,7 +265,7 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
     LOG_BUFFER("bn", bn);
  
 #ifndef NO_PEN_HW_OFFLOAD
-    ret = pd_tls_asym_rsa2k_sig_gen(ex_data->hw_key_index,
+    ret = pd_tls_asym_rsa2k_sig_gen(ex_data->sig_gen_key_id,
                                     bn.data,
                                     NULL,
                                     buf,
@@ -289,8 +290,46 @@ cleanup:
 int pse_rsa_priv_dec(int flen, const unsigned char *from,
                      unsigned char *to, RSA *rsa, int padding)
 {
+    int                 ret = -1;
+    int                 rsa_len = 0;
+    PSE_RSA_EX_DATA     *ex_data = NULL;
     INFO("Inside");
-    return 1;
+
+    if(!from || !to || !rsa) {
+        WARN("Invalid args");
+        goto cleanup;
+    }
+    
+    ex_data = pse_rsa_get_ex_data(rsa);
+    if(!ex_data) {
+        WARN("Failed to get rsa ex data");
+        goto cleanup;
+    }
+
+    rsa_len = RSA_size(rsa);
+    
+    INFO("flen %d, rsa_len: %d, padding: %d, key_id: %d",
+         flen, rsa_len, padding, ex_data->decrypt_key_id);
+    if(flen > rsa_len) {
+        INFO("ERROR: flen is greater than rsa_len");
+        goto cleanup;
+    }
+
+#ifndef NO_PEN_HW_OFFLOAD
+    ret = pd_tls_asym_rsa2k_crt_decrypt(ex_data->decrypt_key_id,
+                                        NULL, NULL, NULL, NULL, NULL,
+                                        (uint8_t *)from, to);
+    INFO("ret: %d", ret);
+    if(ret < 0) {
+        WARN("rsa decrypt failed...");
+        goto cleanup;
+    }
+
+    return rsa_len;
+#endif
+
+cleanup:
+    return ret;
 }
 
 int 
@@ -382,7 +421,9 @@ pse_rsa_get_evp_key(ENGINE* engine, PSE_KEY* key,
     }
     
     EVP_PKEY_set1_RSA(pkey, rsa);
-    pse_rsa_set_ex_data(rsa, key->index);
+    pse_rsa_set_ex_data(rsa,
+                        key->u.rsa_key.sign_key_id,
+                        key->u.rsa_key.decrypt_key_id);
 
     return pkey;
 

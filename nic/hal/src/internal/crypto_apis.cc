@@ -257,6 +257,7 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
 
     switch (key_size) {
         case 256:
+            args.key_idx = req.rsa_crt_decrypt().key_idx();
             args.p = (uint8_t *)req.rsa_crt_decrypt().p().data();
             args.q = (uint8_t *)req.rsa_crt_decrypt().q().data();
             args.dp = (uint8_t *)req.rsa_crt_decrypt().dp().data();
@@ -285,7 +286,7 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
 
 static hal_ret_t
 crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
-                                  int32_t &key_idx)
+                                  cryptoapis::CryptoAsymApiRespSetupPrivateKey *setup_key_resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     EC_KEY              *ec_key = NULL;
@@ -300,7 +301,8 @@ crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
     uint8_t             buf_xg[256] = {0}, buf_yg[256] = {0};
     uint8_t             buf_a[256] = {0}, buf_b[256] = {0};
     uint8_t             buf_da[256] = {0};
-    pd::pd_capri_barco_asym_ecdsa_p256_setup_private_key_args_t args = {0};
+    int32_t             key_idx = -1;
+    pd::pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_t args = {0};
 
     if(!pkey)
         return HAL_RET_INVALID_ARG;
@@ -387,6 +389,9 @@ crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY,
                           (void *) &args);
+    HAL_TRACE_DEBUG("Received key_idx: {}", key_idx);
+    setup_key_resp->set_key_type(types::CRYPTO_ASYM_KEY_TYPE_ECDSA);
+    setup_key_resp->mutable_ecdsa_key_info()->set_sign_key_idx(key_idx);
 
 cleanup:
     if(ctx) {
@@ -398,14 +403,80 @@ cleanup:
 }
 
 static hal_ret_t
-crypto_asym_api_setup_rsa_priv_key(EVP_PKEY *pkey,
-                                   int32_t &key_idx)
+crypto_asym_api_setup_rsa_sig_gen_priv_key(RSA *rsa,
+                                           int32_t &key_idx)
 {
-    uint32_t            key_size = 0;
-    RSA                 *rsa = NULL;
     BIGNUM              *n = NULL, *e = NULL, *d = NULL;
     uint8_t             buf_n[256] = {0}, buf_d[256] = {0};
-    pd::pd_capri_barco_asym_rsa2k_setup_private_key_args_t args;
+    pd::pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t args = {0};
+
+    if(!rsa) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // Extract params
+    RSA_get0_key(rsa,
+                 (const BIGNUM**)&n,
+                 (const BIGNUM**)&e,
+                 (const BIGNUM**)&d);
+
+    BN_bn2binpad(n, buf_n, 256);
+    BN_bn2binpad(d, buf_d,256);
+
+    args.n = (uint8_t *)buf_n;
+    args.d = (uint8_t *)buf_d;
+    args.key_idx = &key_idx;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_ASYM_RSA2K_SETUP_SIG_GEN_PRIV_KEY,
+                          (void *)&args);
+}
+
+static hal_ret_t
+crypto_asym_api_setup_rsa_decrypt_priv_key(RSA *rsa,
+                                           int32_t &key_idx)
+{
+    BIGNUM              *p = NULL, *q = NULL, *dp = NULL, *dq = NULL, *qinv = NULL;
+    uint8_t             buf_p[256] = {0}, buf_q[256] = {0};
+    uint8_t             buf_dp[256] = {0}, buf_dq[256] = {0}, buf_qinv[256] = {0};
+    pd::pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t args = {0};
+
+    if(!rsa) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // Extract params
+    RSA_get0_factors(rsa,
+                     (const BIGNUM**)&p,
+                     (const BIGNUM**)&q);
+    RSA_get0_crt_params(rsa, 
+                        (const BIGNUM**)&dp,
+                        (const BIGNUM**)&dq,
+                        (const BIGNUM**)&qinv);
+
+    BN_bn2binpad(p, buf_p, 256);
+    BN_bn2binpad(q, buf_q, 256);
+    BN_bn2binpad(dp, buf_dp, 256);
+    BN_bn2binpad(dq, buf_dq, 256);
+    BN_bn2binpad(qinv, buf_qinv, 256);
+
+    args.p = (uint8_t *)buf_p;
+    args.q = (uint8_t *)buf_q;
+    args.dp = (uint8_t *)buf_dp;
+    args.dq = (uint8_t *)buf_dq;
+    args.qinv = (uint8_t *)buf_qinv;
+    args.key_idx = &key_idx;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY,
+                          (void *)&args);
+}
+
+static hal_ret_t 
+crypto_asym_api_setup_rsa_priv_key(EVP_PKEY *pkey,
+                                   cryptoapis::CryptoAsymApiRespSetupPrivateKey *setup_key_resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    RSA                 *rsa = NULL;
+    uint32_t            key_size = 0;
+    int32_t             sig_gen_key_idx = -1;
+    int32_t             decrypt_key_idx = -1;
 
     if(!pkey) {
         return HAL_RET_INVALID_ARG;
@@ -424,20 +495,30 @@ crypto_asym_api_setup_rsa_priv_key(EVP_PKEY *pkey,
         return HAL_RET_INVALID_ARG;
     }
 
-    // Extract params
-    RSA_get0_key(rsa,
-                 (const BIGNUM**)&n,
-                 (const BIGNUM**)&e,
-                 (const BIGNUM**)&d);
-    BN_bn2bin(n, buf_n);
-    BN_bn2bin(d, buf_d);
-    args.n = (uint8_t *)buf_n;
-    args.d = (uint8_t *)buf_d;
-    args.key_idx = &key_idx;
-    return pd::hal_pd_call(pd::PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
-                          (void *)&args);
-}
+    // setup sig gen key
+    ret = crypto_asym_api_setup_rsa_sig_gen_priv_key(rsa, sig_gen_key_idx);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to setup rsa sig gen key: {}", ret);
+        goto cleanup;
+    }
+    
+    ret = crypto_asym_api_setup_rsa_decrypt_priv_key(rsa, decrypt_key_idx);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to setup rsa decrypt key: {}", ret);
+        goto cleanup;
+    }
 
+    HAL_TRACE_DEBUG("Received sig_gen key: {}, decrypt key: {}",
+                    sig_gen_key_idx, decrypt_key_idx);
+    setup_key_resp->set_key_type(types::CRYPTO_ASYM_KEY_TYPE_RSA);
+    setup_key_resp->mutable_rsa_key_info()->set_sign_key_idx(sig_gen_key_idx);
+    setup_key_resp->mutable_rsa_key_info()->set_decrypt_key_idx(decrypt_key_idx);
+
+    return ret;
+cleanup:
+    //TODO: remove allocated keys
+    return ret;
+}
 hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
 					 cryptoapis::CryptoApiResponse *resp)
 {
@@ -445,7 +526,6 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
     BIO                 *bio = NULL;
     EVP_PKEY            *pkey = NULL;
     uint32_t            key_type = 0;
-    int32_t             key_idx = -1;
 
     // decode the key
     bio = BIO_new_mem_buf(req.setup_priv_key().key().c_str(), -1);
@@ -469,10 +549,10 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
     HAL_TRACE_DEBUG("Received privkey type {}", key_type);
     switch (key_type) {
     case EVP_PKEY_EC:
-        ret = crypto_asym_api_setup_ec_priv_key(pkey, key_idx);
+        ret = crypto_asym_api_setup_ec_priv_key(pkey, resp->mutable_setup_priv_key());
         break;
     case EVP_PKEY_RSA:
-        ret = crypto_asym_api_setup_rsa_priv_key(pkey, key_idx);
+        ret = crypto_asym_api_setup_rsa_priv_key(pkey, resp->mutable_setup_priv_key());
         break;
     default:
         HAL_TRACE_ERR("Unsupported key type: {}", key_type);
@@ -481,8 +561,6 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
     }
 end:
     if (ret == HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Received key_idx: {}", key_idx);
-        resp->mutable_setup_priv_key()->set_key_idx(key_idx);
         resp->set_api_status(types::API_STATUS_OK);
     }
     else {
