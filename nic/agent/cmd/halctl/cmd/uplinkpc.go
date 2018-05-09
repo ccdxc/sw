@@ -25,15 +25,15 @@ var (
 
 var uplinkPcShowCmd = &cobra.Command{
 	Use:   "uplink-pc",
-	Short: "uplink-pc",
-	Long:  "shows uplink-pc",
+	Short: "show uplink-pc interface information",
+	Long:  "show uplink-pc interface object information",
 	Run:   uplinkPcShowCmdHandler,
 }
 
 var uplinkPcDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows uplink-pc detail",
+	Short: "show detailed information about uplink-pc interface",
+	Long:  "show detailed information about uplink-pc interface object",
 	Run:   uplinkPcDetailShowCmdHandler,
 }
 

@@ -25,15 +25,15 @@ var (
 
 var enicShowCmd = &cobra.Command{
 	Use:   "enic",
-	Short: "enic",
-	Long:  "shows enic",
+	Short: "show enic interface information",
+	Long:  "show enic interface object information",
 	Run:   enicShowCmdHandler,
 }
 
 var enicDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows enic detail",
+	Short: "show detailed information about enic interface",
+	Long:  "show detailed information about enic interface object",
 	Run:   enicDetailShowCmdHandler,
 }
 

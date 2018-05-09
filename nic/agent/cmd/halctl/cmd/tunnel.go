@@ -25,15 +25,15 @@ var (
 
 var tunnelShowCmd = &cobra.Command{
 	Use:   "tunnel",
-	Short: "tunnel",
-	Long:  "shows tunnel",
+	Short: "show tunnel interface information",
+	Long:  "show tunnel interface object information",
 	Run:   tunnelShowCmdHandler,
 }
 
 var tunnelDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows tunnel detail",
+	Short: "show detailed information about tunnel interface",
+	Long:  "show detailed information about tunnel interface object",
 	Run:   tunnelDetailShowCmdHandler,
 }
 

@@ -35,8 +35,8 @@ var vrfShowCmd = &cobra.Command{
 
 var vrfPdShowCmd = &cobra.Command{
 	Use:   "pd",
-	Short: "pd",
-	Long:  "shows vrf pd",
+	Short: "show VRF PD information",
+	Long:  "show PD information about VRF objects",
 	Run:   vrfPdShowCmdHandler,
 }
 

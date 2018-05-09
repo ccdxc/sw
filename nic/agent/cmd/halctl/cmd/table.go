@@ -24,15 +24,15 @@ var (
 
 var tableMetaShowCmd = &cobra.Command{
 	Use:   "table",
-	Short: "table",
-	Long:  "shows table metadata",
+	Short: "show table metadata",
+	Long:  "show table metadata",
 	Run:   tableMetaShowCmdHandler,
 }
 
 var tableShowCmd = &cobra.Command{
 	Use:   "dump",
-	Short: "table dump",
-	Long:  "shows table entries",
+	Short: "show table entries",
+	Long:  "show table entries",
 	Run:   tableShowCmdHandler,
 }
 

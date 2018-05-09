@@ -25,15 +25,15 @@ var (
 
 var cpuShowCmd = &cobra.Command{
 	Use:   "cpu",
-	Short: "cpu",
-	Long:  "shows cpu",
+	Short: "show CPU interface information",
+	Long:  "show CPU interface object information",
 	Run:   cpuShowCmdHandler,
 }
 
 var cpuDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows cpu detail",
+	Short: "show detailed CPU interface information",
+	Long:  "show detailed CPU interface object information",
 	Run:   cpuDetailShowCmdHandler,
 }
 

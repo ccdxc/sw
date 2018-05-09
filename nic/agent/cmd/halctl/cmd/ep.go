@@ -27,8 +27,8 @@ var epShowCmd = &cobra.Command{
 
 var epPdShowCmd = &cobra.Command{
 	Use:   "pd",
-	Short: "pd",
-	Long:  "shows ep pd",
+	Short: "show endpoint PD information",
+	Long:  "show PD information about endpoint objects",
 	Run:   epPdShowCmdHandler,
 }
 

@@ -25,8 +25,8 @@ var (
 
 var uplinkShowCmd = &cobra.Command{
 	Use:   "uplink",
-	Short: "uplink",
-	Long:  "shows uplink",
+	Short: "show uplink interface information",
+	Long:  "show uplink interface object information",
 	Run:   uplinkShowCmdHandler,
 }
 

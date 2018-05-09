@@ -25,15 +25,15 @@ var (
 
 var ifShowCmd = &cobra.Command{
 	Use:   "if",
-	Short: "if",
-	Long:  "shows if",
+	Short: "show interface information",
+	Long:  "show interface object information",
 	Run:   ifShowCmdHandler,
 }
 
 var ifDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "detail",
-	Long:  "shows if detail",
+	Short: "show detailed interface information",
+	Long:  "shows detailed interface object information",
 	Run:   ifDetailShowCmdHandler,
 }
 
