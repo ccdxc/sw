@@ -314,9 +314,21 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     rsp->mutable_spec()->set_salt(ripsec.iv_salt);
     rsp->mutable_spec()->set_iv(ripsec.iv);
     rsp->mutable_spec()->set_spi(ripsec.spi);
-
-    //rsp->mutable_spec()->set_tunnel_sip4(ripsec.tunnel_sip4);
-    //rsp->mutable_spec()->set_tunnel_dip4(ripsec.tunnel_dip4);
+    rsp->mutable_spec()->set_iv_size(ripsec.iv_size);
+    rsp->mutable_spec()->set_icv_size(ripsec.icv_size);
+    uint64_t seq_no  = ripsec.esn_hi;
+    seq_no = seq_no << 32;
+    seq_no = seq_no | ripsec.esn_lo;
+    rsp->mutable_spec()->set_seq_no(seq_no);
+    rsp->mutable_spec()->set_iv(ripsec.iv);
+    rsp->mutable_spec()->set_total_pkts(ripsec.total_pkts);
+    rsp->mutable_spec()->set_total_bytes(ripsec.total_bytes);
+    rsp->mutable_spec()->set_total_drops(ripsec.total_drops);
+ 
+    ripsec.tunnel_sip4.af = IP_AF_IPV4;
+    ip_addr_to_spec(rsp->mutable_spec()->mutable_local_gateway_ip(), &ripsec.tunnel_sip4);
+    ripsec.tunnel_dip4.af = IP_AF_IPV4;
+    ip_addr_to_spec(rsp->mutable_spec()->mutable_remote_gateway_ip(), &ripsec.tunnel_dip4);
 
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipsec_sa_handle(ipsec->hal_handle);

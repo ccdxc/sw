@@ -95,6 +95,15 @@ typedef struct pd_ipsec_decrypt_part2_s {
     uint32_t iv_salt;
 } __PACK__ pd_ipsec_decrypt_part2_t;
 
+typedef struct pd_ipsec_qstate_addr_part2_s {
+    union {
+       pd_ipsec_eth_ip4_hdr_t eth_ip4_hdr;
+       pd_ipsec_eth_ip6_hdr_t eth_ip6_hdr;
+    } u;
+    pd_ipsec_udp_nat_t_hdr_t nat_t_hdr;
+    uint8_t pad[2];
+} __PACK__ pd_ipsec_qstate_addr_part2_t;
+
  
 // allocate a ipseccb pd instance
 static inline pd_ipsec_encrypt_t *

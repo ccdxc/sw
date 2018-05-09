@@ -188,6 +188,8 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipsec_decrypt_t* ipsec_sa_pd)
     uint64_t replay_seq_no_bmp = 0;
     uint32_t expected_seq_no;
 
+    ipsec_sa_t *ipsec_sa = ipsec_sa_pd->ipsec_sa;
+
     // hardware index for this entry
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id + 
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_RX_STAGE0);
@@ -197,12 +199,12 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipsec_decrypt_t* ipsec_sa_pd)
         return HAL_RET_HW_FAIL;
     }
     
-    ipsec_sa_pd->ipsec_sa->iv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size;
-    ipsec_sa_pd->ipsec_sa->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
-    ipsec_sa_pd->ipsec_sa->icv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size;
-    ipsec_sa_pd->ipsec_sa->barco_enc_cmd = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd;
-    ipsec_sa_pd->ipsec_sa->key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index);
-    ipsec_sa_pd->ipsec_sa->new_key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.new_key_index);
+    ipsec_sa->iv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size;
+    ipsec_sa->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
+    ipsec_sa->icv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size;
+    ipsec_sa->barco_enc_cmd = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd;
+    ipsec_sa->key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index);
+    ipsec_sa->new_key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.new_key_index);
    
     ipsec_cb_ring_addr = ntohll(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr);
     cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex;
@@ -216,10 +218,15 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipsec_decrypt_t* ipsec_sa_pd)
 
     expected_seq_no = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no;
     replay_seq_no_bmp = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.replay_seq_no_bmp;
-    ipsec_sa_pd->ipsec_sa->expected_seq_no = ntohl(expected_seq_no);
-    ipsec_sa_pd->ipsec_sa->seq_no_bmp = ntohll(replay_seq_no_bmp);
-    ipsec_sa_pd->ipsec_sa->vrf_vlan = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan);
-    ipsec_sa_pd->ipsec_sa->is_v6 = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6;
+    ipsec_sa->expected_seq_no = ntohl(expected_seq_no);
+    ipsec_sa->seq_no_bmp = ntohll(replay_seq_no_bmp);
+    ipsec_sa->vrf_vlan = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan);
+    ipsec_sa->is_v6 = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6;
+
+    ipsec_sa->cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex;
+    ipsec_sa->cb_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex;
+    ipsec_sa->barco_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_pindex;
+    ipsec_sa->barco_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex;
 
     return HAL_RET_OK;
 }
@@ -228,6 +235,7 @@ hal_ret_t
 p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(pd_ipsec_decrypt_t* ipsec_sa_pd)
 {
     pd_ipsec_decrypt_part2_t  decrypt_part2;
+    ipsec_sa_t *ipsec_sa = ipsec_sa_pd->ipsec_sa;
 
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id + 
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_PART2);
@@ -235,8 +243,8 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(pd_ipsec_decrypt_t* ipsec_sa_pd)
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
-    ipsec_sa_pd->ipsec_sa->last_replay_seq_no = ntohl(decrypt_part2.last_replay_seq_no);
-    ipsec_sa_pd->ipsec_sa->iv_salt = decrypt_part2.iv_salt; 
+    ipsec_sa->last_replay_seq_no = ntohl(decrypt_part2.last_replay_seq_no);
+    ipsec_sa->iv_salt = decrypt_part2.iv_salt; 
     return HAL_RET_OK;
 }
 

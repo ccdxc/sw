@@ -95,6 +95,13 @@ typedef struct ipsec_sa_s {
     // PD state
     void                  *pd;                     // all PD specific state
     void                  *pd_decrypt;                     // all PD specific state
+    uint16_t              cb_pindex;
+    uint16_t              cb_cindex;
+    uint16_t              barco_pindex;
+    uint16_t              barco_cindex;
+    uint64_t              total_pkts;
+    uint64_t              total_bytes;
+    uint64_t              total_drops;
 
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt

@@ -286,7 +286,6 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipsec_encrypt_t* ipsec_sa_pd)
     ipsec_sa->esn_lo = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.esn_lo);
     ipsec_sa->spi = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.spi);
     ipsec_sa->key_index = ntohs(data.u.ipsec_encap_rxdma_initial_table_d.key_index);
-
     ipsec_cb_ring_addr = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr);
 
     ipsec_barco_ring_addr  = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr);
@@ -303,12 +302,37 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipsec_encrypt_t* ipsec_sa_pd)
     return HAL_RET_OK;
 }
 
+
+hal_ret_t 
+p4pd_get_ipsec_rx_stage0_entry_part2(pd_ipsec_encrypt_t* ipsec_sa_pd)
+{
+    ipsec_sa_t  *ipsec_sa = ipsec_sa_pd->ipsec_sa;
+    pd_ipsec_qstate_addr_part2_t data = {0};
+
+    // hardware index for this entry
+    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id + 
+        (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_IP_HDR);
+
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
+        return HAL_RET_HW_FAIL;
+    }
+    ipsec_sa->tunnel_sip4.addr.v4_addr =  ntohl(data.u.eth_ip4_hdr.saddr);
+    ipsec_sa->tunnel_dip4.addr.v4_addr =  ntohl(data.u.eth_ip4_hdr.daddr);
+    return HAL_RET_OK;
+}
+
 hal_ret_t 
 p4pd_get_ipsec_sa_rxdma_entry(pd_ipsec_encrypt_t* ipsec_sa_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
     
     ret = p4pd_get_ipsec_rx_stage0_entry(ipsec_sa_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get ipsec_rx entry");
+        goto cleanup;
+    }
+    ret = p4pd_get_ipsec_rx_stage0_entry_part2(ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get ipsec_rx entry");
         goto cleanup;
