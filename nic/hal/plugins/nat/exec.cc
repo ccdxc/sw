@@ -30,7 +30,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
         HAL_TRACE_DEBUG("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
-        return ret;
+        // return ret;
     }
     // fte state to store the original vrf/ip/port for rflow
     nat_info_t *nat_info = (nat_info_t *)ctx.feature_state();
@@ -74,15 +74,17 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
             acl_key.port_dst = ctx.key().dport;
             break;
         default:
-            HAL_ASSERT(true);
-            ret = HAL_RET_FTE_RULE_NO_MATCH;
-            return ret;
+            break;
         }
-        ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("nat::rule lookup failed ret={}", ret);
-            return ret;
+
+        if (acl_ctx) {
+            ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_DEBUG("nat::rule lookup failed ret={}", ret);
+                return ret;
+            }
         }
+
         if (rule) {
             rule_data = (hal::rule_data_t *) rule->data.userdata;
             nat_cfg = (const hal::nat_cfg_rule_t *)rule_data->userdata;

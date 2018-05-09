@@ -195,6 +195,7 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
 
     int proto = (l4_type == FTE_HEADER_tcp) ? proto_tcp :
         (l4_type == FTE_HEADER_udp) ? proto_udp : proto_other;
+
     int af = (l3_type == FTE_HEADER_ipv4) ? af_v4: af_v6;
 
     switch(nat_type) {
@@ -301,6 +302,7 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
 
     snat = (rewrite.valid_flds.sip || rewrite.valid_flds.sport);
     dnat = (rewrite.valid_flds.dip || rewrite.valid_flds.dport);
+
     if (snat && dnat){
         attrs.nat_ip = config.nat_sip;
         attrs.nat_l4_port = config.nat_sport;
@@ -409,7 +411,7 @@ hal_ret_t flow_t::get_rewrite_config(const hal::flow_cfg_t &config,
                                      header_rewrite_info_t *rewrite)
 {
     hal_ret_t ret = HAL_RET_OK;
-  
+
     rewrite->flags.dec_ttl =  attrs.ttl_dec;
     if (attrs.mac_sa_rewrite) {
         rewrite->valid_flds.smac = true;
@@ -420,66 +422,47 @@ hal_ret_t flow_t::get_rewrite_config(const hal::flow_cfg_t &config,
         rewrite->valid_flds.dmac = true;
         // How to get the actual mac - its not stored anywhere!!
     }
-   
+
+    // vlan
     if (attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
-        rewrite->ether.vlan_id = attrs.tnnl_vnid;
+        HEADER_SET_FLD(*rewrite, ether, vlan_id, attrs.tnnl_vnid)
     } 
 
-    //If SIP was valid then we would have the nat type set. 
-    //Make sure we have both set
-    if (config.nat_sip.af == IP_AF_IPV4 && (config.nat_type&0x1)) {
-        rewrite->ipv4.sip = config.nat_sip.addr.v4_addr;
-        rewrite->valid_hdrs = FTE_HEADER_ipv4;
-        if (rewrite->ipv4.sip != key_.sip.v4_addr)
-            rewrite->valid_flds.sip = true;
-    } else if (config.nat_sip.af == IP_AF_IPV6) {
-        rewrite->ipv6.sip = config.nat_sip.addr.v6_addr;
-        rewrite->valid_hdrs = FTE_HEADER_ipv6;
-        if (!memcmp(&rewrite->ipv6.sip, &key_.sip.v6_addr, sizeof(ipv6_addr_t)))
-            rewrite->valid_flds.sip = true;
-    }
-
-    //If DIP was valid then we would have the nat type set.
-    //Make sure we have both set
-    if (config.nat_dip.af == IP_AF_IPV4 && (config.nat_type&0x2)) {
-        rewrite->ipv4.dip = config.nat_dip.addr.v4_addr;
-        rewrite->valid_hdrs = FTE_HEADER_ipv4;
-        if (rewrite->ipv4.dip != key_.dip.v4_addr)
-            rewrite->valid_flds.dip = true;
-    } else if (config.nat_dip.af == IP_AF_IPV6) {
-        rewrite->ipv6.dip = config.nat_dip.addr.v6_addr;
-        rewrite->valid_hdrs = FTE_HEADER_ipv6;
-        if (!memcmp(&rewrite->ipv6.dip, &key_.dip.v6_addr, sizeof(ipv6_addr_t)))
-            rewrite->valid_flds.dip = true;
-    }
-
-    if (config.nat_type != session::NAT_TYPE_NONE) {
-        switch (key_.proto) {
-        case IP_PROTO_TCP:
-            rewrite->tcp.sport = config.nat_sport;
-            rewrite->tcp.dport = config.nat_dport;
-            rewrite->valid_hdrs = FTE_HEADER_tcp;
-            if (rewrite->tcp.sport != key_.sport) 
-                rewrite->valid_flds.sport = true;
-            if (rewrite->tcp.dport != key_.sport)
-                rewrite->valid_flds.dport = true;
-            break;
-        case IP_PROTO_UDP:
-            rewrite->udp.sport = config.nat_sport;
-            rewrite->udp.dport = config.nat_dport;
-            rewrite->valid_hdrs = FTE_HEADER_udp;
-            if (rewrite->udp.sport != key_.sport)
-                rewrite->valid_flds.sport = true;
-            if (rewrite->udp.dport != key_.sport)
-                rewrite->valid_flds.dport = true;
-            break;
-        default:
-            break;
+    // sip
+    if (!ip_addr_is_zero(&config.nat_sip)) {
+        if (config.nat_sip.af == IP_AF_IPV4) {
+            HEADER_SET_FLD(*rewrite, ipv4, sip, config.nat_sip.addr.v4_addr);
+        } else {
+            HEADER_SET_FLD(*rewrite, ipv6, sip, config.nat_sip.addr.v6_addr);
         }
     }
 
-    if (attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID)
-        rewrite->valid_flds.vlan_id = true; 
+    // dip
+    if (!ip_addr_is_zero(&config.nat_dip)) {
+        if (config.nat_dip.af == IP_AF_IPV4) {
+            HEADER_SET_FLD(*rewrite, ipv4, dip, config.nat_dip.addr.v4_addr);
+        } else {
+            HEADER_SET_FLD(*rewrite, ipv6, dip, config.nat_dip.addr.v6_addr);
+        }
+    }
+
+    // sport
+    if (config.nat_sport) {
+        if  (key_.proto == IP_PROTO_TCP) {
+            HEADER_SET_FLD(*rewrite, tcp, sport, config.nat_sport);
+        } else  if  (key_.proto == IP_PROTO_UDP) {
+            HEADER_SET_FLD(*rewrite, udp, sport, config.nat_sport);
+        }
+    }
+
+    // dport
+    if (config.nat_dport) {
+        if  (key_.proto == IP_PROTO_TCP) {
+            HEADER_SET_FLD(*rewrite, tcp, dport, config.nat_dport);
+        } else  if  (key_.proto == IP_PROTO_UDP) {
+            HEADER_SET_FLD(*rewrite, udp, dport, config.nat_dport);
+        }
+    }
 
     return ret;
 }
