@@ -9,6 +9,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/export/vrf_api.hpp"
 #include "nic/hal/src/utils/utils.hpp"
+#include <google/protobuf/util/json_util.h>
 
 namespace hal {
 void *
@@ -89,6 +90,21 @@ add_ipsec_sa_to_db (ipsec_sa_t *ipsec)
     return HAL_RET_OK;
 }
 
+static inline void
+ipsec_sa_decrypt_spec_dump (IpsecSADecrypt& spec)
+{
+    std::string    ipsec_sa_decrypt_cfg_str;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return;
+    }
+
+    google::protobuf::util::MessageToJsonString(spec, &ipsec_sa_decrypt_cfg_str);
+    HAL_TRACE_DEBUG("IPSec SA Decrypt Config:");
+    HAL_TRACE_DEBUG("{}", ipsec_sa_decrypt_cfg_str.c_str());
+    return;
+}
+
 //------------------------------------------------------------------------------
 // process a IPSEC CB create request
 // TODO: if IPSEC CB exists, treat this as modify (vrf id in the meta must
@@ -107,6 +123,7 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     mac_addr_t smac1 = {0x0, 0xee, 0xff, 0x0, 0x0, 0x02};
     mac_addr_t dmac1 = {0x0, 0xee, 0xff, 0x0, 0x0, 0x03};
 
+    ipsec_sa_decrypt_spec_dump(spec);
     // validate the request message
     ret = validate_ipsec_sa_decrypt_create(spec, rsp);
 
@@ -215,6 +232,7 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     vrf_t   *vrf;
     vrf_id_t tid;
 
+    ipsec_sa_decrypt_spec_dump(spec);
     auto kh = spec.key_or_handle();
 
     ipsec = find_ipsec_sa_by_id(kh.cb_id());
