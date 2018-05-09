@@ -69,15 +69,21 @@ req_tx_sqcb_process:
 
     .brcase        SQ_RING_ID
 
+        crestore [c2,c1], d.{busy...cb1_busy}, 0x3
+        bcf            [c1 | c2], exit
+        nop // Branch Delay Slot
+  
         bbeq           d.poll_in_progress, 1, exit
-        crestore [c2,c1], d.{busy...cb1_busy}, 0x3 //BD Slot
+        nop // Branch Delay Slot
         
         // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
         bbeq           d.congestion_mgmt_enable, 0, process_send
 
-        phvwrpair CAPRI_PHV_FIELD(TO_S2_P, header_template_addr), d.header_template_addr, CAPRI_PHV_FIELD(TO_S2_P, congestion_mgmt_enable), 1  //BD Slot
+        phvwrpair CAPRI_PHV_FIELD(TO_S2_P, header_template_addr), d.header_template_addr, \
+                  CAPRI_PHV_FIELD(TO_S2_P, congestion_mgmt_enable), 1  //BD Slot
 
-        phvwrpair CAPRI_PHV_FIELD(TO_S3_P, header_template_addr), d.header_template_addr, CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_enable), 1
+        phvwrpair CAPRI_PHV_FIELD(TO_S3_P, header_template_addr), d.header_template_addr, \
+                  CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_enable), 1
 
         bbeq           d.dcqcn_rl_failure, 0, process_send
         phvwr CAPRI_PHV_FIELD(TO_S4_P, congestion_mgmt_enable), 1  // Branch Delay Slot

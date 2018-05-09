@@ -356,10 +356,13 @@ op_type_end:
     srl            r3, K_RD_READ_LEN, K_RD_LOG_PMTU
     tblmincr       d.tx_psn, 24, r3
 
+    // if read_len is < pmtu, then increment tx_psn by 1
+    sne            c6, r3, r0
+
     // tx_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
-    add            r3, K_RD_READ_LEN, r0
-    mincr          r3, K_RD_LOG_PMTU, r0
-    sle            c6, r3, r0
+    add.c6         r3, K_RD_READ_LEN, r0
+    mincr.c6       r3, K_RD_LOG_PMTU, r0
+    sle.c6         c6, r3, r0
 
 inc_psn:
     // sqcb1_p->tx_psn++

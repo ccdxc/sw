@@ -57,7 +57,7 @@ ack_or_nak_or_rnr_or_implicit_nak:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, tbl_id), 3
     phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6
     
-    CAPRI_SET_TABLE_0_VALID(0);
+    CAPRI_SET_TABLE_0_VALID(0)
 
     // r1 = aeth_syndrome
     add            r1, K_AETH_SYNDROME, r0
@@ -218,10 +218,13 @@ read_or_atomic:
     
     seq            c2, d.read_rsp_or_atomic, RRQ_OP_TYPE_READ
     bcf            [!c2], atomic
-    nop            // Branch Delay Slot
+    // Zero length read resp should only post completion and no data
+    // transfer
+    seq            c2, d.num_sges, r0 // Branch Delay Slot
+    bcf            [c2], zero_length_read 
 
 read:
-    add            r3, d.read.wqe_sge_list_addr, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T
+    add            r3, d.read.wqe_sge_list_addr, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T // Branch Delay Slot
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqsge_process, r3)
 
     CAPRI_RESET_TABLE_0_ARG()
@@ -248,6 +251,24 @@ read:
 
     // set cmd_eop at the end of data transfer if there is no CQ posting
     phvwr.c4  CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, dma_cmd_eop), 0
+
+    b              set_cqcb_arg
+    nop            // Branch Delay Slot
+
+zero_length_read:
+
+    CAPRI_SET_TABLE_0_VALID(0)
+    // to keep it consistent with read process where
+    // table 0 and 1 are taken for sge process
+    CAPRI_RESET_TABLE_3_ARG()
+
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, e_rsp_psn), d.psn, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, tbl_id), 3
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r1
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot

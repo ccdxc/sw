@@ -171,6 +171,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_REQ_RX_READ_ONLY_ZERO_LENGTH
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_zero_length
+        spec    : req_rx_read_only_zero_length.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_REQ_RX_READ_ONLY_ECN_CNP
         enable  : True
         package : test.rdma

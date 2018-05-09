@@ -922,7 +922,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // 4.096 * (2 ^ local_ack_timeout) usec or 2 ^ (12 + local_ack_timeout) nsec
     // Program local_ack_timeout including the multiplication factor of 4096
     // to avoid MPU from doing the computation
-    sqcb_p->sqcb2.local_ack_timeout = 12 + 2;
+    if (sqcb_p->sqcb0.service == RDMA_SERV_TYPE_RC)
+        sqcb_p->sqcb2.local_ack_timeout = 12 + 2;
     sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
 
     stage0_req_rx_prog_addr(&offset);

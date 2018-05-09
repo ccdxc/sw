@@ -23,8 +23,11 @@ req_rx_sqcb1_process_ext:
 
     // set DMA CMD ptr
     RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START_FLIT_CMD_ID)
+    // In case of RDMA feedback, skip_to_eop is not required as there is no payload. Also,
+    // remaining_payload_bytes in to_stage is not relevant for the feedback msg.
+    seq            c2, CAPRI_APP_DATA_RAW_FLAGS, REQ_RX_FLAG_RDMA_FEEDBACK
     seq            c1, CAPRI_APP_DATA_BTH_PAD, 0
-    bcf            [c1], to_stage_arg
+    bcf            [c1 | c2], to_stage_arg
     // payload_len = app_data_payload_len = bth.padcnt
     sub            r1, CAPRI_APP_DATA_PAYLOAD_LEN, CAPRI_APP_DATA_BTH_PAD // Branch Delay Slot
 
