@@ -19,10 +19,14 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define DRIVER_DESCRIPTION "Pensando Capri RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
 
-/* XXX this just enables workarounds for haps, remove entirely for release */
+/* XXX remove this section for release */
 static bool ionic_xxx_haps = false;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
 MODULE_PARM_DESC(xxx_haps, "XXX Enable workarounds for HAPS.");
+static bool ionic_xxx_limits = false;
+module_param_named(xxx_limits, ionic_xxx_limits, bool, 0444);
+MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
+/* XXX remove above section for release */
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
 module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
@@ -1493,7 +1497,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			/* XXX lif should be dbid */
 			.lif_id = dev->lif_id,
 			.service = ib_qp_type_to_ionic(attr->qp_type),
-			.pmtu = 1024,
+			.pmtu = ib_mtu_enum_to_int(dev->port_attr.active_mtu), /* XXX should set mtu in modify */
 			.qp_num = qp->qpid,
 			.sq_cq_num = send_cq->cqid,
 			.rq_cq_num = recv_cq->cqid,
@@ -1542,6 +1546,7 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 			.dest_qp_num = attr->dest_qp_num,
 			.e_psn = attr->rq_psn,
 			.sq_psn = attr->sq_psn,
+			/* XXX path mtu */
 		},
 	};
 	struct ib_ud_header *hdr;
@@ -2584,8 +2589,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.vendor_id = 0;
 	dev->dev_attr.vendor_part_id = 0;
 	dev->dev_attr.hw_ver = 0;
-	dev->dev_attr.max_qp = 20; /* XXX ident->dev.nrdmasqs_per_lif */
-	dev->dev_attr.max_qp_wr = 0xfff;
+	dev->dev_attr.max_qp = ident->dev.nrdmasqs_per_lif;
+	dev->dev_attr.max_qp_wr = 0xffff;
 	dev->dev_attr.device_cap_flags =
 		//IB_DEVICE_LOCAL_DMA_LKEY |
 		//IB_DEVICE_MEM_WINDOW |
@@ -2596,10 +2601,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		0;
 	dev->dev_attr.max_sge = 6;
 	dev->dev_attr.max_sge_rd = 7;
-	dev->dev_attr.max_cq = 40; /* XXX ident->dev.ncqs_per_lif */
-	dev->dev_attr.max_cqe = 0xfff;
-	dev->dev_attr.max_mr = 40;
-	dev->dev_attr.max_pd = 40;
+	dev->dev_attr.max_cq = ident->dev.ncqs_per_lif;
+	dev->dev_attr.max_cqe = 0xffff;
+	dev->dev_attr.max_mr = 4096; /* XXX need from identify */
+	dev->dev_attr.max_pd = 0x10000; /* XXX only limited by the size of bitset we can alloc */
 	dev->dev_attr.max_qp_rd_atom = 0;
 	dev->dev_attr.max_ee_rd_atom = 0;
 	dev->dev_attr.max_res_rd_atom = 0;
@@ -2607,12 +2612,12 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_ee_init_rd_atom = 0;
 	dev->dev_attr.atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */
 	dev->dev_attr.masked_atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */
-	dev->dev_attr.max_mw = 0;
+	dev->dev_attr.max_mw = 0; /* XXX same as max_mr */
 	dev->dev_attr.max_mcast_grp = 0;
 	dev->dev_attr.max_mcast_qp_attach = 0;
-	dev->dev_attr.max_ah = 0;
-	dev->dev_attr.max_srq = 40; /* XXX ident->dev.nrdmarqs_per_lif */
-	dev->dev_attr.max_srq_wr = 0xfff;
+	dev->dev_attr.max_ah = 4096; /* XXX need from identify */
+	dev->dev_attr.max_srq = ident->dev.nrdmarqs_per_lif;
+	dev->dev_attr.max_srq_wr = 0xffff;
 	dev->dev_attr.max_srq_sge = 7;
 	dev->dev_attr.max_fast_reg_page_list_len = 0; /* XXX ident->dev.pgtbl_size */
 	dev->dev_attr.max_pkeys = 1;
@@ -2620,12 +2625,26 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	/* XXX hardcode values, intentionally low, should come from identify */
 	dev->port_attr.subnet_prefix = 0;
 	dev->port_attr.state = IB_PORT_ACTIVE;
-	dev->port_attr.max_mtu = ib_mtu_int_to_enum(512);
-	dev->port_attr.active_mtu = ib_mtu_int_to_enum(512);
-	dev->port_attr.gid_tbl_len = 16;
+	dev->port_attr.max_mtu = ib_mtu_int_to_enum(ndev->max_mtu);
+	dev->port_attr.active_mtu = ib_mtu_int_to_enum(ndev->mtu);
+	dev->port_attr.gid_tbl_len = 4096; /* XXX same as max_ah, or unlimited? */
 	dev->port_attr.port_cap_flags = IB_PORT_IP_BASED_GIDS;
 	dev->port_attr.max_msg_sz = 0x80000000;
 	dev->port_attr.pkey_tbl_len = 1;
+
+	/* XXX workarounds and overrides, remove for release */
+	if (ionic_xxx_limits) {
+		dev->dev_attr.max_qp = 20;
+		dev->dev_attr.max_cq = 40;
+		dev->dev_attr.max_srq = 40;
+	} else {
+		if (!dev->dev_attr.max_qp)
+			dev->dev_attr.max_qp = 40;
+		if (!dev->dev_attr.max_cq)
+			dev->dev_attr.max_cq = dev->dev_attr.max_qp;
+		if (!dev->dev_attr.max_srq)
+			dev->dev_attr.max_srq = dev->dev_attr.max_qp;
+	}
 
 	mutex_init(&dev->tbl_lock);
 
