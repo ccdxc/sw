@@ -18,7 +18,6 @@ hal_ret_t vrf_pd_dealloc_res(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_cleanup(pd_vrf_t *vrf_pd);
 void link_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten);
 void delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten);
-hal_ret_t vrf_pd_pgm_inp_prop_tbl(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_program_hw(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_pgm_inp_prop_tbl(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_deprogram_hw(pd_vrf_t *vrf_pd);

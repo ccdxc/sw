@@ -72,7 +72,8 @@ asicpd_table_entry_write (uint32_t tableid,
                                   (tbl_ctx.gress == P4_GRESS_INGRESS),
                                   oflow_parent_tbl_depth);
 #if HAL_LOG_TBL_UPDATES
-    if (tbl_ctx.table_type == P4_TBL_TYPE_HASH || tbl_ctx.table_type == P4_TBL_TYPE_INDEX) {
+    if (tbl_ctx.table_type == P4_TBL_TYPE_HASH || tbl_ctx.table_type == P4_TBL_TYPE_HASHTCAM ||
+        tbl_ctx.table_type == P4_TBL_TYPE_INDEX) {
         char    buffer[2048];
         memset(buffer, 0, sizeof(buffer));
 
