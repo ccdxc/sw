@@ -162,6 +162,9 @@ func (p *CMDBasedProvider) openCmdConnection() (*grpc.ClientConn, error) {
 		if err == nil {
 			return conn, nil
 		}
+		if err != nil {
+			log.Infof("Failed to open CMD Connection to: %v, result: %v, retrying in %v", p.cmdEndpointURL, err, p.connRetryInterval)
+		}
 		time.Sleep(p.connRetryInterval)
 	}
 	return nil, err
@@ -170,7 +173,7 @@ func (p *CMDBasedProvider) openCmdConnection() (*grpc.ClientConn, error) {
 func (p *CMDBasedProvider) fetchCaCertificates() error {
 	conn, err := p.openCmdConnection()
 	if err != nil {
-		log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v", p.cmdEndpointURL, p.balancer)
+		log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v, err: %+v", p.cmdEndpointURL, p.balancer, err)
 		return err
 	}
 	defer conn.Close()
@@ -312,7 +315,7 @@ func NewDefaultCMDBasedProvider(cmdEpNameOrURL, endpointID string, opts ...CMDPr
 	prov, err := NewCMDBasedProvider(cmdEpNameOrURL, endpointID, km, opts...)
 	if err != nil {
 		km.Close()
-		return nil, errors.Wrapf(err, "Error instantiating keymgr")
+		return nil, errors.Wrapf(err, "Error instantiating CMD-Based provider")
 	}
 	return prov, nil
 }

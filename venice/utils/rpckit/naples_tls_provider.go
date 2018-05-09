@@ -3,6 +3,7 @@
 package rpckit
 
 import (
+	"sync"
 	"time"
 
 	"github.com/pensando/sw/venice/globals"
@@ -11,7 +12,10 @@ import (
 	"github.com/pensando/sw/venice/utils/testenv"
 )
 
-var naplesCertSrvURL = "pen-master:" + globals.CMDCertAPIPort
+var (
+	naplesCertSrvURL = "pen-master:" + globals.CMDCertAPIPort
+	tlsProviderOnce  sync.Once
+)
 
 // SetN4STLSProvider overrides the default rpckit TLS provider
 // The rpckit default TLS provider expects to pull certificates from a local CMD
@@ -21,6 +25,10 @@ var naplesCertSrvURL = "pen-master:" + globals.CMDCertAPIPort
 // processes and proxies them to Venice, so the default rpckit TLS provider will
 // work and this code will not be needed any more
 func SetN4STLSProvider() {
+	tlsProviderOnce.Do(setN4STLSProvider)
+}
+
+func setN4STLSProvider() {
 	if testenv.GetRpckitTestMode() {
 		SetTestModeDefaultTLSProvider(nil)
 		return
@@ -39,7 +47,7 @@ func SetN4STLSProvider() {
 			tlsproviders.WithConnRetryInterval(5*time.Second),
 			tlsproviders.WithConnMaxRetries(60))
 		if err != nil {
-			log.Errorf("Error getting CMD-based TLS provider for service %s at %s", svcName, certSrvEndpoint)
+			log.Errorf("Error getting CMD-based TLS provider for service %s at %s", svcName, naplesCertSrvURL)
 			return nil, err
 		}
 		defaultTLSProvider = tp
