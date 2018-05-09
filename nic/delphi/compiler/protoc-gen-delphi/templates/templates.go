@@ -168,7 +168,7 @@ error {{.GetName}}::TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, React
 // List returns a list of all {{.GetName}} objects in the mounted db
 vector<{{.GetName}}Ptr> {{.GetName}}::List(SdkPtr sdk) {
     vector<{{.GetName}}Ptr> objlist;
-    vector<BaseObjectPtr> olist = sdk->ListKind("InterfaceSpec");
+    vector<BaseObjectPtr> olist = sdk->ListKind("{{.GetName}}");
 
     // walk all objects and convert type
     for (vector<BaseObjectPtr>::iterator oi=olist.begin(); oi!=olist.end(); ++oi) {
@@ -199,9 +199,9 @@ public: \
         delphi::objects::{{.GetName}}::Watch(sdk_, reactor_class##var_); \
     } \
     void OnMountComplete() { \
-        vector<delphi::objects::InterfaceSpecPtr> iflist = delphi::objects::InterfaceSpec::List(sdk_); \
-        for (vector<delphi::objects::InterfaceSpecPtr>::iterator intf=iflist.begin(); intf!=iflist.end(); ++intf) { \
-            reactor_class##var_->OnInterfaceSpecCreate(*intf); \
+        vector<delphi::objects::{{.GetName}}Ptr> olist = delphi::objects::{{.GetName}}::List(sdk_); \
+        for (vector<delphi::objects::{{.GetName}}Ptr>::iterator obj=olist.begin(); obj!=olist.end(); ++obj) { \
+            reactor_class##var_->On{{.GetName}}Create(*obj); \
         } \
     } \
 private: \

@@ -109,6 +109,20 @@ run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/emp_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/emp_gft_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/efe_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/efe_gft_test.xml"
 
+####################################################
+#################### DELPHI ########################
+####################################################
+
+delphi:
+	bazel build //nic/delphi/...
+
+###########################################################
+#################### UPGRADE Infra ########################
+###########################################################
+
+upgrade-manager:
+	bazel build //nic/upgrade_manager/...
+
 #################################################
 #################### HAL ########################
 #################################################
@@ -312,13 +326,13 @@ agent:
 stage0: p4 gen-proto csrlite go-proto utils capsim-master
 
 # lib building stage
-stage1: asm capmodel build-proto sdk third-party agent
+stage1: asm capmodel build-proto sdk third-party agent delphi
 
 # app building stage
 stage2: plugins linkmgr platform pd hal swig-cli hntap
 
 # post build stage
-stage3: post-make package package-size-check halctl
+stage3: post-make package package-size-check halctl upgrade-manager
 
 nic:
 	$(MAKE) stage0
