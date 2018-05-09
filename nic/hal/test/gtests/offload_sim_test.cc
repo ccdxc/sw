@@ -54,15 +54,16 @@ TEST_F(pnso_sim_test, sync_request) {
     struct pnso_init_params init_params;
     struct pnso_service_request *svc_req;
     struct pnso_service_result *svc_res;
+    struct pnso_output_buf *output_buf;
     struct pnso_buffer_list *src_buflist, *dst_buflist;
     uint32_t buflist_sz;
     struct pnso_flat_buffer *buf;
-    struct pnso_hash_or_chksum_tag tags[16];
+    struct pnso_hash_tag hash_tags[16];
     uint8_t output[16 * 4096];
     char xts_iv[16] = "";
 
     memset(&init_params, 0, sizeof(init_params));
-    memset(tags, 0, sizeof(tags));
+    memset(hash_tags, 0, sizeof(hash_tags));
 
     /* Initialize input */
     fill_data(g_data1, sizeof(g_data1));
@@ -98,6 +99,10 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_NE(svc_res, nullptr);
     memset(svc_res, 0, alloc_sz);
 
+    alloc_sz = sizeof(struct pnso_output_buf);
+    output_buf = (struct pnso_output_buf *) malloc(alloc_sz);
+    EXPECT_NE(output_buf, nullptr);
+
     /* Allocate buffer descriptors */
     buflist_sz = sizeof(struct pnso_buffer_list) + 16*sizeof(struct pnso_flat_buffer);
     src_buflist = (struct pnso_buffer_list*) malloc(buflist_sz);
@@ -110,16 +115,12 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Initialize request buffers */
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
     svc_req->src_buf->buffers[0].len = sizeof(g_data1);
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
 
     /* Setup 2 services */
     svc_req->num_services = 2;
@@ -131,11 +132,20 @@ TEST_F(pnso_sim_test, sync_request) {
     svc_req->svc[0].d.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
     svc_req->svc[0].d.cp_desc.threshold_len = sizeof(g_data1) - 8;
 
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
+
     /* Setup hash service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
     svc_req->svc[1].d.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
-    svc_res->svc[1].num_tags = 16;
-    svc_res->svc[1].tags = tags;
+    svc_res->svc[1].num_outputs = 16;
+    svc_res->svc[1].o.hashes = hash_tags;
 
     /* Execute synchronously */
     rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
@@ -143,19 +153,19 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_EQ(svc_res->err, 0);
 
     /* Check compression+pad status */
-    EXPECT_EQ(svc_req->dst_buf->count, 1);
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, 4096);
-    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, 4096);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->buf_list->count, 1);
+    buf = &svc_res->svc[0].o.output_buf->buf_list->buffers[0];
     EXPECT_EQ(buf->len, 4096);
     EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
 
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
-    EXPECT_EQ(svc_res->svc[1].num_tags, 1);
-    EXPECT_NE(svc_res->svc[1].tags->hash_or_chksum[0], 0);
+    EXPECT_EQ(svc_res->svc[1].num_outputs, 1);
+    EXPECT_NE(svc_res->svc[1].o.hashes->hash_tag[0], 0);
 
 
     /* -------------- Test 2: Encryption + Hash, single block -------------- */
@@ -163,16 +173,12 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Initialize request buffers */
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
     svc_req->src_buf->buffers[0].len = sizeof(g_data1);
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
 
     /* Setup 2 services */
     svc_req->num_services = 2;
@@ -183,12 +189,20 @@ TEST_F(pnso_sim_test, sync_request) {
     svc_req->svc[0].d.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].d.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
 
     /* Setup hash service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
     svc_req->svc[1].d.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
-    svc_res->svc[1].num_tags = 16;
-    svc_res->svc[1].tags = tags;
+    svc_res->svc[1].num_outputs = 16;
+    svc_res->svc[1].o.hashes = hash_tags;
 
     /* Execute synchronously */
     rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
@@ -196,34 +210,30 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_EQ(svc_res->err, 0);
 
     /* Check encryption status */
-    EXPECT_EQ(svc_req->dst_buf->count, 1);
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_ENCRYPT);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, sizeof(g_data1));
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, sizeof(g_data1));
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->buf_list->count, 1);
 
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
-    EXPECT_EQ(svc_res->svc[1].num_tags, 1);
-    EXPECT_NE(svc_res->svc[1].tags->hash_or_chksum[0], 0);
+    EXPECT_EQ(svc_res->svc[1].num_outputs, 1);
+    EXPECT_NE(svc_res->svc[1].o.hashes->hash_tag[0], 0);
 
     /* -------------- Test 3: Compression + Encryption, single block -------------- */
 
     /* Initialize request buffers */
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
     svc_req->src_buf->buffers[0].len = sizeof(g_data1);
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
 
-    /* Setup 2 services */
+   /* Setup 2 services */
     svc_req->num_services = 2;
     svc_res->num_services = 2;
 
@@ -233,6 +243,15 @@ TEST_F(pnso_sim_test, sync_request) {
     svc_req->svc[0].d.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
     svc_req->svc[0].d.cp_desc.threshold_len = sizeof(g_data1) - 8;
 
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
+ 
     /* Setup encryption service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_ENCRYPT;
     svc_req->svc[1].d.crypto_desc.key_desc_idx = 1;
@@ -244,35 +263,31 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_EQ(svc_res->err, 0);
 
     /* Check compression+pad status */
-    EXPECT_EQ(svc_req->dst_buf->count, 1);
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, 4096);
-    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, 4096);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->buf_list->count, 1);
+    buf = &svc_res->svc[0].o.output_buf->buf_list->buffers[0];
     EXPECT_EQ(buf->len, 4096);
 
     /* Check encryption status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_ENCRYPT);
-    EXPECT_EQ(svc_res->svc[1].output_data_len, 4096);
+    EXPECT_EQ(svc_res->svc[1].o.output_buf->data_len, 4096);
 
     /* -------------- Test 4: Compression + Hash + Encryption, multiple blocks -------------- */
 
     /* Initialize request buffers */
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 2;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data2;
     svc_req->src_buf->buffers[0].len = 4096;
     svc_req->src_buf->buffers[1].buf = (uint64_t) g_data2 + 4096;
     svc_req->src_buf->buffers[1].len = sizeof(g_data2) - 4096;
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
 
     /* Setup 3 services */
     svc_req->num_services = 3;
@@ -284,11 +299,20 @@ TEST_F(pnso_sim_test, sync_request) {
     svc_req->svc[0].d.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
     svc_req->svc[0].d.cp_desc.threshold_len = sizeof(g_data2) - 8;
 
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
+
     /* Setup hash service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
     svc_req->svc[1].d.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
-    svc_res->svc[1].num_tags = 16;
-    svc_res->svc[1].tags = tags;
+    svc_res->svc[1].num_outputs = 16;
+    svc_res->svc[1].o.hashes = hash_tags;
 
     /* Setup encryption service */
     svc_req->svc[2].svc_type = PNSO_SVC_TYPE_ENCRYPT;
@@ -303,21 +327,21 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Check compression+pad status */
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, 4096);
-    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, 4096);
+    buf = &svc_res->svc[0].o.output_buf->buf_list->buffers[0];
     EXPECT_EQ(buf->len, 4096);
     //EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
 
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
-    EXPECT_LE(svc_res->svc[1].num_tags, 2);
-    EXPECT_NE(svc_res->svc[1].tags->hash_or_chksum[0], 0);
+    EXPECT_LE(svc_res->svc[1].num_outputs, 2);
+    EXPECT_NE(svc_res->svc[1].o.hashes->hash_tag[0], 0);
 
     /* Check encryption status */
     EXPECT_EQ(svc_res->svc[2].err, 0);
     EXPECT_EQ(svc_res->svc[2].svc_type, PNSO_SVC_TYPE_ENCRYPT);
-    EXPECT_EQ(svc_res->svc[2].output_data_len, 4096);
+    EXPECT_EQ(svc_res->svc[2].o.output_buf->data_len, 4096);
 
     /* -------------- Test 5: Decryption + Hash + Decompression, multiple blocks -------------- */
 
@@ -327,16 +351,12 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Initialize request buffers */
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data2;
     svc_req->src_buf->buffers[0].len = 4096;
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
 
     /* Setup 3 services */
     svc_req->num_services = 3;
@@ -347,11 +367,20 @@ TEST_F(pnso_sim_test, sync_request) {
     svc_req->svc[0].d.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].d.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
+
     /* Setup hash service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
     svc_req->svc[1].d.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
-    svc_res->svc[1].num_tags = 16;
-    svc_res->svc[1].tags = tags;
+    svc_res->svc[1].num_outputs = 16;
+    svc_res->svc[1].o.hashes = hash_tags;
 
     /* Setup decompression service */
     svc_req->svc[2].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
@@ -366,22 +395,22 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Check decryption status */
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_DECRYPT);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, 4096);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, 4096);
 
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
-    EXPECT_LE(svc_res->svc[1].num_tags, 2);
-    EXPECT_NE(svc_res->svc[1].tags->hash_or_chksum[0], 0);
+    EXPECT_LE(svc_res->svc[1].num_outputs, 2);
+    EXPECT_NE(svc_res->svc[1].o.hashes->hash_tag[0], 0);
 
     /* Check decompression status */
     EXPECT_EQ(svc_res->svc[2].err, 0);
     EXPECT_EQ(svc_res->svc[2].svc_type, PNSO_SVC_TYPE_DECOMPRESS);
-    EXPECT_EQ(svc_res->svc[2].output_data_len, sizeof(g_data2));
-    EXPECT_EQ(svc_req->dst_buf->count, 2);
-    EXPECT_EQ(svc_req->dst_buf->buffers[0].len, 4096);
-    EXPECT_EQ(svc_req->dst_buf->buffers[1].len, sizeof(g_data2) - 4096);
-    EXPECT_EQ(memcmp((uint8_t*)svc_req->dst_buf->buffers[0].buf, g_fill_src, sizeof(g_fill_src)), 0);
+    EXPECT_EQ(svc_res->svc[2].o.output_buf->data_len, sizeof(g_data2));
+    EXPECT_EQ(svc_res->svc[2].o.output_buf->buf_list->count, 2);
+    EXPECT_EQ(svc_res->svc[2].o.output_buf->buf_list->buffers[0].len, 4096);
+    EXPECT_EQ(svc_res->svc[2].o.output_buf->buf_list->buffers[1].len, sizeof(g_data2) - 4096);
+    EXPECT_EQ(memcmp((uint8_t*)svc_res->svc[2].o.output_buf->buf_list->buffers[0].buf, g_fill_src, sizeof(g_fill_src)), 0);
 
     /* Restore original g_data2 for next test */
     fill_data(g_data2, sizeof(g_data2));
@@ -406,15 +435,16 @@ TEST_F(pnso_sim_test, async_request) {
     struct pnso_init_params init_params;
     struct pnso_service_request *svc_req;
     struct pnso_service_result *svc_res;
+    struct pnso_output_buf *output_buf;
     struct pnso_buffer_list *src_buflist, *dst_buflist;
     uint32_t buflist_sz;
     struct pnso_flat_buffer *buf;
-    struct pnso_hash_or_chksum_tag tags[16];
+    struct pnso_hash_tag hash_tags[16];
     uint8_t output[16 * 4096];
     char xts_iv[16] = "";
 
     memset(&init_params, 0, sizeof(init_params));
-    memset(tags, 0, sizeof(tags));
+    memset(hash_tags, 0, sizeof(hash_tags));
 
     /* Initialize input */
     fill_data(g_data1, sizeof(g_data1));
@@ -440,6 +470,10 @@ TEST_F(pnso_sim_test, async_request) {
     EXPECT_NE(svc_res, nullptr);
     memset(svc_res, 0, alloc_sz);
 
+    alloc_sz = sizeof(struct pnso_output_buf);
+    output_buf = (struct pnso_output_buf *) malloc(alloc_sz);
+    EXPECT_NE(output_buf, nullptr);
+
     /* Allocate buffer descriptors */
     buflist_sz = sizeof(struct pnso_buffer_list) + 16*sizeof(struct pnso_flat_buffer);
     src_buflist = (struct pnso_buffer_list*) malloc(buflist_sz);
@@ -463,16 +497,12 @@ TEST_F(pnso_sim_test, async_request) {
     /* Initialize request buffers */
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
     svc_req->src_buf->buffers[0].len = sizeof(g_data1);
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
 
     /* Setup 2 services */
     svc_req->num_services = 2;
@@ -484,11 +514,20 @@ TEST_F(pnso_sim_test, async_request) {
     svc_req->svc[0].d.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
     svc_req->svc[0].d.cp_desc.threshold_len = sizeof(g_data1) - 8;
 
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
+
     /* Setup hash service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
     svc_req->svc[1].d.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
-    svc_res->svc[1].num_tags = 16;
-    svc_res->svc[1].tags = tags;
+    svc_res->svc[1].num_outputs = 16;
+    svc_res->svc[1].o.hashes = hash_tags;
 
     /* Start worker thread */
     //    pnso_sim_start_worker_thread();
@@ -516,19 +555,19 @@ TEST_F(pnso_sim_test, async_request) {
     EXPECT_EQ(cb_count, 1);
 
     /* Check compression+pad status */
-    EXPECT_EQ(svc_req->dst_buf->count, 1);
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, 4096);
-    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, 4096);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->buf_list->count, 1);
+    buf = &svc_res->svc[0].o.output_buf->buf_list->buffers[0];
     EXPECT_EQ(buf->len, 4096);
     EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
 
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
-    EXPECT_EQ(svc_res->svc[1].num_tags, 1);
-    EXPECT_NE(svc_res->svc[1].tags->hash_or_chksum[0], 0);
+    EXPECT_EQ(svc_res->svc[1].num_outputs, 1);
+    EXPECT_NE(svc_res->svc[1].o.hashes->hash_tag[0], 0);
 
 
     /* -------- Async Test 2: Encryption (of compacted block) -------- */
@@ -551,16 +590,12 @@ TEST_F(pnso_sim_test, async_request) {
     /* Initialize request buffers */
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
     svc_req->src_buf->buffers[0].len = 4096;
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
 
     /* Setup 1 services */
     svc_req->num_services = 1;
@@ -571,6 +606,15 @@ TEST_F(pnso_sim_test, async_request) {
     svc_req->svc[0].d.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].d.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
+ 
     /* Submit async request */
     cb_count = 0;
     rc = pnso_submit_request(PNSO_BATCH_REQ_FLUSH, svc_req, svc_res, completion_cb, &cb_count, &poller, &poll_ctx);
@@ -590,11 +634,11 @@ TEST_F(pnso_sim_test, async_request) {
     EXPECT_EQ(cb_count, 1);
 
     /* Check encryption status */
-    EXPECT_EQ(svc_req->dst_buf->count, 1);
-    EXPECT_EQ(svc_req->dst_buf->buffers[0].len, 4096);
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_ENCRYPT);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, 4096);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, 4096);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->buf_list->count, 1);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->buf_list->buffers[0].len, 4096);
 
 
     /* -------- Async Test 3: Decryption + decompaction -------- */
@@ -603,17 +647,13 @@ TEST_F(pnso_sim_test, async_request) {
     memcpy(g_data1, output, 4096);
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
+    memset(output_buf, 0, alloc_sz);
+
     svc_req->src_buf = src_buflist;
-    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
     svc_req->src_buf->buffers[0].len = 4096;
-    svc_req->dst_buf->count = 16;
-    for (int i = 0; i < 16; i++) {
-        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
-        svc_req->dst_buf->buffers[i].len = 4096;
-    }
-
+ 
     /* Setup 2 services */
     svc_req->num_services = 2;
     svc_res->num_services = 2;
@@ -622,6 +662,15 @@ TEST_F(pnso_sim_test, async_request) {
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
     svc_req->svc[0].d.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].d.crypto_desc.iv_addr = (uint64_t) xts_iv;
+
+    svc_res->svc[0].num_outputs = 1;
+    svc_res->svc[0].o.output_buf = output_buf;
+    svc_res->svc[0].o.output_buf->buf_list = dst_buflist;
+    svc_res->svc[0].o.output_buf->buf_list->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_res->svc[0].o.output_buf->buf_list->buffers[i].len = 4096;
+    }
 
     /* Setup decompaction service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_DECOMPACT;
@@ -649,14 +698,14 @@ TEST_F(pnso_sim_test, async_request) {
     /* Check decryption status */
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_DECRYPT);
-    EXPECT_EQ(svc_res->svc[0].output_data_len, 4096);
+    EXPECT_EQ(svc_res->svc[0].o.output_buf->data_len, 4096);
 
     /* Check decompaction status */
-    EXPECT_EQ(svc_req->dst_buf->count, 1);
-    EXPECT_EQ(svc_req->dst_buf->buffers[0].len, 512);
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_DECOMPACT);
-    EXPECT_EQ(svc_res->svc[1].output_data_len, 512);
+    EXPECT_EQ(svc_res->svc[1].o.output_buf->data_len, 512);
+    EXPECT_EQ(svc_res->svc[1].o.output_buf->buf_list->count, 1);
+    EXPECT_EQ(svc_res->svc[1].o.output_buf->buf_list->buffers[0].len, 512);
 
 
     /* ---- Cleanup ----- */
