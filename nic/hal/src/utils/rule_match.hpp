@@ -88,6 +88,8 @@ hal_ret_t rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                int              rule_prio,
                                rule_data_t      *data);
 const acl_ctx_t *rule_lib_init(const char *name, acl_config_t *cfg);
+hal_ret_t rule_match_spec_build(rule_match_t *match,
+                                types::RuleMatch *spec);
 
 rule_data_t *
 rule_data_alloc_init();

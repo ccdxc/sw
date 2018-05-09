@@ -57,12 +57,20 @@ var natmappingDetailShowCmd = &cobra.Command{
 	Run:   natmappingDetailShowCmdHandler,
 }
 
+var natpolicyShowCmd = &cobra.Command{
+	Use:   "policy",
+	Short: "show NAT policy information",
+	Long:  "show detailed information about NAT policy objects",
+	Run:   natpolicyShowCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(natShowCmd)
 	natShowCmd.AddCommand(natpoolShowCmd)
 	natpoolShowCmd.AddCommand(natpoolDetailShowCmd)
 	natShowCmd.AddCommand(natmappingShowCmd)
 	natmappingShowCmd.AddCommand(natmappingDetailShowCmd)
+	natShowCmd.AddCommand(natpolicyShowCmd)
 
 	natpoolShowCmd.Flags().Uint64Var(&natpoolHandle, "handle", 1, "Specify natpool handle")
 	natpoolDetailShowCmd.Flags().Uint64Var(&natpoolDetailHandle, "handle", 1, "Specify natpool handle")
@@ -214,6 +222,40 @@ func natmappingDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Routes
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	}
+}
+
+func natpolicyShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	client := halproto.NewNatClient(c.ClientConn)
+
+	// Get all Nat Mappings
+	req := &halproto.NatPolicyGetRequest{}
+	natmappingGetReqMsg := &halproto.NatPolicyGetRequestMsg{
+		Request: []*halproto.NatPolicyGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.NatPolicyGet(context.Background(), natmappingGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting NAT Mapping failed. %v", err)
+	}
+
+	// Print NAT Policies
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)

@@ -59,7 +59,10 @@ void addr_list_cleanup(dllist_ctxt_t *head);
 bool addr_in_addr_list_elem(ip_addr_t *addr, addr_list_elem_t *addr_list_elem);
 hal_ret_t addr_offset(ip_addr_t *addr, addr_list_elem_t *addr_list_elem,
                       uint32_t *offset);
-
+hal_ret_t addr_list_elem_spec_src_addr_build(dllist_ctxt_t *head,
+                                             types::RuleMatch *spec);
+hal_ret_t addr_list_elem_spec_dst_addr_build(dllist_ctxt_t *head,
+                                             types::RuleMatch *spec);
 } // namespace hal
 
 #endif  // __ADDR_LIST_HPP__

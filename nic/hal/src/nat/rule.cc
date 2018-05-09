@@ -171,6 +171,26 @@ nat_cfg_rule_spec_handle (const nat::NatRuleSpec& spec, dllist_ctxt_t *head)
     return ret;
 }
 
+hal_ret_t
+nat_cfg_rule_spec_build (nat_cfg_rule_t *rule, nat::NatRuleSpec *spec)
+{
+    hal_ret_t   ret;
+
+    spec->set_rule_id(rule->key.rule_id);
+
+    auto action = spec->mutable_action();
+    action->set_src_nat_action(rule->action.src_nat_action);
+    action->set_dst_nat_action(rule->action.dst_nat_action);
+    // TODO Set src and dest NAT Pool
+
+    if ((ret = rule_match_spec_build(
+           &rule->match, spec->mutable_match())) != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // Operational handling (hal handles, acl libs, etc)
 //-----------------------------------------------------------------------------

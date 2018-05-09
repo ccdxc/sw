@@ -103,6 +103,42 @@ port_list_elem_l4portrange_spec_handle (const types::L4PortRange& port,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+port_list_elem_dst_port_spec_build (dllist_ctxt_t *head,
+                                    types::RuleMatch_L4PortAppInfo *port_info)
+{
+    dllist_ctxt_t *entry;
+    port_list_elem_t *port;
+    types::L4PortRange *port_range;
+
+    dllist_for_each(entry, head) {
+        port = dllist_entry(entry, port_list_elem_t, list_ctxt);
+        port_range = port_info->add_dst_port_range();
+        port_range->set_port_high(port->port_range.port_hi);
+        port_range->set_port_low(port->port_range.port_lo);
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port_list_elem_src_port_spec_build (dllist_ctxt_t *head,
+                                    types::RuleMatch_L4PortAppInfo *port_info)
+{
+    dllist_ctxt_t *entry;
+    port_list_elem_t *port;
+    types::L4PortRange *port_range;
+
+    dllist_for_each(entry, head) {
+        port = dllist_entry(entry, port_list_elem_t, list_ctxt);
+        port_range = port_info->add_src_port_range();
+        port_range->set_port_high(port->port_range.port_hi);
+        port_range->set_port_low(port->port_range.port_lo);
+    }
+
+    return HAL_RET_OK;
+}
+
 void
 port_list_cleanup (dllist_ctxt_t *head)
 {

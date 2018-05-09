@@ -289,7 +289,6 @@ end:
     return ret;
 }
 
-
 // rule_lib_alloc function allocates data type ipv4_rule_t to be added to
 // acl_lib
 rule_data_t *
@@ -425,5 +424,180 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// Rule Match Spec Build routines
+//-----------------------------------------------------------------------------
+
+static inline hal_ret_t
+rule_match_dst_port_spec_build (
+    rule_match_app_t *app, types::RuleMatch_L4PortAppInfo *port_info)
+{
+    hal_ret_t       ret;
+
+    if (!dllist_empty(&app->l4dstport_list)) {
+        ret = port_list_elem_dst_port_spec_build(&app->l4dstport_list, port_info);
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+rule_match_src_port_spec_build (
+    rule_match_app_t *app, types::RuleMatch_L4PortAppInfo *port_info)
+{
+    hal_ret_t       ret;
+
+    if (!dllist_empty(&app->l4srcport_list)) {
+        ret = port_list_elem_src_port_spec_build(&app->l4srcport_list, port_info);
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+rule_match_port_app_spec_build (rule_match_app_t *app,
+                                  types::RuleMatch *spec)
+{
+    hal_ret_t                       ret;
+    types::RuleMatch_L4PortAppInfo  *port_info;
+
+    if (!dllist_empty(&app->l4srcport_list) ||
+        !dllist_empty(&app->l4dstport_list)) {
+        port_info = spec->add_app_match()->mutable_port_info();
+
+        if ((ret = rule_match_src_port_spec_build(app, port_info)) != HAL_RET_OK)
+            return ret;
+
+        if ((ret = rule_match_dst_port_spec_build(app, port_info)) != HAL_RET_OK)
+            return ret;
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+rule_match_app_spec_build (rule_match_t *match,
+                           types::RuleMatch *spec)
+{
+    hal_ret_t   ret;
+
+    ret = rule_match_port_app_spec_build(&match->app, spec);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    // TODO Other app types
+    return ret;
+}
+
+static inline hal_ret_t
+rule_match_proto_spec_build (rule_match_t *match,
+                             types::RuleMatch *spec)
+{
+    spec->set_protocol(match->proto);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+rule_match_dst_sg_spec_build (rule_match_t *match,
+                              const types::RuleMatch *spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    //TBD: lseshan: Handle sg
+
+    return ret;
+}
+
+static inline hal_ret_t
+rule_match_src_sg_spec_build (rule_match_t *match,
+                              const types::RuleMatch *spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    
+    //TBD: lseshan: Handle sg
+
+    return ret;
+}
+
+static inline hal_ret_t
+rule_match_sg_spec_build (rule_match_t *match,
+                          types::RuleMatch *spec)
+{
+    hal_ret_t ret;
+
+    if ((ret = rule_match_src_sg_spec_build(match, spec)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = rule_match_dst_sg_spec_build(match, spec)) != HAL_RET_OK)
+        return ret;
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+rule_match_src_addr_spec_build (rule_match_t *match,
+                                types::RuleMatch *spec)
+{
+    hal_ret_t ret;
+
+    if ((ret = addr_list_elem_spec_src_addr_build(
+                &match->src_addr_list, spec)) != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+rule_match_dst_addr_spec_build (rule_match_t *match,
+                                types::RuleMatch *spec)
+{
+    hal_ret_t ret;
+
+    if ((ret = addr_list_elem_spec_dst_addr_build(
+                &match->dst_addr_list, spec)) != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+rule_match_addr_spec_build (rule_match_t *match,
+                            types::RuleMatch *spec)
+{
+    hal_ret_t ret;
+
+    if ((ret = rule_match_src_addr_spec_build(match, spec)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = rule_match_dst_addr_spec_build(match, spec)) != HAL_RET_OK)
+        return ret;
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+rule_match_spec_build (rule_match_t *match,
+                       types::RuleMatch *spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if ((ret = rule_match_addr_spec_build(match, spec)) != HAL_RET_OK)
+        goto end;
+
+    if ((ret = rule_match_sg_spec_build(match, spec)) != HAL_RET_OK)
+        goto end;
+
+    if ((ret = rule_match_proto_spec_build(match, spec)) != HAL_RET_OK)
+        goto end;
+
+    if ((ret = rule_match_app_spec_build(match, spec)) != HAL_RET_OK)
+        goto end;
+
+end:
+    return ret;
+}
 
 } //end namespace hal

@@ -840,13 +840,88 @@ nat_policy_delete (NatPolicyDeleteRequest& req,
     return HAL_RET_OK;
 }
 
-hal_ret_t
-nat_policy_get (NatPolicyGetRequest& req, NatPolicyGetResponseMsg *res)
+//------------------------------------------------------------------------------
+// lookup a NAT policy by its handle
+//------------------------------------------------------------------------------
+static inline nat_cfg_pol_t *
+find_nat_policy_by_handle (hal_handle_t handle)
 {
-    hal_ret_t ret;
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_ERR("Failed to find object with handle : {}", handle);
+        return NULL;
+    }
 
-    if ((ret = nat_cfg_pol_get_cfg_handle(req, res)) != HAL_RET_OK)
-        return ret;
+    if (hal_handle->obj_id() != HAL_OBJ_ID_NAT_POLICY) {
+        HAL_TRACE_ERR("Object id mismatch for handle {}, obj id found {}",
+                        handle, hal_handle->obj_id());
+        return NULL;
+    }
+
+    return (nat_cfg_pol_t *)hal_handle_get_obj(handle);
+}
+
+//------------------------------------------------------------------------------
+// lookup a NAT policy by key-handle spec
+//------------------------------------------------------------------------------
+static inline nat_cfg_pol_t *
+find_nat_policy_by_key_or_handle (const NatPolicyKeyHandle& kh)
+{
+    if (kh.has_policy_key()) {
+        nat_cfg_pol_key_t key = {0};
+
+        key.pol_id = kh.policy_key().nat_policy_id();
+        key.vrf_id = kh.policy_key().vrf_key_or_handle().vrf_id();
+        
+        return (nat_cfg_pol_t *) g_hal_state->nat_policy_ht()->lookup((void *)&key);
+    } else {
+        return find_nat_policy_by_handle(kh.policy_handle());
+    }
+}
+
+//------------------------------------------------------------------------------
+// callback invoked from nat policy hash table while processing get request
+//------------------------------------------------------------------------------
+static inline bool
+nat_policy_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    NatPolicyGetResponseMsg     *rsp = (NatPolicyGetResponseMsg *)ctxt;
+    nat::NatPolicyGetResponse   *response = rsp->add_response();
+    nat_cfg_pol_t               *pol;
+
+    pol = (nat_cfg_pol_t *)hal_handle_get_obj(entry->handle_id);
+    nat_cfg_pol_get_cfg_handle(pol, response);
+
+    // return false here, so that we don't terminate the walk
+    return false;
+}
+
+hal_ret_t
+nat_policy_get (NatPolicyGetRequest& req, NatPolicyGetResponseMsg *rsp)
+{
+    hal_ret_t        ret;
+    nat_cfg_pol_t    *pol;
+
+    if (!req.has_key_or_handle()) {
+        g_hal_state->nat_policy_ht()->walk(nat_policy_get_ht_cb, rsp);
+    } else {
+        auto kh = req.key_or_handle();
+        pol = find_nat_policy_by_key_or_handle(kh);
+        if (pol == NULL) {
+            auto response = rsp->add_response();
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
+            HAL_API_STATS_INC(HAL_API_NAT_POLICY_GET_FAIL);
+            return HAL_RET_NAT_POLICY_NOT_FOUND;
+        }
+        auto response = rsp->add_response();
+        if ((ret = nat_cfg_pol_get_cfg_handle(pol, response)) != HAL_RET_OK) {
+            return ret;
+        }
+    }
 
     return HAL_RET_OK;
 }

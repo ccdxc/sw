@@ -243,6 +243,40 @@ addr_list_elem_ipaddressobj_spec_handle (const types::IPAddressObj& addr,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+addr_list_elem_spec_src_addr_build (dllist_ctxt_t *head,
+                           types::RuleMatch *spec)
+{
+    dllist_ctxt_t       *entry;
+    addr_list_elem_t    *addr_elem;
+
+    dllist_for_each(entry, head) {
+        auto addr = spec->add_src_address();
+        addr_elem = dllist_entry(entry, addr_list_elem_t, list_ctxt);
+        ip_range_to_spec(addr->mutable_address()->mutable_range(), &addr_elem->ip_range);
+        addr->set_negate(addr_elem->negate);
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+addr_list_elem_spec_dst_addr_build (dllist_ctxt_t *head,
+                           types::RuleMatch *spec)
+{
+    dllist_ctxt_t       *entry;
+    addr_list_elem_t    *addr_elem;
+
+    dllist_for_each(entry, head) {
+        auto addr = spec->add_dst_address();
+        addr_elem = dllist_entry(entry, addr_list_elem_t, list_ctxt);
+        ip_range_to_spec(addr->mutable_address()->mutable_range(), &addr_elem->ip_range);
+        addr->set_negate(addr_elem->negate);
+    }
+
+    return HAL_RET_OK;
+}
+
 void
 addr_list_cleanup (dllist_ctxt_t *head)
 {

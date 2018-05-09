@@ -298,32 +298,54 @@ nat_cfg_pol_rsp_build (nat::NatPolicyResponse *rsp, hal_ret_t ret,
     rsp->set_api_status(hal_prepare_rsp(ret));
 }
 
-static hal_ret_t
-nat_cfg_pol_rule_spec_build (nat::NatPolicyGetRequest& req,
-                             nat::NatPolicyGetResponseMsg *res)
+hal_ret_t
+nat_cfg_pol_rule_spec_build (nat_cfg_pol_t *pol,
+                             nat::NatPolicySpec *spec)
 {
+    hal_ret_t       ret;
+    dllist_ctxt_t   *entry;
+    nat_cfg_rule_t  *rule;
+
+    dllist_for_each(entry, &pol->rule_list) {
+        rule = (nat_cfg_rule_t  *)((char *)entry -
+                    (sizeof(nat_cfg_rule_action_t) + sizeof(rule_match_t) + sizeof(nat_cfg_rule_key_t)));
+        auto rule_spec = spec->add_rules();
+        if ((ret = nat_cfg_rule_spec_build(
+               rule, rule_spec)) != HAL_RET_OK) {
+            return ret;
+        }
+    }
+
     return HAL_RET_OK;
 }
 
 static hal_ret_t
-nat_cfg_pol_spec_build (nat::NatPolicyGetRequest& req,
-                        nat::NatPolicyGetResponseMsg *res)
+nat_cfg_pol_spec_build (nat_cfg_pol_t *pol,
+                        nat::NatPolicySpec *spec)
 {
-    hal_ret_t ret;
+    hal_ret_t           ret;
+    nat_cfg_pol_key_t   *key;
 
-    if ((ret = nat_cfg_pol_rule_spec_build(req, res)) != HAL_RET_OK)
+    key = &(pol->key);
+    spec->mutable_key_or_handle()->mutable_policy_key()->mutable_vrf_key_or_handle()->set_vrf_id(key->vrf_id);
+    spec->mutable_key_or_handle()->mutable_policy_key()->set_nat_policy_id(key->pol_id);
+    spec->mutable_key_or_handle()->set_policy_handle(pol->hal_hdl);
+
+    if ((ret = nat_cfg_pol_rule_spec_build(pol, spec)) != HAL_RET_OK) {
         return ret;
+    }
 
     return ret;
 }
 
 hal_ret_t
-nat_cfg_pol_get_cfg_handle (NatPolicyGetRequest& req,
-                            NatPolicyGetResponseMsg *res)
+nat_cfg_pol_get_cfg_handle (nat_cfg_pol_t *pol,
+                            nat::NatPolicyGetResponse *response)
 {
     hal_ret_t ret = HAL_RET_OK;
+    auto spec = response->mutable_spec();
 
-    if ((ret = nat_cfg_pol_spec_build(req, res)) != HAL_RET_OK)
+    if ((ret = nat_cfg_pol_spec_build(pol, spec)) != HAL_RET_OK)
         return ret;
 
     return ret;
