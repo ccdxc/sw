@@ -16,7 +16,7 @@ struct phv_ p;
 
 %%
 
-storage_seq_barco_ring_push_start:
+storage_seq_barco_ring_push:
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.

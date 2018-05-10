@@ -485,6 +485,9 @@ header_type storage_kivec6_t {
   modify_field(scratch.roce_msn, kivec.roce_msn);			\
   modify_field(scratch.data_addr, kivec.data_addr);			\
 
+#define STORAGE_KIVEC6_USE(scratch, kivec)				\
+  modify_field(scratch.ssd_ci_addr, kivec.ssd_ci_addr);			\
+
 // Macros for ASM param addresses (hardcoded in P4)
 #define q_state_push_start		0x80000000
 #define pci_q_state_push_start		0x80001000

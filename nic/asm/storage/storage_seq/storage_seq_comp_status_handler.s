@@ -215,7 +215,7 @@ comp_error:
     // cancel any barco push prep
     DMA_CMD_CANCEL(dma_m2m_19)
     DMA_CMD_CANCEL(dma_m2m_20)
-    DMA_CMD_CANCEL(dma_m2m_21)
+    DMA_CMD_CANCEL(dma_p2m_21)
     
     // else if intr_en then complete any status DMA and 
     // override doorbell to raising an interrupt
@@ -223,7 +223,7 @@ comp_error:
     nop
 
     PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5_INTR_ADDR,
-                               dma_m2m_21)
+                               dma_p2m_21)
     b           all_dma_complete
     nop
 

@@ -23,7 +23,7 @@ uint32_t gcm_exp_opaque_tag_decr = 0;
 
 const static uint32_t  kAolSize              = 64;
 const static uint32_t  kXtsDescSize          = 128;
-const        uint32_t  kXtsQueueSize         = 1024;
+const        uint32_t  kXtsQueueSize         = 4096;
 
 using namespace dp_mem;
 extern size_t tcid;
@@ -105,10 +105,10 @@ xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
                     uint32_t blk_size,
                     uint32_t num_blks)
 {
-    xts_aol_t   *xts_aol;
-    uint64_t    xts_buf_addr;
-    uint32_t    xts_buf_size;
-    uint32_t    block_no;
+    xts::xts_aol_t  *xts_aol;
+    uint64_t        xts_buf_addr;
+    uint32_t        xts_buf_size;
+    uint32_t        block_no;
 
     assert(xts_aol_vec->num_lines_get() >= num_blks);
     xts_buf_addr = xts_buf->pa();
@@ -118,7 +118,7 @@ xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
         xts_aol_vec->line_set(block_no);
         xts_aol_vec->clear();
 
-        xts_aol = (xts_aol_t *)xts_aol_vec->read();
+        xts_aol = (xts::xts_aol_t *)xts_aol_vec->read();
         xts_aol->a0 = xts_buf_addr;
         xts_aol->l0 = xts_buf_size >= blk_size ? blk_size : xts_buf_size;
         assert(xts_aol->l0);

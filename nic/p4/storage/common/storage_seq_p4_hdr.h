@@ -11,7 +11,7 @@
 // Generic Sequencer Queue State. Total size can be 64 bytes at most.
 header_type seq_q_state_t {
   fields {
-    pc_offset       : 8;    // Program counter (relative offset)
+    //pc_offset     : 8;    // Program counter (relative offset)
     rsvd            : 8;    // Hardware reserved field
     cosA            : 4;    // Cos value A
     cosB            : 4;    // Cos value B
@@ -33,6 +33,7 @@ header_type seq_q_state_t {
     dst_qaddr       : 34;   // Destination queue state address
     desc1_next_pc_valid: 1;
     desc1_next_pc   : 28;   // desc bytes 64-127 next program's PC
+    pad             : 167;  // Align to 64 bytes
   }
 }
 
@@ -303,7 +304,6 @@ header_type seq_kivec6_t {
 }
 
 #define SEQ_Q_STATE_COPY_INTRINSIC(q_state)                             \
-  modify_field(q_state.pc_offset, pc_offset);                           \
   modify_field(q_state.rsvd, rsvd);                                     \
   modify_field(q_state.cosA, cosA);                                     \
   modify_field(q_state.cosB, cosB);                                     \

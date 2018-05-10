@@ -45,12 +45,10 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
                               0, DP_MEM_ALLOC_NO_FILL);
 
-    // size of compressed buffers accounts any for compression failure,
-    // i.e., must be as large as uncompressed buffer plus cp_hdr_t
-    comp_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
+    comp_buf = new dp_mem_t(1, app_max_size,
                             DP_MEM_ALIGN_PAGE, params.comp_mem_type_,
                             0, DP_MEM_ALLOC_NO_FILL);
-    xts_encrypt_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
+    xts_encrypt_buf = new dp_mem_t(1, app_max_size,
                           DP_MEM_ALIGN_PAGE, params.encrypt_mem_type_,
                           0, DP_MEM_ALLOC_NO_FILL);
     // for comp status, caller can elect to have 2 status buffers, e.g.
@@ -287,7 +285,7 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts_out_aol->clear();
     xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read();
     xts_out->a0 = xts_encrypt_buf->pa();
-    xts_out->l0 = datain_len + sizeof(cp_hdr_t);
+    xts_out->l0 = datain_len;
     xts_out_aol->write_thru();
 
     // Set up XTS encrypt descriptor

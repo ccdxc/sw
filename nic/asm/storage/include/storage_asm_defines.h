@@ -187,6 +187,82 @@
     k.{nvme_kivec_arm_dst7_rrq_desc_addr_sbit0_ebit31...nvme_kivec_arm_dst7_rrq_desc_addr_sbit32_ebit33}
 
 
+#define SEQ_KIVEC1_SRC_LIF                      \
+    k.{seq_kivec1_src_lif_sbit0_ebit7...seq_kivec1_src_lif_sbit8_ebit10}
+#define SEQ_KIVEC1_SRC_QTYPE                    \
+    k.seq_kivec1_src_qtype
+#define SEQ_KIVEC1_SRC_QID                      \
+    k.{seq_kivec1_src_qid_sbit0_ebit1...seq_kivec1_src_qid_sbit18_ebit23}
+#define SEQ_KIVEC1_SRC_QADDR                    \
+    k.{seq_kivec1_src_qaddr_sbit0_ebit1...seq_kivec1_src_qaddr_sbit26_ebit33}
+#define SEQ_KIVEC1_BARCO_RING_ADDR              \
+    k.{seq_kivec1_barco_ring_addr_sbit0_ebit7...seq_kivec1_barco_ring_addr_sbit32_ebit33}
+
+#define SEQ_KIVEC2_SGL_PDMA_DST_ADDR            \
+    k.seq_kivec2_sgl_pdma_dst_addr
+#define SEQ_KIVEC2_SGL_VEC_ADDR                 \
+    k.seq_kivec2_sgl_vec_addr
+
+#define SEQ_KIVEC3_FLAT_BUF_ADDR                \
+    k.seq_kivec3_flat_buf_addr
+#define SEQ_KIVEC3_PAD_BUF_ADDR                 \
+    k.{seq_kivec3_pad_buf_addr_sbit0_ebit31...seq_kivec3_pad_buf_addr_sbit32_ebit33}
+#define SEQ_KIVEC3_PAD_LEN                      \
+    k.{seq_kivec3_pad_len_sbit0_ebit5...seq_kivec3_pad_len_sbit14_ebit15}
+#define SEQ_KIVEC3_NUM_BLKS                     \
+    k.seq_kivec3_num_blks
+
+#define SEQ_KIVEC4_BARCO_ALT_DESC_ADDR          \
+    k.{seq_kivec4_barco_alt_desc_addr_sbit0_ebit15...seq_kivec4_barco_alt_desc_addr_sbit56_ebit63}
+#define SEQ_KIVEC4_BARCO_RING_ADDR              \
+    k.{seq_kivec4_barco_ring_addr_sbit0_ebit23...seq_kivec4_barco_ring_addr_sbit32_ebit33}
+#define SEQ_KIVEC4_BARCO_DESC_SIZE              \
+    k.seq_kivec4_barco_desc_size
+#define SEQ_KIVEC4_BARCO_PNDX_SHADOW_ADDR       \
+    k.{seq_kivec4_barco_pndx_shadow_addr_sbit0_ebit5...seq_kivec4_barco_pndx_shadow_addr_sbit30_ebit33}
+#define SEQ_KIVEC4_BARCO_PNDX_SIZE              \
+    k.seq_kivec4_barco_pndx_size
+#define SEQ_KIVEC4_BARCO_RING_SIZE              \
+    k.seq_kivec4_barco_ring_size
+#define SEQ_KIVEC4_BARCO_NUM_DESCS              \
+    k.seq_kivec4_barco_num_descs
+
+#define SEQ_KIVEC5_INTR_ADDR                    \
+    k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
+#define SEQ_KIVEC5_DATA_LEN                     \
+    k.{seq_kivec5_data_len_sbit0_ebit7...seq_kivec5_data_len_sbit8_ebit15}
+#define SEQ_KIVEC5_PAD_LEN_SHIFT                \
+    k.seq_kivec5_pad_len_shift
+#define SEQ_KIVEC5_STATUS_DMA_EN                \
+    k.seq_kivec5_status_dma_en
+#define SEQ_KIVEC5_DATA_LEN_FROM_DESC           \
+    k.seq_kivec5_data_len_from_desc
+#define SEQ_KIVEC5_STOP_CHAIN_ON_ERROR          \
+    k.seq_kivec5_stop_chain_on_error
+#define SEQ_KIVEC5_COPY_SRC_DST_ON_ERROR        \
+    k.seq_kivec5_copy_src_desc_on_error
+#define SEQ_KIVEC5_NEXT_DB_EN                   \
+    k.seq_kivec5_next_db_en
+#define SEQ_KIVEC5_AOL_PAD_EN                   \
+    k.seq_kivec5_aol_pad_en
+#define SEQ_KIVEC5_SGL_PAD_EN                   \
+    k.seq_kivec5_sgl_pad_en
+#define SEQ_KIVEC5_SGL_PDMA_EN                  \
+    k.seq_kivec5_sgl_pdma_en
+#define SEQ_KIVEC5_SGL_PDMA_PAD_ONLY            \
+    k.seq_kivec5_sgl_pdma_pad_only
+#define SEQ_KIVEC5_INTR_EN                      \
+    k.seq_kivec5_intr_en
+#define SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH    \
+    k.seq_kivec5_next_db_action_barco_push
+#define SEQ_KIVEC5_DESC_VEC_PUSH_EN             \
+    k.seq_kivec5_desc_vec_push_en
+
+#define SEQ_KIVEC6_AOL_SRC_VEC_ADDR             \
+    k.seq_kivec6_aol_src_vec_addr
+#define SEQ_KIVEC6_AOL_DST_VEC_ADDR             \
+    k.seq_kivec6_aol_dst_vec_addr
+    
 /*
  * Debug flags
  */

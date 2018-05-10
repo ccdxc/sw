@@ -311,7 +311,7 @@ action exit() {
  *                    queue entry.
  *****************************************************************************/
 @pragma little_endian p_ndx c_ndx
-action seq_q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
+action seq_q_state_pop(/*pc_offset, */rsvd, cosA, cosB, cos_sel, eval_last, 
                        total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                        num_entries, base_addr, entry_size, next_pc,
                        dst_lif, dst_qtype, dst_qid,  dst_qaddr,

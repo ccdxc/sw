@@ -75,6 +75,8 @@
 metadata storage_kivec0_t storage_kivec0;
 @pragma pa_header_union ingress common_global
 metadata storage_kivec1_t storage_kivec1;
+@pragma pa_header_union ingress to_stage_1
+metadata storage_kivec6_t storage_kivec6;
 @pragma pa_header_union ingress to_stage_2
 metadata storage_kivec2_t storage_kivec2;
 @pragma pa_header_union ingress to_stage_3
@@ -254,6 +256,9 @@ metadata storage_kivec2_t storage_kivec2_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec3_t storage_kivec3_scratch;
+
+@pragma scratch_metadata
+metadata storage_kivec6_t storage_kivec6_scratch;
 
 @pragma scratch_metadata
 metadata ssd_cmds_t ssd_cmds_scratch;
