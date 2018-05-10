@@ -22,7 +22,8 @@ void eff_comp_cb(void *arg1, struct pnso_service_result *svc_res)
 
 	if (arg1 == NULL) return;
 	printf("IO: %s in Eff thread completed\n", io->name);
-	printf("IO: %s compressed length is %d\n", io->name, svc_res->svc[0].output_data_len);
+	printf("IO: %s compressed length is %d\n", io->name,
+			svc_res->svc[0].o.output_buf->data_len);
 	free(svc_res);
 	spdk_event_call(spdk_event_allocate(
 			io->tchain.threads[++io->tchain.current_thread],
@@ -34,14 +35,14 @@ int exec_eff_thread(void *arg1, void *arg2)
 	struct pnso_service_request *svc_req;
 	struct pnso_service_result *svc_res;
 	struct io_ctx *io = (struct io_ctx *)arg1;
-	struct pnso_hash_or_chksum_tag* tags;
+	struct pnso_hash_tag *hash_tags;
 	size_t alloc_sz;
 	int rc;
 
 	if (arg1 == NULL) return PNSO_INVALID_ARG;
 	printf("Servicing IO: %s in eff thread\n", io->name);
-	tags = io->tbuf[io->tchain.current_thread].tags;
-	memset(tags, 0, PNSO_NUM_TAGS * sizeof(struct pnso_hash_or_chksum_tag));
+	hash_tags = io->tbuf[io->tchain.current_thread].hash_tags;
+	memset(hash_tags, 0, PNSO_NUM_TAGS * sizeof(struct pnso_hash_tag));
 
 	/* Allocate request and response */
 	alloc_sz = sizeof(struct pnso_service_request) + PNSO_SVC_TYPE_MAX*sizeof(struct pnso_service);
@@ -53,7 +54,8 @@ int exec_eff_thread(void *arg1, void *arg2)
 	memset(svc_res, 0, alloc_sz);
 
 	svc_req->src_buf = io->src_buflist[io->tchain.current_thread];
-	svc_req->dst_buf = io->dst_buflist[io->tchain.current_thread];
+	svc_res->svc[0].o.output_buf->buf_list =
+		io->dst_buflist[io->tchain.current_thread];
 
 	/* Setup 3 services */
 	svc_req->num_services = 2;
@@ -68,8 +70,8 @@ int exec_eff_thread(void *arg1, void *arg2)
 	/* Setup hash service */
 	svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
 	svc_req->svc[1].d.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
-	svc_res->svc[1].num_tags = 16;
-	svc_res->svc[1].tags = tags;
+	svc_res->svc[1].num_outputs = 16;
+	svc_res->svc[1].o.hashes = hash_tags;
 
 	/* Start worker thread */
 	if (!sim_worker_inited) {
