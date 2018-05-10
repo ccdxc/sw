@@ -9,6 +9,22 @@ delphi_compile(
     srcs = [ 'proto/upgrade.proto' ],
 )
 
+# compile the reactor for apps
+cc_library(
+    name = "upgrade_app_lib",
+    srcs = [
+        "export/upgrade.cc",
+        "export/upgrade.hpp",
+    ],
+    hdrs = [
+        "export/upgrade.hpp",
+    ],
+    deps = [
+        "//nic/delphi/sdk",
+        ":upgrade_gen",
+    ],
+)
+
 # compile the service and reactor
 cc_library(
     name = "upgrade_lib",

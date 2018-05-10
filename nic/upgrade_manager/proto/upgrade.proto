@@ -8,30 +8,30 @@ message UpgReqId {
     uint32    id = 1;
 }
 
-enum UpgReqCmd {
-    InvalidAction = 0;
-    UpgStart = 1;
-    UpgAbort = 2;
+enum UpgReqCmdType {
+    InvalidCmd = 0;
+    UpgStart   = 1;
+    UpgAbort   = 2;
 }
 
 // Upgrade Request Status
-enum UpgReqState {
-    InvalidUpgState   = 0;
-    RcvdUpgReq        = 1;
-    PreUpgState       = 2;
-    PostBinRestart    = 3;
+enum UpgReqStateType {
+    InvalidUpgState     = 0;
+    UpgReqRcvd          = 1;
+    PreUpgState         = 2;
+    PostBinRestart      = 3;
     ProcessesQuiesced   = 4;
-    DataplaneDowntime  = 5;
-    UpgSuccess        = 6;
-    UpgFailed         = 7;
+    DataplaneDowntime   = 5;
+    UpgSuccess          = 6;
+    UpgFailed           = 7;
 }
 
 // spec part of the object
-message UpgradeRequestSpec {
+message UpgReq {
     option (delphi.update_event) = true;
-    delphi.ObjectMeta      Meta            = 1;
-    UpgReqId               Key             = 2;
-    UpgReqCmd              UpgReqAction    = 3 [(delphi.event) = true];
+    delphi.ObjectMeta          Meta            = 1;
+    UpgReqId                   Key             = 2;
+    UpgReqCmdType              UpgReqCmd       = 3 [(delphi.event) = true];
 }
 
 // status part of the object
@@ -39,6 +39,5 @@ message UpgReqStatus {
     option (delphi.update_event) = false;
     delphi.ObjectMeta      Meta              = 1;
     uint32                 Key               = 2;
-    UpgReqState            UpgReqStatus      = 3 [(delphi.event) = true];
-    string                 DummyStatusField  = 4 [(delphi.event) = false];
+    UpgReqStateType        UpgReqState       = 3 [(delphi.event) = true];
 }

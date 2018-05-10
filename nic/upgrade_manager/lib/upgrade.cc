@@ -9,23 +9,23 @@ namespace upgrade {
 
 using namespace std;
 
-// OnInterfaceSpecCreate gets called when InterfaceSpec object is created
-delphi::error UpgradeMgr::OnUpgradeRequestSpecCreate(delphi::objects::UpgradeRequestSpecPtr req) {
-    LogInfo("UpgradeRequestSpec got created for {}/{}", req, req->meta().ShortDebugString());
+// OnUpgReqCreate gets called when UpgReq object is created
+delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
+    LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
     // find the status object
     auto upgReqStatus = this->findUpgReqStatus(req->key().id());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        RETURN_IF_FAILED(this->createUpgReqStatus(req->key().id(), upgrade::RcvdUpgReq));
+        RETURN_IF_FAILED(this->createUpgReqStatus(req->key().id(), upgrade::UpgReqRcvd));
     }
 
     return delphi::error::OK();
 }
 
-// OnInterfaceSpecDelete gets called when InterfaceSpec object is deleted
-delphi::error UpgradeMgr::OnUpgradeRequestSpecDelete(delphi::objects::UpgradeRequestSpecPtr req) {
-    LogInfo("UpgradeRequestSpec got deleted");
+// OnUpgReqDelete gets called when UpgReq object is deleted
+delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
+    LogInfo("UpgReq got deleted");
     auto upgReqStatus = this->findUpgReqStatus(req->key().id());
     if (upgReqStatus != NULL) {
         LogInfo("Deleting Upgrade Request Status");
@@ -34,10 +34,10 @@ delphi::error UpgradeMgr::OnUpgradeRequestSpecDelete(delphi::objects::UpgradeReq
     return delphi::error::OK();
 }
 
-// OnUpgReqAction gets called when UpgReqAction attribute changes
-delphi::error UpgradeMgr::OnUpgReqAction(delphi::objects::UpgradeRequestSpecPtr req) {
+// OnUpgReqCmd gets called when UpgReqCmd attribute changes
+delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     // start or abort?
-    if (req->upgreqaction() == upgrade::UpgStart) {
+    if (req->upgreqcmd() == upgrade::UpgStart) {
         LogInfo("Start Upgrade");
     } else {
         LogInfo("Abort Upgrade");
@@ -47,19 +47,19 @@ delphi::error UpgradeMgr::OnUpgReqAction(delphi::objects::UpgradeRequestSpecPtr 
     auto upgReqStatus = this->findUpgReqStatus(req->key().id());
     if (upgReqStatus != NULL) {
         LogInfo("Updated Upgrade Request Status");
-        upgReqStatus->set_upgreqstatus(upgrade::RcvdUpgReq);
+        upgReqStatus->set_upgreqstate(upgrade::UpgReqRcvd);
         sdk_->SetObject(upgReqStatus);
     }
 
     return delphi::error::OK();
 }
 
-// createIntfStatus creates a interface status object
-delphi::error UpgradeMgr::createUpgReqStatus(uint32_t id, upgrade::UpgReqState status) {
+// createUpgReqStatus creates a upgrade request status object
+delphi::error UpgradeMgr::createUpgReqStatus(uint32_t id, upgrade::UpgReqStateType status) {
     // create an object
     delphi::objects::UpgReqStatusPtr req = make_shared<delphi::objects::UpgReqStatus>();
     req->set_key(id);
-    req->set_upgreqstatus(status);
+    req->set_upgreqstate(status);
 
     // add it to database
     sdk_->SetObject(req);
@@ -91,14 +91,14 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     this->svcName_ = name;
 
     // mount objects
-    delphi::objects::UpgradeRequestSpec::Mount(sdk_, delphi::ReadWriteMode);
+    delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadWriteMode);
 
-    // create interface event handler
+    // create upgrade manager event handler
     upgMgr_ = make_shared<UpgradeMgr>(sdk_);
 
-    // Register interface reactor
-    delphi::objects::UpgradeRequestSpec::Watch(sdk_, upgMgr_);
+    // Register upgrade request reactor
+    delphi::objects::UpgReq::Watch(sdk_, upgMgr_);
 
     LogInfo("Upgrade service constructor got called");
 }
@@ -109,10 +109,10 @@ void UpgradeService::OnMountComplete() {
 
     LogInfo("UpgradeService OnMountComplete got called\n");
 
-    // walk all interface objects and reconcile them
-    vector<delphi::objects::UpgradeRequestSpecPtr> upgReqlist = delphi::objects::UpgradeRequestSpec::List(sdk_);
-    for (vector<delphi::objects::UpgradeRequestSpecPtr>::iterator req=upgReqlist.begin(); req!=upgReqlist.end(); ++req) {
-        upgMgr_->OnUpgradeRequestSpecCreate(*req);
+    // walk all upgrade request objects and reconcile them
+    vector<delphi::objects::UpgReqPtr> upgReqlist = delphi::objects::UpgReq::List(sdk_);
+    for (vector<delphi::objects::UpgReqPtr>::iterator req=upgReqlist.begin(); req!=upgReqlist.end(); ++req) {
+        upgMgr_->OnUpgReqCreate(*req);
     }
 
     LogInfo("============== UpgradeService Finished Reconciliation ==================\n");
@@ -121,15 +121,15 @@ void UpgradeService::OnMountComplete() {
 // createUpgReqSpec creates a dummy upgrade request 
 void UpgradeService::createUpgReqSpec() {
     // create an object
-    delphi::objects::UpgradeRequestSpecPtr req = make_shared<delphi::objects::UpgradeRequestSpec>();
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     srand(time(NULL));
     req->mutable_key()->set_id(rand());
-    req->set_upgreqaction(upgrade::InvalidAction);
+    req->set_upgreqcmd(upgrade::InvalidCmd);
 
     // add it to database
     sdk_->SetObject(req);
 
-    req->set_upgreqaction(upgrade::UpgStart);
+    req->set_upgreqcmd(upgrade::UpgStart);
     sdk_->SetObject(req);
 }
 

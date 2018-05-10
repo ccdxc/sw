@@ -10,27 +10,27 @@ namespace upgrade {
 
 using namespace std;
 
-// UpgradeMgr is the reactor for the UpgradeRequestSpec object
-class UpgradeMgr : public delphi::objects::UpgradeRequestSpecReactor {
+// UpgradeMgr is the reactor for the UpgReq object
+class UpgradeMgr : public delphi::objects::UpgReqReactor {
     delphi::SdkPtr sdk_;
 public:
     UpgradeMgr(delphi::SdkPtr sk) {
         this->sdk_ = sk;
     }
 
-    // OnUpgradeRequestSpecCreate gets called when UpgradeRequestSpec object is created
-    virtual delphi::error OnUpgradeRequestSpecCreate(delphi::objects::UpgradeRequestSpecPtr upgreq);
+    // OnUpgReqCreate gets called when UpgReq object is created
+    virtual delphi::error OnUpgReqCreate(delphi::objects::UpgReqPtr upgreq);
 
-    // OnUpgradeRequestSpecDelete gets called when UpgradeRequestSpec object is deleted
-    virtual delphi::error OnUpgradeRequestSpecDelete(delphi::objects::UpgradeRequestSpecPtr upgreq);
+    // OnUpgReqDelete gets called when UpgReq object is deleted
+    virtual delphi::error OnUpgReqDelete(delphi::objects::UpgReqPtr upgreq);
 
-    // OnUpgReqAction gets called when UpgReqAction attribute changes
-    virtual delphi::error OnUpgReqAction(delphi::objects::UpgradeRequestSpecPtr upgreq);
+    // OnUpgReqCmd gets called when UpgReqCmd attribute changes
+    virtual delphi::error OnUpgReqCmd(delphi::objects::UpgReqPtr upgreq);
 
     // createUpgReqStatus creates an upgrade request status object
-    delphi::error createUpgReqStatus(uint32_t id, upgrade::UpgReqState status);
+    delphi::error createUpgReqStatus(uint32_t id, upgrade::UpgReqStateType status);
 
-    // findIntfStatus finds the interface status object
+    // findUpgReqStatus finds the upgrade request status object
     delphi::objects::UpgReqStatusPtr findUpgReqStatus(uint32_t id);
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
