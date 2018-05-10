@@ -58,10 +58,11 @@ free_rnmdr:
     add             r1, r1, RNMDR_GC_PRODUCER_TCP, RNMDR_GC_PER_PRODUCER_SHIFT
     add             r1, r1, r2, RNMDR_TABLE_ENTRY_SIZE_SHFT
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry_dma_dma_cmd, r1, ring_entry_descr_addr, ring_entry_descr_addr)
-    CAPRI_DMA_CMD_RING_DOORBELL2(doorbell_dma_dma_cmd, LIF_GC,
+    mincr	    r2, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_dma_dma_cmd, LIF_GC,
                     CAPRI_HBM_GC_RNMDR_QTYPE,
                     CAPRI_RNMDR_GC_TCP_RING_PRODUCER, 0,
-                    0, db_data_pid, db_data_index)
+                    r2, db_data_pid, db_data_index)
     CAPRI_DMA_CMD_STOP_FENCE(doorbell_dma_dma_cmd)
     nop.e
     nop
@@ -75,10 +76,11 @@ free_tnmdr:
     add             r1, r1, TNMDR_GC_PRODUCER_TCP, TNMDR_GC_PER_PRODUCER_SHIFT
     add             r1, r1, r2, TNMDR_TABLE_ENTRY_SIZE_SHFT
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry_dma_dma_cmd, r1, ring_entry_descr_addr, ring_entry_descr_addr)
-    CAPRI_DMA_CMD_RING_DOORBELL2(doorbell_dma_dma_cmd, LIF_GC,
+    mincr	    r2, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_dma_dma_cmd, LIF_GC,
                     CAPRI_HBM_GC_TNMDR_QTYPE,
                     CAPRI_TNMDR_GC_TCP_RING_PRODUCER, 0,
-                    0, db_data_pid, db_data_index)
+                    r2, db_data_pid, db_data_index)
     CAPRI_DMA_CMD_STOP_FENCE(doorbell_dma_dma_cmd)
     nop.e
     nop

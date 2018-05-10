@@ -110,7 +110,8 @@ send_pkt_to_dev(dev_handle_t *dest_dev, uint8_t *recv_buf, uint16_t rsize)
       perror("Net-Rx 2: Writing data to host-tap");
       abort();
     } else {
-      TLOG("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - offset);
+      TLOG("Wrote packet with %lu bytes to Tap-if %d (Tx)\n", rsize - offset,
+                  dest_dev->port);
     }
 }
 
@@ -142,18 +143,39 @@ model_check_host_dev(dev_handle_t *dev_handles[], uint32_t max_handles)
 static void
 model_check_uplinks(dev_handle_t *dev_handles[], uint32_t max_handles)
 {
-    uint32_t port = 0, cos = 0;
-    std::vector<uint8_t> opkt;
+    uint32_t port, cos;
+    std::vector<uint8_t> opkt1, opkt2;
 
-    get_next_pkt(opkt, port, cos);
-    if (!opkt.size()) {
-        //TLOG("NO packet back from model! size: %d\n", opkt.size());
+    /*
+     * Check if there's data on both uplink ports - 0 and 1.
+     */
+    opkt1.resize(0);
+    opkt2.resize(0);
+    port = 0;
+    cos = 0;
+    get_next_pkt(opkt1, port, cos);
+    if (!opkt1.size()) {
+        //TLOG("NO packet back from model! size: %d\n", opkt1.size());
     } else {
-        TLOG("Got packet back from network model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
+        TLOG("Got packet back from network model! size: %d on port: %d cos %d\n", opkt1.size(), port, cos);
         for (uint32_t i = 0 ; i < max_handles; i++) {
             dev_handle_t * dev_handle = dev_handles[i];
             if (dev_handle->tap_ep == TAP_ENDPOINT_NET && dev_handle->port == port) {
-                send_pkt_to_dev(dev_handle, opkt.data(), opkt.size());
+                send_pkt_to_dev(dev_handle, opkt1.data(), opkt1.size());
+            }
+        }
+    }
+
+    port = 1;
+    get_next_pkt(opkt2, port, cos);
+    if (!opkt2.size()) {
+        //TLOG("NO packet back from model! size: %d\n", opkt2.size());
+    } else {
+        TLOG("Got packet back from network model! size: %d on port: %d cos %d\n", opkt2.size(), port, cos);
+        for (uint32_t i = 0 ; i < max_handles; i++) {
+            dev_handle_t * dev_handle = dev_handles[i];
+            if (dev_handle->tap_ep == TAP_ENDPOINT_NET && dev_handle->port == port) {
+                send_pkt_to_dev(dev_handle, opkt2.data(), opkt2.size());
             }
         }
     }
@@ -319,7 +341,7 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   uint16_t src_lif_id = (uint16_t) (dev_handle->lif_id & 0xffff);
   dev_handle_t *dest_dev_handle = get_dest_dev_handle(dev_handle);
   uint16_t dest_lif_id = (uint16_t)(dest_dev_handle->lif_id & 0xffff);
-  uint32_t port = 0, cos = 0;
+  uint32_t port = dev_handle->port, cos = 0;
   uint16_t prev_cindex = 0xFFFF;
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt, opkt;
@@ -404,13 +426,13 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
       dump_pkt((char *)send_buf, size);
 
       // Transmit Packet
-      TLOG("Writing packet to model! size: %d on port: %d\n", size, port);
+      TLOG("Writing packet to model! size: %d on port: Host\n", size);
       post_buffer(src_lif_id, TX, 0, send_buf, size);
   } else if (dev_handle->tap_ep == TAP_ENDPOINT_NET)  {
       // Send packet to Model
       ipkt.resize(size);
       memcpy(ipkt.data(), pkt, size);
-      TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), port);
+      TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), dev_handle->port);
       step_network_pkt(ipkt, dev_handle->port);
   } else {
       abort();

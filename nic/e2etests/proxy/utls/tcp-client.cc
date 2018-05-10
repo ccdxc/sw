@@ -6,6 +6,7 @@ int port;
 char* test_data;
 bool from_localhost;
 bool continuous_stream = false;
+int  pkt_count = 1;
 
 pthread_t server_thread;
 
@@ -76,7 +77,7 @@ int create_socket() {
   if (from_localhost) {
       inet_pton(AF_INET, "64.1.0.4", &src_addr.sin_addr.s_addr);
   } else {
-      inet_pton(AF_INET, "64.0.0.2", &src_addr.sin_addr.s_addr);
+      inet_pton(AF_INET, "64.0.0.5", &src_addr.sin_addr.s_addr);
   }
 
 
@@ -127,7 +128,7 @@ void test_tcp(int transport_fd)
   int res = 0;
   int total_recv = 0;
   struct timeval tv;
-  int do_nb_recv = 0;
+  int do_nb_recv = 0, count = 0, nb_recv_count;
 
   tv.tv_sec = 300;
   tv.tv_usec = 0;
@@ -139,13 +140,15 @@ void test_tcp(int transport_fd)
 
   start = clock();
 
-  filefd = open(test_data, O_RDONLY);
+  //filefd = open(test_data, O_RDONLY);
   totalbytes = 0;
 
   res = 0;
   total_recv = 0;
 
   do {
+    count++;
+    filefd = open(test_data, O_RDONLY);
     memset(buf, 0, sizeof(buf));
     bytes = read(filefd, buf, sizeof(buf));
     totalbytes += bytes;
@@ -156,6 +159,7 @@ void test_tcp(int transport_fd)
       break;
     }
 
+    nb_recv_count = 10;
     do {
         memset(buf, 0, sizeof(buf));
         res = recv(transport_fd, buf, sizeof(buf), do_nb_recv ? MSG_DONTWAIT : 0);
@@ -168,7 +172,7 @@ void test_tcp(int transport_fd)
 		break;
 	    }
 	}
-    } while (do_nb_recv--);
+    } while (do_nb_recv && nb_recv_count--);
 
     //res = recv(transport_fd, buf, sizeof(buf), 0);
     total_recv += res;
@@ -178,10 +182,8 @@ void test_tcp(int transport_fd)
       TLOG("Client: Received tcp test data: %i %i, %s\n", res, total_recv, buf);
     }
 	
-  } while(bytes > 0);
-
-  close(filefd);
-
+    close(filefd);
+  } while(count < pkt_count);
 
   end = clock();
   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;

@@ -121,7 +121,7 @@ int create_socket() {
   if (from_localhost) {
       inet_pton(AF_INET, "64.1.0.4", &src_addr.sin_addr.s_addr);
   } else {
-      inet_pton(AF_INET, "64.0.0.2", &src_addr.sin_addr.s_addr);
+      inet_pton(AF_INET, "64.0.0.5", &src_addr.sin_addr.s_addr);
   }
 
   int optval = 1;

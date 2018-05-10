@@ -23,17 +23,20 @@
 #define HNTAP_HOST_ROUTE_GWIP   "64.1.0.4"
 
 #define HNTAP_NET_TAPIF         "hntap_net0"
-#define HNTAP_NET_TAPIF_IP      "64.0.0.2"
+#define HNTAP_NET_TAPIF_IP      "64.0.0.5"
 #define HNTAP_NET_TAPIF_IPMASK  "255.255.255.0"
 #define HNTAP_NET_ROUTE_DESTIP  "64.1.0.3"
-#define HNTAP_NET_ROUTE_GWIP    "64.0.0.2"
+#define HNTAP_NET_ROUTE_GWIP    "64.0.0.5"
 #define HNTAP_LIF_ID             15
 #define HNTAP_NET_PORT           0
+#define HNTAP_UPLINK_HOST_PORT   1
+#define HNTAP_UPLINK_HOST_ROUTE_DESTIP  "64.0.0.2"
 
 
 extern uint32_t nw_retries;
 extern uint16_t hntap_port;
 extern bool hntap_drop_rexmit;
+bool hntap_proxy_uplink_to_uplink_mode = false;
 
 
 void
@@ -187,20 +190,52 @@ hntap_host_client_to_server_nat(char *pkt, int len)
   hntap_nat_worker(pkt, len, true, 0x40010004, 0x40010003);
 }
 void
+hntap_ul2ul_host_client_to_server_nat(char *pkt, int len)
+{
+  hntap_nat_worker(pkt, len, true, 0x40010004, 0x40000002);
+}
+void
 hntap_net_client_to_server_nat(char *pkt, int len)
 {
-  hntap_nat_worker(pkt, len, false, 0x40000001, 0x40000002);
+  hntap_nat_worker(pkt, len, false, 0x40000001, 0x40000005);
 }
 void
 hntap_net_server_to_client_nat(char *pkt, int len)
 
 {
-  hntap_nat_worker(pkt, len, true, 0x40000002, 0x40000001);
+  hntap_nat_worker(pkt, len, true, 0x40000005, 0x40000001);
 }
 void
 hntap_host_server_to_client_nat(char *pkt, int len)
 {
   hntap_nat_worker(pkt, len, false, 0x40010003, 0x40010004);
+}
+void
+hntap_ul2ul_host_server_to_client_nat(char *pkt, int len)
+{
+  hntap_nat_worker(pkt, len, false, 0x40000002, 0x40010004);
+}
+
+void
+hntap_ul2ul_net_ether_header_add(char *pkt)
+{
+  struct ether_header_t *eth = (struct ether_header_t *)pkt;
+
+  eth->dmac[0] = 0x00;
+  eth->dmac[1] = 0xEE;
+  eth->dmac[2] = 0xFF;
+  eth->dmac[3] = 0x00;
+  eth->dmac[4] = 0x00;
+  eth->dmac[5] = 0x05;
+
+  eth->smac[0] = 0x00;
+  eth->smac[1] = 0xEE;
+  eth->smac[2] = 0xFF;
+  eth->smac[3] = 0x00;
+  eth->smac[4] = 0x00;
+  eth->smac[5] = 0x04;
+
+  eth->etype   = htons(0x0800);
 }
 
 
@@ -222,6 +257,28 @@ hntap_net_ether_header_add(char *pkt)
   eth->smac[3] = 0x00;
   eth->smac[4] = 0x00;
   eth->smac[5] = 0x04;
+
+  eth->etype   = htons(0x0800);
+}
+
+void
+hntap_ul2ul_host_ether_header_add(char *pkt)
+{
+  struct ether_header_t *eth = (struct ether_header_t *)pkt;
+
+  eth->dmac[0] = 0x00;
+  eth->dmac[1] = 0xEE;
+  eth->dmac[2] = 0xFF;
+  eth->dmac[3] = 0x00;
+  eth->dmac[4] = 0x00;
+  eth->dmac[5] = 0x04;
+
+  eth->smac[0] = 0x00;
+  eth->smac[1] = 0xEE;
+  eth->smac[2] = 0xFF;
+  eth->smac[3] = 0x00;
+  eth->smac[4] = 0x00;
+  eth->smac[5] = 0x05;
 
   eth->etype   = htons(0x0800);
 }
@@ -258,6 +315,13 @@ host_pkt_pre_process(char *pktbuf, uint32_t len)
 }
 
 int
+ul2ul_host_pkt_pre_process(char *pktbuf, uint32_t len)
+{
+    hntap_ul2ul_host_ether_header_add(pktbuf);
+    return 0;
+}
+
+int
 net_pkt_pre_process(char *pktbuf, uint32_t len)
 {
     hntap_net_ether_header_add(pktbuf);
@@ -265,8 +329,25 @@ net_pkt_pre_process(char *pktbuf, uint32_t len)
 }
 
 int
+ul2ul_net_pkt_pre_process(char *pktbuf, uint32_t len)
+{
+    hntap_ul2ul_net_ether_header_add(pktbuf);
+    return 0;
+}
+
+int
 host_process_nat_cb(char *pktbuf, uint32_t len, pkt_direction_t direction)
 {
+    if (hntap_proxy_uplink_to_uplink_mode) {
+        if (direction == PKT_DIRECTION_FROM_DEV) {
+            hntap_ul2ul_host_client_to_server_nat(pktbuf, len);
+        } else if (direction == PKT_DIRECTION_TO_DEV) {
+            hntap_ul2ul_host_server_to_client_nat(pktbuf, len);
+        } else {
+            abort();
+        }
+    }
+
     if (direction == PKT_DIRECTION_FROM_DEV) {
         hntap_host_client_to_server_nat(pktbuf, len);
     } else if (direction == PKT_DIRECTION_TO_DEV) {
@@ -324,7 +405,7 @@ int main(int argv, char *argc[])
   TLOG("Starting Host/network Tapper..\n");
 
   /* Create tap interface for Host-tap */
-  host_tap_hdl = hntap_create_tunnel_device(TAP_ENDPOINT_HOST,
+  host_tap_hdl = hntap_create_tunnel_device(hntap_proxy_uplink_to_uplink_mode ? TAP_ENDPOINT_NET : TAP_ENDPOINT_HOST,
                                             HNTAP_HOST_TAPIF,
                                             HNTAP_HOST_TAPIF_IP,
                                             HNTAP_HOST_TAPIF_IPMASK,
@@ -334,17 +415,27 @@ int main(int argv, char *argc[])
     TLOG("Error creating tap interface %s!\n", HNTAP_HOST_TAPIF);
     abort();
   }
-  host_tap_hdl->pre_process = host_pkt_pre_process;
   host_tap_hdl->nat_cb = host_process_nat_cb;
   host_tap_hdl->tap_ports[0] = hntap_port;
-  host_tap_hdl->lif_id = HNTAP_LIF_ID;
-  host_tap_hdl->needs_vlan_tag = true;
+
+  if (hntap_proxy_uplink_to_uplink_mode) {
+      host_tap_hdl->pre_process = ul2ul_host_pkt_pre_process;
+      host_tap_hdl->lif_id = 0;
+      host_tap_hdl->port = HNTAP_UPLINK_HOST_PORT;
+      host_tap_hdl->needs_vlan_tag = false;
+  } else {
+      host_tap_hdl->pre_process = host_pkt_pre_process;
+      host_tap_hdl->lif_id = HNTAP_LIF_ID;
+      host_tap_hdl->needs_vlan_tag = true;
+  }
 
   dev_handles[0] = host_tap_hdl;
   net_tap_hdl = hntap_create_tunnel_device(TAP_ENDPOINT_NET,
                                            HNTAP_NET_TAPIF,
                                            HNTAP_NET_TAPIF_IP,
                                            HNTAP_NET_TAPIF_IPMASK,
+                                           hntap_proxy_uplink_to_uplink_mode ?
+                                           HNTAP_UPLINK_HOST_ROUTE_DESTIP :
                                            HNTAP_NET_ROUTE_DESTIP,
                                            HNTAP_NET_ROUTE_GWIP);
 
@@ -353,7 +444,7 @@ int main(int argv, char *argc[])
       TLOG("Error creating tap interface %s!\n", HNTAP_NET_TAPIF);
       abort();
   }
-  net_tap_hdl->pre_process = net_pkt_pre_process;
+  net_tap_hdl->pre_process = hntap_proxy_uplink_to_uplink_mode ? ul2ul_net_pkt_pre_process : net_pkt_pre_process;
   net_tap_hdl->nat_cb = net_process_nat_cb;
   net_tap_hdl->tap_ports[0] = hntap_port;
   net_tap_hdl->lif_id = 0;
@@ -363,7 +454,7 @@ int main(int argv, char *argc[])
 
   TLOG("  Setup done, listening on tap devices..\n");
   add_dev_handle_tap_pair(host_tap_hdl, net_tap_hdl);
-  hntap_work_loop(dev_handles, MAX_DEV_HANDLES);
+  hntap_work_loop(dev_handles, MAX_DEV_HANDLES, hntap_proxy_uplink_to_uplink_mode ? true : false);
 
   return(0);
 }

@@ -83,6 +83,7 @@ dma_cmd_serq_slot:
 
 ring_doorbell:
     add         r1, k.to_s6_serq_pidx, 1
+    and         r1, r1, CAPRI_SERQ_RING_SLOTS_MASK
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(tls_doorbell_dma_cmd, LIF_TLS, 0,
                                  k.common_phv_fid, TLS_SCHED_RING_SERQ,
                                  r1, db_data_pid, db_data_index)
