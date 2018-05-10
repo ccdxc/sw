@@ -289,28 +289,28 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     chain_params.chain_ent.push_entry.barco_ring_size = 
                            (uint8_t)log2(hash_queue->q_size_get());
     chain_params.chain_ent.push_entry.barco_desc_addr = hash_desc_vec->pa();
-    chain_params.chain_ent.sgl_vec_pa = hash_sgl_vec->pa();
+    chain_params.chain_ent.sgl_vec_addr = hash_sgl_vec->pa();
 
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
     if (comp_status_buf1 != comp_status_buf2) {
         comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
     }
-    chain_params.chain_ent.status_hbm_pa = comp_status_buf1->pa();
+    chain_params.chain_ent.status_addr0 = comp_status_buf1->pa();
     if (comp_status_buf1 != comp_status_buf2) {
         chain_params.chain_ent.status_dma_en = 1;
-        chain_params.chain_ent.status_host_pa = comp_status_buf2->pa();
+        chain_params.chain_ent.status_addr1 = comp_status_buf2->pa();
         chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
     }
 
-    chain_params.chain_ent.pad_buf_pa = caller_comp_pad_buf->pa();
+    chain_params.chain_ent.pad_buf_addr = caller_comp_pad_buf->pa();
     chain_params.chain_ent.stop_chain_on_error = 1;
-    chain_params.chain_ent.sgl_pad_hash_en = 1;
+    chain_params.chain_ent.sgl_pad_en = 1;
     chain_params.chain_ent.pad_len_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
 
     // Enable interrupt in case compression fails
     comp_opaque_buf->clear_thru();
-    chain_params.chain_ent.intr_pa = comp_opaque_buf->pa();
+    chain_params.chain_ent.intr_addr = comp_opaque_buf->pa();
     chain_params.chain_ent.intr_data = kCompSeqIntrData;
     chain_params.chain_ent.intr_en = 1;
 
@@ -343,8 +343,8 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
         sgl_pdma_entry->len[0] = comp_buf2->line_size_get();
         seq_sgl_pdma->write_thru();
 
-        chain_params.chain_ent.dst_hbm_pa = comp_buf1->pa();
-        chain_params.chain_ent.sgl_pdma_out_pa = seq_sgl_pdma->pa();
+        chain_params.chain_ent.flat_dst_buf_addr = comp_buf1->pa();
+        chain_params.chain_ent.aol_dst_vec_addr = seq_sgl_pdma->pa();
     }
     chain_params.chain_ent.sgl_pdma_en = 1;
 

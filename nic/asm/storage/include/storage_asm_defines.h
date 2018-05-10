@@ -28,7 +28,7 @@
 #define STORAGE_KIVEC0_DST_QID                  \
     k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR                \
-    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit10_ebit33}
+    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST               \
     k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0                    \
@@ -55,9 +55,9 @@
 #define STORAGE_KIVEC1_SRC_QID                  \
     k.{storage_kivec1_src_qid_sbit0_ebit1...storage_kivec1_src_qid_sbit18_ebit23}
 #define STORAGE_KIVEC1_SRC_QADDR                \
-    k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit26_ebit33}
+    k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC1_DEVICE_ADDR              \
-    k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
+    k.{storage_kivec1_device_addr_sbit0_ebit31...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD          \
     k.storage_kivec1_roce_cq_new_cmd
 #define STORAGE_KIVEC1_ROCE_POST_BUF            \
@@ -194,132 +194,16 @@
 #define SEQ_COMP_SGL_PDMA_PAD_ONLY_DEBUG        1
 
 /*
- * Storage Tx TxDMA descriptors usage
- */
-#define STORAGE_DMA_FIELD(_p, _field)               _p##_field
-#define STORAGE_DMA_Q_STATE_POP_P2M_DB              dma_p2m_0
- 
-/*
- * Storage sequencer TxDMA descriptors usage
- */
-#define SEQ_DMA_P2M_FIRST                           dma_p2m_0
-#define SEQ_DMA_P2M_LAST                            dma_p2m_17
- 
-#define SEQ_DMA_FIELD(_p, _field)                   _p##_field
-#define SEQ_DMA_Q_STATE_POP_P2M_DB                  STORAGE_DMA_Q_STATE_POP_P2M_DB
- 
-/*
- * VERY IMPORTANT NOTE: mem2mem descriptors work in adjacent pair and must not
- * cross flit boundary. P4+ code sets up PHV space which guarantees that a valid
- * mem2mem pair always starts with an even numbered ID.
- *
- * For example: dma_m2m_2/dma_m2m_3 would be a valid pair, 
- *              but dma_m2m_7/dma_m2m_8 would not necessarily be adjacent.
- *
- * When a phv2mem doorbell ring follows a mem2mem of a descriptor,
- * the phv2mem must also be in the same flit as the mem2mem.
- *
- * Currently it is known that dma_m2m_0/dma_m2m_0 are in one flit, and
- * all the subsequent mem2mem quads are in succeeding flits.
- */
- 
-// TxDMA descriptors set up by storage_seq_barco_entry_handler
-#define SEQ_DMA_BARCO_ENTRY_M2M_SRC                 dma_m2m_2
-#define SEQ_DMA_BARCO_ENTRY_M2M_DST                 dma_m2m_3
-#define SEQ_DMA_BARCO_ENTRY_P2M_DB                  dma_p2m_4
-
-// TxDMA descriptors set up by storage_seq_comp_status_desc0_handler
-#define SEQ_DMA_COMP_CHAIN_STATUS_M2M_SRC           dma_m2m_0
-#define SEQ_DMA_COMP_CHAIN_STATUS_M2M_DST           dma_m2m_1
-
-#define SEQ_DMA_COMP_CHAIN_BARCO_M2M_SRC            dma_m2m_15
-#define SEQ_DMA_COMP_CHAIN_BARCO_M2M_DST            dma_m2m_16
-#define SEQ_DMA_COMP_CHAIN_BARCO_P2M_DB             dma_p2m_17
-
-// TxDMA descriptors set up by storage_seq_comp_status_handler
-#define SEQ_DMA_COMP_CHAIN_SGL_PAD_P2M_L0           dma_p2m_2
-#define SEQ_DMA_COMP_CHAIN_SGL_PAD_P2M_A1           dma_p2m_3
-#define SEQ_DMA_COMP_CHAIN_SGL_PAD_P2M_L1           dma_p2m_4
-
-// TxDMA descriptors set up by storage_seq_comp_aol_pad_handler
-#define SEQ_DMA_COMP_CHAIN_AOL_SRC_PAD_P2M_L0       dma_p2m_5
-#define SEQ_DMA_COMP_CHAIN_AOL_SRC_PAD_P2M_A1       dma_p2m_6
-#define SEQ_DMA_COMP_CHAIN_AOL_SRC_PAD_P2M_L1       dma_p2m_7
-#define SEQ_DMA_COMP_CHAIN_AOL_SRC_PAD_P2M_NEXT     dma_p2m_8
-#define SEQ_DMA_COMP_CHAIN_AOL_DST_PAD_P2M_NEXT     dma_p2m_9
-
-// TxDMA descriptors set up by storage_seq_comp_sgl_pad_only_xfer
-#define SEQ_DMA_COMP_CHAIN_SGL_PAD_XFER_M2M_SRC     dma_m2m_10
-#define SEQ_DMA_COMP_CHAIN_SGL_PAD_XFER_M2M_DST     dma_m2m_11
-
-// TxDMA descriptors set up by storage_tx_seq_xts_status_desc_handler
-#define SEQ_DMA_XTS_CHAIN_STATUS_M2M_SRC            dma_m2m_0
-#define SEQ_DMA_XTS_CHAIN_STATUS_M2M_DST            dma_m2m_1
-
-#define SEQ_DMA_XTS_CHAIN_BARCO_M2M_SRC             dma_m2m_15
-#define SEQ_DMA_XTS_CHAIN_BARCO_M2M_DST             dma_m2m_16
-#define SEQ_DMA_XTS_CHAIN_BARCO_P2M_DB              dma_p2m_17
-
-// TxDMA descriptors set up by storage_seq_comp_sgl_pdma_xfer
-// When status_dma_en=1, aol_pad_en=1, sgl_pad_hash_en=1,
-// only 1 sets of TxDMA descriptors remain for SGL DMA full xfer,
-// plus one set for the padding xfer.
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_DOUBLE_M2M_SRC0 dma_m2m_10
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_DOUBLE_M2M_DST0 dma_m2m_11
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_DOUBLE_M2M_SRC1 dma_m2m_12
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_DOUBLE_M2M_DST1 dma_m2m_13
-
-// When status_dma_en=0, aol_pad_en=1, sgl_pad_hash_en=1,
-// 3 sets of descriptors are available, plus one set for the padding xfer
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_SRC0 dma_m2m_0
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_DST0 dma_m2m_1
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_SRC1 dma_m2m_10
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_DST1 dma_m2m_11
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_SRC2 dma_m2m_12
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_DST2 dma_m2m_13
-
-// When status_dma_en=0, aol_pad_en=1, sgl_pad_hash_en=0,
-// 3 sets of descriptors are available, plus one set for the padding xfer
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC0 dma_m2m_0
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_DST0 dma_m2m_1
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC1 dma_m2m_2
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_DST1 dma_m2m_3
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC2 dma_m2m_10
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_DST2 dma_m2m_11
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC3 dma_m2m_12
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_DST3 dma_m2m_13
-
-// When aol_pad_en=0, sgl_pad_hash_en=1,
-// 3 sets of descriptors are available, plus one set for the padding xfer
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC0 dma_m2m_6
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_DST0 dma_m2m_7
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC1 dma_m2m_8
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_DST1 dma_m2m_9
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC2 dma_m2m_10
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_DST2 dma_m2m_11
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC3 dma_m2m_12
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_DST3 dma_m2m_13
-
-// When next_db_action_barco_push=0, the only padding that would apply
-// is for the case of pad-only transfer, which would be handled
-// entirely in storage_seq_comp_sgl_pad_only_xfer(). So at least the
-// following descriptors become available, plus one set for the padding xfer.
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC0   dma_m2m_2
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST0   dma_m2m_3
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC1   dma_m2m_4
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST1   dma_m2m_5
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC2   dma_m2m_6
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST2   dma_m2m_7
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC3   dma_m2m_8
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST3   dma_m2m_9
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC4   dma_m2m_10
-#define SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST4   dma_m2m_11
-
-/*
  * Barco SGL descriptor size
  */
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
+
+/*
+ * Barco AOL descriptor size
+ */
+#define BARCO_AOL_DESC_SIZE         64
+#define BARCO_AOL_DESC_SIZE_SHIFT   6
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_NOP               0
@@ -669,7 +553,7 @@ struct capri_dma_cmd_mem2mem_t {
              p._dma_cmd_X##_dma_cmd_addr, _addr;                        \
    phvwr     p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];            \
 
-#define DMA_MEM2MEM_NO_LIF_SETUP(_type, _addr, _size, _dma_cmd_X)       \                 
+#define DMA_MEM2MEM_NO_LIF_SETUP(_type, _addr, _size, _dma_cmd_X)       \
    add      r1, r0, _addr;                                              \
    DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(_type, r1, _size, _dma_cmd_X)      \
    
@@ -748,7 +632,7 @@ struct capri_dma_cmd_mem2mem_t {
    DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r0, _ring, _qid, r0)    \
    DOORBELL_ADDR_SETUP(_lif, _qtype, _wr_sched, DOORBELL_UPDATE_NONE)   \
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,  \
-                     r7, STORAGE_DMA_Q_STATE_POP_P2M_DB)                \
+                     r7, dma_p2m_0)                                     \
 
 // Queue pop doorbell clear is done in two stages:
 // 1. table write of w_ndx to c_ndx (this should make p_ndx == c_ndx)

@@ -31,25 +31,25 @@ storage_seq_barco_entry_handler:
    // Setup the source of the mem2mem DMA into DMA cmd 1.
    // For now, not using any override LIF parameters.
    DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.barco_desc_addr, r7,
-                            SEQ_DMA_BARCO_ENTRY_M2M_SRC)
+                            dma_m2m_2)
 
    // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
    // the size). For now, not using any override LIF parameters.
    DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, r7,
-                                     SEQ_DMA_BARCO_ENTRY_M2M_DST)
+                                     dma_m2m_3)
 
    // Copy the data for the doorbell into the PHV and setup a DMA command
    // to ring it. Form the doorbell DMA command in this stage as opposed 
    // the push stage (as is the norm) to avoid carrying the doorbell address 
    // in K+I vector.
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
-                            d.barco_pndx_addr, SEQ_DMA_BARCO_ENTRY_P2M_DB)
+                            d.barco_pndx_addr, dma_p2m_4)
 
    bbeq     d.barco_batch_mode, 1, barco_batch_mode
    nop
    
    // Set the fence bit for the doorbell 
-   DMA_PHV2MEM_FENCE(SEQ_DMA_BARCO_ENTRY_P2M_DB)
+   DMA_PHV2MEM_FENCE(dma_p2m_4)
 
 
    // Advance to a common stage for executing table lock read to get the
@@ -63,17 +63,15 @@ barco_batch_mode:
    QUEUE_PUSH_ADDR(d.barco_ring_addr, d.barco_batch_pndx, d.barco_desc_size)
    
    // DMA command address update
-   DMA_ADDR_UPDATE(r7, SEQ_DMA_BARCO_ENTRY_M2M_DST)
+   DMA_ADDR_UPDATE(r7, dma_m2m_3)
    
    bbeq     d.barco_batch_last, 1, barco_batch_last
    add      r6, d.barco_batch_pndx, 1   // delay slot
    
    // not the last entry of the batch so don't ring barco doorbell
-   DMA_PHV2MEM_FENCE(SEQ_DMA_BARCO_ENTRY_M2M_DST)
-   
    // Setup the start and end DMA pointers
-   DMA_PTR_SETUP(SEQ_DMA_FIELD(SEQ_DMA_BARCO_ENTRY_M2M_SRC, dma_cmd_pad)
-                 SEQ_DMA_FIELD(SEQ_DMA_BARCO_ENTRY_M2M_DST, dma_cmd_eop),
+   DMA_PTR_SETUP(dma_p2m_2_dma_cmd_pad,
+                 dma_p2m_3_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
    LOAD_NO_TABLES
 
@@ -84,8 +82,9 @@ barco_batch_last:
    phvwr    p.barco_doorbell_data_p_ndx, r6.wx
    
    // Setup the start and end DMA pointers
-   DMA_PTR_SETUP(SEQ_DMA_FIELD(SEQ_DMA_BARCO_ENTRY_M2M_SRC, dma_cmd_pad)
-                 SEQ_DMA_FIELD(SEQ_DMA_BARCO_ENTRY_P2M_DB, dma_cmd_eop),
+   DMA_PHV2MEM_FENCE(dma_p2m_4)
+   DMA_PTR_SETUP(dma_p2m_2_dma_cmd_pad,
+                 dma_p2m_4_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
    LOAD_NO_TABLES
    

@@ -185,10 +185,10 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     if (comp_status_buf1 != comp_status_buf2) {
         comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
     }
-    chain_params.chain_ent.status_hbm_pa = comp_status_buf1->pa();
+    chain_params.chain_ent.status_addr0 = comp_status_buf1->pa();
     if (comp_status_buf1 != comp_status_buf2) {
         chain_params.chain_ent.status_dma_en = 1;
-        chain_params.chain_ent.status_host_pa = comp_status_buf2->pa();
+        chain_params.chain_ent.status_addr1 = comp_status_buf2->pa();
         chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
     }
 
@@ -196,9 +196,9 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     // above. The compression status sequencer will use the AOLs given below
     // only to update the length fields with the correct output data length
     // and pad length.
-    chain_params.chain_ent.barco_aol_in_pa = xts_in_aol->pa();
-    chain_params.chain_ent.barco_aol_out_pa = xts_out_aol->pa();
-    chain_params.chain_ent.pad_buf_pa = caller_comp_pad_buf->pa();
+    chain_params.chain_ent.aol_src_vec_addr = xts_in_aol->pa();
+    chain_params.chain_ent.aol_dst_vec_addr = xts_out_aol->pa();
+    chain_params.chain_ent.pad_buf_addr = caller_comp_pad_buf->pa();
     chain_params.chain_ent.stop_chain_on_error = 1;
     chain_params.chain_ent.aol_pad_en = 1;
     chain_params.chain_ent.pad_len_shift =
@@ -206,7 +206,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 
     // Enable interrupt in case compression fails
     comp_opaque_buf->clear_thru();
-    chain_params.chain_ent.intr_pa = comp_opaque_buf->pa();
+    chain_params.chain_ent.intr_addr = comp_opaque_buf->pa();
     chain_params.chain_ent.intr_data = kCompSeqIntrData;
     chain_params.chain_ent.intr_en = 1;
 

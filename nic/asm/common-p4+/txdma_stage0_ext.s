@@ -164,3 +164,9 @@ storage_nvme_armq_stage0:
 smbdc_req_tx_stage0:
     j smbdc_req_tx_sqcb_process_ext
     nop
+
+.align
+storage_seq_stage0:
+   nop.e
+   nop
+

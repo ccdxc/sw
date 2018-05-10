@@ -163,23 +163,29 @@ comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
                      uint32_t num_blks)
 {
     cp_sgl_t    *comp_sgl;
-    uint64_t    comp_buf_pa;
+    uint64_t    comp_buf_addr;
+    uint32_t    comp_buf_size;
     uint32_t    block_no;
 
     assert(comp_sgl_vec->num_lines_get() >= num_blks);
-    comp_buf_pa = comp_buf->pa();
+    comp_buf_addr = comp_buf->pa();
+    comp_buf_size = comp_buf->line_size_get();
+
     for (block_no = 0; block_no < num_blks; block_no++) {
         comp_sgl_vec->line_set(block_no);
         comp_sgl_vec->clear();
 
         comp_sgl = (cp_sgl_t *)comp_sgl_vec->read();
-        comp_sgl->addr0 = comp_buf_pa;
-        comp_sgl->len0 = blk_size;
+        comp_sgl->addr0 = comp_buf_addr;
+        comp_sgl->len0 = comp_buf_size >= blk_size ? blk_size : comp_buf_size;
+        assert(comp_sgl->len0);
+
         if (block_no < (num_blks - 1)) {
             comp_sgl->link = comp_sgl_vec->pa() + sizeof(*comp_sgl);
         }
         comp_sgl_vec->write_thru();
-        comp_buf_pa += blk_size;
+        comp_buf_addr += comp_sgl->len0;
+        comp_buf_size -= comp_sgl->len0;
     }
 }
 
@@ -1133,13 +1139,12 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   acc_chain_params_t chain_params = {0};
   status_host_buf->clear_thru();
   chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
-  chain_params.chain_ent.status_hbm_pa = status_buf->pa();
-  chain_params.chain_ent.status_host_pa = status_host_buf->pa();
-  chain_params.chain_ent.src_hbm_pa = d.src;
-  chain_params.chain_ent.dst_hbm_pa = d.dst;
-  chain_params.chain_ent.sgl_pdma_out_pa = seq_sgl->pa();
+  chain_params.chain_ent.status_addr0 = status_buf->pa();
+  chain_params.chain_ent.status_addr1 = status_host_buf->pa();
+  chain_params.chain_ent.flat_dst_buf_addr = d.dst;
+  chain_params.chain_ent.aol_dst_vec_addr = seq_sgl->pa();
   chain_params.chain_ent.sgl_pdma_en = 1;
-  chain_params.chain_ent.intr_pa = opaque_host_buf->pa();
+  chain_params.chain_ent.intr_addr = opaque_host_buf->pa();
   chain_params.chain_ent.intr_data = kCompSeqIntrData;
 
   // Clear the area where interrupt from sequencer is going to come.

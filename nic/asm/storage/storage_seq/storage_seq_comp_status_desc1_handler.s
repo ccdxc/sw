@@ -27,12 +27,12 @@ storage_seq_comp_status_desc1_handler_start:
     add		r_pad_buf_addr, d.pad_buf_addr, r0
     phvwrpair	p.seq_kivec3_flat_buf_addr, d.flat_buf_dst_addr, \
                 p.seq_kivec3_pad_buf_addr, r_pad_buf_addr
-    phvwr	p.pad_buf_addr, r_pad_buf_addr.dx
+    phvwr	p.pad_buf_addr_addr, r_pad_buf_addr.dx
 
     // aol_dst_vec_addr points to SGL PDMA destination when SGL PDMA (full) transfer
     // is applicable, unless AOL padding is enabled (see below)
     phvwrpair	p.seq_kivec2_sgl_pdma_dst_addr, d.aol_dst_vec_addr, \
-                p.seq_kivec2_sgl_vec_addr, d.sgl_vec_pa  // delay slot
+                p.seq_kivec2_sgl_vec_addr, d.sgl_vec_addr  // delay slot
 
     phvwrpair	p.seq_kivec6_aol_src_vec_addr, d.aol_src_vec_addr, \
                 p.seq_kivec6_aol_dst_vec_addr, d.aol_dst_vec_addr

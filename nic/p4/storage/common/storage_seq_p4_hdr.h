@@ -73,8 +73,8 @@ header_type seq_comp_status_desc0_t {
     barco_desc_size :  4;   // descriptor size (power of 2 exponent)
     barco_pndx_size :  3;   // producer index size (power of 2 exponent)
     barco_ring_size :  5;   // log2(ring_size)
-    status_addr1    : 64;   // Address where compression status will be placed
-    status_addr2    : 64;   // 2nd address where compression status will be placed
+    status_addr0    : 64;   // Address where compression status will be placed
+    status_addr1    : 64;   // 2nd address where compression status will be placed
     intr_addr       : 64;   // Address where interrupt needs to be written
     intr_data       : 32;   // Data that needs to be written for interrupt
     status_len      : 16;   // Length of the compression status
@@ -106,9 +106,10 @@ header_type seq_comp_status_desc1_t {
     data_len_from_desc  : 1; // 1 => Use data_len in the descriptor, 
                              // 0 => Use the comp_output_data_len
     aol_pad_en      : 1;
-    sgl_pad_hash_en : 1;
+    sgl_pad_en      : 1;
     sgl_pdma_en     : 1;
     sgl_pdma_pad_only:1;
+    desc_vec_push_en:1;
     copy_src_dst_on_error: 1; // not yet supported
   }
 }
@@ -147,8 +148,8 @@ header_type seq_xts_status_desc_t {
     barco_desc_size : 4;    // descriptor size (power of 2 exponent)
     barco_pndx_size : 3;    // producer index size (power of 2 exponent)
     barco_ring_size :  5;   // log2(ring_size)
-    status_addr1    : 64;   // Address where HW compression status was placed
-    status_addr2    : 64;   // 2nd address where a copy of above status can be made
+    status_addr0    : 64;   // Address where HW compression status was placed
+    status_addr1    : 64;   // 2nd address where a copy of above status can be made
     intr_addr       : 64;   // Address where interrupt needs to be written
     intr_data       : 32;   // Data that needs to be written for interrupt
     status_len      : 16;   // Length of the compression status
@@ -201,6 +202,14 @@ header_type barco_sgl_t {
     rsvd2           : 32;
     link            : 64;
     rsvd            : 64;
+  }
+}
+
+// Pad structures
+
+header_type storage_seq_pad192_t {
+  fields {
+      pad           : 192;
   }
 }
 
@@ -277,9 +286,10 @@ header_type seq_kivec5_t {
     data_len_from_desc  : 1;    // 1 => Use the data length in the descriptor, 
                                 // 0 => Use the data lenghth in the status
     aol_pad_en          : 1;
-    sgl_pad_hash_en     : 1;
+    sgl_pad_en          : 1;
     sgl_pdma_en         : 1;
     sgl_pdma_pad_only   : 1;
+    desc_vec_push_en    : 1;
     copy_src_dst_on_error: 1;
   }
 }
@@ -367,10 +377,11 @@ header_type seq_kivec6_t {
   modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);   \
   modify_field(scratch.aol_pad_en, kivec.aol_pad_en);                   \
-  modify_field(scratch.sgl_pad_hash_en, kivec.sgl_pad_hash_en);         \
+  modify_field(scratch.sgl_pad_en, kivec.sgl_pad_en);                   \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
   modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
+  modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
 
 #define SEQ_KIVEC6_USE(scratch, kivec)                                  \
   modify_field(scratch.aol_src_vec_addr, kivec.aol_src_vec_addr);       \
@@ -379,7 +390,7 @@ header_type seq_kivec6_t {
 // Macros for ASM param addresses (hardcoded in P4)
 #define seq_barco_ring_push_start	    0x82000000
 #define seq_comp_status_handler_start   0x82010000
-#define seq_comp_sgl_handler_start      0x82020000
+#define seq_comp_sgl_pdma_xfer_start    0x82020000
 #define seq_xts_status_handler_start    0x82030000
 #define seq_barco_ring_pndx_read_start  0x82040000
 

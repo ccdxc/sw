@@ -17,6 +17,7 @@
 
     .param      req_tx_sqcb_process
     .param      storage_tx_q_state_pop_start
+    .param      storage_seq_q_state_pop_start
     .param      storage_tx_pri_q_state_pop_start
     .param      tcp_tx_read_rx2tx_shared_process
     .param      tls_stage0
@@ -184,3 +185,9 @@ storage_nvme_armq_stage0:
 smbdc_req_tx_stage0:
     j smbdc_req_tx_sqcb_process
     nop
+
+.align
+storage_seq_stage0:
+   j    storage_seq_q_state_pop_start
+   nop
+

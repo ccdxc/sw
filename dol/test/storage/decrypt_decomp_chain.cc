@@ -182,15 +182,15 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
         // xts_status_buf2 will receive the content of xts_status_buf1
         // so we can freely initialize it with any non-zero (invalid) value.
         xts_status_buf2->fill_thru(0xff);
-        chain_params.chain_ent.status_hbm_pa = xts_status_buf1->pa();
-        chain_params.chain_ent.status_host_pa = xts_status_buf2->pa();
+        chain_params.chain_ent.status_addr0 = xts_status_buf1->pa();
+        chain_params.chain_ent.status_addr1 = xts_status_buf2->pa();
         chain_params.chain_ent.status_len = xts_status_buf2->line_size_get();
         chain_params.chain_ent.status_dma_en = 1;
     }
 
     // Enable interrupt in case decryption fails
     xts_opaque_buf->clear_thru();
-    chain_params.chain_ent.intr_pa = xts_opaque_buf->pa();
+    chain_params.chain_ent.intr_addr = xts_opaque_buf->pa();
     chain_params.chain_ent.intr_data = kCompSeqIntrData;
     chain_params.chain_ent.intr_en = 1;
     chain_params.chain_ent.stop_chain_on_error = 1;

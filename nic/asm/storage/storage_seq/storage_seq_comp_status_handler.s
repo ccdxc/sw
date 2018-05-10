@@ -85,8 +85,8 @@ storage_seq_comp_status_handler:
     sub         r_pad_len, r_total_len, r_comp_data_len
     sub         r_last_blk_len, r_pad_boundary, r_pad_len
 
-    phvwrpair   p.comp_last_blk_len, r_last_blk_len.wx, \
-                p.comp_pad_len, r_pad_len.wx
+    phvwrpair   p.comp_last_blk_len_len, r_last_blk_len.wx, \
+                p.comp_pad_len_len, r_pad_len.wx
                 
     // Note that both SGL padding and AOL padding may be enabled, for the
     // following use case: compress-pad-encrypt where the compressed output
@@ -106,7 +106,7 @@ aol_padding:
     setcf       c6, [c0]
 
 possible_sgl_padding:
-    bbeq        SEQ_KIVEC5_SGL_PAD_HASH_EN, 0, possible_sgl_pdma_xfer
+    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, possible_per_block_descs
     nop
 
     // SGL padding enabled:
@@ -130,28 +130,31 @@ if0:
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len0))
-    DMA_PHV2MEM_SETUP_ADDR64(comp_last_blk_len, comp_last_blk_len,
-                             r_sgl_field_p, SEQ_DMA_COMP_CHAIN_SGL_PAD_P2M_L0)
+    DMA_PHV2MEM_SETUP_ADDR64(comp_last_blk_len_len, comp_last_blk_len_len,
+                             r_sgl_field_p, dma_p2m_2)
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr1))
-    DMA_PHV2MEM_SETUP_ADDR64(pad_buf_addr, pad_buf_addr,
-                             r_sgl_field_p, SEQ_DMA_COMP_CHAIN_SGL_PAD_P2M_A1)
+    DMA_PHV2MEM_SETUP_ADDR64(pad_buf_addr_addr, pad_buf_addr_addr,
+                             r_sgl_field_p, dma_p2m_3)
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len1))
-    DMA_PHV2MEM_SETUP_ADDR64(comp_pad_len, comp_pad_len,
-                             r_sgl_field_p, SEQ_DMA_COMP_CHAIN_SGL_PAD_P2M_L1)
+    DMA_PHV2MEM_SETUP_ADDR64(comp_pad_len_len, comp_pad_len_len,
+                             r_sgl_field_p, dma_p2m_4)
 endif0:
 
+possible_per_block_descs:
+
     // In addition, storage_seq_comp_status_desc0_handler has already set up
-    // DMA transfer of a hash descriptor for the Barco ring. In the hash case,
-    // the descriptor address actually points to the 1st of a vector of descriptors.
-    // We now correct the transfer length based on r_num_blks.
+    // DMA transfer of a descriptor for the Barco ring. In the per-block hash or
+    // encryption case, the descriptor address actually points to the 1st of a 
+    // vector of descriptors. We now correct the transfer length based on r_num_blks.
     
-    sll         r_desc_vec_len, r_num_blks, SEQ_KIVEC4_BARCO_DESC_SIZE
-    DMA_SIZE_UPDATE(r_desc_vec_len, SEQ_DMA_COMP_CHAIN_BARCO_M2M_SRC)
-    DMA_SIZE_UPDATE(r_desc_vec_len, SEQ_DMA_COMP_CHAIN_BARCO_M2M_DST)
+    bbeq        SEQ_KIVEC5_DESC_VEC_PUSH_EN, 0, possible_sgl_pdma_xfer
+    sll         r_desc_vec_len, r_num_blks, SEQ_KIVEC4_BARCO_DESC_SIZE  // delay slot
+    DMA_SIZE_UPDATE(r_desc_vec_len, dma_m2m_19)
+    DMA_SIZE_UPDATE(r_desc_vec_len, dma_m2m_20)
     phvwr       p.seq_kivec4_barco_num_descs, r_num_blks
     
 possible_sgl_pdma_xfer:
@@ -163,10 +166,10 @@ possible_sgl_pdma_xfer:
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop
     
-    // sgl_pad_hash_en must have been enabled, the result of which
+    // sgl_pad_en must have been enabled, the result of which
     // is referenced here for PDMA transfer of the pad data.
     
-    bbeq        SEQ_KIVEC5_SGL_PAD_HASH_EN, 0, pdma_pad_only_error
+    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, pdma_pad_only_error
     nop
     LOAD_TABLE2_FOR_ADDR_PC_IMM(r_last_sgl_p, 
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
@@ -177,7 +180,7 @@ possible_sgl_pdma_xfer:
 sgl_pdma_xfer_full:
                                 
     // PDMA compressed data to user buffers specified in SGL
-    LOAD_TABLE1_FOR_ADDR_PC_IMM(SEQ_KIVEC2_SGL_PDMA_OUT_ADDR, 
+    LOAD_TABLE1_FOR_ADDR_PC_IMM(SEQ_KIVEC2_SGL_PDMA_DST_ADDR, 
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_seq_comp_sgl_pdma_xfer)
 possible_barco_push:
@@ -198,8 +201,8 @@ barco_push:
 all_dma_complete:
 
     // Setup the start and end DMA pointers
-    DMA_PTR_SETUP_e(SEQ_DMA_FIELD(SEQ_DMA_P2M_FIRST, dma_cmd_pad),
-                    SEQ_DMA_FIELD(SEQ_DMA_P2M_LAST, dma_cmd_eop),
+    DMA_PTR_SETUP_e(dma_p2m_0_dma_cmd_pad,
+                    dma_p2m_21_dma_cmd_eop,
                     p4_txdma_intr_dma_cmd_ptr)
 
 comp_error:
@@ -210,24 +213,24 @@ comp_error:
     nop
 
     // cancel any barco push prep
-    DMA_CMD_CANCEL(SEQ_DMA_COMP_CHAIN_BARCO_M2M_SRC)
-    DMA_CMD_CANCEL(SEQ_DMA_COMP_CHAIN_BARCO_M2M_DST)
-    DMA_CMD_CANCEL(SEQ_DMA_COMP_CHAIN_BARCO_P2M_DB)
+    DMA_CMD_CANCEL(dma_m2m_19)
+    DMA_CMD_CANCEL(dma_m2m_20)
+    DMA_CMD_CANCEL(dma_m2m_21)
     
     // else if intr_en then complete any status DMA and 
     // override doorbell to raising an interrupt
-    bbeq        SEQ_KIVEC5_INTR_EN, 0, exit
+    bbeq        SEQ_KIVEC5_INTR_EN, 0, all_dma_complete
     nop
 
     PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5_INTR_ADDR,
-                               SEQ_DMA_COMP_CHAIN_BARCO_P2M_DB)
+                               dma_m2m_21)
     b           all_dma_complete
     nop
 
 pdma_pad_only_error:
 
-   // PDMA pad-only requires sgl_pad_hash_en to also be enabled
-   // (the sgl_pad_hash_en operation provides the necessary SGL
+   // PDMA pad-only requires sgl_pad_en to also be enabled
+   // (the sgl_pad_en operation provides the necessary SGL
    // for the calculation and resulting PDMA transfer of the pad data)
    
    SEQ_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()

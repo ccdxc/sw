@@ -30,11 +30,11 @@ storage_seq_barco_ring_push_start:
    tblwr.f      d.p_ndx, r6
 
    // DMA command address update
-   DMA_ADDR_UPDATE(r7, SEQ_DMA_BARCO_ENTRY_M2M_DST)
+   DMA_ADDR_UPDATE(r7, dma_m2m_3)
    
    // Setup the start and end DMA pointers
-   DMA_PTR_SETUP(SEQ_DMA_FIELD(SEQ_DMA_BARCO_ENTRY_M2M_SRC, dma_cmd_pad)
-                 SEQ_DMA_FIELD(SEQ_DMA_BARCO_ENTRY_P2M_PNDX, dma_cmd_eop),
+   DMA_PTR_SETUP(dma_p2m_2_dma_cmd_pad,
+                 dma_p2m_4_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
 
    LOAD_NO_TABLES

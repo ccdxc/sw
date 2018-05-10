@@ -2613,9 +2613,9 @@ int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
     seq_status_desc->write_bit_fields(64, 64, chain_ent.db_entry.next_doorbell_data);
   }
 
-  seq_status_desc->write_bit_fields(208, 64, chain_ent.status_hbm_pa);
-  seq_status_desc->write_bit_fields(272, 64, chain_ent.status_host_pa);
-  seq_status_desc->write_bit_fields(336, 64, chain_ent.intr_pa);
+  seq_status_desc->write_bit_fields(208, 64, chain_ent.status_addr0);
+  seq_status_desc->write_bit_fields(272, 64, chain_ent.status_addr1);
+  seq_status_desc->write_bit_fields(336, 64, chain_ent.intr_addr);
   seq_status_desc->write_bit_fields(400, 32, chain_ent.intr_data);
   seq_status_desc->write_bit_fields(432, 16, chain_ent.status_len);
   seq_status_desc->write_bit_fields(448, 1, chain_ent.status_dma_en);
@@ -2624,21 +2624,22 @@ int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
   seq_status_desc->write_bit_fields(451, 1, chain_ent.next_db_action_barco_push);
 
   // desc bytes 64-127
-  seq_status_desc->write_bit_fields(512 + 0, 64, chain_ent.src_hbm_pa);
-  seq_status_desc->write_bit_fields(512 + 64, 64, chain_ent.dst_hbm_pa);
-  seq_status_desc->write_bit_fields(512 + 128, 64, chain_ent.sgl_pdma_in_pa);
-  seq_status_desc->write_bit_fields(512 + 192, 64, chain_ent.sgl_pdma_out_pa);
-  seq_status_desc->write_bit_fields(512 + 256, 64, chain_ent.sgl_vec_pa);
-  seq_status_desc->write_bit_fields(512 + 320, 64, chain_ent.pad_buf_pa);
+  seq_status_desc->write_bit_fields(512 + 0, 64, 0); // reserved
+  seq_status_desc->write_bit_fields(512 + 64, 64, chain_ent.flat_dst_buf_addr);
+  seq_status_desc->write_bit_fields(512 + 128, 64, chain_ent.aol_src_vec_addr);
+  seq_status_desc->write_bit_fields(512 + 192, 64, chain_ent.aol_dst_vec_addr);
+  seq_status_desc->write_bit_fields(512 + 256, 64, chain_ent.sgl_vec_addr);
+  seq_status_desc->write_bit_fields(512 + 320, 64, chain_ent.pad_buf_addr);
   seq_status_desc->write_bit_fields(512 + 384, 16, chain_ent.data_len);
   seq_status_desc->write_bit_fields(512 + 400, 5, chain_ent.pad_len_shift);
   seq_status_desc->write_bit_fields(512 + 405, 1, chain_ent.stop_chain_on_error);
   seq_status_desc->write_bit_fields(512 + 406, 1, chain_ent.data_len_from_desc);
   seq_status_desc->write_bit_fields(512 + 407, 1, chain_ent.aol_pad_en);
-  seq_status_desc->write_bit_fields(512 + 408, 1, chain_ent.sgl_pad_hash_en);
+  seq_status_desc->write_bit_fields(512 + 408, 1, chain_ent.sgl_pad_en);
   seq_status_desc->write_bit_fields(512 + 409, 1, chain_ent.sgl_pdma_en);
   seq_status_desc->write_bit_fields(512 + 410, 1, chain_ent.sgl_pdma_pad_only);
-  seq_status_desc->write_bit_fields(512 + 411, 1, chain_ent.copy_src_dst_on_error);
+  seq_status_desc->write_bit_fields(512 + 411, 1, chain_ent.desc_vector_push_en);
+  seq_status_desc->write_bit_fields(512 + 412, 1, chain_ent.copy_src_dst_on_error);
   seq_status_desc->write_thru();
 
   return 0;
@@ -2663,9 +2664,9 @@ int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
     seq_status_desc->write_bit_fields(64, 64, chain_ent.db_entry.next_doorbell_data);
   }
 
-  seq_status_desc->write_bit_fields(208, 64, chain_ent.status_hbm_pa);
-  seq_status_desc->write_bit_fields(272, 64, chain_ent.status_host_pa);
-  seq_status_desc->write_bit_fields(336, 64, chain_ent.intr_pa);
+  seq_status_desc->write_bit_fields(208, 64, chain_ent.status_addr0);
+  seq_status_desc->write_bit_fields(272, 64, chain_ent.status_addr1);
+  seq_status_desc->write_bit_fields(336, 64, chain_ent.intr_addr);
   seq_status_desc->write_bit_fields(400, 32, chain_ent.intr_data);
   seq_status_desc->write_bit_fields(432, 16, chain_ent.status_len);
   seq_status_desc->write_bit_fields(448, 1, chain_ent.status_dma_en);

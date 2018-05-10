@@ -9,7 +9,7 @@
 
 
 struct s3_tbl1_k k;
-struct s3_tbl1_seq_comp_sgl_handler_d d;
+struct s3_tbl1_seq_comp_sgl_pdma_xfer_d d;
 struct phv_ p;
 
 /*
@@ -55,24 +55,35 @@ storage_seq_comp_sgl_pdma_xfer:
 
 all_sgl_plus_padding_case:
    
+   /*
+    * VERY IMPORTANT NOTE: mem2mem descriptors work in adjacent pair and must not
+    * cross flit boundary. P4+ code sets up PHV space which guarantees that a valid
+    * mem2mem pair always starts with an even numbered ID.
+    *
+    * For example: dma_m2m_2/dma_m2m_3 would be a valid pair, 
+    *              but dma_m2m_7/dma_m2m_8 would not necessarily be adjacent.
+    *
+    * When a phv2mem doorbell ring follows a mem2mem of a descriptor,
+    * the phv2mem must also be in the same flit as the mem2mem.
+    *
+    * Currently it is known that dma_m2m_0/dma_m2m_0 are in one flit, and
+    * all the subsequent mem2mem quads are in succeeding flits.
+    */
+ 
    // Can process the entire PDMA SGL here which holds 4 addr/len pairs,
    // plus padding
    
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC0,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST0,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC1),
+   COMP_SGL_DMA(dma_m2m_2, dma_m2m_3,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_4),
                 d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC1,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST1,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC2),
+   COMP_SGL_DMA(dma_m2m_4, dma_m2m_5,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_6),
                 d.addr1, d.len1, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC2,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST2,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC3),
+   COMP_SGL_DMA(dma_m2m_6, dma_m2m_7,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_8),
                 d.addr2, d.len2, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC3,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_DST3,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_QUAD_M2M_SRC4),
+   COMP_SGL_DMA(dma_m2m_8, dma_m2m_9,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
                 d.addr3, d.len3, possible_padding_apply)
 
 src_len_remain_check:
@@ -118,52 +129,49 @@ limited_sgl_case:
    nop
    bbeq         SEQ_KIVEC5_STATUS_DMA_EN, 0, possible_alt0_quad_sgl_case
    nop
-   bbeq         SEQ_KIVEC5_SGL_PAD_HASH_EN, 0, alt0_quad_sgl_case
+   bbeq         SEQ_KIVEC5_SGL_PAD_EN, 0, alt0_quad_sgl_case
    nop
    
-   // Can process only 1 addr/len pair, plus padding
+   // Can process only 2 addr/len pairs, plus padding
    
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_DOUBLE_M2M_SRC0,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_DOUBLE_M2M_DST0,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_DOUBLE_M2M_SRC1),
+   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
                 d.addr0, d.len0, possible_padding_apply)
+   COMP_SGL_DMA(dma_m2m_12, dma_m2m_13,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_14),
+                d.addr1, d.len1, possible_padding_apply)
    b            src_len_remain_check
    nop
 
 alt1_quad_sgl_case:
-   bbeq         SEQ_KIVEC5_SGL_PAD_HASH_EN, 0, all_sgl_plus_padding_case
+   bbeq         SEQ_KIVEC5_SGL_PAD_EN, 0, all_sgl_plus_padding_case
    nop
    
    // Can process 3 addr/len pairs, plus padding
    
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC0,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_DST0,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC1),
+   COMP_SGL_DMA(dma_m2m_6, dma_m2m_7,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_8),
                 d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC1,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_DST1,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC2),
+   COMP_SGL_DMA(dma_m2m_8, dma_m2m_9,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
                 d.addr1, d.len1, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC2,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_DST2,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT1_QUAD_M2M_SRC3),
+   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
                 d.addr2, d.len2, possible_padding_apply)
    b            src_len_remain_check
    nop
                 
 possible_alt0_quad_sgl_case:
-   bbeq         SEQ_KIVEC5_SGL_PAD_HASH_EN, 0, alt0_quad_sgl_case
+   bbeq         SEQ_KIVEC5_SGL_PAD_EN, 0, alt0_quad_sgl_case
    nop
 
    // Can process 2 addr/len pairs, plus padding
    
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_SRC0,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_DST0,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_SRC1),
+   COMP_SGL_DMA(dma_m2m_0, dma_m2m_1,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
                 d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_SRC1,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_DST1,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_TRIPLE_M2M_SRC2),
+   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
                 d.addr1, d.len1, possible_padding_apply)
    b            src_len_remain_check
    nop
@@ -172,17 +180,14 @@ alt0_quad_sgl_case:
 
    // Can process 3 addr/len pairs, plus padding
    
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC0,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_DST0,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC1),
+   COMP_SGL_DMA(dma_m2m_0, dma_m2m_1,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_2),
                 d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC1,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_DST1,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC2),
+   COMP_SGL_DMA(dma_m2m_2, dma_m2m_3,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
                 d.addr1, d.len1, possible_padding_apply)
-   COMP_SGL_DMA(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC2,
-                SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_DST2,
-                PHV_DMA_CMD_START_OFFSET(SEQ_DMA_COMP_CHAIN_SGL_PDMA_ALT0_QUAD_M2M_SRC3),
+   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
+                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
                 d.addr2, d.len2, possible_padding_apply)
    b            src_len_remain_check
    nop

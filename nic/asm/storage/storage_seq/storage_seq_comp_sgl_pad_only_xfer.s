@@ -12,7 +12,7 @@
 
 
 struct s3_tbl2_k k;
-struct s3_tbl2_seq_comp_sgl_pad_only_d d;
+struct s3_tbl2_seq_comp_sgl_pad_only_xfer_d d;
 struct phv_ p;
 
 /*
@@ -41,9 +41,9 @@ storage_seq_comp_sgl_pad_only_xfer:
     add         r_pad_dest, r_pad_dest, d.addr0
     
     DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, SEQ_KIVEC3_PAD_BUF_ADDR,
-                             r_pad_len, SEQ_DMA_COMP_CHAIN_SGL_PAD_XFER_M2M_SRC)
+                             r_pad_len, dma_m2m_10)
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_pad_dest,
-                                r_pad_len, SEQ_DMA_COMP_CHAIN_SGL_PAD_XFER_M2M_DST)
+                                      r_pad_len, dma_m2m_11)
 
 exit:
     CLEAR_TABLE2_e
