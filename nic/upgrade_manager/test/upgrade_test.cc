@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 #include "gtest/gtest.h"
-#include "upgrade.hpp"
+#include "nic/upgrade_manager/lib/upgrade.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi_utest.hpp"
 
 namespace {

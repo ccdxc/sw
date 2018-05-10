@@ -13,11 +13,11 @@ delphi_compile(
 cc_library(
     name = "upgrade_lib",
     srcs = [
-        "upgrade.cc",
-        "upgrade.hpp",
+        "lib/upgrade.cc",
+        "lib/upgrade.hpp",
     ],
     hdrs = [
-        "upgrade.hpp",
+        "lib/upgrade.hpp",
     ],
     deps = [
         "//nic/delphi/sdk",
@@ -29,7 +29,7 @@ cc_library(
 cc_binary(
     name = "upgrade",
     srcs = [
-        "upgrade_main.cc"
+        "src/upgrade_main.cc"
     ],
     deps = [
         ":upgrade_lib",
@@ -43,7 +43,7 @@ cc_binary(
 cc_test(
     name = "upgrade_test",
     srcs = [
-        "upgrade_test.cc",
+        "test/upgrade_test.cc",
     ],
     linkopts = [
         "-lpthread",
