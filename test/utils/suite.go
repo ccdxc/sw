@@ -18,12 +18,19 @@ import (
 
 	"github.com/pensando/sw/api"
 
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
+
+const clientName = "test-utils"
 
 // TestBedConfig is Config that can be changed with a json file and environment variables
 type TestBedConfig struct {
@@ -60,11 +67,14 @@ type TestUtils struct {
 	NameToIPMap   map[string]string
 	IPToNameMap   map[string]string
 
-	vIPClient *ssh.Client
-	sshConfig *ssh.ClientConfig
-	client    map[string]*ssh.Client
-	resolver  resolver.Interface
-	apiGwAddr string
+	vIPClient   *ssh.Client
+	sshConfig   *ssh.ClientConfig
+	client      map[string]*ssh.Client
+	resolver    resolver.Interface
+	apiGwAddr   string
+	tlsProvider rpckit.TLSProvider
+	APIClient   apiclient.Services
+	Logger      log.Logger
 }
 
 // New creates a new instane of TestUtils. It can be passed a different config (only specifying the fields to be overwritten)
@@ -161,13 +171,6 @@ func (tu *TestUtils) sshInit() {
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
-	servers := make([]string, 0)
-	for _, jj := range tu.VeniceNodeIPs {
-		servers = append(servers, fmt.Sprintf("%s:%s", tu.IPToNameMap[jj], globals.CMDClusterMgmtPort))
-	}
-	ginkgo.By(fmt.Sprintf("resolver servers: %+v ", servers))
-	tu.resolver = resolver.New(&resolver.Config{Name: "test-utils", Servers: servers})
-
 	tu.apiGwAddr = tu.ClusterVIP + ":" + globals.APIGwRESTPort
 
 }
@@ -182,18 +185,18 @@ func (tu *TestUtils) Init() {
 		tu.VeniceNodeIPs = append(tu.VeniceNodeIPs, ip.String())
 		ip[3]++
 	}
+	var err error
+	tu.tlsProvider, err = tlsproviders.NewDefaultCMDBasedProvider(tu.ClusterVIP+":9002", "e2eClusterTest")
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create TLS provider err: %v", err))
+	}
 
 	tu.sshInit()
 	ginkgo.By(fmt.Sprintf("VeniceNodeIPs: %+v ", tu.VeniceNodeIPs))
 	ginkgo.By(fmt.Sprintf("NameToIPMap: %+v", tu.NameToIPMap))
 	ginkgo.By(fmt.Sprintf("IPToNameMap: %+v", tu.IPToNameMap))
-
-	var err error
-	if tu.resolver == nil {
-		ginkgo.Fail(fmt.Sprintf("resolver is nil"))
-	}
-
 	ginkgo.By(fmt.Sprintf("apiGwAddr : %+v ", tu.apiGwAddr))
+
 	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.apiGwAddr)
 	clusterIf := cmdClient.Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
@@ -210,6 +213,31 @@ func (tu *TestUtils) Init() {
 		tu.QuorumNodes = append(tu.QuorumNodes, qn)
 	}
 	ginkgo.By(fmt.Sprintf("QuorumNodes: %+v ", tu.QuorumNodes))
+
+	servers := make([]string, 0)
+	for _, jj := range tu.QuorumNodes {
+		servers = append(servers, fmt.Sprintf("%s:%s", tu.NameToIPMap[jj], globals.CMDResolverPort))
+	}
+	ginkgo.By(fmt.Sprintf("Resolver servers: %+v ", servers))
+	tu.resolver = resolver.New(&resolver.Config{Name: clientName, Servers: servers, Options: []rpckit.Option{rpckit.WithTLSProvider(tu.tlsProvider)}})
+	if tu.resolver == nil {
+		ginkgo.Fail(fmt.Sprintf("resolver is nil"))
+	}
+
+	gomega.Eventually(func() bool {
+		instList := tu.resolver.Lookup(globals.APIServer)
+		if len(instList.Items) == 0 {
+			return false
+		}
+		return true
+	}, 5, 1).Should(gomega.BeTrue(), "Resolver should have APIServer entry")
+
+	// create api server client
+	tu.Logger = log.GetNewLogger(log.GetDefaultConfig(clientName))
+	tu.APIClient, err = apiclient.NewGrpcAPIClient(clientName, globals.APIServer, tu.Logger, rpckit.WithBalancer(balancer.New(tu.resolver)), rpckit.WithTLSProvider(tu.tlsProvider))
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create client to apiServer, err: %v", err))
+	}
 }
 
 // Close any open connections to nodes

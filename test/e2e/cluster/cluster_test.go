@@ -63,7 +63,6 @@ var _ = Describe("cluster tests", func() {
 			nodeIf := cmdClient.Node()
 			nodes, err = nodeIf.List(context.Background(), &api.ListWatchOptions{})
 		})
-		By(fmt.Sprintf("Got Nodes: %#v", nodes))
 		It("Node fields should be ok", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			numNaplesNodes := 0
