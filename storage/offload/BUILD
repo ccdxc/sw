@@ -20,7 +20,8 @@ cc_library(
     ],
     hdrs = [
         "include/pnso_api.h",
-        "include/pnso_wafl.h"
+        "include/pnso_wafl.h",
+        "src/sim/pnso_sim.h"
     ],
     alwayslink = 1
 )
@@ -32,8 +33,18 @@ cc_library(
 
 cc_binary(
     name = "pnso_offloader",
-    srcs = ["src/linux/uspace/offloader.c"],
-    deps = ["//storage/offload:spdk"],
-		copts = [ "-g" ],
+    srcs = [
+	"src/linux/uspace/offloader.c",
+	"src/linux/uspace/offloader.h",
+	"src/linux/uspace/io_initiator.c",
+	"src/linux/uspace/eff.c",
+	"src/linux/uspace/xor.c",
+	"src/linux/uspace/read.c",
+	],
+    deps = [
+	"//storage/offload:spdk",
+	"pnso_sim",
+	],
+    copts = [ "-g" ],
     linkopts = [ "-lpthread", "-lrt", "-ldl", "-lnuma", "-luuid"],
 )

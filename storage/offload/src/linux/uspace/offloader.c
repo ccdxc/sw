@@ -1,59 +1,53 @@
-#include "spdk/stdinc.h"
-
-#include "spdk/env.h"
-#include "spdk/event.h"
-#include "spdk/log.h"
-#include "spdk/io_channel.h"
+#include "offloader.h"
 
 static struct spdk_poller *test_end_poller;
-static bool g_app_stopped = false;
+static bool g_app_stopped;
 static int g_time_in_sec;
-static int g_reqs_eff_thread = 0;
-static int g_reqs_xor_thread = 0;
-static int g_reqs_read_thread = 0;
+static int g_reqs_eff_thread;
+static int g_reqs_xor_thread;
+static int g_reqs_read_thread;
 
-static int g_num_thread_types = 3;
-enum  thread_types {
-	THREAD_TYPE_STORAGE_EFFECIENCY,
-	THREAD_TYPE_XOR,
-	THREAD_TYPE_READ,
-};
-
-static void
+void
 offload_fn(void *arg1, void *arg2)
 {
 	uint32_t thread_num = spdk_env_get_current_core();
-	switch(thread_num % g_num_thread_types) {
+
+	switch (thread_num % THREAD_TYPE_MAX) {
+		case THREAD_TYPE_IO_INITIATOR: {
+			exec_io_initiator(arg1, arg2);
+		}
+		break;
 		case THREAD_TYPE_STORAGE_EFFECIENCY: {
+			exec_eff_thread(arg1, arg2);
 			g_reqs_eff_thread++;
-			if(g_app_stopped) {
-				printf("\nHandled %d offload requests in effeciency thread num %d", 
+			if (g_app_stopped) {
+				printf("\nHandled %d offload requests in effeciency thread num %d",
 					g_reqs_eff_thread, thread_num);
 			}
 		}
 		break;
 		case THREAD_TYPE_XOR: {
+			exec_xor_thread(arg1, arg2);
 			g_reqs_xor_thread++;
-			if(g_app_stopped) {
-				printf("\nHandled %d offload requests in xor thread num %d", 
+			if (g_app_stopped) {
+				printf("\nHandled %d offload requests in xor thread num %d",
 					g_reqs_xor_thread, thread_num);
 			}
 		}
 		break;
 		case THREAD_TYPE_READ: {
+			exec_read_thread(arg1, arg2);
 			g_reqs_read_thread++;
-			if(g_app_stopped) {
-				printf("\nHandled %d offload requests in read thread num %d", 
+			if (g_app_stopped) {
+				printf("\nHandled %d offload requests in read thread num %d",
 					g_reqs_read_thread, thread_num);
 			}
 		}
 		break;
-	} 
-	if(g_app_stopped) {
-		return;	
 	}
-	spdk_event_call(spdk_event_allocate(thread_num, offload_fn,
-					    NULL, NULL));
+	if (g_app_stopped) {
+		return;
+	}
 }
 
 static void
