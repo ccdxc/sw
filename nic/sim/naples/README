@@ -1,26 +1,11 @@
 
-1. create a directory and copy naples-release-v1.tgz (call it install_dir)
+1. vagrant up
 
-2. cd install_dir
-
-3. tar xvzf naples-release-v1.tgz
-
-   once naples-release-v1.tgz is unzipped, you will find a Vagrantfile
-   that is needed to VMs needed for simulating multiple data centers
-   (each VM is a datacenter/kingdom)
-
-   to create a VM needed to run NAPLES docker container. Note that
-   only bare minimum packages needed to run NAPLES docker container
-   are installed in this default Vagrantfile. Please feel free to add
-   other packages that you may need to run your (native) apps, if any.
-
-4. vagrant up
-
-   This will bringup the datacenters and establish the VM connectivity between
-   them. Additionally, each of the VMs will have NAPLES container running
-   already with all the components of Pensando NIC. This container represents
-   the NIC in the VPN gateway of that datacenter. Use 'vagrant ssh node1/node2'
-   to connect to VMs
+   This will bringup datacenters/kingdomws (as VMs) establish VM connectivity
+   between them. Additionally, each of the VMs will have NAPLES container
+   running already with all the components of Pensando NIC. This container
+   represents the NIC in the VPN gateway of that datacenter. Use 'vagrant ssh
+   node1/node2' to connect to VMs
 
 5. Posting sample policies
 
@@ -29,12 +14,8 @@
 
    $ newman run postman_collection.json -e postman_env.json
 
-6. If you have to spin the NAPLES container manually (in case something went wrong),
-   use 'docker start/stop naples-sim' inside the VMs.
-   To do a fresh re-install of the naples container, re-provision the vargant VM
+6. To do a fresh re-install of the naples container, re-provision the vargant VM
    using 'vagrant up --provision'
-
-
 
 By default, port 9007 of the docker container is exposed to the host (i.e., VM
 representing the datacenter) and hence REST APIs can be invoked using curl.
@@ -250,5 +231,3 @@ NOTE:
    in case flow keys are reused across sessions, data path state (e.g., NAT
    bindings etc.) will be reused in the data plane as well. If this is not
    intended, NAPLES container should be restarted.
-
-Testing the branch creation.
