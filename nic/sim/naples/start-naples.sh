@@ -25,6 +25,7 @@ fi
 # make the example configs visible to the VM outside
 if [ -d /naples/nic/data/examples ]; then
     mkdir -p /naples/data/examples/
+    cp /naples/nic/tools/bootstrap.sh /naples/data/
     cp /naples/nic/data/examples/* /naples/data/examples/
 fi
 

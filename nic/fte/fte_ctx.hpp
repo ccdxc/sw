@@ -127,15 +127,15 @@ typedef struct header_fld_s {
 } __PACK__ header_fld_t;
 
 #define HEADER_SET_FLD(obj, hdr, fld, val)          \
-    {                                               \
-        obj.valid_hdrs  |= fte::FTE_HEADER_ ## hdr; \
-        obj.valid_flds.fld = 1;                     \
-        obj.hdr.fld = val;                          \
+    {                                                   \
+        (obj).valid_hdrs  |= fte::FTE_HEADER_ ## hdr;   \
+        (obj).valid_flds.fld = 1;                       \
+        (obj).hdr.fld = val;                            \
     }
 
 #define HEADER_COPY_FLD(dst, src, hdr, fld)         \
-    if (src.valid_flds.fld) {                       \
-        HEADER_SET_FLD(dst, hdr, fld, src.hdr.fld); \
+    if ((src).valid_flds.fld) {                     \
+        HEADER_SET_FLD(dst, hdr, fld, (src).hdr.fld);   \
     }
 
 #define HEADER_FORMAT_FLD(out, obj, header, fld)                    \

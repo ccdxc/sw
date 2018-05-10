@@ -30,7 +30,7 @@ fi
 
 # prepare the release tar ball now
 echo "Preparing final image ..."
-tar cvzf $IMAGE_DIR/naples-release-$VER.tgz README Vagrantfile naples-docker-$VER.tgz bootstrap.sh postman_env.json SF-Kingdom1.postman_collection.json SF-Kingdom2.postman_collection.json
+tar cvzf $IMAGE_DIR/naples-release-$VER.tgz README Vagrantfile naples-docker-$VER.tgz 
 
 echo "Image ready in $IMAGE_DIR"
 exit 0

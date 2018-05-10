@@ -189,7 +189,7 @@ ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
 }
 
 static inline bool
-ip_addr_is_zero (ip_addr_t *addr)
+ip_addr_is_zero (const ip_addr_t *addr)
 {
     return (addr->af == IP_AF_IPV4) ? addr->addr.v4_addr == 0 :
         (addr->addr.v6_addr.addr64[0] & addr->addr.v6_addr.addr64[1]) == 0;
