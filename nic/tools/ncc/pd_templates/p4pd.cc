@@ -2232,6 +2232,13 @@ hash_${table}_unpack_action_data(uint32_t tableid,
 
     actiondata->actionid = actionid;
 
+//::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
+//::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
+//::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
+//::            if pddict['tables'][table]['is_wide_key']:
+//::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
+//::            #endif
+
     switch(actiondata->actionid) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -2240,12 +2247,6 @@ hash_${table}_unpack_action_data(uint32_t tableid,
 //::                    continue
 //::                #endif
         case ${tbl}_${actname}_ID:
-//::                mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
-//::                mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
-//::                mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
-//::                if pddict['tables'][table]['is_wide_key']:
-//::                    mat_key_bit_length = pddict['tables'][table]['wide_key_len']
-//::                #endif
             if (actiondata_len_before_key) {
                 copy_before_key = true;
                 packed_action_data = packed_actiondata_before_key;
@@ -2777,7 +2778,8 @@ static uint32_t
 ${table}_hwkey_unbuild(uint32_t tableid,
                        uint8_t *hwkey,
                        uint16_t hwkey_len,
-                       ${table}_swkey_t *swkey)
+                       ${table}_swkey_t *swkey,
+                       uint16_t axi_shift_bytes)
 {
     /*
      * [ P4Table   Match      Byte Location      ByteLocation ]
@@ -2890,7 +2892,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                            #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in destination */
                    hwkey,
-                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit} - (axi_shift_bytes * 8), /* source bit position */
                    ${width});
 //::                        #endfor
 //::                    #endif
@@ -2899,13 +2901,13 @@ ${table}_hwkey_unbuild(uint32_t tableid,
     /* Copying one bit from table-key into correct place */
     p4pd_copy_single_bit(
 //::                            if p4fldwidth <= 32:
-                   (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + (${kbit}/8)),
+                   (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
 //::                            else:
                    &(swkey->${p4fldname}[${kbit}/8]),
 //::                            #endif
                    (${p4fldwidth} - 1 - ${kbit}) % 8 /* start bit in destination */,
-                   hwkey + (${kmbit - mat_key_start_bit} >> 3),
-                   ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Source bit position */
+                   hwkey + (${kmbit - mat_key_start_bit} >> 3) - axi_shift_bytes,
+                   ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}) - (axi_shift_bytes * 8), /* Source bit position */
                    1 /* copy single bit */);
 //::                        #endfor
 //::                    #endif
@@ -2934,7 +2936,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                                #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in destination */
                    hwkey,
-                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit} - (axi_shift_bytes * 8), /* source bit position */
                    ${width});
 //::                            #endfor
 //::                        #endif
@@ -2943,13 +2945,13 @@ ${table}_hwkey_unbuild(uint32_t tableid,
     /* Copying one bit from table-key into correct place */
     p4pd_copy_single_bit(
 //::                                if p4fldwidth <= 32:
-                   (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + (${kbit}/8)),
+                   (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
 //::                                else:
                    &(swkey->${ustr}${p4fldname}[${kbit}/8]),
 //::                                #endif
                    (${p4fldwidth} - 1 - ${kbit}) % 8 /* start bit in destination */,
-                   hwkey + (${kmbit - mat_key_start_bit} >> 3),
-                   ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Source bit position */
+                   hwkey + (${kmbit - mat_key_start_bit} >> 3) - axi_shift_bytes,
+                   ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}) - (axi_shift_bytes * 8), /* Source bit position */
                    1 /* copy single bit */);
 //::                            #endfor
 //::                        #endif
@@ -2980,7 +2982,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                                #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in destination */
                    hwkey,
-                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit} - (axi_shift_bytes * 8), /* source bit position */
                    ${width});
 //::                            #endfor
 //::                        #endif
@@ -2989,13 +2991,13 @@ ${table}_hwkey_unbuild(uint32_t tableid,
     /* Copying one bit from table-key into correct place */
     p4pd_copy_single_bit(
 //::                                if p4fldwidth <= 32:
-                   (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + (${kbit}/8)),
+                   (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
 //::                                else:
                    &(swkey->${ustr}${p4fldname}[${kbit}/8]),
 //::                                #endif
                    (${p4fldwidth} - 1 - ${kbit}) % 8 /* start bit in destination */,
-                   hwkey + (${kmbit - mat_key_start_bit} >> 3),
-                   ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Source bit position */
+                   hwkey + (${kmbit - mat_key_start_bit} >> 3) - axi_shift_bytes,
+                   ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}) - (axi_shift_bytes * 8), /* Source bit position */
                    1 /* copy single bit */);
 //::                            #endfor
 //::                        #endif
@@ -3197,14 +3199,12 @@ ${table}_entry_read(uint32_t tableid,
     uint16_t actiondata_len_after_key, key_bit_len;
 
     (void)key_bit_len;
-
 //::            if pddict['tables'][table]['location'] == 'HBM':
     hal::pd::asicpd_hbm_table_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
 //::            else:
     hal::pd::asicpd_table_hw_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
     p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
-
     if (!hwentry_bit_len) {
         // Zero len!!
         return (P4PD_SUCCESS);
@@ -3212,17 +3212,19 @@ ${table}_entry_read(uint32_t tableid,
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
-
-    ${table}_hwkey_unbuild(tableid, hwentry,
-                           ${mat_key_bit_length}, swkey);
-
 //::            if pddict['tables'][table]['is_wide_key']:
 //::                mat_key_start_byte = (keylen - (keylen % 512)) / 8
 //::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
 //::            #endif
-//
+//::            spilled_adata_bits = 0
+//::            max_adata_bits_before_key = max_actionfld_len
+//::            if max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
+//::                spilled_adata_bits = max_actionfld_len % 16
+//::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits
+//::            #endif
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
+//::                max_adata_bits_before_key -= 8
 //::            else:
 //::                action_pc_added = False
 //::            #endif
@@ -3234,12 +3236,23 @@ ${table}_entry_read(uint32_t tableid,
     actiondata->actionid = 0;
     int adatabyte = 0;
 //::            #endif
+
+    uint16_t axi_shift_bytes = 0;
+    if ((${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)) < ${mat_key_start_bit}) {
+        // compute axi_shift if applied.
+        uint16_t delta_bits = (${mat_key_start_bit} - (${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)));
+        axi_shift_bytes = ((delta_bits >> 4) << 1);
+    }
+    // when axi_shift_bytes > 0, table entry is left shifted by positive number of bytes.
+    ${table}_hwkey_unbuild(tableid, hwentry, 
+                           ${mat_key_bit_length}, swkey, axi_shift_bytes);
+
     // Since actionpc is not in KM, when unbuilding key into p4fld,
     // pass pointer to hwentry byte stream after action-pc
     packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
-    actiondata_len_before_key = (${mat_key_start_byte} - adatabyte) * 8;
-    actiondata_len_after_key = ${max_actionfld_len} - actiondata_len_before_key;
+    actiondata_len_before_key = ${max_adata_bits_before_key};
+    actiondata_len_after_key = ${max_actionfld_len} - ${max_adata_bits_before_key};
     hash_${table}_unpack_action_data(tableid,
                                     actiondata->actionid,
                                     packed_actiondata_before_key,
@@ -3320,7 +3333,6 @@ ${table}_entry_decode(uint32_t tableid,
 {
     // Since actionpc is not in KM, when unbuilding key into p4fld,
     // pass pointer to hwentry byte stream after action-pc
-    ${table}_hwkey_unbuild(tableid, hwentry, hwentry_len, swkey);
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -3340,14 +3352,28 @@ ${table}_entry_decode(uint32_t tableid,
 //::                mat_key_start_byte = (keylen - (keylen % 512)) / 8
 //::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
 //::            #endif
+//::            spilled_adata_bits = 0
+//::            max_adata_bits_before_key = max_actionfld_len
+//::            if max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
+//::                spilled_adata_bits = max_actionfld_len % 16
+//::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits
+//::            #endif
+    uint16_t axi_shift_bytes = 0;
+    if ((${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)) < ${mat_key_start_bit}) {
+        // compute axi_shift if applied.
+        uint16_t delta_bits = (${mat_key_start_bit} - (${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)));
+        axi_shift_bytes = ((delta_bits >> 4) << 1);
+    }
+    // when axi_shift_bytes > 0, table entry is left shifted by positive number of bytes.
+    ${table}_hwkey_unbuild(tableid, hwentry, hwentry_len, swkey, axi_shift_bytes);
     uint8_t *packed_actiondata_before_key;
     uint8_t *packed_actiondata_after_key;
     uint16_t actiondata_len_before_key;
     uint16_t actiondata_len_after_key;
     packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
-    actiondata_len_before_key = (${mat_key_start_byte} - adatabyte) * 8; // bit len without actionpc
-    actiondata_len_after_key = ${max_actionfld_len} - actiondata_len_before_key;
+    actiondata_len_before_key = ${max_adata_bits_before_key}; // bit len without actionpc
+    actiondata_len_after_key = ${max_actionfld_len} - ${max_adata_bits_before_key};
     hash_${table}_unpack_action_data(tableid,
                                     actiondata->actionid,
                                     packed_actiondata_before_key,
