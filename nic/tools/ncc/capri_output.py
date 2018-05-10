@@ -4158,34 +4158,6 @@ def capri_p4pd_create_swig_makefile(be):
         of.write(content_str)
         of.close()
 
-
-def capri_p4pd_create_debug_cli_sh(be):
-
-    name = be.prog_name
-    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
-
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-
-    content_str = '#!/bin/bash\n'
-    content_str += 'SW_DIR=../../../..\n'
-    content_str += 'NIC_DIR=$SW_DIR/nic\n'
-    content_str += '\n'
-    content_str += '# dependent modules for python\n'
-    content_str += 'export PYTHONPATH=$PYTHONPATH:$NIC_DIR/gen/proto/hal\n'
-    content_str += '\n'
-    content_str += '# dependent shared libs\n'
-    content_str += 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/gen/x86_64/lib\n'
-    content_str += '\n'
-    content_str += '# start the debug CLI prompt\n'
-    content_str += 'python3 debugshell.py repl\n'
-
-    out_file = out_dir + 'debug_hal_cli.sh'
-    with open(out_file, "w") as of:
-        of.write(content_str)
-        of.close()
-    os.chmod(out_file, 0o755)
-
 def capri_p4pd_create_swig_custom_hdr(be):
 
     name = be.prog_name
@@ -4241,9 +4213,6 @@ void
 """ + api_prefix + """_register_list(std::string blockname,
                    std::string regname,
                    std::string filename);
-
-p4pd_error_t
-""" + api_prefix + """_cli_init(char* grpc_server_port);
 
 """
 
@@ -4325,7 +4294,7 @@ def capri_p4pd_create_swig_interface(be):
 %include "std_string.i"
 %{
     #include <thread>
-    #include "nic/gen/"""+ name + """/include/""" + hdr_name + """p4pd_swig.h"
+    #include "nic/gen/"""+ name + """/include/""" + hdr_name + """p4pd_cli_swig.h"
     #include""" +' "' + name + """_custom.h"
     extern int capri_init(void);
     char """     + prefix + """_tbl_names[P4"""               + caps_p4prog + """TBL_ID_TBLMAX][P4""" + caps_p4prog + """TBL_NAME_MAX_LEN];
@@ -4361,7 +4330,7 @@ typedef unsigned long long uint64_t;
 %free(uint16_t);
 %free(uint32_t);
 %free(uint64_t);
-%include"""+' "' + hdr_name + """p4pd_swig.h"
+%include"""+' "' + hdr_name + """p4pd_cli_swig.h"
 %include"""+' "' + name     + """_custom.h"
 """
     out_file = out_dir + '%s.i' % (name)

@@ -23,6 +23,7 @@
 # ${pddict['cli-name']} DEBUG CLI
 #
 
+import os
 import json
 import glob
 from   ${pddict['cli-name']} import *
@@ -999,7 +1000,13 @@ def populate_table(ctx):
         # endfor table
 
 def table_dump():
-    with open("../${api_prefix}/capri_p4_table_map.json") as data_file:
+    if "TBL_DIR" in os.environ:
+        tbl_dir = os.environ['TBL_DIR']
+    else:
+        print ("TBL_DIR env variable not set")
+        return
+
+    with open(tbl_dir + "/${pddict['cli-name']}/p4pd/capri_p4_table_map.json") as data_file:
         data = json.load(data_file)
         print("=================================================================================")
         print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format("Table","TblId", "Type", "In/Egress", "Stage", "StageTblID", "Size"))

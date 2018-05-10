@@ -30,14 +30,12 @@ from capri_output import capri_p4pd_create_bazel_build as capri_p4pd_create_baze
 from capri_output import capri_p4pd_create_swig_custom_hdr as capri_p4pd_create_swig_custom_hdr
 from capri_output import capri_p4pd_create_swig_interface as capri_p4pd_create_swig_interface
 from capri_output import capri_p4pd_create_swig_main as capri_p4pd_create_swig_main
-from capri_output import capri_p4pd_create_debug_cli_sh as capri_p4pd_create_debug_cli_sh
 
 tenjin_prefix = "//::"
 
-
 CHECK_INVALID_C_VARIABLE = re.compile(r'[^a-zA-Z0-9_]')
 
-def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, cli_name):
+def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, cli_name):
 
     # file-names in template_dir will be used
     # to generate corresponding .c or .h files and
@@ -48,11 +46,14 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
     pdoutfiles = []
     for f in files:
         if f.endswith('.py'):
-            output_dir = output_py_dir
-            if "debug_cli" in f:
-                genf = cli_name + '_debug_cli.py'
-            elif "p4pd" in f:
-                genf = cli_name + '_cli.py'
+            output_dir = cli_outputdir_map['default']
+            if "p4pd_cli_backend.py" == f:
+                genf = cli_name + '_backend.py'
+            elif "p4pd_cli_frontend.py" == f:
+                genf = cli_name + '_frontend.py'
+            elif "p4pd_cli_frontend_common.py" == f:
+                output_dir = cli_outputdir_map['common']
+                genf = 'cli_frontend.py'
             else:
                 genf = f
         else:
@@ -72,16 +73,19 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
                            os.path.join(output_dir, genf)))
     return pdoutfiles
 
-def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, gen_dir):
+def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, gen_dir):
 
     if output_h_dir and not os.path.exists(output_h_dir):
         os.mkdir(output_h_dir)
     if output_c_dir and not os.path.exists(output_c_dir):
         os.mkdir(output_c_dir)
-    if output_py_dir and not os.path.exists(output_py_dir):
-        os.mkdir(output_py_dir)
 
-    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, pd_dict['cli-name'])
+    if cli_outputdir_map is not None:
+        for output_dir in cli_outputdir_map.values():
+            if output_dir and not os.path.exists(output_dir):
+                os.mkdir(output_dir)
+
+    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, pd_dict['cli-name'])
     _prog_name = ''
     if prog_name != '':
         prog_name = prog_name + '_'
@@ -123,16 +127,19 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
                     of.close()
 
 
-def p4pd_generate_asm_code(pd_dict, template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name):
+def p4pd_generate_asm_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name):
 
     if output_h_dir and not os.path.exists(output_h_dir):
         os.mkdir(output_h_dir)
     if output_c_dir and not os.path.exists(output_c_dir):
         os.mkdir(output_c_dir)
-    if output_py_dir and not os.path.exists(output_py_dir):
-        os.mkdir(output_py_dir)
 
-    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, pd_dict['cli-name'])
+    if cli_outputdir_map is not None:
+        for output_dir in cli_outputdir_map.values():
+            if output_dir and not os.path.exists(output_dir):
+                os.mkdir(output_dir)
+
+    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, pd_dict['cli-name'])
     kd_json = {}
     for templatefile, outfile in templates_outfiles:
         outputfile_path = os.path.dirname(outfile)
@@ -1516,6 +1523,7 @@ class capri_p4pd:
         h_outputdir = gen_dir + '/%s/include' % (self.be.prog_name)
         c_outputdir = gen_dir + '/%s/src/' % (self.be.prog_name)
         py_outputdir = gen_dir + '/%s/cli/' % (self.be.prog_name)
+        cli_outputdir = gen_dir + '/common/cli/'
 
         if not os.path.exists(h_outputdir):
             os.makedirs(h_outputdir)
@@ -1523,6 +1531,8 @@ class capri_p4pd:
             os.makedirs(c_outputdir)
         if not os.path.exists(py_outputdir):
             os.makedirs(py_outputdir)
+        if not os.path.exists(cli_outputdir):
+            os.makedirs(cli_outputdir)
 
         cur_path = os.path.abspath(__file__)
         cur_path = os.path.split(cur_path)[0]
@@ -1533,7 +1543,11 @@ class capri_p4pd:
         else:
             prog_name = ''
 
-        p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir, py_outputdir, prog_name, gen_dir)
+        cli_outputdir_map = {}
+        cli_outputdir_map['default'] = py_outputdir
+        cli_outputdir_map['common']  = cli_outputdir
+
+        p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir, cli_outputdir_map, prog_name, gen_dir)
 
         outputdir = gen_dir + '/%s/asm_out' % (self.be.prog_name)
         if not os.path.exists(outputdir):
@@ -1546,7 +1560,6 @@ class capri_p4pd:
 
     def generate_swig(self):
         capri_p4pd_create_swig_interface(self.be)
-        capri_p4pd_create_debug_cli_sh(self.be)
         capri_p4pd_create_bazel_build(self.be)
         capri_p4pd_create_swig_custom_hdr(self.be)
 

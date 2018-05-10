@@ -59,18 +59,29 @@ using ::debug::RegisterResponseMsg;
 
 static std::shared_ptr<Channel>     channel;
 static std::unique_ptr<Debug::Stub> stub;
+static bool grpc_inited = 0;
 
-p4pd_error_t
-${api_prefix}_cli_init(char *grpc_server_port)
+static int
+p4pd_grpc_init(void)
 {
-    grpc_init();
+    if (grpc_inited != 0) {
+        return 0;
+    }
+
+    std::string grpc_server_port = "localhost:50054";
+
+    if (getenv("HAL_GRPC_PORT")) {
+        grpc_server_port = getenv("HAL_GRPC_PORT");
+    }
 
     channel =
         grpc::CreateChannel(grpc_server_port, grpc::InsecureChannelCredentials());
 
     stub    = ::debug::Debug::NewStub(channel);
 
-    return (P4PD_SUCCESS);
+    grpc_inited = 1;
+
+    return 0;
 }
 
 p4pd_error_t
@@ -84,6 +95,8 @@ ${api_prefix}_entry_write(uint32_t tableid,
     MemoryResponseMsg rsp_msg;
     ClientContext     context;
     MemoryRequest     *req  = NULL;
+
+    p4pd_grpc_init();
 
     req = req_msg.add_request();
 
@@ -175,6 +188,8 @@ ${api_prefix}_entry_read(uint32_t  tableid,
     MemoryResponseMsg *rsp_msg = (MemoryResponseMsg*)mem_rsp_msg;
     ClientContext     context;
     MemoryRequest     *req    = NULL;
+
+    p4pd_grpc_init();
 
     req = req_msg.add_request();
 

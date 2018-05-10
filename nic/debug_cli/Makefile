@@ -1,8 +1,14 @@
 # This Makefile is auto-generated. Changes will be overwritten!
-SW_DIR         =  ../../
-NIC_DIR        =  $(SW_DIR)/nic
 PGM            := iris
+SW_DIR         =  ../..
+NIC_DIR        =  $(SW_DIR)/nic
+
+ifeq ($(PGM),cli)
+CLI_DIR        =  $(NIC_DIR)/debug_cli/cli
+else
 CLI_DIR        =  $(NIC_DIR)/gen/$(PGM)/cli
+endif
+
 TOOLCHAIN_ROOT =  /tool/toolchain/aarch64
 TOOLCHAIN_VER  =  1.1
 TOOLCHAIN_PATH =  $(TOOLCHAIN_ROOT)-$(TOOLCHAIN_VER)
@@ -43,13 +49,19 @@ SHARED_LIBS    += -lhalproto
 default: $(PGM)
 
 swig:
+    ifeq ($(PGM),cli)
+	swig -c++ -python -o $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).i
+    else
 	swig -c++ -python -I$(NIC_DIR)/gen/$(PGM)/include -I$(NIC_DIR)/hal/pd -o $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).i
+    endif
 
 $(PGM): swig
-    ifeq ($(PGM),$(filter $(PGM),iris gft))
-		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/p4pd_debug.cc        $(ARCHIVES) $(SHARED_LIBS)
+    ifeq ($(PGM),cli)
+		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/debug_cli/src/cli.cc $(ARCHIVES) $(SHARED_LIBS)
+    else ifeq ($(PGM),$(filter $(PGM),iris gft))
+		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/p4pd_cli_backend.cc        $(ARCHIVES) $(SHARED_LIBS)
     else
-		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)
+		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4pd_cli_backend.cc $(ARCHIVES) $(SHARED_LIBS)
     endif
 
 clean:

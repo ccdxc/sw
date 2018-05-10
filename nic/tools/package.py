@@ -25,6 +25,10 @@ for input_file in files:
     f  = open(input_file, 'r')
 
     for line in f:
+        # skip comments or empty line
+        if line.startswith('#') or line == '\n':
+            continue
+
         items = line.split()
         directory = output_dir + '/' + items[1]
         if not os.path.exists(directory):

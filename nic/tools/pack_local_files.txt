@@ -1,10 +1,26 @@
-nic/conf                                                         /nic/conf/
-bazel-bin/nic/hal/hal                                            /nic/bin/
-bazel-bin/nic/linkmgr/linkmgr                                    /nic/bin/
-bazel-bin/nic/hal/test/hal_test                                  /nic/bin/
-nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
-nic/gen/iris/cli/iris_debug_cli.py                               /nic/cli/
-nic/gen/iris/cli/iris.py                                         /nic/cli/
-nic/gen/iris/cli/debugshell.py                                   /nic/cli/
-nic/gen/iris/cli/_iris.so                                        /nic/cli/
-bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so            /nic/lib/
+nic/conf                                                          /nic/conf/
+
+bazel-bin/nic/hal/hal                                             /nic/bin/
+bazel-bin/nic/linkmgr/linkmgr                                     /nic/bin/
+bazel-bin/nic/hal/test/hal_test                                   /nic/bin/
+nic/sdk/bazel-bin/examples/pal-app/hal_access                     /nic/bin/
+
+bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so             /nic/lib/
+
+# CLI
+nic/gen/common/cli/cli_frontend.py                                /nic/cli/
+nic/debug_cli/cli/cli_main.py                                     /nic/cli/
+nic/debug_cli/cli/cli.py                                          /nic/cli/
+nic/debug_cli/cli/_cli.so                                         /nic/cli/
+nic/gen/iris/cli/iris_frontend.py                                 /nic/cli/
+nic/gen/iris/cli/iris_backend.py                                  /nic/cli/
+nic/gen/iris/cli/iris.py                                          /nic/cli/
+nic/gen/iris/cli/_iris.so                                         /nic/cli/
+nic/gen/common_txdma_actions/cli/common_txdma_actions_frontend.py /nic/cli/
+nic/gen/common_txdma_actions/cli/common_txdma_actions_backend.py  /nic/cli/
+nic/gen/common_txdma_actions/cli/common_txdma_actions.py          /nic/cli/
+nic/gen/common_txdma_actions/cli/_common_txdma_actions.so         /nic/cli/
+nic/gen/common_rxdma_actions/cli/common_rxdma_actions_frontend.py /nic/cli/
+nic/gen/common_rxdma_actions/cli/common_rxdma_actions_backend.py  /nic/cli/
+nic/gen/common_rxdma_actions/cli/common_rxdma_actions.py          /nic/cli/
+nic/gen/common_rxdma_actions/cli/_common_rxdma_actions.so         /nic/cli/

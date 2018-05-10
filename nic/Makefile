@@ -69,9 +69,15 @@ hal-rtl: p4 platform capsim-master
 
 swig-cli-gft-clean:
 	make -C debug_cli clean PGM=gft
+	make -C debug_cli clean PGM=common_txdma_actions
+	make -C debug_cli clean PGM=common_rxdma_actions
+	make -C debug_cli clean PGM=cli
 
 swig-cli-gft: swig-cli-gft-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=gft
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_txdma_actions
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_rxdma_actions
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=cli
 
 gft: platform capsim-master go-proto
 	$(MAKE) capmodel
@@ -129,15 +135,21 @@ upgrade-manager:
 
 swig-cli-clean:
 	make -C debug_cli clean
+	make -C debug_cli clean PGM=common_txdma_actions
+	make -C debug_cli clean PGM=common_rxdma_actions
+	make -C debug_cli clean PGM=cli
 
 swig-cli: swig-cli-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_txdma_actions
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_rxdma_actions
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=cli
 
 package-size-check: package
     ifeq ($(ARCH),aarch64)
 	$(eval FILE_NAME = nic.tar)
-	# max file size is 136MB
-	$(eval MAX_FILE_SIZE = 142606336)
+	# max file size is 143MB
+	$(eval MAX_FILE_SIZE = 149946368)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
 
 	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
@@ -221,6 +233,7 @@ asm:
 gen-clean:
 	@rm -rf gen/x86_64
 	@rm -rf gen/aarch64
+	@rm -rf gen/common
 	$(MAKE) clean-svc
 	$(MAKE) clean-csrlite
 
