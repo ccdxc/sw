@@ -277,6 +277,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes128_gcm_record_pkt.testspec
+        rtl     : True
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -436,6 +437,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             bypass_barco : 1
             maxflows : 1
@@ -523,6 +525,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_COMPLETE
         spec    : uplink_to_uplink_clean_retx_complete.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             num_pkts : 2
             bypass_barco : 1
@@ -535,6 +538,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_COMPLETE_ONE_SHOT
         spec    : uplink_to_uplink_clean_retx_complete_one_shot.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             num_pkts : 2
             bypass_barco : 1
@@ -547,6 +551,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL
         spec    : uplink_to_uplink_clean_retx_partial.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             num_pkts : 2
             bypass_barco : 1
@@ -559,6 +564,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL_SEND_ACK
         spec    : uplink_to_uplink_clean_retx_partial_send_ack.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             num_pkts : 2
             bypass_barco : 1
@@ -790,6 +796,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA1_GENERATE
         iterate :
@@ -801,6 +808,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA1_VERIFY
         iterate :
@@ -812,6 +820,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA224_GENERATE
         iterate :
@@ -823,6 +832,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA224_VERIFY
         iterate :
@@ -834,6 +844,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA256_GENERATE
         iterate :
@@ -845,6 +856,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA256_VERIFY
         iterate :
@@ -856,6 +868,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA384_GENERATE
         iterate :
@@ -867,6 +880,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA384_VERIFY
         iterate :
@@ -878,6 +892,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA512_GENERATE
         iterate :
@@ -889,6 +904,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_HMAC_SHA512_VERIFY
         iterate :
