@@ -1,0 +1,27 @@
+---
+targets:
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+rebase: true
+logfiles:
+  - /sw/nic/nic_sanity_logs.tar.gz
+
+warmd:
+  target: [ "/sw/nic/sim/warmd/setup.sh" ]
+  create:
+    image: build-9
+    count: 2
+
+    resources:
+      cpus: 4
+      memory: 8
+
+  provision:
+    username: vm
+    password: vm
+    # additional vars to pass to ansible.
+    vars:

@@ -1,0 +1,23 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: scp naples tarball
+    copy:
+      src: /sw/nic/obj/images/naples-release-v1.tgz
+      dest: /var/naples/naples-release-v1.tgz
+      owner: vm
+      group: vm
+      mode: 0644
+
+  - name: extract naples image
+    shell: cd /var/naples/ && tar xvzf naples-release-v1.tgz
+
+  - name: init naples environment
+    shell: /var/naples/stop-naples-docker.sh
+
+  - name: start naples
+    shell: /var/naples/start-naples-docker.sh
+
+  - name: bootstrap naples
+    shell: /var/naples/bootstrap.sh
