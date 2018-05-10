@@ -71,7 +71,7 @@ func (na *NetAgent) FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEn
 	key := objectKey(meta, typeMeta)
 	ipSecEncryptSA, ok := na.ipSecSAEncryptDB[key]
 	if !ok {
-		return nil, fmt.Errorf("IPSec encrypt SA not found %v", ipSecEncryptSA)
+		return nil, fmt.Errorf("IPSec encrypt SA not found %v", meta.Name)
 	}
 
 	return ipSecEncryptSA, nil

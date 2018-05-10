@@ -51,6 +51,7 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 		ipSecPolicyDB:    make(map[string]*netproto.IPSecPolicy),
 		ipSecSAEncryptDB: make(map[string]*netproto.IPSecSAEncrypt),
 		ipSecSADecryptDB: make(map[string]*netproto.IPSecSADecrypt),
+		ipSecPolicyLUT:   make(map[string]*IPSecRuleRef),
 	}
 
 	c := config.Agent{

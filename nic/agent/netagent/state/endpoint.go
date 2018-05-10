@@ -220,8 +220,6 @@ func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 		return ErrEndpointNotFound
 	}
 
-	fmt.Println("BALERION IN EP: ", ep)
-
 	// call the datapath
 	if ep.Status.NodeUUID == na.nodeUUID {
 		err = na.datapath.DeleteLocalEndpoint(ep)

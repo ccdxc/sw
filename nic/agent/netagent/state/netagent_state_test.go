@@ -236,7 +236,7 @@ func (dp *mockDatapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.N
 }
 
 // CreateIPSecPolicy creates an IPSec Policy in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+func (dp *mockDatapath) CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*IPSecRuleRef) error {
 	return nil
 }
 
@@ -2566,7 +2566,7 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "updatedDecryptSA",
+			Name:      "testIPSecSADecrypt",
 		},
 		Spec: netproto.IPSecSADecryptSpec{
 			Protocol:           "ESP",
@@ -2581,6 +2581,28 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 		},
 	}
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
+	AssertOk(t, err, "Error creating IPSec SA Decrypt rule")
+
+	updatedSADecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "updatedSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:           "ESP",
+			AuthAlgo:           "AES_GCM",
+			AuthKey:            "someRandomString",
+			DecryptAlgo:        "AES_GCM_128",
+			DecryptionKey:      "someRandomKey",
+			RekeyDecryptAlgo:   "DES3",
+			RekeyDecryptionKey: "someRandomString",
+			LocalGwIP:          "10.0.0.1",
+			RemoteGwIP:         "192.168.1.1",
+		},
+	}
+	err = ag.CreateIPSecSADecrypt(&updatedSADecrypt)
 	AssertOk(t, err, "Error creating IPSec SA Decrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{
@@ -2618,10 +2640,10 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 
 	// create nat policy
 	err = ag.CreateIPSecPolicy(&ipSecPolicy)
-	AssertOk(t, err, "Error creating nat policy")
+	AssertOk(t, err, "Error creating IPsec policy")
 	natPool, err := ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
 	AssertOk(t, err, "Tenant was not found in DB")
-	Assert(t, natPool.Name == "testIPSecPolicy", "IPSec Pool names did not match", natPool)
+	Assert(t, natPool.Name == "testIPSecPolicy", "IPSec policy names did not match", natPool)
 
 	ipSpec := netproto.IPSecPolicySpec{
 		Rules: []netproto.IPSecRule{
@@ -2635,6 +2657,7 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 
 	err = ag.UpdateIPSecPolicy(&ipSecPolicy)
 	AssertOk(t, err, "Error updating nat policy")
+
 }
 
 func TestIPSecSAEncryptCreateDelete(t *testing.T) {

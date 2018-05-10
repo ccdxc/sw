@@ -33,6 +33,44 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	if err != nil {
 		return err
 	}
+	// validate SA Policies
+	for _, r := range ipSec.Spec.Rules {
+		r.ID, err = na.store.GetNextID(IPSecRuleID)
+		oMeta := api.ObjectMeta{
+			Tenant:    ipSec.Tenant,
+			Namespace: ipSec.Namespace,
+			Name:      r.SAName,
+		}
+		switch r.SAType {
+		case "ENCRYPT":
+			sa, err := na.FindIPSecSAEncrypt(oMeta)
+			if err != nil {
+				log.Errorf("could not find SA Encrypt rule. Rule: {%v}. Err: %v", r, err)
+				return err
+			}
+			key := fmt.Sprintf("ENCRYPT|%s", sa.Name)
+			saRef := &IPSecRuleRef{
+				NamespaceID: ns.Status.NamespaceID,
+				RuleID:      sa.Status.IPSecSAEncryptID,
+			}
+			na.ipSecPolicyLUT[key] = saRef
+		case "DECRYPT":
+			sa, err := na.FindIPSecSADecrypt(oMeta)
+			if err != nil {
+				log.Errorf("could not find SA Decrypt rule. Rule: {%v}. Err: %v", r, err)
+				return err
+			}
+			key := fmt.Sprintf("DECRYPT|%s", sa.Name)
+			saRef := &IPSecRuleRef{
+				NamespaceID: ns.Status.NamespaceID,
+				RuleID:      sa.Status.IPSecSADecryptID,
+			}
+			na.ipSecPolicyLUT[key] = saRef
+		default:
+			log.Errorf("Invalid IPSec Policy rule type")
+			return errors.New("invalid IPSec Policy rule type")
+		}
+	}
 
 	ipSec.Status.IPSecPolicyID, err = na.store.GetNextID(IPSecPolicyID)
 
@@ -42,7 +80,7 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateIPSecPolicy(ipSec, ns)
+	err = na.datapath.CreateIPSecPolicy(ipSec, ns, na.ipSecPolicyLUT)
 	if err != nil {
 		log.Errorf("Error creating ipsec policy in datapath. IPSecPolicy {%+v}. Err: %v", ipSec, err)
 		return err
