@@ -97,7 +97,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Starting netagent ..."
-$NIC_DIR/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath hal &
+$NIC_DIR/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath mock &
 PID=`ps -eaf | grep netagent | grep -v grep | awk '{print $2}'`
 if [[ "" ==  "$PID" ]]; then
     echo "Failed to start netagent"
