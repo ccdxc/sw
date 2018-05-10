@@ -327,6 +327,8 @@ dp_mem_t *target_sq_va;
 dp_mem_t *target_rq_va;
 uint64_t target_rq_va_base;
 uint16_t target_cq_cindex = 0;
+
+uint32_t roce_cq_mem_reg_size, roce_sq_mem_reg_size, roce_rq_mem_reg_size;
 }  // anonymous namespace
 
 dp_mem_t *initiator_rcv_buf_va = NULL;
@@ -348,20 +350,29 @@ void WriteBackBufKeysIncr() {
 }
 
 void AllocRdmaMem() {
+  roce_cq_mem_reg_size = NUM_TO_VAL(kRoceNumEntries) * NUM_TO_VAL(kRoceCQEntrySize);
+  roce_sq_mem_reg_size = NUM_TO_VAL(kRoceNumEntries) * NUM_TO_VAL(kRoceEntrySize);
+  roce_rq_mem_reg_size = NUM_TO_VAL(kRoceNumEntries) * NUM_TO_VAL(kRoceEntrySize);
   initiator_cq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
-                                 NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+                                 NUM_TO_VAL(kRoceCQEntrySize), DP_MEM_ALIGN_PAGE);
+  printf("Init CQ PA %lx %d \n", initiator_cq_va->pa(), roce_cq_mem_reg_size);
   initiator_sq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
                                  NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+  printf("Init SQ PA %lx %d \n", initiator_sq_va->pa(), roce_sq_mem_reg_size);
   initiator_rq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
                                  NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+  printf("Init RQ PA %lx %d \n", initiator_rq_va->pa(), roce_rq_mem_reg_size);
   initiator_rq_va_base = initiator_rq_va->pa();
 
   target_cq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
-                              NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+                              NUM_TO_VAL(kRoceCQEntrySize), DP_MEM_ALIGN_PAGE);
+  printf("Tgt CQ PA %lx \n", target_cq_va->pa());
   target_sq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
                               NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+  printf("Tgt SQ PA %lx \n", target_sq_va->pa());
   target_rq_va = new dp_mem_t(NUM_TO_VAL(kRoceNumEntries),
                               NUM_TO_VAL(kRoceEntrySize), DP_MEM_ALIGN_PAGE);
+  printf("Tgt RQ PA %lx \n", target_rq_va->pa());
   target_rq_va_base = target_rq_va->pa();
   printf("Init RQ PA %lx; Tgt RQ PA %lx \n", initiator_rq_va_base, target_rq_va_base);
 
@@ -399,8 +410,8 @@ void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
   assert(status.ok());
 }
 
-void RdmaMemRegister(dp_mem_t *mem, uint32_t lkey, uint32_t rkey, bool remote) {
-  RdmaMemRegister(mem->va(), mem->pa(), 4096, lkey, rkey, remote);
+void RdmaMemRegister(dp_mem_t *mem, uint32_t len, uint32_t lkey, uint32_t rkey, bool remote) {
+  RdmaMemRegister(mem->va(), mem->pa(), len, lkey, rkey, remote);
 }
 
 void CreateCQ(uint32_t cq_num, uint32_t lkey) {
@@ -442,18 +453,18 @@ void CreateCQ(uint32_t cq_num, uint32_t lkey) {
 }
 
 void CreateInitiatorCQ() {
-  RdmaMemRegister(initiator_cq_va, kInitiatorCQLKey, 0, false);
+  RdmaMemRegister(initiator_cq_va, roce_cq_mem_reg_size, kInitiatorCQLKey, 0, false);
   CreateCQ(0, kInitiatorCQLKey);
 }
 
 void CreateTargetCQ() {
-  RdmaMemRegister(target_cq_va, kTargetCQLKey, 0, false);
+  RdmaMemRegister(target_cq_va, roce_cq_mem_reg_size, kTargetCQLKey, 0, false);
   CreateCQ(1, kTargetCQLKey);
 }
 
 void CreateInitiatorQP() {
-  RdmaMemRegister(initiator_sq_va, kInitiatorSQLKey, 0, false);
-  RdmaMemRegister(initiator_rq_va, kInitiatorRQLKey, 0, false);
+  RdmaMemRegister(initiator_sq_va, roce_sq_mem_reg_size, kInitiatorSQLKey, 0, false);
+  RdmaMemRegister(initiator_rq_va, roce_rq_mem_reg_size, kInitiatorRQLKey, 0, false);
   rdma::RdmaQpRequestMsg req;
   rdma::RdmaQpResponseMsg resp;
   rdma::RdmaQpSpec *rq = req.add_request();
@@ -480,9 +491,9 @@ void CreateInitiatorQP() {
 }
 
 void CreateTargetQP() {
-  RdmaMemRegister(target_sq_va, kTargetSQLKey, 0, false);
-  RdmaMemRegister(target_rq_va, kTargetRQLKey, 0, false);
-  RdmaMemRegister(initiator_rq_va, kInitiatorRQLKey, 0, false);
+  RdmaMemRegister(target_sq_va, roce_sq_mem_reg_size, kTargetSQLKey, 0, false);
+  RdmaMemRegister(target_rq_va, roce_rq_mem_reg_size, kTargetRQLKey, 0, false);
+  RdmaMemRegister(initiator_rq_va, roce_rq_mem_reg_size, kInitiatorRQLKey, 0, false);
   rdma::RdmaQpRequestMsg req;
   rdma::RdmaQpResponseMsg resp;
   rdma::RdmaQpSpec *rq = req.add_request();

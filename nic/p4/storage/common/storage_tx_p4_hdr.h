@@ -36,10 +36,10 @@ header_type q_state_t {
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
     ssd_q_num	: 16;	// Number of entries in the SSD priority queue
     ssd_q_size	: 16;	// Size of each queue state entry in SSD priority queue
-    ssd_ci_addr	: 34;	// Address of the consumer index in the SSD qstate
+    ssd_ci_addr	: 64;	// Address of the consumer index in the SSD qstate
     desc1_next_pc_valid: 1;
     desc1_next_pc: 28;	// desc bytes 64-127 next program's PC
-    pad		: 43;	// Align to 64 bytes
+    pad		: 13;	// Align to 64 bytes
   }
 }
 
@@ -550,6 +550,13 @@ header_type storage_kivec5_t {
   }
 }
 
+// kivec6: header union with to_stage_1  (128 bits max)
+header_type storage_kivec6_t {
+  fields {
+    ssd_ci_addr	: 64;	// Address of the consumer index in the SSD qstate
+  }
+}
+
 #define Q_STATE_COPY_INTRINSIC(q_state)			\
   modify_field(q_state.pc_offset, pc_offset);		\
   modify_field(q_state.rsvd, rsvd);			\
@@ -724,6 +731,8 @@ header_type storage_kivec5_t {
   modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
   modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
 
+#define STORAGE_KIVEC6_USE(scratch, kivec)				\
+  modify_field(scratch.ssd_ci_addr, kivec.ssd_ci_addr);			\
 
 // Macros for ASM param addresses (hardcoded in P4)
 #define q_state_push_start		0x80000000

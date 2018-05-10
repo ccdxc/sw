@@ -129,6 +129,9 @@
 #define STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH\
     k.storage_kivec5_next_db_action_barco_push
 
+#define STORAGE_KIVEC6_SSD_CI_ADDR              \
+    k.storage_kivec6_ssd_ci_addr
+
 #define STAGE0_KIVEC_LIF                        \
     k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
 #define STAGE0_KIVEC_QTYPE                      \
@@ -515,6 +518,18 @@ struct capri_dma_cmd_mem2mem_t {
    phvwr    p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];             \
 
 // _start and _end can resolve to literals larger than 9 bits.
+// _addr is a 64-bit value in k/d-vector.
+#define DMA_PHV2MEM_SETUP_ADDR_VEC(_start, _end, _addr, _dma_cmd_X)     \
+   phvwr     p._dma_cmd_X##_dma_cmd_addr, _addr;                        \
+   phvwrpair p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63],            \
+             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM ;           \
+   phvwri    p._dma_cmd_X##_dma_cmd_phv_end_addr,                       \
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _end));               \
+   phvwri    p._dma_cmd_X##_dma_cmd_phv_start_addr,                     \
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) +             \
+                                      sizeof(p._start) - 1);            \
+   
+// _start and _end can resolve to literals larger than 9 bits.
 // _addr is a 64-bit value.
 #define DMA_PHV2MEM_SETUP_ADDR64(_start, _end, _addr, _dma_cmd_X)       \
    phvwrpair p._dma_cmd_X##_dma_cmd_addr, _addr,                        \
@@ -526,7 +541,7 @@ struct capri_dma_cmd_mem2mem_t {
                                       sizeof(p._start) - 1);            \
    phvwr     p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];            \
    
-// _start and _end can resolve to literals larger than 9 bits
+// _start and _end can resolve to literals larger than 9 bits 
 // _addr is less than 64-bit in size
 #define DMA_PHV2MEM_SETUP_ADDR34(_start, _end, _addr, _dma_cmd_X)       \
    phvwrpair p._dma_cmd_X##_dma_cmd_addr[33:0], _addr,                  \

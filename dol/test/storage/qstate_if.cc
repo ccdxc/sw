@@ -74,7 +74,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 340, 34, ssd_bm_addr);
   utils::write_bit_fields(q_state, 374, 16, ssd_q_num);
   utils::write_bit_fields(q_state, 390, 16, ssd_q_size);
-  utils::write_bit_fields(q_state, 406, 34, ssd_ci_addr);
+  utils::write_bit_fields(q_state, 406, 64, ssd_ci_addr);
 
   if (desc1_pgm_bin) {
     if (hal_if::get_pgm_base_addr(desc1_pgm_bin, &next_pc) < 0) {
@@ -82,8 +82,8 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
       return -1;
     }
     next_pc = next_pc >> 6;
-    utils::write_bit_fields(q_state, 440, 1, 1);    // desc1_next_pc valid
-    utils::write_bit_fields(q_state, 441, 28, next_pc);
+    utils::write_bit_fields(q_state, 470, 1, 1);    // desc1_next_pc valid
+    utils::write_bit_fields(q_state, 471, 28, next_pc);
   }
 
   //utils::dump(q_state);

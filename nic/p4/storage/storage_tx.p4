@@ -94,6 +94,8 @@ metadata storage_kivec4_t storage_kivec4;
 metadata storage_kivec1_t storage_kivec1;
 @pragma pa_header_union ingress common_global
 metadata storage_kivec5_t storage_kivec5;
+@pragma pa_header_union ingress to_stage_1
+metadata storage_kivec6_t storage_kivec6;
 @pragma pa_header_union ingress to_stage_2
 metadata storage_kivec2_t storage_kivec2;
 @pragma pa_header_union ingress to_stage_2
@@ -301,6 +303,9 @@ metadata storage_kivec4_t storage_kivec4_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec5_t storage_kivec5_scratch;
+
+@pragma scratch_metadata
+metadata storage_kivec6_t storage_kivec6_scratch;
 
 @pragma scratch_metadata
 metadata ssd_cmds_t ssd_cmds_scratch;
@@ -719,6 +724,7 @@ action nvme_be_cq_handler(cspec, rsvd, sq_head, sq_id, cid, phase, status) {
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
   STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
+  STORAGE_KIVEC6_USE(storage_kivec6_scratch, storage_kivec6)
 
   // Carry forward NVME status information in the PHV 
   NVME_STATUS_COPY(nvme_sta)
@@ -742,7 +748,7 @@ action nvme_be_cq_handler(cspec, rsvd, sq_head, sq_id, cid, phase, status) {
 
   // Setup the DMA command to push the sq_head to the c_ndx of the SSD
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2, 
-                           storage_kivec1.device_addr,
+                           storage_kivec6_scratch.ssd_ci_addr,
                            PHV_FIELD_OFFSET(ssd_ci.c_ndx),
                            PHV_FIELD_OFFSET(ssd_ci.c_ndx),
                            0, 0, 0, 0)
