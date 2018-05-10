@@ -35,6 +35,9 @@ typedef struct rule_match_s {
     dllist_ctxt_t         dst_addr_list;
     dllist_ctxt_t         src_sg_list;
     dllist_ctxt_t         dst_sg_list;
+    dllist_ctxt_t         src_mac_addr_list;
+    dllist_ctxt_t         dst_mac_addr_list;
+    uint16_t              ethertype;
     IPProtocol            proto;
     rule_match_app_t      app;
 } __PACK__ rule_match_t;
@@ -52,6 +55,9 @@ struct ipv4_tuple {
     uint8_t   proto;
     uint32_t  ip_src;
     uint32_t  ip_dst;
+    uint64_t  mac_src;
+    uint64_t  mac_dst;
+    uint16_t  ethertype;
     uint32_t  port_src;
     uint32_t  port_dst;
     uint32_t  src_sg;
@@ -59,7 +65,7 @@ struct ipv4_tuple {
 };
 
 enum {
-    PROTO = 0, IP_SRC, IP_DST, PORT_SRC, PORT_DST, SRC_SG, DST_SG,
+    PROTO = 0, IP_SRC, IP_DST, MAC_SRC, MAC_DST, ETHERTYPE, PORT_SRC, PORT_DST, SRC_SG, DST_SG,
     NUM_FIELDS
 };
 

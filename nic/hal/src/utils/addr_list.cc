@@ -332,4 +332,110 @@ addr_offset (ip_addr_t *addr, addr_list_elem_t *addr_list_elem,
     return HAL_RET_NOT_SUPPORTED;
 }
 
+// Mac address list methods
+static inline mac_addr_list_elem_t *
+mac_addr_list_elem_alloc ()
+{
+    return ((mac_addr_list_elem_t *)g_hal_state->
+             mac_addr_list_elem_slab()->alloc());
+}
+
+static inline void
+mac_addr_list_elem_free (mac_addr_list_elem_t *addr)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_MACADDR_LIST_ELEM, addr);
+}
+
+static inline void
+mac_addr_list_elem_init (mac_addr_list_elem_t *addr)
+{
+    dllist_reset(&addr->list_ctxt);
+}
+
+static inline void
+mac_addr_list_elem_uninit (mac_addr_list_elem_t *addr)
+{
+}
+
+static inline mac_addr_list_elem_t *
+mac_addr_list_elem_alloc_init ()
+{
+    mac_addr_list_elem_t *addr;
+
+    if ((addr = mac_addr_list_elem_alloc()) ==  NULL)
+        return NULL;
+
+    mac_addr_list_elem_init(addr);
+    return addr;
+}
+
+static inline void
+mac_addr_list_elem_uninit_free (mac_addr_list_elem_t *addr)
+{
+    if (addr) {
+        mac_addr_list_elem_uninit(addr);
+        mac_addr_list_elem_free(addr);
+    }
+}
+
+static inline void
+mac_addr_list_elem_add (dllist_ctxt_t *head, mac_addr_list_elem_t *addr)
+{
+    dllist_add_tail(head, &addr->list_ctxt);
+}
+
+static inline void
+mac_addr_list_elem_del (mac_addr_list_elem_t *addr)
+{
+    dllist_del(&addr->list_ctxt);
+}
+
+void
+mac_addr_list_cleanup (dllist_ctxt_t *head)
+{
+    dllist_ctxt_t       *curr, *next;
+    mac_addr_list_elem_t    *addr;
+
+    dllist_for_each_safe(curr, next, head) {
+        addr = dllist_entry(curr, mac_addr_list_elem_t, list_ctxt);
+        mac_addr_list_elem_del(addr);
+        mac_addr_list_elem_free(addr);
+    }
+}
+
+hal_ret_t
+mac_addr_elem_add (uint64_t mac_addr, dllist_ctxt_t *head)
+{
+    mac_addr_list_elem_t *elem;
+    if ((elem = mac_addr_list_elem_alloc_init()) == NULL) {
+        return HAL_RET_OOM;
+    }
+    
+    elem->addr = mac_addr;
+    mac_addr_list_elem_add(head, elem);
+    
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+mac_addr_elem_delete (uint64_t mac_addr, dllist_ctxt_t *head)
+{
+    dllist_ctxt_t        *curr, *next;
+    mac_addr_list_elem_t *elem;
+    bool                 found = false; 
+
+    dllist_for_each_safe(curr, next, head) {
+        elem = dllist_entry(curr, mac_addr_list_elem_t, list_ctxt);
+        if (elem->addr == mac_addr) {
+            mac_addr_list_elem_del(elem);
+            mac_addr_list_elem_free(elem);
+            found = true;
+        }
+    }
+    if (!found)
+        return HAL_RET_ENTRY_NOT_FOUND;
+
+    return HAL_RET_OK;
+}
+
 } // namespace hal

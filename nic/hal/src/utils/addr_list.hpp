@@ -48,6 +48,11 @@ typedef struct addr_list_elem_s {
     ip_range_t       ip_range;     // IP address range
 } __PACK__ addr_list_elem_t;
 
+typedef struct mac_addr_list_elem_s {
+    uint64_t         addr;      // mac address
+    dllist_ctxt_t    list_ctxt; // list ctxt to link to other nodes
+} __PACK__ mac_addr_list_elem_t;
+
 //-----------------------------------------------------------------------------
 // Function prototypes
 //-----------------------------------------------------------------------------
@@ -63,6 +68,10 @@ hal_ret_t addr_list_elem_spec_src_addr_build(dllist_ctxt_t *head,
                                              types::RuleMatch *spec);
 hal_ret_t addr_list_elem_spec_dst_addr_build(dllist_ctxt_t *head,
                                              types::RuleMatch *spec);
+hal_ret_t mac_addr_elem_add(uint64_t mac_addr, dllist_ctxt_t *head);
+hal_ret_t mac_addr_elem_delete(uint64_t mac_addr, dllist_ctxt_t *head);
+void mac_addr_list_cleanup(dllist_ctxt_t *head);
+
 } // namespace hal
 
 #endif  // __ADDR_LIST_HPP__

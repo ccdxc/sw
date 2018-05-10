@@ -153,6 +153,8 @@ public:
         return TO_SLAB_PTR(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM]); }
     slab *port_list_elem_slab(void) const {
         return TO_SLAB_PTR(slabs_[HAL_SLAB_PORT_LIST_ELEM]); }
+    slab *mac_addr_list_elem_slab(void) const {
+        return TO_SLAB_PTR(slabs_[HAL_SLAB_MACADDR_LIST_ELEM]); }
 
     slab *nat_pool_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_POOL]); }
     slab *nat_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_RULE]); }
@@ -518,6 +520,8 @@ public:
         return cfg_db_->v6addr_list_elem_slab(); }
     slab *port_list_elem_slab(void) const {
         return cfg_db_->port_list_elem_slab(); }
+    slab *mac_addr_list_elem_slab(void) const {
+        return cfg_db_->mac_addr_list_elem_slab(); }
 
     // get APIs for nexthop related state
     slab *nexthop_slab(void) const { return cfg_db_->nexthop_slab(); }

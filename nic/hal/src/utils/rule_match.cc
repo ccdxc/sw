@@ -17,6 +17,9 @@ acl::acl_config_t ip_acl_config_glbl = {
 
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_src),
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, ip_dst),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_EXACT, ipv4_tuple, mac_src),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_EXACT, ipv4_tuple, mac_dst),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_EXACT, ipv4_tuple, ethertype),
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_src),
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_dst),
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, src_sg),
@@ -47,6 +50,8 @@ rule_match_init (rule_match_t *match)
     dllist_reset(&match->dst_addr_list);
     dllist_reset(&match->src_sg_list);
     dllist_reset(&match->dst_sg_list);
+    dllist_reset(&match->src_mac_addr_list);
+    dllist_reset(&match->dst_mac_addr_list);
     rule_match_app_init(&match->app);
 }
 
@@ -67,6 +72,12 @@ rule_match_proto_cleanup (rule_match_t *match)
 }
 
 static inline void
+rule_match_ethertype_cleanup (rule_match_t *match)
+{
+   match->ethertype = 0;
+}
+
+static inline void
 rule_match_sg_cleanup (rule_match_t *match)
 {
    return;
@@ -77,6 +88,8 @@ rule_match_addr_cleanup (rule_match_t *match)
 {
    addr_list_cleanup(&match->src_addr_list);
    addr_list_cleanup(&match->dst_addr_list);
+   mac_addr_list_cleanup(&match->src_mac_addr_list);
+   mac_addr_list_cleanup(&match->dst_mac_addr_list);
 }
 
 void
@@ -85,6 +98,7 @@ rule_match_cleanup (rule_match_t *match)
     rule_match_addr_cleanup(match);
     rule_match_sg_cleanup(match);
     rule_match_proto_cleanup(match);
+    rule_match_ethertype_cleanup(match);
     rule_match_app_cleanup(match);
 }
 
@@ -249,6 +263,42 @@ rule_match_src_addr_spec_extract (const types::RuleMatch& spec,
 }
 
 static hal_ret_t
+rule_match_dst_mac_addr_spec_extract (const types::RuleMatch& spec,
+                                      rule_match_t *match)
+{
+    hal_ret_t ret;
+
+    for (int i = 0; i < spec.dst_mac_address_size(); i++) {
+        if ((ret = mac_addr_elem_add(spec.dst_mac_address(i), 
+                                     &match->dst_addr_list)) != HAL_RET_OK)
+            return ret;
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+rule_match_src_mac_addr_spec_extract (const types::RuleMatch& spec,
+                                      rule_match_t *match)
+{
+    hal_ret_t ret;
+
+    for (int i = 0; i < spec.src_mac_address_size(); i++) {
+        if ((ret = mac_addr_elem_add(spec.src_mac_address(i), 
+                                     &match->src_addr_list)) != HAL_RET_OK)
+            return ret;
+    }
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+rule_match_ethertype_spec_extract (const types::RuleMatch&  spec,
+                                   rule_match_t *match)
+{
+    match->ethertype = spec.ether_type();
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
 rule_match_addr_spec_extract (const types::RuleMatch& spec,
                               rule_match_t *match)
 {
@@ -258,6 +308,12 @@ rule_match_addr_spec_extract (const types::RuleMatch& spec,
         return ret;
 
     if ((ret = rule_match_dst_addr_spec_extract(spec, match)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = rule_match_src_mac_addr_spec_extract(spec, match)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = rule_match_dst_mac_addr_spec_extract(spec, match)) != HAL_RET_OK)
         return ret;
 
     return HAL_RET_OK;
@@ -277,6 +333,9 @@ rule_match_spec_extract (const types::RuleMatch& spec,
         goto end;
 
     if ((ret = rule_match_proto_spec_extract(spec, match)) != HAL_RET_OK)
+        goto end;
+
+    if ((ret = rule_match_ethertype_spec_extract(spec, match)) != HAL_RET_OK)
         goto end;
 
     if ((ret = rule_match_app_spec_extract(spec, match)) != HAL_RET_OK)

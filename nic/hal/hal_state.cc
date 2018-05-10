@@ -320,6 +320,12 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PORT_LIST_ELEM] != NULL), false);
 
+    slabs_[HAL_SLAB_MACADDR_LIST_ELEM] =
+        slab::factory("mac-addr-list-elem", HAL_SLAB_MACADDR_LIST_ELEM,
+                      sizeof(hal::mac_addr_list_elem_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_MACADDR_LIST_ELEM] != NULL), false);
+
     slabs_[HAL_SLAB_NAT_POOL] =
         slab::factory("natpool", HAL_SLAB_NAT_POOL,
                       sizeof(hal::nat_pool_t), 8,
@@ -1792,6 +1798,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_PORT_LIST_ELEM:
         g_hal_state->port_list_elem_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_MACADDR_LIST_ELEM:
+        g_hal_state->mac_addr_list_elem_slab()->free(elem);
         break;
 
     case HAL_SLAB_NAT_CFG_RULE:

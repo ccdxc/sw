@@ -202,7 +202,7 @@ nat_acl_ctx_name (vrf_id_t vrf_id)
 {
     thread_local static char name[ACL_NAMESIZE];
 
-    std::snprintf(name, sizeof(name), "nwsec-ipv4-rules:%lu", vrf_id);
+    std::snprintf(name, sizeof(name), "nat-ipv4-rules:%lu", vrf_id);
     return name;
 }
 

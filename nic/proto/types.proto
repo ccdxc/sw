@@ -354,19 +354,22 @@ message RuleMatch {
   // cannot have repeated of oneof hence this intermediate message
   message AppMatchInfo {
     oneof App {
-      L4PortAppInfo   port_info               = 1;     // Matching port based apps
-      ICMPAppInfo     icmp_info               = 2;     // Matching icmp based apps
-      ICMPv6AppInfo   icmpv6_info             = 3;     // Matching icmpv6 based apps 
-      RPCAppInfo      rpc_info                = 4;     // Matching rpc based apps
-      MSRPCAppInfo    msrpc_info              = 5;    // Matching msrpc based apps
-      ESPInfo         esp_info                = 6;    // Matching esp based apps
+      L4PortAppInfo   port_info               = 1;   // Matching port based apps
+      ICMPAppInfo     icmp_info               = 2;   // Matching icmp based apps
+      ICMPv6AppInfo   icmpv6_info             = 3;   // Matching icmpv6 based apps 
+      RPCAppInfo      rpc_info                = 4;   // Matching rpc based apps
+      MSRPCAppInfo    msrpc_info              = 5;   // Matching msrpc based apps
+      ESPInfo         esp_info                = 6;   // Matching esp based apps
     }
   }
 
-  repeated types.IPAddressObj   src_address = 1;     // Match on the src address range
-  repeated uint32               src_sg      = 2;     // Match on the src security group
-  repeated types.IPAddressObj   dst_address = 3;     // Match on the dst address range
-  repeated uint32               dst_sg      = 4;     // Match on the dst sg
-  types.IPProtocol              protocol    = 5;     // Match protocol
-  repeated AppMatchInfo         app_match   = 6;     // Repeated apps that the rules are matching
+  repeated types.IPAddressObj   src_address     = 1;     // Match on the src address range
+  repeated fixed64              src_mac_address = 2;     // Match on the src mac addresses
+  repeated uint32               src_sg          = 3;     // Match on the src security group
+  repeated types.IPAddressObj   dst_address     = 4;     // Match on the dst address range
+  repeated fixed64              dst_mac_address = 5;     // Match on the dst mac addresses
+  repeated uint32               dst_sg          = 6;     // Match on the dst sg
+  types.IPProtocol              protocol        = 7;     // Match protocol
+  uint32                        ether_type      = 8;     // Match Ethertype
+  repeated AppMatchInfo         app_match       = 9;     // Repeated apps that the rules are matching
 }
