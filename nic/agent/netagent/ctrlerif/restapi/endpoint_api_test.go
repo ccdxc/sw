@@ -37,7 +37,7 @@ func TestEndpointList(t *testing.T) {
 
 func TestEndpointPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var endpointList []*netproto.Endpoint
 
@@ -77,7 +77,7 @@ func TestEndpointPost(t *testing.T) {
 
 func TestEndpointUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var endpointList []*netproto.Endpoint
 
 	var actualEndpointSpec netproto.EndpointSpec
@@ -117,7 +117,7 @@ func TestEndpointUpdate(t *testing.T) {
 
 func TestEndpointDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var endpointList []*netproto.Endpoint
 

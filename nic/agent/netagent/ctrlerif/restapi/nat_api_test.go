@@ -37,7 +37,7 @@ func TestNatBindingList(t *testing.T) {
 
 func TestNatBindingPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var natbindingList []*netproto.NatBinding
 
@@ -72,7 +72,7 @@ func TestNatBindingPost(t *testing.T) {
 
 func TestNatBindingUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var natbindingList []*netproto.NatBinding
 
 	var actualNatBindingSpec netproto.NatBindingSpec
@@ -106,7 +106,7 @@ func TestNatBindingUpdate(t *testing.T) {
 
 func TestNatBindingDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var natbindingList []*netproto.NatBinding
 
@@ -163,7 +163,7 @@ func TestNatPolicyList(t *testing.T) {
 
 func TestNatPolicyPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var natpolicyList []*netproto.NatPolicy
 
@@ -208,7 +208,7 @@ func TestNatPolicyPost(t *testing.T) {
 
 func TestNatPolicyUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var natpolicyList []*netproto.NatPolicy
 
 	var actualNatPolicySpec netproto.NatPolicySpec
@@ -245,7 +245,7 @@ func TestNatPolicyUpdate(t *testing.T) {
 
 func TestNatPolicyDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var natpolicyList []*netproto.NatPolicy
 
@@ -312,7 +312,7 @@ func TestNatPoolList(t *testing.T) {
 
 func TestNatPoolPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var natpoolList []*netproto.NatPool
 
@@ -346,7 +346,7 @@ func TestNatPoolPost(t *testing.T) {
 
 func TestNatPoolUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var natpoolList []*netproto.NatPool
 
 	var actualNatPoolSpec netproto.NatPoolSpec
@@ -379,7 +379,7 @@ func TestNatPoolUpdate(t *testing.T) {
 
 func TestNatPoolDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var natpoolList []*netproto.NatPool
 

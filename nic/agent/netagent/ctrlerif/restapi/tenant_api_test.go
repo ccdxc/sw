@@ -37,7 +37,7 @@ func TestTenantList(t *testing.T) {
 
 func TestTenantPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var tenantList []*netproto.Tenant
 
@@ -69,7 +69,7 @@ func TestTenantPost(t *testing.T) {
 
 func TestTenantDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var tenantList []*netproto.Tenant
 
@@ -101,7 +101,7 @@ func TestTenantDelete(t *testing.T) {
 
 func TestTenantUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var tenantList []*netproto.Tenant
 
 	var actualTenantSpec netproto.TenantSpec

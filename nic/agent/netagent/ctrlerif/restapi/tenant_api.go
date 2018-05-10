@@ -8,6 +8,7 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (s *RestServer) listTenantHandler(r *http.Request) (interface{}, error) {
 }
 
 func (s *RestServer) postTenantHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +44,22 @@ func (s *RestServer) postTenantHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.CreateTenant(&o)
+	err = s.agent.CreateTenant(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s", r.RequestURI, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteTenantHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +67,22 @@ func (s *RestServer) deleteTenantHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteTenant(&o)
+	err = s.agent.DeleteTenant(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putTenantHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,6 +90,16 @@ func (s *RestServer) putTenantHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateTenant(&o)
+	err = s.agent.UpdateTenant(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

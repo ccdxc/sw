@@ -37,7 +37,7 @@ func TestIPSecPolicyList(t *testing.T) {
 
 func TestIPSecPolicyPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var ipsecpolicyList []*netproto.IPSecPolicy
 
@@ -100,7 +100,7 @@ func TestIPSecPolicyPost(t *testing.T) {
 
 func TestIPSecPolicyUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ipsecpolicyList []*netproto.IPSecPolicy
 
 	var actualIPSecPolicySpec netproto.IPSecPolicySpec
@@ -137,7 +137,7 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 
 func TestIPSecPolicyDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var ipsecpolicyList []*netproto.IPSecPolicy
 
@@ -222,7 +222,7 @@ func TestIPSecSADecryptList(t *testing.T) {
 
 func TestIPSecSADecryptPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var ipsecsadecryptList []*netproto.IPSecSADecrypt
 
@@ -264,7 +264,7 @@ func TestIPSecSADecryptPost(t *testing.T) {
 
 func TestIPSecSADecryptUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ipsecsadecryptList []*netproto.IPSecSADecrypt
 
 	var actualIPSecSADecryptSpec netproto.IPSecSADecryptSpec
@@ -297,7 +297,7 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 
 func TestIPSecSADecryptDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var ipsecsadecryptList []*netproto.IPSecSADecrypt
 
@@ -359,7 +359,7 @@ func TestIPSecSAEncryptList(t *testing.T) {
 
 func TestIPSecSAEncryptPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var ipsecsaencryptList []*netproto.IPSecSAEncrypt
 
@@ -399,7 +399,7 @@ func TestIPSecSAEncryptPost(t *testing.T) {
 
 func TestIPSecSAEncryptUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ipsecsaencryptList []*netproto.IPSecSAEncrypt
 
 	var actualIPSecSAEncryptSpec netproto.IPSecSAEncryptSpec
@@ -432,7 +432,7 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 
 func TestIPSecSAEncryptDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var ipsecsaencryptList []*netproto.IPSecSAEncrypt
 

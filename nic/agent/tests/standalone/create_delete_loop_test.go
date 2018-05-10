@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
@@ -401,7 +402,7 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 
 // creates three namespaces
 func createNS(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 	nsURL := fmt.Sprintf("http://%s/api/namespaces/", baseURL)
 
 	ns1 := netproto.Namespace{
@@ -446,7 +447,7 @@ func createNS(baseURL string) error {
 
 // deletes three namespaces
 func deleteNS(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 	ns1 := netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
@@ -492,7 +493,7 @@ func deleteNS(baseURL string) error {
 
 // creates three networks
 func createNetwork(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	nwURL := fmt.Sprintf("http://%s/api/networks/", baseURL)
 
@@ -559,7 +560,7 @@ func createNetwork(baseURL string) error {
 
 // deletes three networks
 func deleteNetwork(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	nw1 := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -614,7 +615,7 @@ func deleteNetwork(baseURL string) error {
 
 // creates three endpoints
 func createEndpoint(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	epURL := fmt.Sprintf("http://%s/api/endpoints/", baseURL)
 
@@ -693,7 +694,7 @@ func createEndpoint(baseURL string) error {
 
 // deletes three endpoints
 func deleteEndpoint(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	ep1 := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -747,7 +748,7 @@ func deleteEndpoint(baseURL string) error {
 
 // creates three routes
 func createRoute(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	rtURL := fmt.Sprintf("http://%s/api/routes/", baseURL)
 
@@ -814,7 +815,7 @@ func createRoute(baseURL string) error {
 
 // deletes three routes
 func deleteRoute(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	rt1 := netproto.Route{
 		TypeMeta: api.TypeMeta{Kind: "Route"},
@@ -869,7 +870,7 @@ func deleteRoute(baseURL string) error {
 
 // creates nat pool
 func createNatPool(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	natPoolURL := fmt.Sprintf("http://%s/api/natpools/", baseURL)
 
@@ -895,7 +896,7 @@ func createNatPool(baseURL string) error {
 
 // deletes a nat pool
 func deleteNatPool(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	np1 := netproto.NatPool{
 		TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -918,7 +919,7 @@ func deleteNatPool(baseURL string) error {
 
 // creates nat binding
 func createNatBinding(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	natBindingURL := fmt.Sprintf("http://%s/api/natbindings/", baseURL)
 
@@ -945,7 +946,7 @@ func createNatBinding(baseURL string) error {
 
 // deletes a nat binding
 func deleteNatBinding(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	nb1 := netproto.NatBinding{
 		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
@@ -968,7 +969,7 @@ func deleteNatBinding(baseURL string) error {
 
 // creates nat policy
 func createNatPolicy(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	natPolicyURL := fmt.Sprintf("http://%s/api/natpolicies/", baseURL)
 
@@ -999,7 +1000,7 @@ func createNatPolicy(baseURL string) error {
 
 // deletes a nat policy
 func deleteNatPolicy(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	np1 := netproto.NatPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},

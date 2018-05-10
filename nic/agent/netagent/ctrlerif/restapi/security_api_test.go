@@ -37,7 +37,7 @@ func TestSecurityGroupList(t *testing.T) {
 
 func TestSecurityGroupPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var securitygroupList []*netproto.SecurityGroup
 
@@ -78,7 +78,7 @@ func TestSecurityGroupPost(t *testing.T) {
 
 func TestSecurityGroupUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var securitygroupList []*netproto.SecurityGroup
 
 	var actualSecurityGroupSpec netproto.SecurityGroupSpec
@@ -119,7 +119,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 
 func TestSecurityGroupDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var securitygroupList []*netproto.SecurityGroup
 

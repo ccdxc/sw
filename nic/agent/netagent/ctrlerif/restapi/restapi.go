@@ -24,6 +24,13 @@ type RestServer struct {
 	httpServer *http.Server     // HTTP server
 }
 
+// Response captures the HTTP Response sent by Agent REST Server
+type Response struct {
+	StatusCode int    `json:"status-code"`
+	Error      string `json:"error"`
+	SelfLink   string `json:"self-link"`
+}
+
 type routeAddFunc func(*mux.Router, *RestServer)
 
 // NewRestServer creates a new HTTP server servicg REST api

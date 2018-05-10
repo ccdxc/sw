@@ -37,7 +37,7 @@ func TestNamespaceList(t *testing.T) {
 
 func TestNamespacePost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var namespaceList []*netproto.Namespace
 
@@ -69,7 +69,7 @@ func TestNamespacePost(t *testing.T) {
 
 func TestNamespaceDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var namespaceList []*netproto.Namespace
 
@@ -102,7 +102,7 @@ func TestNamespaceDelete(t *testing.T) {
 
 func TestNamespaceUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var namespaceList []*netproto.Namespace
 
 	var actualNamespaceSpec netproto.NamespaceSpec

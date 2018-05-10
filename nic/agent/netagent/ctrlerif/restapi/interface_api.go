@@ -8,6 +8,7 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (s *RestServer) listInterfaceHandler(r *http.Request) (interface{}, error) 
 }
 
 func (s *RestServer) postInterfaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +44,22 @@ func (s *RestServer) postInterfaceHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
-	return nil, s.agent.CreateInterface(&o)
+	err = s.agent.CreateInterface(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteInterfaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +67,22 @@ func (s *RestServer) deleteInterfaceHandler(r *http.Request) (interface{}, error
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteInterface(&o)
+	err = s.agent.DeleteInterface(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putInterfaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,6 +90,16 @@ func (s *RestServer) putInterfaceHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateInterface(&o)
+	err = s.agent.UpdateInterface(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

@@ -8,6 +8,7 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (s *RestServer) listNatBindingHandler(r *http.Request) (interface{}, error)
 }
 
 func (s *RestServer) postNatBindingHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +44,22 @@ func (s *RestServer) postNatBindingHandler(r *http.Request) (interface{}, error)
 		return nil, err
 	}
 
-	return nil, s.agent.CreateNatBinding(&o)
+	err = s.agent.CreateNatBinding(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putNatBindingHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +67,22 @@ func (s *RestServer) putNatBindingHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateNatBinding(&o)
+	err = s.agent.UpdateNatBinding(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteNatBindingHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,8 +90,18 @@ func (s *RestServer) deleteNatBindingHandler(r *http.Request) (interface{}, erro
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteNatBinding(&o)
+	err = s.agent.DeleteNatBinding(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 // addNatPolicyAPIRoutes adds NatPolicy routes
@@ -88,6 +122,7 @@ func (s *RestServer) listNatPolicyHandler(r *http.Request) (interface{}, error) 
 }
 
 func (s *RestServer) postNatPolicyHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -95,11 +130,22 @@ func (s *RestServer) postNatPolicyHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
-	return nil, s.agent.CreateNatPolicy(&o)
+	err = s.agent.CreateNatPolicy(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putNatPolicyHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -107,11 +153,22 @@ func (s *RestServer) putNatPolicyHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateNatPolicy(&o)
+	err = s.agent.UpdateNatPolicy(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteNatPolicyHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -119,8 +176,18 @@ func (s *RestServer) deleteNatPolicyHandler(r *http.Request) (interface{}, error
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteNatPolicy(&o)
+	err = s.agent.DeleteNatPolicy(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 // addNatPoolAPIRoutes adds NatPool routes
@@ -141,6 +208,7 @@ func (s *RestServer) listNatPoolHandler(r *http.Request) (interface{}, error) {
 }
 
 func (s *RestServer) postNatPoolHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -148,11 +216,22 @@ func (s *RestServer) postNatPoolHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.CreateNatPool(&o)
+	err = s.agent.CreateNatPool(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putNatPoolHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -160,11 +239,22 @@ func (s *RestServer) putNatPoolHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateNatPool(&o)
+	err = s.agent.UpdateNatPool(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteNatPoolHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -172,6 +262,16 @@ func (s *RestServer) deleteNatPoolHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteNatPool(&o)
+	err = s.agent.DeleteNatPool(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

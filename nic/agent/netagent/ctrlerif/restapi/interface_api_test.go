@@ -37,7 +37,7 @@ func TestInterfaceList(t *testing.T) {
 
 func TestInterfacePost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var interfaceList []*netproto.Interface
 
@@ -75,7 +75,7 @@ func TestInterfacePost(t *testing.T) {
 
 func TestInterfaceDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var interfaceList []*netproto.Interface
 
@@ -112,7 +112,7 @@ func TestInterfaceDelete(t *testing.T) {
 
 func TestInterfaceUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var interfaceList []*netproto.Interface
 
 	var actualInterfaceSpec netproto.InterfaceSpec

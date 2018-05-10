@@ -37,7 +37,7 @@ func TestRouteList(t *testing.T) {
 
 func TestRoutePost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var routeList []*netproto.Route
 
@@ -73,7 +73,7 @@ func TestRoutePost(t *testing.T) {
 
 func TestRouteDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var routeList []*netproto.Route
 
@@ -110,7 +110,7 @@ func TestRouteDelete(t *testing.T) {
 
 func TestRouteUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var routeList []*netproto.Route
 
 	var actualRouteSpec netproto.RouteSpec

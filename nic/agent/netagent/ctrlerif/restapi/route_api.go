@@ -8,6 +8,7 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (s *RestServer) listRouteHandler(r *http.Request) (interface{}, error) {
 }
 
 func (s *RestServer) postRouteHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +44,22 @@ func (s *RestServer) postRouteHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.CreateRoute(&o)
+	err = s.agent.CreateRoute(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteRouteHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +67,22 @@ func (s *RestServer) deleteRouteHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteRoute(&o)
+	err = s.agent.DeleteRoute(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putRouteHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,6 +90,16 @@ func (s *RestServer) putRouteHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateRoute(&o)
+	err = s.agent.UpdateRoute(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

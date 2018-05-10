@@ -54,7 +54,7 @@ import (
                 {{else if strEq . "post"}}
                     func Test{{title $crudObject}}{{title .}}(t *testing.T){
                         t.Parallel()
-                        var resp error
+                        var resp Response
                         var ok bool
                         var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
                         {{if strEq $crudObject "Network"}}
@@ -328,7 +328,7 @@ import (
                     {{else if strEq . "put"}}
                         func Test{{title $crudObject}}Update(t *testing.T){
                             t.Parallel()
-                            var resp error
+                            var resp Response
                             var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
                             {{if strEq $crudObject "Network"}}
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
@@ -725,7 +725,7 @@ import (
                 {{else if strEq . "delete"}}
                     func Test{{title $crudObject}}{{title .}}(t *testing.T){
                         t.Parallel()
-                        var resp error
+                        var resp Response
                         var found bool
                         var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
                         {{if strEq $crudObject "Network"}}

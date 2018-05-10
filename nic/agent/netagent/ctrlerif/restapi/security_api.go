@@ -8,6 +8,7 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (s *RestServer) listSecurityGroupHandler(r *http.Request) (interface{}, err
 }
 
 func (s *RestServer) postSecurityGroupHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +44,22 @@ func (s *RestServer) postSecurityGroupHandler(r *http.Request) (interface{}, err
 		return nil, err
 	}
 
-	return nil, s.agent.CreateSecurityGroup(&o)
+	err = s.agent.CreateSecurityGroup(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putSecurityGroupHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +67,22 @@ func (s *RestServer) putSecurityGroupHandler(r *http.Request) (interface{}, erro
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateSecurityGroup(&o)
+	err = s.agent.UpdateSecurityGroup(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteSecurityGroupHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,6 +90,16 @@ func (s *RestServer) deleteSecurityGroupHandler(r *http.Request) (interface{}, e
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteSecurityGroup(&o)
+	err = s.agent.DeleteSecurityGroup(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

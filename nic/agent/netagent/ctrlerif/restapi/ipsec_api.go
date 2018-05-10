@@ -8,6 +8,7 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (s *RestServer) listIPSecPolicyHandler(r *http.Request) (interface{}, error
 }
 
 func (s *RestServer) postIPSecPolicyHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +44,22 @@ func (s *RestServer) postIPSecPolicyHandler(r *http.Request) (interface{}, error
 		return nil, err
 	}
 
-	return nil, s.agent.CreateIPSecPolicy(&o)
+	err = s.agent.CreateIPSecPolicy(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putIPSecPolicyHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +67,22 @@ func (s *RestServer) putIPSecPolicyHandler(r *http.Request) (interface{}, error)
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateIPSecPolicy(&o)
+	err = s.agent.UpdateIPSecPolicy(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteIPSecPolicyHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,8 +90,18 @@ func (s *RestServer) deleteIPSecPolicyHandler(r *http.Request) (interface{}, err
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteIPSecPolicy(&o)
+	err = s.agent.DeleteIPSecPolicy(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 // addIPSecSADecryptAPIRoutes adds IPSecSADecrypt routes
@@ -88,6 +122,7 @@ func (s *RestServer) listIPSecSADecryptHandler(r *http.Request) (interface{}, er
 }
 
 func (s *RestServer) postIPSecSADecryptHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecSADecrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -95,11 +130,22 @@ func (s *RestServer) postIPSecSADecryptHandler(r *http.Request) (interface{}, er
 		return nil, err
 	}
 
-	return nil, s.agent.CreateIPSecSADecrypt(&o)
+	err = s.agent.CreateIPSecSADecrypt(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putIPSecSADecryptHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecSADecrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -107,11 +153,22 @@ func (s *RestServer) putIPSecSADecryptHandler(r *http.Request) (interface{}, err
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateIPSecSADecrypt(&o)
+	err = s.agent.UpdateIPSecSADecrypt(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteIPSecSADecryptHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecSADecrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -119,8 +176,18 @@ func (s *RestServer) deleteIPSecSADecryptHandler(r *http.Request) (interface{}, 
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteIPSecSADecrypt(&o)
+	err = s.agent.DeleteIPSecSADecrypt(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 // addIPSecSAEncryptAPIRoutes adds IPSecSAEncrypt routes
@@ -141,6 +208,7 @@ func (s *RestServer) listIPSecSAEncryptHandler(r *http.Request) (interface{}, er
 }
 
 func (s *RestServer) postIPSecSAEncryptHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecSAEncrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -148,11 +216,22 @@ func (s *RestServer) postIPSecSAEncryptHandler(r *http.Request) (interface{}, er
 		return nil, err
 	}
 
-	return nil, s.agent.CreateIPSecSAEncrypt(&o)
+	err = s.agent.CreateIPSecSAEncrypt(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putIPSecSAEncryptHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecSAEncrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -160,11 +239,22 @@ func (s *RestServer) putIPSecSAEncryptHandler(r *http.Request) (interface{}, err
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateIPSecSAEncrypt(&o)
+	err = s.agent.UpdateIPSecSAEncrypt(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteIPSecSAEncryptHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.IPSecSAEncrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -172,6 +262,16 @@ func (s *RestServer) deleteIPSecSAEncryptHandler(r *http.Request) (interface{}, 
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteIPSecSAEncrypt(&o)
+	err = s.agent.DeleteIPSecSAEncrypt(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
