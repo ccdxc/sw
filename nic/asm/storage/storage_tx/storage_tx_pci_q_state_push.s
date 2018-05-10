@@ -18,7 +18,14 @@ struct phv_ p;
 storage_tx_pci_q_state_push_start:
    // Check queue full condition and exit
    // TODO: Push error handling
-   QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, tbl_load)
+   //QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, tbl_load)
+
+   // Queue full condition based on Qstate does not work for PCI queue state push
+   // as the c_ndx is in host memory in software. Need to read the c_ndx correctly
+   // via another stage to perform this computation. 
+   // For now in the SSD case, the throttling of max_cmds takes care of never 
+   // overflowing this buffer.  
+   // TODO: Need to come up with a good strategy for this.
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.

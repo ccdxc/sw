@@ -177,6 +177,8 @@ uint32_t arm_free_iob_q[MAX_ARM_FREE_IOB_QS];
 
 void *pndx_data_va;
 uint64_t pndx_data_pa;
+void *cndx_data_va;
+uint64_t cndx_data_pa;
 
 // Forward declaration with default mem_type
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
@@ -424,11 +426,20 @@ int resources_init() {
   // for the E2E cases.
   pndx_data_va = alloc_host_mem(kMinHostMemAllocSize);
   if (pndx_data_va == nullptr) {
-    printf("Unable to allocate host memory for queue\n");
+    printf("Unable to allocate host memory for p_ndx\n");
     return -1;
   }
   memset(pndx_data_va, 0, kMinHostMemAllocSize);
   pndx_data_pa = host_mem_v2p(pndx_data_va);
+
+  cndx_data_va = alloc_host_mem(kMinHostMemAllocSize);
+  if (cndx_data_va == nullptr) {
+    printf("Unable to allocate host memory for c_ndx\n");
+    return -1;
+  }
+  memset(cndx_data_va, 0, kMinHostMemAllocSize);
+  cndx_data_pa = host_mem_v2p(cndx_data_va);
+
 
   return 0;
 }
@@ -748,6 +759,8 @@ pvm_queues_setup() {
       storage_test::SsdWorkingParams params;
       nvme_e2e_ssd->GetWorkingParams(&params);
       pi_pa = params.subq_pi_pa;
+      ssd_cndx_addr[j] = params.compq_ci_pa;
+      printf("j %d ci_pa %lx cndx_addr %lx \n", j, params.compq_ci_pa, ssd_cndx_addr[j]);
 
       // Initialize the doorbell of the CQ
       uint64_t db_addr;
@@ -768,6 +781,7 @@ pvm_queues_setup() {
 
       // Store the default value of the PI's physical address
       pi_pa = pndx_data_pa;
+      ssd_cndx_addr[j] = cndx_data_pa;
     }
 
     // Setup the queue state in Capri:
@@ -782,15 +796,6 @@ pvm_queues_setup() {
       printf("Failed to setup PVM SSD SQ %d state \n", i);
       return -1;
     }
-
-    // Store the address of the CI for this SSD
-    uint64_t qaddr;
-    if (qstate_if::get_qstate_addr(pvm_lif, SQ_TYPE, i, &qaddr) < 0) {
-        printf("Failed to get PVM SSD SQ %d address \n", i);
-        return -1;
-    }
-    ssd_cndx_addr[j] = qaddr + kQstateCndxOffset;
-    printf("SSD %d qaddr %lx cndx_addr %lx \n", j, qaddr, ssd_cndx_addr[j]);
   }
 
   // Initialize PVM SQs for processing R2N commands from the Sequencer.

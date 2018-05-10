@@ -41,7 +41,8 @@ const static uint32_t	kIOBufMaxDataSize	 = 4096;
 const static uint32_t	kIOBufHdrSize	 	 = 4096;
 const static uint32_t	kIOBufEntrySize		 = (kIOBufHdrSize + kIOBufMaxDataSize);
 const static uint32_t	kIOBufHdrXmitSize	 = (kIOBufHdrSize - IO_BUF_NVME_BE_CMD_OFFSET);
-const static uint32_t	kIOBufNumEntries	 = 8;
+const static uint32_t	kIOBufNumEntriesLog2	 = 3;
+const static uint32_t	kIOBufNumEntries	 = NUM_TO_VAL(kIOBufNumEntriesLog2);
 const static uint32_t	kIOBFreeListEntrySizeLog2	 = 6;
 const static uint32_t	kIOBFreeListEntrySize	 	 = NUM_TO_VAL(kIOBFreeListEntrySizeLog2);
 const static uint32_t	kIOBRingStateSizeLog2	 	 = 6;
@@ -131,7 +132,7 @@ int init_iob_ring() {
   iob_ring_base_addr->write_bit_fields(0, 16, (uint16_t) (iob_free_list_num_entries-1));
   iob_ring_base_addr->write_bit_fields(16, 16, 0);
   iob_ring_base_addr->write_bit_fields(32, 16, (uint16_t) (iob_free_list_num_entries-1));
-  iob_ring_base_addr->write_bit_fields(48, 16, (uint16_t) iob_free_list_num_entries);
+  iob_ring_base_addr->write_bit_fields(48, 16, (uint16_t) kIOBufNumEntriesLog2);
   iob_ring_base_addr->write_bit_fields(64, 64, iob_free_list_base_addr->pa());
   iob_ring_base_addr->write_bit_fields(128, 16, kIOBFreeListEntrySizeLog2);
   iob_ring_base_addr->write_thru();

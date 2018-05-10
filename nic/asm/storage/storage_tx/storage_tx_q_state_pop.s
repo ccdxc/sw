@@ -38,7 +38,7 @@ storage_tx_q_state_pop_start:
         	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
    phvwrpair	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID, \
    	        p.storage_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
-   phvwr	p.storage_kivec1_device_addr, d.ssd_ci_addr
+   phvwr	p.storage_kivec6_ssd_ci_addr, d.ssd_ci_addr
    
    phvwrpair	p.storage_kivec2_ssd_q_num, d.ssd_q_num, \
    	        p.storage_kivec2_ssd_q_size, d.ssd_q_size
