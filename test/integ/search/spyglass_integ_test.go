@@ -5,19 +5,27 @@ package search
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"testing"
+	"time"
+
+	grpcruntime "github.com/pensando/grpc-gateway/runtime"
+	grpccodes "google.golang.org/grpc/codes"
 
 	api "github.com/pensando/sw/api"
 	apicache "github.com/pensando/sw/api/client"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/search"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
+	"github.com/pensando/sw/api/labels"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
@@ -72,15 +80,34 @@ type testInfo struct {
 
 var tInfo testInfo
 
-func getSearchURL(query string, from, maxResults int32) string {
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+// helper to generate random string of requested length
+func randStr(n int) string {
+	r := make([]rune, n)
+	for i := range r {
+		r[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(r)
+}
+
+func getSearchURLWithParams(query string, from, maxResults int32, sortBy string) string {
 
 	// convert to query-string to url-encoded string
 	// to escape special characters like space, comma, braces.
 	u := url.URL{Path: query}
 	urlQuery := url.QueryEscape(query)
 	log.Debugf("Query: %s Encoded: %s Escaped: %s", query, u.String(), urlQuery)
-	return fmt.Sprintf("http://127.0.0.1:%s/v1/search/query?QueryString=%s&From=%d&MaxResults=%d",
+	str := fmt.Sprintf("http://127.0.0.1:%s/v1/search/query?QueryString=%s&From=%d&MaxResults=%d",
 		tInfo.apiGwPort, urlQuery, from, maxResults)
+	if sortBy != "" {
+		str += fmt.Sprintf("&SortBy=%s", sortBy)
+	}
+	return str
+}
+
+func getSearchURL() string {
+	return fmt.Sprintf("http://127.0.0.1:%s/v1/search/query", tInfo.apiGwPort)
 }
 
 // Validate Elasticsearch is up and running
@@ -231,10 +258,10 @@ func TestSpyglass(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
-			err = netutils.HTTPGet(getSearchURL("tesla", 0, 10), &resp)
+			err = netutils.HTTPGet(getSearchURLWithParams("tesla", 0, 10, ""), &resp)
 			if err != nil {
 				log.Errorf("GET on search REST endpoint: %s failed, err:%+v",
-					getSearchURL("tesla", 0, 10), err)
+					getSearchURLWithParams("tesla", 0, 10, ""), err)
 				return false, nil
 			}
 			return true, nil
@@ -285,332 +312,1179 @@ func TestSpyglass(t *testing.T) {
 
 // Execute search test cases
 func performSearchTests(t *testing.T) {
+
+	// Http error for InvalidArgument test cases
+	httpInvalidArgErrCode := grpcruntime.HTTPStatusFromCode(grpccodes.InvalidArgument)
+	httpInvalidArgErr := fmt.Errorf("%d %s", httpInvalidArgErrCode, http.StatusText(httpInvalidArgErrCode))
+
 	// Testcases for various queries on config objects
 	queryTestcases := []struct {
-		query        string
-		from         int32
-		maxResults   int32
+		query        search.SearchRequest
+		sortBy       string
 		expectedHits int64
-		aggresults   map[string]map[string]map[string]interface{}
+		aggresults   map[string]map[string]map[string]map[string]interface{}
+		err          error
 	}{
+		//
+		// Search Test cases with URI params, to test QueryString query
+		// Uses GET method (GET with body is not supported in many http clients)
+		//
 		{
-			"kind:Tenant",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "kind:Tenant",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			int64(len(Tenants)),
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
-					"Tenant": {
-						"tesla": nil,
-						"audi":  nil,
+					"Cluster": {
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
-			"kind:SmartNIC",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "kind:SmartNIC",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			objectCount,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.00": nil,
-						"44.44.44.00.00.01": nil,
-						"44.44.44.00.00.02": nil,
-						"44.44.44.00.00.03": nil,
-						"44.44.44.00.00.04": nil,
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
-			"kind:SmartNIC",
-			from,
-			maxResults,
-			objectCount,
-			map[string]map[string]map[string]interface{}{
+			// Test Paginated query #1
+			// Use sort option for deterministic results
+			search.SearchRequest{
+				QueryString: "kind:SmartNIC",
+				From:        0, // from offset-0
+				MaxResults:  3, // get 3 results
+			},
+			"meta.name",
+			3,
+			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.00": nil,
-						"44.44.44.00.00.01": nil,
-						"44.44.44.00.00.02": nil,
-						"44.44.44.00.00.03": nil,
-						"44.44.44.00.00.04": nil,
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
-			// Test Paginated query
-			"kind:SmartNIC",
-			0, // from offset-0
-			3, // get 3 results
-			objectCount,
-			map[string]map[string]map[string]interface{}{
+			// Test Paginated query #2
+			// Use sort option for deterministic results
+			search.SearchRequest{
+				QueryString: "kind:SmartNIC",
+				From:        3, // from offset-3
+				MaxResults:  2, // get 2 results
+			},
+			"meta.name",
+			2,
+			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.00": nil,
-						"44.44.44.00.00.01": nil,
-						"44.44.44.00.00.02": nil,
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
-			// Test Paginated query
-			"kind:SmartNIC",
-			3, // from offset-3
-			2, // get 2 results
-			objectCount,
-			map[string]map[string]map[string]interface{}{
-				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.03": nil,
-						"44.44.44.00.00.04": nil,
-					},
-				},
+			search.SearchRequest{
+				QueryString: "kind:Network",
+				From:        from,
+				MaxResults:  maxResults,
 			},
-		},
-		{
-			"kind:Network",
-			from,
-			maxResults,
+			"",
 			objectCount,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"audi": {
 					"Network": {
-						"net01": nil,
-						"net03": nil,
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
 					},
 				},
 				"tesla": {
 					"Network": {
-						"net00": nil,
-						"net02": nil,
-						"net04": nil,
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
-			"kind:SecurityGroup",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "kind:SecurityGroup",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			objectCount,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
-					"SecurityGroup": {
-						"sg00": nil,
-						"sg02": nil,
-						"sg04": nil,
+					"Security": {
+						"SecurityGroup": {
+							"sg00": nil,
+							"sg02": nil,
+							"sg04": nil,
+						},
 					},
 				},
 				"audi": {
-					"SecurityGroup": {
-						"sg01": nil,
-						"sg03": nil,
+					"Security": {
+						"SecurityGroup": {
+							"sg01": nil,
+							"sg03": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
 			// Term query with multi-value match on Kind
-			"kind:(Network OR SecurityGroup)",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "kind:(Network OR SecurityGroup)",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			2 * objectCount,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
-						"net00": nil,
-						"net02": nil,
-						"net04": nil,
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
 					},
-					"SecurityGroup": {
-						"sg00": nil,
-						"sg02": nil,
-						"sg04": nil,
+					"Security": {
+						"SecurityGroup": {
+							"sg00": nil,
+							"sg02": nil,
+							"sg04": nil,
+						},
 					},
 				},
 				"audi": {
 					"Network": {
-						"net01": nil,
-						"net03": nil,
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
 					},
-					"SecurityGroup": {
-						"sg01": nil,
-						"sg03": nil,
+					"Security": {
+						"SecurityGroup": {
+							"sg01": nil,
+							"sg03": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
 			// Term Match on Kind and Label attributes
-			"kind:Network AND meta.labels.Application:MS-Exchange",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "kind:Network AND meta.labels.Application:MS-Exchange",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			objectCount,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
-						"net00": nil,
-						"net02": nil,
-						"net04": nil,
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
 					},
 				},
 				"audi": {
 					"Network": {
-						"net01": nil,
-						"net03": nil,
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
 			// Text search that matches on Kind
-			"SmartNIC",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "SmartNIC",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			objectCount,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.00": nil,
-						"44.44.44.00.00.01": nil,
-						"44.44.44.00.00.02": nil,
-						"44.44.44.00.00.03": nil,
-						"44.44.44.00.00.04": nil,
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
 			// Text search that matches on meta.Namespace
-			"infra",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "infra",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			objectCount + int64(len(Tenants)),
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.00": nil,
-						"44.44.44.00.00.01": nil,
-						"44.44.44.00.00.02": nil,
-						"44.44.44.00.00.03": nil,
-						"44.44.44.00.00.04": nil,
-					},
-					"Tenant": {
-						"tesla": nil,
-						"audi":  nil,
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
 			// Text search that matches on meta.Labels.key
-			"us-west",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "us-west",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			3*objectCount + int64(len(Tenants)),
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
-						"net00": nil,
-						"net02": nil,
-						"net04": nil,
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
 					},
-					"SecurityGroup": {
-						"sg00": nil,
-						"sg02": nil,
-						"sg04": nil,
+					"Security": {
+						"SecurityGroup": {
+							"sg00": nil,
+							"sg02": nil,
+							"sg04": nil,
+						},
 					},
 				},
 				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.00": nil,
-						"44.44.44.00.00.01": nil,
-						"44.44.44.00.00.02": nil,
-						"44.44.44.00.00.03": nil,
-						"44.44.44.00.00.04": nil,
-					},
-					"Tenant": {
-						"tesla": nil,
-						"audi":  nil,
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
 					},
 				},
 				"audi": {
 					"Network": {
-						"net01": nil,
-						"net03": nil,
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
 					},
-					"SecurityGroup": {
-						"sg01": nil,
-						"sg03": nil,
+					"Security": {
+						"SecurityGroup": {
+							"sg01": nil,
+							"sg03": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
 			// Precise match on a MAC address, part of smartNIC object
-			"44.44.44.00.00.01",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "44.44.44.00.00.01",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			1,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
-					"SmartNIC": {
-						"44.44.44.00.00.01": nil,
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.01": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
 		{
 			// Precise match on a IP address, part of Network object
-			"10.0.1.254",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "10.0.1.254",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			1,
-			map[string]map[string]map[string]interface{}{
+			map[string]map[string]map[string]map[string]interface{}{
 				"audi": {
 					"Network": {
-						"net01": nil,
+						"Network": {
+							"net01": nil,
+						},
 					},
 				},
 			},
+			nil,
 		},
+
+		// Negative test cases
 		{
-			// Non-existent Kind
-			"kind:Contract",
-			from,
-			maxResults,
+			// Invalid Kind
+			search.SearchRequest{
+				QueryString: "kind:Contract",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			0,
+			nil,
 			nil,
 		},
 		{
 			// Non-existent Text
-			"OzzyOzbuorne",
-			from,
-			maxResults,
+			search.SearchRequest{
+				QueryString: "OzzyOzbuorne",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
 			0,
 			nil,
+			nil,
+		},
+		{
+			// Invalid QueryString length (> 256)
+			search.SearchRequest{
+				QueryString: randStr(512),
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
+			0,
+			nil,
+			httpInvalidArgErr,
+		},
+		{
+			// Invalid From offset (-1)
+			search.SearchRequest{
+				QueryString: "Network",
+				From:        -1,
+				MaxResults:  maxResults,
+			},
+			"",
+			0,
+			nil,
+			httpInvalidArgErr,
+		},
+		{
+			// Invalid From offset (>1023)
+			search.SearchRequest{
+				QueryString: "Network",
+				From:        1200,
+				MaxResults:  maxResults,
+			},
+			"",
+			0,
+			nil,
+			httpInvalidArgErr,
+		},
+		{
+			// Invalid MaxResults offset (-1)
+			search.SearchRequest{
+				QueryString: "Network",
+				From:        from,
+				MaxResults:  -1,
+			},
+			"",
+			0,
+			nil,
+			httpInvalidArgErr,
+		},
+		{
+			// Invalid MaxResults offset (> 8192)
+			search.SearchRequest{
+				QueryString: "Network",
+				From:        from,
+				MaxResults:  9000,
+			},
+			"",
+			0,
+			nil,
+			httpInvalidArgErr,
+		},
+
+		//
+		// Search test cases with using Post with BODY for advanced queries
+		//
+		{
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Tenant"},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			int64(len(Tenants)),
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Test Paginated query #1
+			// Use sort option for deterministic results
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+				},
+				From:       0, // from offset-0
+				MaxResults: 3, // get 3 results
+				SortBy:     "meta.name",
+			},
+			"meta.name",
+			3,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Test Paginated query #2
+			// Use sort option for deterministic results
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+				},
+				From:       3, // from offset-3
+				MaxResults: 2, // get 2 results
+				SortBy:     "meta.name",
+			},
+			"meta.name",
+			2,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Network"},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"audi": {
+					"Network": {
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
+					},
+				},
+				"tesla": {
+					"Network": {
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SecurityGroup"},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"tesla": {
+					"Security": {
+						"SecurityGroup": {
+							"sg00": nil,
+							"sg02": nil,
+							"sg04": nil,
+						},
+					},
+				},
+				"audi": {
+					"Security": {
+						"SecurityGroup": {
+							"sg01": nil,
+							"sg03": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Term query with multi-value match on Kind
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Network", "SecurityGroup"},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			2 * objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"tesla": {
+					"Network": {
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
+					},
+					"Security": {
+						"SecurityGroup": {
+							"sg00": nil,
+							"sg02": nil,
+							"sg04": nil,
+						},
+					},
+				},
+				"audi": {
+					"Network": {
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
+					},
+					"Security": {
+						"SecurityGroup": {
+							"sg01": nil,
+							"sg03": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Term Match on Kind and Label attributes
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Network"},
+					Labels: &labels.Selector{
+						Requirements: []*labels.Requirement{
+							&labels.Requirement{
+								Key:      "meta.labels.Application",
+								Operator: "equals",
+								Values:   []string{"MS-Exchange"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"tesla": {
+					"Network": {
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
+					},
+				},
+				"audi": {
+					"Network": {
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Text search that matches on Kind
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"SmartNIC"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Text search that matches on meta.Namespace
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"infra"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount + int64(len(Tenants)),
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Text search that matches on meta.Labels.key
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"us-west"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			3*objectCount + int64(len(Tenants)),
+			map[string]map[string]map[string]map[string]interface{}{
+				"tesla": {
+					"Network": {
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
+					},
+					"Security": {
+						"SecurityGroup": {
+							"sg00": nil,
+							"sg02": nil,
+							"sg04": nil,
+						},
+					},
+				},
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
+					},
+				},
+				"audi": {
+					"Network": {
+						"Network": {
+							"net01": nil,
+							"net03": nil,
+						},
+					},
+					"Security": {
+						"SecurityGroup": {
+							"sg01": nil,
+							"sg03": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Phrase query
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"human resources"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			int64(len(Tenants)),
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Precise match on a MAC address, part of smartNIC object
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							&fields.Requirement{
+								Key:      "meta.name",
+								Operator: "equals",
+								Values:   []string{"44.44.44.00.00.01"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			1,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.01": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// NotEquals test case
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							&fields.Requirement{
+								Key:      "meta.name",
+								Operator: "notEquals",
+								Values:   []string{"44.44.44.00.00.01"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			4,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// IN test case
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							&fields.Requirement{
+								Key:      "meta.name",
+								Operator: "in",
+								Values:   []string{"44.44.44.00.00.00", "44.44.44.00.00.01"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			2,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// NOT-IN test case
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							&fields.Requirement{
+								Key:      "meta.name",
+								Operator: "notIn",
+								Values:   []string{"44.44.44.00.00.00", "44.44.44.00.00.01"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			3,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Precise match on a IP address, part of Network object
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"10.0.1.254"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			1,
+			map[string]map[string]map[string]map[string]interface{}{
+				"audi": {
+					"Network": {
+						"Network": {
+							"net01": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Invalid Kind, negative test case
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Contract"},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			0,
+			nil,
+			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+		},
+		{
+			// Non-existent Text
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"OzzyOzbuorne"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			0,
+			nil,
+			nil,
+		},
+		{
+			// Invalid QueryString length (> 256)
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{randStr(512)},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			0,
+			nil,
+			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+		},
+		{
+			// Invalid From offset (-1)
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Network"},
+				},
+				From:       -1,
+				MaxResults: maxResults,
+			},
+			"",
+			0,
+			nil,
+			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+		},
+		{
+			// Invalid From offset (>1023)
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Network"},
+				},
+				From:       1200,
+				MaxResults: maxResults,
+			},
+			"",
+			0,
+			nil,
+			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+		},
+		{
+			// Invalid MaxResults offset (-1)
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Network"},
+				},
+				From:       from,
+				MaxResults: -1,
+			},
+			"",
+			0,
+			nil,
+			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+		},
+		{
+			// Invalid MaxResults offset (> 8192)
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Network"},
+				},
+				From:       from,
+				MaxResults: 9000,
+			},
+			"",
+			0,
+			nil,
+			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
 		},
 	}
 
 	// Execute the Query Testcases
 	for _, tc := range queryTestcases {
 
-		t.Run(tc.query, func(t *testing.T) {
+		t.Run(tc.query.QueryString, func(t *testing.T) {
 			AssertEventually(t,
 				func() (bool, interface{}) {
 
 					// execute search
-					searchURL := getSearchURL(tc.query, from, maxResults)
-					resp := search.SearchResponse{}
-					err := netutils.HTTPGet(searchURL, &resp)
-					if err != nil {
-						log.Errorf("GET on search REST endpoint: %s failed, err:%+v",
-							searchURL, err)
+					var err error
+					var resp search.SearchResponse
+					var searchURL string
+					if len(tc.query.QueryString) != 0 {
+						fmt.Printf("## QueryString query: %s\n", tc.query.QueryString)
+						// Query using URI params - via GET method
+						searchURL = getSearchURLWithParams(tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.sortBy)
+						resp = search.SearchResponse{}
+						err = netutils.HTTPGet(searchURL, &resp)
+					} else {
+						// Query using Body - via POST method
+						// GET with body is not supported by many http clients including
+						// net/http package.
+						fmt.Printf("## Query Body: %+v\n", tc.query)
+						searchURL = getSearchURL()
+						resp = search.SearchResponse{}
+						err = netutils.HTTPPost(searchURL, &tc.query, &resp)
+					}
+
+					if (err != nil && tc.err == nil) ||
+						(err == nil && tc.err != nil) ||
+						(err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
+						log.Errorf("Search request URL: %s didn't match expected error, expected:%+v actual:%+v",
+							searchURL, tc.err, err)
 						return false, nil
 					}
 
@@ -620,51 +1494,81 @@ func performSearchTests(t *testing.T) {
 							tc.expectedHits, resp.ActualHits, resp)
 						return false, nil
 					}
-					log.Debugf("Query: %s, result : %+v", searchURL, resp)
 
-					// Check size of aggregated results
-					if len(tc.aggresults) != len(resp.AggregatedEntries.Entries) {
-						log.Errorf("Tenant agg entries count didn't match, expected %d actual:%d",
-							len(tc.aggresults), len(resp.AggregatedEntries.Entries))
+					// For cases with expectedHits to 0, return here
+					if tc.expectedHits == 0 {
+						return true, nil
+					}
+
+					// Validate the response for exact match
+					// Verify count of tenant entries
+					log.Debugf("Query: %s, result : %+v", searchURL, resp)
+					if len(tc.aggresults) != len(resp.AggregatedEntries.Tenants) {
+						log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
+							len(tc.aggresults), len(resp.AggregatedEntries.Tenants))
 						return false, nil
 					}
 
 					// Tenant verification
 					for tenantKey, tenantVal := range tc.aggresults {
 						log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
-						if _, ok := resp.AggregatedEntries.Entries[tenantKey]; !ok {
+						if _, ok := resp.AggregatedEntries.Tenants[tenantKey]; !ok {
 							log.Errorf("Tenant %s not found", tenantKey)
 							return false, nil
 						}
 
-						// Kind verification
-						for kindKey, kindVal := range tenantVal {
-							log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
-							if _, ok := resp.AggregatedEntries.Entries[tenantKey].Entries[kindKey]; !ok {
-								log.Errorf("Kind %s not found", kindKey)
+						// Verify count of category entries match for each tenant
+						if len(tenantVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories) {
+							log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
+								tenantKey, len(tenantVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories))
+							return false, nil
+						}
+
+						// Category verification
+						for categoryKey, categoryVal := range tenantVal {
+							log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
+							if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
+								log.Errorf("Category %s not found", categoryKey)
 								return false, nil
 							}
 
-							// make a interim object map from the entries slice
-							entries := resp.AggregatedEntries.Entries[tenantKey].Entries[kindKey].Entries
-							omap := make(map[string]interface{}, len(entries))
-							for _, val := range entries {
-								omap[val.GetName()] = nil
+							// Verify count of kind entries match for each (tenant,category)
+							if len(categoryVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
+								log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
+									tenantKey, categoryKey, len(categoryVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
+								return false, nil
 							}
 
-							// object verification
-							for objKey := range kindVal {
-								log.Debugf("Verifying Object Key: %s", objKey)
-								if _, ok := omap[objKey]; !ok {
-									log.Errorf("Object %s not found", objKey)
+							// Kind verification
+							for kindKey, kindVal := range categoryVal {
+								log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
+								if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
+									log.Errorf("Kind %s not found", kindKey)
 									return false, nil
+								}
+
+								// make an interim object map from the entries slice
+								log.Debugf("Kinds: %+v", resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey])
+								entries := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey].Entries
+								omap := make(map[string]interface{}, len(entries))
+								for _, val := range entries {
+									omap[val.GetName()] = nil
+								}
+
+								// object verification
+								for objKey := range kindVal {
+									log.Debugf("Verifying Object Key: %s", objKey)
+									if _, ok := omap[objKey]; !ok {
+										log.Errorf("Object %s not found", objKey)
+										return false, nil
+									}
 								}
 							}
 						}
 					}
 
 					return true, nil
-				}, fmt.Sprintf("Query failed for: %s", tc.query), "100ms", "1m")
+				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
 	}
 }
@@ -757,6 +1661,8 @@ func stopAPIserverAPIgw(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
+
+	rand.Seed(time.Now().UnixNano())
 
 	// Fill logger config params
 	logConfig := &log.Config{

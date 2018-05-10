@@ -3,9 +3,8 @@ package indexer
 import (
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/venice/globals"
-	elastic "github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/elastic"
 	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 /*
@@ -141,11 +140,12 @@ func (idr *Indexer) getIndexMapping(dType globals.DataType) (string, error) {
 
 		// get the elastic mapping config
 		config, err := mapper.ElasticMapper(search.Entry{},
-			elastic.GetDocType(globals.Configs),
+			elastic.GetDocType(dType),
 			mapper.WithShardCount(3),
 			mapper.WithReplicaCount(2))
 		if err != nil {
-			log.Errorf("Failed to generate elastic mapping for docType: %d, err: %v", dType, err)
+			idr.logger.Errorf("Failed to generate elastic mapping for docType: %d, err: %v",
+				dType, err)
 			return "", err
 		}
 

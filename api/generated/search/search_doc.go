@@ -7,16 +7,17 @@ Input file: search.proto
 
 The following Messages are defined.
 
-  Aggregation
   Category
+  CategoryAggregation
   Entry
   EntryList
   Error
   Kind
-  NestedAggregation
+  KindAggregation
   SearchQuery
   SearchRequest
   SearchResponse
+  TenantAggregation
   TextRequirement
 
 The following Services and Methods are defined.

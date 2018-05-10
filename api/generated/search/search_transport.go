@@ -17,40 +17,6 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-func encodeHTTPAggregation(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAggregation(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Aggregation
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAggregation encodes GRPC request
-func EncodeGrpcReqAggregation(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Aggregation)
-	return req, nil
-}
-
-// DecodeGrpcReqAggregation decodes GRPC request
-func DecodeGrpcReqAggregation(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Aggregation)
-	return req, nil
-}
-
-// EncodeGrpcRespAggregation encodes GRC response
-func EncodeGrpcRespAggregation(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAggregation decodes GRPC response
-func DecodeGrpcRespAggregation(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPCategory(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -82,6 +48,40 @@ func EncodeGrpcRespCategory(ctx context.Context, response interface{}) (interfac
 
 // DecodeGrpcRespCategory decodes GRPC response
 func DecodeGrpcRespCategory(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPCategoryAggregation(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPCategoryAggregation(_ context.Context, r *http.Request) (interface{}, error) {
+	var req CategoryAggregation
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqCategoryAggregation encodes GRPC request
+func EncodeGrpcReqCategoryAggregation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CategoryAggregation)
+	return req, nil
+}
+
+// DecodeGrpcReqCategoryAggregation decodes GRPC request
+func DecodeGrpcReqCategoryAggregation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CategoryAggregation)
+	return req, nil
+}
+
+// EncodeGrpcRespCategoryAggregation encodes GRC response
+func EncodeGrpcRespCategoryAggregation(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespCategoryAggregation decodes GRPC response
+func DecodeGrpcRespCategoryAggregation(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -221,37 +221,37 @@ func DecodeGrpcRespKind(ctx context.Context, response interface{}) (interface{},
 	return response, nil
 }
 
-func encodeHTTPNestedAggregation(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPKindAggregation(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPNestedAggregation(_ context.Context, r *http.Request) (interface{}, error) {
-	var req NestedAggregation
+func decodeHTTPKindAggregation(_ context.Context, r *http.Request) (interface{}, error) {
+	var req KindAggregation
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqNestedAggregation encodes GRPC request
-func EncodeGrpcReqNestedAggregation(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NestedAggregation)
+// EncodeGrpcReqKindAggregation encodes GRPC request
+func EncodeGrpcReqKindAggregation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*KindAggregation)
 	return req, nil
 }
 
-// DecodeGrpcReqNestedAggregation decodes GRPC request
-func DecodeGrpcReqNestedAggregation(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NestedAggregation)
+// DecodeGrpcReqKindAggregation decodes GRPC request
+func DecodeGrpcReqKindAggregation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*KindAggregation)
 	return req, nil
 }
 
-// EncodeGrpcRespNestedAggregation encodes GRC response
-func EncodeGrpcRespNestedAggregation(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespKindAggregation encodes GRC response
+func EncodeGrpcRespKindAggregation(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespNestedAggregation decodes GRPC response
-func DecodeGrpcRespNestedAggregation(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespKindAggregation decodes GRPC response
+func DecodeGrpcRespKindAggregation(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -354,6 +354,40 @@ func EncodeGrpcRespSearchResponse(ctx context.Context, response interface{}) (in
 
 // DecodeGrpcRespSearchResponse decodes GRPC response
 func DecodeGrpcRespSearchResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTenantAggregation(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTenantAggregation(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TenantAggregation
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTenantAggregation encodes GRPC request
+func EncodeGrpcReqTenantAggregation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantAggregation)
+	return req, nil
+}
+
+// DecodeGrpcReqTenantAggregation decodes GRPC request
+func DecodeGrpcReqTenantAggregation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantAggregation)
+	return req, nil
+}
+
+// EncodeGrpcRespTenantAggregation encodes GRC response
+func EncodeGrpcRespTenantAggregation(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTenantAggregation decodes GRPC response
+func DecodeGrpcRespTenantAggregation(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

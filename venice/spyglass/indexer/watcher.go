@@ -361,6 +361,20 @@ func (idr *Indexer) startWriter(id int) {
 				id, ometa.GetName(), req.evType,
 				len(idr.requests[id]))
 
+			// TODO: Once the category is available in Kind attribute or a new Meta
+			// attribute we will use it here. Until then, it is derived from this map.
+			category := globals.Kind2Category[req.object.(runtime.Object).GetObjectKind()]
+			if category == "" {
+				category = "default"
+			}
+
+			// Insert Category as Label in Meta
+			// TODO: Remove this once api-server populates it for all policy objects
+			if ometa.Labels == nil {
+				ometa.Labels = make(map[string]string)
+			}
+			ometa.Labels["_category"] = category
+
 			// prepare the index request
 			request := &elastic.BulkRequest{
 				RequestType: reqType,
@@ -371,7 +385,7 @@ func (idr *Indexer) startWriter(id int) {
 			}
 			idr.requests[id] = append(idr.requests[id], request)
 			log.Debugf("Writer: %d pending-requests len:%d data:%v",
-				len(idr.requests[id]), idr.requests[id])
+				id, len(idr.requests[id]), idr.requests[id])
 
 			// check if batchSize is reached and call the bulk API
 			count := len(idr.requests[id])

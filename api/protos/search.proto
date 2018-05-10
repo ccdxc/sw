@@ -12,7 +12,6 @@ import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
 
-
 // API-groups and associated Kinds as defined in api/protos
 //
 // Cluster
@@ -20,7 +19,6 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 //        Node
 //        SmartNIC
 //        Rollout
-//        RolloutPolicy
 //        Tenant
 //
 // Workload
@@ -40,9 +38,7 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 //        AuthenticationPolicy
 //        Role
 //        RoleBinding
-//        ClusterUser
-//        ClusterRole
-//
+//        
 // Network
 //        Network
 //        Service
@@ -80,9 +76,7 @@ message Category {
 
         // special categories
         AuditTrail  = 9;
-        Log         = 10; // Debug log, not exposed to user
-        Config      = 11; // User configured objects (TBD)
-    }
+   }
 }
 
 // List of all allowed Kinds in search, specified via "kind" modifier
@@ -109,21 +103,18 @@ message Kind {
         AuthenticationPolicy    = 14;
         Role                    = 15;
         RoleBinding             = 16;
-        ClusterUser             = 17;
-        ClusterRole             = 18;
-        ClusterRoleBinding      = 19;
-        Network                 = 20;
-        Service                 = 21;
-        LbPolicy                = 22;
-        Alert                   = 23;
-        AlertDestination        = 24;
-        AlertPolicy             = 25;
-        Event                   = 26;
-        EventPolicy             = 27;
-        StatsPolicy             = 28;
-        FlowExportPolicy        = 29;
-        FwlogPolicy             = 30;
-        MirrorSession           = 31;
+        Network                 = 17;
+        Service                 = 18;
+        LbPolicy                = 19;
+        Alert                   = 20;
+        AlertDestination        = 21;
+        AlertPolicy             = 22;
+        Event                   = 23;
+        EventPolicy             = 24;
+        StatsPolicy             = 25;
+        FlowExportPolicy        = 26;
+        FwlogPolicy             = 27;
+        MirrorSession           = 28;
     }
 }
 
@@ -145,7 +136,9 @@ message Kind {
 message TextRequirement {
 
   // AND of words or phrases to be matched
-  repeated string Text = 1 [(gogoproto.jsontag) = "text,omitempty"];
+  // The max text-string length is 256 bytes
+  repeated string Text = 1 [(gogoproto.jsontag) = "text,omitempty",
+                            (venice.check) = "StrLen(0,256)"];
 }
 
 // SearchQuery contains various search clauses, modifiers and its associated requirements.
@@ -179,11 +172,15 @@ message SearchQuery {
 
 
   // OR of Categories to be matched, AND and Exclude are not supported for this type
+  // The max category string length is 64 bytes
   repeated string Categories        = 2 [(venice.check) = "StrEnum(Category.Type)",
+                                         (venice.check) = "StrLen(0,64)",
                                          (gogoproto.jsontag) = "categories,omitempty"];
 
   // OR of Kinds to be matched, AND and Exclude are not supported for this type
+  // The max kind string length is 64 bytes
   repeated string Kinds             = 3 [(venice.check) = "StrEnum(Kind.Type)",
+                                         (venice.check) = "StrLen(0,64)",
                                          (gogoproto.jsontag) = "kinds,omitempty"];
 
   // Field Selector is AND of field.Requirements
@@ -223,21 +220,26 @@ message EntryList {
                                 (gogoproto.jsontag) = "entries,omitempty"];
 }
 
-// Aggregation contains map of search results entries
-// grouped by a Key.
-// For eg: search result entries grouped by Kind as key
-message Aggregation {
-    map <string, EntryList> Entries = 1 [(gogoproto.nullable) = true,
-                                            (gogoproto.jsontag) = "entries,omitempty"];
+// KindAggregation contains map of search result
+// entries grouped by Kind.
+message KindAggregation {
+    map <string, EntryList> Kinds = 1 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "kinds,omitempty"];
 }
 
-// NestedAggregation contains map of search results
-// grouped by two levels of Aggregation
-// For eg: search result entries grouped first by Tenant
-//         name and subsequently grouped by Kind.
-message NestedAggregation {
-    map <string, Aggregation> Entries = 1 [(gogoproto.nullable) = true,
-                                           (gogoproto.jsontag) = "entries,omitempty"];
+// CategoryAggregation contains map of search result entries
+// grouped by two levels: first by Category and then by Kind.
+message CategoryAggregation {
+    map <string, KindAggregation> Categories = 1 [(gogoproto.nullable) = true,
+                                                  (gogoproto.jsontag) = "categories,omitempty"];
+}
+
+// TenantAggregation contains map of search result entries
+// grouped by three levels: first by Tenant, second by Category 
+// and finally by Kind.
+message TenantAggregation {
+    map <string, CategoryAggregation> Tenants = 1 [(gogoproto.nullable) = true,
+                                                   (gogoproto.jsontag) = "tenants,omitempty"];
 }
 
 // SearchRequest is the input to the search API
@@ -287,18 +289,29 @@ message SearchRequest {
     // This can be specified as URI parameter.
     // For advanced query cases, Users should use specify SearchQuery
     // and pass the SearchRequest in a GET/POST Body
-    string QueryString          = 1 [(gogoproto.jsontag) = "query-string,omitempty"];
+    // The max query-string length is 256 bytes
+    string QueryString          = 1 [(gogoproto.jsontag) = "query-string,omitempty",
+                                     (venice.check) = "StrLen(0,256)"];
 
     // From represents the start offset (zero based), used in paginated search requests
     // The results returned would be in the range [From ... From+MaxResults-1]
-    // TODO: Add venice option to set default to 0.
-    // This can be specified as URI parameter.
-    int32 From                  = 2 [(gogoproto.jsontag) = "from,omitempty"];
+    // This can be specified as URI parameter. 
+    // Default value is 0 and valid range is 0..1023
+    int32 From                  = 2 [(gogoproto.jsontag) = "from,omitempty",
+                                     (venice.check) = "IntRange(0,1023)"];
 
     // MaxResults is the max-count of search results
-    // TODO: Add venice option to set some default value (TBD)
     // This can be specified as URI parameter.
-    int32 MaxResults            = 3 [(gogoproto.jsontag) = "max-results,omitempty"];
+    // Default value is 10 and valid range is 0..8192
+    int32 MaxResults            = 3 [(venice.default) = "10",
+                                     (venice.check) = "IntRange(0,8192)",
+                                     (gogoproto.jsontag) = "max-results,omitempty"];
+
+    // SortyBy is an optional parameter and contains the field name 
+    // to be sorted by, For eg: "meta.name"
+    // This can be specified as URI parameter.
+    string SortBy               = 4 [(gogoproto.jsontag) = "sort-by,omitempty",
+                                     (venice.check) = "StrLen(0,256)"];
 
     // Search query contains the search requirements
     // This is intended for advanced query use cases involving
@@ -306,7 +319,7 @@ message SearchRequest {
     // combinations of text, phrase strings and search modifiers
     // for specific categories, kinds, fields and labels.
     // This cannot be specified as URI parameter.
-    SearchQuery Query           = 4 [(gogoproto.nullable) = true,
+    SearchQuery Query           = 5 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "query,omitempty"];
 }
 
@@ -316,13 +329,6 @@ message SearchRequest {
 // In case of failures, Error would indicate the error status and
 // description.
 message SearchResponse {
-
-    api.TypeMeta T                      = 1 [(gogoproto.embed) = true,
-                                            (gogoproto.nullable) = false,
-                                            (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta O                    = 2 [(gogoproto.embed) = true,
-                                             (gogoproto.nullable) = false,
-                                             (gogoproto.jsontag) = "meta,omitempty"];
 
     // TotalHits indicates total number of hits matched
     int64 TotalHits                     = 3 [(gogoproto.jsontag) = "total-hits,omitempty"];
@@ -343,6 +349,6 @@ message SearchResponse {
 
     // AggregatedEntries is a three level grouping of all search results,
     // Grouped by tenant, category and kind in that order.
-    NestedAggregation AggregatedEntries = 8 [(gogoproto.nullable) = true,
+    TenantAggregation AggregatedEntries = 8 [(gogoproto.nullable) = true,
                                             (gogoproto.jsontag) = "aggregated-entries,omitempty"];
 }

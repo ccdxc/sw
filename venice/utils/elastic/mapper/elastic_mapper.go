@@ -44,7 +44,7 @@ type ElasticConfig struct {
 }
 
 // ElasticMapping is generic container for json key:value pairs
-// and can be used recursively to defined nested definitions
+// and can be used recursively to define nested definitions
 type ElasticMapping map[string]interface{}
 
 // Settings contains shards and replicas settings
@@ -81,6 +81,7 @@ var fieldOrTypeOverride = map[string]map[string]string{
 		// fields that need aggregations should map to keyword
 		"tenant": "keyword",
 		"kind":   "keyword",
+		"name":   "keyword",
 
 		// special types mapping
 		"Timestamp": "date",
@@ -93,6 +94,7 @@ var fieldOrTypeOverride = map[string]map[string]string{
 		"severity":  "keyword",
 		"type":      "keyword",
 		"component": "keyword",
+		"name":      "keyword",
 
 		// special types mapping
 		"Timestamp": "date",

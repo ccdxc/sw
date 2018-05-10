@@ -59,7 +59,8 @@ func createTenant(name string) *cluster.Tenant {
 				Timestamp: *creationTime,
 			},
 			Labels: map[string]string{
-				"Location": "us-west-zone1",
+				"Location":   "us-west-zone1",
+				"Department": "human resources",
 			},
 		},
 	}

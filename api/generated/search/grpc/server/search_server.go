@@ -35,17 +35,18 @@ func (s *ssearchSearchBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 	l.Infof("registering message for ssearchSearchBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"search.Aggregation":       apisrvpkg.NewMessage("search.Aggregation"),
-		"search.Category":          apisrvpkg.NewMessage("search.Category"),
-		"search.Entry":             apisrvpkg.NewMessage("search.Entry"),
-		"search.EntryList":         apisrvpkg.NewMessage("search.EntryList"),
-		"search.Error":             apisrvpkg.NewMessage("search.Error"),
-		"search.Kind":              apisrvpkg.NewMessage("search.Kind"),
-		"search.NestedAggregation": apisrvpkg.NewMessage("search.NestedAggregation"),
-		"search.SearchQuery":       apisrvpkg.NewMessage("search.SearchQuery"),
-		"search.SearchRequest":     apisrvpkg.NewMessage("search.SearchRequest"),
-		"search.SearchResponse":    apisrvpkg.NewMessage("search.SearchResponse"),
-		"search.TextRequirement":   apisrvpkg.NewMessage("search.TextRequirement"),
+		"search.Category":            apisrvpkg.NewMessage("search.Category"),
+		"search.CategoryAggregation": apisrvpkg.NewMessage("search.CategoryAggregation"),
+		"search.Entry":               apisrvpkg.NewMessage("search.Entry"),
+		"search.EntryList":           apisrvpkg.NewMessage("search.EntryList"),
+		"search.Error":               apisrvpkg.NewMessage("search.Error"),
+		"search.Kind":                apisrvpkg.NewMessage("search.Kind"),
+		"search.KindAggregation":     apisrvpkg.NewMessage("search.KindAggregation"),
+		"search.SearchQuery":         apisrvpkg.NewMessage("search.SearchQuery"),
+		"search.SearchRequest":       apisrvpkg.NewMessage("search.SearchRequest"),
+		"search.SearchResponse":      apisrvpkg.NewMessage("search.SearchResponse"),
+		"search.TenantAggregation":   apisrvpkg.NewMessage("search.TenantAggregation"),
+		"search.TextRequirement":     apisrvpkg.NewMessage("search.TextRequirement"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

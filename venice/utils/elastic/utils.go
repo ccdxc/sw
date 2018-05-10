@@ -21,8 +21,14 @@ const (
 	// for internal data
 	InternalIndexPrefix = "venice.internal"
 
+	// ConfigIndexPrefix is the elastic index prefix for config/policies
+	ConfigIndexPrefix = "venice.external.configs.*"
+
 	// TenantAggKey is the Aggregation key to group by Tenant
 	TenantAggKey = "tenant_agg"
+
+	// CategoryAggKey is the Aggregation key to group by Category
+	CategoryAggKey = "category_agg"
 
 	// KindAggKey is the Aggregation key to group by Kind
 	KindAggKey = "kind_agg"

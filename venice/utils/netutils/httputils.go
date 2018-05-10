@@ -3,6 +3,7 @@ package netutils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -77,7 +78,7 @@ func HTTPPost(url string, req interface{}, resp interface{}) error {
 
 	if res.StatusCode != http.StatusOK {
 		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return errors.New("HTTP Error response")
+		return fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
 	}
 
 	// Read the entire response

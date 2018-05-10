@@ -38,6 +38,7 @@ var (
 	maxResults         = int32(10)
 	infraNamespace     = "infra"
 	eventsTemplateName = elastic.GetTemplateName(globals.Events)
+	sortBy             = ""
 
 	// test command line args
 	preserveEvents = flag.Bool("preserve-events", false, "Preserve events?")
@@ -152,7 +153,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// this is a query on the nested object events.ObjectMeta.ModTime
 	now := time.Now()
 	query1 := es.NewRangeQuery("meta.mod-time").Gte(now.Add(-30 * time.Second)).Lte(now)
-	result, err := client.Search(ctx, indexName, indexType, query1, nil, from, maxResults)
+	result, err := client.Search(ctx, indexName, indexType, query1, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query1, err)
 	}
@@ -166,7 +167,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// term queries are used for keyword searches (exact values)
 	// whereas, match queries are full_text searches
 	query2 := es.NewTermQuery("severity", event.Severity)
-	result, err = client.Search(ctx, indexName, indexType, query2, nil, from, maxResults)
+	result, err = client.Search(ctx, indexName, indexType, query2, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query2, err)
 	}
@@ -179,7 +180,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// Query 3: match all the events;
 	// creationTime is the same for all the events indexed during this run.
 	query3 := es.NewMatchQuery("meta.creation-time", cTime)
-	result, err = client.Search(ctx, indexName, indexType, query3, nil, from, maxResults)
+	result, err = client.Search(ctx, indexName, indexType, query3, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query3, err)
 	}
@@ -192,7 +193,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// Query 4: combine queries 1 & 2;
 	// look for severity == event.Severity events within the given 30 seconds
 	query4 := es.NewBoolQuery().Must(query1, query2)
-	result, err = client.Search(ctx, indexName, indexType, query4, nil, from, maxResults)
+	result, err = client.Search(ctx, indexName, indexType, query4, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query4, err)
 	}
@@ -205,7 +206,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// query 5: combine 2 & 3;
 	// search for events with severity == event.Severity with the creation time of this run
 	query5 := es.NewBoolQuery().Must(query2, query3)
-	result, err = client.Search(ctx, indexName, indexType, query5, nil, from, maxResults)
+	result, err = client.Search(ctx, indexName, indexType, query5, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query5, err)
 	}
@@ -220,7 +221,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// query 6: find all the event that has string defined in `infraNamespace`;
 	// atleast half the total events should match this query which is `numEvents`
 	query6 := es.NewQueryStringQuery(infraNamespace)
-	result, err = client.Search(ctx, indexName, indexType, query6, nil, from, maxResults)
+	result, err = client.Search(ctx, indexName, indexType, query6, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query6, err)
 	}
@@ -233,7 +234,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// query 7: find events by `ObjectMeta.Namespace: string`
 	// atleast half the total events should match this query which is `numEvents`
 	query7 := es.NewQueryStringQuery(fmt.Sprintf("%s:%s", "meta.namespace", infraNamespace))
-	result, err = client.Search(ctx, indexName, indexType, query7, nil, from, maxResults)
+	result, err = client.Search(ctx, indexName, indexType, query7, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query7, err)
 	}
@@ -245,7 +246,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 
 	// query 8: find all the event that has string "honda"
 	query8 := es.NewQueryStringQuery(string("honda"))
-	result, err = client.Search(ctx, indexName, indexType, query8, nil, from, maxResults)
+	result, err = client.Search(ctx, indexName, indexType, query8, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query8, err)
 	}

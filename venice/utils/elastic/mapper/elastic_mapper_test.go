@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	eventMapping       = `{"settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"first-timestamp":{"type":"text"},"kind":{"type":"keyword"},"last-timestamp":{"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"text"},"namespace":{"type":"text"},"tenant":{"type":"keyword"},"uri":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
+	eventMapping       = `{"settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"first-timestamp":{"type":"text"},"kind":{"type":"keyword"},"last-timestamp":{"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"keyword"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"keyword"},"namespace":{"type":"text"},"tenant":{"type":"keyword"},"uri":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
 	eventMappingPretty = `{
     "settings": {
         "number_of_shards": 1,
@@ -61,7 +61,7 @@ const (
                             "type": "date"
                         },
                         "name": {
-                            "type": "text"
+                            "type": "keyword"
                         },
                         "namespace": {
                             "type": "text"
@@ -86,7 +86,7 @@ const (
                             "type": "keyword"
                         },
                         "name": {
-                            "type": "text"
+                            "type": "keyword"
                         },
                         "namespace": {
                             "type": "text"
@@ -119,8 +119,7 @@ const (
         }
     }
 }`
-
-	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"first-timestamp":{"type":"text"},"kind":{"type":"keyword"},"last-timestamp":{"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"text"},"namespace":{"type":"text"},"tenant":{"type":"keyword"},"uri":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
+	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"first-timestamp":{"type":"text"},"kind":{"type":"keyword"},"last-timestamp":{"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"keyword"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"keyword"},"namespace":{"type":"text"},"tenant":{"type":"keyword"},"uri":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
 	eventTemplateMappingPretty = `{
     "index_patterns": "*.events.*",
     "settings": {
@@ -168,7 +167,7 @@ const (
                             "type": "date"
                         },
                         "name": {
-                            "type": "text"
+                            "type": "keyword"
                         },
                         "namespace": {
                             "type": "text"
@@ -193,7 +192,7 @@ const (
                             "type": "keyword"
                         },
                         "name": {
-                            "type": "text"
+                            "type": "keyword"
                         },
                         "namespace": {
                             "type": "text"
@@ -227,7 +226,7 @@ const (
     }
 }`
 
-	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression"},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"type":"keyword"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}}}}}}`
+	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression"},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"type":"keyword"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"keyword"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}}}}}}`
 	searchMappingPretty = `{
     "settings": {
         "number_of_shards": 3,
@@ -262,7 +261,7 @@ const (
                             "type": "date"
                         },
                         "name": {
-                            "type": "text"
+                            "type": "keyword"
                         },
                         "namespace": {
                             "type": "text"
@@ -373,24 +372,6 @@ func TestElasticMapper(t *testing.T) {
 			nil,
 			searchMapping,
 			searchMappingPretty,
-		},
-		{
-			monitoring.Event{
-				EventAttributes: monitoring.EventAttributes{
-					// Need to make sure pointer fields are valid to
-					// generate right mappings using reflect
-					ObjectRef: &api.ObjectRef{},
-					Source:    &monitoring.EventSource{},
-				},
-			},
-			elastic.GetDocType(globals.Events),
-			[]Option{
-				WithReplicaCount(0),
-				WithShardCount(1),
-			},
-			nil,
-			eventMapping,
-			eventMappingPretty,
 		},
 		{
 			monitoring.Event{

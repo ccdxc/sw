@@ -25,27 +25,6 @@ var _ validators.DummyVar
 var validatorMapSearch = make(map[string]map[string][]func(interface{}) bool)
 
 // Clone clones the object into into or creates one of into is nil
-func (m *Aggregation) Clone(into interface{}) (interface{}, error) {
-	var out *Aggregation
-	var ok bool
-	if into == nil {
-		out = &Aggregation{}
-	} else {
-		out, ok = into.(*Aggregation)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *Aggregation) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *Category) Clone(into interface{}) (interface{}, error) {
 	var out *Category
 	var ok bool
@@ -63,6 +42,27 @@ func (m *Category) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Category) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *CategoryAggregation) Clone(into interface{}) (interface{}, error) {
+	var out *CategoryAggregation
+	var ok bool
+	if into == nil {
+		out = &CategoryAggregation{}
+	} else {
+		out, ok = into.(*CategoryAggregation)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CategoryAggregation) Defaults(ver string) bool {
 	return false
 }
 
@@ -151,13 +151,13 @@ func (m *Kind) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *NestedAggregation) Clone(into interface{}) (interface{}, error) {
-	var out *NestedAggregation
+func (m *KindAggregation) Clone(into interface{}) (interface{}, error) {
+	var out *KindAggregation
 	var ok bool
 	if into == nil {
-		out = &NestedAggregation{}
+		out = &KindAggregation{}
 	} else {
-		out, ok = into.(*NestedAggregation)
+		out, ok = into.(*KindAggregation)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -167,7 +167,7 @@ func (m *NestedAggregation) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *NestedAggregation) Defaults(ver string) bool {
+func (m *KindAggregation) Defaults(ver string) bool {
 	return false
 }
 
@@ -190,6 +190,11 @@ func (m *SearchQuery) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *SearchQuery) Defaults(ver string) bool {
 	var ret bool
+	for k := range m.Texts {
+		if m.Texts[k] != nil {
+			ret = ret || m.Texts[k].Defaults(ver)
+		}
+	}
 	ret = true
 	switch ver {
 	default:
@@ -225,6 +230,11 @@ func (m *SearchRequest) Defaults(ver string) bool {
 	if m.Query != nil {
 		ret = ret || m.Query.Defaults(ver)
 	}
+	ret = true
+	switch ver {
+	default:
+		m.MaxResults = 10
+	}
 	return ret
 }
 
@@ -250,6 +260,27 @@ func (m *SearchResponse) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *TenantAggregation) Clone(into interface{}) (interface{}, error) {
+	var out *TenantAggregation
+	var ok bool
+	if into == nil {
+		out = &TenantAggregation{}
+	} else {
+		out, ok = into.(*TenantAggregation)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TenantAggregation) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *TextRequirement) Clone(into interface{}) (interface{}, error) {
 	var out *TextRequirement
 	var ok bool
@@ -267,16 +298,17 @@ func (m *TextRequirement) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TextRequirement) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Validators
 
-func (m *Aggregation) Validate(ver string, ignoreStatus bool) bool {
+func (m *Category) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *Category) Validate(ver string, ignoreStatus bool) bool {
+func (m *CategoryAggregation) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -296,7 +328,7 @@ func (m *Kind) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *NestedAggregation) Validate(ver string, ignoreStatus bool) bool {
+func (m *KindAggregation) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -306,6 +338,11 @@ func (m *SearchQuery) Validate(ver string, ignoreStatus bool) bool {
 	}
 	if m.Labels != nil && !m.Labels.Validate(ver, ignoreStatus) {
 		return false
+	}
+	for _, v := range m.Texts {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
 	}
 	if vs, ok := validatorMapSearch["SearchQuery"][ver]; ok {
 		for _, v := range vs {
@@ -327,6 +364,19 @@ func (m *SearchRequest) Validate(ver string, ignoreStatus bool) bool {
 	if m.Query != nil && !m.Query.Validate(ver, ignoreStatus) {
 		return false
 	}
+	if vs, ok := validatorMapSearch["SearchRequest"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := validatorMapSearch["SearchRequest"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
 	return true
 }
 
@@ -334,7 +384,24 @@ func (m *SearchResponse) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *TenantAggregation) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *TextRequirement) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := validatorMapSearch["TextRequirement"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := validatorMapSearch["TextRequirement"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
 	return true
 }
 
@@ -353,12 +420,102 @@ func init() {
 		}
 		return true
 	})
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+		m := i.(*SearchQuery)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "64")
+
+		for _, v := range m.Categories {
+			if !validators.StrLen(v, args) {
+				return false
+			}
+		}
+		return true
+	})
 
 	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
 		m := i.(*SearchQuery)
 
 		for _, v := range m.Kinds {
 			if _, ok := Kind_Type_value[v]; !ok {
+				return false
+			}
+		}
+		return true
+	})
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+		m := i.(*SearchQuery)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "64")
+
+		for _, v := range m.Kinds {
+			if !validators.StrLen(v, args) {
+				return false
+			}
+		}
+		return true
+	})
+
+	validatorMapSearch["SearchRequest"] = make(map[string][]func(interface{}) bool)
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+		m := i.(*SearchRequest)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "1023")
+
+		if !validators.IntRange(m.From, args) {
+			return false
+		}
+		return true
+	})
+
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+		m := i.(*SearchRequest)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "8192")
+
+		if !validators.IntRange(m.MaxResults, args) {
+			return false
+		}
+		return true
+	})
+
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+		m := i.(*SearchRequest)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "256")
+
+		if !validators.StrLen(m.QueryString, args) {
+			return false
+		}
+		return true
+	})
+
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+		m := i.(*SearchRequest)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "256")
+
+		if !validators.StrLen(m.SortBy, args) {
+			return false
+		}
+		return true
+	})
+
+	validatorMapSearch["TextRequirement"] = make(map[string][]func(interface{}) bool)
+	validatorMapSearch["TextRequirement"]["all"] = append(validatorMapSearch["TextRequirement"]["all"], func(i interface{}) bool {
+		m := i.(*TextRequirement)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "256")
+
+		for _, v := range m.Text {
+			if !validators.StrLen(v, args) {
 				return false
 			}
 		}

@@ -29,7 +29,11 @@ service SearchV1 {
     //  SearchRequest{ QueryString: "XXXXX", MaxResults:100}
     rpc Query (SearchRequest) returns (SearchResponse) {
         option (google.api.http) = {
-		    get: "/query"
+            post: "/query"
+            body: "*"
+            additional_bindings {
+                get: "/query"
+            }
 		};
     }
 }

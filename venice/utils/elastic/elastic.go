@@ -491,7 +491,7 @@ func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
 // so the document will be available to search 1s after indexing it.
 // This behavior can be changed by adjusting `index.refresh_interval` in indices settings.
 func (e *Client) Search(ctx context.Context, index, iType string, query interface{}, aggregation interface{},
-	from, size int32) (*es.SearchResult, error) {
+	from, size int32, sortBy string) (*es.SearchResult, error) {
 	var esQuery es.Query
 	var esAgg es.Aggregation
 	var ok bool
@@ -574,6 +574,16 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 				request = request.Size(int(size))
 			} else {
 				request = request.Size(int(defaultMaxResults))
+			}
+
+			// Add doc type if valid
+			if len(iType) != 0 {
+				request = request.Type(iType)
+			}
+
+			// Add sort option if valid
+			if len(sortBy) != 0 {
+				request = request.Sort(sortBy, true)
 			}
 
 			// Execute the search request with desired size
