@@ -9,6 +9,12 @@ delphi_compile(
     srcs = [ 'proto/upgrade.proto' ],
 )
 
+cc_library(
+    name = "upgrade_app_lib_includes",
+    srcs = [],
+    hdrs = ["export/upgrade.hpp"],
+)
+
 # compile the reactor for apps
 cc_library(
     name = "upgrade_app_lib",
@@ -55,11 +61,48 @@ cc_binary(
     ],
 )
 
+
+#################################
+############ EXAMPLE ############ 
+#################################
+# compile the example service library
+cc_library(
+    name = "example_lib",
+    srcs = [
+        "example/example.cc",
+        "example/example.hpp",
+    ],
+    hdrs = [
+        "example/example.hpp",
+    ],
+    deps = [
+        "//nic/delphi/sdk",
+        ":upgrade_app_lib",
+        "//nic/upgrade_manager:upgrade_app_lib_includes",
+    ],
+)
+
+# Compile the example binary
+cc_binary(
+    name = "example",
+    srcs = [
+        "example/example_main.cc"
+    ],
+    deps = [
+        ":example_lib",
+        ":upgrade_app_lib",
+        "//nic/upgrade_manager:upgrade_app_lib_includes",
+        "//nic/delphi/sdk",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
+    ],
+)
+
 # run the tests
 cc_test(
-    name = "upgrade_test",
+    name = "upgrade_manager_test",
     srcs = [
-        "test/upgrade_test.cc",
+        "test/upgrade_manager_test.cc",
     ],
     linkopts = [
         "-lpthread",

@@ -12,6 +12,7 @@ using namespace std;
 // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
 delphi::error UpgReqStatusMgr::OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
     LogInfo("UpgReqStatus got created for {}/{}", req, req->meta().ShortDebugString());
+    LogInfo("UpgReqStatusMgr OnUpgReqStatusCreate got called. API not implemented by svc.");
     //create the object
     return delphi::error::OK();
 }
@@ -33,6 +34,15 @@ delphi::error UpgReqStatusMgr::OnUpgReqState(delphi::objects::UpgReqStatusPtr re
     }
     //switch and invoke callback
     return delphi::error::OK();
+}
+
+void UpgReqStatusMgr::OnMountComplete(void) {
+    LogInfo("UpgReqStatusMgr OnMountComplete called");
+
+    vector<delphi::objects::UpgReqStatusPtr> upgReqStatuslist = delphi::objects::UpgReqStatus::List(sdk_);
+    for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
+        OnUpgReqStatusCreate(*reqStatus);
+    }
 }
 
 } // namespace upgrade

@@ -105,8 +105,6 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
 
 // OnMountComplete gets called when all the objects are mounted
 void UpgradeService::OnMountComplete() {
-    string out_str;
-
     LogInfo("UpgradeService OnMountComplete got called\n");
 
     // walk all upgrade request objects and reconcile them

@@ -14,18 +14,28 @@ using namespace std;
 class UpgReqStatusMgr : public delphi::objects::UpgReqStatusReactor {
     delphi::SdkPtr sdk_;
 public:
+    UpgReqStatusMgr() {}
+
     UpgReqStatusMgr(delphi::SdkPtr sk) {
         this->sdk_ = sk;
+        delphi::objects::UpgReqStatus::Mount(sk, delphi::ReadMode);
     }
-
-    // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
-    virtual delphi::error OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
 
     // OnUpgReqStatusDelete gets called when UpgReqStatus object is deleted
     virtual delphi::error OnUpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req);
 
     // OnUpgReqState gets called when UpgReqState attribute changes
     virtual delphi::error OnUpgReqState(delphi::objects::UpgReqStatusPtr req);
+
+    void OnMountComplete(void);
+
+    void Watch(std::shared_ptr<UpgReqStatusMgr> ptr) {
+        LogInfo("UpgReqStatusMgr Watch called");
+        delphi::objects::UpgReqStatus::Watch(sdk_, ptr);
+    }
+
+    // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
+    virtual delphi::error OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
 };
 typedef std::shared_ptr<UpgReqStatusMgr> UpgReqStatusMgrPtr;
 
