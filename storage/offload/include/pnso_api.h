@@ -301,7 +301,7 @@ struct pnso_decompaction_desc {
  * maximum of 4 or 8 bytes.
  *
  * Depending on the hash and checksum algorithm, Pensando accelerator can
- * produce either 64 or 32-byte hash, and 4-byte or 8-byte checksums for every
+ * produce either 64 or 32-byte hash, and 4 or 8-byte checksums for every
  * 4KB block.
  *
  * NOTE: Netapp will specify a max of 32KB buffer per request, so will require
@@ -313,50 +313,40 @@ struct pnso_decompaction_desc {
 
 /**
  * struct pnso_hash_tag - represents the SHA hash tag.
- * @hash_tag: specifies a hash tag.
+ * @hash: specifies a 64 or 32-byte hash.
  *
  */
 struct pnso_hash_tag {
-	uint8_t hash_tag[PNSO_HASH_TAG_LEN];
+	uint8_t hash[PNSO_HASH_TAG_LEN];
 };
 
 /**
  * struct pnso_chksum_tag - represents the checksum tag.
- * @chksum_tag: specifies a checksum tag.
+ * @chksum: specifies 4 or 8-byte checksum.
  *
  */
 struct pnso_chksum_tag {
-	uint8_t chksum_tag[PNSO_CHKSUM_TAG_LEN];
-};
-
-/**
- * struct pnso_output_buf - represents the output buffer of a specific
- * service.
- * @data_len: specifies the length of the output data
- * @buf_list: specifies a scatter/gather buffer list that to be used
- * as output buffer.
- *
- */
-struct pnso_output_buf {
-	uint32_t data_len;
-	struct pnso_buffer_list *buf_list;
+	uint8_t chksum[PNSO_CHKSUM_TAG_LEN];
 };
 
 /**
  * struct pnso_service_status - represents the result of a specific service
  * within a request.
  * @err: specifies the error code of a service within the service request.
+ * When 'err' is set to '0', the processing of this service can be considered
+ * successful.  Otherwise, this service in the request is failed, and any output
+ * data should be discarded.
  * @svc_type: specifies one of the enumerated values for the accelerator service
  * type.
- * @num_outputs: specifies number of SHAs or checksums or destination buffer.
- * @hashes: specifies a pointer to an allocated memory for number of
- * 'num_outputs' for hashes.  When 'num_outputs' is 0, this parameter is NULL.
- * @chksums: specifies a pointer to an allocated memory for number of 
- * 'num_outputs' for the checksums.  When 'num_outputs' is 0, this parameter is
- * NULL.
- * @output_buf: specifies a scatter/gather buffer list that to be used
- * as output buffer for this service and 'num_outputs' will be set to 1.  When
- * 'num_outputs' is set to 0, 'output_buf' is NULL.
+ * @rsvd_1: specifies a 'reserved' field meant to be used by Pensando.
+ * @hash: specifies a pointer to an allocated memory for number of
+ * hashes as specified in 'num_hashes'.  When 'num_hashes' is 0, this
+ * parameter is NULL.
+ * @chksum: specifies a pointer to an allocated memory for number of 
+ * checksums as specified in 'num_chksums'.  When 'num_chksums' is 0, this
+ * parameter is NULL.
+ * @dst: specifies a sgl that to be used as output buffer for this service.
+ * 'data_len' specifies the length of the data within the the sgl.
  *
  * Note: Hash or checksum tags will be packed one after another.
  *
@@ -364,22 +354,39 @@ struct pnso_output_buf {
 struct pnso_service_status {
 	pnso_error_t err;
 	uint16_t svc_type;
-	uint16_t num_outputs;
+	uint16_t rsvd_1;
 	union {
-		struct pnso_hash_tag *hashes;
-		struct pnso_chksum_tag *chksums;
-		struct pnso_output_buf *output_buf;
-	} o;
+		struct {
+			uint16_t num_tags;
+			uint16_t rsvd_2;
+			struct pnso_hash_tag *tags;
+		} hash;
+		struct {
+			uint16_t num_tags;
+			uint16_t rsvd_3;
+			struct pnso_chksum_tag *tags;
+		} chksum;
+		struct {
+			uint32_t data_len;
+			struct pnso_buffer_list *sgl;
+		} dst;
+	} u;
 } __attribute__ ((__packed__));
 
 /**
  * struct pnso_service_result - represents the result of the request upon
- * completion of a service within the service request.
- * @err: specifies the error code of the service request.
+ * completion one or all services.
+ * @err: specifies the overall error code of the request. When set to '0', the
+ * request processing can be considered successful.  Otherwise, one of the
+ * services in the request is failed, and any output data should be discarded.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @num_services: specifies the number of services in the request.
  * @svc: specifies an array of service status structures to report the status of
  * each service within a request upon its completion.
+ *
+ * When 'err' is set to '0', the overall request processing can be considered
+ * successful.  Otherwise, one of the services in the request is failed, and
+ * any output data should be discarded.
  *
  */
 struct pnso_service_result {
@@ -411,20 +418,20 @@ struct pnso_service {
 		struct pnso_hash_desc hash_desc;
 		struct pnso_checksum_desc chksum_desc;
 		struct pnso_decompaction_desc decompact_desc;
-	} d;
+	} u;
 } __attribute__ ((__packed__));
 
 /**
  * struct pnso_service_request - represents an array of services that are to be
  * handled in a request.
- * @src_buf: specifies input buffer on which the request will operate on.
+ * @sgl: specifies input buffer list on which the request will operate on.
  * @num_services: specifies the number of services in the input service request.
  * @svc: specifies the information about each service within the service
  * request.
  *
  */
 struct pnso_service_request {
-	struct pnso_buffer_list *src_buf;
+	struct pnso_buffer_list *sgl;
 	uint32_t num_services;
 	struct pnso_service svc[0];
 };
@@ -477,6 +484,9 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  * input and output parameters. Caller should keep the memory intact (ex:
  * svc_req/svc_res) until the Pensando accelerator returns the result via
  * completion callback.
+ *
+ * Refer to 'pnso_service_result' and 'pnso_service_status' notes above for
+ * handling the output data.
  *
  * Return:
  *	PNSO_OK - on success
