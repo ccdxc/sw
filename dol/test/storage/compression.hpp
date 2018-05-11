@@ -6,6 +6,12 @@
 
 using namespace dp_mem;
 
+// Calculate max number of hash blocks required for a given app_max_size 
+// and app_hash_size.
+#define COMP_MAX_HASH_BLKS(app_max_size, app_hash_size)   \
+    (((app_max_size) + (app_hash_size) - 1) / (app_hash_size))
+
+
 namespace tests {
 
 class comp_encrypt_chain_t;

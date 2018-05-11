@@ -52,8 +52,7 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
     /*
      * Allocate enough chksum status for the worst case
      */
-    max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(app_max_size, sizeof(cp_hdr_t),
-                                                  app_hash_size);
+    max_hash_blks = COMP_MAX_HASH_BLKS(app_max_size, app_hash_size);
     /*
      * Allocate enough chksum status for the worst case; used in the event
      * caller does not supply their own status buffers.

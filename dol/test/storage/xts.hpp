@@ -259,6 +259,10 @@ int xts_multi_blk_128req();
 int xts_multi_blk_noc_stress_from_host();
 int xts_multi_blk_noc_stress_from_hbm();
 
+void xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
+                         dp_mem_t *xts_buf,
+                         uint32_t blk_size,
+                         uint32_t num_blks);
 
 }  // namespace tests
 

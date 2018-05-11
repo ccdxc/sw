@@ -35,6 +35,7 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     comp_queue(nullptr),
     push_type(COMP_QUEUE_PUSH_INVALID),
     seq_comp_qid(0),
+    num_enc_blks(0),
     last_cp_output_data_len(0),
     last_encrypt_output_data_len(0),
     destructor_free_buffers(params.destructor_free_buffers_),
@@ -69,10 +70,11 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
                                    kMinHostMemAllocSize);
 
     // XTS AOL must be 512 byte aligned
-    xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
-    xts_out_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
+    max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, kCompAppHashBlkSize);
+    xts_src_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
+    xts_dst_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
     xts_desc_buf = new dp_mem_t(1, sizeof(xts::xts_desc_t),
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(xts::xts_desc_t));
@@ -104,8 +106,8 @@ comp_encrypt_chain_t::~comp_encrypt_chain_t()
         }
         delete comp_status_buf1;
         delete comp_opaque_buf;
-        delete xts_in_aol;
-        delete xts_out_aol;
+        delete xts_src_aol_vec;
+        delete xts_dst_aol_vec;
         delete xts_desc_buf;
     }
 }
@@ -153,6 +155,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     xts_encrypt_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
     app_blk_size = params.app_blk_size_;
+    num_enc_blks = COMP_MAX_HASH_BLKS(app_blk_size, kCompAppHashBlkSize);
     comp_queue = params.comp_queue_;
     success = false;
     compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf,
@@ -165,6 +168,8 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     chain_params.seq_status_q = params.seq_comp_status_qid_;
 
     // Set up encryption
+    xts_src_aol_vec->line_set(0);
+    xts_dst_aol_vec->line_set(0);
     encrypt_setup(chain_params);
 
     // encryption will use direct Barco push action
@@ -190,12 +195,11 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
         chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
     }
 
-    // Note that encryption data transfer is handled by compress_xts_encrypt_setup()
-    // above. The compression status sequencer will use the AOLs given below
+    // The compression status sequencer will use the AOLs given below
     // only to update the length fields with the correct output data length
     // and pad length.
-    chain_params.chain_ent.aol_src_vec_addr = xts_in_aol->pa();
-    chain_params.chain_ent.aol_dst_vec_addr = xts_out_aol->pa();
+    chain_params.chain_ent.aol_src_vec_addr = xts_src_aol_vec->pa();
+    chain_params.chain_ent.aol_dst_vec_addr = xts_dst_aol_vec->pa();
     chain_params.chain_ent.pad_buf_addr = caller_comp_pad_buf->pa();
     chain_params.chain_ent.stop_chain_on_error = 1;
     chain_params.chain_ent.aol_pad_en = 1;
@@ -244,7 +248,6 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
 {
     xts::xts_cmd_t cmd;
     xts::xts_desc_t *xts_desc_addr;
-    uint32_t datain_len;
 
     // Use caller's XTS opaque info and status, if any
     if (caller_xts_opaque_buf) {
@@ -271,28 +274,18 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts_ctx.copy_desc = false;
     xts_ctx.ring_db = false;
 
-    xts_in_aol->clear();
-    xts::xts_aol_t *xts_in = (xts::xts_aol_t *)xts_in_aol->read();
-
-    // Note: p4+ will modify L0 and L1 below based on compression
+    // Note: p4+ will modify AOL vectors below based on compression
     // output_data_len and any required padding
-    datain_len = cp_desc.datain_len == 0 ?
-                 kCompEngineMaxSize :  cp_desc.datain_len;
-    xts_in->a0 = comp_buf->pa();
-    xts_in->l0 = datain_len;
-    xts_in_aol->write_thru();
-
-    xts_out_aol->clear();
-    xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read();
-    xts_out->a0 = xts_encrypt_buf->pa();
-    xts_out->l0 = datain_len;
-    xts_out_aol->write_thru();
+    xts_aol_sparse_fill(xts_src_aol_vec, comp_buf,
+                        kCompAppHashBlkSize, num_enc_blks);
+    xts_aol_sparse_fill(xts_dst_aol_vec, xts_encrypt_buf,
+                        kCompAppHashBlkSize, num_enc_blks);
 
     // Set up XTS encrypt descriptor
     xts_ctx.cmd_eval_seq_xts(cmd);
     xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
-    xts_desc_addr->in_aol = xts_in_aol->pa();
-    xts_desc_addr->out_aol = xts_out_aol->pa();
+    xts_desc_addr->in_aol = xts_src_aol_vec->pa();
+    xts_desc_addr->out_aol = xts_dst_aol_vec->pa();
     xts_desc_addr->cmd = cmd;
     xts_desc_buf->write_thru();
     xts_ctx.desc_write_seq_xts(xts_desc_buf);
@@ -340,7 +333,9 @@ comp_encrypt_chain_t::fast_verify(void)
 int 
 comp_encrypt_chain_t::full_verify(void)
 {
-    uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
+    xts::xts_aol_t  *xts_aol;
+    uint32_t        block_no;
+    uint32_t        poll_factor = app_blk_size / kCompAppMinSize;
 
     // Poll for comp status
     success = false;
@@ -370,8 +365,16 @@ comp_encrypt_chain_t::full_verify(void)
     }
 
     // Status verification done.
-    xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read_thru();
-    last_encrypt_output_data_len = xts_out->l0;
+    last_encrypt_output_data_len = 0;
+    for (block_no = 0; block_no < xts_dst_aol_vec->num_lines_get(); block_no++) {
+        xts_dst_aol_vec->line_set(block_no);
+        xts_aol = (xts::xts_aol_t *)xts_dst_aol_vec->read_thru();
+
+        last_encrypt_output_data_len += xts_aol->l0;
+        if (!xts_aol->next) {
+            break;
+        }
+    }
 
     if (!suppress_info_log) {
         printf("Testcase comp_encrypt_chain full_verify passed: "

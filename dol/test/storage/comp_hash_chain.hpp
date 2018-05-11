@@ -6,13 +6,6 @@
 
 #include <vector>
 
-// Calculate max number of hash blocks required for a given app_max_size and app_hash_size.
-// Calculation takes into account of possible compression failure which may introduce
-// a cp_hdr_t overhead.
-#define COMP_HASH_CHAIN_MAX_HASH_BLKS(app_max_size, overhead_size, app_hash_size)   \
-    (((app_max_size) + overhead_size + app_hash_size - 1) / app_hash_size)
-
-
 namespace tests {
 
 /*

@@ -109,10 +109,12 @@ xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
     uint64_t        xts_buf_addr;
     uint32_t        xts_buf_size;
     uint32_t        block_no;
+    uint32_t        save_curr_line;
 
     assert(xts_aol_vec->num_lines_get() >= num_blks);
     xts_buf_addr = xts_buf->pa();
     xts_buf_size = xts_buf->line_size_get();
+    save_curr_line = xts_aol_vec->line_get();
 
     for (block_no = 0; block_no < num_blks; block_no++) {
         xts_aol_vec->line_set(block_no);
@@ -124,12 +126,13 @@ xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
         assert(xts_aol->l0);
 
         if (block_no < (num_blks - 1)) {
-            xts_aol->next = xts_aol_vec->pa() + sizeof(*xts_aol);
+            xts_aol->next = xts_aol_vec->pa() + xts_aol_vec->line_size_get();
         }
         xts_aol_vec->write_thru();
         xts_buf_addr += xts_aol->l0;
         xts_buf_size -= xts_aol->l0;
     }
+    xts_aol_vec->line_set(save_curr_line);
 }
 
 bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset,

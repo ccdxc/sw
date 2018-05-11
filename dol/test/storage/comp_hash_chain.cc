@@ -45,13 +45,10 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     uncomp_buf = new dp_mem_t(1, app_max_size,
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
                               0, DP_MEM_ALLOC_NO_FILL);
-    // Size of compressed buffers accounts any for compression failure,
-    // i.e., must be as large as uncompressed buffer plus cp_hdr_t.
-    // 
-    // Also, caller can elect to have 2 output buffers, e.g.
+    // Caller can elect to have 2 output buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will PDMA transfer into for the application.
-    comp_buf1 = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
+    comp_buf1 = new dp_mem_t(1, app_max_size,
                              DP_MEM_ALIGN_PAGE, params.comp_mem_type1_,
                              0, DP_MEM_ALLOC_NO_FILL);
     if (params.comp_mem_type2_ != DP_MEM_TYPE_VOID) {
@@ -84,8 +81,7 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     /*
      * Allocate enough hash descriptors for the worst case
      */
-    max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(app_max_size, sizeof(cp_hdr_t),
-                                                  app_hash_size);
+    max_hash_blks = COMP_MAX_HASH_BLKS(app_max_size, app_hash_size);
     hash_desc_vec = new dp_mem_t(max_hash_blks, sizeof(cp_desc_t),
                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                  sizeof(cp_desc_t));
@@ -187,8 +183,7 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      */
     app_blk_size = params.app_blk_size_;
     app_hash_size = params.app_hash_size_;
-    num_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(app_blk_size, sizeof(cp_hdr_t),
-                                                  app_hash_size);
+    num_hash_blks = COMP_MAX_HASH_BLKS(app_blk_size, app_hash_size);
     actual_hash_blks = -1;
     if (num_hash_blks > max_hash_blks) {
         printf("%s num_hash_blks %u exceeds max_hash_blks %u\n",
@@ -213,7 +208,7 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      */
     if (caller_hash_opaque_vec &&
         (caller_hash_opaque_vec->num_lines_get() < num_hash_blks)) {
-        printf("%s number of status buffers %u is less than num_hash_blks %u\n",
+        printf("%s number of opaque buffers %u is less than num_hash_blks %u\n",
                __FUNCTION__, caller_hash_opaque_vec->num_lines_get(),
                num_hash_blks);
         assert(caller_hash_opaque_vec->num_lines_get() >= num_hash_blks);
@@ -346,7 +341,13 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
         chain_params.chain_ent.flat_dst_buf_addr = comp_buf1->pa();
         chain_params.chain_ent.aol_dst_vec_addr = seq_sgl_pdma->pa();
     }
+
+    /*
+     * hash executes multiple requests, one per block; hence,
+     * indicate to P4+ to push a vector of descriptors.
+     */
     chain_params.chain_ent.sgl_pdma_en = 1;
+    chain_params.chain_ent.desc_vec_push_en = 1;
 
     if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
         printf("test_setup_seq_acc_chain_entry failed\n");
@@ -481,8 +482,8 @@ comp_hash_chain_t::actual_hash_blks_get(comp_hash_chain_retrieve_method_t method
                 return -1;
             }
             last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
-            actual_hash_blks = (int)COMP_HASH_CHAIN_MAX_HASH_BLKS(last_cp_output_data_len, 0,
-                                                                  app_hash_size);
+            actual_hash_blks = (int)COMP_MAX_HASH_BLKS(last_cp_output_data_len,
+                                                       app_hash_size);
             if (!suppress_info_log) {
                 printf("comp_hash_chain: last_cp_output_data_len %u actual_hash_blks %u\n",
                        last_cp_output_data_len, actual_hash_blks);
