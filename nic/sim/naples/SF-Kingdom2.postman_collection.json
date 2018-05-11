@@ -8,25 +8,6 @@
 	},
 	"item": [
 		{
-			"name": "tenant/default",
-			"request": {
-				"url": "{{node2}}/api/tenants/",
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\": \"Tenant\", \"meta\":{\"Name\":\"default\"}}"
-				},
-				"description": ""
-			},
-			"response": []
-		},
-		{
 			"name": "namespace/kg1",
 			"request": {
 				"url": "{{node2}}/api/namespaces/",
