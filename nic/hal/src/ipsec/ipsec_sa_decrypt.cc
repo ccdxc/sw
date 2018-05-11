@@ -159,8 +159,6 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec->new_key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
     memcpy((uint8_t*)ipsec->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
 
-    ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
-    ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
     vrf = vrf_get_infra_vrf();
     if (vrf) {
         tid = vrf->vrf_id;
@@ -267,9 +265,6 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec->iv_salt = spec.salt();
     ipsec->spi = spec.spi();
     ipsec->new_spi = spec.rekey_spi();
-
-    ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
-    ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
 
     vrf = vrf_get_infra_vrf();
     if (vrf) {

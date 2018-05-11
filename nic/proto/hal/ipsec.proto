@@ -99,8 +99,6 @@ message IpsecSADecrypt {
   Key                            decryption_key            = 8;   // encryption key
   Key                            rekey_authentication_key  = 9;   // authenticaion key
   Key                            rekey_decryption_key      = 10;   // encryption key
-  types.IPAddress                local_gateway_ip          = 11;   // local VPN GW IP, helps derive local MAC as well
-  types.IPAddress                remote_gateway_ip         = 12;   // remote VPN GW IP, derive remote MAC using ARP database
   uint32                         spi                       = 13;   // security parameters index
   uint32                         rekey_active              = 14;
   uint32                         rekey_spi                 = 15;  // Valid when rekey is active - part of update 

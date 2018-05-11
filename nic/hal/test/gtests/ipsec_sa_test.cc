@@ -422,10 +422,6 @@ TEST_F(ipsec_encrypt_test, test1)
     decrypt_spec.set_decryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
     decrypt_spec.mutable_authentication_key()->set_key("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
     decrypt_spec.mutable_decryption_key()->set_key("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
-    decrypt_spec.mutable_remote_gateway_ip()->set_ip_af(types::IP_AF_INET);
-    decrypt_spec.mutable_remote_gateway_ip()->set_v4_addr(ip2);
-    decrypt_spec.mutable_local_gateway_ip()->set_ip_af(types::IP_AF_INET);
-    decrypt_spec.mutable_local_gateway_ip()->set_v4_addr(ip1);
     decrypt_spec.set_salt(0xbbbbbbbb);
     decrypt_spec.set_spi(0);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
