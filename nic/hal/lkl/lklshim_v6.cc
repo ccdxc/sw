@@ -254,10 +254,7 @@ lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb,
     HAL_TRACE_DEBUG("lklshim: flow hit pkt rxhdr->qid={}", rxhdr->qid);
     flow = lklshim_flow_by_qid[rxhdr->qid];
     if (!flow) return false;
-    if (flow->itor_dir != dir) {
-        flow->dst_lif = rxhdr->src_lif;
-        HAL_TRACE_DEBUG("lklshim: updating flow dst lif = {}", flow->dst_lif);
-    }
+
     if (lkl_tcp_v6_rcv(pkt_skb)) {
         //return false;
     }
@@ -268,10 +265,15 @@ lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb,
      * release the client syn and establish session for the original flow.
      */
     if (!hal::tls::proxy_tls_bypass_mode) {
-        if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
-            hal::tls::tls_api_start_connection(flow->iqid, flow->rqid, false, false, flow->pfi);
-        } else {
-            hal::tls::tls_api_start_connection(flow->rqid, flow->iqid, false, true, flow->pfi);
+        hal::tls::tls_api_start_connection(flow->flow_encap.encrypt_qid, flow->flow_encap.decrypt_qid,
+                                           false, flow->flow_encap.is_server_ctxt, flow->pfi);
+        if(flow->flow_encap.is_server_ctxt) {
+            HAL_TRACE_DEBUG("lklshim: TLS server connection setup done: release client syn for daddr={}, saddr={}, "
+                            "dport={}, sport={}, seqno={}, ackseqno={} ", 
+                            ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq),
+                            ntohl(tcp->ack_seq));
+            // Inform LKL  
+            lklshim_release_client_syn6(flow->iqid);
         }
     } else {
 
@@ -363,10 +365,6 @@ lklshim_process_v6_flow_hit_rx_header (void *pkt_skb,
                     ip->daddr, ip->saddr, 
                     ntohs(tp->hdr.dport), ntohs(tp->hdr.sport), ntohl(tp->hdr.seq), ntohl(tp->hdr.ack_seq));
 
-    if (flow->itor_dir != dir) {
-        flow->dst_lif = rxhdr->src_lif;
-        HAL_TRACE_DEBUG("lklshim: updating flow dst lif = {}", flow->dst_lif);
-    }
     HAL_TRACE_DEBUG("lklshim: calling lkl_tcp_v6_rcv");
     if (!lkl_tcp_v6_rcv(pkt_skb)) {
         return false;
@@ -378,8 +376,8 @@ bool
 lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
                                         hal::flow_direction_t dir,
                                         uint32_t iqid, uint32_t rqid, 
-                                        uint16_t src_lif, uint16_t hw_vlan_id,
-                                        uint16_t rencap_vlan, proxy_flow_info_t *pfi)
+                                        proxy_flow_info_t *pfi,
+                                        lklshim_flow_encap_t *flow_encap)
 {
     lklshim_flow_t      *flow;
     lklshim_flow_key_t  flow_key;
@@ -400,26 +398,22 @@ lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
      * Cache the pointer to the packet as we'll process it later.
      */
     flow->itor_dir = dir;
-    flow->hw_vlan_id = hw_vlan_id;
-    flow->rencap_vlan = rencap_vlan;
     flow->iqid = iqid;
     lklshim_flow_by_qid[iqid] = flow;
     flow->rqid = rqid;
     lklshim_flow_by_qid[rqid] = flow;
-    flow->src_lif = src_lif;
     flow->pfi = pfi;
+    memcpy(&flow->flow_encap, flow_encap, sizeof(lklshim_flow_encap_t));
 
-    proxy::tcp_create_cb_v6(flow->iqid, flow->src_lif, eth, vlan, ip6, tcp, true, hw_vlan_id,
-                            proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid), flow->rencap_vlan);
-    proxy::tcp_create_cb_v6(flow->rqid, flow->src_lif, eth, vlan, ip6, tcp, false, hw_vlan_id,
-                            proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid), flow->rencap_vlan);
+    proxy::tcp_create_cb_v6(flow->iqid, flow_encap->i_src_lif, flow_encap->i_src_vlan_id,
+                            eth, vlan, ip6, tcp, true, proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid));
+    proxy::tcp_create_cb_v6(flow->rqid, flow_encap->r_src_lif, flow_encap->r_src_vlan_id,
+                            eth, vlan, ip6, tcp, false, proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid));
 
     // create tlscb
-    hal::tls::tls_api_init_flow(flow->iqid, false);
-    hal::tls::tls_api_init_flow(flow->rqid, true);
+    hal::tls::tls_api_init_flow(flow_encap->encrypt_qid, flow_encap->decrypt_qid);
 
     if (dir == hal::FLOW_DIR_FROM_ENIC) {
-        hal::tls::tls_api_init_flow(flow->iqid, flow->rqid);
         flow->hostns.skbuff = pkt_skb;
         flow->netns.skbuff = NULL;
         HAL_TRACE_DEBUG("lklshim: flow->hostns.skbuff={}", flow->hostns.skbuff);
@@ -443,7 +437,6 @@ lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
         lklshim_create_v6_listen_sockets(dir, flow);
         lklshim_trigger_v6_flow_connection(flow, dir);
     } else {
-        hal::tls::tls_api_init_flow(flow->rqid, flow->iqid);
         flow->netns.skbuff = pkt_skb;
         flow->hostns.skbuff = NULL;
         flow->netns.state = FLOW_STATE_SYN_RCVD;

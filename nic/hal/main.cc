@@ -65,8 +65,9 @@
 #include "nic/gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "nic/gen/hal/svc/multicast_svc_gen.hpp"
 #include "nic/gen/hal/svc/gft_svc_gen.hpp"
-
+#include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
+
 
 using grpc::Server;
 using grpc::ServerBuilder;

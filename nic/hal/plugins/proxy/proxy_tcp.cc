@@ -15,8 +15,8 @@
 #include "nic/hal/pd/pd_api.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"
-#include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
+#include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
@@ -68,6 +68,10 @@ std::string hex_dump(const uint8_t *buf, size_t sz)
     return result.str();
 }
 
+static bool
+is_local_ep(hal::if_t *intf) {
+    return (intf != NULL && intf->if_type == intf::IF_TYPE_ENIC);
+}
 
 hal_ret_t
 proxy_create_hdr_template(TcpCbSpec &spec,
@@ -76,8 +80,7 @@ proxy_create_hdr_template(TcpCbSpec &spec,
                           ipv4_header_t *ip,
                           tcp_header_t *tcp,
                           bool is_itor_dir,
-                          uint16_t hw_vlan_id, 
-                          uint16_t rencap_vlan)
+                          uint16_t src_vlan_id)
 {
     hal_ret_t       ret = HAL_RET_OK;
     uint8_t         buf[64];
@@ -86,17 +89,11 @@ proxy_create_hdr_template(TcpCbSpec &spec,
     uint16_t        sport, dport;
     uint32_t        sip, dip;
     mac_addr_t      smac, dmac;
-    fte::ctx_t &ctx = *gl_ctx;
 
     HAL_TRACE_DEBUG("tcp-proxy: header template eth={}", hex_dump((uint8_t*)eth, 18));
     HAL_TRACE_DEBUG("tcp-proxy: header template ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
     HAL_TRACE_DEBUG("tcp-proxy: header template tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
     
-    if(ctx.dif() == NULL) {
-        HAL_TRACE_DEBUG("tcp-proxy: ctx.dif() is NULL");    
-    } else {
-        HAL_TRACE_DEBUG("tcp-proxy: dif if type {}", ctx.dif()->if_type);    
-    }
     if (is_itor_dir) {
         sport = tcp->sport;
         dport = tcp->dport;
@@ -104,17 +101,6 @@ proxy_create_hdr_template(TcpCbSpec &spec,
         memcpy(&dip, &ip->daddr, sizeof(ip->daddr));
         memcpy(&smac, eth->smac, ETH_ADDR_LEN);
         memcpy(&dmac, eth->dmac, ETH_ADDR_LEN);
-        //vlan_id = htons(hw_vlan_id);
-        
-        if(ctx.dif() == NULL || ctx.dif()->if_type != intf::IF_TYPE_ENIC) {
-            HAL_TRACE_DEBUG("hw_vlan_id: {}, htons(hw_vlan_id): {:#x}", hw_vlan_id, htons(hw_vlan_id));
-            vlan_id = htons(hw_vlan_id);
-        } else {
-            HAL_TRACE_DEBUG("rencap_vlan: {}, htons(rencap_vlan): {:#x}", rencap_vlan, htons(rencap_vlan));
-            vlan_id = htons(rencap_vlan);
-        }
-        
-        //spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.dep()));
     } else {
         sport = tcp->dport;
         dport = tcp->sport;
@@ -122,22 +108,16 @@ proxy_create_hdr_template(TcpCbSpec &spec,
         memcpy(&dip, &ip->saddr, sizeof(ip->saddr));
         memcpy(&smac, eth->dmac, ETH_ADDR_LEN);
         memcpy(&dmac, eth->smac, ETH_ADDR_LEN);
-        //vlan_id = vlan->vlan_tag;
-        
-       if(ctx.dif() == NULL || ctx.dif()->if_type != intf::IF_TYPE_ENIC) {
-            vlan_id = vlan->vlan_tag;
-        } else {
-            vlan_id = htons(hw_vlan_id);
-        }
-        //spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.sep()));
-     }
+    }
+
+    vlan_id = htons(src_vlan_id);
+    HAL_TRACE_DEBUG("tcp-proxy: src_vlan_id: {}, htons(vlan_id): {:#x}", src_vlan_id, vlan_id);   
     HAL_TRACE_DEBUG("tcp-proxy: sport={}", hex_dump((uint8_t*)&sport, sizeof(sport)));
     HAL_TRACE_DEBUG("tcp-proxy: dport={}", hex_dump((uint8_t*)&dport, sizeof(dport)));
     HAL_TRACE_DEBUG("tcp-proxy: sip={}", hex_dump((uint8_t*)&sip, sizeof(sip)));
     HAL_TRACE_DEBUG("tcp-proxy: dip={}", hex_dump((uint8_t*)&dip, sizeof(dip)));
     HAL_TRACE_DEBUG("tcp-proxy: smac={}", hex_dump((uint8_t*)smac, sizeof(smac)));
     HAL_TRACE_DEBUG("tcp-proxy: dmac={}", hex_dump((uint8_t*)dmac, sizeof(dmac)));
-    HAL_TRACE_DEBUG("tcp-proxy: vlan={}", hex_dump((uint8_t*)&vlan_id, sizeof(vlan_id)));
 
     spec.set_source_port(ntohs(dport));
     spec.set_dest_port(ntohs(sport));
@@ -170,8 +150,7 @@ proxy_create_v6_hdr_template(TcpCbSpec &spec,
                           ipv6_header_t *ip,
                           tcp_header_t *tcp,
                           bool is_itor_dir,
-                          uint16_t hw_vlan_id,
-                          uint16_t rencap_vlan)
+                          uint16_t src_vlan_id)
 {
     hal_ret_t       ret = HAL_RET_OK;
     uint8_t         buf[64];
@@ -180,7 +159,6 @@ proxy_create_v6_hdr_template(TcpCbSpec &spec,
     uint16_t        sport, dport;
     ipv6_addr_t     sip, dip;
     mac_addr_t      smac, dmac;
-    fte::ctx_t &ctx = *gl_ctx;
 
     HAL_TRACE_DEBUG("tcp-proxy: header template eth={}", hex_dump((uint8_t*)eth, 18));
     HAL_TRACE_DEBUG("tcp-proxy: header template ip6={}", hex_dump((uint8_t*)ip, sizeof(ipv6_header_t)));
@@ -193,11 +171,6 @@ proxy_create_v6_hdr_template(TcpCbSpec &spec,
         memcpy(&dip.addr8, &ip->daddr, sizeof(ip->daddr));
         memcpy(&smac, eth->smac, ETH_ADDR_LEN);
         memcpy(&dmac, eth->dmac, ETH_ADDR_LEN);
-        if(ctx.dif() == NULL || ctx.dif()->if_type != intf::IF_TYPE_ENIC) {
-            vlan_id = htons(hw_vlan_id);
-        } else {
-            vlan_id = rencap_vlan;    
-        }
     } else {
         sport = tcp->dport;
         dport = tcp->sport;
@@ -205,19 +178,16 @@ proxy_create_v6_hdr_template(TcpCbSpec &spec,
         memcpy(&dip.addr8, &ip->saddr, sizeof(ip->saddr));
         memcpy(&smac, eth->dmac, ETH_ADDR_LEN);
         memcpy(&dmac, eth->smac, ETH_ADDR_LEN);
-        if(ctx.dif() == NULL || ctx.dif()->if_type != intf::IF_TYPE_ENIC) {
-            vlan_id = vlan->vlan_tag;
-        } else {
-            vlan_id = htons(hw_vlan_id);    
-        }
-     }
+    }
+
+    vlan_id = htons(src_vlan_id);
+    HAL_TRACE_DEBUG("tcp-proxy: src_vlan_id: {}, htons(vlan_id): {:#x}", src_vlan_id, vlan_id);   
     HAL_TRACE_DEBUG("tcp-proxy: sport={}", hex_dump((uint8_t*)&sport, sizeof(sport)));
     HAL_TRACE_DEBUG("tcp-proxy: dport={}", hex_dump((uint8_t*)&dport, sizeof(dport)));
     HAL_TRACE_DEBUG("tcp-proxy: sip={}", hex_dump((uint8_t*)&sip, sizeof(sip)));
     HAL_TRACE_DEBUG("tcp-proxy: dip={}", hex_dump((uint8_t*)&dip, sizeof(dip)));
     HAL_TRACE_DEBUG("tcp-proxy: smac={}", hex_dump((uint8_t*)smac, sizeof(smac)));
     HAL_TRACE_DEBUG("tcp-proxy: dmac={}", hex_dump((uint8_t*)dmac, sizeof(dmac)));
-    HAL_TRACE_DEBUG("tcp-proxy: vlan={}", hex_dump((uint8_t*)&vlan_id, sizeof(vlan_id)));
 
     spec.set_source_port(ntohs(dport));
     spec.set_dest_port(ntohs(sport));
@@ -258,8 +228,10 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 }
 
 hal_ret_t
-tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv4_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, uint16_t hw_vlan_id,
-              types::AppRedirType l7_proxy_type, uint16_t rencap_vlan)
+tcp_create_cb(qid_t qid, uint16_t src_lif, uint16_t src_vlan_id,
+              ether_header_t *eth, vlan_header_t* vlan,
+              ipv4_header_t *ip, tcp_header_t *tcp,
+              bool is_itor_dir, types::AppRedirType l7_proxy_type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
@@ -272,29 +244,7 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* v
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
-    /*
-    if (is_itor_dir) {
-        spec.set_source_lif(hal::SERVICE_LIF_CPU);
-    } else {
-        spec.set_source_lif(src_lif);
-    }
-    */
-    
-    if(ctx.dif()->if_type != intf::IF_TYPE_ENIC) {
-        HAL_TRACE_DEBUG("tcp-proxy: set tcpcb params for host syn");
-        if (is_itor_dir) {
-            spec.set_source_lif(hal::SERVICE_LIF_CPU);
-        } else {
-            spec.set_source_lif(src_lif);
-        }
-    } else {
-        HAL_TRACE_DEBUG("tcp-proxy: set tcpcb params for network syn");
-        if (is_itor_dir) {
-            spec.set_source_lif(src_lif);
-        } else {       
-            spec.set_source_lif(hal::SERVICE_LIF_CPU);
-        }
-    }
+    spec.set_source_lif(src_lif);
     HAL_TRACE_DEBUG("tcp-proxy: source lif: {}", spec.source_lif());
 
     ret = proxy_tcp_cb_init_def_params(spec);
@@ -303,7 +253,7 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* v
         return ret;
     }
 
-    ret = proxy_create_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir, hw_vlan_id, rencap_vlan);
+    ret = proxy_create_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir, src_vlan_id);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize header templates");
         return ret;
@@ -322,7 +272,7 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* v
 }
 
 hal_ret_t
-tcp_create_cb_v6(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, uint16_t hw_vlan_id, types::AppRedirType l7_proxy_type, uint16_t rencap_vlan)
+tcp_create_cb_v6(qid_t qid, uint16_t src_lif, uint16_t src_vlan_id, ether_header_t *eth, vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, types::AppRedirType l7_proxy_type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
@@ -335,18 +285,15 @@ tcp_create_cb_v6(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
-    if (is_itor_dir) {
-        spec.set_source_lif(hal::SERVICE_LIF_CPU);
-    } else {
-        spec.set_source_lif(src_lif);
-    }
+    spec.set_source_lif(src_lif);
+
     ret = proxy_tcp_cb_init_def_params(spec);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize CB");
         return ret;
     }
 
-    ret = proxy_create_v6_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir, hw_vlan_id, rencap_vlan);
+    ret = proxy_create_v6_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir, src_vlan_id);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize header templates");
         return ret;
@@ -600,6 +547,12 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     // Ignore direction. Always set it to 0
     flow_key.dir = 0;
 
+    // no need to enable proxy if both src and dest are local
+    if(is_local_ep(ctx.sif()) && is_local_ep(ctx.dif())) {
+        HAL_TRACE_DEBUG("tcp-proxy: skipping proxy when both src/dest are local");
+        return fte::PIPELINE_CONTINUE;
+    }
+
     // Check if TCP proxy is enabled for the flow
     if(!tcp_is_proxy_enabled_for_flow(flow_key)) {
         HAL_TRACE_DEBUG("tcp-proxy: not enabled for flow: {}", ctx.key());
@@ -640,77 +593,198 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
+static hal_ret_t 
+tcp_get_flow_encap_for_h2n_flow(const fte::ctx_t &ctx,
+                                const proxy_flow_info_t& pfi,
+                                hal::lklshim_flow_encap_t& flow_encap)
+{
+    uint16_t hw_vlan_id = 0;
+    hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args = {0};
+
+    HAL_TRACE_DEBUG("tcp-proxy: Host -> Uplink connection");
+    
+    // Get CPU hw vlan-id 
+    args.l2seg = ctx.dl2seg();
+    args.vid = &hw_vlan_id;
+    
+    if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                             (void*)&args) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get CPU VLAN-id");
+    } else {
+        HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", hw_vlan_id);
+    }
+
+    flow_encap.i_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.i_src_vlan_id = hw_vlan_id;
+    flow_encap.r_src_lif = ctx.cpu_rxhdr()->src_lif;
+    flow_encap.r_src_vlan_id = ctx.sif()->encap_vlan;
+    flow_encap.encrypt_qid = pfi.qid1;
+    flow_encap.decrypt_qid = pfi.qid2;
+    flow_encap.is_server_ctxt = false;
+    return HAL_RET_OK;
+}
+
+static hal_ret_t 
+tcp_get_flow_encap_for_n2h_flow(const fte::ctx_t &ctx,
+                                const proxy_flow_info_t& pfi,
+                                hal::lklshim_flow_encap_t& flow_encap)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint16_t hw_vlan_id = 0, hw_lif_id = 0;
+    hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args = {0};
+    hal::lif_t *lif = NULL;
+    hal::pd::pd_lif_get_args_t hwlif_args = {0};
+
+    HAL_TRACE_DEBUG("tcp-proxy: Uplink -> host connection");
+    
+    // Get CPU hw vlan-id 
+    args.l2seg = ctx.sl2seg();
+    args.vid = &hw_vlan_id;
+    if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                             (void*)&args) != HAL_RET_OK) {
+        HAL_TRACE_ERR("tcp-proxy: Failed to get CPU VLAN-id");
+    } else {
+        HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", hw_vlan_id);
+    }
+
+    // find lif
+    lif = find_lif_by_handle(ctx.dif()->lif_handle);
+    if(!lif) {
+        HAL_TRACE_ERR("Failed to find for the handle: {}", ctx.dif()->lif_handle);
+        return HAL_RET_LIF_NOT_FOUND;
+    }
+    
+    hwlif_args.lif = lif;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET, (void *)&hwlif_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get hw_lif_id for lif {}", lif->lif_id);
+        return ret;
+    }
+    hw_lif_id = hwlif_args.hw_lif_id;
+    HAL_TRACE_DEBUG("tcp-proxy: Found lif id: {}, hw_lif-id: {}", 
+                    lif->lif_id, hw_lif_id);
+
+    flow_encap.i_src_lif = hw_lif_id;
+    flow_encap.i_src_vlan_id = ctx.dif()->encap_vlan;
+    flow_encap.r_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.r_src_vlan_id = hw_vlan_id;
+    flow_encap.encrypt_qid = pfi.qid2;
+    flow_encap.decrypt_qid = pfi.qid1;
+    flow_encap.is_server_ctxt = true;
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t 
+tcp_get_flow_encap_for_n2n_flow(const fte::ctx_t &ctx,
+                                const proxy_flow_info_t& pfi,
+                                hal::lklshim_flow_encap_t& flow_encap)
+{
+    uint16_t shw_vlan_id = 0, dhw_vlan_id = 0;
+    hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args = {0};
+
+    HAL_TRACE_DEBUG("tcp-proxy: Uplink -> Uplink connection");
+    
+    // Get CPU hw vlan-id 
+    args.l2seg = ctx.sl2seg();
+    args.vid = &shw_vlan_id;
+    if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                             (void*)&args) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get CPU VLAN-id");
+    } else {
+        HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
+    }
+
+    args.l2seg = ctx.dl2seg();
+    args.vid = &dhw_vlan_id;
+    if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                             (void*)&args) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get CPU VLAN-id");
+    } else {
+        HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", dhw_vlan_id);
+    }
+    
+    flow_encap.i_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.i_src_vlan_id = dhw_vlan_id;
+    flow_encap.r_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.r_src_vlan_id = shw_vlan_id;
+    flow_encap.encrypt_qid = pfi.qid1;
+    flow_encap.decrypt_qid = pfi.qid2;
+    flow_encap.is_server_ctxt = false;
+    
+    return HAL_RET_OK;
+}
+
+static hal_ret_t 
+tcp_get_flow_encap(const fte::ctx_t& ctx,
+                   const proxy_flow_info_t& pfi,
+                   hal::lklshim_flow_encap_t& flow_encap)
+{
+    bool is_local_src = is_local_ep(ctx.sif());
+    bool is_local_dest = is_local_ep(ctx.dif());
+
+    if(is_local_src && is_local_dest) {
+        // Host -> Host
+        HAL_TRACE_DEBUG("tcp-proxy: both src and dest local. proxy shouldn't be enabled");
+        return HAL_RET_INVALID_ARG;
+    } else if (is_local_src && !is_local_dest) {
+        return tcp_get_flow_encap_for_h2n_flow(ctx, pfi, flow_encap);
+    } else if (!is_local_src && is_local_dest) {
+        return tcp_get_flow_encap_for_n2h_flow(ctx, pfi, flow_encap);
+    } else {
+        return tcp_get_flow_encap_for_n2n_flow(ctx, pfi, flow_encap);
+    }
+    return HAL_RET_OK;
+}
+
 fte::pipeline_action_t
 tcp_exec_trigger_connection(fte::ctx_t& ctx)
 {
+    hal_ret_t               ret = HAL_RET_OK;
     proxy_flow_info_t*      pfi = NULL;
     flow_key_t              flow_key = ctx.key();
-    hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
+    hal::lklshim_flow_encap_t flow_encap = {0};
 
+    // Ignore direction for lookup. Always set it to 0
     if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
         HAL_TRACE_DEBUG("{}: responder side. ignoring.", __FUNCTION__);
         return fte::PIPELINE_CONTINUE;
     }
 
-    if (!ctx.protobuf_request()) {
-        uint16_t shw_vlan_id, dhw_vlan_id, hw_vlan_id, rencap_vlan;
-
-        // Ignore direction. Always set it to 0
-        flow_key.dir = 0;
-
-        // get the flow info for the tcp proxy service
-        pfi = tcp_proxy_get_flow_info(flow_key);
-        if (pfi) {
-            args.l2seg = ctx.sl2seg();
-            args.vid = &shw_vlan_id;
-            // if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.sl2seg(), &shw_vlan_id) == HAL_RET_OK) {
-            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                     (void*)&args) == HAL_RET_OK) {
-              HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
-            }
-
-            args.l2seg = ctx.dl2seg();
-            args.vid = &dhw_vlan_id;
-            // if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.dl2seg(), &dhw_vlan_id) == HAL_RET_OK) {
-            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                     (void*)&args) == HAL_RET_OK) {
-              HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", dhw_vlan_id);
-            }
-            
-            if(ctx.direction() == FLOW_DIR_FROM_UPLINK) {
-                hw_vlan_id = shw_vlan_id;
-                // get encap vlan for the destination
-                if((ctx.dif() == NULL) || ctx.dif()->if_type != intf::IF_TYPE_ENIC) {
-                    HAL_TRACE_DEBUG("tcp-proxy: dest-if is not enic. using encap {}", 
-                                    dhw_vlan_id);
-                    rencap_vlan = dhw_vlan_id;
-                } else {
-                    HAL_TRACE_DEBUG("tcp-proxy: enic dest  encap: {}", 
-                                    ctx.dif()->encap_vlan);
-                    rencap_vlan = ctx.dif()->encap_vlan;
-                }
-            } else {
-                hw_vlan_id = dhw_vlan_id;
-            }
-            HAL_TRACE_DEBUG("LKL return {}",
-                            hal::pd::lkl_handle_flow_miss_pkt(
-                                                              hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
-                                                                                        ctx.pkt(),
-                                                                                        ctx.pkt_len(),
-                                                                                        ctx.direction()),
-                                                              ctx.direction(),
-                                                              pfi->qid1, pfi->qid2,
-                                                              ctx.cpu_rxhdr(),
-                                                              hw_vlan_id,
-                                                              rencap_vlan,
-                                                              pfi));
-        }
+    if (ctx.protobuf_request()) {
+        HAL_TRACE_DEBUG("protobuf request. ignoring.");
+        return fte::PIPELINE_CONTINUE;
     }
 
+    // Ignore direction for lookup. Always set it to 0
+    flow_key.dir = 0;
+
+    // get the flow info for the tcp proxy service
+    pfi = tcp_proxy_get_flow_info(flow_key);
+    if(!pfi) {
+        HAL_TRACE_DEBUG("proxy flow info not found for the flow. ignoring");
+        return fte::PIPELINE_CONTINUE;
+    }
+
+    ret = tcp_get_flow_encap(ctx, *pfi, flow_encap);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get flow encap params");
+        return fte::PIPELINE_CONTINUE;
+    }
+
+    HAL_TRACE_DEBUG("LKL return {}",
+                    hal::pd::lkl_handle_flow_miss_pkt(hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
+                                                                                ctx.pkt(),
+                                                                                ctx.pkt_len(),
+                                                                                ctx.direction()),
+                                                      ctx.direction(),
+                                                      pfi->qid1, pfi->qid2,
+                                                      ctx.cpu_rxhdr(),
+                                                      pfi,
+                                                      &flow_encap));
     return fte::PIPELINE_CONTINUE;
 }
 
-#if 1
 fte::pipeline_action_t
 tcp_exec_tcp_lif(fte::ctx_t& ctx)
 {
@@ -740,19 +814,6 @@ tcp_exec_tcp_lif(fte::ctx_t& ctx)
 
     return fte::PIPELINE_CONTINUE;
 }
-#else
-fte::pipeline_action_t
-tcp_exec_tcp_lif(fte::ctx_t& ctx)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    const fte::cpu_rxhdr_t* cpu_rxhdr = ctx.cpu_rxhdr();
-
-    ret = tcp_trigger_ack_send(cpu_rxhdr->qid);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, fte::PIPELINE_CONTINUE);
-
-    return fte::PIPELINE_CONTINUE;
-}
-#endif
 
 fte::pipeline_action_t
 tcp_exec(fte::ctx_t& ctx)
@@ -771,54 +832,22 @@ tcp_exec(fte::ctx_t& ctx)
 void
 tcp_transmit_pkt(unsigned char* pkt,
                  unsigned int len,
-                 bool is_connect_req,
-                 uint16_t dst_lif,
                  uint16_t src_lif,
-                 hal::flow_direction_t dir,
-                 uint16_t hw_vlan_id,
-                 uint16_t rencap_vlan)
+                 uint16_t src_vlan_id)
 {
     if (gl_ctx) {
-        HAL_TRACE_DEBUG("tcp-proxy: txpkt dir={} dst_lif={} src_lif={} hw_vlan_id={}, rencap_vlan={}",
-                        dir, dst_lif, src_lif, hw_vlan_id, rencap_vlan);
-        if (true){//is_connect_req) {
-            hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
-            hal::pd::p4plus_to_p4_header_t  p4plus_header = {0};
-
-            p4plus_header.flags = 0;
-            if (dir == FLOW_DIR_FROM_UPLINK) {
-                if (is_connect_req) {
-                    cpu_header.src_lif = hal::SERVICE_LIF_CPU;
-                    cpu_header.hw_vlan_id = hw_vlan_id;
-                    cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-                    p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
-                } else {
-                    // Fill the lif/vlan corresponding the host
-                    cpu_header.src_lif = dst_lif;
-                    cpu_header.hw_vlan_id = rencap_vlan;
-                    cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-                    p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
-                }
-
-            } else {
-                if (is_connect_req) {
-                    cpu_header.src_lif = src_lif;
-                    cpu_header.hw_vlan_id = 0;
-                    cpu_header.flags = 0;
-                } else {
-                    cpu_header.src_lif = hal::SERVICE_LIF_CPU;
-                    cpu_header.hw_vlan_id = hw_vlan_id;
-                    cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-                    p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
-                }
-            }
-            HAL_TRACE_DEBUG("tcp-proxy: txpkt cpu_header src_lif={} hw_vlan_id={} flags={}",
-                            cpu_header.src_lif, cpu_header.hw_vlan_id, cpu_header.flags);
-
-            gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
-        } else {
-            gl_ctx->queue_txpkt(pkt, len, NULL, NULL, dst_lif, CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ);
-        }
+        HAL_TRACE_DEBUG("tcp-proxy: txpkt src_lif={} src_vlan_id={}", src_lif, src_vlan_id);
+        
+        hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
+        hal::pd::p4plus_to_p4_header_t  p4plus_header = {0};
+        cpu_header.src_lif = src_lif;
+        cpu_header.hw_vlan_id = src_vlan_id;
+        cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+        p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
+        
+        gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
+    } else {
+        HAL_TRACE_DEBUG("tcp-proxy: gl_ctx is NULL");
     }
 }
 

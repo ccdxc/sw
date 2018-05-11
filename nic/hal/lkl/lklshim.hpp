@@ -53,18 +53,25 @@ typedef struct lklshim_flow_ns_t_ {
     uint8_t   vlan[VLAN_SIZE];
 } lklshim_flow_ns_t;
 
+typedef struct lklshim_flow_encap_s {
+    uint16_t                i_src_lif;      // LIF for initiator
+    uint16_t                i_src_vlan_id;  // VLAN for initiator
+    uint16_t                r_src_lif;      // LIF for responder
+    uint16_t                r_src_vlan_id;  // VLAN for responder
+    uint32_t                encrypt_qid;    // QID for encrypt flow 
+    uint32_t                decrypt_qid;    // QID for decrypt flow 
+    bool                    is_server_ctxt; // is this a TLS server ctxt
+} lklshim_flow_encap_t;
+
 typedef struct lklshim_flow_t_ {
     lklshim_flow_key_t      key;
     lklshim_flow_ns_t       hostns;
     lklshim_flow_ns_t       netns;
 
     hal::flow_direction_t   itor_dir;
-    uint16_t                src_lif;
-    uint16_t                dst_lif;
     uint32_t                iqid;
     uint32_t                rqid;
-    uint16_t                hw_vlan_id;
-    uint16_t                rencap_vlan;    // responder encap vlan
+    lklshim_flow_encap_t    flow_encap;
     proxy_flow_info_t       *pfi;
 } lklshim_flow_t;
 
@@ -107,8 +114,8 @@ lklshim_make_flow_v6key (lklshim_flow_key_t *key,
     key->type = hal::FLOW_TYPE_V6;
 }
 
-bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id, uint16_t rencap_vlan, proxy_flow_info_t *pfi);
-bool lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id, uint16_t rencap_vlan, proxy_flow_info_t *pfi);
+bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, proxy_flow_info_t *pfi, lklshim_flow_encap_t *flow_encap);
+bool lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, proxy_flow_info_t *pfi, lklshim_flow_encap_t *flow_encap);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 bool lklshim_process_flow_hit_rx_header (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 bool lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
