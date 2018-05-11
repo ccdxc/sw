@@ -23,7 +23,7 @@ void eff_comp_cb(void *arg1, struct pnso_service_result *svc_res)
 	if (arg1 == NULL) return;
 	printf("IO: %s in Eff thread completed\n", io->name);
 	printf("IO: %s compressed length is %d\n", io->name,
-			svc_res->svc[0].o.output_buf->data_len);
+			svc_res->svc[0].u.dst.data_len);
 	free(svc_res);
 	spdk_event_call(spdk_event_allocate(
 			io->tchain.threads[++io->tchain.current_thread],
@@ -53,25 +53,24 @@ int exec_eff_thread(void *arg1, void *arg2)
 	svc_res = (struct pnso_service_result *) malloc(alloc_sz);
 	memset(svc_res, 0, alloc_sz);
 
-	svc_req->src_buf = io->src_buflist[io->tchain.current_thread];
-	svc_res->svc[0].o.output_buf->buf_list =
-		io->dst_buflist[io->tchain.current_thread];
+	svc_req->sgl = io->src_buflist[io->tchain.current_thread];
 
-	/* Setup 3 services */
+	/* Setup 2 services */
 	svc_req->num_services = 2;
 	svc_res->num_services = 2;
 
 	/* Setup compression service */
 	svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-	svc_req->svc[0].d.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-	svc_req->svc[0].d.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
-	svc_req->svc[0].d.cp_desc.threshold_len = PNSO_TEST_DATA_SIZE - 8;
+	svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+	svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+	svc_req->svc[0].u.cp_desc.threshold_len = PNSO_TEST_DATA_SIZE - 8;
+	svc_res->svc[0].u.dst.sgl = io->dst_buflist[io->tchain.current_thread];
 
 	/* Setup hash service */
 	svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
-	svc_req->svc[1].d.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
-	svc_res->svc[1].num_outputs = 16;
-	svc_res->svc[1].o.hashes = hash_tags;
+	svc_req->svc[1].u.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
+	svc_res->svc[1].u.hash.num_tags = 16;
+	svc_res->svc[1].u.hash.tags = hash_tags;
 
 	/* Start worker thread */
 	if (!sim_worker_inited) {
