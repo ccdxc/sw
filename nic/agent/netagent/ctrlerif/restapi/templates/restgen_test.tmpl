@@ -200,13 +200,9 @@ import (
                                                                 {
                                                                  Src: &netproto.MatchSelector{
                                                                         Address: "10.0.0.0 - 10.0.1.0",
-                                                                        App: "ESP",
-                                                                        AppConfig: "1",
                                                                     },
                                                                  Dst: &netproto.MatchSelector{
                                                                         Address: "192.168.0.1 - 192.168.1.0",
-                                                                        App: "ESP",
-                                                                        AppConfig: "1",
                                                                     },
                                                                  SAName: "preCreatedIPSecSAEncrypt",
                                                                  SAType: "ENCRYPT",
@@ -214,16 +210,13 @@ import (
                                                                 {
                                                                  Src: &netproto.MatchSelector{
                                                                         Address: "10.0.0.0 - 10.0.1.0",
-                                                                        App: "ESP",
-                                                                        AppConfig: "1",
                                                                     },
                                                                  Dst: &netproto.MatchSelector{
                                                                         Address: "192.168.0.1 - 192.168.1.0",
-                                                                        App: "ESP",
-                                                                        AppConfig: "1",
                                                                     },
                                                                  SAName: "preCreatedIPSecSADecrypt",
                                                                  SAType: "DECRYPT",
+                                                                 SPI: 42,
                                                                 },
                                                             },
 
@@ -859,6 +852,7 @@ import (
                                                 },
                                              SAName: "preCreatedIPSecSADecrypt",
                                              SAType: "DECRYPT",
+                                             SPI: 42,
                                             },
                                         },
                                       },

@@ -61,6 +61,9 @@ message IPSecRule {
     // Security Association type
     string SAType       = 5 [(venice.check) = "StrEnum(IPSecRule.Type)",
                             (gogoproto.jsontag) = "sa-type,omitempty"];
+    // ESP SPI
+    uint32 SPI          = 6 [(gogoproto.jsontag) = "spi,omitempty"];
+
 }
 
 // IPSecPolicy Status

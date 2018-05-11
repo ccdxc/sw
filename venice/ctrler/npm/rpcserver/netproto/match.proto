@@ -18,13 +18,12 @@ message MatchSelector {
     {
         NONE            = 0;
         L4PORT          = 1; // Automatically interpret as an individual port, a comma separted ports or a hyphen separated port range
-        ESP             = 2; // ESP  Security Parameter Index Match
     }
     // Automatically interpret the string as an octet, a CIDR or an hyphen separated range
     string Address          = 1 [(gogoproto.jsontag) = "address,omitempty"];
 
     // Match on the security group
-    string SeurityGroup     = 2 [(gogoproto.jsontag) = "security-group,omitempty"];
+    string SecurityGroup    = 2 [(gogoproto.jsontag) = "security-group,omitempty"];
 
     // Match on the App info
     string App              = 3 [(venice.check) = "StrEnum(MatchSelector.Type)",

@@ -43,6 +43,11 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 		}
 		switch r.SAType {
 		case "ENCRYPT":
+			// SPI should not be specified for encrypt rules
+			if r.SPI != 0 {
+				log.Errorf("SPI is required for decrypt rules only")
+				return errors.New("spi was set in encrypt rule")
+			}
 			sa, err := na.FindIPSecSAEncrypt(oMeta)
 			if err != nil {
 				log.Errorf("could not find SA Encrypt rule. Rule: {%v}. Err: %v", r, err)

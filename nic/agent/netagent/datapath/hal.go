@@ -1928,19 +1928,33 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 	var ipSecRules []*halproto.IpsecRuleMatchSpec
 
 	for _, r := range ipSec.Spec.Rules {
+		// Match source and dest attributes
 		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
 		}
 
+		// Populate esp info in the match selector.
+		appInfo := []*halproto.RuleMatch_AppMatchInfo{
+			{
+				App: &halproto.RuleMatch_AppMatchInfo_EspInfo{
+					EspInfo: &halproto.RuleMatch_ESPInfo{
+						Spi: r.SPI,
+					},
+				},
+			},
+		}
+		ruleMatch.AppMatch = appInfo
+
+		// Lookup corresponding SA
 		lookupKey := fmt.Sprintf("%s|%s", r.SAType, r.SAName)
 
 		ipSecRuleRef, ok := ipSecLUT[lookupKey]
 		if !ok {
 			return fmt.Errorf("IPSec SA Rule not found. {%v}", r.SAName)
 		}
-		//
+
 		ipSecAction, err := hd.convertIPSecRuleAction(r.SAType, ipSecRuleRef.NamespaceID, ipSecRuleRef.RuleID)
 		if err != nil {
 			log.Errorf("Could not convert IPSec rule action. Rule: %v. Err: %v", r, err)
@@ -2380,6 +2394,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) (*hal
 	var ruleMatch halproto.RuleMatch
 	var err error
 
+	// Match source attributes
 	if src != nil {
 		// ToDo implement IP, Prefix Match address converters.
 		srcIPRange, err = hd.convertIPRange(src.Address)
@@ -2390,6 +2405,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) (*hal
 		ruleMatch.SrcAddress = srcIPRange
 	}
 
+	// Match dest attributes
 	if dst != nil {
 		dstIPRange, err = hd.convertIPRange(dst.Address)
 		if err != nil {
