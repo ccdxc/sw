@@ -6,28 +6,37 @@ import (
 
 func TestFieldKeyValidation(t *testing.T) {
 	goodKeys := []string{
-		"ab.cd",        // two level
-		"a.b.c.d",      // multi level
-		"a.b[*].cd",    // Slice field (any index)
-		"a.b[x].cd",    // Map field (with key x)
-		"ab.cd[*]",     // Slice leaf
-		"ab.cd[x]",     // Map leaf
-		"a.b[x].cd[*]", // Map with Slice leaf
-		"a.b[x].cd[y]", // Map with Map leaf
-		"a.b[*].cd[y]", // Slice with Map leaf
-		"a.b[*].cd[*]", // Slice with Slice leaf
+		"ab.cd",           // two level
+		"a.b.c.d",         // multi level
+		"a.b[*].cd",       // Map field - key (any)
+		"a.b[x].cd",       // Map field - key (x)
+		"ab.cd[*]",        // Map leaf - key (any)
+		"ab.cd[x]",        // Map leaf - key (x)
+		"a.b[x].cd[*]",    // Map with Map leaf - keys (x, any)
+		"a.b[x].cd[y]",    // Map with Map leaf - keys (x, y)
+		"a.b[*].cd[y]",    // Map with Map leaf - keys (any, y)
+		"a.b[*].cd[*]",    // Map with Map leaf - keys (any, any)
+		"a.b[0].cd[*]",    // Map with Map leaf - keys (0, any)
+		"a.b[x].cd[9999]", // Map with Map leaf - keys (x, 9999)
 	}
 	badKeys := []string{
-		"abcd",        // Has to be a atleast two level
-		"abcd.",       // Invalid
-		"ab[cd",       // Invalid
-		"ab[]cd",      // Invalid
-		"ab*cd",       // Invalid
-		"ab[*]cd",     // Invalid
-		"ab0.cd",      // Invalid, no numerics in name
-		"ab*.cd",      // Invalid
-		"a.b[x].cd[]", // Invalid
-		"a.b[x].cd]",  // Invalid
+		"abcd",         // Has to be a atleast two level
+		"abcd.",        // Invalid
+		"ab[cd",        // Invalid
+		"ab[]cd",       // Invalid
+		"ab.cd[",       // Invalid
+		"ab.cd[].",     // Invalid
+		"ab.cd[*].",    // Invalid
+		"ab.cd[*]*",    // Invalid
+		"ab.cd[[]",     // Invalid
+		"ab.cd[[*]]",   // Invalid
+		"ab*cd",        // Invalid
+		"ab[*]cd",      // Invalid
+		"ab0.cd",       // Invalid, no numerics in name
+		"ab*.cd",       // Invalid
+		"a.b[x].cd[]",  // Invalid
+		"a.b[x].cd]",   // Invalid
+		"a.b[11.1].cd", // Invalid
 	}
 	for ii := range goodKeys {
 		if err := validateFieldKey(goodKeys[ii]); err != nil {
@@ -149,9 +158,14 @@ func TestSelectorValidation(t *testing.T) {
 		"a.b[x].cd[y]= y",
 		"a.b[*].cd[y] in   (x,z)",
 		"a.b[*].cd[*] notin\t (x,z)",
+		"a.b[10].cd[y] in   (x,z)",
+		"a.b[*].cd[8787] notin\t (x,z)",
 	}
 	badSels := []string{
 		"",
+		"x.x==",
+		"x.x[*]==",
+		"x.x[*]*=",
 		"x.x=a||y.y=b",
 		"x.x==a==b",
 		"!x.x=a",
@@ -163,6 +177,7 @@ func TestSelectorValidation(t *testing.T) {
 		"x.x in (a",
 		"x.x in (a,b",
 		"x.x=(a,b)",
+		"a.b[999.99].cd[x] in (x,z)",
 	}
 	for ii := range goodSels {
 		if err := validateSelector(goodSels[ii]); err != nil {

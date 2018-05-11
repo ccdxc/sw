@@ -540,8 +540,10 @@ func TestGet(t *testing.T) {
 				{Ports: "tcp/6379", Action: "permit,log", PeerGroup: "db-sg"}},
 			Interval: 33,
 			Perms:    &Permission{ToObj: "network", RWX: "rw"},
-			Policies: map[string]Policy{"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
-				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"}},
+			Policies: map[string]Policy{
+				"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
+				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"},
+			},
 			UserHandle:  0x45544422,
 			Uint32Field: 9821,
 			Int32Field:  8832,
@@ -990,8 +992,10 @@ func TestUpdate(t *testing.T) {
 			},
 			Interval: 33,
 			Perms:    &Permission{ToObj: "sgpolicy", RWX: "r"},
-			Policies: map[string]Policy{"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
-				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"}},
+			Policies: map[string]Policy{
+				"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
+				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"},
+			},
 			UserHandle:  0x45544422,
 			Uint32Field: 9821,
 			Int32Field:  7473,
@@ -1409,8 +1413,10 @@ func TestFieldByName(t *testing.T) {
 			},
 			Interval: 33,
 			Perms:    &Permission{ToObj: "network", RWX: "rw"},
-			Policies: map[string]Policy{"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
-				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"}},
+			Policies: map[string]Policy{
+				"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
+				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"},
+			},
 			UserHandle:  0x45544422,
 			Uint32Field: 9823,
 			Int32Field:  5351,
@@ -1560,4 +1566,118 @@ func subObj(kind string) interface{} {
 	}
 
 	return nil
+}
+
+// These structs are temporary until ref can handle nested maps/slices.
+type Attribute struct {
+	Attr string `json:"attr,omitempty"`
+}
+
+type PolicyRule struct {
+	Something string `json:"something,omitempty"`
+}
+
+type NewPolicy struct {
+	ToGroup    string               `json:"toGroup,omitempty"`
+	FromGroup  string               `json:"fromGroup,omitempty"`
+	Attributes map[string]Attribute `json:"attrs,omitempty"`
+	Rules      []PolicyRule         `json:"rules,omitempty"`
+}
+
+type RuleAttribute struct {
+	Attr string `json:"attr,omitempty"`
+}
+
+type NewSGRule struct {
+	Action     string               `json:"action,omitempty"`
+	Attributes map[string]Attribute `json:"attrs,omitempty"`
+}
+
+type NewUserSpec struct {
+	Alias        string               `json:"alias,omitempty"`
+	Roles        []string             `json:"roles,omitempty"`
+	Perm         *Permission          `json:"perm,omitempty"`
+	PolicyMap    map[string]NewPolicy `json:"policiesMap,omitempty"`
+	PolicyIdxMap map[int8]NewPolicy   `json:"policiesIndexMap,omitempty"`
+	PolicySlice  []NewPolicy          `json:"policiesSlice,omitempty"`
+	InRules      []NewSGRule          `json:"igRules,omitempty" venice:"ins=in"`
+}
+
+type NewUser struct {
+	Spec *NewUserSpec `json:"spec,omitempty"`
+}
+
+func TestFieldByJSONTag(t *testing.T) {
+	u := NewUser{
+		Spec: &NewUserSpec{
+			Roles: []string{"test"},
+			Perm:  &Permission{},
+			PolicyMap: map[string]NewPolicy{
+				"key1": {
+					ToGroup:    "to-key1",
+					FromGroup:  "from-key1",
+					Attributes: map[string]Attribute{"foo": {"bar"}},
+					Rules:      []PolicyRule{{"a"}, {"b"}},
+				},
+			},
+			PolicyIdxMap: map[int8]NewPolicy{
+				10: {
+					ToGroup:    "to-key1",
+					FromGroup:  "from-key1",
+					Attributes: map[string]Attribute{"foo": {"bar"}},
+					Rules:      []PolicyRule{{"a"}, {"b"}},
+				},
+			},
+			PolicySlice: []NewPolicy{
+				{
+					ToGroup:    "to-key1",
+					FromGroup:  "from-key1",
+					Attributes: map[string]Attribute{"foo": {"bar"}},
+					Rules:      []PolicyRule{{"a"}, {"b"}},
+				},
+			},
+			InRules: []NewSGRule{NewSGRule{Action: "permit", Attributes: map[string]Attribute{"foo": {"bar"}}}},
+		},
+	}
+	v := reflect.ValueOf(u)
+	tests := []struct {
+		jsonTag    string
+		expSuccess bool
+		expField   string
+	}{
+		{"spec.alias", true, "Spec.Alias"},                                                         // A single nested field
+		{"spec.roles", true, "Spec.Roles"},                                                         // Slices dont need indexing
+		{"spec.roles[*]", false, ""},                                                               // Slice cant be indexed
+		{"spec.perm.rwx", true, "Spec.Perm.RWX"},                                                   // A single nested field
+		{"spec.policiesMap[key1]", false, ""},                                                      // Cant end in a map of struct
+		{"spec.policiesMap[key1].toGroup", true, "Spec.PolicyMap[key1].ToGroup"},                   // Map by a string key
+		{"spec.policiesMap[100].toGroup", true, "Spec.PolicyMap[100].ToGroup"},                     // 100 is a string here
+		{"spec.policiesMap[100].toGroup", true, "Spec.PolicyMap[100].ToGroup"},                     // 100 is a string here
+		{"spec.policiesIndexMap[100].toGroup", true, "Spec.PolicyIdxMap[100].ToGroup"},             // 100 is an int here
+		{"spec.policiesIndexMap[1000].toGroup", false, ""},                                         // 1000 is not uint8
+		{"spec.policiesIndexMap[*].toGroup", true, "Spec.PolicyIdxMap[*].ToGroup"},                 // * is allowed on int map
+		{"spec.policiesIndexMap[key1].toGroup", false, ""},                                         // int map indexed by string is not valid
+		{"spec.policiesMap[*].toGroup", true, "Spec.PolicyMap[*].ToGroup"},                         // Map by any key
+		{"spec.policiesMap[*].attrs[*]", false, ""},                                                // Not a leaf
+		{"spec.policiesMap[*].attrs[*].attr", true, "Spec.PolicyMap[*].Attributes[*].Attr"},        // Nested maps
+		{"spec.policiesMap[*].rules[*]", false, ""},                                                // Slice cant be indexed
+		{"spec.policiesMap[*].rules", false, ""},                                                   // Not a leaf
+		{"spec.policiesMap[*].rules.something", true, "Spec.PolicyMap[*].Rules.Something"},         // Map with nested slice
+		{"spec.policiesIndexMap[*].rules.something", true, "Spec.PolicyIdxMap[*].Rules.Something"}, // Map with nested slice
+		{"spec.policiesSlice.rules.something", true, "Spec.PolicySlice.Rules.Something"},           // Slice with nested slice
+		{"spec.igRules[*]", false, ""},                                                             // Slice cant be indexed
+		{"spec.igRules[0].action", false, ""},                                                      // Slice cant be indexed
+		{"spec.igRules[*].action", false, ""},                                                      // Slice cant be indexed
+		{"spec.igRules.attrs", false, ""},                                                          // Not a leaf
+		{"spec.igRules.attrs[*].attr", true, "Spec.InRules.Attributes[*].Attr"},                    // Slice with nested map
+	}
+	for ii := range tests {
+		field, err := FieldByJSONTag(v, tests[ii].jsonTag)
+		if !tests[ii].expSuccess && err == nil {
+			t.Fatalf("Expected %v to fail, found %v", tests[ii].jsonTag, field)
+		}
+		if tests[ii].expSuccess && field != tests[ii].expField {
+			t.Fatalf("Expected %v for %v, found %v with err %v", tests[ii].expField, tests[ii].jsonTag, field, err)
+		}
+	}
 }

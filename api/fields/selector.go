@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 /*
@@ -787,4 +789,36 @@ func ParseV2(selector string) (*Selector, error) {
 	return &Selector{
 		Requirements: requirements,
 	}, nil
+}
+
+// ParseForStruct parses a selector for the provided Struct (reflect.Value).
+// In addition to Parse, it does two additional things:
+// 1) Check that the key is a valid field of the struct
+// 2) Coverts json value of the key field into name of the field
+//
+// ref.FieldJSONByTag validates that key indexing can only happen on maps or
+// slices. maps support two forms of indexing - "*" for any key OR a specific
+// key. Slices only support "*".
+//
+// Returns an error on failure.
+//
+// Valid examples for keys:
+//   spec.vlan                               => Spec.Vlan
+//   spec.networks[*].vlan                   => Spec.Networks[*].Vlan
+//   spec.networks[*].ipaddresses[*].gateway => Spec.Networks[*].IpAddresses[*].Gateway
+//   spec.networkMap[abc].vlan               => Spec.NetworkMap[abc].Vlan
+//
+func ParseForStruct(v reflect.Value, selector string) (*Selector, error) {
+	sel, err := ParseV2(selector)
+	if err != nil {
+		return nil, err
+	}
+	for ii := range sel.Requirements {
+		found, err := ref.FieldByJSONTag(v, sel.Requirements[ii].Key)
+		if err != nil {
+			return nil, err
+		}
+		sel.Requirements[ii].Key = found
+	}
+	return sel, err
 }

@@ -1,6 +1,7 @@
 package fields
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -410,6 +411,7 @@ func TestSelectorParseV2(t *testing.T) {
 	}
 	testBadStrings := []string{
 		"",
+		"x.x",
 		"x.x=superrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrlooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongone",
 		"x.x=a||y.y=b",
 		"x.x==a==b",
@@ -487,5 +489,122 @@ func TestDeterministicParseV2(t *testing.T) {
 	}
 	if s1.String() != s2.String() {
 		t.Errorf("Non-deterministic parse")
+	}
+}
+
+type RolePerms struct {
+	Perms []string `json:"perms"`
+}
+
+type UserGroup struct {
+	Group string `json:"group"`
+}
+
+type UserSpec struct {
+	Name     string               `json:"name"`
+	Groups   []*UserGroup         `json:"groups"`
+	Perms    map[string]RolePerms `json:"perms"`
+	PermsIdx map[int8]RolePerms   `json:"permsIdx"`
+}
+
+type User struct {
+	Spec UserSpec `json:"spec"`
+}
+
+func TestParseForStruct(t *testing.T) {
+	u := User{
+		Spec: UserSpec{
+			Groups: []*UserGroup{
+				&UserGroup{},
+			},
+			Perms: map[string]RolePerms{
+				"test": RolePerms{
+					Perms: []string{"test"},
+				},
+			},
+			PermsIdx: map[int8]RolePerms{
+				0: RolePerms{
+					Perms: []string{"test"},
+				},
+			},
+		},
+	}
+	v := reflect.ValueOf(u)
+	goodTests := []struct {
+		selString string
+		selector  Selector
+	}{
+		{
+			selString: "spec.name=foo",
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Name",
+						Operator: "equals",
+						Values:   []string{"foo"},
+					},
+				},
+			},
+		},
+		{
+			selString: "spec.groups.group=foo,spec.perms[*].perms=bar",
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Groups.Group",
+						Operator: "equals",
+						Values:   []string{"foo"},
+					},
+					&Requirement{
+						Key:      "Spec.Perms[*].Perms",
+						Operator: "equals",
+						Values:   []string{"bar"},
+					},
+				},
+			},
+		},
+		{
+			selString: "spec.groups.group=foo,spec.permsIdx[0].perms=bar",
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Groups.Group",
+						Operator: "equals",
+						Values:   []string{"foo"},
+					},
+					&Requirement{
+						Key:      "Spec.PermsIdx[0].Perms",
+						Operator: "equals",
+						Values:   []string{"bar"},
+					},
+				},
+			},
+		},
+	}
+	for ii := range goodTests {
+		sel, err := ParseForStruct(v, goodTests[ii].selString)
+		if err != nil {
+			t.Fatalf("Failed to parse %v with error: %v", goodTests[ii].selString, err)
+		}
+		if !reflect.DeepEqual(*sel, goodTests[ii].selector) {
+			t.Fatalf("Expected %+v, got %+v", goodTests[ii].selector, sel)
+		}
+	}
+
+	badTests := []string{
+		"spec.nonexistent=foo",           // Non existent field
+		"spec.groups=foo",                // Non leaf
+		"spec.groups[*]=foo",             // Non leaf
+		"spec.groups[*].group=foo",       // Cant index slice
+		"spec.groups[*].nonexistent=foo", // Non existent field
+		"spec.perms[*]=foo",              // Non leaf
+		"spec.perms[*].perms[*]=foo",     // Cant index slice
+		"spec.permsIdx[256].perms=foo",   // Not uint8
+	}
+	for ii := range badTests {
+		sel, err := ParseForStruct(v, badTests[ii])
+		if err == nil {
+			t.Fatalf("Expected to fail parsing, but found %v", sel)
+		}
 	}
 }

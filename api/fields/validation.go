@@ -11,8 +11,10 @@ import (
 // 2) Only four operators are currently supported "=", "!=", " in ", " notin ".
 // 3) Key is used to select a field in a nested structure like an API object.
 //    Key can only be a string of alphabets. "." is used as separator to get to
-//    the next level. Atleast one "." is required. Slices can be indexed using
-//    [*]. Maps can be indexed using [*] or [map-key].
+//    the next level. Atleast one "." is required. Slices are not indexable as
+//    the order is not guaranteed. Indexing can be skipped when using slices,
+//    all the members of a slice are matched. Maps can be indexed using [*] or
+//    [map-key].
 //    Examples: "a.b", "a.b.c", "a.b[*].c", "a.b[*]", "a.b[x].c", "a.b[x]"
 // 4) Operators "=", "!=" require a single value
 //    Examples: "x=a", "x!=a"
@@ -27,10 +29,10 @@ import (
 
 // Key related validations.
 var (
-	startFmt           = "[A-Za-z]+"                // Start with alphabets
-	varFmt             = "\\.[A-Za-z]+"             // . separated variable
-	subscriptedStarFmt = varFmt + "\\[\\*\\]"       // subscript [*] for slices or maps
-	subscriptedVarFmt  = varFmt + "\\[[A-Za-z]+\\]" // subscript [key] for maps
+	startFmt           = "[A-Za-z]+"                   // Start with alphabets
+	varFmt             = "\\.[A-Za-z]+"                // . separated variable
+	subscriptedStarFmt = varFmt + "\\[\\*\\]"          // subscript [*] for maps
+	subscriptedVarFmt  = varFmt + "\\[[A-Za-z0-9]+\\]" // subscript [key] for maps
 
 	// middleFmt is list of "." separated variables, optionally subscripted by "*"
 	// for slices or maps, "key" for maps.
@@ -44,7 +46,7 @@ var (
 	keyRE           = regexp.MustCompile(fieldKeyFmt)
 	validFieldKeyRE = regexp.MustCompile("^" + fieldKeyFmt + "$")
 
-	fieldKeyErrMsg = "valid field must be a . separated string of alphabets, indexed using [*] for slices and [key] for maps, and must start and end with an alphabet"
+	fieldKeyErrMsg = "valid field must be a . separated string of alphabets, indexed using [*] or [key] for maps, and must start and end with an alphabet"
 )
 
 func validateFieldKey(k string) error {
@@ -108,7 +110,7 @@ var (
 	selFmt       = reqStartFmt + reqNextFmt
 
 	validSelRE = regexp.MustCompile(selFmt)
-	selErrMsg  = "valid selector must be a comma separated set of <key,op,values> tuples, key is a string of alphabets, with indices for slices and maps, op must be one of {=,!=,in,notin}, values must be a single alphanumeric string or a comma separated set of alphanumeric strings in parentheses"
+	selErrMsg  = "valid selector must be a comma separated set of <key,op,values> tuples, key is a string of alphabets, with indices for maps, op must be one of {=,!=,in,notin}, values must be a single alphanumeric string or a comma separated set of alphanumeric strings in parentheses"
 )
 
 func validateSelector(sel string) error {

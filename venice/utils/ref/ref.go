@@ -409,7 +409,7 @@ func getKv(kvCtx *kvContext, v reflect.Value) (string, string, bool) {
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Struct, reflect.Slice, reflect.Array, reflect.Map:
 		return typeStr, valueStr, false
-	case reflect.Bool, reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8,
+	case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
 		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
 		valueStr += fmt.Sprintf("%v", v)
 		isLeaf = true
@@ -670,7 +670,7 @@ func writeKv(new, orig reflect.Value, kvString string, kvCtx *kvContext) reflect
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		intVal, _ := strconv.ParseInt(valueString, 10, 64)
 		new.SetInt(intVal)
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint64, reflect.Uint32:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		var uintVal uint64
 		if strings.HasPrefix(valueString, "0x") {
 			uintVal, _ = strconv.ParseUint(strings.TrimPrefix(valueString, "0x"), 16, 64)
@@ -881,4 +881,145 @@ func getBaseObj(name string) interface{} {
 	}
 	log.Errorf("Invalid base obj type '%s'", name)
 	return nil
+}
+
+// fieldByJSONTag returns the field Name given a JSON tag. 't' must be a structure.
+func fieldByJSONTag(t reflect.Type, json string) (*reflect.StructField, int) {
+	if t.Kind() != reflect.Struct {
+		return nil, 0
+	}
+	for ii := 0; ii < t.NumField(); ii++ {
+		f := t.Field(ii)
+		tag := f.Tag.Get("json")
+		if tag == "" {
+			continue
+		}
+		parts := strings.Split(tag, ",")
+		if parts[0] == json {
+			return &f, ii
+		}
+	}
+	return nil, 0
+}
+
+// FieldByJSONTag converts hierachical json tag based field to name based field.
+// 'v' must be a dummy structure with pointers, maps, slices instantiated. In the
+// future, this will be rewritten to use generated schema.
+//
+// It validates that indexing can only happen on maps. maps support two forms of
+// indexing - "*" for any key OR a specific key. Slices skip indexing.
+//
+// Returns an error on failure.
+//
+// Valid examples:
+//   spec.vlan                                    => Spec.Vlan
+//   spec.networksSlice.vlan                      => Spec.NetworksSlice.Vlan
+//   spec.networksMap[*].ipaddressesSlice.gateway => Spec.NetworksMap[*].IpAddressesSlice.Gateway
+//   spec.networksMap[abc].vlan                   => Spec.NetworksMap[abc].Vlan
+//
+func FieldByJSONTag(v reflect.Value, f string) (string, error) {
+	fList := strings.Split(f, ".")
+	result := ""
+	t := v.Type()
+	for ii := range fList {
+		jsonStr := fList[ii]
+		indexStr := "" // string inside the []
+		if t.Kind() == reflect.Ptr {
+			v = reflect.Indirect(v)
+			if !v.IsValid() {
+				return "", fmt.Errorf("Invalid or nil pointer for %v", t)
+			}
+			t = v.Type()
+		}
+		// if string contains [], the element should be a slice or map
+		jj := strings.Index(jsonStr, "[")
+		// Strip off the indexed part
+		if jj != -1 {
+			jsonStr = jsonStr[:jj]
+			indexStr = fList[ii][jj+1 : len(fList[ii])-1]
+		}
+		sf, index := fieldByJSONTag(t, jsonStr)
+		if sf == nil {
+			return "", fmt.Errorf("Did not find field %v in %v", jsonStr, t)
+		}
+		if result != "" {
+			result += "."
+		}
+		result += sf.Name
+		v = v.Field(index)
+		t = v.Type()
+		if jj != -1 {
+			switch t.Kind() {
+			case reflect.Slice:
+				return "", fmt.Errorf("Indexing is not supported on slice %v, found %v", t, indexStr)
+			case reflect.Map:
+				size := 0
+				unsigned := false
+				intCheck := true
+				switch t.Key().Kind() {
+				case reflect.Int:
+					size = 32
+				case reflect.Int8:
+					size = 8
+				case reflect.Int16:
+					size = 16
+				case reflect.Int32:
+					size = 32
+				case reflect.Int64:
+					size = 64
+				case reflect.Uint:
+					size = 32
+					unsigned = true
+				case reflect.Uint8:
+					size = 8
+					unsigned = true
+				case reflect.Uint16:
+					size = 16
+					unsigned = true
+				case reflect.Uint32:
+					size = 32
+					unsigned = true
+				case reflect.Uint64:
+					size = 64
+					unsigned = true
+				default:
+					intCheck = false
+				}
+				// "*" is ok for indexing maps with int keys
+				if intCheck && indexStr != "*" {
+
+					if unsigned {
+						if _, err := strconv.ParseUint(indexStr, 10, size); err != nil {
+							return "", fmt.Errorf("Error parsing %v as uint%v for indexing %v: %v", indexStr, size, t, err)
+						}
+					} else {
+						if _, err := strconv.ParseInt(indexStr, 10, size); err != nil {
+							return "", fmt.Errorf("Error parsing %v as int%v for indexing %v: %v", indexStr, size, t, err)
+						}
+					}
+				}
+
+				keys := v.MapKeys()
+				if len(keys) == 0 {
+					return "", fmt.Errorf("Empty map %v", t)
+				}
+				t = t.Elem()
+				v = v.MapIndex(keys[0])
+			default:
+				return "", fmt.Errorf("Found [] in non map kind %v in %v", t.Kind(), t)
+			}
+			// Add back the stripped off []
+			result += fList[ii][jj:]
+		} else if t.Kind() == reflect.Slice {
+			t = t.Elem()
+			v = v.Index(0)
+		}
+	}
+	switch t.Kind() {
+	case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
+		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
+	default:
+		return "", fmt.Errorf("Lead kind is %v, not scalar for %v", t.Kind(), t)
+	}
+	return result, nil
 }
