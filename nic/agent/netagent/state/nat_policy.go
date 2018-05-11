@@ -90,7 +90,7 @@ func (na *NetAgent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, err
 	key := objectKey(meta, typeMeta)
 	np, ok := na.natPolicyDB[key]
 	if !ok {
-		return nil, fmt.Errorf("nat policy not found %v", np)
+		return nil, fmt.Errorf("nat policy not found %v", meta.Name)
 	}
 
 	return np, nil

@@ -73,7 +73,7 @@ func (na *NetAgent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) 
 	key := objectKey(meta, typeMeta)
 	tn, ok := na.natPoolDB[key]
 	if !ok {
-		return nil, fmt.Errorf("nat pool not found %v", tn)
+		return nil, fmt.Errorf("nat pool not found %v", meta.Name)
 	}
 
 	return tn, nil

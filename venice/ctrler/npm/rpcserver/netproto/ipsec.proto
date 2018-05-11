@@ -130,6 +130,9 @@ message IPSecSAEncryptSpec {
     // Remote Gateway IP
     string RemoteGwIP       = 7 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
 
+    // SPI Value
+    uint32 SPI              = 8 [(gogoproto.jsontag) = "spi,omitempty"];
+
 }
 
 message Protocol{
@@ -241,6 +244,9 @@ message IPSecSADecryptSpec {
 
     // Remote Gateway IP
     string RemoteGwIP           = 10 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+
+    // SPI information
+    uint32 SPI                  = 11 [(gogoproto.jsontag) = "spi,omitempty"];
 
 }
 

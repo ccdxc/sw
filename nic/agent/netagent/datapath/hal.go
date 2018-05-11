@@ -44,6 +44,9 @@ var ErrInvalidNatActionType = errors.New("invalid NAT Action Type")
 // ErrInvalidIPSecSAType is returned on an invalid IPSec Policy SA Action
 var ErrInvalidIPSecSAType = errors.New("invalid IPSec SA Action")
 
+// ErrIPMissing is returned when the IP field is not specified in an Encrypt SA Action
+var ErrIPMissing = errors.New("ipsec encrypt SA needs local and remote gateway IP")
+
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
 type Kind string
 
@@ -2018,12 +2021,12 @@ func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 	localGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.LocalGwIP))
 	if len(localGwIP) == 0 {
 		log.Errorf("could not parse IP from {%v}", localGwIP)
-		return ErrIPParse
+		return ErrIPMissing
 	}
 	remoteGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.RemoteGwIP))
 	if len(remoteGwIP) == 0 {
 		log.Errorf("could not parse IP from {%v}", remoteGwIP)
-		return ErrIPParse
+		return ErrIPMissing
 	}
 
 	localGw := &halproto.IPAddress{
@@ -2063,6 +2066,7 @@ func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 				},
 				LocalGatewayIp:  localGw,
 				RemoteGatewayIp: remoteGw,
+				Spi:             sa.Spec.SPI,
 			},
 		},
 	}
@@ -2101,29 +2105,27 @@ func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 
 // CreateIPSecSADecrypt creates an IPSecSA decrypt rule in the datapath
 func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+	var localGw *halproto.IPAddress
+	var remoteGw *halproto.IPAddress
+
 	localGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.LocalGwIP))
-	if len(localGwIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", localGwIP)
-		return ErrIPParse
+	if len(localGwIP) != 0 {
+		localGw = &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(localGwIP),
+			},
+		}
 	}
+
 	remoteGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.RemoteGwIP))
-	if len(remoteGwIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", remoteGwIP)
-		return ErrIPParse
-	}
-
-	localGw := &halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(localGwIP),
-		},
-	}
-
-	remoteGw := &halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(remoteGwIP),
-		},
+	if len(remoteGwIP) != 0 {
+		remoteGw = &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(remoteGwIP),
+			},
+		}
 	}
 
 	ipSecSADecryptReqMsg := &halproto.IpsecSADecryptRequestMsg{
@@ -2161,6 +2163,7 @@ func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netpro
 
 				LocalGatewayIp:  localGw,
 				RemoteGatewayIp: remoteGw,
+				Spi:             sa.Spec.SPI,
 			},
 		},
 	}

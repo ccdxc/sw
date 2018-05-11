@@ -86,7 +86,7 @@ func (na *NetAgent) FindRoute(meta api.ObjectMeta) (*netproto.Route, error) {
 	key := objectKey(meta, typeMeta)
 	rt, ok := na.routeDB[key]
 	if !ok {
-		return nil, fmt.Errorf("route not found %v", rt)
+		return nil, fmt.Errorf("route not found %v", meta.Name)
 	}
 
 	return rt, nil

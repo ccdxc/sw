@@ -307,7 +307,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"20.1.1.1\",\"remote-gateway-ip\":\"20.1.1.2\", \"spi\":\"1\"}}"
+                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"20.1.1.1\",\"remote-gateway-ip\":\"20.1.1.2\", \"spi\":1}}"
                 },
                 "description": ""
             },
@@ -327,7 +327,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\", \"spi\":\"1\"}}"
+                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\", \"spi\":1}}"
                 },
                 "description": ""
             },
@@ -367,7 +367,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"kg2-ipsec-decrypt-policy\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"rules\":[{\"source\":{\"address\":\"20.1.1.2 - 20.1.1.2\"},\"destination\":{\"address\":\"20.1.1.1 - 20.1.1.1\"},\"spi\":\"1\",\"sa-name\":\"kg2-ipsec-sa-decrypt\",\"sa-type\":\"DECRYPT\"}]}}"
+                    "raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"kg2-ipsec-decrypt-policy\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"rules\":[{\"source\":{\"address\":\"20.1.1.2 - 20.1.1.2\"},\"destination\":{\"address\":\"20.1.1.1 - 20.1.1.1\"},\"spi\":1,\"sa-name\":\"kg2/kg2-ipsec-sa-decrypt\",\"sa-type\":\"DECRYPT\"}]}}"
                 },
                 "description": ""
             },

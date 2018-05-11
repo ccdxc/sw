@@ -96,7 +96,7 @@ func (na *NetAgent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, err
 	key := objectKey(meta, typeMeta)
 	tn, ok := na.enicDB[key]
 	if !ok {
-		return nil, fmt.Errorf("interface not found %v", tn)
+		return nil, fmt.Errorf("interface not found %v", meta.Name)
 	}
 
 	return tn, nil

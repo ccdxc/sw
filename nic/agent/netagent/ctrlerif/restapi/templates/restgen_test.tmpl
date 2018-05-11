@@ -241,6 +241,7 @@ import (
                                                            EncryptionKey: "someRandomKey",
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
+                                                           SPI: 1,
                                                        },
                                                    }
                            err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower .}}Data, &resp)
@@ -264,6 +265,7 @@ import (
                                                            RekeyDecryptionKey: "someRandomString",
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
+                                                           SPI: 1,
                                                        },
                                                    }
                            err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower .}}Data, &resp)
@@ -878,6 +880,7 @@ import (
                                                            EncryptionKey: "someRandomKey",
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
+                                                           SPI: 1,
                                                        },
                                                    }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower .}}Data, &resp)
@@ -900,6 +903,7 @@ import (
                                                            DecryptionKey: "someRandomKey",
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
+                                                           SPI: 1,
                                                        },
                                                    }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower .}}Data, &resp)

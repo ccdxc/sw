@@ -88,7 +88,7 @@ func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) 
 	key := objectKey(meta, typeMeta)
 	nt, ok := na.networkDB[key]
 	if !ok {
-		return nil, fmt.Errorf("network not found %v", nt)
+		return nil, fmt.Errorf("network not found %v", meta.Name)
 	}
 
 	return nt, nil

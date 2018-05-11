@@ -65,7 +65,7 @@ func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace
 	// Find the corresponding tenant
 	_, err := na.FindTenant(meta.Tenant)
 	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", meta)
+		log.Errorf("Could not find the tenant: {%+v}", tenant)
 		return nil, err
 	}
 	// lock the db
@@ -76,7 +76,7 @@ func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace
 	key := objectKey(meta, nsTypeMeta)
 	ns, ok := na.namespaceDB[key]
 	if !ok {
-		return nil, fmt.Errorf("namespace not found %v", ns)
+		return nil, fmt.Errorf("namespace not found %v", namespace)
 	}
 
 	return ns, nil

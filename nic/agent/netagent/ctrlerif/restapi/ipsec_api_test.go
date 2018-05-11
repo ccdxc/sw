@@ -237,6 +237,7 @@ func TestIPSecSADecryptPost(t *testing.T) {
 			RekeyDecryptionKey: "someRandomString",
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
+			SPI:                1,
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &postData, &resp)
@@ -310,6 +311,7 @@ func TestIPSecSADecryptDelete(t *testing.T) {
 			DecryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &deleteData, &resp)
@@ -372,6 +374,7 @@ func TestIPSecSAEncryptPost(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &postData, &resp)
@@ -445,6 +448,7 @@ func TestIPSecSAEncryptDelete(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &deleteData, &resp)
