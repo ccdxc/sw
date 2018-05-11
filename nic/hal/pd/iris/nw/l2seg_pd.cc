@@ -28,8 +28,10 @@ hal_ret_t l2seg_pd_cleanup(pd_l2seg_t *l2seg_pd);
 uint32_t l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd);
 uint32_t pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg);
 pd_vrf_t *pd_l2seg_get_pd_vrf(pd_l2seg_t *pd_l2seg);
-hal_ret_t l2seg_pd_program_hw(pd_l2seg_t *l2seg_pd);
-hal_ret_t l2seg_pd_pgm_inp_prop_tbl(pd_l2seg_t *l2seg_pd);
+hal_ret_t l2seg_pd_program_hw(pd_l2seg_t *l2seg_pd,
+                              bool is_upgrade = false);
+hal_ret_t l2seg_pd_pgm_inp_prop_tbl(pd_l2seg_t *l2seg_pd,
+                                    bool is_upgrade = false);
 hal_ret_t l2seg_pd_deprogram_hw(pd_l2seg_t *l2seg_pd);
 hal_ret_t l2seg_pd_depgm_inp_prop_tbl(pd_l2seg_t *l2seg_pd);
 
@@ -260,6 +262,80 @@ end:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// pd l2seg restore from response
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_l2seg_restore_data (pd_l2seg_restore_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    l2seg_t         *l2seg = args->l2seg;
+    pd_l2seg_t      *l2seg_pd = (pd_l2seg_t *)l2seg->pd;
+
+    auto l2seg_info = args->l2seg_status->epd_info();
+
+    l2seg_pd->l2seg_hw_id = l2seg_info.hw_l2seg_id();
+    l2seg_pd->l2seg_fl_lkup_id = l2seg_info.l2seg_lookup_id();
+    l2seg_pd->cpu_l2seg_id = l2seg_info.l2seg_vlan_id_cpu();
+    l2seg_pd->inp_prop_tbl_cpu_idx = l2seg_info.inp_prop_cpu_idx();
+    for (int i = 0; i < l2seg_info.inp_prop_idx_size(); i++) {
+        l2seg_pd->inp_prop_tbl_idx[i] = l2seg_info.inp_prop_idx(i);
+    }
+    for (int i = 0; i < l2seg_info.inp_prop_idx_pr_tag_size(); i++) {
+        l2seg_pd->inp_prop_tbl_idx_pri[i] = l2seg_info.inp_prop_idx_pr_tag(i);
+    }
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// PD l2seg restore
+//------------------------------------------------------------------------------
+hal_ret_t
+pd_l2seg_restore (pd_l2seg_restore_args_t *args)
+{
+    hal_ret_t     ret;
+    pd_l2seg_t    *l2seg_pd = NULL;
+
+    HAL_TRACE_DEBUG("Restoring pd state for l2seg {}", args->l2seg->seg_id);
+
+    // create l2seg PD
+    l2seg_pd = l2seg_pd_alloc_init();
+    if (l2seg_pd == NULL) {
+        return HAL_RET_OOM;
+    }
+
+    // link PI<->PD
+    l2seg_link_pi_pd(l2seg_pd, args->l2seg);
+
+    // Restore data
+    ret = pd_l2seg_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore pd data for l2seg: {}, err: {}",
+                      args->l2seg->seg_id, ret);
+        goto end;
+    }
+
+    // Program HW
+    ret = l2seg_pd_program_hw(l2seg_pd, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program hw");
+        goto end;
+    }
+
+    // Add to DB. Assuming PI calls PD create at the end
+    ret = l2seg_pd_add_to_db(l2seg_pd, ((l2seg_t *)(l2seg_pd->l2seg))->hal_handle);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+end:
+    if (ret != HAL_RET_OK) {
+        l2seg_pd_cleanup(l2seg_pd);
+    }
+
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // PD l2seg Update
 //-----------------------------------------------------------------------------
@@ -358,12 +434,12 @@ l2seg_pd_depgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
 // program HW
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd)
+l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd, bool is_upgrade)
 {
     hal_ret_t            ret;
 
     // program Input properties Table
-    ret = l2seg_pd_pgm_inp_prop_tbl(l2seg_pd);
+    ret = l2seg_pd_pgm_inp_prop_tbl(l2seg_pd, is_upgrade);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
@@ -373,7 +449,7 @@ l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd)
 // program input propterties table for cpu tx traffic
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
+l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
 {
     sdk_ret_t                   sdk_ret;
     hal_ret_t                   ret           = HAL_RET_OK;
@@ -407,7 +483,13 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
                                                          (l2seg_pd->l2seg));
     inp_prop.allow_flood      = 1;
 
-    sdk_ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);
+    if (is_upgrade) {
+        // insert
+        sdk_ret = inp_prop_tbl->insert_withid(&key, &data,
+                                              l2seg_pd->inp_prop_tbl_cpu_idx);
+    } else {
+        sdk_ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);
+    }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to program from cpu entry input properties "

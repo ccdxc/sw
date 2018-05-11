@@ -25,6 +25,7 @@ using sdk::lib::dllist_ctxt_t;
 using kh::L2SegmentKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentStatus;
+using l2segment::L2SegmentStats;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponseMsg;
@@ -160,9 +161,9 @@ hal_ret_t l2segment_delete(L2SegmentDeleteRequest& req,
 hal_ret_t l2segment_get(l2segment::L2SegmentGetRequest& req,
                         l2segment::L2SegmentGetResponseMsg *rsp);
 
-hal_ret_t l2seg_marshall_cb(void *obj, uint8_t *mem,
+hal_ret_t l2seg_store_cb(void *obj, uint8_t *mem,
                           uint32_t len, uint32_t *mlen);
-
+uint32_t l2seg_restore_cb(void *obj, uint32_t len);
 }    // namespace hal
 
 #endif    // __L2SEGMENT_HPP__

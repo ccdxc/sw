@@ -44,8 +44,8 @@ hal_obj_meta_init (void)
                          vrf_restore_cb);
     g_obj_meta[HAL_OBJ_ID_L2SEG] =
         new hal_obj_meta(HAL_SLAB_L2SEG,
-                         l2seg_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         l2seg_store_cb,
+                         l2seg_restore_cb);
     g_obj_meta[HAL_OBJ_ID_NETWORK] =
         new hal_obj_meta(HAL_SLAB_NETWORK,
                          hal_default_marshall_cb,

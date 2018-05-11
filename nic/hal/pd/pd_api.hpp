@@ -151,6 +151,11 @@ typedef struct pd_l2seg_create_args_s {
     l2seg_t     *l2seg;
 } __PACK__ pd_l2seg_create_args_t;
 
+typedef struct pd_l2seg_restore_args_s {
+    l2seg_t                 *l2seg;
+    const L2SegmentStatus   *l2seg_status;
+} __PACK__ pd_l2seg_restore_args_t;
+
 typedef struct pd_l2seg_delete_args_s {
     vrf_t       *vrf;
     l2seg_t     *l2seg;
@@ -181,6 +186,14 @@ pd_l2seg_create_args_init (pd_l2seg_create_args_t *args)
 {
     args->vrf = NULL;
     args->l2seg = NULL;
+    return;
+}
+
+static inline void
+pd_l2seg_restore_args_init (pd_l2seg_restore_args_t *args)
+{
+    args->l2seg = NULL;
+    args->l2seg_status = NULL;
     return;
 }
 
@@ -2766,16 +2779,17 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_L2SEG_GET,                230, "PD_FUNC_ID_L2SEG_GET")\
     ENTRY(PD_FUNC_ID_EP_GET,                   231, "PD_FUNC_ID_EP_GET")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 232, "PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE") \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE,       233, "PD_FUNC_ID_IPSEC_ENCRYPT_CREATE")          \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE,       234, "PD_FUNC_ID_IPSEC_ENCRYPT_DELETE")          \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE,       235, "PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE")          \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_GET,          236, "PD_FUNC_ID_IPSEC_ENCRYPT_GET")        \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_CREATE, 237, "PD_FUNC_ID_IPSEC_DECRYPT_CREATE") \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_DELETE, 238, "PD_FUNC_ID_IPSEC_DECRYPT_DELETE") \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE, 239, "PD_FUNC_ID_IPSEC_DECRYPT_UPDATE") \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_GET,    240, "PD_FUNC_ID_IPSEC_DECRYPT_GET")    \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE,      233, "PD_FUNC_ID_IPSEC_ENCRYPT_CREATE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE,      234, "PD_FUNC_ID_IPSEC_ENCRYPT_DELETE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE,      235, "PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_GET,         236, "PD_FUNC_ID_IPSEC_ENCRYPT_GET")        \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_CREATE,      237, "PD_FUNC_ID_IPSEC_DECRYPT_CREATE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_DELETE,      238, "PD_FUNC_ID_IPSEC_DECRYPT_DELETE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE,      239, "PD_FUNC_ID_IPSEC_DECRYPT_UPDATE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_GET,         240, "PD_FUNC_ID_IPSEC_DECRYPT_GET")    \
     ENTRY(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, 241, "PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY")\
-    ENTRY(PD_FUNC_ID_MAX,                      242, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_L2SEG_RESTORE,             242, "PD_FUNC_ID_L2SEG_RESTORE")    \
+    ENTRY(PD_FUNC_ID_MAX,                       243, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2809,6 +2823,7 @@ PD_FUNCP_TYPEDEF(pd_vrf_get);
 
 // l2seg pd calls
 PD_FUNCP_TYPEDEF(pd_l2seg_create);
+PD_FUNCP_TYPEDEF(pd_l2seg_restore);
 PD_FUNCP_TYPEDEF(pd_l2seg_update);
 PD_FUNCP_TYPEDEF(pd_l2seg_delete);
 PD_FUNCP_TYPEDEF(pd_l2seg_mem_free);
@@ -3176,6 +3191,7 @@ typedef struct pd_call_s {
 
         // l2seg pd calls
         PD_UNION_FIELD(pd_l2seg_create);
+        PD_UNION_FIELD(pd_l2seg_restore);
         PD_UNION_FIELD(pd_l2seg_update);
         PD_UNION_FIELD(pd_l2seg_delete);
         PD_UNION_FIELD(pd_l2seg_mem_free);

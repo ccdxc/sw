@@ -17,7 +17,7 @@
 
 namespace hal {
 
-static void l2seg_ep_learning_update(L2SegmentSpec& spec, l2seg_t *l2seg);
+static void l2seg_ep_learning_update(l2seg_t *l2seg, const L2SegmentSpec& spec);
 //----------------------------------------------------------------------------
 // hash table seg_id => entry
 //  - Get key from entry
@@ -560,6 +560,32 @@ end:
     return ret;
 }
 
+static hal_ret_t
+l2seg_create_abort_cleanup (l2seg_t *l2seg, hal_handle_t hal_handle)
+{
+    hal_ret_t                       ret;
+    pd::pd_l2seg_delete_args_t      pd_l2seg_args = { 0 };
+
+    // delete call to PD
+    if (l2seg->pd) {
+        pd::pd_l2seg_delete_args_init(&pd_l2seg_args);
+        pd_l2seg_args.l2seg = l2seg;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}",
+                          ret);
+        }
+    }
+
+    // remove object from hal_handle id based hash table in infra
+    hal_handle_free(hal_handle);
+
+    // Free l2seg. This will also cleanup nws if there are any
+    // l2seg_cleanup(l2seg);
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // l2seg_create_add_cb was a failure
 // 1. call delete to PD
@@ -573,7 +599,6 @@ hal_ret_t
 l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_l2seg_delete_args_t  pd_l2seg_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                    *l2seg = NULL;
@@ -594,22 +619,8 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("create abort cb {}",
                     l2seg->seg_id);
 
-    // delete call to PD
-    if (l2seg->pd) {
-        pd::pd_l2seg_delete_args_init(&pd_l2seg_args);
-        pd_l2seg_args.l2seg = l2seg;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}",
-                          ret);
-        }
-    }
+    ret = l2seg_create_abort_cleanup(l2seg, hal_handle);
 
-    // remove object from hal_handle id based hash table in infra
-    hal_handle_free(hal_handle);
-
-    // Free l2seg. This will also cleanup nws if there are any
-    // l2seg_cleanup(l2seg);
 end:
     return ret;
 }
@@ -656,7 +667,7 @@ l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
 // Reads networks from spec
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
+l2seg_read_networks (l2seg_t *l2seg, const L2SegmentSpec& spec)
 {
     hal_ret_t               ret = HAL_RET_OK;
     uint32_t                num_nws = 0, i = 0;
@@ -795,6 +806,67 @@ is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app
     return true;
 }
 
+static hal_ret_t
+l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
+{
+    vrf_t           *vrf;
+    hal_ret_t       ret;
+    // fetch the vrf
+    vrf = vrf_lookup_key_or_handle(spec.vrf_key_handle());
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("Vrf {}/{} not found", spec.vrf_key_handle().vrf_id(),
+                      spec.vrf_key_handle().vrf_handle());
+        return HAL_RET_VRF_NOT_FOUND;
+    }
+
+    l2seg->vrf_handle       = vrf->hal_handle;
+    l2seg->seg_id           = spec.key_or_handle().segment_id();
+    l2seg->segment_type     = spec.segment_type();
+    l2seg->pinned_uplink    = spec.pinned_uplink_if_handle();
+    l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
+    l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
+    ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());
+    if (spec.has_wire_encap()) {
+        l2seg->wire_encap.type = spec.wire_encap().encap_type();
+        l2seg->wire_encap.val = spec.wire_encap().encap_value();
+        HAL_TRACE_DEBUG("Wire enc_type : {} enc_val : {}",
+                        l2seg->wire_encap.type, l2seg->wire_encap.val);
+    }
+    if (spec.has_tunnel_encap()) {
+        l2seg->tunnel_encap.type = spec.tunnel_encap().encap_type();
+        l2seg->tunnel_encap.val = spec.tunnel_encap().encap_value();
+        HAL_TRACE_DEBUG("Tunnel enc_type : {} enc_val : {}",
+                        l2seg->tunnel_encap.type, l2seg->tunnel_encap.val);
+    }
+
+    ret = l2seg_read_networks(l2seg, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in reading networks, err {}", ret);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    l2seg_ep_learning_update(l2seg, spec);
+
+end:
+
+    return ret;
+}
+
+static hal_ret_t
+l2seg_init_from_status(l2seg_t *l2seg, const L2SegmentStatus& status)
+{
+    l2seg->hal_handle = status.l2segment_handle();
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+l2seg_init_from_stats(l2seg_t *l2seg, const L2SegmentStats& stats)
+{
+    l2seg->num_ep = stats.num_endpoints();
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // process a L2 segment create request
 // TODO: if L2 segment exists, treat this as modify (vrf id in the vrf_key_handle must
@@ -804,7 +876,6 @@ hal_ret_t
 l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t                   ret;
-    vrf_t                       *vrf;
     l2seg_t                     *l2seg    = NULL;
     l2seg_create_app_ctxt_t     app_ctxt  = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
@@ -851,37 +922,13 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
-    vrf                     = app_ctxt.vrf;
-    l2seg->vrf_handle       = vrf->hal_handle;
-    l2seg->seg_id           = spec.key_or_handle().segment_id();
-    l2seg->segment_type     = spec.segment_type();
-    l2seg->pinned_uplink    = spec.pinned_uplink_if_handle();
-    l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
-    l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
-    ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());
-    if (spec.has_wire_encap()) {
-        l2seg->wire_encap.type = spec.wire_encap().encap_type();
-        l2seg->wire_encap.val = spec.wire_encap().encap_value();
-        HAL_TRACE_DEBUG("Wire enc_type : {} enc_val : {}",
-                        l2seg->wire_encap.type, l2seg->wire_encap.val);
-    }
-    if (spec.has_tunnel_encap()) {
-        l2seg->tunnel_encap.type = spec.tunnel_encap().encap_type();
-        l2seg->tunnel_encap.val = spec.tunnel_encap().encap_value();
-        HAL_TRACE_DEBUG("Tunnel enc_type : {} enc_val : {}",
-                        l2seg->tunnel_encap.type, l2seg->tunnel_encap.val);
-    }
-
-    ret = l2seg_read_networks(l2seg, spec);
+    // Init l2seg from spec
+    ret = l2seg_init_from_spec(l2seg, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error in reading networks, err {}", ret);
-        l2seg_cleanup(l2seg);
-        l2seg = NULL;
-        ret = HAL_RET_INVALID_ARG;
+        HAL_TRACE_ERR("Failed to init l2seg, ret: {}", ret);
+        rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         goto end;
     }
-
-    l2seg_ep_learning_update(spec, l2seg);
 
     // allocate hal handle id
     l2seg->hal_handle = hal_handle_alloc(HAL_OBJ_ID_L2SEG);
@@ -1475,7 +1522,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
-    l2seg_ep_learning_update(spec, l2seg);
+    l2seg_ep_learning_update(l2seg, spec);
 
     ret = l2seg_check_update(spec, l2seg, &app_ctxt);
     if (ret != HAL_RET_OK) {
@@ -1768,12 +1815,16 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const L2SegmentKeyHandle    &kh = req.key_or_handle();
 
+    HAL_TRACE_DEBUG("Received L2seg Delete");
+
     // validate the request message
     ret = validate_l2seg_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("l2seg delete validation Failed, ret : {}", ret);
         goto end;
     }
+
+    HAL_TRACE_DEBUG("L2seg Delete Validated");
 
     l2seg = l2seg_lookup_key_or_handle(kh);
     if (l2seg == NULL) {
@@ -2077,7 +2128,7 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
 }
 
 static void
-l2seg_ep_learning_update (L2SegmentSpec& spec, l2seg_t *l2seg)
+l2seg_ep_learning_update (l2seg_t *l2seg, const L2SegmentSpec& spec)
 {
     if (spec.has_eplearn_cfg()) {
         if (spec.eplearn_cfg().has_arp()) {
@@ -2101,7 +2152,7 @@ l2seg_ep_learning_update (L2SegmentSpec& spec, l2seg_t *l2seg)
 }
 
 //-----------------------------------------------------------------------------
-// given a l2seg, marshall it for persisting its state (spec, status, stats)
+// given a l2seg, store it for persisting its state (spec, status, stats)
 //
 // obj points to vrf object i.e., l2seg_t
 // mem is the memory buffer to serialize the state into
@@ -2109,7 +2160,7 @@ l2seg_ep_learning_update (L2SegmentSpec& spec, l2seg_t *l2seg)
 // mlen is to be filled by this function with marshalled state length
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+l2seg_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 {
     L2SegmentGetResponse    rsp;
     uint32_t                serialized_state_sz;
@@ -2137,6 +2188,111 @@ l2seg_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     HAL_TRACE_DEBUG("Marshalled L2 segment {}, len {}",
                     l2seg->seg_id, serialized_state_sz);
     return HAL_RET_OK;
+}
+
+static hal_ret_t
+l2seg_restore_add (l2seg_t *l2seg, const L2SegmentGetResponse& l2seg_info)
+{
+    hal_ret_t                       ret;
+    pd::pd_l2seg_restore_args_t     pd_l2seg_args = { 0 };
+
+    // restore pd state
+    pd::pd_l2seg_restore_args_init(&pd_l2seg_args);
+    pd_l2seg_args.l2seg = l2seg;
+    pd_l2seg_args.l2seg_status = &l2seg_info.status();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_RESTORE, &pd_l2seg_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore l2seg {} pd, err : {}",
+                      l2seg->seg_id, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+l2seg_restore_commit (l2seg_t *l2seg, const L2SegmentGetResponse& l2seg_info)
+{
+    hal_ret_t   ret;
+    vrf_t       *vrf;
+
+    // Add to l2seg id hash table
+    ret = l2seg_add_to_db(l2seg, l2seg->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add l2seg {} to db, err : {}",
+                      l2seg->seg_id, ret);
+        goto end;
+    }
+
+    // Add l2seg to vrf's l2seg list
+    vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+    if (!vrf) {
+        HAL_TRACE_ERR("Failed to find vrf {}", l2seg->vrf_handle);
+        goto end;
+    }
+
+    ret = vrf_add_l2seg(vrf, l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add rel. from vrf");
+        goto end;
+    }
+
+    // Add l2seg to network's l2seg list
+    ret = l2seg_update_network_relation (l2seg->nw_list, l2seg, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add network -> l2seg "
+                      "relation ret : {}", ret);
+        goto end;
+    }
+
+end:
+
+    return ret;
+}
+
+static hal_ret_t
+l2seg_restore_abort (l2seg_t *l2seg, const L2SegmentGetResponse& l2seg_info)
+{
+    HAL_TRACE_ERR("Aborting l2seg {} restore", l2seg->seg_id);
+    l2seg_create_abort_cleanup(l2seg, l2seg->hal_handle);
+    return HAL_RET_OK;
+}
+
+uint32_t
+l2seg_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t               ret;
+    L2SegmentGetResponse    l2seg_info;
+    l2seg_t                 *l2seg;
+ 
+    // de-serialize the object
+    if (l2seg_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized l2seg obj");
+        HAL_ASSERT(0);
+        return 0;
+    }
+
+    // instantiate the L2 segment
+    l2seg = l2seg_alloc_init();
+    if (l2seg == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init l2seg, err : {}", ret);
+        return 0;
+    }
+
+    l2seg_init_from_spec(l2seg, l2seg_info.spec());
+    l2seg_init_from_status(l2seg, l2seg_info.status());
+    l2seg_init_from_stats(l2seg, l2seg_info.stats());
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_L2SEG, l2seg->hal_handle, (void *)l2seg);
+
+    l2seg_create_oifs(l2seg);
+
+    ret = l2seg_restore_add(l2seg, l2seg_info);
+    if (ret != HAL_RET_OK) {
+        l2seg_restore_abort(l2seg, l2seg_info);
+    }
+    l2seg_restore_commit(l2seg, l2seg_info);
+
+    return 0; 
 }
 
 //------------------------------------------------------------------------------

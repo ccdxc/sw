@@ -40,6 +40,7 @@ PD_FUNC_STUB(pd_vrf_get);
 
 // l2seg pd calls
 PD_FUNC_STUB(pd_l2seg_create);
+PD_FUNC_STUB(pd_l2seg_restore);
 PD_FUNC_STUB(pd_l2seg_update);
 PD_FUNC_STUB(pd_l2seg_delete);
 PD_FUNC_STUB(pd_l2seg_mem_free);

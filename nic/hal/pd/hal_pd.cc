@@ -80,6 +80,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 
     // l2seg pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_CREATE, pd_l2seg_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_RESTORE, pd_l2seg_restore);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_DELETE, pd_l2seg_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
@@ -459,6 +460,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
 
     // l2seg pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_CREATE, pd_l2seg_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_RESTORE, pd_l2seg_restore);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_DELETE, pd_l2seg_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
