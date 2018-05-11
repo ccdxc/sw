@@ -203,7 +203,6 @@ static pnso_error_t execute_service(struct pnso_sim_session *session,
 	PNSO_ASSERT(session->funcs[ctx->cmd.svc_type]);
 	rc = session->funcs[ctx->cmd.svc_type](ctx, opaque);
 
-	ctx->status.num_outputs = 1;
 	ctx->status.svc_type = ctx->cmd.svc_type;
 	ctx->status.err = rc;
 
@@ -222,7 +221,6 @@ pnso_error_t pnso_sim_execute_request(struct pnso_sim_worker_ctx *worker_ctx,
 	struct pnso_sim_svc_ctx *cur_svc = &svc_ctxs[0];
 	struct pnso_sim_svc_ctx *prev_svc = NULL;
 	struct pnso_service_status *status;
-	struct pnso_output_buf *output_buf;
 
 	PNSO_ASSERT(svc_req->num_services == svc_res->num_services);
 	PNSO_ASSERT(svc_req->num_services >= 1);
@@ -234,7 +232,7 @@ pnso_error_t pnso_sim_execute_request(struct pnso_sim_worker_ctx *worker_ctx,
 	cur_svc = &svc_ctxs[0];
 	cur_svc->input.buf = (uint64_t) sess->scratch.data[scratch_bank];
 	cur_svc->input.len = sess->scratch.data_sz;
-	pnso_memcpy_list_to_flat_buf(&cur_svc->input, svc_req->src_buf);
+	pnso_memcpy_list_to_flat_buf(&cur_svc->input, svc_req->sgl);
 	cur_svc->is_first = 1;
 
 	for (svc_i = 0; svc_i < svc_req->num_services; svc_i++) {
@@ -272,12 +270,13 @@ pnso_error_t pnso_sim_execute_request(struct pnso_sim_worker_ctx *worker_ctx,
 
 		/* Store result */
 		status = &cur_svc->status;
-		if (status->num_outputs) {
-			output_buf = status->o.output_buf;
-			if (output_buf && output_buf->buf_list)
+		if (cur_svc->cmd.svc_type != PNSO_SVC_TYPE_HASH &&
+			cur_svc->cmd.svc_type != PNSO_SVC_TYPE_CHKSUM) {
+			if (status->u.dst.sgl) {
 				/* Intermediate buffer */
-				pnso_memcpy_flat_buf_to_list(output_buf->buf_list,
+				pnso_memcpy_flat_buf_to_list(status->u.dst.sgl,
 						&cur_svc->output);
+			}
 		}
 		svc_res->svc[svc_i] = cur_svc->status;
 
@@ -385,7 +384,7 @@ static pnso_error_t svc_exec_compress_lzrw1a(struct pnso_sim_svc_ctx *ctx)
 {
 	struct pnso_compression_header *hdr =
 	    (struct pnso_compression_header *) ctx->output.buf;
-	uint32_t hdr_len = ctx->cmd.d.cp_desc.flags & PNSO_DFLAG_INSERT_HEADER ?
+	uint32_t hdr_len = ctx->cmd.u.cp_desc.flags & PNSO_DFLAG_INSERT_HEADER ?
 				sizeof(*hdr) : 0;
 	uint32_t dst_len = ctx->sess->scratch.data_sz - hdr_len;
 
@@ -408,7 +407,7 @@ static pnso_error_t svc_exec_decompress_lzrw1a(struct pnso_sim_svc_ctx
 {
 	struct pnso_compression_header *hdr =
 	    (struct pnso_compression_header *) ctx->input.buf;
-	uint32_t hdr_len = ctx->cmd.d.dc_desc.flags & PNSO_DFLAG_HEADER_PRESENT ?
+	uint32_t hdr_len = ctx->cmd.u.dc_desc.flags & PNSO_DFLAG_HEADER_PRESENT ?
 				sizeof(*hdr) : 0;
 	uint32_t dst_len = ctx->sess->scratch.data_sz;
 
@@ -433,7 +432,7 @@ static pnso_error_t svc_exec_compress(struct pnso_sim_svc_ctx *ctx,
 
 	/* TODO: obey threshold value */
 
-	switch (ctx->cmd.d.cp_desc.algo_type) {
+	switch (ctx->cmd.u.cp_desc.algo_type) {
 	case PNSO_COMPRESSOR_TYPE_NONE:
 		rc = svc_exec_noop(ctx, opaque);
 		break;
@@ -444,21 +443,21 @@ static pnso_error_t svc_exec_compress(struct pnso_sim_svc_ctx *ctx,
 		rc = EINVAL;
 		break;
 	}
-	
-	ctx->status.o.output_buf->data_len = ctx->output.len;
 
 	if (rc == PNSO_OK) {
 		/* Check that it was compressed enough */
-		if (ctx->output.len > ctx->cmd.d.cp_desc.threshold_len) {
+		if (ctx->output.len > ctx->cmd.u.cp_desc.threshold_len) {
 			svc_exec_noop(ctx, opaque);
 			rc = PNSO_ERR_CPDC_DATA_TOO_LONG;
 		}
 
 		/* Pad */
-		if (ctx->cmd.d.cp_desc.flags & PNSO_DFLAG_ZERO_PAD) {
+		if (ctx->cmd.u.cp_desc.flags & PNSO_DFLAG_ZERO_PAD) {
 			flat_buffer_pad(&ctx->output, ctx->sess->block_sz);
 		}
 	}
+
+	ctx->status.u.dst.data_len = ctx->output.len;
 
 	return rc;
 }
@@ -470,7 +469,7 @@ static pnso_error_t svc_exec_decompress(struct pnso_sim_svc_ctx *ctx,
 
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
 
-	switch (ctx->cmd.d.dc_desc.algo_type) {
+	switch (ctx->cmd.u.dc_desc.algo_type) {
 	case PNSO_COMPRESSOR_TYPE_NONE:
 		rc = svc_exec_noop(ctx, opaque);
 		break;
@@ -482,7 +481,7 @@ static pnso_error_t svc_exec_decompress(struct pnso_sim_svc_ctx *ctx,
 		break;
 	}
 
-	ctx->status.o.output_buf->data_len = ctx->output.len;
+	ctx->status.u.dst.data_len = ctx->output.len;
 
 	return rc;
 }
@@ -496,7 +495,7 @@ static pnso_error_t svc_exec_encrypt(struct pnso_sim_svc_ctx *ctx,
 	if (0 !=
 	    pnso_sim_get_key_desc_idx((void **) &key1, (void **) &key2,
 				      &key_size,
-				      ctx->cmd.d.crypto_desc.
+				      ctx->cmd.u.crypto_desc.
 				      key_desc_idx)) {
 		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
 	}
@@ -504,7 +503,7 @@ static pnso_error_t svc_exec_encrypt(struct pnso_sim_svc_ctx *ctx,
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
 
 	if (0 != algo_encrypt_xts(ctx->sess->scratch.cmd, key1,
-				  (uint8_t *) ctx->cmd.d.crypto_desc.
+				  (uint8_t *) ctx->cmd.u.crypto_desc.
 				  iv_addr, (uint8_t *) ctx->input.buf,
 				  ctx->input.len,
 				  (uint8_t *) ctx->output.buf,
@@ -512,7 +511,7 @@ static pnso_error_t svc_exec_encrypt(struct pnso_sim_svc_ctx *ctx,
 		return PNSO_ERR_XTS_AXI_ERROR;
 	}
 
-	ctx->status.o.output_buf->data_len = ctx->output.len;
+	ctx->status.u.dst.data_len = ctx->output.len;
 
 	return PNSO_OK;
 }
@@ -526,7 +525,7 @@ static pnso_error_t svc_exec_decrypt(struct pnso_sim_svc_ctx *ctx,
 	if (0 !=
 	    pnso_sim_get_key_desc_idx((void **) &key1, (void **) &key2,
 				      &key_size,
-				      ctx->cmd.d.crypto_desc.
+				      ctx->cmd.u.crypto_desc.
 				      key_desc_idx)) {
 		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
 	}
@@ -534,7 +533,7 @@ static pnso_error_t svc_exec_decrypt(struct pnso_sim_svc_ctx *ctx,
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
 
 	if (0 != algo_decrypt_xts(ctx->sess->scratch.cmd, key1,
-				  (uint8_t *) ctx->cmd.d.crypto_desc.
+				  (uint8_t *) ctx->cmd.u.crypto_desc.
 				  iv_addr, (uint8_t *) ctx->input.buf,
 				  ctx->input.len,
 				  (uint8_t *) ctx->output.buf,
@@ -542,7 +541,7 @@ static pnso_error_t svc_exec_decrypt(struct pnso_sim_svc_ctx *ctx,
 		return PNSO_ERR_XTS_AXI_ERROR;
 	}
 
-	ctx->status.o.output_buf->data_len = ctx->output.len;
+	ctx->status.u.dst.data_len = ctx->output.len;
 
 	return PNSO_OK;
 }
@@ -583,23 +582,22 @@ static pnso_error_t svc_exec_hash_one_block(struct pnso_sim_svc_ctx *ctx,
 
 	(*call_count)++;
 
-	PNSO_ASSERT(ctx->status.num_outputs > block_idx);
+	PNSO_ASSERT(ctx->status.u.hash.num_tags > block_idx);
 
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
 
-	switch (ctx->cmd.d.hash_desc.algo_type) {
+	switch (ctx->cmd.u.hash_desc.algo_type) {
 	case PNSO_HASH_TYPE_SHA2_256:
 		if (!algo_sha_gen
 		    (ctx->sess->scratch.cmd,
-		     ctx->status.o.hashes[block_idx].hash_tag,
+		     ctx->status.u.hash.tags[block_idx].hash,
 		     (uint8_t *) block->buf, block->len, 256)) {
 			rc = PNSO_ERR_SHA_FAILED;
 		}
 		break;
 	case PNSO_HASH_TYPE_SHA2_512:
-		if (!algo_sha_gen
-		    (ctx->sess->scratch.cmd,
-		     ctx->status.o.hashes[block_idx].hash_tag,
+		if (!algo_sha_gen(ctx->sess->scratch.cmd,
+		     ctx->status.u.hash.tags[block_idx].hash,
 		     (uint8_t *) block->buf, block->len, 512)) {
 			rc = PNSO_ERR_SHA_FAILED;
 		}
@@ -620,7 +618,7 @@ static pnso_error_t svc_exec_hash(struct pnso_sim_svc_ctx *ctx,
 	    svc_iterate_blocks(ctx, svc_exec_hash_one_block,
 			       &opaque_counter);
 
-	ctx->status.num_outputs= opaque_counter;
+	ctx->status.u.hash.num_tags = opaque_counter;
 
 	/* Zero-copy output */
 	ctx->output = ctx->input;
@@ -635,16 +633,16 @@ static pnso_error_t svc_exec_chksum_one_block(struct pnso_sim_svc_ctx *ctx,
 {
 	int *call_count = (int *) opaque;
 	uint32_t temp32;
-	uint8_t *hash_buf;
+	uint8_t *chksum_buf;
 	pnso_error_t rc = PNSO_OK;
 
 	(*call_count)++;
 
-	PNSO_ASSERT(ctx->status.num_outputs> block_idx);
+	PNSO_ASSERT(ctx->status.u.chksum.num_tags > block_idx);
 
-	hash_buf = ctx->status.o.chksums[block_idx].chksum_tag;
+	chksum_buf = ctx->status.u.chksum.tags[block_idx].chksum;
 
-	switch (ctx->cmd.d.chksum_desc.algo_type) {
+	switch (ctx->cmd.u.chksum_desc.algo_type) {
 	case PNSO_CHKSUM_TYPE_NONE:
 		/* TODO */
 		rc = EINVAL;
@@ -659,15 +657,13 @@ static pnso_error_t svc_exec_chksum_one_block(struct pnso_sim_svc_ctx *ctx,
 		break;
 
 	case PNSO_CHKSUM_TYPE_ADLER32:
-		temp32 =
-		    algo_gen_adler32((uint8_t *) block->buf, block->len);
-		*((uint32_t *) hash_buf) = temp32;
+		temp32 = algo_gen_adler32((uint8_t *) block->buf, block->len);
+		*((uint32_t *) chksum_buf) = temp32;
 		break;
 
 	case PNSO_CHKSUM_TYPE_MADLER32:
-		temp32 =
-		    algo_gen_madler((uint64_t *) block->buf, block->len);
-		*((uint32_t *) hash_buf) = temp32;
+		temp32 = algo_gen_madler((uint64_t *) block->buf, block->len);
+		*((uint32_t *) chksum_buf) = temp32;
 		break;
 
 	default:
@@ -689,7 +685,7 @@ static pnso_error_t svc_exec_chksum(struct pnso_sim_svc_ctx *ctx,
 	    svc_iterate_blocks(ctx, svc_exec_chksum_one_block,
 			       &opaque_counter);
 
-	ctx->status.num_outputs= opaque_counter;
+	ctx->status.u.chksum.num_tags = opaque_counter;
 
 	/* Zero-copy output */
 	ctx->output = ctx->input;
@@ -715,13 +711,13 @@ static pnso_error_t svc_exec_decompact(struct pnso_sim_svc_ctx *ctx,
 
 	for (i = 0; i < wafl_blk->wpb_hdr.wpbh_num_objs; i++) {
 		wafl_data = &wafl_blk->wpb_data_info[i];
-		if (wafl_data->wpd_vvbn == ctx->cmd.d.decompact_desc.vvbn) {
+		if (wafl_data->wpd_vvbn == ctx->cmd.u.decompact_desc.vvbn) {
 			/* Found the right data, now decompress or copy raw to output */
 			PNSO_ASSERT(wafl_data->wpd_len +
 				    wafl_data->wpd_off <=
 				    ctx->sess->block_sz);
 			if ((wafl_data->wpd_flags & WAFL_PACKED_DATA_ENCODED)
-			    /*|| !ctx->cmd.d.decompact_desc.is_uncompressed*/) {
+			    /*|| !ctx->cmd.u.decompact_desc.is_uncompressed*/) {
 				/* Compressed (either single or multi-block).  Decompress it. */
 				struct pnso_compression_header *hdr =
 				    (struct pnso_compression_header *)
@@ -759,7 +755,7 @@ static pnso_error_t svc_exec_decompact(struct pnso_sim_svc_ctx *ctx,
 				ctx->output.len = wafl_data->wpd_len;
 			}
 			
-			ctx->status.o.output_buf->data_len = ctx->output.len;
+			ctx->status.u.dst.data_len = ctx->output.len;
 
 			return PNSO_OK;
 		}
