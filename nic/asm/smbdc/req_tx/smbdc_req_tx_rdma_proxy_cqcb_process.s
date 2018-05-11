@@ -13,7 +13,7 @@ struct smbdc_req_tx_s1_t0_k k;
 #define K_WQE_CONTEXT_ADDR      CAPRI_KEY_RANGE(IN_P, wqe_context_addr_sbit0_ebit7, wqe_context_addr_sbit24_ebit31)
 
 #define TO_RDMA_CQE_P t0_s2s_rdma_cqe_info
-#define TO_S4_P       to_s4_to_stage
+#define TO_S4_P       to_s4_to_stage_cq
 
 %%
     .param    smbdc_req_tx_rdma_cqe_process

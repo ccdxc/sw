@@ -8,10 +8,21 @@ struct smbdc_sqwqe_t d;
 struct smbdc_req_tx_s1_t0_k k;
 
 #define WQE_TO_SELECT_MR_P t0_s2s_wqe_to_mr_select_info
+#define WQE_TO_SGE_P t0_s2s_wqe_to_sge_info
 
+#define TO_S2_P       to_s2_to_stage
+
+#define IN_P t0_s2s_sqcb_to_wqe_info
+
+#define K_MAX_FRAGMENTED_SIZE CAPRI_KEY_RANGE(IN_P, max_fragmented_size_sbit0_ebit7, max_fragmented_size_sbit24_ebit31)
+#define K_MAX_SEND_SIZE CAPRI_KEY_FIELD(IN_P, max_send_size)
+#define K_CURRENT_SGE_ID CAPRI_KEY_FIELD(IN_P, current_sge_id)
+#define K_CURRENT_SGE_OFFSET CAPRI_KEY_FIELD(IN_P, current_sge_offset)
+#define K_IN_PROGRESS CAPRI_KEY_FIELD(IN_P, in_progress)
 
 %%
     .param    smbdc_req_tx_mr_select_process
+    .param    smbdc_req_tx_sge_process
 
 .align
 smbdc_req_tx_wqe_process:
@@ -63,9 +74,58 @@ for_each_sg_list:
     nop
 
 process_send:
+    
+    sle     c1, K_MAX_FRAGMENTED_SIZE, d.send.total_len 
+    bcf     [c1], invalid_request
+    nop
+  
+    bbeq    K_IN_PROGRESS, 1, in_progress
+    nop
+
+    //fill smbdc_wqe context
+    phvwr   p.smbdc_wqe_context.wrid, d.send.wrid
+    
+    mfspr   r2, spr_tbladdr //Branch Delay Slot
+    add     r2, r2, offsetof(struct smbdc_sqwqe_send_t, sg0)
+
+    CAPRI_RESET_TABLE_0_ARG()
+
+    slt     c1, d.send.num_sges, SMBDC_NUM_SGES_PER_CACHELINE
+    cmov    r1, c1, d.send.num_sges, SMBDC_NUM_SGES_PER_CACHELINE
+
+    phvwr     CAPRI_PHV_FIELD(TO_S2_P, total_data_length), d.send.total_len
+
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), r0, \
+              CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r1
+    phvwr     CAPRI_PHV_FIELD(WQE_TO_SGE_P, wrid), d.send.wrid
+    phvwr     CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), r0
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_sge_process, r2)
+
+    nop.e
+    nop
+    
+in_progress:
+
+    mfspr   r2, spr_tbladdr //Branch Delay Slot
+    add     r2, r2, offsetof(struct smbdc_sqwqe_send_t, sg0)
+    add     r5, r0, sizeof(struct smbdc_sge_t)
+    sll     r5, r5, K_CURRENT_SGE_ID
+    add     r2, r2, r5
+
+    sub     r1, d.send.num_sges, K_CURRENT_SGE_ID
+
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), K_CURRENT_SGE_ID, \
+              CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r1
+    phvwr     CAPRI_PHV_FIELD(WQE_TO_SGE_P, wrid), d.send.wrid
+    phvwr     CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), K_CURRENT_SGE_OFFSET
+
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_sge_process, r2)
+
     nop.e
     nop
 
+invalid_request:
 exit:
     phvwr   p.common.p4_intr_global_drop, 1
     nop.e

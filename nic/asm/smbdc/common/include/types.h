@@ -85,8 +85,23 @@ struct smbdc_sqwqe_mr_t {
     pad2: 64;
 };
 
+#define SMBDC_NUM_SGES_PER_CACHELINE 4
+
+struct smbdc_sge_t {
+    va: 64;
+    len: 32;
+    pad: 32;
+};
+
 struct smbdc_sqwqe_send_t {
-    pad: 504;
+    wrid: 64;
+    total_len: 32;
+    pad: 16;
+    num_sges: 8;
+    
+    struct smbdc_sge_t sg0;   
+    struct smbdc_sge_t sg1;   
+    struct smbdc_sge_t sg2;   
 };
 
 #define SMBDC_SQWQE_OP_TYPE_NONE 0
@@ -102,6 +117,13 @@ struct smbdc_sqwqe_t {
     };
 };
 
+
+struct smbdc_sqsge_t {
+    struct smbdc_sge_t sge0;
+    struct smbdc_sge_t sge1;
+    struct smbdc_sge_t sge2;
+    struct smbdc_sge_t sge3;
+};
 
 //smbdc_cqe format
 

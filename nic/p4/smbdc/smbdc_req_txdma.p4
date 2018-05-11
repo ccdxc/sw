@@ -52,10 +52,12 @@
 #define tx_table_s1_t0_action1 smbdc_req_tx_rdma_proxy_cqcb_process
 #define tx_table_s2_t0_action smbdc_req_tx_mr_select_process
 #define tx_table_s2_t0_action1 smbdc_req_tx_rdma_cqe_process
+#define tx_table_s2_t0_action2 smbdc_req_tx_sge_process
 #define tx_table_s3_t0_action smbdc_req_tx_post_rdma_req_process
 #define tx_table_s3_t0_action1 smbdc_req_tx_sq_wqe_context_process
-#define tx_table_s4_t0_action smbdc_req_tx_sqcb_writeback_process
-#define tx_table_s4_t0_action1 smbdc_req_tx_cqcb_process
+#define tx_table_s4_t0_action smbdc_req_tx_sqcb_writeback_cq_process
+#define tx_table_s4_t0_action1 smbdc_req_tx_sqcb_writeback_sq_process
+#define tx_table_s4_t0_action2 smbdc_req_tx_cqcb_process
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -82,8 +84,24 @@ header_type phv_global_common_t {
 
 header_type smbdc_req_tx_sqcb_to_wqe_info_t {
     fields {
-        wqe_addr                         :   64;
-        pad                              :   96;
+        max_fragmented_size              :   32;
+        max_send_size                    :   32;
+        current_sge_id                   :   8;
+        current_sge_offset               :   32;
+        in_progress                      :   1;
+        pad                              :   55;
+    }
+}
+
+header_type smbdc_req_tx_wqe_to_sge_info_t {
+    fields {
+        wrid                             :   32;
+        current_total_offset             :   32;
+        current_sge_id                   :   8;
+        current_sge_offset               :   32;
+        num_valid_sges                   :   2;
+        max_send_size                    :   32;
+        pad                              :   22;
     }
 }
 
@@ -96,9 +114,10 @@ header_type smbdc_req_tx_wqe_to_mr_select_info_t {
 
 header_type smbdc_req_tx_mr_select_to_rdma_info_t {
     fields {
-        num_mrs                          :     8;
+        num_wqes                         :     8;
+        fill_smbd_hdr_sge                :     1;
         dma_cmd_start_index              :     5;
-        pad                              :   147;
+        pad                              :   146;
     }
 }
 
@@ -124,7 +143,13 @@ header_type smbdc_req_tx_rdma_cqe_to_wqe_context_info_t {
     }
 }
 
-header_type smbdc_req_tx_writeback_info_t {
+header_type smbdc_req_tx_writeback_info_cq_t {
+    fields {
+        pad                              :   160;
+    }
+}
+
+header_type smbdc_req_tx_writeback_info_sq_t {
     fields {
         pad                              :   160;
     }
@@ -139,7 +164,8 @@ header_type smbdc_req_tx_to_stage_t {
 
 header_type smbdc_req_tx_to_stage_s2_t {
     fields {
-        pad                              :   128;
+        total_data_length                :   32;
+        pad                              :   96;
     }
 }
 
@@ -150,7 +176,7 @@ header_type smbdc_req_tx_to_stage_s3_t {
     }
 }
 
-header_type smbdc_req_tx_to_stage_s4_t {
+header_type smbdc_req_tx_to_stage_s4_cq_t {
     fields {
         incr_proxy_cq_cindex             :   1;
         incr_rdma_cq_cindex              :   1;
@@ -165,6 +191,16 @@ header_type smbdc_req_tx_to_stage_s4_t {
     }
 }
 
+header_type smbdc_req_tx_to_stage_s4_sq_t {
+    fields {
+        in_progress                      :   1;
+        incr_sq_cindex                   :   1;
+        current_sge_id                   :   8;
+        current_sge_offset               :   32;
+        current_total_offset             :   32;
+        pad                              :   46;
+    }
+}
 
 /**** global header unions ****/
 
@@ -205,11 +241,15 @@ metadata smbdc_req_tx_to_stage_s3_t to_s3_to_stage;
 metadata smbdc_req_tx_to_stage_s3_t to_s3_to_stage_scr;
 
 //To-Stage-4
-@pragma pa_header_union ingress to_stage_4 to_s4_to_stage
+@pragma pa_header_union ingress to_stage_4 to_s4_to_stage_cq to_s4_to_stage_sq
 
-metadata smbdc_req_tx_to_stage_s4_t to_s4_to_stage;
+metadata smbdc_req_tx_to_stage_s4_cq_t to_s4_to_stage_cq;
 @pragma scratch_metadata
-metadata smbdc_req_tx_to_stage_s4_t to_s4_to_stage_scr;
+metadata smbdc_req_tx_to_stage_s4_cq_t to_s4_to_stage_cq_scr;
+
+metadata smbdc_req_tx_to_stage_s4_sq_t to_s4_to_stage_sq;
+@pragma scratch_metadata
+metadata smbdc_req_tx_to_stage_s4_sq_t to_s4_to_stage_sq_scr;
 
 //To-Stage-5
 @pragma pa_header_union ingress to_stage_5 to_s5_to_stage
@@ -236,7 +276,7 @@ metadata smbdc_req_tx_to_stage_t to_s7_to_stage_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_rdma_proxy_cqcb_info t0_s2s_wqe_to_mr_select_info t0_s2s_mr_select_to_rdma_info t0_s2s_rdma_cqe_info t0_s2s_rdma_cqe_to_wqe_context_info t0_s2s_writeback_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_rdma_proxy_cqcb_info t0_s2s_wqe_to_mr_select_info t0_s2s_wqe_to_sge_info t0_s2s_mr_select_to_rdma_info t0_s2s_rdma_cqe_info t0_s2s_rdma_cqe_to_wqe_context_info t0_s2s_writeback_info_cq t0_s2s_writeback_info_sq
 
 metadata smbdc_req_tx_sqcb_to_wqe_info_t t0_s2s_sqcb_to_wqe_info;
 @pragma scratch_metadata
@@ -258,13 +298,21 @@ metadata smbdc_req_tx_wqe_to_mr_select_info_t t0_s2s_wqe_to_mr_select_info;
 @pragma scratch_metadata
 metadata smbdc_req_tx_wqe_to_mr_select_info_t t0_s2s_wqe_to_mr_select_info_scr;
 
+metadata smbdc_req_tx_wqe_to_sge_info_t t0_s2s_wqe_to_sge_info;
+@pragma scratch_metadata
+metadata smbdc_req_tx_wqe_to_sge_info_t t0_s2s_wqe_to_sge_info_scr;
+
 metadata smbdc_req_tx_mr_select_to_rdma_info_t t0_s2s_mr_select_to_rdma_info;
 @pragma scratch_metadata
 metadata smbdc_req_tx_mr_select_to_rdma_info_t t0_s2s_mr_select_to_rdma_info_scr;
 
-metadata smbdc_req_tx_writeback_info_t t0_s2s_writeback_info;
+metadata smbdc_req_tx_writeback_info_cq_t t0_s2s_writeback_info_cq;
 @pragma scratch_metadata
-metadata smbdc_req_tx_writeback_info_t t0_s2s_writeback_info_scr;
+metadata smbdc_req_tx_writeback_info_cq_t t0_s2s_writeback_info_cq_scr;
+
+metadata smbdc_req_tx_writeback_info_sq_t t0_s2s_writeback_info_sq;
+@pragma scratch_metadata
+metadata smbdc_req_tx_writeback_info_sq_t t0_s2s_writeback_info_sq_scr;
 
 //Table-1
 
@@ -290,6 +338,11 @@ action smbdc_req_tx_wqe_process () {
     modify_field(to_s1_to_stage_scr.pad, to_s1_to_stage.pad);
 
     // stage to stage
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.max_fragmented_size, t0_s2s_sqcb_to_wqe_info.max_fragmented_size);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.max_send_size, t0_s2s_sqcb_to_wqe_info.max_send_size);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.current_sge_id, t0_s2s_sqcb_to_wqe_info.current_sge_id);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.current_sge_offset, t0_s2s_sqcb_to_wqe_info.current_sge_offset);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.in_progress, t0_s2s_sqcb_to_wqe_info.in_progress);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pad, t0_s2s_sqcb_to_wqe_info.pad);
 
 }
@@ -308,6 +361,27 @@ action smbdc_req_tx_mr_select_process () {
 
 }
 
+action smbdc_req_tx_sge_process () {
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s2_to_stage_scr.total_data_length, to_s2_to_stage.total_data_length);
+    modify_field(to_s2_to_stage_scr.pad, to_s2_to_stage.pad);
+
+    // stage to stage
+    modify_field(t0_s2s_wqe_to_sge_info_scr.wrid, t0_s2s_wqe_to_sge_info.wrid);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.current_total_offset, t0_s2s_wqe_to_sge_info.current_total_offset);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.current_sge_id, t0_s2s_wqe_to_sge_info.current_sge_id);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.current_sge_offset, t0_s2s_wqe_to_sge_info.current_sge_offset);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.num_valid_sges, t0_s2s_wqe_to_sge_info.num_valid_sges);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.max_send_size, t0_s2s_wqe_to_sge_info.max_send_size);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.pad, t0_s2s_wqe_to_sge_info.pad);
+
+}
+
+
 action smbdc_req_tx_post_rdma_req_process () {
 
     // from ki global
@@ -317,7 +391,8 @@ action smbdc_req_tx_post_rdma_req_process () {
     modify_field(to_s3_to_stage_scr.pad, to_s3_to_stage.pad);
 
     // stage to stage
-    modify_field(t0_s2s_mr_select_to_rdma_info_scr.num_mrs, t0_s2s_mr_select_to_rdma_info.num_mrs);
+    modify_field(t0_s2s_mr_select_to_rdma_info_scr.num_wqes, t0_s2s_mr_select_to_rdma_info.num_wqes);
+    modify_field(t0_s2s_mr_select_to_rdma_info_scr.fill_smbd_hdr_sge, t0_s2s_mr_select_to_rdma_info.fill_smbd_hdr_sge);
     modify_field(t0_s2s_mr_select_to_rdma_info_scr.dma_cmd_start_index, t0_s2s_mr_select_to_rdma_info.dma_cmd_start_index);
     modify_field(t0_s2s_mr_select_to_rdma_info_scr.pad, t0_s2s_mr_select_to_rdma_info.pad);
 
@@ -370,30 +445,47 @@ action smbdc_req_tx_cqcb_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s4_to_stage_scr.pad, to_s4_to_stage.pad);
+    modify_field(to_s4_to_stage_cq_scr.pad, to_s4_to_stage_cq.pad);
 
     // stage to stage
 }
 
 
-action smbdc_req_tx_sqcb_writeback_process () {
+action smbdc_req_tx_sqcb_writeback_cq_process () {
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s4_to_stage_scr.incr_proxy_cq_cindex, to_s4_to_stage.incr_proxy_cq_cindex);
-    modify_field(to_s4_to_stage_scr.incr_rdma_cq_cindex, to_s4_to_stage.incr_rdma_cq_cindex);
-    modify_field(to_s4_to_stage_scr.incr_sq_unack_pindex, to_s4_to_stage.incr_sq_unack_pindex);
-    modify_field(to_s4_to_stage_scr.clear_busy, to_s4_to_stage.clear_busy);
-    modify_field(to_s4_to_stage_scr.clear_in_progress, to_s4_to_stage.clear_in_progress);
-    modify_field(to_s4_to_stage_scr.rdma_cq_lif, to_s4_to_stage.rdma_cq_lif);
-    modify_field(to_s4_to_stage_scr.rdma_cq_qtype, to_s4_to_stage.rdma_cq_qtype);
-    modify_field(to_s4_to_stage_scr.rdma_cq_qid, to_s4_to_stage.rdma_cq_qid);
-    modify_field(to_s4_to_stage_scr.rdma_cq_ring_id, to_s4_to_stage.rdma_cq_ring_id);
-    modify_field(to_s4_to_stage_scr.pad, to_s4_to_stage.pad);
+    modify_field(to_s4_to_stage_cq_scr.incr_proxy_cq_cindex, to_s4_to_stage_cq.incr_proxy_cq_cindex);
+    modify_field(to_s4_to_stage_cq_scr.incr_rdma_cq_cindex, to_s4_to_stage_cq.incr_rdma_cq_cindex);
+    modify_field(to_s4_to_stage_cq_scr.incr_sq_unack_pindex, to_s4_to_stage_cq.incr_sq_unack_pindex);
+    modify_field(to_s4_to_stage_cq_scr.clear_busy, to_s4_to_stage_cq.clear_busy);
+    modify_field(to_s4_to_stage_cq_scr.clear_in_progress, to_s4_to_stage_cq.clear_in_progress);
+    modify_field(to_s4_to_stage_cq_scr.rdma_cq_lif, to_s4_to_stage_cq.rdma_cq_lif);
+    modify_field(to_s4_to_stage_cq_scr.rdma_cq_qtype, to_s4_to_stage_cq.rdma_cq_qtype);
+    modify_field(to_s4_to_stage_cq_scr.rdma_cq_qid, to_s4_to_stage_cq.rdma_cq_qid);
+    modify_field(to_s4_to_stage_cq_scr.rdma_cq_ring_id, to_s4_to_stage_cq.rdma_cq_ring_id);
+    modify_field(to_s4_to_stage_cq_scr.pad, to_s4_to_stage_cq.pad);
 
     // stage to stage
-    modify_field(t0_s2s_writeback_info_scr.pad, t0_s2s_writeback_info.pad);
+    modify_field(t0_s2s_writeback_info_cq_scr.pad, t0_s2s_writeback_info_cq.pad);
+
+}
+
+action smbdc_req_tx_sqcb_writeback_sq_process () {
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_to_stage_sq_scr.in_progress, to_s4_to_stage_sq.in_progress);
+    modify_field(to_s4_to_stage_sq_scr.incr_sq_cindex, to_s4_to_stage_sq.incr_sq_cindex);
+    modify_field(to_s4_to_stage_sq_scr.current_sge_id, to_s4_to_stage_sq.current_sge_id);
+    modify_field(to_s4_to_stage_sq_scr.current_sge_offset, to_s4_to_stage_sq.current_sge_offset);
+    modify_field(to_s4_to_stage_sq_scr.pad, to_s4_to_stage_sq.pad);
+
+    // stage to stage
+    modify_field(t0_s2s_writeback_info_sq_scr.pad, t0_s2s_writeback_info_sq.pad);
 
 }

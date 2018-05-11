@@ -10,15 +10,32 @@
 #define REQ_TX_DMA_CMD_PYLD_BASE 4
 #define REQ_TX_DMA_CMD_START_FLIT_ID 7
 #define REQ_TX_DMA_CMD_START_FLIT_CMD_ID 2
-#define REQ_TX_DMA_CMD_FRMR_BASE 12
-#define REQ_TX_DMA_CMD_ID_CQ 16
-#define REQ_TX_DMA_CMD_ID_WQE_CONTEXT REQ_TX_DMA_CMD_ID_CQ
-#define REQ_TX_DMA_CMD_ID_RDMA_CQ 17
+/*
+ * DMA command usage plan
+ * There are total of 8 DMA commands allowed, 12 to 19 including
+ *Incase of req_tx
+ * smbdc_send - 12, 13, 14 for rdma_wqe, 
+ *              15, 16, 17 for rdma_wqe_ctx, 
+ *              18 for rdma doorbell, 
+ *              19 for smbdc_context
+ * smbdc_mr   - 12, 13, 14, 15 for rdma_wqe
+ *              16, 17 - unused
+ *              18 for rdma doorbell
+ *              19 for smbdc context
+ * cq_proxy   - 12-17 unused, 18 for CQ, 19 for RDMA_CQ
+ */
+#define REQ_TX_DMA_CMD_RDMA_REQ_BASE 12
+#define REQ_TX_DMA_CMD_ID_RDMA_DOORBELL 18
+#define REQ_TX_DMA_CMD_ID_WQE_CONTEXT 19 
+#define REQ_TX_DMA_CMD_ID_CQ 18
+#define REQ_TX_DMA_CMD_ID_RDMA_CQ 19 
+
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
 //copy from rdma/common/include/types.h
 
 #define RDMA_SQ_RING_ID             0
+#define OP_TYPE_SEND                0
 #define OP_TYPE_FRMR                12
 
 struct sqwqe_base_t {
@@ -44,6 +61,20 @@ struct sqwqe_frmr_t {
     pad                : 37;
 };
 
+// RC send
+struct sqwqe_send_t {
+    imm_data           : 32;
+    inv_key            : 32;
+    rsvd1              : 32;
+    length             : 32;
+    rsvd2              : 32;
+};
+
+struct sqsge_t {
+    va                 : 64;
+    lkey               : 32;
+    len                : 32;
+};
 
 struct sqwqe_t {
     struct sqwqe_base_t base;
@@ -51,16 +82,18 @@ struct sqwqe_t {
         //struct sqwqe_atomic_t atomic;
         struct {
             union {
-                //struct sqwqe_send_t send;
+                struct sqwqe_send_t send;
                 //struct sqwqe_ud_send_t ud_send;
                 //struct sqwqe_write_t write;
                 //struct sqwqe_read_t read;
                 struct sqwqe_frmr_t frmr;
             };
-            union {
-                pad : 256;
-                inline_data: 256;
-            };
+            //union {
+            //    pad : 256;
+            //    inline_data: 256;
+            //};
+            struct sqsge_t sge0;
+            struct sqsge_t sge1;
         };
     };
 };
@@ -166,20 +199,46 @@ struct req_tx_phv_t {
     union {
         struct {
             union {
+                pad5: 512;
+
+                // No plan to use t3_s2s in smbdc req_tx.
+                // Hence, overloading with other stuff 
+                struct rdma_sq_wqe_context_t rdma_wqe_ctx2;
+                struct rdma_sq_wqe_context_t rdma_wqe_ctx3;
+            };
+            union {
+                pad4: 512;
+
+                // No plan to use t1_s2s and t2_s2s in smbdc req_tx.
+                // Hence, overloading with other stuff 
+                struct rdma_sq_wqe_context_t rdma_wqe_ctx0;
+                struct rdma_sq_wqe_context_t rdma_wqe_ctx1;
+            };
+            pad3: 512;
+            union {
+                pad2: 512;
                 struct {
+                    pad2_1: 384;
+                    // No plan to use to_stage 7 in smbdc req_tx_sq path.
+                    // Hence, overloading with other stuff 
+                    unused: 64;
                     db_data: 64;
+                };
+            };
+            union {
+                pad1: 512;
+
+                // No plan to use to_stage 0, 1 in smbdc req_tx_sq path.
+                // to_stage 2, 3 is assumed to be used and unions with pad1_1 below
+                // Hence, overloading with other stuff 
+                struct {
                     union {
                         struct smbdc_cqe_t smbdc_cqe; //256 bits
                         struct sq_wqe_context_t smbdc_wqe_context; //256 bits
                     };
-                    pad5_1: 192;
+                    pad1_1: 256;
                 };
-                pad5: 512;
             };
-            pad4: 512;
-            pad3: 512;
-            pad2: 512;
-            pad1: 512;
             pad0: 512;
         };
         // common tx

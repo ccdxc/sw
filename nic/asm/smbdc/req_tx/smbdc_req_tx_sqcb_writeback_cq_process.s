@@ -8,7 +8,7 @@ struct sqcb0_t d;
 struct smbdc_req_tx_s4_t0_k k;
 
 #define IN_P t0_s2s_writeback_info
-#define IN_TO_S4_P to_s4_to_stage
+#define IN_TO_S4_P to_s4_to_stage_cq
 
 #define K_RDMA_CQ_LIF     CAPRI_KEY_RANGE(IN_TO_S4_P, rdma_cq_lif_sbit0_ebit2, rdma_cq_lif_sbit11_ebit11)
 #define K_RDMA_CQ_QTYPE   CAPRI_KEY_FIELD(IN_TO_S4_P, rdma_cq_qtype)
@@ -19,7 +19,7 @@ struct smbdc_req_tx_s4_t0_k k;
 
 .align
 
-smbdc_req_tx_sqcb_writeback_process:
+smbdc_req_tx_sqcb_writeback_cq_process:
 
     // Pin to stage 4
     mfspr         r1, spr_mpuid
@@ -49,6 +49,10 @@ smbdc_req_tx_sqcb_writeback_process:
 
     nop.e
     nop
+
+handle_send_writeback:
+
+
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3

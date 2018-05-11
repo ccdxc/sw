@@ -13,7 +13,6 @@ struct smbdc_req_tx_s0_t0_k k;
 
 %%
     .param    smbdc_req_tx_wqe_process
-    .param    smbdc_req_tx_rdma_cqe_process
     .param    smbdc_req_tx_rdma_proxy_cqcb_process
 
 .align
@@ -39,12 +38,19 @@ smbdc_req_tx_sqcb_process:
 
     .brcase        SQ_RING_ID
 
+        //TBD: If busy, check if other rings have work to do
+        bbeq           d.busy, 1, exit
+        nop
+
+        bbeq           d.send_in_progress, 1, in_progress
         // Check if cindex is pointing to yet to be filled wqe
-        seq            c3, SQ_C_INDEX, SQ_P_INDEX
+        seq            c3, SQ_C_INDEX, SQ_P_INDEX //BD Slot
         bcf            [c3], exit
         
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
+
+        tblwr          d.busy, 1
 
         add            r1, r0, SQ_C_INDEX
         
@@ -53,9 +59,13 @@ smbdc_req_tx_sqcb_process:
        
         CAPRI_RESET_TABLE_0_ARG()
 
+        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, max_fragmented_size), d.max_fragmented_size, \
+                  CAPRI_PHV_FIELD(SQCB_TO_WQE_P, max_send_size), d.max_send_size
+
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_wqe_process, r2)
         
-        tblmincri      SQ_C_INDEX, d.log_num_wqes, 1 
+        #moved to writeback stage
+        #tblmincri      SQ_C_INDEX, d.log_num_wqes, 1 
 
         //setup dma_cmd for wqe_context, also set end of commands
         //r1 already has SQ_C_INDEX
@@ -67,6 +77,27 @@ smbdc_req_tx_sqcb_process:
 
         nop.e
         nop
+
+in_progress:
+
+#define SMBDC_WQE_BASE_SIZE 16 //bytes
+
+        add            r1, r0, SQ_C_INDEX
+        
+        sll            r2, r1, d.log_wqe_size
+        add            r2, r2, d.sq_base_addr
+        #add            r2, r2, SMBDC_WQE_BASE_SIZE
+        #add            r2, r2, sizeof(smbdc_sge_t), d.current_sge_id
+       
+        CAPRI_RESET_TABLE_0_ARG()
+
+        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, max_fragmented_size), d.max_fragmented_size, \
+                  CAPRI_PHV_FIELD(SQCB_TO_WQE_P, max_send_size), d.max_send_size
+        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_id), d.current_sge_id, \
+                  CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.current_sge_offset
+
+        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_wqe_process, r2)
+
 
     .brcase        TIMER_RING_ID
         nop.e

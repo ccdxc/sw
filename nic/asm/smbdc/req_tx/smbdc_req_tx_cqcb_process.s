@@ -11,7 +11,7 @@ struct smbdc_req_tx_s3_t0_k k;
 
 %%
 
-    .param    smbdc_req_tx_sqcb_writeback_process
+    .param    smbdc_req_tx_sqcb_writeback_cq_process
 
 .align
 smbdc_req_tx_cqcb_process:
@@ -42,7 +42,7 @@ smbdc_req_tx_cqcb_process:
 
     SQCB0_ADDR_GET(r2)
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_sqcb_writeback_process, r2)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_sqcb_writeback_cq_process, r2)
 
     nop.e
     nop

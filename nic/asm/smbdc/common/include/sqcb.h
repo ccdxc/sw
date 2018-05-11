@@ -74,6 +74,15 @@ struct sqcb0_t {
     sq_unack_pindex               : 16;
     sq_wqe_context_base_addr      : 34;
 
+    //smbdc state
+    max_fragmented_size           : 32;
+    max_send_size                 : 32;
+    current_sge_id                : 8;
+    current_sge_offset            : 32;
+    current_total_offset          : 32;
+    send_in_progress              : 1;
+    busy                          : 1;
+
     //rdma proxy cq
     rdma_cq_processing_in_prog    : 1;
     rdma_cq_processing_busy       : 1;
@@ -88,7 +97,7 @@ struct sqcb0_t {
     log_num_wqes                  : 5;  // RO
     sq_in_hbm                     : 1;  // RO
     ring_empty_sched_eval_done    : 1;  // RW S0
-    pad2                          : 143;
+    pad2                          : 5;
 };
 
 #define NUM_ROWS                      7
@@ -108,6 +117,30 @@ struct sqcb1_t {
     row6                          : 64;
 };
 
+#define RDMA_SQ_WQE_CONTEXT_LOG_SIZE 8
+
+struct rdma_sq_wqe_local_context_t {
+    pad                           : 64;
+};
+
+//196 bits
+struct rdma_smbdc_header_t {
+    credits_requested             : 16;
+    credits_granted               : 16;
+    flags                         : 16;
+    reserved                      : 16;
+    remaining_data_length         : 32;
+    data_offset                   : 32;
+    data_length                   : 32;
+    padding                       : 32;
+    //buffer[];
+};
+
+struct rdma_sq_wqe_context_t {
+    struct rdma_sq_wqe_local_context_t local;
+    struct rdma_smbdc_header_t smbdc_hdr;
+};
+
 struct sqcb2_t {
     rdma_sq_base_addr             : 64;
     rdma_sq_pindex                : 16;
@@ -119,7 +152,20 @@ struct sqcb2_t {
     rdma_qtype                    : 3;
     rdma_qid                      : 24;
     rdma_sq_msn                   : 24;
-    pad                           : 318;
+
+    rdma_local_dma_lkey           : 32;
+
+    //local-context + SMBDC header associated with RDMA WQE
+    rdma_sq_wqe_context_base_addr : 34;
+
+    //smbdc protocol parameters
+    //set by control plane, and used by req_tx
+    //never chagned by data plane
+    credits_requested             : 16;
+    //set by resp_rx, used and reset by req_tx
+    //in s3_t0
+    credits_granted               : 16;
+    pad                           : 220;
 };
 
 struct sqcb3_t {

@@ -32,8 +32,6 @@ smbdc_req_tx_mr_select_process:
     add     r5, r0, offsetof(struct req_tx_phv_t, smbdc_wqe_context)
     phvwrp  r5, offsetof(struct sq_wqe_context_t, type), sizeof(p.smbdc_wqe_context.type), SQ_WQE_CONTEXT_TYPE_MR
 
-    SQCB2_ADDR_GET(r6)
-
 allocate_next_mr:
 
 mr_try_next_row:
@@ -58,7 +56,9 @@ mr_try_next_row:
     add.!c1 r6, r6, sizeof(p.rdma_wqe0) //BD slot
 
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(SELECT_MR_TO_RDMA_P, dma_cmd_start_index, REQ_TX_DMA_CMD_FRMR_BASE)
+    phvwrpair CAPRI_PHV_FIELD(SELECT_MR_TO_RDMA_P, num_wqes), K_NUM_MRS, \
+              CAPRI_PHV_FIELD(SELECT_MR_TO_RDMA_P, dma_cmd_start_index), REQ_TX_DMA_CMD_RDMA_REQ_BASE
+    SQCB2_ADDR_GET(r6)
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_post_rdma_req_process, r6)
 
     nop.e
