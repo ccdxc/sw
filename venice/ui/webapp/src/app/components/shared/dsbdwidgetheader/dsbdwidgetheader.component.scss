@@ -1,5 +1,7 @@
+@import 'styles';
+
 .dsbd-widgetheader{
-  font-family: 'Fira Sans Condensed';
+  @include primary-font();
 }
 .dsbd-widgetheader-icon {
   opacity: 0.3;
@@ -18,10 +20,8 @@
 }
 
 .dsbd-widgetheader-update-text {
-  font-family: 'Fira Sans Condensed';
-  font-size: 12px;
+  @include primary-font(12px, #cccccc);
   text-align: right;
-  color: #cccccc;
 }
 
 .dsbd-widgetheader-info {

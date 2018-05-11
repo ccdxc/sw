@@ -24,5 +24,10 @@ export const environment = {
   server_port: '9000',
   version_api_string: '/v1/',
   venice_nodes: 'cmd/nodes',
-  venice_endpoints: 'endpoints/default/endpoints'  // http://192.168.30.11:9000/v1/endpoints/default/endpoints //TODO: defaults should be as tenant.name
+  venice_endpoints: 'endpoints' , // http://192.168.30.11:9000/v1/endpoints/default/endpoints //TODO: defaults should be as tenant.name
+  venice_securitygroups: 'security-groups',
+  venice_sgpolicy: 'sgpolicy',
+  venice_lbpolicy: 'lb-policy',
+  venice_network: 'networks'
+
 };

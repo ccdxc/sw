@@ -10,6 +10,7 @@ import { _throw } from 'rxjs/observable/throw';
 import { MockDataUtil } from '../common/MockDataUtil';
 import { Utility } from '../common/Utility';
 import { LogService } from './logging/log.service';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class AbstractService {
@@ -239,5 +240,27 @@ export class AbstractService {
       observables.push(obserable);
     }
     return Observable.forkJoin(observables);
+  }
+
+  /**
+   * Get login user tenant information
+   *
+   */
+  getTenant(): string {
+    return Utility.getInstance().getTenant();
+  }
+
+  /**
+   * This API build URL string
+   * For example: given 'endpoints' , it will return endpoints/default/endpoints
+   * @param token
+   */
+  buildURLHelper (token: string): string {
+     return token + '/' + this.getTenant() + '/' + token;
+  }
+
+  isToUserRealData(): boolean {
+    const isUseRealData = Utility.getInstance().getControllerService().useRealData;
+    return (isUseRealData) ? isUseRealData : environment.isRESTAPIReady;
   }
 }

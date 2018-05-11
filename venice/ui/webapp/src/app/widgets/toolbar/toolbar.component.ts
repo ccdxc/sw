@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { ControllerService } from '../../services/controller.service';
 import { CommonComponent } from '../../common.component';
 import { Subscription } from 'rxjs/Subscription';
@@ -21,7 +21,7 @@ export class ToolbarComponent extends CommonComponent implements OnInit, OnDestr
   }
 
   ngOnInit() {
-    this.breadcrumb = [{label: ''}];
+    this.breadcrumb = [{ label: '' }];
     this.subscription = this._controllerService.subscribe(Eventtypes.TOOLBAR_DATA_CHANGE,
       (data) => {
         this.breadcrumb = data.breadcrumb;
@@ -36,5 +36,15 @@ export class ToolbarComponent extends CommonComponent implements OnInit, OnDestr
 
   buttonCallback(event, button) {
     button.callback(event);
+  }
+
+  public clear() {
+    console.log('ToolbarComponent.clear()');
+    if (this.breadcrumb) {
+      this.breadcrumb.length = 0;
+    }
+    if (this.buttons) {
+      this.buttons.length = 0;
+    }
   }
 }

@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-
-import { CommonComponent } from '../../common.component';
-import { Utility } from '../../common/Utility';
-import { Eventtypes } from '../../enum/eventtypes.enum';
 import { ControllerService } from '../../services/controller.service';
+import { Eventtypes } from '../../enum/eventtypes.enum';
+import { Utility } from '../../common/Utility';
+import { CommonComponent } from '../../common.component';
+import { SortEvent } from 'primeng/components/common/api';
 
 declare var google: any;
 
@@ -36,10 +36,10 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
   protected loadGoogleChart() {
     if (!BaseComponent.googleLoaded) {
-      google.charts.load('current', {'packages': ['corechart']});
-      this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADING, {'googleChartLoading': 'true'});
+      google.charts.load('current', { 'packages': ['corechart'] });
+      this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADING, { 'googleChartLoading': 'true' });
       this._interval = setInterval(() => {
-        if (google.visualization && google.visualization.ChartWrapper ) {
+        if (google.visualization && google.visualization.ChartWrapper) {
           this._googleChartLoaded();
           window.clearInterval(this._interval);
         }
@@ -54,7 +54,7 @@ export class BaseComponent extends CommonComponent implements OnInit {
   _googleChartLoaded() {
     BaseComponent.googleLoaded = true;
     this.drawGraph();
-    this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADED, {'googleChartLoaded': 'true'});
+    this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADED, { 'googleChartLoaded': 'true' });
   }
 
   drawGraph() {
@@ -67,11 +67,11 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
   createChartWrapper(chartOptions, chartType, chartData, elementId): any {
     return new google.visualization.ChartWrapper({
-             chartType: chartType,
-             dataTable: chartData ,
-             options: chartOptions || {},
-             containerId: elementId
-           });
+      chartType: chartType,
+      dataTable: chartData,
+      options: chartOptions || {},
+      containerId: elementId
+    });
   }
 
   addEventHandler(chartWrapper, eventName, handlerFunction) {
@@ -85,14 +85,14 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
   protected _publishAJAXStart() {
     this.errorMessage = '';
-    Utility.getInstance().publishAJAXStart( {'ajax': 'start', 'name': 'cv-AJAX'});
+    Utility.getInstance().publishAJAXStart({ 'ajax': 'start', 'name': 'cv-AJAX' });
   }
 
   protected _publishAJAXEnd() {
     this.errorMessage = '';
     this.successMessage = '';
     this.autosaveMessage.message = '';
-    Utility.getInstance().publishAJAXEnd( {'ajax': 'end', 'name': 'cv-AJAX'});
+    Utility.getInstance().publishAJAXEnd({ 'ajax': 'end', 'name': 'cv-AJAX' });
   }
 
   /**
@@ -103,10 +103,10 @@ export class BaseComponent extends CommonComponent implements OnInit {
     if (obj instanceof Date) {
       return false;
     }
-    if ( typeof(obj) === 'boolean') {
+    if (typeof (obj) === 'boolean') {
       return false;
     }
-    if ( typeof(obj) === 'string') {
+    if (typeof (obj) === 'string') {
       return false;
     }
     for (const attr in obj) {
@@ -121,15 +121,15 @@ export class BaseComponent extends CommonComponent implements OnInit {
    * This API traverse JSON object to trim any empty sub-treee
    */
   trimJSON(parentObj) {
-      if (typeof parentObj !== 'object') {return; }
-      if (!parentObj) {return; }
-      for (const prop in parentObj) {
-          if ( this.isObjectEmpty(parentObj[prop])) {
-              delete parentObj[prop];
-          } else {
-              this.trimJSON(parentObj[prop]);
-          }
+    if (typeof parentObj !== 'object') { return; }
+    if (!parentObj) { return; }
+    for (const prop in parentObj) {
+      if (this.isObjectEmpty(parentObj[prop])) {
+        delete parentObj[prop];
+      } else {
+        this.trimJSON(parentObj[prop]);
       }
+    }
   }
 
   /**
@@ -141,11 +141,11 @@ export class BaseComponent extends CommonComponent implements OnInit {
     }
   }
 
-  showHideSuccessMessage(message: string , milliSeconds: number = 1500) {
+  showHideSuccessMessage(message: string, milliSeconds: number = 1500) {
     this.successMessage = message;
     if (this.successMessage) {
       setTimeout(() => {
-       this.successMessage = null;
+        this.successMessage = null;
       }, milliSeconds);
     }
   }
@@ -175,15 +175,53 @@ export class BaseComponent extends CommonComponent implements OnInit {
    */
   protected getSelectedValueObject(value: string, list: any, key?: any): any {
     if (!key) {
-        key = 'value';
+      key = 'value';
     }
     for (let i = 0; list && i < list.length; i++) {
       const listObj = list[i];
       if (listObj[key] === value) {
-          return listObj;
+        return listObj;
       }
     }
     return null;
+  }
+
+  displayLabels(item): string {
+    return JSON.stringify(item);
+  }
+
+  /**
+   * Default table column sort API.
+   * @param event
+   */
+  customSort(event: SortEvent) {
+    event.data.sort((data1, data2) => {
+      const value1 = data1[event.field];
+      const value2 = data2[event.field];
+      let result = null;
+
+      if (value1 == null && value2 != null) {
+        result = -1;
+      } else if (value1 != null && value2 == null) {
+        result = 1;
+      } else if (value1 == null && value2 == null) {
+        result = 0;
+      } else if (typeof value1 === 'string' && typeof value2 === 'string') {
+        result = value1.localeCompare(value2);
+      } else {
+        result = (value1 < value2) ? -1 : (value1 > value2) ? 1 : 0;
+      }
+
+      return (event.order * result);
+    });
+  }
+
+  getObjectKeys(obj): string[] {
+    return (obj) ? Object.keys(obj) : [];
+  }
+
+  stringify(obj): string {
+    return JSON.stringify(obj, null, 1);
   }
 
 }

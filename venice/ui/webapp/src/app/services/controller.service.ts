@@ -93,7 +93,16 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('menu-collapse', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-collapse-menu.svg'));
     this.matIconRegistry.addSvgIcon('venice', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-venice.svg'));
     this.matIconRegistry.addSvgIcon('policy-health', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-policyhealth.svg'));
+    this.matIconRegistry.addSvgIcon('policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/ico-policy.svg'));
     this.matIconRegistry.addSvgIcon('security-policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-security-policy.svg'));
+
+    // network icons
+    this.matIconRegistry.addSvgIcon('network-network', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/network/ico-network-network.svg'));
+    this.matIconRegistry.addSvgIcon('network-lbpolicy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/network/ico-network-loadbalance_policy.svg'));
+
+    // security icons
+    this.matIconRegistry.addSvgIcon('security-group', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/ico-security-group.svg'));
+    this.matIconRegistry.addSvgIcon('security-policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/icon-security-policy.svg'));
 
     // Workload icons
     this.matIconRegistry.addSvgIcon('workloads-alert', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workloads-alert.svg'));
@@ -102,6 +111,10 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('workloads-unprotected', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workloads-unprotected.svg'));
     this.matIconRegistry.addSvgIcon('workload', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workload.svg'));
     this.matIconRegistry.addSvgIcon('workloads', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workloads.svg'));
+
+    // Naple icons
+    this.matIconRegistry.addSvgIcon('naples', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/naples/ico-naples.svg'));
+
 
     this.matIconRegistry.addSvgIcon('un-pin', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/dashboard/ico-unpinned.svg'));
 
@@ -176,8 +189,8 @@ export class ControllerService {
     return this._router.url;
   }
 
-  public navigate(path: string) {
-    this._router.navigate([path]);
+  public navigate(paths: string[]) {
+    this._router.navigate(paths);
   }
 
   /***** Building component from another module *****/

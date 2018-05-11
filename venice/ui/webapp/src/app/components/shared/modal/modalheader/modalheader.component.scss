@@ -1,9 +1,10 @@
+@import 'styles';
+
 .modalheader-container {
+    @include primary-font(36px);
     background-color: #97b8df;
-    font-family: 'Fira Sans Condensed';
     height: 80px;
     width: 100%;
-    font-size: 36px;
 }
 
 :host {

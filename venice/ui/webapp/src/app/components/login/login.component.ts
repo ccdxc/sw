@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonComponent } from '@app/common.component';
 import * as authActions from '@app/core';
 import { Store } from '@ngrx/store';
@@ -12,7 +12,9 @@ import { ControllerService } from '../../services/controller.service';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
+
+  encapsulation: ViewEncapsulation.None
 })
 export class LoginComponent  extends CommonComponent implements OnInit, OnDestroy {
   credentials = { username: '', password: '' };

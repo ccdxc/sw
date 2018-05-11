@@ -312,7 +312,7 @@ export class WorkloadService extends AbstractService {
   }
 
   public getItemURL(): string {
-    return environment.server_url + ':' + environment.server_port + environment.version_api_string + environment.venice_endpoints;
+    return environment.server_url + ':' + environment.server_port + environment.version_api_string + this.buildURLHelper(environment.venice_endpoints);
   }
 
   public getWidgetURL(): string {

@@ -1,5 +1,7 @@
+@import 'styles';
+
 .policyhealth-container {
-  font-family: Fira Sans;
+  @include primary-font();
   height: 300px;
 }
 

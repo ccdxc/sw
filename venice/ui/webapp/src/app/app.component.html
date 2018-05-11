@@ -19,10 +19,6 @@
                         </button>
                     </div>
                     <div class="app-shell-header-search-div">
-                        <!-- <button type="button" class="btn btn-link app-search-button" (click)="onAppHeaderSearchClick($event)" title="Seach">
-                            <i class="fa fa-search app-header-search-icon"></i>
-                        </button> -->
-                        
                         <pw-searchbox styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchVeniceApplicationsSuggestions"
                             (completeMethod)="filterVeniceApplicationSearchSuggestions($event)" [minLength]="1" placeholder="Search"
                             field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}" [multiple]="true" dataKey="code" (invokeSearch)="onInvokeSearch($event)">
@@ -30,7 +26,6 @@
                                 <div class="row ui-helper-clearfix app-search-autocomplete-suggestion-div" *ngIf="item.description">
                                     <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-name">{{item.name}}</div>
                                     <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-desc">{{item.description}}</div>
-                                    <input matInput [placeholder]="envPort">
                                 </div>
                             </ng-template>
                             <ng-template let-item pTemplate="selectedItem">                               
@@ -82,7 +77,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false">
+                            <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false" class="app-sidenav-group-header"  >
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster"></i>
                                 <span class="app-l-side-nav-item-label">Cluster</span>
                             </a>
@@ -94,7 +89,7 @@
                                     <a class="app-sidenav-item">Tenants</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item">Naples</a>
+                                    <a class="app-sidenav-item" id="naples">Naples</a>
                                 </li>
                             </ul>
                         </li>
@@ -105,16 +100,16 @@
                             </a>
                         </li>
                         <li>
-                            <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false">
+                            <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false" >
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-security"></i>
                                 <span class="app-l-side-nav-item-label">Security</span>
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="securitySubmenu">
                                 <li>
-                                    <a class="app-sidenav-item">Security Group</a>
+                                    <a class="app-sidenav-item" id="securitygroup">Security Group</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item">Security Policy</a>
+                                    <a class="app-sidenav-item" id="sgpolicy">Security Policy</a>
                                 </li>
                                 <li>
                                     <a class="app-sidenav-item">Firewall Policy</a>
@@ -122,35 +117,23 @@
                                 <li>
                                     <a class="app-sidenav-item">ALG</a>
                                 </li>
-                                <li>
-                                    <a class="app-sidenav-item">App ID</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">App ID Group</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">App User ID</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">App User ID Group</a>
-                                </li>
                             </ul>
                         </li>
 
                         <li>
-                            <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false">
+                            <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false" >
                                     <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
                                     <span class="app-l-side-nav-item-label">Network</span>
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="networkSubmenu">
                                 <li>
-                                    <a class="app-sidenav-item">Network</a>
+                                    <a class="app-sidenav-item" id="network">Network</a>
                                 </li>
                                 <li>
                                     <a class="app-sidenav-item">Services</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item">Loadbalance Policy</a>
+                                    <a class="app-sidenav-item" id="lbpolicy">Loadbalance Policy</a>
                                 </li>
                                 <li>
                                     <a class="app-sidenav-item">QoS Policy</a>
@@ -161,7 +144,7 @@
                             </ul>
                         </li>
                         <li>
-                            <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
+                            <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false" >
                                     <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
                                     <span class="app-l-side-nav-item-label">Monitoring</span>
                                 
@@ -174,14 +157,14 @@
                                     <a class="app-sidenav-item">Events</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item">Troubleshooting</a>
+                                    <a id="troubleshooting" class="app-sidenav-item">Troubleshooting</a>
                                 </li>
                             </ul>
                         </li>
                     </ul>
                 </mat-sidenav>
                 <mat-sidenav-content>
-                    <app-toolbar></app-toolbar>
+                    <app-toolbar #breadcrumbToolbar ></app-toolbar>
                     <div class="app-shell-router-outter-div">
                        <router-outlet></router-outlet>
                     </div>
@@ -189,7 +172,7 @@
                 </mat-sidenav-content>
             </mat-sidenav-container>
 
-            <mat-toolbar class="app-shell-footer">Pensando System (click workload or dasboard)</mat-toolbar>
+            <mat-toolbar class="app-shell-footer">Pensando Systems</mat-toolbar>
         </ng-container>
     </div>
 </div>

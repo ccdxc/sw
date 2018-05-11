@@ -1,3 +1,5 @@
+@import 'styles';
+
 .modalwidget {
     height: 100%;
     width: 100%;
@@ -35,9 +37,7 @@
 }
 
 .modalwidget .mat-radio-label-content {
-    font-size: 16px;
-    font-family: 'Fira Sans Condensed' !important;
-    color: #676763;
+    @include primary-font(16px);
     font-weight: 400 !important;
 }
 

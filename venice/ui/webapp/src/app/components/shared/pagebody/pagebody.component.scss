@@ -1,7 +1,15 @@
+@import 'styles';
+
 .pagebody-container {
     height:100%;
     margin: 0px 10px 10px 10px;
     border: solid 1px;
+    /** For chrome rounding errors with flex layout,
+     *  the bottom border doesn't appear sometimes.
+     *  This shadow hides that issue.
+     *  This was observed on the troubleshooting page.
+     */
+    box-shadow: 0 1px #bdbdbd;
 }
 
 .pagebody-header {
@@ -10,8 +18,7 @@
 }
 
 .pagebody-headercontent {
-    font-family: 'Fira Sans Condensed';
-    font-size: 26px;
+    @include primary-font(26px);
     text-align: left;
     margin: auto;
 }

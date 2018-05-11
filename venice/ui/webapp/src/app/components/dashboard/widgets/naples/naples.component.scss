@@ -1,5 +1,7 @@
+@import 'styles';
+
 .naples-container {
-  font-family: "Fira Sans Condensed";
+  @include primary-font();
   height: 100%;
   width: 100%;
 }

@@ -19,7 +19,7 @@ import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
 import { DatafetchService } from './services/datafetch.service';
 import { AlerttableService } from '@app/services/alerttable.service';
-
+import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 
 /**
  * This is the entry point component of Pensando-Venice Web-Application
@@ -75,6 +75,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') _sidenav: MatSidenav;
   @ViewChild('rightSideNav') _rightSideNav: MatSidenav;
   @ViewChild('container') _container: MatSidenavContainer;
+  @ViewChild('breadcrumbToolbar') _breadcrumbToolbar: ToolbarComponent;
 
   protected _rightSivNavIndicator = 'notifications';
 
@@ -142,8 +143,8 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     this.store
       .select(selectorSettings)
       .pipe(
-      takeUntil(this.unsubscribeStore$),
-      map(({ theme }) => theme.toLowerCase())
+        takeUntil(this.unsubscribeStore$),
+        map(({ theme }) => theme.toLowerCase())
       )
       .subscribe(theme => {
         this.componentCssClass = theme;
@@ -151,10 +152,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
       });
   }
 
-  onItemSelect(item) {
-    this.log('AppComponent.onItemSelect() ' + item);
-    this._controllerService.publish(Eventtypes.SIDENAV_INVOKATION_REQUEST, { 'id': item.title });
-  }
 
   protected _registerSidenavMenuItemClick() {
 
@@ -164,19 +161,62 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
       self._sideNavMenuItemClickHandler(event);
     });
 
+    jQ('a[aria-expanded]').on('click', function (event) {
+      self._sideNavMenuGroupHeaderClickHandler(event);
+    });
+
   }
 
+  /**
+   * Make the sideNav group function like an accordion. (only one group expand and all other collapse)
+   * This is highly related to html make-up.
+   */
+  _sideNavMenuGroupHeaderClickHandler(event) {
+    const $ = Utility.getJQuery();
+    const groupheaders = $('a[aria-expanded]');
+    for (let i = 0; i < groupheaders.length; i++) {
+      if (groupheaders[i] !== event.currentTarget) {
+        $(groupheaders[i]).attr('aria-expanded', false);
+        if ($(groupheaders[i]).siblings('ul')) {
+          $(groupheaders[i]).siblings('ul').removeClass('in');
+        }
+      }
+    }
+    this._resetHighlightedItems(event);
+  }
+
+  /**
+   * Invoke Left-hand-side menu item selection
+   * @param event
+   */
   protected _sideNavMenuItemClickHandler(event) {
     this.log('APP _sideNavMenuItemClickHandler()', event.currentTarget.textContent.trim());
     let _invokeId = null;
     _invokeId = event.currentTarget.id;
-    // (_invokeId=="_workload")
     if (_invokeId) {
       this._controllerService.publish(Eventtypes.SIDENAV_INVOKATION_REQUEST, { 'id': _invokeId });
     }
+    this._resetHighlightedItems(event);
   }
 
-    /**
+  /**
+   * Removes previously highlighted item -- say 'workload' was highlighted, now user clicks 'security group'. 'workload' should be reset.
+   */
+  private _resetHighlightedItems(event: any) {
+    if (!event)  {
+      return;
+    }
+    const $ = Utility.getJQuery();
+    const list = $('.app-sidenav-selected');
+    for (let i = 0; i < list.length; i++) {
+      if (list[i] !== event.currentTarget) {
+        $(list[i]).removeClass('app-sidenav-selected');
+      }
+    }
+    $(event.currentTarget).addClass('app-sidenav-selected');
+  }
+
+  /**
    * Is the user logged in?
    */
   get isLoggedIn() {
@@ -185,8 +225,8 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
 
   /***** Routing *****/
 
-  public navigate(path: string) {
-    this._controllerService.navigate(path);
+  public navigate(paths: string[]) {
+    this._controllerService.navigate(paths);
   }
 
   /**
@@ -198,11 +238,11 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   }
 
   /**
-  * handles case when we find user not yet login.
-  * For example, before login, user can change browser URL to access page. But we want to block it.
-  */
+   * handles case when we find user not yet login.
+   * For example, before login, user can change browser URL to access page. But we want to block it.
+   */
   private onNotYetLogin(payload: any) {
-    this.navigate('/login');
+    this.navigate(['/login']);
   }
 
   /**
@@ -210,7 +250,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    */
   private onLogout(payload: any) {
     this._controllerService.LoginUserInfo = null;
-    this.navigate('/login');
+    this.navigate(['/login']);
   }
 
 
@@ -219,11 +259,19 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    */
   private onSidenavInvokation(payload) {
     if (payload['id'] === 'workload') {
-      this.navigate('/workload');
+      this.navigate(['/workload']);
     } else if (payload['id'] === 'alerttable') {
-      this.navigate('/alerttable');
+      this.navigate(['/alerttable']);
+    } else if (payload['id'] === 'sgpolicy') {
+      this.navigate(['/security', 'sgpolicy']);
+    } else if (payload['id'] === 'network') {
+      this.navigate(['/network', 'network']);
+    } else if (payload['id'] === 'troubleshooting') {
+        this.navigate(['/monitoring', 'troubleshooting']);
+    } else if (payload['id'] === 'naples') {
+      this.navigate(['/cluster', 'naples']);
     } else {
-      this.navigate('/dashboard');
+      this.navigate(['/dashboard']);
     }
   }
 
@@ -283,7 +331,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     this.idle.setIdle(5);
     this.idle.setTimeout(10);
     this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
-    this.idle.onIdleEnd.subscribe(() => {this.showIdleWarning = false; });
+    this.idle.onIdleEnd.subscribe(() => { this.showIdleWarning = false; });
     this.idle.onTimeout.subscribe(() => {
       this.idleDialogRef.close();
       this.onLogoutClick();
@@ -294,7 +342,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
         this.idleDialogRef = this.dialog.open(IdleWarningComponent, {
           width: '400px',
           hasBackdrop: true,
-          data: { countdown: countdown}
+          data: { countdown: countdown }
         });
       } else {
         this.idleDialogRef.componentInstance.updateCountdown(countdown);
@@ -311,8 +359,10 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   }
 
   _handleComponentStateChangeDestroy(payload: any) {
-
     this._currentComponent = null;
+    if (this._breadcrumbToolbar) {
+      this._breadcrumbToolbar.clear();
+    }
   }
 
   /**
@@ -396,9 +446,11 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     }
   }
 
-  onAppHeaderSearchClick(event) {
-    this.log('APP onAppHeaderSearchClick()', );
+  onInvokeSearch(searchItems) {
+    console.log('AppComponent.invokeSearch()', searchItems);
+    alert('Search:\n' + JSON.stringify(searchItems));
   }
+
 
   onSearchVeniceApplicationSelect(event) {
     this.log('APP onSearchVeniceApplicationSelect()', );
@@ -462,9 +514,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    * @param  alertlist
    */
   onExpandAllAlertsClick(alertlist) {
-    console.log('AppComponet.onExpandAllAlertsClick()');
-    // this._controllerService.publish(Eventtypes.SIDENAV_INVOKATION_REQUEST, { 'id': 'alerttable' });
-    this.navigate('alerttable');
+    this.navigate(['alerttable']);
     this._rightSideNav.close();
 
   }

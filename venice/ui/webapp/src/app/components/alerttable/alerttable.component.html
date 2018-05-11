@@ -1,6 +1,6 @@
 <div class="alerttable-widget">
-  <p-table [columns]="cols" [value]="alerts" [(selection)]="selectedAlerts" dataKey="id" [rows]="15" [paginator]="true" #alerttable
-    styleClass="alerttable-table" [responsive]="true" [loading]="loading" [resizableColumns]="true">
+  <p-table class="global-primeng-table" [columns]="cols" [value]="alerts" [(selection)]="selectedAlerts" dataKey="id" [rows]="15" [paginator]="true" #alerttable
+   [responsive]="true" [loading]="loading" [resizableColumns]="true">
     <!-- Table Caption -->
     <ng-template pTemplate="caption">
       <div class="alerttable-header-div">

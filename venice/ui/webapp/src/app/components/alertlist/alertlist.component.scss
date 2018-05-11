@@ -1,5 +1,7 @@
+@import 'styles';
+
 .alertlist-widget {
-  font-family: 'Fira Sans Condensed';
+  @include primary-font();
 }
 
 .alertlist-header-div {

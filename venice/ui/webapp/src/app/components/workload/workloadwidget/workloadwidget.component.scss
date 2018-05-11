@@ -1,3 +1,5 @@
+@import 'styles';
+
 .wlWidget {
   height: 140px;
   width: 234px;
@@ -61,11 +63,9 @@
 }
 
 .wlWidget-title {
+  @include primary-font(18px, #000000);
   padding: 10px 0px 2px 10px;
-  font-family: 'Fira Sans Condensed';
-  font-size: 18px;
   text-align: left;
-  color: #000000;
 }
 
 .wlWidget-icon {
@@ -81,9 +81,8 @@
 }
 
 .wlWidget-label {
+  @include primary-font(48px);
   padding-left: 7px;
-  font-family: 'Fira Sans Condensed';
-  font-size: 48px;
   text-align: left;
 }
 
@@ -165,10 +164,8 @@
 }
 
 .wlWidget-collapsed {
-  font-family: "Fira Sans condensed";
-	font-size: 18px;
+  @include primary-font(18px);
 	text-align: left;
-  color: #676763;
   width: 234px;
   height: 24px;
   margin-top: 20px;

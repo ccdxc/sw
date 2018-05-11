@@ -1,14 +1,7 @@
 export class ModuleUtility {
-    static instance: ModuleUtility;
+    static instance: ModuleUtility = null;
     private constructor() {
 
-    }
-
-    public static getInstance(): ModuleUtility {
-        if (!this.instance) {
-            this.instance = new ModuleUtility();
-        }
-        return this.instance;
     }
 
     public static s4(): string {

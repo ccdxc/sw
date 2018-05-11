@@ -211,10 +211,6 @@ $sidenavWidth: 200px;
   border: 0px;
 }
 
-.app-header-search-autocomplete-widget.ui-autocomplete  .ui-inputtext:focus {
-  box-shadow: none;
-}
-
 .app-search-autocomplete-suggestion-div {
   display: flex;
 }
@@ -226,5 +222,6 @@ $sidenavWidth: 200px;
 .app-search-autocomplete-suggestion-item-desc {
   width: 50%;
 }
+
 /*-------- Seach --------*/
 

@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, OnChanges, ViewEncapsulation } from '@angular/core';
 
 /**
  * Component for styling the content holder for each page.
@@ -9,9 +9,10 @@ import { Component, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular
   styleUrls: ['./pagebody.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class PagebodyComponent implements OnInit, OnDestroy {
+export class PagebodyComponent implements OnInit, OnChanges, OnDestroy {
   hasOptions: Boolean;
   _iconStyles: any;
+
 
   @Input() title: String;
   @Input() icon: any;
@@ -21,9 +22,7 @@ export class PagebodyComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.title = 'Workloads header';
     this.hasOptions = this.options != null;
-
     this._iconStyles = this._setIconStyles();
   }
 
@@ -38,6 +37,12 @@ export class PagebodyComponent implements OnInit, OnDestroy {
       'background-image': 'url(' + this.icon.url + ')',
     };
     return styles;
+  }
+
+  ngOnChanges() {
+    if (!this.title ) {
+      this.title = 'Workloads header';
+    }
   }
 
   ngOnDestroy() {

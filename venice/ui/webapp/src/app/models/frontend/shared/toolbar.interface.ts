@@ -1,6 +1,8 @@
 export interface BreadcrumbItem {
     label: string;
-    url: string;
+    url?: string;
+    command?: (...args: any[]) => void;
+    payload?: any;
   }
 
   export interface ToolbarButton {

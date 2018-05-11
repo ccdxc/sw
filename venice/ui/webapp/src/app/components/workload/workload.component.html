@@ -36,14 +36,14 @@
   </div>
   <!-- PrimeNG Turbo Table -->
   <p-table #workloadtable [value]="workloads" [(selection)]="selectedWorkloads" dataKey="name" [rows]="10" [paginator]="true"
-  class="workload-table" [responsive]="true" [globalFilterFields]="globalFilterFields" [loading]="loading">
+  class="workload-table global-primeng-table" [responsive]="true" [globalFilterFields]="globalFilterFields" [loading]="loading">
     <!-- Table Header -->  
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 2.25em">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
-        <th *ngFor="let col of cols" [pSortableColumn]="col.field">
+        <th *ngFor="let col of cols | slice:1" [pSortableColumn]="col.field">
             {{col.header}}
             <p-sortIcon style="float: right;" [field]="col.field"></p-sortIcon>
         </th>
@@ -58,7 +58,7 @@
         <td>
           <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
         </td>
-        <td *ngFor="let col of cols">
+        <td *ngFor="let col of cols | slice:1">
             {{rowData[col.field]}}
         </td>
         <td>

@@ -1,5 +1,6 @@
 import { environment } from '../../environments/environment';
 import { Utility } from './Utility';
+import { Rule, RuleAction, IPRule, PortRule, IPRange } from '@app/models/frontend/shared/rule.interface';
 
 export class MockDataUtil {
 
@@ -21,7 +22,7 @@ export class MockDataUtil {
       'indicator': 'pensando',
       'query': query,
       'code': query,
-     };
+    };
     if (query === 'in') {
       obj['name'] = 'Search By Category - ' + query;
       obj['seachType'] = 'in';
@@ -37,29 +38,22 @@ export class MockDataUtil {
       obj['seachType'] = 'has';
       obj['options'] = ['owner', 'label', 'meta', 'role'];
       filtered.push(obj);
+    } else if (query === 'date') {
+      obj['name'] = 'Search By Content - ' + query;
+      obj['seachType'] = 'date';
+      filtered.push(obj);
     } else {
-       // filtered = this.filterCountry(query, this.countriesJSON);
-       if ( filtered.length === 0) {
+      if (filtered.length === 0) {
         const objMisc = {
           'indicator': 'pensando',
           'name': 'Free Form search - ' + query,
           'query': query,
           'code': query,
-         };
-         filtered.push(objMisc);
-       }
+        };
+        filtered.push(objMisc);
+      }
     }
     return filtered;
-   /*  const suggestions = [];
-    const eLen = 5;
-    const hLen = Utility.getRandomInt(10, 25);
-    for (let i = 0; i < hLen; i++) {
-      const obj = {};
-      obj['name'] = 'search-' + i;
-      obj['description'] = 'desc-' + i;
-      suggestions.push(obj);
-    }
-    return suggestions; */
   }
 
   public static getWorkloadItems(count): any {
@@ -85,7 +79,7 @@ export class MockDataUtil {
 
         },
         'status': {
-          'endpoint-uuid': 'uuid-' + id ,
+          'endpoint-uuid': 'uuid-' + id,
           'workload-uuid': 'workload-' + id,
           'workload-name': 'vm1-' + id,
           'network': 'default',
@@ -176,65 +170,363 @@ export class MockDataUtil {
 
   public static getMockedData(url: string, method: string, eventpayload: any): any {
     const reqID = this.getMockRequestID(url, method, eventpayload);
-    if (reqID === 'login') {
-      return {
-        'result': 'success',
-        'response': {
-          'context': {
-            'requestId': 'aa9246d9-abd8-e646-1169-96fa3b3b1251',
-            'initiatedBy': 'PensandoLoginUI',
-            'timestamp': '2017-03-15T18:16Z',
-            'requestName': 'PENSANDO_USERR_SIGNIN_REQUEST',
-            'servicedBy': 'DataAccessPlatform,RESTService',
-            'responseName': 'PENSANDO_USERR_SIGNIN_RESPONSE'
-          },
-          'data': {
-            'username': 'Pensando',
-            'role': 'Admin'
-          }
+    switch (reqID) {
+      case 'login':
+        return this.mockLogin();
+      case 'endpoints':
+        return this.getWorkloadItems(8);
+      case 'globalsearch':
+        return this.mockGlobalSearch();
+      case 'alertlist':
+        return this.mockAlertlist();
+      case 'alerttable':
+        return this.mockAlerttable();
+      case 'workloadwidget':
+        return {
+          totalworkloads: this.mockWorkloadWidget(8, 1000, 10000),
+          newworkloads: this.mockWorkloadWidget(8, 2, 400),
+          unprotectedworkloads: this.mockWorkloadWidget(8, 0, 50),
+          workloadalerts: this.mockWorkloadWidget(8, 0, 50),
+        };
+      case 'workloadwidget-totalworkloads':
+        return this.mockWorkloadWidget(8, 1000, 10000);
+      case 'workloadwidget-newworkloads':
+        return this.mockWorkloadWidget(8, 2, 400);
+      case 'workloadwidget-unprotectedworkloads':
+        return this.mockWorkloadWidget(8, 0, 50);
+      case 'workloadwidget-workloadalerts':
+        return this.mockWorkloadWidget(8, 0, 50);
+      case 'dsbdworkloadwidget':
+        const endpointPercent = Utility.getRandomIntList(3, 20, 30);
+        return {
+          veniceEndpointCount: Utility.getRandomInt(200000, 500000),
+          veniceNewEndpointCount: Utility.getRandomInt(200, 2000),
+          endpointList: Utility.getRandomIntList(3, 30, 41),
+          endpointPercent: endpointPercent,
+          endpointPercentCompliment: Utility.getComplimentaryList(endpointPercent),
+        };
+      case 'sgpolicy':
+        return this.mockSGPolicies();
+      default:
+        return {};
+    }
+  }
+
+  public static mockLogin() {
+    return {
+      'result': 'success',
+      'response': {
+        'context': {
+          'requestId': 'aa9246d9-abd8-e646-1169-96fa3b3b1251',
+          'initiatedBy': 'PensandoLoginUI',
+          'timestamp': '2017-03-15T18:16Z',
+          'requestName': 'PENSANDO_USERR_SIGNIN_REQUEST',
+          'servicedBy': 'DataAccessPlatform,RESTService',
+          'responseName': 'PENSANDO_USERR_SIGNIN_RESPONSE'
         },
-        'message': null
-      };
+        'data': {
+          'username': 'Pensando',
+          'role': 'Admin'
+        }
+      },
+      'message': null
+    };
+  }
+
+  public static mockGlobalSearch() {
+    return [
+      { login: 'John' },
+      { login: 'Doe' }
+    ];
+  }
+
+  public static buidCreateAndModDates(): any {
+    const monment = Utility.getMomentJS();
+    const minusDays = Utility.getRandomInt(1, 30);
+    const cDate = monment().subtract(minusDays, 'd');
+    const addDays = Utility.getRandomInt(0, minusDays);
+    const mDate = monment(cDate).add(addDays, 'd');
+    mDate.add(addDays, 'h');
+    mDate.subtract(minusDays + 'm');
+    const obj = {
+      cdate: cDate,
+      mdate: mDate
+    };
+    return obj;
+  }
+
+  public static buildUUID(): string {
+    return Utility.s4() + Utility.s4() + '-' + Utility.s4() + '-' + Utility.s4() + '-' + Utility.s4() + Utility.s4() + Utility.s4();
+  }
+
+  public static buildRandomLabelObject(len?: number): any {
+    const labelObj = {};
+    const myLen = (len) ? len : Utility.getRandomInt(1, 10);
+    for (let i = 0; i < myLen; i++) {
+      const key = Utility.s4();
+      const value = Utility.s4();
+      labelObj[key] = value;
     }
-    if (reqID === 'endpoints') {
-      return this.getWorkloadItems(8);
-    }
-    if (reqID === 'globalsearch') {
-      return [
-        { login: 'John' },
-        { login: 'Doe' }
-      ];
-    } if (reqID === 'alertlist') {
-      return this.mockAlertlist();
-    } else if (reqID === 'alerttable') {
-      return this.mockAlerttable();
-    } else if (reqID === 'workloadwidget') {
-      return {
-        totalworkloads: this.mockWorkloadWidget(8, 1000, 10000),
-        newworkloads: this.mockWorkloadWidget(8, 2, 400),
-        unprotectedworkloads: this.mockWorkloadWidget(8, 0, 50),
-        workloadalerts: this.mockWorkloadWidget(8, 0, 50),
-      };
-    } else if (reqID === 'workloadwidget-totalworkloads') {
-      return this.mockWorkloadWidget(8, 1000, 10000);
-    } else if (reqID === 'workloadwidget-newworkloads') {
-      return this.mockWorkloadWidget(8, 2, 400);
-    } else if (reqID === 'workloadwidget-unprotectedworkloads') {
-      return this.mockWorkloadWidget(8, 0, 50);
-    } else if (reqID === 'workloadwidget-workloadalerts') {
-      return this.mockWorkloadWidget(8, 0, 50);
-    } else if (reqID === 'dsbdworkloadwidget') {
-      const endpointPercent = Utility.getRandomIntList(3, 20, 30);
-      return {
-        veniceEndpointCount: Utility.getRandomInt(200000, 500000),
-        veniceNewEndpointCount: Utility.getRandomInt(200, 2000),
-        endpointList: Utility.getRandomIntList(3, 30, 41),
-        endpointPercent: endpointPercent,
-        endpointPercentCompliment: Utility.getComplimentaryList(endpointPercent),
-      };
+    return labelObj;
+  }
+
+  public static buildDefaultOutRule(): any {
+    return {
+      'ports': 'any',
+      'action': 'allow'
+    };
+  }
+  /**
+   * {
+            'ports': 'tcp/80-90', // or imcp:
+            'action': 'allow'
+      },
+   */
+  public static buildInRulePortData(): PortRule[] {
+    // const protocols = ['BGP', 'DHCP', 'DNS', 'FTP', 'HTTP', 'IMAP', 'LDAP', 'MGCP', 'MQTT', 'NNTP', 'NTP', 'POP',  'RTP', 'RTSP', 'RIP', 'SIP', 'SMTP', 'SNMP', 'SSH', 'Telnet', 'TLS/SSL', 'XMPP', 'TCP', 'UDP', 'DCCP', 'SCTP', 'RSVP','ICMP'];
+    const protocols = ['TCP', 'UDP'];
+    const protocol = this.getRandomItemFromList(protocols);
+    let portList = null;
+    let rangeList = null;
+
+    const isRanged = this.getRandomItemFromList([true, false]);
+    if (isRanged) {
+      rangeList = [];
+      const rLen = Utility.getRandomInt(1, 10);
+      for (let i = 0; i < rLen; i++) {
+        const fromNumber = Utility.getRandomInt(1, 1000);
+        const toNumber = Utility.getRandomInt(fromNumber, 1000);
+        const range = {};
+        range['start'] = fromNumber;
+        range['end'] = toNumber;
+        rangeList.push(range);
+      }
     } else {
-      return {};
+      portList = [];
+      let len = Utility.getRandomInt(1, 10);
+      if (protocol === 'ICMP') {
+        len = 0 ; // for ICMP to no port number
+      }
+      for (let i = 0; i < len; i++) {
+        portList.push(Utility.getRandomInt(1, 1000));
+      }
+      portList = portList.sort();
     }
+
+    const portData: PortRule = {
+      'protocol': protocol,
+      'ranges': rangeList,
+      'list': portList,
+    };
+    return [portData];
+  }
+
+  static getIP_oct1 (): number {
+    return (Math.floor(Math.random() * 255) + 1);
+  }
+
+  static getIP_oct2 (): number {
+    return (Math.floor(Math.random() * 255) + 0);
+  }
+
+  static getIPv4Address(buildSub: boolean = false): string {
+    let ipStr = '';
+    ipStr += this.getIP_oct1();
+    ipStr += '.' + this.getIP_oct2();
+    const isOct3Wildcard = this.getRandomItemFromList([true, false]);
+    if (isOct3Wildcard) {
+      ipStr += '.*';
+    } else {
+      ipStr += '.' + this.getIP_oct2 ();
+    }
+    let isOct4Wildcard = isOct3Wildcard;
+    if (!isOct3Wildcard) {
+      isOct4Wildcard = this.getRandomItemFromList([true, false]);
+    }
+    if (isOct4Wildcard) {
+      ipStr += '.*';
+    } else {
+      ipStr += '.' + this.getIP_oct2 ();
+    }
+    const sub = (buildSub && !isOct3Wildcard && !isOct4Wildcard ) ? Utility.getRandomInt(1, 24).toString() : '';
+    ipStr += sub;
+
+    return ipStr;
+  }
+
+
+
+  public static _increaseOct(value: any): any {
+    value = Utility.getRandomInt(value + 1, 255);
+    return value;
+  }
+
+  /**
+   * For building the destIP in a range format
+   * Makes sure that the dest is greater than the given source
+   */
+  public static _builddestIP(sourceIP: string): string {
+    const octs = sourceIP.split('.');
+    const destOcts = Utility.getLodash().cloneDeep(octs);
+    if (octs[2] === '*' && octs[3] === '*') {
+      destOcts[1] = this._increaseOct(octs[1]);
+    } else if (octs[3] === '*') {
+      destOcts[2] = this._increaseOct(octs[2]);
+    } else {
+      const isIncOc4 = this.getRandomItemFromList([true, false]);
+      if (isIncOc4) {
+        destOcts[3] = this._increaseOct(octs[3]);
+      }
+      const isIncOc3 = this.getRandomItemFromList([true, false]);
+      if (isIncOc3 && !isIncOc4) {
+        destOcts[2] = this._increaseOct(destOcts[2]);
+      }
+    }
+    return destOcts.join('.');
+
+  }
+  public static buildIPData(): IPRule {
+    let ipList = null;
+    let rangeList = null;
+
+    const isRanged =  this.getRandomItemFromList([true, false]);
+    if (isRanged) {
+      rangeList = [];
+      // We don't allow submask for ranges currently
+      // in our searching functionality, searching will
+      // probably be moved to the backend in the future
+      const sourceIP = this.getIPv4Address(false);
+      const destIP = this._builddestIP(sourceIP);
+      const ip: IPRange = {
+        start: sourceIP,
+        end: destIP
+      };
+      rangeList.push(ip);
+    } else {
+        ipList = [];
+        const len = Utility.getRandomInt(1, 5);
+        for (let i = 0; i < len; i++) {
+          const isSub = this.getRandomItemFromList([true, false]);
+          ipList.push(this.getIPv4Address(isSub));
+        }
+        ipList = ipList.sort();
+    }
+    const ipData: IPRule = {
+        'list': ipList,
+        'ranges': rangeList,
+    };
+    return ipData;
+  }
+
+  public static buildInRule(isPermit: boolean= true): Rule {
+    const sourceIP: IPRule = this.buildIPData();
+    const destIP: IPRule = this.buildIPData();
+    const ret = {
+      'sourceIP': sourceIP,
+      'destIP': destIP,
+      'ports': this.buildInRulePortData(),
+      'action': (isPermit) ? RuleAction.permit : RuleAction.deny
+    };
+    return ret;
+  }
+
+
+  public static buildmockSGPolicyObject() {
+    const objName = (name) ? name : 'sgpolicy-' + Utility.s4();
+    const cmDate = this.buidCreateAndModDates();
+    const cDate = cmDate.cdate;
+    const mDate = cmDate.mdate;
+    const uuid = this.buildUUID();
+
+    const inRuleLen = 50;
+    const inRules: Rule[] = [];
+
+    for (let i = 0; i < inRuleLen; i++) {
+      const isPermit = (i < inRuleLen - 1);
+      // Two rules are always fixed for demo purposes
+      if (i === 3) {
+        const fixedRule: Rule = {
+          sourceIP: {
+            ranges: [{
+              start: '10.1.1.13',
+              end: '10.1.1.24'
+            }],
+          },
+          destIP: {
+            list: ['11.34.23.44']
+          },
+          ports: [{
+            protocol: 'TCP',
+            ranges: [{
+              start: 8000,
+              end: 9000
+            }]
+          }],
+          action: RuleAction.permit
+        };
+
+        inRules.push(fixedRule);
+        continue;
+      }
+      if (i === 23) {
+        const fixedRule: Rule = {
+          sourceIP: {
+            list: ['198.62.1.0/24']
+          },
+          destIP: {
+            list: ['10.1.1.0/24']
+          },
+          ports: [{
+            protocol: 'UDP',
+            list: [8080]
+          }],
+          action: RuleAction.permit
+        };
+        inRules.push(fixedRule);
+        continue;
+      }
+      inRules.push(this.buildInRule(isPermit));
+    }
+    return {
+      'Kind': 'Sgpolicy',
+      'APIVersion': 'v1',
+      'meta': {
+        'Name': objName,
+        'Creator': 'Ravi Gadde',
+        'Tenant': 'default',
+        'ResourceVersion': Utility.getRandomInt(10000, 34550),
+        'UUID': uuid,
+        'CreationTime': cDate.toISOString(),
+        'ModTime': mDate.toISOString(),
+        'Labels': this.buildRandomLabelObject(),
+        'SelfLink': '/v1/sgpolicy/default/sgpolicy/' + objName
+      },
+      'spec': {
+        'attach-groups': [
+          'SG3',
+          'SG0'
+        ],
+        'in-rules': inRules,
+        'out-rules': [
+          this.buildDefaultOutRule()
+        ]
+      },
+      'status': {}
+    };
+  }
+
+  public static mockSGPolicies() {
+    const len = 1;
+    const sgpolices = [];
+    for (let i = 0; i < len; i++) {
+      sgpolices.push(this.buildmockSGPolicyObject());
+    }
+
+    return {
+      'T': {},
+      'ListMeta': {},
+      'Items': sgpolices
+    };
   }
 
   public static mockWorkloadWidget(dataPoints, randLower, randUpper) {
@@ -271,6 +563,8 @@ export class MockDataUtil {
       return 'alertlist';
     } else if (url.indexOf('alerttable') >= 0) {
       return 'alerttable';
+    } else if (url.indexOf('sgpolicy') >= 0) {
+      return 'sgpolicy';
     } else if (url.indexOf('workloadwidgetById') >= 0) {
       if (url.indexOf('totalworkloads') >= 0) {
         return 'workloadwidget-totalworkloads';

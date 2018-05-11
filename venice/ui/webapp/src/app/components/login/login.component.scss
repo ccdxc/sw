@@ -1,3 +1,5 @@
+@import 'styles';
+
 /**
     This is pensando ui login page CSS. 
 
@@ -7,14 +9,13 @@
 
 /* set height to view-port height, set background image */
 .login-outter-div {
+  @include primary-font(14px, #231f20);
   width: 100%;
   height: 100vh;
   background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-2.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   display: table;
-  font-family: 'Fira Sans Condensed';
-  color: #231f20;
   /** define animation */
   -webkit-animation: login-background-animation 350s infinite;
   -moz-animation: login-background-animation 350s infinite;

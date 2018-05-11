@@ -34,13 +34,32 @@ export const routes: Routes = [
     loadChildren: '@components/alerttable/alerttable.module#AlerttableModule'
   },
   {
+    path: 'monitoring',
+    loadChildren: '@components/monitoring/monitoring.module#MonitoringModule'
+  },
+  {
     path: 'settings',
     component: SettingsComponent,
     data: {
       title: 'Settings'
     }
   },
-
+  {
+    path: 'security',
+    loadChildren: '@components/security/security.module#SecurityModule'
+  },
+  {
+    path: 'network',
+    loadChildren: '@components/network/network.module#NetworkModule'
+  },
+  {
+    path: 'cluster',
+    loadChildren: '@components/cluster/cluster.module#ClusterModule'
+  },
+  {
+    path: '**',
+    component: DashboardComponent
+  }
 
 ];
 

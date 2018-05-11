@@ -1,3 +1,5 @@
+@import 'styles';
+
 .ui-breadcrumb {
   border: 0px;
 }
@@ -19,8 +21,7 @@
 }
 
 .ui-menuitem-text {
-  font-family: 'Fira Sans Condensed';
-  font-size: 18px;
+  @include primary-font(18px);
 }
 
 .ui-breadcrumb-chevron {

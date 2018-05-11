@@ -1,3 +1,5 @@
+@import 'styles';
+
 .labelselector-expanded {
     height: 35px;
     width: 175px;
@@ -18,16 +20,12 @@
 
 
 .labelselector-modal-option {
+    @include primary-font(16px);
     height: 25px !important;
-    font-family: "Fira Sans Condensed" !important;
-    font-size: 16px !important;
-    color: #676763 !important;
 }
 
 .labelselector-label-and {
-    font-family: Roboto;
-	font-size: 13px;
-	font-stretch: condensed;
+    @include secondary-font(13px, #484848);
 	text-align: left;
 	color: #484848;
 

@@ -1,9 +1,9 @@
+@import 'styles';
+
 .dsbdworkloads {
+  @include primary-font();
   height: 100%;
   width: 100%;
-  font-family: "Fira Sans Condensed";
-  color: #676763;
-  font-size: 14px;
 }
 
 .dsbdworkload-left {

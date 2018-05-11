@@ -13,5 +13,10 @@ export const environment = {
   server_port: '9000',
   version_api_string: '/v1/',
   venice_nodes: 'cmd/nodes',
-  venice_endpoints: 'endpoints/default/endpoints'
+  venice_endpoints: 'endpoints',
+  venice_securitygroups: 'security-groups',
+  venice_sgpolicy: 'sgpolicy',
+  venice_lbpolicy: 'lb-policy',
+  venice_network: 'networks'
+
 };

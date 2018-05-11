@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-
+import * as moment from 'moment';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
@@ -95,14 +95,25 @@ export class Utility {
       .substring(1);
   }
 
+  static getMacAddress(): string {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
+      return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
+    });
+  }
+
+  static getIPv4(): string {
+    const ipv4 = (Math.floor(Math.random() * 255) + 1) + '.' + (Math.floor(Math.random() * 255) + 0) + '.' + (Math.floor(Math.random() * 255) + 0) + '.' + (Math.floor(Math.random() * 255) + 0);
+    return ipv4;
+  }
+
   static getPayloadDatetime() {
     const d = new Date();
     return d.toISOString();
   }
 
-  static getPastDate(minuusDay): Date {
+  static getPastDate(minusDay): Date {
     const d = new Date();
-    d.setDate(d.getDate() - minuusDay);
+    d.setDate(d.getDate() - minusDay);
     d.setHours(0);
     d.setMinutes(0);
     d.setSeconds(0);
@@ -338,11 +349,15 @@ export class Utility {
     return _;
   }
 
+  static getMomentJS(): any {
+    return moment;
+  }
+
   static getJQuery(): any {
     return $;
   }
 
-  static comparyDatePart(myDate: Date, compareToDate: Date): number {
+  static compareDatePart(myDate: Date, compareToDate: Date): number {
     const d1 = myDate.setHours(0, 0, 0, 0);
     const d2 = compareToDate.setHours(0, 0, 0, 0);
     if (d1 === d2) {
@@ -559,6 +574,8 @@ export class Utility {
     }
   }
 
+  // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()
+
   setControllerService(controllerService: ControllerService) {
     this.myControllerService = controllerService;
   }
@@ -584,6 +601,10 @@ export class Utility {
     if (this.myControllerService) {
       this.myControllerService.publish(Eventtypes.AJAX_START, { 'ajax': 'start', 'name': 'pv-AJAX' });
     }
+  }
+
+  getTenant(): string {
+    return 'default';
   }
 }
 

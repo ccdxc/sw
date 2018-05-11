@@ -1,3 +1,5 @@
+@import 'styles';
+
 .modalbody-container {
     padding: 10px 25px 0px 37px;
     position: relative;
@@ -9,10 +11,8 @@
 }
 
 .modalbody-content {
+  @include primary-font(18px, #484848);
   transform: translateX(-10px);
   z-index: 10;
-  font-size: 18px;
-  color: #484848;
   font-weight: bold;
-  font-family: 'Fira Sans Condensed';
 }

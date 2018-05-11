@@ -34,6 +34,7 @@ import { VeniceUIHttpInterceptor} from '@app/inteceptors/httpinterceptor.service
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AlerttableService } from '@app/services/alerttable.service';
+import { SecurityService } from '@app/services/security.service';
 // Pensando UI components
 import { routing } from '@app/app.routing';
 import { AppComponent } from '@app/app.component';
@@ -48,6 +49,9 @@ import { SettingsModule } from '@app/components/settings';
 import { DashboardModule } from '@app/components/dashboard';
 import { AlertlistModule } from '@app/components/alertlist';
 import { AlerttableModule} from '@app/components/alerttable';
+import { SecurityModule } from '@app/components/security';
+import { NetworkModule } from '@app/components/network';
+import { ClusterModule } from '@app/components/cluster';
 import { LoginModule } from '@app/components/login/login.module';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
@@ -68,7 +72,7 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     BaseComponent,
     CommonComponent,
     ToolbarComponent,
-    IdleWarningComponent,
+    IdleWarningComponent
   ],
   entryComponents: [
     BaseComponent,
@@ -96,6 +100,8 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     AlerttableModule,
     LoginModule,
     DashboardModule,
+    SecurityModule,
+    NetworkModule,
 
     // material-design
     MaterialdesignModule,
@@ -106,7 +112,7 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     // moment.js
     MomentModule,
     GridsterModule,
-    FlexLayoutModule
+    FlexLayoutModule,
 
   ],
   providers: [
@@ -118,6 +124,7 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     LogService,
     LogPublishersService,
     AlerttableService,
+    SecurityService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true }  ,

@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+import { ComponentFixture, TestBed, async } from '@angular/core/testing';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
-
 import { LabelselectorComponent } from './labelselector.component';
+
 
 describe('LabelselectorComponent', () => {
   let component: LabelselectorComponent;

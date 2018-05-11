@@ -1,0 +1,99 @@
+<app-pagebody [icon]="bodyicon" title="Security Policy">
+  <mat-expansion-panel class="global-mat-expansion-panel" [expanded]="true">
+    <mat-expansion-panel-header class="sgpolicy-expansionpanel-header">
+      <mat-panel-title class="sgpolicy-summary-panel-header">
+        Security Policiy Details
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="sgpolicy-summary-panel-content">
+      <div flex fxLayout="row">
+        <div fxFlex="50">
+          <div class="sgpolicy-summary-panel-content-label">Policy Name:</div>
+          <div class="sgpolicy-summary-panel-content-value">{{policyName}} </div>
+        </div>
+        <div fxFlex="50">
+            <div class="sgpolicy-summary-panel-content-label2">Created on:</div>
+            <div class="sgpolicy-summary-panel-content-value">{{creationTime | date:'MM-dd-yyyy HH:mm a'}}</div>
+        </div>
+      </div>
+      <div flex fxLayout="row">
+        <div fxFlex="50">
+            <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
+            <div class="sgpolicy-summary-panel-content-value">{{creator}}</div>
+        </div>
+        <div fxFlex="50">
+            <div class="sgpolicy-summary-panel-content-label2">Last Modified: </div>
+            <div class="sgpolicy-summary-panel-content-value">{{lastModifiedTime | date:'MM-dd-yyyy HH:mm a'}}</div>
+        </div>
+      </div>
+    </div>
+  </mat-expansion-panel>
+  <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
+</app-pagebody>
+
+
+
+<ng-template #DataTable>
+  <div class="sgpolicy-widget">
+    <p-table [columns]="cols" sortField="order" [value]="sgPolicyRules" dataKey="order" [(selection)]="selectedSGPolices" [rows]="15" [paginator]="false" #sgpolicyTable
+    class="global-primeng-table sgpolicy-table"  [responsive]="true" [loading]="loading" [resizableColumns]="true"
+      (sortFunction)="customSort($event)" [customSort]="true"
+      >
+      <!-- Table Caption -->
+      <ng-template pTemplate="caption">
+        <div fxLayout="row" fxLayoutAlign="start center" class="sgpolicy-header-div">
+          <div fxFlex fxLayout="row" class="sgpolicy-main-menu">
+            <div fxFlex fxLayout="row" fxLayoutAlign="start center"  class="sgpolicy-main-menu-number-front-group-div">
+              <div fxFlex="225px" fxLayout="row" >
+                <div fxFlex="30px">
+                  <mat-icon svgIcon="policy" class="penui-table-header-icon sgpolicy-table-icon"> </mat-icon>
+                </div>
+                <div *ngIf="sgpolicyTurboTable != null && sgpolicyTurboTable.hasFilter()" fxFlex="nogrow" class="sgpolicy-main-menu-label" >
+                  Policy Rules ( {{ sgpolicyTurboTable.filteredValue?.length || 0 | number }} / {{ sgPolicyRules.length | number }} )
+                </div>
+                <div *ngIf="sgpolicyTurboTable == null || !sgpolicyTurboTable.hasFilter()" fxFlex="nogrow" class="sgpolicy-main-menu-label" >
+                  Policy Rules ( {{ sgPolicyRules.length | number }} )
+                </div>
+              </div>
+              <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
+                Find Rule by: 
+                <mat-form-field fxFlex="nogrow" floatLabel="never" class="example-full-width">
+                  <input matInput [formControl]="ipFormControl" placeholder="IP / IP Range" (input)="filterPolicyRules($event)">
+                </mat-form-field>
+                <mat-form-field fxFlex="nogrow" floatLabel="never" class="example-full-width" (input)="filterPolicyRules($event)">
+                  <input matInput [formControl]="portFormControl" placeholder="Protocol / Port">
+                </mat-form-field>
+                <div fxFlex></div>
+                <mat-slide-toggle (change)="toggle($event)" fxFlex='nogrow' class="sgpolicy-table-toggle">Show Entire List</mat-slide-toggle>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+      <!-- Table Header -->
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <!-- Holds the order number of the rule -->
+          <th style="width: 2.25em">
+          </th>
+          <th> Source IPs</th>
+          <th> Destination IPs</th>
+          <th> Action</th>
+          <th >Protocol / Ports</th>
+        </tr>
+      </ng-template>
+      <!-- Table Body -->
+      <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+        <tr [ngClass] = "computeClass(rowData)" [pSelectableRow]="rowData">
+          <td class = "sgpolicy-rule-number">
+            {{rowData['order']}}
+          </td>
+          <td> {{rowData.sourceIP}}</td>
+          <td> {{rowData.destIP}}</td>
+          <td> {{rowData.action}}</td>
+          <td> {{rowData.ports}}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</ng-template>

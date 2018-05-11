@@ -1,3 +1,5 @@
+@import 'styles';
+
 .workload-body {
     height:100%;
     margin: 0px 10px 10px 10px;
@@ -12,22 +14,6 @@
     border-radius: 2px;
 }
 
-//Column headers
-.workload-table .ui-table .ui-table-thead > tr > th {
-    font-family: Roboto;
-    color: #676763;
-    background-color: #e7e7e3;
-    text-align: left;
-    font-size: 14px;
-    font-stretch: condensed;
-}
-
-.workload-table .ui-table .ui-table-thead > tr > th:hover,
-.workload-table .ui-table .ui-table-thead > tr > th.ui-state-highlight {
-    color: #353532;
-    background-color: #cfcfcb;
-}
-
 .workload-button {
     padding-left: 10px;
     padding-right: 10px;
@@ -38,11 +24,9 @@ $table-headerheight: 55px;
 $table-headercontentheight: 25px;
 
 .workload-table-header {
+    @include primary-font(18px, black);
     width: 100%;
     height: $table-headerheight;
-    font-size: 18px;
-    font-family: 'Fira Sans Condensed';
-    font-stretch: condensed;
     font-weight: 500;
 }
 
@@ -74,38 +58,17 @@ $table-headercontentheight: 25px;
 
 .workload-table-toggle {
     margin: 20px 5px 15px 5px;
-}
-
-.workload-table-toggle .mat-slide-toggle-content {
-    font-family: "Fira Sans Condensed";
-    font-size: 14px;
-    color: #676763;
-}
-
-.workload-table-toggle.mat-slide-toggle.mat-accent .mat-slide-toggle-bar {
-    background-color: rgb(209, 209, 208);
-}
-
-.workload-table-toggle.mat-slide-toggle.mat-accent .mat-slide-toggle-thumb {
-    background-color: rgb(103, 103, 99);
-}
-.workload-table-toggle.mat-slide-toggle.mat-accent.mat-checked .mat-slide-toggle-bar {
-    background-color: rgba(139, 195, 74, 0.5);
-}
-.workload-table-toggle.mat-slide-toggle.mat-accent.mat-checked .mat-slide-toggle-thumb {
-    background-color: rgb(139, 195, 74);
+    @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgba(139, 195, 74, 0.5), rgb(139, 195, 74));
 }
 
 .workload-table-filter {
+    @include secondary-font();
     width: 175px;
     height: $table-headercontentheight;
     border-radius: 12.5px;
     background-color: #f7f7f7;
     margin: 20px 5px 10px 5px;
     border: none;
-    font-family: Roboto;
-    font-size: 14px;
-    font-stretch: condensed;
     padding-left: 10px;
 }
 
@@ -114,49 +77,23 @@ $table-headercontentheight: 25px;
 }
 
 .workload-table-filter::-webkit-input-placeholder { /* WebKit browsers */
-    font-family: Roboto;
-	font-size: 14px;
-	font-stretch: condensed;
+    @include secondary-font();
 	text-align: left;
-	color: #676763;
 }
+
 .workload-table-filter:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-    font-family: Roboto;
-	font-size: 14px;
-	font-stretch: condensed;
+    @include secondary-font();
 	text-align: left;
-	color: #676763;
 }
+
 .workload-table-filter::-moz-placeholder { /* Mozilla Firefox 19+ */
-    font-family: Roboto;
-	font-size: 14px;
-	font-stretch: condensed;
+    @include secondary-font();
 	text-align: left;
-	color: #676763;
 }
+
 .workload-table-filter:-ms-input-placeholder { /* Internet Explorer 10+ */
-    font-family: Roboto;
-	font-size: 14px;
-	font-stretch: condensed;
+    @include secondary-font();
 	text-align: left;
-	color: #676763;
-}
-
-//We skip the first so that the checkboxes are the same size
-//as the one in the header
-.workload-table .ui-table .ui-table-tbody > tr > td:not(:first-child) {
-    text-align: left;
-    font-size: 12px !important;
-    font-family: Roboto;
-    font-stretch: condensed;
-}
-
-.workload-table .ui-chkbox-box.ui-state-default {
-    border: 2px solid #676763;
-}
-
-.workload-table .ui-chkbox-box.ui-state-default:hover {
-    border: 2px solid #343434;
 }
 
 /* NEUTRAL ITEMS */

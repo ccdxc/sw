@@ -7,19 +7,21 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 
-import { ControllerService } from '@app/services/controller.service';
-import { MatIconRegistry} from '@angular/material';
-import { AlerttableService } from 'app/services/alerttable.service';
 
-import { AlerttableComponent } from './alerttable.component';
+import { MatIconRegistry} from '@angular/material';
+
 
 /**-----
  Third-parties imports
  ------------------*/
 import { PrimengModule } from '@lib/primeng.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
-
-
+/**-----
+ Venice web-app imports
+ ------------------*/
+import { ControllerService } from '@app/services/controller.service';
+import { AlerttableService } from 'app/services/alerttable.service';
+import { AlerttableComponent } from './alerttable.component';
 @Component( {
   template: ''
 })

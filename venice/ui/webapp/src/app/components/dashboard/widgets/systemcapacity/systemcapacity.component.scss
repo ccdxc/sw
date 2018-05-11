@@ -1,17 +1,16 @@
+@import 'styles';
+
 .systemCapacity-container {
-  font-family: "Fira Sans condensed"
+  @include primary-font();
 }
 
 .systemCapacity-nodecount {
+  @include primary-font(14px, #b592e3);
   text-align: center;
-  font-family: 'Fira Sans Condensed';
   font-size: 100px;
-  font-stretch: condensed;
-  color: #b592e3;
 }
 
 .systemCapacity-left {
-  // opacity: 0.3;
   background-repeat: no-repeat;
   background-position: center;
   background-size: fit;
