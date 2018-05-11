@@ -347,7 +347,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"kg1-ipsec-encrypt-policy\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"rules\":[{\"source\":{\"address\":\"10.0.0.0-10.0.255.255\"},\"destination\":{\"address\":\"10.0.0.0-10.0.255.255\"},\"sa-name\":\"kg1-ipsec-sa-encrypt\",\"sa-type\":\"ENCRYPT\"}]}}"
+                    "raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"kg1-ipsec-encrypt-policy\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"rules\":[{\"destination\":{\"address\":\"10.0.0.0-10.0.255.255\"},\"sa-name\":\"kg1-ipsec-sa-encrypt\",\"sa-type\":\"ENCRYPT\"}]}}"
                 },
                 "description": ""
             },

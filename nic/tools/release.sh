@@ -15,7 +15,7 @@ ln -f nic.tgz sim/naples
 echo "Building and saving a docker image ..."
 cd sim/naples
 
-docker build -t naples:$VER . && docker save -o naples-docker-$VER.tar naples:$VER
+docker build -t pensando/naples:$VER . && docker save -o naples-docker-$VER.tar pensando/naples:$VER
 if [ $? -eq 0 ]; then
     gzip naples-docker-$VER.tar
     mv naples-docker-$VER.tar.gz naples-docker-$VER.tgz
