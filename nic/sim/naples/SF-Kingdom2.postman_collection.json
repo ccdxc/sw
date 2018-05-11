@@ -292,6 +292,67 @@
 				"description": ""
 			},
 			"response": []
-		}
+		},
+        {
+            "name": "ipsecsaencrypt",
+            "request": {
+                "url": "{{node1}}/api/ipsec/encrypt/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"20.1.1.1\",\"remote-gateway-ip\":\"20.1.1.2\", \"spi\":\"1\"}}}"
+                },
+                "description": ""
+            },
+            "response": []
+       },
+       {
+            "name": "ipsecsadecrypt",
+            "request": {
+                "url": "{{node1}}/api/ipsec/decrypt/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"spi\":\"1\"}}}"
+                },
+                "description": ""
+            },
+            "response": []
+        },
+        {
+            "name": "ipsecpolicy",
+            "request": {
+                "url": "{{node1}}/api/ipsec/policies/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"kg2-ipsec-policy\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"rules\":[{\"source\":{\"address\":\"10.0.0.0-10.0.255.255\"},{\"destination\":{\"address\":\"10.0.0.0-10.0.255.255\"}},\"sa-name\":\"kg2-ipsec-sa-encrypt\",\"sa-type\":\"ENCRYPT\"},{\"source\":{\"address\":\"20.1.1.1 - 20.1.1.1\"},\"destination\":{\"address\":\"20.1.1.2 - 20.1.1.2\"},\"app\":\"ESP\",\"app-config\":\"1\",\"sa-name\":\"kg2-ipsec-sa-decrypt\",\"sa-type\":\"DECRYPT\"}]}}}"
+                },
+                "description": ""
+            },
+            "response": []
+        }
+
 	]
 }
