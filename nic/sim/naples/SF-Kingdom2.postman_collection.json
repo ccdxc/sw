@@ -191,7 +191,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"},\"spec\":{\"NetworkName\":\"public\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"20.1.1.1/16\",\"MacAddress\":\"00:22:14:01:01:01\",\"NodeUUID\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"},\"spec\":{\"NetworkName\":\"public\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"20.1.1.2/16\",\"MacAddress\":\"00:22:14:01:01:01\",\"NodeUUID\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},
