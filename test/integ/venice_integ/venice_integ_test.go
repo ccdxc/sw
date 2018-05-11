@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/npm"
+	"github.com/pensando/sw/venice/ctrler/tsm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/simapi"
@@ -40,6 +41,7 @@ import (
 
 	_ "github.com/pensando/sw/api/generated/cluster/gateway"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	_ "github.com/pensando/sw/api/generated/monitoring/gateway"
 	_ "github.com/pensando/sw/api/generated/network/gateway"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 
@@ -62,6 +64,9 @@ const (
 	integTestApisrvURL  = "localhost:8082"
 	integTestAPIGWURL   = "localhost:9092"
 	vchTestURL          = "localhost:19003"
+	// TS Controller
+	integTestTsmURL     = "localhost:9500"
+	integTestTsmRestURL = "localhost:9501"
 	agentDatapathKind   = "mock"
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
@@ -76,6 +81,7 @@ type veniceIntegSuite struct {
 	certSrv        *certsrv.CertSrv
 	ctrler         *npm.Netctrler
 	tpm            *tpm.PolicyManager
+	tsCtrler       *tsm.TsCtrler
 	agents         []*netagent.Agent
 	datapaths      []*datapath.Datapath
 	datapathKind   datapath.Kind
@@ -161,6 +167,19 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	}
 	m.AddServiceInstance(&npmSi)
 
+	tsmSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-tsm-test",
+		},
+		Service: globals.Tsm,
+		Node:    "localhost",
+		URL:     integTestTsmURL,
+	}
+	m.AddServiceInstance(&tsmSi)
+
 	// api server config
 	sch := runtime.NewScheme()
 	apisrvConfig := apiserver.Config{
@@ -199,6 +218,13 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 
+	// create a trouble shooting controller
+	tsmrc := resolver.New(&resolver.Config{Name: globals.Tsm, Servers: []string{resolverServer.GetListenURL()}})
+	// The resolver client will be used by trouble shooting net agent...
+	tsCtrler, err := tsm.NewTsCtrler(integTestTsmURL, integTestTsmRestURL, globals.APIServer, tsmrc)
+	c.Assert(err, IsNil)
+	it.tsCtrler = tsCtrler
+
 	log.Infof("Creating %d/%d agents", it.numAgents, *numAgents)
 
 	// create agents
@@ -218,6 +244,8 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}
+	// XXX create a new agent to handle TS requests - Once the netagent has this functionality, this can be removed
+	// TBD - for now test until memDB of TsController
 
 	// REST Client
 	restcl, err := apiclient.NewRestAPIClient(integTestAPIGWURL)
@@ -270,6 +298,8 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.tpm.Stop()
 	it.ctrler.Stop()
 	it.ctrler = nil
+	it.tsCtrler.Stop()
+	it.tsCtrler = nil
 	it.apiSrv.Stop()
 	it.apiGw.Stop()
 	it.certSrv.Stop()

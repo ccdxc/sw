@@ -1,15 +1,15 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-// Service name
-package monitoring;
+
+// Trouble shooting: Mirroring APIs
+package tsproto;
 
 import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/export.proto";
-
 //========================================================================================
 // Packet Mirroring
 //========================================================================================
@@ -17,13 +17,10 @@ import "github.com/pensando/sw/api/export.proto";
 //---- MirrorSessionSpec
 //-----------------------
 message MirrorSessionSpec {
-    // PacketSize: Max size of a mirrored packet.
-    // PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. 
-    // For packets mirrored to Venice, max mirror packet size allowed is 256 B
-    uint32                  PacketSize      = 1 [(gogoproto.jsontag) = "packet-size,omitempty"];
-
-    // StartConditions
-    MirrorStartConditions   StartConditions = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "start-condition,inline"];
+    bool                    Enable          = 1 [(gogoproto.jsontag) = "enable"];
+    // Original packets can be truncated when being mirrored to save bandwidth and storage
+    // When mirrored packets are sent to Venice, default size is 128 (venice)??? or complete packet (erspan)?
+    uint32                  PacketSize      = 2 [(gogoproto.jsontag) = "packet-size,omitempty"];
 
     MirrorStopConditions    StopConditions  = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "stop-condition,inline"];
 
@@ -33,6 +30,11 @@ message MirrorSessionSpec {
     // Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions
     repeated MatchRule      MatchRules      = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
 
+    // CaptureAt and PacketDirection for capturing
+    // When Src and Dst is on the same NIC, only one mirror copy in each direction is made
+    MirrorSrcDst        CaptureAt           = 6 [(gogoproto.jsontag) = "capture-at,omitempty", (venice.check) = "StrEnum(MirrorSrcDst)"];
+    MirrorDir           PacketDir           = 7 [(gogoproto.jsontag) = "packet-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
+
     // Filter selected packets further - mirror only those packets that match atleast one of the PacketFilers
     enum MirrorPacketFilter {
         ALL_PKTS                = 0;
@@ -40,39 +42,37 @@ message MirrorSessionSpec {
         NETWORK_POLICY_DROP     = 2;
         FIREWALL_POLICY_DROP    = 3;
     }
-    repeated string PacketFilters           = 6 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
+    repeated string PacketFilters           = 8 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
 }
 
-// MirrorStartConditions - Conditions to start mirroring
-message MirrorStartConditions {
-    api.Timestamp   ScheduleTime    = 1 [(gogoproto.jsontag) = "schedule-time,omitempty"];
+enum MirrorDir {
+    BOTH        = 0;
+    INGRESS     = 1;
+    EGRESS      = 2;
 }
 
-// MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met
+// A MirrorSession will stop mirroring after this condition is met
 message MirrorStopConditions {
     // Stop after capturing specified number of packets
     uint32          MaxPacketCount  = 1 [(gogoproto.jsontag) = "max-packets,omitempty"];
-    // Stop after specified amount of time. E.g. 1h, 20min
-    // When ExpiryDuration is not specified, Default is "2h"
-    string          ExpiryDuration  = 2 [(gogoproto.jsontag) = "expiry-duration,omitempty"];
 }
 
-enum PacketCollectorType {
-    VENICE     = 0;    // captured on venice
-    ERSPAN     = 1;    // external packet capture using ERSPAN format
-}
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
 message MirrorCollector {
-    string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(PacketCollectorType)"];
+    enum PacketCollectorType {
+        VENICE  = 0;
+        ERSPAN  = 1; // external collector via erspan
+    }
+    string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(MirrorCollector.PacketCollectorType)"];
 
     // When collector type is Venice, collector export information is not required
-    api.ExportConfig    ExportCfg   = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+    api.ExportConfig    ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
 }
 
 // Traffic Selection Rules
 // Traffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses
 message MatchSelector {
-    // Any one of the following match selector can be specified to select a packet from mirroring
+    // only one of the following match selector can be specified to select a packet from mirroring
     repeated string Endpoints       = 1 [(gogoproto.jsontag) = "endpoints,omitempty"];
     // Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)
     repeated string IPAddresses     = 2 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
@@ -101,53 +101,61 @@ message MatchRule {
     AppProtoSelector   AppProtoSel  = 3 [(gogoproto.jsontag) = "app-protocol-selectors,omitempty"];;
 }
 
+
 //-------------------------
 //---- MirrorSessionStatus
 //-------------------------
 enum MirrorSessionState {
-    RUNNING         = 0;    // active i.e. capturing packets
-    STOPPED         = 1;    // stop condition met
-    SCHEDULED       = 2;    // Waiting on start condition
-    READY_TO_RUN    = 3;
+    INACTIVE    = 0;    // not applicable to any flow on this NIC
+    RUNNING     = 1;    // active i.e. capturing packets
+}
+
+enum MirrorSrcDst {
+    SRC_DST = 0;    // both src and dst are on the same SamrtNIC
+    SRC     = 1;    // captured at src
+    DST     = 2;    // captured at dst
 }
 
 message MirrorSessionStatus {
-    string State                = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
-    repeated SmartNICMirrorSessionStatus NICStatus = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "smart-nic-status,omitempty"];
-    string SrcPacketCaptureFileURL = 3 [(gogoproto.jsontag) = "src-packet-capture-url,inline)"];
-    string DstPacketCaptureFileURL = 4 [(gogoproto.jsontag) = "dst-packet-capture-url,inline)"];
+    string          State                = 4 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
+    uint32          SessionId            = 5 [(gogoproto.jsontag) = "session-id,inline"];
+    MirrorSrcDst    CapturePoint         = 6 [(gogoproto.jsontag) = "capture-point,omitempty", (venice.check) = "StrEnum(MirrorSrcDst)"];
+
 }
 
-message SmartNICMirrorSessionStatus {
-    string SmartNIC             = 1 [(gogoproto.jsontag) = "smart-nic,inline)"];
-    uint32 NumSrcPackets        = 2 [(gogoproto.jsontag) = "num-src-packets,inline"];
-    uint32 NumDstPackets        = 3 [(gogoproto.jsontag) = "num-dst-packets,inline"];
-    uint32 SessionId            = 4 [(gogoproto.jsontag) = "session-id,inline"];
-}
-
-//------------------
-//---- MirrorSession
-//------------------
 message MirrorSession {
-    option (venice.objectPrefix) = {Collection: "MirrorSession", Path: "/{O.Tenant}"}; // ??? Tenant -> ??
     api.TypeMeta            T       = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta          O       = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    MirrorSessionSpec       Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "mirror-session-spec,inline"];
+    MirrorSessionSpec       Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,inline"];
     MirrorSessionStatus     Status  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
+// mirror session crud event
+message MirrorSessionEvent {
+    api.EventType   EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    MirrorSession   MirrorSession   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "mirror-session,omitempty"];
+}
 
-// MirrorSession REST API
-service MirrorSessionV1 {
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "MirrorSession";
-    // API Version.
-    option (venice.apiVersion) = "v1";
+message MirrorSessionEventList {
+    repeated MirrorSessionEvent mirrorSessionEvents = 1;
+}
 
-    option (venice.apiGrpcCrudService) = "MirrorSession";
+message MirrorSessionList {
+    repeated MirrorSession      MirrorSessions = 1 [(gogoproto.jsontag) = "mirror-sessions,omitempty"];
+}
 
-    option (venice.apiRestService) = {
-        Object: "MirrorSession"
-        Method: [ "get", "put", "delete", "post", "list" ]
-    };
+message MirrorSessionStatusList {
+    string                      SmartNIC   = 1 [(gogoproto.jsontag) = "smart-nic,inline)"];
+    repeated MirrorSession      StatusList = 2 [(gogoproto.jsontag) = "status-list,omitempty"];
+}
+
+message PacketAckDummy {
+}
+
+// trouble shooting controller - mirror api
+service MirrorSessionApi {
+    rpc WatchMirrorSessions (api.ObjectMeta) returns (stream MirrorSessionEventList) {};
+    // client side streaming to receive mirror session status on agent
+    // XXX change it simple rpc status update once we settle down on packet streaming vs minio from naples
+    rpc GetMirrorSessionsStatus (stream MirrorSessionStatusList) returns (PacketAckDummy) {};
 }

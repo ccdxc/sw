@@ -88,6 +88,10 @@ const (
 	// TPM
 	TpmRPCPort = "9020"
 
+	// Trouble shooting (TSM) Controller
+	TsmRPCPort  = "9030"
+	TsmRESTPort = "9031"
+
 	// Spyglass search service
 	SpyglassRPCPort = "9011"
 

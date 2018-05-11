@@ -19,4 +19,5 @@ const (
 	KubeScheduler         = "pen-kube-scheduler"
 	KubeControllerManager = "pen-kube-controller-manager"
 	Tpm                   = "pen-tpm"
+	Tsm                   = "pen-tsm"
 )

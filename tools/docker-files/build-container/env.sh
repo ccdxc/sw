@@ -1,2 +1,2 @@
 export GOPATH='/import/'
-export PATH=/usr/local/go/bin:/opt/bin:/import/bin:$PATH
+export PATH=$GOPATH/bin:/usr/local/go/bin:/opt/bin:$PATH

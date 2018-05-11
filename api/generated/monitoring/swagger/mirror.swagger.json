@@ -269,7 +269,13 @@
             "type": "string"
           },
           {
-            "name": "Status.PacketCaptureFileURL",
+            "name": "Status.SrcPacketCaptureFileURL",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.DstPacketCaptureFileURL",
             "in": "query",
             "required": false,
             "type": "string"
@@ -529,7 +535,7 @@
           }
         }
       },
-      "title": "Conditions to start mirroring"
+      "title": "MirrorStartConditions - Conditions to start mirroring"
     },
     "monitoringAutoMsgMirrorSessionWatchHelperWatchEvent": {
       "type": "object",
@@ -557,7 +563,7 @@
           "$ref": "#/definitions/monitoringAppProtoSelector"
         }
       },
-      "title": "A MirrorSession will stop mirroring after this condition is met"
+      "title": "MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met"
     },
     "monitoringMatchSelector": {
       "type": "object",
@@ -589,7 +595,7 @@
       "properties": {
         "Type": {
           "type": "string",
-          "title": "Any of the following match selector can be specified to select a packet from mirroring"
+          "title": "Any one of the following match selector can be specified to select a packet from mirroring"
         },
         "ExportCfg": {
           "$ref": "#/definitions/apiExportConfig",
@@ -684,7 +690,10 @@
             "$ref": "#/definitions/monitoringSmartNICMirrorSessionStatus"
           }
         },
-        "PacketCaptureFileURL": {
+        "SrcPacketCaptureFileURL": {
+          "type": "string"
+        },
+        "DstPacketCaptureFileURL": {
           "type": "string"
         }
       }
@@ -716,11 +725,11 @@
         "SmartNIC": {
           "type": "string"
         },
-        "NumIngressPackets": {
+        "NumSrcPackets": {
           "type": "integer",
           "format": "int64"
         },
-        "NumEgressPackets": {
+        "NumDstPackets": {
           "type": "integer",
           "format": "int64"
         },

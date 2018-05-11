@@ -176,7 +176,7 @@ func (m *MirrorCollector) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = MirrorCollector_PacketCollectorType_name[0]
+		m.Type = PacketCollectorType_name[0]
 	}
 	return ret
 }
@@ -481,7 +481,7 @@ func init() {
 	validatorMapMirror["MirrorCollector"]["all"] = append(validatorMapMirror["MirrorCollector"]["all"], func(i interface{}) bool {
 		m := i.(*MirrorCollector)
 
-		if _, ok := MirrorCollector_PacketCollectorType_value[m.Type]; !ok {
+		if _, ok := PacketCollectorType_value[m.Type]; !ok {
 			return false
 		}
 		return true

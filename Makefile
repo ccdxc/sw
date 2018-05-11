@@ -14,6 +14,7 @@ EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|fields|vendor"
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
 venice/ctrler/ckm/rpcserver/ckmproto venice/ctrler/npm/rpcserver/netproto \
+venice/ctrler/tsm/rpcserver/tsproto \
 venice/collector/rpcserver/metric venice/utils/runtime/test \
 venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi \
@@ -37,7 +38,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./nic/delphi/compiler/... \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub pen-npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr
+TO_DOCKERIZE := apigw apiserver vchub pen-npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm
 
 ifneq ($(NOGOLANG),1)
 # Install gopkgs

@@ -266,12 +266,12 @@ try:
     # start vcsim
     vcsim = Node("pen-master", args.user, args.password, args.simbin)
     vcsim.startVcsim(",".join(hsims), ",".join(snics))
-    time.sleep(2)
+    time.sleep(5)
 
     print "################### Started Simulation agents #####################"
 
     # Create a network
-    createNetwork("pen-master", "default", "10.1.0.0/16", "10.1.254.254", 2)
+    createNetwork("localhost", "default", "10.1.0.0/16", "10.1.254.254", 2)
     print "################### Created default network #####################"
 except Exception, err:
     print "ERROR while running the script: "

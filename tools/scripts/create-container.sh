@@ -32,6 +32,10 @@ function createNPMContainer() {
     docker build --rm --no-cache -t pen-npm:latest -f tools/docker-files/pen-npm/Dockerfile tools/docker-files/pen-npm
 }
 
+function createTSMContainer() {
+    docker build --rm --no-cache -t pen-tsm:latest -f tools/docker-files/tsm/Dockerfile tools/docker-files/tsm
+}
+
 function createVCSimContainer() {
     docker build --rm --no-cache -t pen-vcsim:latest -f tools/docker-files/vcsim/Dockerfile tools/docker-files/vcsim
 }
@@ -65,7 +69,7 @@ function createBinContainerTarBall() {
     mkdir -p bin/tars
     dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest \
         pen-npm:latest pen-vcsim:latest pen-netagent:latest pen-nmd:latest pen-collector:latest \
-        pen-tpm:latest pen-spyglass:latest pen-evtsmgr:latest"
+        pen-tpm:latest pen-spyglass:latest pen-evtsmgr:latest pen-tsm:latest"
     for i in $staticimages $dynamicimages
     do
         # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -95,6 +99,7 @@ case $1 in
     tpm) createTpmContainer;;
     spyglass) createSpyglassContainer;;
     evtsmgr) createEvtsmgrContainer;;
+    tsm) createTSMContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;
