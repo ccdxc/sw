@@ -395,13 +395,17 @@ class CapcovCoverage(CoverageBase):
         pass
 
 def gen_model_bulls_eye_coverage():
-    cmd = [env.bullseye_covhtml_cmd,
-           "-v", "-f", os.path.realpath(env.bullseye_model_cov_file),
+    #ignore error if model coverage file not found.
+    try:
+        cmd = [env.bullseye_covhtml_cmd,
+               "-v", "-f", os.path.realpath(env.bullseye_model_cov_file),
+                env.bullseye_model_html_output_dir]
+        subprocess.call(cmd)
+        cmd = ["cp", os.path.realpath(env.bullseye_model_cov_file),
             env.bullseye_model_html_output_dir]
-    subprocess.call(cmd)
-    cmd = ["cp", os.path.realpath(env.bullseye_model_cov_file),
-		env.bullseye_model_html_output_dir]
-    subprocess.call(cmd)
+        subprocess.call(cmd)
+    except:
+        print ("Bulls eye model coverage was not generated.")
 
 def gen_hal_bulls_eye_coverage():
     cmd = [env.bullseye_covselect_cmd,
