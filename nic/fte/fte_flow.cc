@@ -473,6 +473,11 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
 
     config.key = key_;
 
+    // Restore the old attrs
+    if (valid_.attrs) {
+        attrs = attrs_;
+    }
+
     if (valid_.action) {
         config.action = action_;
         attrs.drop =  (action_ == session::FLOW_ACTION_DROP);
@@ -527,6 +532,10 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
                                     mirror_info_.proxy_ing_mirror_session;
         config.eg_mirror_session = mirror_info_.egr_mirror_session |
                                    mirror_info_.proxy_egr_mirror_session;
+    }
+
+    if (valid_.lkp_info) {
+        attrs.vrf_hwid = lkp_info_.vrf_hwid;
     }
 
     // header manipulations
@@ -605,6 +614,10 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_at
     header_update_t *entry;
 
     key_ = flow_cfg.key;
+    valid_.key = 1;
+
+    attrs_ = attrs;
+    valid_.attrs = 1;
 
     is_proxy_enabled_ = attrs.is_proxy_en;
 
@@ -632,6 +645,7 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_at
         fwding_.qid_en = attrs.qid_en;
         fwding_.qtype = attrs.qtype;
         fwding_.qid = attrs.qid;
+        valid_.fwding = true;
     }
 
     if (flow_cfg.is_ing_proxy_mirror)

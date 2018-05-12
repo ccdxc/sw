@@ -139,6 +139,18 @@ public:
         return valid_.ingress_info;
     }
 
+    hal_ret_t set_lkp_info(const lkp_info_t& lkp_info) {
+        lkp_info_ = lkp_info;
+        valid_.lkp_info = true;
+        return HAL_RET_OK;
+    }
+    const lkp_info_t& lkp_info() const {
+        return lkp_info_;
+    } 
+    bool valid_lkp_info() const {
+        return valid_.lkp_info;
+    }
+
     hal_ret_t merge_mirror_info(const mirror_info_t& mirror_info) {
         if (!memcmp(&mirror_info, &mirror_info_, sizeof(mirror_info_t))) {
             return HAL_RET_ENTRY_EXISTS;
@@ -218,6 +230,7 @@ private:
 
     struct {
         uint8_t key:1;
+        uint8_t attrs:1;
         uint8_t action:1;
         uint8_t flow_state:1;
         uint8_t fwding:1;
@@ -225,9 +238,12 @@ private:
         uint8_t ingress_info:1;
         uint8_t mirror_info:1;
         uint8_t qos_info:1;
+        uint8_t lkp_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
+    hal::flow_pgm_attrs_t     attrs_;               // Restored flow attrs
+
     session::FlowAction       action_;              // firwall action
     flow_state_t              flow_state_;          // connection tracking 
     fwding_info_t             fwding_;              // Fwding info
@@ -235,6 +251,7 @@ private:
     ingress_info_t            ingress_info_;        // Ingress info (src if check)
     mirror_info_t             mirror_info_;         // Mirror info
     qos_info_t                qos_info_;            // Qos Info
+    lkp_info_t                lkp_info_;            // Flow lookup info
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

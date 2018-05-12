@@ -7,13 +7,15 @@ namespace fte {
 
 // FTE pipeline progress action codes
 //  continue - continue the pipeline
-//  end - end processing
+//  end - end processing 
+//  finish - finish processing current flow
 //  restart - restart the processing from the begining
 //            (may select a diffrent pipeline)
 #define FTE_PIPELINE_ACTION_ENTRIES(ENTRY)       \
     ENTRY(PIPELINE_CONTINUE, 0, "continue")      \
     ENTRY(PIPELINE_END,      1, "end")           \
-    ENTRY(PIPELINE_RESTART,  2, "restart")
+    ENTRY(PIPELINE_FINISH,   2, "finish")       \
+    ENTRY(PIPELINE_RESTART,  3, "restart")
 
 DEFINE_ENUM(pipeline_action_t, FTE_PIPELINE_ACTION_ENTRIES)
 #undef FTE_PIPELINE_ACTION_ENTRIES

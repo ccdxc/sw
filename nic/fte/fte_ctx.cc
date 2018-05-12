@@ -57,13 +57,21 @@ ctx_t::extract_flow_key()
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
-    if (ret != HAL_RET_OK || obj_id != hal::HAL_OBJ_ID_L2SEG) {
+    if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: Invalid obj id: {}, ret: {}", obj_id, ret);
         return HAL_RET_L2SEG_NOT_FOUND;
     }
-    l2seg = (hal::l2seg_t *)obj;
 
-    key_.svrf_id = key_.dvrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
+    if (obj_id == hal::HAL_OBJ_ID_L2SEG) {
+        l2seg = (hal::l2seg_t *)obj;
+        key_.svrf_id = key_.dvrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
+    } else if (obj_id == hal::HAL_OBJ_ID_VRF)  {
+        HAL_ASSERT_RETURN(cpu_rxhdr_->lkp_type != FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
+        key_.svrf_id = key_.dvrf_id  = ((hal::vrf_t *)obj)->vrf_id;
+    } else {
+        HAL_TRACE_ERR("fte: Invalid obj id: {}", obj_id);
+        return HAL_RET_ERR;
+    }
 
     // extract src/dst/proto
     switch (cpu_rxhdr_->lkp_type) {
@@ -184,20 +192,18 @@ ctx_t::lookup_flow_objs()
         args.obj_id = &obj_id;
         args.pi_obj = &obj;
         ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
-        if (ret != HAL_RET_OK || obj_id != hal::HAL_OBJ_ID_L2SEG) {
-            HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
-            return HAL_RET_L2SEG_NOT_FOUND;
-        }
-        sl2seg_ = (hal::l2seg_t *)obj;
+        if (ret == HAL_RET_OK && obj_id == hal::HAL_OBJ_ID_L2SEG) {
+            sl2seg_ = (hal::l2seg_t *)obj;
 
-        // Try to find sep by looking at L2.
-         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
-         sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
-         if (sep_) {
-             HAL_TRACE_INFO("fte: src ep found by L2 lookup, key={}", key_);
-             sif_ = hal::find_if_by_handle(sep_->if_handle);
-             HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
-         }
+            // Try to find sep by looking at L2.
+            ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+            sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
+            if (sep_) {
+                HAL_TRACE_INFO("fte: src ep found by L2 lookup, key={}", key_);
+                sif_ = hal::find_if_by_handle(sep_->if_handle);
+                HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+            }
+        }
     }
 
     if (sep_) {
@@ -224,7 +230,7 @@ ctx_t::lookup_flow_objs()
 // Returns flow key of the specified flow
 //------------------------------------------------------------------------------
 const hal::flow_key_t&
-ctx_t::get_key(hal::flow_role_t role)
+ctx_t::get_key(hal::flow_role_t role) const
 {
     flow_t *flow = NULL;
 
@@ -458,6 +464,7 @@ ctx_t::update_flow_table()
     hal::session_t *session = NULL;
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
     hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;
+    hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
 
     hal::session_args_t session_args = {};
     hal::session_cfg_t session_cfg = {};
@@ -497,6 +504,16 @@ ctx_t::update_flow_table()
             iflow_attrs = session_->iflow->pgm_attrs;
         }
 
+        if (sl2seg_) {
+            args.l2seg = sl2seg_;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+            iflow_attrs.vrf_hwid = args.hwid;
+        } else {
+            vrf_args.vrf = svrf_;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, (void *)&vrf_args);
+            iflow_attrs.vrf_hwid = vrf_args.lkup_id;
+        }
+
         iflow->to_config(iflow_cfg, iflow_attrs);
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
@@ -504,11 +521,6 @@ ctx_t::update_flow_table()
         if (stage != 0) {
             iflow_attrs.lkp_inst = 1;
         }
-
-        args.l2seg = sl2seg_;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
-        iflow_attrs.vrf_hwid = args.hwid;
-        // iflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(sl2seg_);
 
         // TODO(goli) fix tnnl_rw_idx lookup
         if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
@@ -535,14 +547,15 @@ ctx_t::update_flow_table()
             iflow_attrs.is_proxy_en = 1;
         }
 
-        HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
+        HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} "
+                        "lkp_vrf={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={} is_ing_proxy_mirror={} "
                         "is_eg_proxy_mirror={} slif_en={} slif={} qos_class_en={} "
                         "qos_class_id={} is_proxy_en={} is_proxy_mcast={}",
-                        stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_cfg.action,
-                        iflow_attrs.mac_sa_rewrite,
+                        stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_attrs.vrf_hwid,
+                        iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
                         iflow_attrs.lport, iflow_attrs.qid_en, iflow_attrs.qtype, iflow_attrs.qid,
                         iflow_attrs.rw_act, iflow_attrs.rw_idx, iflow_attrs.tnnl_rw_act,
@@ -603,12 +616,14 @@ ctx_t::update_flow_table()
             session_state.rflow_state = rflow->flow_state();
         }
 
-        HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
+        HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} "
+                        "lkp_vrf={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={} "
                         "qos_class_en={} qos_class_id={}",
-                        stage, rflow_cfg.key, rflow_attrs.lkp_inst, rflow_cfg.action,
+                        stage, rflow_cfg.key, rflow_attrs.lkp_inst,
+                        rflow_attrs.vrf_hwid, rflow_cfg.action,
                         rflow_attrs.mac_sa_rewrite,
                         rflow_attrs.mac_da_rewrite, rflow_attrs.ttl_dec, rflow_attrs.mcast_en,
                         rflow_attrs.lport, rflow_attrs.qid_en, rflow_attrs.qtype, rflow_attrs.qid,
@@ -1069,13 +1084,6 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         }
         break;
 
-    case FLOWUPD_KEY:
-        ret = flow->set_key(flowupd.key);
-        if (ret == HAL_RET_OK) {
-            LOG_FLOW_UPDATE(key);
-        }
-        break;
-
     case FLOWUPD_MCAST_COPY:
         ret = flow->merge_mcast_info(flowupd.mcast_info);
         if (ret == HAL_RET_OK) {
@@ -1101,6 +1109,13 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->set_qos_info(flowupd.qos_info);
         if (ret == HAL_RET_OK) {
             LOG_FLOW_UPDATE(qos_info);
+        }
+        break;
+
+    case FLOWUPD_LKP_INFO:
+        ret = flow->set_lkp_info(flowupd.lkp_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(lkp_info);
         }
         break;
     }
@@ -1548,6 +1563,12 @@ std::ostream& operator<<(std::ostream& os, const qos_info_t& val)
     if (val.qos_class_en) {
         os << " ,qos_class_id=" << val.qos_class_id;
     }
+    return os << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, const lkp_info_t& val)
+{
+    os << "{vrf_hwid=" << val.vrf_hwid;
     return os << "}";
 }
 

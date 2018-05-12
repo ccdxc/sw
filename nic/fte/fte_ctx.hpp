@@ -31,7 +31,7 @@ DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
     ENTRY(FLOWUPD_HEADER_POP,    3, "pop header")                       \
     ENTRY(FLOWUPD_FLOW_STATE,    4,  "connection tracking state")       \
     ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
-    ENTRY(FLOWUPD_KEY,           6, "flow key update")                  \
+    ENTRY(FLOWUPD_LKP_INFO,      6, "flow lookup update")               \
     ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
     ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")                     \
     ENTRY(FLOWUPD_MIRROR_INFO,   9, "mirror info")                      \
@@ -295,6 +295,12 @@ typedef struct qos_info_s {
 
 std::ostream& operator<<(std::ostream& os, const qos_info_t& val);
 
+typedef struct lkp_info_s {
+    uint32_t vrf_hwid; // vrf/l2seg id of the flow key
+} lkp_info_t;
+
+std::ostream& operator<<(std::ostream& os, const lkp_info_t& val);
+
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
@@ -306,7 +312,7 @@ typedef struct flow_update_s {
         fwding_info_t fwding;
         ingress_info_t ingress_info;
         qos_info_t qos_info;
-        hal::flow_key_t key;
+        lkp_info_t lkp_info;
         mcast_info_t mcast_info;
         mirror_info_t mirror_info;
     };
@@ -444,8 +450,6 @@ public:
         HAL_TRACE_DEBUG("fte::set_drop feature={}", feature_name_);
     }
 
-    // direction of the current pkt
-    hal::flow_direction_t direction() {return (hal::flow_direction_t)(key_.dir); };
 
     // role of the current flow being processed
     hal::flow_role_t role() const { return role_; }
@@ -454,9 +458,15 @@ public:
     // flow key of the current pkt's flow
     const hal::flow_key_t& key() const { return key_; }
     void set_key(const hal::flow_key_t& key) { key_ = key; }
-
     // Get key based on role (role defualts to current flow's role if not specified)
-    const hal::flow_key_t& get_key(hal::flow_role_t role = hal::FLOW_ROLE_NONE);
+    const hal::flow_key_t& get_key(hal::flow_role_t role = hal::FLOW_ROLE_NONE) const;
+
+
+    // direction of the current pkt
+    hal::flow_direction_t direction() const { return (hal::flow_direction_t)(key().dir); }
+    // direction of the currnet flow being processed
+    hal::flow_direction_t flow_direction() const { return (hal::flow_direction_t)(get_key().dir); }
+
 
     // Following are valid only for packets punted to ARM
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
