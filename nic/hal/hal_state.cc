@@ -44,6 +44,7 @@
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
 #include "sdk/shmmgr.hpp"
+#include "nic/hal/src/ipsec/ipsec.hpp"
 
 // name of the HAL state store segment
 #define HAL_STATE_STORE                         "h2s"
@@ -367,6 +368,18 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       HAL_SLAB_ROUTE_ACL_USERDATA, sizeof(route_acl_user_data_t),
                       64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE_ACL_USERDATA] != NULL), false);
+
+    slabs_[HAL_SLAB_IPSEC_CFG_RULE] =
+        slab::factory("ipsec_cfg_rule", HAL_SLAB_IPSEC_CFG_RULE,
+                      sizeof(hal::ipsec_cfg_rule_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSEC_CFG_RULE] != NULL), false);
+
+    slabs_[HAL_SLAB_IPSEC_CFG_POL] =
+        slab::factory("ipsec_cfg_policy", HAL_SLAB_IPSEC_CFG_POL,
+                      sizeof(hal::ipsec_cfg_pol_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSEC_CFG_POL] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -1059,6 +1072,13 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::nat_cfg_pol_hash_func_compute,
                   hal::nat_cfg_pol_key_func_compare);
     HAL_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
+
+    HAL_HT_CREATE("ipsec policy", ipsec_policy_ht_,
+                  HAL_MAX_VRFS >> 1,
+                  hal::ipsec_cfg_pol_key_func_get,
+                  hal::ipsec_cfg_pol_hash_func_compute,
+                  hal::ipsec_cfg_pol_key_func_compare);
+    HAL_ASSERT_RETURN((ipsec_policy_ht_ != NULL), false);
 
     return true;
 }

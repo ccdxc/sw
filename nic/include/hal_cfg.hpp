@@ -148,6 +148,7 @@ typedef enum hal_obj_id_e {
     HAL_OBJ_ID_NAT_POLICY,
     HAL_OBJ_ID_NAT_MAPPING,
     HAL_OBJ_ID_PORT,                              // TBD: doesn't belong in HAL
+    HAL_OBJ_ID_IPSEC_POLICY,
     HAL_OBJ_ID_MAX                                // NOTE: must be the last
 } hal_obj_id_t;
 

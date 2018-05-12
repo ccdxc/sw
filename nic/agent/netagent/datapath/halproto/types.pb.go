@@ -392,6 +392,10 @@
 		IpsecRuleDeleteResponseMsg
 		IpsecRuleGetRequest
 		IpsecRuleGetRequestMsg
+		IpsecRuleEntryStats
+		IpsecRuleStats
+		IpsecRuleGetResponse
+		IpsecRuleGetResponseMsg
 		IpsecSAEncryptRequestMsg
 		IpsecSAEncryptStatus
 		IpsecSAEncryptResponse
@@ -467,6 +471,7 @@
 		NatPolicyKeyHandle
 		Svc
 		NatMappingKeyHandle
+		IPSecRuleKey
 		IpsecRuleKeyHandle
 		IpsecSAEncryptKeyHandle
 		IpsecSADecryptKeyHandle

@@ -163,6 +163,8 @@ public:
     slab *route_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE]); }
     slab *route_acl_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE_ACL_RULE]); }
     slab *route_acl_userdata_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE_ACL_USERDATA]); }
+    slab *ipsec_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_CFG_RULE]); }
+    slab *ipsec_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_CFG_POL]); }
 
 
 private:
@@ -238,6 +240,7 @@ public:
     ht *nat_mapping_ht(void) const { return nat_mapping_ht_; }
     ht *nexthop_id_ht(void) const { return nexthop_id_ht_; }
     ht *route_ht(void) const { return route_ht_; }
+    ht *ipsec_policy_ht(void) const { return ipsec_policy_ht_; }
 
     void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
@@ -307,6 +310,7 @@ private:
     ht    *nat_mapping_ht_;
     ht    *nexthop_id_ht_;
     ht    *route_ht_;
+    ht    *ipsec_policy_ht_;
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
@@ -391,6 +395,7 @@ public:
     ht   *nwsec_policy_ht(void) const { return oper_db_->nwsec_policy_ht(); }
     ht   *nat_policy_ht(void) const { return oper_db_->nat_policy_ht(); }
     ht   *nwsec_group_ht(void) const { return oper_db_->nwsec_group_ht(); }
+    ht   *ipsec_policy_ht(void) const { return oper_db_->ipsec_policy_ht(); }
 
     // get APIs for dos policy related state
     slab *dos_policy_slab(void) const { return cfg_db_->dos_policy_slab(); }
@@ -532,6 +537,10 @@ public:
     slab *route_acl_rule_slab(void) const { return cfg_db_->route_acl_rule_slab(); }
     ht *route_ht(void) const { return oper_db_->route_ht(); }
     slab *route_acl_userdata_slab(void) const { return cfg_db_->route_acl_userdata_slab(); }
+  
+    // get APIs for IPSec policy related state
+    slab *ipsec_cfg_rule_slab(void) const { return cfg_db_->ipsec_cfg_rule_slab(); }
+    slab *ipsec_cfg_pol_slab(void) const { return cfg_db_->ipsec_cfg_pol_slab(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(hal_forwarding_mode_t mode) {

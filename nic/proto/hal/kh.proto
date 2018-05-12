@@ -318,12 +318,18 @@ message NatMappingKeyHandle {
   }
 }
 
+// Key for the IPSec rule policy
+message IPSecRuleKey {
+  uint64          ipsec_rule_id     = 1;    // IPSec rule policy id
+  VrfKeyHandle    vrf_key_or_handle = 2 [(gogoproto.moretags) = "venice:ref"];    // VRF key or handle
+}
+
 // IpsecRuleKeyHandle uniquely identifies a IPSec rule and is used
 // to create/update/delete/get IPSec rules
 message IpsecRuleKeyHandle {
   oneof key_or_handle {
-    uint64     rule_id     = 1;  // rule id idenfied by a number
-    fixed64    rule_handle = 2;  // handle for IPSec rule returned by HAL
+    IPSecRuleKey rule_key = 1;     // key for the IPSec policy
+    fixed64      rule_handle = 2;  // handle for IPSec rule returned by HAL
   }
 }
 

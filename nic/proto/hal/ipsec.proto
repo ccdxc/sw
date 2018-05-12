@@ -17,7 +17,7 @@ service Ipsec {
   rpc IpsecRuleCreate (IpsecRuleRequestMsg) returns (IpsecRuleResponseMsg) {}
   rpc IpsecRuleUpdate (IpsecRuleRequestMsg) returns (IpsecRuleResponseMsg) {}
   rpc IpsecRuleDelete (IpsecRuleDeleteRequestMsg) returns (IpsecRuleDeleteResponseMsg) {}
-  rpc IpsecRuleGet (IpsecRuleGetRequestMsg) returns (IpsecRuleGetRequestMsg) {}
+  rpc IpsecRuleGet (IpsecRuleGetRequestMsg) returns (IpsecRuleGetResponseMsg) {}
 
   rpc IpsecSAEncryptCreate (IpsecSAEncryptRequestMsg) returns (IpsecSAEncryptResponseMsg) {}
   rpc IpsecSAEncryptUpdate (IpsecSAEncryptRequestMsg) returns (IpsecSAEncryptResponseMsg) {}
@@ -175,7 +175,6 @@ message IpsecRuleMatchSpec {
   uint64             rule_id    = 1;    // rule id
   types.RuleMatch    match      = 2;    // match conditions
   IpsecSAAction      sa_action  = 3;
-
 }
 
 // IpsecRuleSpec is the user intent for the IPSec rule
@@ -234,7 +233,30 @@ message IpsecRuleGetRequestMsg {
   repeated IpsecRuleGetRequest    request = 1;    // batched get request
 }
 
+// per rule stats
+message IpsecRuleEntryStats {
+  uint32    num_tcp_sessions   = 1;
+  uint32    num_udp_sessions   = 2;
+  uint32    num_other_sessions = 3;
+}
 
+// per policy stats
+message IpsecRuleStats {
+  repeated IpsecRuleEntryStats    stats = 1;    // batched rule stats
+}
+
+// IpsecRuleGetResponse catpures all information about IPSec policy
+message IpsecRuleGetResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
+  IpsecRuleSpec      spec       = 2;    // config
+  IpsecRuleStatus    status     = 3;    // operational state
+  IpsecRuleStats     stats      = 4;    // stats
+}
+
+// IpsecRuleGetResponseMsg is batched response to IpsecRuleGetRequestMsg
+message IpsecRuleGetResponseMsg {
+  repeated IpsecRuleGetResponse    response = 1;
+}
 
 // IpsecSAEncryptRequestMsg is batched add or modify ipsec_sa request
 message IpsecSAEncryptRequestMsg {

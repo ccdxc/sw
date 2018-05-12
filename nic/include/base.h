@@ -261,6 +261,7 @@ do {                                                       \
     ENTRY(HAL_RET_NAT_MAPPING_NOT_FOUND,      75,  "NAT mapping not found")          \
     ENTRY(HAL_RET_IPSEC_ALGO_NOT_SUPPORTED,   76,  "IPSec Algo not supported")       \
     ENTRY(HAL_RET_NAT_POLICY_NOT_FOUND,       77,  "NAT policy not found")           \
+    ENTRY(HAL_RET_IPSEC_RULE_NOT_FOUND,       78,  "IPSec rule not found")           \
                                                                                      \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
