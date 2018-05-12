@@ -11,9 +11,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
@@ -44,6 +47,14 @@ func (s *RestServer) postSecurityGroupHandler(r *http.Request) (interface{}, err
 		return nil, err
 	}
 
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
 	err = s.agent.CreateSecurityGroup(&o)
 
 	if err != nil {
@@ -67,6 +78,10 @@ func (s *RestServer) putSecurityGroupHandler(r *http.Request) (interface{}, erro
 		return nil, err
 	}
 
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
 	err = s.agent.UpdateSecurityGroup(&o)
 
 	if err != nil {

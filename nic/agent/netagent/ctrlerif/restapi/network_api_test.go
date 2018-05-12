@@ -140,3 +140,48 @@ func TestNetworkDelete(t *testing.T) {
 	}
 
 }
+
+func TestNetworkCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/networks/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNetworkDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/networks/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNetworkUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/networks/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}

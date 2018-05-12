@@ -16,6 +16,10 @@ import (
 
 // CreateIPSecSADecrypt creates an IPSec SA Decrypt rule
 func (na *NetAgent) CreateIPSecSADecrypt(ipSecSADecrypt *netproto.IPSecSADecrypt) error {
+	err := na.validateMeta(ipSecSADecrypt.Kind, ipSecSADecrypt.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldDecryptSA, err := na.FindIPSecSADecrypt(ipSecSADecrypt.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
@@ -32,6 +36,11 @@ func (na *NetAgent) CreateIPSecSADecrypt(ipSecSADecrypt *netproto.IPSecSADecrypt
 	ns, err := na.FindNamespace(ipSecSADecrypt.Tenant, ipSecSADecrypt.Namespace)
 	if err != nil {
 		return err
+	}
+
+	// Only ESP Protocol supported for encrypt SA
+	if ipSecSADecrypt.Spec.Protocol != "ESP" {
+		return fmt.Errorf("ipsec sa decrypt protocol should be ESP")
 	}
 
 	ipSecSADecrypt.Status.IPSecSADecryptID, err = na.store.GetNextID(IPSecSADecryptID)
@@ -120,6 +129,10 @@ func (na *NetAgent) UpdateIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt
 
 // DeleteIPSecSADecrypt deletes an IPSec decrypt SA
 func (na *NetAgent) DeleteIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt) error {
+	err := na.validateMeta(ipSecDecryptSA.Kind, ipSecDecryptSA.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(ipSecDecryptSA.Tenant, ipSecDecryptSA.Namespace)
 	if err != nil {

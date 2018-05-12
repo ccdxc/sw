@@ -16,6 +16,10 @@ import (
 
 // CreateNatPolicy creates a nat policy
 func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
+	err := na.validateMeta(np.Kind, np.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldNp, err := na.FindNatPolicy(np.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
@@ -139,6 +143,10 @@ func (na *NetAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 
 // DeleteNatPolicy deletes a nat policy
 func (na *NetAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
+	err := na.validateMeta(np.Kind, np.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
 	if err != nil {

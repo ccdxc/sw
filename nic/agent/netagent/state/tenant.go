@@ -4,10 +4,11 @@ package state
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
-
-	"fmt"
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -16,6 +17,10 @@ import (
 
 // CreateTenant creates a tenant
 func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
+	err := na.validateMeta(tn.Kind, tn.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldTn, err := na.FindTenant(tn.ObjectMeta.Name)
 	if err == nil {
 		// check if the contents are same
@@ -53,12 +58,19 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 		return err
 	}
 
+	c, _ := types.TimestampProto(time.Now())
 	// Create a default namespace for every tenant
 	defaultNS := &netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: tn.Name,
 			Name:   "default",
+			CreationTime: api.Timestamp{
+				Timestamp: *c,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *c,
+			},
 		},
 	}
 	return na.CreateNamespace(defaultNS)
@@ -127,6 +139,18 @@ func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
 	if tn.Name == "default" {
 		return errors.New("default tenants can not be deleted")
 	}
+
+	// delete the default namespace under the tenant first
+	// Create a default namespace for every tenant
+	defaultNS := &netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: tn.Name,
+			Name:   "default",
+		},
+	}
+	// ignore error if the default namespace under non-default tenant is already deleted
+	na.DeleteNamespace(defaultNS)
 
 	existingTenant, err := na.FindTenant(tn.ObjectMeta.Name)
 	if err != nil {

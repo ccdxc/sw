@@ -140,3 +140,48 @@ func TestRouteUpdate(t *testing.T) {
 	AssertEquals(t, updatedRouteSpec, actualRouteSpec, "Could not validate updated spec.")
 
 }
+
+func TestRouteCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.Route{
+		TypeMeta: api.TypeMeta{Kind: "Route"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/routes/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestRouteDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Route{
+		TypeMeta: api.TypeMeta{Kind: "Route"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/routes/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestRouteUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Route{
+		TypeMeta: api.TypeMeta{Kind: "Route"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/routes/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}

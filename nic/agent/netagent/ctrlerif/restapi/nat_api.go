@@ -11,9 +11,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
@@ -44,6 +47,14 @@ func (s *RestServer) postNatBindingHandler(r *http.Request) (interface{}, error)
 		return nil, err
 	}
 
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
 	err = s.agent.CreateNatBinding(&o)
 
 	if err != nil {
@@ -67,6 +78,10 @@ func (s *RestServer) putNatBindingHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
 	err = s.agent.UpdateNatBinding(&o)
 
 	if err != nil {
@@ -130,6 +145,14 @@ func (s *RestServer) postNatPolicyHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
 	err = s.agent.CreateNatPolicy(&o)
 
 	if err != nil {
@@ -153,6 +176,10 @@ func (s *RestServer) putNatPolicyHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
 	err = s.agent.UpdateNatPolicy(&o)
 
 	if err != nil {
@@ -216,6 +243,14 @@ func (s *RestServer) postNatPoolHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
 	err = s.agent.CreateNatPool(&o)
 
 	if err != nil {
@@ -239,6 +274,10 @@ func (s *RestServer) putNatPoolHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
 	err = s.agent.UpdateNatPool(&o)
 
 	if err != nil {

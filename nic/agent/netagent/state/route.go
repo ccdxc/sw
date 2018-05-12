@@ -16,6 +16,10 @@ import (
 
 // CreateRoute creates a route
 func (na *NetAgent) CreateRoute(rt *netproto.Route) error {
+	err := na.validateMeta(rt.Kind, rt.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// check if route already exists
 	oldRt, err := na.FindRoute(rt.ObjectMeta)
 	if err == nil {
@@ -122,6 +126,10 @@ func (na *NetAgent) UpdateRoute(rt *netproto.Route) error {
 
 // DeleteRoute deletes a route. ToDo implement route deletes in datapath
 func (na *NetAgent) DeleteRoute(rt *netproto.Route) error {
+	err := na.validateMeta(rt.Kind, rt.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(rt.Tenant, rt.Namespace)
 	if err != nil {

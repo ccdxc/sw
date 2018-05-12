@@ -16,7 +16,10 @@ import (
 
 // CreateNamespace creates a namespace
 func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
-
+	err := na.validateMeta(ns.Kind, ns.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldNs, err := na.FindNamespace(ns.Tenant, ns.Name)
 	if err == nil {
 		// check if the contents are same
@@ -120,8 +123,8 @@ func (na *NetAgent) UpdateNamespace(ns *netproto.Namespace) error {
 
 // DeleteNamespace deletes a namespace
 func (na *NetAgent) DeleteNamespace(ns *netproto.Namespace) error {
-	if ns.Name == "default" {
-		return errors.New("default namespaces can not be deleted")
+	if ns.Name == "default" && ns.Tenant == "default" {
+		return errors.New("default namespaces under default tenant cannot be deleted")
 	}
 
 	existingNamespace, err := na.FindNamespace(ns.Tenant, ns.Name)

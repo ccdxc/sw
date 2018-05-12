@@ -20,7 +20,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\"}}"
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\"}}"
 				},
 				"description": ""
 			},
@@ -39,7 +39,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\"}}"
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"kg2\",\"tenant\":\"default\"}}"
 				},
 				"description": ""
 			},
@@ -58,7 +58,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\"}}"
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\"}}"
 				},
 				"description": ""
 			},
@@ -77,7 +77,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"IPv4Subnet\": \"10.0.0.0/16\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":300}}"
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ipv4-subnet\": \"10.0.0.0/16\", \"ipv4-gateway\":\"10.0.2.1\", \"vlan-id\":300}}"
 				},
 				"description": ""
 			},
@@ -96,7 +96,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"IPv4Subnet\": \"10.0.0.0/16\", \"IPv4Gateway\":\"10.0.2.1\", \"VlanID\":100}}"
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"kg2\",\"tenant\":\"default\",\"namespace\":\"kg2\"}, \"spec\":{\"ipv4-subnet\": \"10.0.0.0/16\", \"ipv4-gateway\":\"10.0.2.1\", \"vlan-id\":100}}"
 				},
 				"description": ""
 			},
@@ -115,7 +115,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"IPv4Subnet\": \"20.0.0.0/16\", \"IPv4Gateway\":\"20.1.1.1\", \"VlanID\":200}}"
+					"raw": "{\"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ipv4-subnet\": \"20.0.0.0/16\", \"ipv4-gateway\":\"20.1.1.1\", \"vlan-id\":200}}"
 				},
 				"description": ""
 			},
@@ -134,7 +134,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg1-router\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"},\"spec\":{\"NetworkName\":\"kg1\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"10.0.2.1/16\",\"MacAddress\":\"00:22:0A:00:02:01\",\"NodeUUID\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"kg1-router\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"10.0.2.1/16\",\"mac-address\":\"00:22:0A:00:02:01\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},
@@ -153,7 +153,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg2-router\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"},\"spec\":{\"NetworkName\":\"kg2\",\"Interface\":\"default-uplink-0\"},\"status\":{\"IPv4Address\":\"10.0.2.1/16\",\"MacAddress\":\"00:22:0A:00:02:01\",\"NodeUUID\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"kg2-router\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"network-name\":\"kg2\",\"interface\":\"default-uplink-0\"},\"status\":{\"ipv4-address\":\"10.0.2.1/16\",\"mac-address\":\"00:22:0A:00:02:01\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},
@@ -172,7 +172,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"},\"spec\":{\"NetworkName\":\"public\",\"Interface\":\"default-uplink-1\"},\"status\":{\"IPv4Address\":\"20.1.1.2/16\",\"MacAddress\":\"00:22:14:01:01:01\",\"NodeUUID\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"public-router\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"20.1.1.2/16\",\"mac-address\":\"00:22:14:01:01:01\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},
@@ -191,7 +191,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"Interface\":\"default-uplink-1\", \"gateway-ip\":\"10.0.2.1\"}}"
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"interface\":\"default-uplink-1\", \"gateway-ip\":\"10.0.2.1\"}}"
 				},
 				"description": ""
 			},
@@ -210,7 +210,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"interface\":\"default-uplink-0\", \"gateway-ip\":\"10.0.2.1\"}}"
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"kg2\",\"tenant\":\"default\",\"namespace\":\"kg2\"}, \"spec\":{\"ip-prefix\": \"10.0.0.0/16\", \"interface\":\"default-uplink-0\", \"gateway-ip\":\"10.0.2.1\"}}"
 				},
 				"description": ""
 			},
@@ -229,7 +229,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/16\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.1\"}}"
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/16\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.1\"}}"
 				},
 				"description": ""
 			},
@@ -238,7 +238,7 @@
 		{
 			"name": "natpool",
 			"request": {
-				"url": "{{node2}}/api/natpools/",
+				"url": "{{node2}}/api/nat/pools/",
 				"method": "POST",
 				"header": [
 					{
@@ -257,7 +257,7 @@
 		{
 			"name": "natbinding/client",
 			"request": {
-				"url": "{{node2}}/api/natbindings/",
+				"url": "{{node2}}/api/nat/bindings/",
 				"method": "POST",
 				"header": [
 					{
@@ -267,7 +267,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"Kind\":\"NatBinding\",\"meta\":{\"Name\":\"client\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}, \"spec\":{\"nat-pool\":\"kg2/pool-1\", \"ip-address\":\"10.0.2.1\"}}"
+					"raw": "{\"kind\":\"NatBinding\",\"meta\":{\"name\":\"client\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"nat-pool\":\"kg2/pool-1\", \"ip-address\":\"10.0.2.1\"}}"
 				},
 				"description": ""
 			},
@@ -276,7 +276,7 @@
 		{
 			"name": "natpolicy",
 			"request": {
-				"url": "{{node2}}/api/natpolicies/",
+				"url": "{{node2}}/api/nat/policies/",
 				"method": "POST",
 				"header": [
 					{
@@ -296,7 +296,7 @@
         {
             "name": "ipsecsaencrypt",
             "request": {
-                "url": "{{node2}}/api/ipsec/encrypt/",
+                "url": "{{node2}}/api/ipsec/encryption/",
                 "method": "POST",
                 "header": [
                     {
@@ -316,7 +316,7 @@
        {
             "name": "ipsecsadecrypt",
             "request": {
-                "url": "{{node2}}/api/ipsec/decrypt/",
+                "url": "{{node2}}/api/ipsec/decryption/",
                 "method": "POST",
                 "header": [
                     {

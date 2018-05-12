@@ -7,6 +7,8 @@ Input file: {{.Name}}
 package restapi
 import (
     "github.com/gorilla/mux"
+    "github.com/pensando/sw/api"
+    "github.com/gogo/protobuf/types"
 )
 {{range .Services}}
     {{$svcname := .Name}}
@@ -48,12 +50,23 @@ import (
                             return nil, err
                         }
                         {{if strEq . "post"}}
+                            c, _ := types.TimestampProto(time.Now())
+                            o.CreationTime = api.Timestamp{
+                                Timestamp: *c,
+                            }
+                            o.ModTime = api.Timestamp{
+                                Timestamp: *c,
+                            }
                           {{if strEq $crudObject "Endpoint"}}
                               _, err = s.agent.Create{{title $crudObject}}(&o)
                           {{else}}
                              err = s.agent.Create{{title $crudObject}}(&o)
                           {{end}}
                         {{else if strEq . "put"}}
+                             m, _ := types.TimestampProto(time.Now())
+                             o.ModTime = api.Timestamp{
+                                Timestamp: *m,
+                             }
                              err = s.agent.Update{{title $crudObject}}(&o)
                         {{else if strEq . "delete"}}
                              err = s.agent.Delete{{title $crudObject}}(&o)

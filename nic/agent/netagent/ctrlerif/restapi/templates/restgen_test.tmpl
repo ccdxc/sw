@@ -27,15 +27,19 @@ import (
                         {{if strEq $crudObject "SecurityGroup"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/sgs/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "NatPolicy"}}
-                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &{{lower $crudObject}}{{title .}} )
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "IPSecPolicy"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "IPSecSAEncrypt"}}
-                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower $crudObject}}{{title .}} )
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "IPSecSADecrypt"}}
-                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower $crudObject}}{{title .}} )
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "NatPool"}}
-                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &{{lower $crudObject}}{{title .}} )
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &{{lower $crudObject}}{{title .}} )
+                        {{else if strEq $crudObject "NatBinding"}}
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &{{lower $crudObject}}{{title .}} )
+                        {{else if strEq $crudObject "NatPolicy"}}
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}{{title .}} )
                         {{end}}
@@ -169,8 +173,8 @@ import (
 
                                                           },
                                                       }
-                              err := netutils.HTTPPost("http://"+agentRestURL+"/api/natpolicies/", &{{lower .}}Data, &resp)
-                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &{{lower $crudObject}}List )
+                              err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &{{lower .}}Data, &resp)
+                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}List )
                          {{else if strEq $crudObject "NatPool"}}
                                                    {{lower .}}Data := netproto.NatPool{
                                                        TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -184,8 +188,8 @@ import (
 
                                                        },
                                                    }
-                           err := netutils.HTTPPost("http://"+agentRestURL+"/api/natpools/", &{{lower .}}Data, &resp)
-                           getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &{{lower $crudObject}}List )
+                           err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/pools/", &{{lower .}}Data, &resp)
+                           getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &{{lower $crudObject}}List )
 
                          {{else if strEq $crudObject "IPSecPolicy"}}
                                                       {{lower .}}Data := netproto.IPSecPolicy{
@@ -244,8 +248,8 @@ import (
                                                            SPI: 1,
                                                        },
                                                    }
-                           err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower .}}Data, &resp)
-                           getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower $crudObject}}List )
+                           err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower .}}Data, &resp)
+                           getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower $crudObject}}List )
 
                          {{else if strEq $crudObject "IPSecSADecrypt"}}
                                                    {{lower .}}Data := netproto.IPSecSADecrypt{
@@ -268,8 +272,8 @@ import (
                                                            SPI: 1,
                                                        },
                                                    }
-                           err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower .}}Data, &resp)
-                           getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower $crudObject}}List )
+                           err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower .}}Data, &resp)
+                           getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower $crudObject}}List )
 
 
                          {{else if strEq $crudObject "Route"}}
@@ -303,8 +307,8 @@ import (
                                                          IPAddress: "10.1.1.2",
                                                      },
                                                  }
-                         err := netutils.HTTPPost("http://"+agentRestURL+"/api/natbindings/", &{{lower .}}Data, &resp)
-                         getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &{{lower $crudObject}}List )
+                         err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/bindings/", &{{lower .}}Data, &resp)
+                         getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &{{lower $crudObject}}List )
 
                         {{end}}
                         AssertOk(t, err, "Error posting {{lower $crudObject}} to REST Server")
@@ -401,10 +405,10 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpolicies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &{{lower $crudObject}}List )
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}List )
                                AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
                                for _, o := range {{lower $crudObject}}List{
                                     if o.Name == "preCreated{{title $crudObject}}"{
@@ -461,10 +465,10 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/encrypt/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/encryption/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower $crudObject}}List )
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower $crudObject}}List )
                                AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
                                for _, o := range {{lower $crudObject}}List{
                                     if o.Name == "preCreated{{title $crudObject}}"{
@@ -489,10 +493,10 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/decrypt/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/decryption/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower $crudObject}}List )
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower $crudObject}}List )
                                AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
                                for _, o := range {{lower $crudObject}}List{
                                     if o.Name == "preCreated{{title $crudObject}}"{
@@ -518,10 +522,10 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpools/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/pools/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &{{lower $crudObject}}List )
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &{{lower $crudObject}}List )
                                AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
                                for _, o := range {{lower $crudObject}}List{
                                     if o.Name == "preCreated{{title $crudObject}}"{
@@ -575,10 +579,10 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/natbindings/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/bindings/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &{{lower $crudObject}}List )
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &{{lower $crudObject}}List )
                                AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
                                for _, o := range {{lower $crudObject}}List{
                                     if o.Name == "preCreated{{title $crudObject}}"{
@@ -751,9 +755,9 @@ import (
                                        IPRange: "10.1.2.1-10.1.2.200",
                                    },
                                }
-                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
-                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/pools/", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/pools/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &{{lower $crudObject}}List )
 
                         {{else if strEq $crudObject "Route"}}
                         {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -785,9 +789,9 @@ import (
                                                IPAddress: "10.1.1.1",
                                            },
                                        }
-                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
-                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/bindings/", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/bindings/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &{{lower $crudObject}}List )
 
                         {{else if strEq $crudObject "NatPolicy"}}
                                {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -813,9 +817,9 @@ import (
 
                                       },
                                }
-                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natpolicies/", &{{lower .}}Data, &resp)
-                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/natpolicies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &{{lower $crudObject}}List )
+                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}List )
 
                        {{else if strEq $crudObject "IPSecPolicy"}}
                                {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -883,9 +887,9 @@ import (
                                                            SPI: 1,
                                                        },
                                                    }
-                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower .}}Data, &resp)
-                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/encrypt/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &{{lower $crudObject}}List )
+                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/encryption/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower $crudObject}}List )
 
                        {{else if strEq $crudObject "IPSecSADecrypt"}}
                                                    {{lower .}}Data := netproto.IPSecSADecrypt{
@@ -906,9 +910,9 @@ import (
                                                            SPI: 1,
                                                        },
                                                    }
-                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower .}}Data, &resp)
-                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/decrypt/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &{{lower $crudObject}}List )
+                               postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/decryption/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower $crudObject}}List )
 
 
                         {{else if strEq $crudObject "SecurityGroup"}}
@@ -1013,6 +1017,127 @@ import (
                 {{end}}
 
            {{end}}
+           func Test{{title $crudObject}}CreateErr(t *testing.T){
+             t.Parallel()
+		         var resp Response
+             badPostData := netproto.{{title $crudObject}}{
+			                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+			                     ObjectMeta: api.ObjectMeta{
+				                   Name:      "",
+			                        },
+		                          }
+
+           {{if strEq $crudObject "Tenant"}}
+              err := netutils.HTTPPost("http://"+agentRestURL+"/api/tenants/", &badPostData, &resp)
+           {{else if strEq $crudObject "Namespace"}}
+              err := netutils.HTTPPost("http://"+agentRestURL+"/api/namespaces/", &badPostData, &resp)
+           {{else if strEq $crudObject "Network"}}
+              err := netutils.HTTPPost("http://"+agentRestURL+"/api/networks/", &badPostData, &resp)
+           {{else if strEq $crudObject "Endpoint"}}
+              err := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &badPostData, &resp)
+           {{else if strEq $crudObject "Route"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/routes/", &badPostData, &resp)
+          {{else if strEq $crudObject "NatPool"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/pools/", &badPostData, &resp)
+          {{else if strEq $crudObject "NatBinding"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/bindings/", &badPostData, &resp)
+          {{else if strEq $crudObject "NatPolicy"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &badPostData, &resp)
+          {{else if strEq $crudObject "IPSecSAEncrypt"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &badPostData, &resp)
+          {{else if strEq $crudObject "IPSecSADecrypt"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &badPostData, &resp)
+          {{else if strEq $crudObject "IPSecPolicy"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/policies/", &badPostData, &resp)
+          {{else if strEq $crudObject "Interface"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &badPostData, &resp)
+          {{else if strEq $crudObject "SecurityGroup"}}
+             err := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &badPostData, &resp)
+          {{end}}
+          Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
+        }
+
+        func Test{{title $crudObject}}DeleteErr(t *testing.T){
+          t.Parallel()
+          var resp Response
+          badDelData := netproto.{{title $crudObject}}{
+                        TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                        ObjectMeta: api.ObjectMeta{ Tenant:"default",
+                                                    Namespace:"default",
+                                                    Name:"badObject" },
+                        }
+
+        {{if strEq $crudObject "Tenant"}}
+           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/tenants/badObject", &badDelData, &resp)
+        {{else if strEq $crudObject "Namespace"}}
+           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/namespaces/default/badObject", &badDelData, &resp)
+        {{else if strEq $crudObject "Network"}}
+           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/networks/default/default/badObject", &badDelData, &resp)
+        {{else if strEq $crudObject "Endpoint"}}
+           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/endpoints/default/default/badObject", &badDelData, &resp)
+        {{else if strEq $crudObject "Route"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/routes/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "NatPool"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/pools/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "NatBinding"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/bindings/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "NatPolicy"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/policies/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "IPSecSAEncrypt"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/encryption/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "IPSecSADecrypt"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/decryption/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "IPSecPolicy"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/policies/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "Interface"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "SecurityGroup"}}
+          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
+       {{end}}
+       Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
+     }
+
+     func Test{{title $crudObject}}UpdateErr(t *testing.T){
+       t.Parallel()
+       var resp Response
+       badDelData := netproto.{{title $crudObject}}{
+                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                     ObjectMeta: api.ObjectMeta{ Tenant:"default",
+                                                 Namespace:"default",
+                                                 Name:"badObject" },
+                     }
+
+     {{if strEq $crudObject "Tenant"}}
+        err := netutils.HTTPPut("http://"+agentRestURL+"/api/tenants/badObject", &badDelData, &resp)
+     {{else if strEq $crudObject "Namespace"}}
+        err := netutils.HTTPPut("http://"+agentRestURL+"/api/namespaces/default/badObject", &badDelData, &resp)
+     {{else if strEq $crudObject "Network"}}
+        err := netutils.HTTPPut("http://"+agentRestURL+"/api/networks/default/default/badObject", &badDelData, &resp)
+     {{else if strEq $crudObject "Endpoint"}}
+        err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/default/badObject", &badDelData, &resp)
+     {{else if strEq $crudObject "Route"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/routes/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "NatPool"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/pools/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "NatBinding"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/bindings/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "NatPolicy"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/policies/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "IPSecSAEncrypt"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/encryption/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "IPSecSADecrypt"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/decryption/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "IPSecPolicy"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/policies/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "Interface"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "SecurityGroup"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
+    {{end}}
+    Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
+  }
+
+
        {{end}}
     {{end}}
 {{end}}

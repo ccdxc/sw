@@ -4,8 +4,10 @@ package state
 
 import (
 	"fmt"
-
 	"strings"
+	"time"
+
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	config "github.com/pensando/sw/nic/agent/netagent/protos"
@@ -136,11 +138,26 @@ func (na *NetAgent) GetAgentID() string {
 }
 
 func (na *NetAgent) createDefaultTenant() error {
+	c, _ := types.TimestampProto(time.Now())
+
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "default",
+			CreationTime: api.Timestamp{
+				Timestamp: *c,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *c,
+			},
 		},
 	}
 	return na.CreateTenant(&tn)
+}
+
+func (na *NetAgent) validateMeta(kind string, oMeta api.ObjectMeta) error {
+	if len(oMeta.Name) == 0 {
+		return fmt.Errorf("%s name can't be empty", kind)
+	}
+	return nil
 }

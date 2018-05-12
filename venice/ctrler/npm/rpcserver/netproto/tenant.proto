@@ -17,7 +17,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // Tenant Status
 message TenantStatus {
-    uint64 TenantID                              = 1;     // Tenant identifier
+    uint64 TenantID     = 1[(gogoproto.jsontag) = "tenant-id,omitempty"];     // Tenant identifier
 }
 
 // TenantSpec captures all the tenant level configuration

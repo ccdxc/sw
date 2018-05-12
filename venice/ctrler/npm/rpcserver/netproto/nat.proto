@@ -31,14 +31,14 @@ service NatPoolApi {
 message NatPool {
     api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    NatPoolSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    NatPoolStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    NatPoolSpec     Spec          = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NatPoolStatus   Status        = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 
 message NatPoolSpec {
     // Range of IP Addresses for the nat pool
-    string IPRange   = 1 [(gogoproto.jsontag) = "ip-range"];
+    string IPRange   = 1 [(gogoproto.jsontag) = "ip-range,omitempty"];
 }
 
 // nat pool status
@@ -84,8 +84,8 @@ service NatBindingApi {
 }
 
 message NatBinding {
-    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    api.TypeMeta    TypeMeta     = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta   = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
     NatBindingSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
     NatBindingStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
@@ -173,7 +173,7 @@ message NatRule {
     // Nat action
     string Action       = 7 [(venice.check) = "StrEnum(NatRule.NatAction)",
                              (gogoproto.jsontag) = "action,omitempty"];
-    uint64 ID           = 8;
+    uint64 ID           = 8 [(gogoproto.jsontag) = "rule-id,omitempty"];
 }
 
 message NatPolicyStatus {

@@ -16,6 +16,10 @@ import (
 
 // CreateInterface creates an interface
 func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
+	err := na.validateMeta(intf.Kind, intf.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	var ok bool
 	var lif *netproto.Interface
 
@@ -146,6 +150,10 @@ func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
 
 // DeleteInterface deletes an interface
 func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
+	err := na.validateMeta(intf.Kind, intf.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
 	if err != nil {

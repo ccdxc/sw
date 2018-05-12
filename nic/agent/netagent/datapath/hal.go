@@ -423,7 +423,11 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
-	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
+	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
+
+	if err != nil {
+		return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+	}
 
 	// convert v4 address
 	v4Addr := halproto.IPAddress{
@@ -432,14 +436,6 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
-
-	// convert v6 address
-	//	v6Addr := halproto.IPAddress{
-	//		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-	//		V4OrV6: &halproto.IPAddress_V6Addr{
-	//			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
-	//		},
-	//	}
 
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
@@ -816,8 +812,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 
 	gwIP := net.ParseIP(nw.Spec.IPv4Gateway)
 	if len(gwIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", gwIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from {%v}", nw.Spec.IPv4Gateway)
 	}
 
 	halGwIP := &halproto.IPAddress{
@@ -830,8 +825,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	if len(nw.Spec.IPv4Subnet) != 0 {
 		ip, net, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
 		if err != nil {
-			log.Errorf("Error parsing the subnet mask. Err: %v", err)
-			return err
+			return fmt.Errorf("error parsing the subnet mask from {%v}. Err: %v", nw.Spec.IPv4Subnet, err)
 		}
 		prefixLen, _ := net.Mask.Size()
 
@@ -950,7 +944,6 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		ifL2SegReqMsg := halproto.InterfaceL2SegmentRequestMsg{
 			Request: make([]*halproto.InterfaceL2SegmentSpec, 0),
 		}
-		//var req []*halproto.InterfaceL2SegmentSpec
 		_, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
 			log.Errorf("Error creating tenant. Err: %v", err)
@@ -1515,19 +1508,16 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 
 	ipRange := strings.Split(np.Spec.IPRange, "-")
 	if len(ipRange) != 2 {
-		log.Errorf("could not parse IP Range from the NAT Pool. {%v}", np)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP Range from the NAT Pool IPRange. {%v}", np.Spec.IPRange)
 	}
 
 	startIP := net.ParseIP(strings.TrimSpace(ipRange[0]))
 	if len(startIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", startIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from {%v}", startIP)
 	}
 	endIP := net.ParseIP(strings.TrimSpace(ipRange[1]))
 	if len(endIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", endIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from {%v}", endIP)
 	}
 
 	lowIP := halproto.IPAddress{
@@ -1708,8 +1698,7 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 
 	epIP := net.ParseIP(rt.Spec.GatewayIP)
 	if len(epIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", epIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from %v", rt.Spec.GatewayIP)
 	}
 
 	gwIPAddr := &halproto.IPAddress{
@@ -1766,8 +1755,8 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 	// build route object
 	ip, net, err := net.ParseCIDR(rt.Spec.IPPrefix)
 	if err != nil {
-		log.Errorf("Error parsing the IP Prefix mask. Err: %v", err)
-		return err
+		return fmt.Errorf("error parsing the IP Prefix mask from %v. Err: %v", rt.Spec.IPPrefix, err)
+
 	}
 	prefixLen, _ := net.Mask.Size()
 	ipPrefix := &halproto.IPPrefix{
@@ -2020,13 +2009,11 @@ func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
 	localGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.LocalGwIP))
 	if len(localGwIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", localGwIP)
-		return ErrIPMissing
+		return fmt.Errorf("could not parse IP from {%v}", localGwIP)
 	}
 	remoteGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.RemoteGwIP))
 	if len(remoteGwIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", remoteGwIP)
-		return ErrIPMissing
+		return fmt.Errorf("could not parse IP from {%v}", remoteGwIP)
 	}
 
 	localGw := &halproto.IPAddress{

@@ -20,7 +20,7 @@ func TestNatBindingList(t *testing.T) {
 	var ok bool
 	var natbindingList []*netproto.NatBinding
 
-	err := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+	err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &natbindingList)
 
 	AssertOk(t, err, "Error getting natbindings from the REST Server")
 	for _, o := range natbindingList {
@@ -53,8 +53,8 @@ func TestNatBindingPost(t *testing.T) {
 			IPAddress:   "10.1.1.2",
 		},
 	}
-	err := netutils.HTTPPost("http://"+agentRestURL+"/api/natbindings/", &postData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/bindings/", &postData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &natbindingList)
 
 	AssertOk(t, err, "Error posting natbinding to REST Server")
 	AssertOk(t, getErr, "Error getting natbindings from the REST Server")
@@ -89,10 +89,10 @@ func TestNatBindingUpdate(t *testing.T) {
 		},
 		Spec: updatedNatBindingSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natbindings/default/default/preCreatedNatBinding", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/bindings/default/default/preCreatedNatBinding", &putData, &resp)
 	AssertOk(t, err, "Error updating natbinding to REST Server")
 
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &natbindingList)
 	AssertOk(t, getErr, "Error getting natbindings from the REST Server")
 	for _, o := range natbindingList {
 		if o.Name == "preCreatedNatBinding" {
@@ -122,9 +122,9 @@ func TestNatBindingDelete(t *testing.T) {
 			IPAddress:   "10.1.1.1",
 		},
 	}
-	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natbindings/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/natbindings/default/default/testDeleteNatBinding", &deleteData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/bindings/", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/bindings/default/default/testDeleteNatBinding", &deleteData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &natbindingList)
 
 	AssertOk(t, postErr, "Error posting natbinding to REST Server")
 	AssertOk(t, err, "Error deleting natbinding from REST Server")
@@ -141,12 +141,57 @@ func TestNatBindingDelete(t *testing.T) {
 
 }
 
+func TestNatBindingCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/bindings/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNatBindingDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/bindings/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNatBindingUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/bindings/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
 func TestNatPolicyList(t *testing.T) {
 	t.Parallel()
 	var ok bool
 	var natpolicyList []*netproto.NatPolicy
 
-	err := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &natpolicyList)
+	err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &natpolicyList)
 
 	AssertOk(t, err, "Error getting natpolicys from the REST Server")
 	for _, o := range natpolicyList {
@@ -189,8 +234,8 @@ func TestNatPolicyPost(t *testing.T) {
 			},
 		},
 	}
-	err := netutils.HTTPPost("http://"+agentRestURL+"/api/natpolicies/", &postData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &natpolicyList)
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &postData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &natpolicyList)
 
 	AssertOk(t, err, "Error posting natpolicy to REST Server")
 	AssertOk(t, getErr, "Error getting natpolicys from the REST Server")
@@ -228,10 +273,10 @@ func TestNatPolicyUpdate(t *testing.T) {
 		},
 		Spec: updatedNatPolicySpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpolicies/default/default/preCreatedNatPolicy", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/policies/default/default/preCreatedNatPolicy", &putData, &resp)
 	AssertOk(t, err, "Error updating natpolicy to REST Server")
 
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &natpolicyList)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &natpolicyList)
 	AssertOk(t, getErr, "Error getting natpolicys from the REST Server")
 	for _, o := range natpolicyList {
 		if o.Name == "preCreatedNatPolicy" {
@@ -271,9 +316,9 @@ func TestNatPolicyDelete(t *testing.T) {
 			},
 		},
 	}
-	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natpolicies/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/natpolicies/default/default/testDeleteNatPolicy", &deleteData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &natpolicyList)
+	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/policies/default/default/testDeleteNatPolicy", &deleteData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &natpolicyList)
 
 	AssertOk(t, postErr, "Error posting natpolicy to REST Server")
 	AssertOk(t, err, "Error deleting natpolicy from REST Server")
@@ -290,12 +335,57 @@ func TestNatPolicyDelete(t *testing.T) {
 
 }
 
+func TestNatPolicyCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNatPolicyDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/policies/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNatPolicyUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/policies/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
 func TestNatPoolList(t *testing.T) {
 	t.Parallel()
 	var ok bool
 	var natpoolList []*netproto.NatPool
 
-	err := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &natpoolList)
+	err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &natpoolList)
 
 	AssertOk(t, err, "Error getting natpools from the REST Server")
 	for _, o := range natpoolList {
@@ -327,8 +417,8 @@ func TestNatPoolPost(t *testing.T) {
 			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
-	err := netutils.HTTPPost("http://"+agentRestURL+"/api/natpools/", &postData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &natpoolList)
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/pools/", &postData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &natpoolList)
 
 	AssertOk(t, err, "Error posting natpool to REST Server")
 	AssertOk(t, getErr, "Error getting natpools from the REST Server")
@@ -362,10 +452,10 @@ func TestNatPoolUpdate(t *testing.T) {
 		},
 		Spec: updatedNatPoolSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpools/default/default/preCreatedNatPool", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/pools/default/default/preCreatedNatPool", &putData, &resp)
 	AssertOk(t, err, "Error updating natpool to REST Server")
 
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &natpoolList)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &natpoolList)
 	AssertOk(t, getErr, "Error getting natpools from the REST Server")
 	for _, o := range natpoolList {
 		if o.Name == "preCreatedNatPool" {
@@ -394,9 +484,9 @@ func TestNatPoolDelete(t *testing.T) {
 			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
-	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natpools/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/natpools/default/default/testDeleteNatPool", &deleteData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &natpoolList)
+	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/pools/", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/pools/default/default/testDeleteNatPool", &deleteData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/pools/", &natpoolList)
 
 	AssertOk(t, postErr, "Error posting natpool to REST Server")
 	AssertOk(t, err, "Error deleting natpool from REST Server")
@@ -411,4 +501,49 @@ func TestNatPoolDelete(t *testing.T) {
 		t.Errorf("Found testDeleteNatPool in Response after deleting: %v", natpoolList)
 	}
 
+}
+
+func TestNatPoolCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/pools/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNatPoolDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/nat/pools/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestNatPoolUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/nat/pools/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }

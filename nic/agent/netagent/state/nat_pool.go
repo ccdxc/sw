@@ -16,6 +16,10 @@ import (
 
 // CreateNatPool creates a nat pool
 func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
+	err := na.validateMeta(np.Kind, np.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldNp, err := na.FindNatPool(np.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
@@ -122,6 +126,10 @@ func (na *NetAgent) UpdateNatPool(np *netproto.NatPool) error {
 
 // DeleteNatPool deletes a nat pool
 func (na *NetAgent) DeleteNatPool(np *netproto.NatPool) error {
+	err := na.validateMeta(np.Kind, np.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
 	if err != nil {

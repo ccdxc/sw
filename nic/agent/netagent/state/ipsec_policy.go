@@ -18,6 +18,10 @@ import (
 
 // CreateIPSecPolicy creates an IPSec Policy
 func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldIPSec, err := na.FindIPSecPolicy(ipSec.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
@@ -161,6 +165,10 @@ func (na *NetAgent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 
 // DeleteIPSecPolicy deletes an IPSec policy
 func (na *NetAgent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(ipSec.Tenant, ipSec.Namespace)
 	if err != nil {
