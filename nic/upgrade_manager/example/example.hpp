@@ -12,9 +12,9 @@ using namespace std;
 using namespace upgrade;
 
 // ExUpgSvc is the service object for example upgrade service 
-class ExUpgSvc : public delphi::Service, public enable_shared_from_this<ExUpgSvc>, public UpgReqStatusMgr {
+class ExUpgSvc : public delphi::Service, public enable_shared_from_this<ExUpgSvc> {
 private:
-    UpgReqStatusMgrPtr upgReqStatusMgr_;
+    UpgSdkPtr          upgsdk_;
     delphi::SdkPtr     sdk_;
     string             svcName_;
 public:
@@ -22,23 +22,20 @@ public:
     ExUpgSvc(delphi::SdkPtr sk);
     ExUpgSvc(delphi::SdkPtr sk, string name);
 
-    // OnMountComplete gets called when all the objects are mounted
-    void OnMountComplete();
-
-    delphi::error OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
-        LogInfo("ExUpgSvc OnUpgReqStatusCreate called");
-        return delphi::error::OK();
-    }
-
     // override service name method
     virtual string Name() { return svcName_; }
 
     // timer for creating a dummy object
     ev::timer          createTimer;
     void createTimerHandler(ev::timer &watcher, int revents);
+
+    void OnMountComplete(void) {
+        LogInfo("ExUpgSvc OnMountComplete called!!");
+        this->upgsdk_->OnMountComplete();
+    }
 };
 typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;
 
 } // namespace example
 
-#endif // __CODE_UPGRADE_H__
+#endif // __EXAMPLE_H__

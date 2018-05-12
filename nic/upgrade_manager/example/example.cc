@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "example.hpp"
-#include "nic/upgrade_manager/export/upgrade.hpp"
 
 namespace example {
 
@@ -18,27 +17,9 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
     this->svcName_ = name;
 
     // create upgrade request status manager event handler
-    upgReqStatusMgr_ = make_shared<UpgReqStatusMgr>(sdk_);
+    upgsdk_ = make_shared<UpgSdk>(sdk_);
 
     LogInfo("Example upgrade service constructor got called");
-}
-
-#if 0
-delphi::error ExUpgSvc::OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
-    LogInfo("ExUpgSvc OnUpgReqStatusCreate got called.");
-    return delphi::error::OK();
-}
-#endif
-
-// OnMountComplete gets called when all the objects are mounted
-void ExUpgSvc::OnMountComplete() {
-    string out_str;
-
-    LogInfo("ExUpgSvc OnMountComplete got called\n");
-
-    upgReqStatusMgr_->OnMountComplete();
-    upgReqStatusMgr_->Watch(upgReqStatusMgr_);
-    LogInfo("============== ExUpgSvc Finished Reconciliation ==================\n");
 }
 
 // createTimerHandler creates a dummy code upgrade request

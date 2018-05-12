@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#ifndef __UPG_MGR_STATUS_H__
-#define __UPG_MGR_STATUS_H__
+#ifndef __UPGRAGE_H__
+#define __UPGRADE_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
@@ -10,35 +10,67 @@ namespace upgrade {
 
 using namespace std;
 
-// UpgReqStatusMgr is the reactor for the UpgReqStatusMgr object
-class UpgReqStatusMgr : public delphi::objects::UpgReqStatusReactor {
-    delphi::SdkPtr sdk_;
+class UpgHandler {
 public:
-    UpgReqStatusMgr() {}
 
-    UpgReqStatusMgr(delphi::SdkPtr sk) {
+    UpgHandler() {}
+
+    void UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
+};
+typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
+
+// UpgReqReactor is the reactor for the UpgReqStatus object
+class UpgReqReactor : public delphi::objects::UpgReqStatusReactor {
+    delphi::SdkPtr sdk_;
+    UpgHandlerPtr upgHdlrPtr_;
+public:
+    UpgReqReactor(delphi::SdkPtr sk) {
         this->sdk_ = sk;
-        delphi::objects::UpgReqStatus::Mount(sk, delphi::ReadMode);
+        upgHdlrPtr_ = make_shared<UpgHandler>();
     }
+
+    UpgReqReactor(delphi::SdkPtr sk, UpgHandlerPtr uh) {
+        this->sdk_ = sk;
+        this->upgHdlrPtr_ = uh;
+    }
+
+    // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
+    virtual delphi::error OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
 
     // OnUpgReqStatusDelete gets called when UpgReqStatus object is deleted
     virtual delphi::error OnUpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req);
 
     // OnUpgReqState gets called when UpgReqState attribute changes
     virtual delphi::error OnUpgReqState(delphi::objects::UpgReqStatusPtr req);
+};
+typedef std::shared_ptr<UpgReqReactor> UpgReqReactorPtr;
 
-    void OnMountComplete(void);
-
-    void Watch(std::shared_ptr<UpgReqStatusMgr> ptr) {
-        LogInfo("UpgReqStatusMgr Watch called");
-        delphi::objects::UpgReqStatus::Watch(sdk_, ptr);
+class UpgSdk : public delphi::Service {
+    delphi::SdkPtr sdk_;
+    UpgHandlerPtr upgHdlrPtr_;
+    UpgReqReactorPtr upgReqReactPtr_;
+public:
+    UpgSdk(delphi::SdkPtr sk) {
+        this->sdk_ = sk;
+        this->upgHdlrPtr_ = NULL;
+        upgReqReactPtr_ = make_shared<UpgReqReactor>(sk);
+        delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadMode);
+        delphi::objects::UpgReqStatus::Watch(sdk_, upgReqReactPtr_);
     }
 
-    // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
-    virtual delphi::error OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
+    UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh) {
+        this->sdk_ = sk;
+        this->upgHdlrPtr_ = uh;
+        upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, uh);
+        delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadMode);
+        delphi::objects::UpgReqStatus::Watch(sdk_, upgReqReactPtr_);
+    }
+
+    // OnMountComplete gets called when all the objects are mounted
+    void OnMountComplete(void);
 };
-typedef std::shared_ptr<UpgReqStatusMgr> UpgReqStatusMgrPtr;
+typedef std::shared_ptr<UpgSdk> UpgSdkPtr;
 
-} // namespace example
+} // namespace upgrade
 
-#endif // __UPG_MGR_STATUS_H__
+#endif // __UPGRAGE_H__
