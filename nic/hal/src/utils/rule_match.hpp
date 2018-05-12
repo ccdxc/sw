@@ -75,6 +75,9 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
     {typ, sizeof(((struct_name*)0)->fld_name),   \
             offsetof(struct_name, fld_name) }
 
+#define RULE_MATCH_GET_MAC_ADDR(addr_entry)  \
+    dllist_entry(addr_entry, mac_addr_list_elem_t, list_ctxt)
+
 #define RULE_MATCH_GET_ADDR(addr_entry)  \
     dllist_entry(addr_entry, addr_list_elem_t, list_ctxt)
 
@@ -103,6 +106,3 @@ rule_data_alloc_init();
 } // namespace hal
 
 #endif //__RULES_HPP__
-
-
-

@@ -376,6 +376,11 @@ rule_lib_init(const char *name, acl_config_t *cfg)
     return acl_create(name, (const acl_config_t *)cfg);
 }
 
+void
+rule_lib_deref(ipv4_rule_t *rule)
+{
+    acl_rule_deref((acl_rule_t *) rule);
+}
 
 // rule_lib_alloc function allocates data type ipv4_rule_t to be added to
 // acl_lib
@@ -393,6 +398,46 @@ rule_lib_alloc()
     return rule;
 }
 
+static ipv4_rule_t *
+construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
+                       port_list_elem_t *sp_entry, port_list_elem_t *dp_entry,
+                       IPProtocol proto)
+{
+    ipv4_rule_t     *rule = NULL;
+    bool            alloc = false;
+
+    rule  = rule_lib_alloc();
+    if (sa_entry->num_addrs) {
+        rule->field[IP_SRC].value.u32 = sa_entry->ip_range.vx_range[0].v4_range.ip_lo;
+        rule->field[IP_SRC].mask_range.u32 = sa_entry->ip_range.vx_range[0].v4_range.ip_hi;
+        alloc = true;
+    }
+    if (da_entry->num_addrs) {
+        rule->field[IP_DST].value.u32 = da_entry->ip_range.vx_range[0].v4_range.ip_lo;
+        rule->field[IP_DST].mask_range.u32 = da_entry->ip_range.vx_range[0].v4_range.ip_hi;
+        alloc = true;
+    }
+    if (sp_entry->port_range.port_lo || sp_entry->port_range.port_hi) {
+        rule->field[PORT_SRC].value.u32 = sp_entry->port_range.port_lo;
+        rule->field[PORT_SRC].mask_range.u32 = sp_entry->port_range.port_hi;
+        alloc = true;
+    }
+    if (dp_entry->port_range.port_lo || dp_entry->port_range.port_hi) {
+        rule->field[PORT_DST].value.u32 = dp_entry->port_range.port_lo;
+        rule->field[PORT_DST].mask_range.u32 = dp_entry->port_range.port_hi;
+        alloc = true;
+    }
+    if (proto != types::IPPROTO_NONE) {
+        rule->field[PROTO].value.u32 = proto;
+        alloc = true;
+    }
+    if (!alloc) {
+        rule_lib_deref(rule);
+        rule = NULL;
+    }
+    return rule;
+}
+
 // rule_match_rule_add api adds the rules to the acl library.
 // As of today type of fields that are instantiated in acl_lib
 // (pkt_classify_lib) will be of type ipv4_rule_t across plugins that use
@@ -404,68 +449,42 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                      int               rule_prio,
                      rule_data_t      *data)
 {
-    ipv4_rule_t       *rule;
-    rule_match_app_t  *app_match = &match->app;
-    hal_ret_t         ret = HAL_RET_OK;
-    addr_list_elem_t  *src_addr, *dst_addr;
-    port_list_elem_t  *dst_port, *src_port;
-    dllist_ctxt_t     *sa_entry, *da_entry, *dp_entry, *sp_entry;
-    int               src_addr_len = 1, dst_addr_len = 1, dst_port_len = 1, src_port_len = 1;
+    ipv4_rule_t          *rule;
+    rule_match_app_t     *app_match = &match->app;
+    hal_ret_t            ret = HAL_RET_OK;
+    //mac_addr_list_elem_t *mac_src_addr, *mac_dst_addr;
+    addr_list_elem_t     *src_addr, *dst_addr;
+    port_list_elem_t     *dst_port, *src_port;
+    dllist_ctxt_t        *sa_entry, *da_entry, *sp_entry, *dp_entry;
+    //dllist_ctxt_t        *mac_sa_entry, *mac_da_entry;
+    port_list_elem_t     dst_port_new = {0}, src_port_new = {0};
+    addr_list_elem_t     src_addr_new = {0}, dst_addr_new = {0};
+    mac_addr_list_elem_t mac_src_addr_new = {0}, mac_dst_addr_new = {0};
 
-
-    if (!dllist_empty(&match->src_addr_list)) {
-        src_addr_len = dllist_count(&match->src_addr_list);
-    }
-
-    if (!dllist_empty(&match->dst_addr_list)) {
-        dst_addr_len = dllist_count(&match->dst_addr_list);
-    }
-
-    if (!dllist_empty(&app_match->l4dstport_list)) {
-        dst_port_len = dllist_count(&app_match->l4dstport_list);
-    }
-
-    if (!dllist_empty(&app_match->l4srcport_list)) {
-        src_port_len = dllist_count(&app_match->l4srcport_list);
-    }
-
-    sa_entry = match->src_addr_list.next;
-    da_entry = match->dst_addr_list.next;
-    dp_entry = app_match->l4dstport_list.next;
-    sp_entry = app_match->l4srcport_list.next;
-
-
-    // ToDo: lseshan: Explore and Make below loop efficient
-    for (int src_addr_idx =0; src_addr_idx < src_addr_len; src_addr_idx++) {
+    /* Add dummy node at the head of the list */
+    dllist_add(&match->src_mac_addr_list, &mac_src_addr_new.list_ctxt);
+    dllist_add(&match->dst_mac_addr_list, &mac_dst_addr_new.list_ctxt);
+    dllist_add(&match->src_addr_list, &src_addr_new.list_ctxt);
+    dllist_add(&match->dst_addr_list, &dst_addr_new.list_ctxt);
+    dllist_add(&app_match->l4dstport_list, &dst_port_new.list_ctxt);
+    dllist_add(&app_match->l4srcport_list, &src_port_new.list_ctxt);
+    
+    /* IP-SA loop */
+    dllist_for_each(sa_entry, &match->src_addr_list) {
         src_addr = RULE_MATCH_GET_ADDR(sa_entry);
-        sa_entry = sa_entry->next;
-        for (int dst_addr_idx = 0; dst_addr_idx < dst_addr_len; dst_addr_idx++) {
+        /* IP-DA loop */
+        dllist_for_each(da_entry, &match->dst_addr_list) {
             dst_addr = RULE_MATCH_GET_ADDR(da_entry);
-            da_entry = da_entry->next;
-            for (int src_port_idx = 0; src_port_idx < src_port_len; src_port_idx++) {
+            /* L4 Src-Port loop */
+            dllist_for_each(sp_entry, &app_match->l4srcport_list) {
                 src_port = RULE_MATCH_GET_PORT(sp_entry);
-                sp_entry = sp_entry->next;
-                for (int dst_port_idx = 0; dst_port_idx < dst_port_len; dst_port_idx++) {
+                /* L4 Dst-Port loop */
+                dllist_for_each(dp_entry, &app_match->l4dstport_list) {
                     dst_port = RULE_MATCH_GET_PORT(dp_entry);
-                    dp_entry = dp_entry->next;
-
-                    rule  = rule_lib_alloc();
-                    rule->field[PROTO].value.u32 = 0;
-                    if (!dllist_empty(&match->src_addr_list)) {
-                        rule->field[IP_SRC].value.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_lo;
-                        rule->field[IP_SRC].mask_range.u32 = src_addr->ip_range.vx_range[0].v4_range.ip_hi;
-                    }
-                    if (!dllist_empty(&match->dst_addr_list)) {
-                        rule->field[IP_DST].value.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_lo;
-                        rule->field[IP_DST].mask_range.u32 = dst_addr->ip_range.vx_range[0].v4_range.ip_hi;
-                    }
-                    if (!dllist_empty(&app_match->l4srcport_list)) {
-                        rule->field[PORT_SRC].value.u32 = src_port->port_range.port_lo;
-                        rule->field[PORT_SRC].mask_range.u32 = src_port->port_range.port_hi;
-                    }
-                    if (!dllist_empty(&app_match->l4dstport_list)) {
-                        rule->field[PORT_DST].value.u32 = dst_port->port_range.port_lo;
-                        rule->field[PORT_DST].mask_range.u32 = dst_port->port_range.port_hi;
+                    rule = construct_rule_fields(src_addr, dst_addr, src_port,
+                                                 dst_port, match->proto);
+                    if (!rule) {
+                        continue;
                     }
                     rule->data.priority = rule_prio;
                     rule->data.userdata = (void *)data;
@@ -478,6 +497,13 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
             }
         }
     }
+    /* Delete dummy node at the head of the list */
+    dllist_del(&mac_src_addr_new.list_ctxt);
+    dllist_del(&mac_dst_addr_new.list_ctxt);
+    dllist_del(&src_addr_new.list_ctxt);
+    dllist_del(&dst_addr_new.list_ctxt);
+    dllist_del(&dst_port_new.list_ctxt);
+    dllist_del(&src_port_new.list_ctxt);
     //Added rule - lets increment the ref
     ref_inc(&data->ref_count);
     return ret;
