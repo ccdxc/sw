@@ -9,6 +9,22 @@ namespace hal {
 namespace plugins {
 namespace nat {
 
+hal_ret_t
+get_nat_addr_from_pool(nat_pool_t *nat_pool, hal::utils::nat::addr_entry_t *addr_entry) 
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = nat_pool_address_alloc(nat_pool, &addr_entry->tgt_ip_addr);
+    if (ret != HAL_RET_OK) {
+	    HAL_TRACE_DEBUG("failed to alloc ip from nat pool:vrf {} pool id {}", nat_pool->key.vrf_id, nat_pool->key.pool_id);
+	    return ret;
+    }
+    addr_entry->tgt_vrf_id = nat_pool->key.vrf_id;
+    addr_entry->nat_pool_id = nat_pool->key.pool_id;
+
+    return ret;
+}
+
 /*
  * update_flow
  *   Update flow from NAT policy
@@ -19,6 +35,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
     hal::utils::nat::addr_entry_key_t  src_addr_key, dst_addr_key;
     hal::utils::nat::addr_entry_t     *src_addr_entry, *dst_addr_entry;
+    hal::utils::nat::addr_entry_t     src_nat_addr, dst_nat_addr;
     const nat_cfg_rule_t              *nat_cfg;
     hal::rule_data_t                  *rule_data;
     hal::ipv4_tuple                    acl_key = {};
@@ -26,12 +43,6 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
     hal_ret_t                          ret = HAL_RET_OK;
     const acl::acl_ctx_t              *acl_ctx = NULL;
 
-    const char *ctx_name = nat_acl_ctx_name(ctx.key().svrf_id);
-    acl_ctx = acl::acl_get(ctx_name);
-    if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
-        // return ret;
-    }
     // fte state to store the original vrf/ip/port for rflow
     nat_info_t *nat_info = (nat_info_t *)ctx.feature_state();
     if (ctx.key().flow_type == FLOW_TYPE_V4) {
@@ -55,6 +66,13 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
     dst_addr_entry = hal::utils::nat::addr_entry_get(&dst_addr_key);
 
     if (!src_addr_entry || !dst_addr_entry) {
+        const char *ctx_name = nat_acl_ctx_name(ctx.key().svrf_id);
+        acl_ctx = acl::acl_get(ctx_name);
+        if (acl_ctx == NULL) {
+            HAL_TRACE_DEBUG("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
+            ret = HAL_RET_ERR;
+            goto fall_thro;
+        }
         acl_key.proto = ctx.key().proto;
         acl_key.ip_src = ctx.key().sip.v4_addr;
         acl_key.ip_dst = ctx.key().dip.v4_addr;
@@ -74,53 +92,53 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
             acl_key.port_dst = ctx.key().dport;
             break;
         default:
-            break;
+            HAL_ASSERT(true);
+            ret = HAL_RET_FTE_RULE_NO_MATCH;
+            goto fall_thro;
         }
 
-        if (acl_ctx) {
-            ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("nat::rule lookup failed ret={}", ret);
-                return ret;
-            }
+        ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("nat::rule lookup failed ret={}", ret);
+            goto fall_thro;
         }
 
         if (rule) {
             rule_data = (hal::rule_data_t *) rule->data.userdata;
             nat_cfg = (const hal::nat_cfg_rule_t *)rule_data->userdata;
             // Handle for each NatAction: None, Static address, Dynamic address
-            if (!src_addr_entry) {
-                if (nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {
-                    nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.src_nat_pool);
-                    if (nat_pool) {
-                        ret = nat_pool_address_alloc(nat_pool, &src_addr_entry->tgt_ip_addr);
-                        if (ret != HAL_RET_OK) {
-                            HAL_TRACE_DEBUG("failed to allocate src nat ip");
-                            return ret;
-                        }
-                    } else {
-                        HAL_TRACE_DEBUG("unable to find src nat pool for the handle = {}", nat_cfg->action.src_nat_pool);
-                        return HAL_RET_ERR;
+            if (!src_addr_entry && nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {
+                src_addr_entry = &src_nat_addr;
+                nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.src_nat_pool);
+                if (nat_pool) {
+                    ret = get_nat_addr_from_pool(nat_pool, src_addr_entry);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_DEBUG("failed to allocate src nat ip");
+                        return ret;
                     }
+                } else {
+                    HAL_TRACE_DEBUG("unable to find src nat pool for the handle = {}", nat_cfg->action.src_nat_pool);
+                    return HAL_RET_ERR;
                 }
             }
 
-            if (!dst_addr_entry) {
-                if (nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {
-                    nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.dst_nat_pool);
-                    if (nat_pool) {
-                        ret = nat_pool_address_alloc(nat_pool, &dst_addr_entry->tgt_ip_addr);
-                        if (ret != HAL_RET_OK) {
-                            HAL_TRACE_DEBUG("failed to allocate dst nat ip");
-                            return ret;
-                        }
-                    } else {
-                        HAL_TRACE_DEBUG("unable to find dst nat pool for the handle = {}", nat_cfg->action.dst_nat_pool);
-                        return HAL_RET_ERR;
+            if (!dst_addr_entry && nat_cfg->action.dst_nat_action != ::nat::NAT_TYPE_NONE) {
+                dst_addr_entry = &dst_nat_addr;
+                nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.dst_nat_pool);
+                if (nat_pool) {
+                    ret = get_nat_addr_from_pool(nat_pool, dst_addr_entry);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_DEBUG("failed to allocate dst nat ip");
+                        return ret;
                     }
+                } else {
+                    HAL_TRACE_DEBUG("unable to find dst nat pool for the handle = {}", nat_cfg->action.dst_nat_pool);
+                    return HAL_RET_ERR;
                 }
             }
         }
+        fall_thro:
+            HAL_TRACE_DEBUG("continue to process nat");
     }
 
     if (src_addr_entry) {
@@ -188,7 +206,6 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         //     }
         // }
     }
-
     return ctx.update_flow(flowupd);
 }
 

@@ -389,8 +389,8 @@ nat_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
-
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("nat create commit failed");
         //todo: free resources
     }
     return ret;
@@ -409,7 +409,7 @@ nat_cfg_pol_rule_oper_handle (
         rule = dllist_entry(entry, nat_cfg_rule_t, list_ctxt);
         rule->prio = prio++;
         if ((ret = nat_cfg_rule_create_oper_handle(
-               rule, app_ctxt->acl_ctx)) != HAL_RET_OK)
+               rule, &app_ctxt->acl_ctx)) != HAL_RET_OK)
             return ret;
     }
     return ret;
@@ -424,11 +424,15 @@ nat_cfg_pol_oper_init (nat_cfg_pol_t *pol, hal_handle_t hal_hdl)
 hal_ret_t
 nat_cfg_pol_create_oper_handle (nat_cfg_pol_t *pol)
 {
+
     hal_ret_t ret;
     hal_handle_t hal_hdl;
     nat_cfg_pol_create_app_ctxt_t app_ctxt = { 0 };
 
     app_ctxt.acl_ctx = nat_cfg_pol_create_app_ctxt_init(pol);
+
+    if ((ret = nat_cfg_pol_rule_oper_handle(pol, &app_ctxt)) != HAL_RET_OK)
+        return ret;
 
     if ((ret = cfg_ctxt_op_create_handle(HAL_OBJ_ID_NAT_POLICY, pol, &app_ctxt,
                                          hal_cfg_op_null_cb,
@@ -439,9 +443,6 @@ nat_cfg_pol_create_oper_handle (nat_cfg_pol_t *pol)
         return ret;
 
     nat_cfg_pol_oper_init(pol, hal_hdl);
-
-    if ((ret = nat_cfg_pol_rule_oper_handle(pol, &app_ctxt)) != HAL_RET_OK)
-        return ret;
 
     return HAL_RET_OK;
 }

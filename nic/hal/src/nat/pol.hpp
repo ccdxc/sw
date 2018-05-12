@@ -151,7 +151,7 @@ hal_ret_t nat_cfg_pol_get_cfg_handle(nat_cfg_pol_t *pol,
 hal_ret_t nat_cfg_rule_spec_handle(
     const nat::NatRuleSpec& spec, dllist_ctxt_t *head);
 hal_ret_t nat_cfg_rule_create_oper_handle(
-    nat_cfg_rule_t *rule, const acl_ctx_t *acl_ctxt);
+    nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctxt);
 const acl::acl_ctx_t * nat_cfg_pol_create_app_ctxt_init(nat_cfg_pol_t *pol);
 hal_ret_t nat_cfg_rule_spec_build(nat_cfg_rule_t *rule, nat::NatRuleSpec *spec);
 

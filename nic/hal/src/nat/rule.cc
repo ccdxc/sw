@@ -28,26 +28,31 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
                                   nat_cfg_rule_action_t *action)
 {
     hal_ret_t ret = HAL_RET_OK;
-    NatPoolKeyHandle kh;
+    nat_pool_t  *pool;
 
     action->src_nat_action = spec.src_nat_action();
     action->dst_nat_action = spec.dst_nat_action();
-    kh = spec.src_nat_pool();
-    if (kh.key_or_handle_case() == NatPoolKeyHandle::kPoolHandle) {
-        action->src_nat_pool = kh.pool_handle();
-    } else {
-        HAL_TRACE_ERR("handle is not present for src_nat_pool");
-        ret  = HAL_RET_ERR;
-        return ret;
+
+    if (spec.has_src_nat_pool()) {
+        pool = find_nat_pool_by_key_or_handle(spec.src_nat_pool());
+        if (pool != NULL) {
+            action->src_nat_pool = pool->hal_handle;
+        } else {
+            HAL_TRACE_ERR("src NAT pool not present in rule");
+            ret = HAL_RET_NAT_POOL_NOT_FOUND;
+            return ret;
+        }
     }
 
-    kh = spec.dst_nat_pool();
-    if (kh.key_or_handle_case() == kh::NatPoolKeyHandle::kPoolHandle) {
-        action->dst_nat_pool = kh.pool_handle();
-    } else {
-        HAL_TRACE_ERR("handle is not present for src_nat_pool");
-        ret  = HAL_RET_ERR;
-        return ret;
+    if (spec.has_dst_nat_pool()) {
+        pool = find_nat_pool_by_key_or_handle(spec.dst_nat_pool());
+        if (pool != NULL) {
+            action->dst_nat_pool = pool->hal_handle;
+        } else {
+            HAL_TRACE_ERR("dst NAT pool not present in rule");
+            ret = HAL_RET_NAT_POOL_NOT_FOUND;
+            return ret;
+        }
     }
     return ret;
 }
@@ -214,13 +219,13 @@ nat_cfg_pol_create_app_ctxt_init (nat_cfg_pol_t *pol)
 }
 
 hal_ret_t
-nat_cfg_rule_create_oper_handle (nat_cfg_rule_t *rule, const acl_ctx_t *acl_ctx)
+nat_cfg_rule_create_oper_handle (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
 {
     rule_data_t     *rule_data;
     rule_data = rule_data_alloc_init();
     rule_data->userdata = rule;
     rule_data->data_free = nat_cfg_rule_free;
-    return rule_match_rule_add(&acl_ctx,
+    return rule_match_rule_add(acl_ctx,
                                &rule->match,
                                rule->prio,
                                rule_data);

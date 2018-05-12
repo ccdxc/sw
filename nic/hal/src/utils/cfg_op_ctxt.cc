@@ -27,16 +27,6 @@ cfg_op_ctxt_hal_hdl_free (hal_handle_t hal_hdl)
     hal_handle_free(hal_hdl);
 }
 
-static inline void
-cfg_op_ctxt_hal_hdl_init (hal_handle_t hal_hdl)
-{
-}
-
-static inline void
-cfg_op_ctxt_hal_hdl_uninit (hal_handle_t hal_hdl)
-{
-}
-
 static inline hal_handle_t
 cfg_op_ctxt_hal_hdl_alloc_init (hal_obj_id_t obj_id)
 {
@@ -45,7 +35,6 @@ cfg_op_ctxt_hal_hdl_alloc_init (hal_obj_id_t obj_id)
     if ((hal_hdl = cfg_op_ctxt_hal_hdl_alloc(obj_id)) == HAL_HANDLE_INVALID)
         return hal_hdl;
 
-    cfg_op_ctxt_hal_hdl_init(hal_hdl);
     return hal_hdl;
 }
 
@@ -53,7 +42,6 @@ static inline void
 cfg_op_ctxt_hal_hdl_uninit_free (hal_handle_t hal_hdl)
 {
     if (hal_hdl != HAL_HANDLE_INVALID) {
-        cfg_op_ctxt_hal_hdl_uninit(hal_hdl);
         cfg_op_ctxt_hal_hdl_free(hal_hdl);
     }
 }
@@ -84,7 +72,7 @@ cfg_op_ctxt_hal_hdl_add_handle (cfg_op_ctxt_t *cfg_ctxt, hal_obj_id_t obj_id,
             HAL_HANDLE_INVALID)
         return HAL_RET_HANDLE_INVALID;
 
-    if ((ret = cfg_op_ctxt_hal_hdl_db_add(cfg_ctxt, obj_id,
+    if ((ret = cfg_op_ctxt_hal_hdl_db_add(cfg_ctxt, hal_hdl,
             add_cb, commit_cb, abort_cb, cleanup_cb)) != HAL_RET_OK)
         return ret;
 
@@ -95,35 +83,17 @@ cfg_op_ctxt_hal_hdl_add_handle (cfg_op_ctxt_t *cfg_ctxt, hal_obj_id_t obj_id,
 //-----------------------------------------------------------------------------
 // DHL Entry routines
 //-----------------------------------------------------------------------------
-
-static inline void
-cfg_op_ctxt_dhl_entry_init (dhl_entry_t *dhl_entry, hal_handle_t hal_hdl,
-                            void *obj)
+static inline hal_ret_t
+cfg_op_ctxt_dhl_entry_handle (cfg_op_ctxt_t *cfg_ctxt, dhl_entry_t *dhl_entry,
+                              hal_handle_t hal_hdl, void *obj)
 {
+    // Init dhl_entry
     dllist_reset(&dhl_entry->dllist_ctxt);
     dhl_entry->handle = hal_hdl;
     dhl_entry->obj = obj;
-}
 
-static inline void
-cfg_op_ctxt_dhl_entry_uninit (dhl_entry_t *dhl_entry)
-{
-}
-
-static inline void
-cfg_op_ctxt_dhl_entry_db_add (cfg_op_ctxt_t *cfg_ctxt, dhl_entry_t *dhl_entry)
-{
+    // Add dhl_entry to db
     dllist_add(&cfg_ctxt->dhl, &dhl_entry->dllist_ctxt);
-}
-
-static inline hal_ret_t
-cfg_op_ctxt_dhl_entry_handle (cfg_op_ctxt_t *cfg_ctxt,
-                              hal_handle_t hal_hdl, void *obj)
-{
-    dhl_entry_t dhl_entry = { 0 };
-
-    cfg_op_ctxt_dhl_entry_init(&dhl_entry, hal_hdl, obj);
-    cfg_op_ctxt_dhl_entry_db_add(cfg_ctxt, &dhl_entry);
     return HAL_RET_OK;
 }
 
@@ -160,15 +130,16 @@ cfg_ctxt_op_create_handle (hal_obj_id_t obj_id, void *obj, void *app_ctxt,
 {
     hal_ret_t ret;
     cfg_op_ctxt_t cfg_ctxt = { 0 };
+    dhl_entry_t   dhl_entry = { 0 };
 
     cfg_op_ctxt_init(&cfg_ctxt);
 
-    if ((ret = cfg_op_ctxt_hal_hdl_add_handle(&cfg_ctxt, obj_id, add_cb,
-            commit_cb, abort_cb, cleanup_cb, hal_hdl)) != HAL_RET_OK)
+    if ((ret = cfg_op_ctxt_dhl_entry_handle(&cfg_ctxt, &dhl_entry, *hal_hdl,
+            obj)) != HAL_RET_OK)
         return ret;
 
-    if ((ret = cfg_op_ctxt_dhl_entry_handle(&cfg_ctxt, *hal_hdl,
-            obj)) != HAL_RET_OK)
+    if ((ret = cfg_op_ctxt_hal_hdl_add_handle(&cfg_ctxt, obj_id, add_cb,
+            commit_cb, abort_cb, cleanup_cb, hal_hdl)) != HAL_RET_OK)
         return ret;
 
     return ret;
