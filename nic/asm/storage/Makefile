@@ -2,6 +2,7 @@
 
 LIBDIRS = \
 	  storage_tx \
+	  storage_seq \
 	  storage_nvme \
           $(NULL)
 PGMDIRS = $(NULL)

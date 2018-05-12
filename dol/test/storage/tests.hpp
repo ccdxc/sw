@@ -75,27 +75,20 @@ typedef struct acc_chain_entry {
       acc_chain_next_db_entry_t    db_entry;
       acc_chain_barco_push_entry_t push_entry;
   };
-  uint64_t status_hbm_pa;	// Status address in HBM. Provide this even if data_len is provided in desc.
-  uint64_t status_host_pa;	// Destination for the PDMA of status.
-  uint64_t src_hbm_pa;		// Address of compression source buffer (needed if copy_src_dst_on_error is set)
-  uint64_t dst_hbm_pa;		// Address of compression destination buffer (see above)
+  uint64_t status_addr0;
+  uint64_t status_addr1;	// Destination for the PDMA of status from status_addr0 to status_addr1
+  uint64_t flat_dst_buf_addr; // Address of ...
 
   // post compression, options available are:
   // - PDMA compressed data to pdma_out_sgl_pa (sgl_pdma_en), or
   // - chain to next accelerator service which uses input/output AOL (aol_pad_en),
-  // - chain to next accelerator service which uses SGL input (sgl_pad_hash_en),
+  // - chain to next accelerator service which uses SGL input (sgl_pad_en),
   //   where P4+ will modify addr/length fields in the AOL/SGL based on compression result
-  union {
-      uint64_t sgl_pdma_in_pa;	// Address of the input SGL
-      uint64_t barco_aol_in_pa;
-  };
-  union {
-      uint64_t sgl_pdma_out_pa;	// Address of the output SGL
-      uint64_t barco_aol_out_pa;
-  };
-  uint64_t sgl_vec_pa;	    // SGL vector for multi-block hash
-  uint64_t pad_buf_pa;	    // pad buffer address
-  uint64_t intr_pa;		    // MSI-X Interrupt address
+  uint64_t aol_src_vec_addr;
+  uint64_t aol_dst_vec_addr;
+  uint64_t sgl_vec_addr;	// SGL vector for multi-block hash
+  uint64_t pad_buf_addr;	// pad buffer address
+  uint64_t intr_addr;		// MSI-X Interrupt address
   uint32_t intr_data;		// MSI-X Interrupt data
   uint16_t status_len;		// Length of the status header
   uint16_t data_len;		// Remaining data length of compression buffer
@@ -117,13 +110,14 @@ typedef struct acc_chain_entry {
   // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.
   // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
            aol_pad_en           :1, // enable AOL length padding
-           sgl_pad_hash_en      :1, // enable SGL length padding for multi-block hash
+           sgl_pad_en           :1, // enable SGL length padding (e.g., for multi-block hash)
            sgl_pdma_en          :1, // enable data transfer from src_hbm_pa to sgl_pa
-           sgl_pdma_pad_only    :1; // enable pad-only fill mode, i.e., Comp engine writes
+           sgl_pdma_pad_only    :1, // enable pad-only fill mode, i.e., Comp engine writes
                                     // compressed output according to SGL, P4+ will fill
                                     // the last block with the right amount of pad data.
                                     // This mode requires sgl_pad_hash_en as P4+ will glean
                                     // the buffers info from the supplied sgl_vec_pa.
+           desc_vec_push_en     : 1;// barco_desc_addr points to a vector of descriptors to be pushed
 } acc_chain_entry_t;
 
 typedef struct cq_sq_ent_sgl {

@@ -254,8 +254,8 @@ private:
     dp_mem_t        *comp_opaque_buf;
 
     // XTS uses AOL for input/output;
-    dp_mem_t        *xts_in_aol;
-    dp_mem_t        *xts_out_aol;
+    dp_mem_t        *xts_src_aol_vec;
+    dp_mem_t        *xts_dst_aol_vec;
     dp_mem_t        *xts_desc_buf;
 
     // Since XTS is last in the chain, allow the caller to supply
@@ -271,6 +271,9 @@ private:
     comp_queue_t    *comp_queue;
     comp_queue_push_t push_type;
     uint32_t        seq_comp_qid;
+
+    uint32_t        max_enc_blks;
+    uint32_t        num_enc_blks;
 
     uint32_t        last_cp_output_data_len;
     uint32_t        last_encrypt_output_data_len;

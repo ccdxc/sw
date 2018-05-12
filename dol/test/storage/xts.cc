@@ -23,7 +23,7 @@ uint32_t gcm_exp_opaque_tag_decr = 0;
 
 const static uint32_t  kAolSize              = 64;
 const static uint32_t  kXtsDescSize          = 128;
-const        uint32_t  kXtsQueueSize         = 1024;
+const        uint32_t  kXtsQueueSize         = 4096;
 
 using namespace dp_mem;
 extern size_t tcid;
@@ -91,6 +91,48 @@ int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
   }
   free(buf);
   return 0;
+}
+
+/*
+ * Format a sparse AOL vector where only the addr0/len0 chunk is filled.
+ * Leaving addr1/len1/addr2/len2 unused is somewhat wasteful in terms of
+ * descriptor memory usage but makes it easier for P4+ and also comsumes
+ * less P4+ TxDMA descriptors.
+ */
+void
+xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
+                    dp_mem_t *xts_buf,
+                    uint32_t blk_size,
+                    uint32_t num_blks)
+{
+    xts::xts_aol_t  *xts_aol;
+    uint64_t        xts_buf_addr;
+    uint32_t        xts_buf_size;
+    uint32_t        block_no;
+    uint32_t        save_curr_line;
+
+    assert(xts_aol_vec->num_lines_get() >= num_blks);
+    xts_buf_addr = xts_buf->pa();
+    xts_buf_size = xts_buf->line_size_get();
+    save_curr_line = xts_aol_vec->line_get();
+
+    for (block_no = 0; block_no < num_blks; block_no++) {
+        xts_aol_vec->line_set(block_no);
+        xts_aol_vec->clear();
+
+        xts_aol = (xts::xts_aol_t *)xts_aol_vec->read();
+        xts_aol->a0 = xts_buf_addr;
+        xts_aol->l0 = xts_buf_size >= blk_size ? blk_size : xts_buf_size;
+        assert(xts_aol->l0);
+
+        if (block_no < (num_blks - 1)) {
+            xts_aol->next = xts_aol_vec->pa() + xts_aol_vec->line_size_get();
+        }
+        xts_aol_vec->write_thru();
+        xts_buf_addr += xts_aol->l0;
+        xts_buf_size -= xts_aol->l0;
+    }
+    xts_aol_vec->line_set(save_curr_line);
 }
 
 bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset,

@@ -112,13 +112,6 @@ header_type pci_q_state_t {
   }
 }
 
-// Barco ring 
-header_type barco_ring_t {
-  fields {
-    p_ndx	: 32;	// Producer Index
-  }
-}
-
 
 // Trailer in the PVM cmd containing source information
 header_type pvm_cmd_trailer_t {
@@ -275,176 +268,6 @@ header_type seq_pdma_entry_t {
   }
 }
 
-// Sequencer metadata for pushing Barco descriptor
-header_type seq_barco_entry_t {
-  fields {
-    barco_desc_addr	: 64;	// Address of the descriptor to push
-    barco_pndx_addr	: 34;	// 64 bit address of the doorbell to ring
-    barco_pndx_shadow_addr: 34;
-    barco_desc_size	:  4;	// Size of the descriptor to push
-    barco_pndx_size	:  3;	// Size of the ring state to be loaded
-    barco_ring_size	:  5;	// log2(ring_size)
-    barco_ring_addr	: 34;	// Address of the ring
-
-    // special test batch mode: pndx value is given in entry
-    barco_batch_pndx: 16;
-    barco_batch_mode: 1;
-    barco_batch_last: 1;
-  }
-}
-
-// Sequencer metadata compression status entry
-header_type seq_comp_status_desc0_t {
-  fields {
-    next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
-    next_db_data	: 64;	// 64 bit data of the next doorbell to ring,
-    	                    // also represents barco_desc_addr when next_db_action_barco_push is set
-    barco_pndx_addr	: 34;	// producer index address
-    barco_pndx_shadow_addr: 34;
-    barco_desc_size	:  4;	// descriptor size (power of 2 exponent)
-    barco_pndx_size	:  3;	// producer index size (power of 2 exponent)
-    barco_ring_size	:  5;	// log2(ring_size)
-    status_hbm_addr	: 64;	// Address where compression status will be placed
-    status_host_addr    : 64;	// Address where compression status will be placed
-    intr_addr		: 64;	// Address where interrupt needs to be written
-    intr_data		: 32;	// Data that needs to be written for interrupt
-    status_len		: 16;	// Length of the compression status
-    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA 
-    next_db_en		:  1;	// 1 => Ring next sequencer doorbell, 0 => don't ring
-    intr_en		:  1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
-				// NOTE: Don't enable intr_en and next_db_en together
-				//       as only one will be serviced
-				// Order of evaluation: 1. next_db_en 2. intr_en
-    next_db_action_barco_push: 1; // next_db action is actually Barco push
-  }
-}
-
-header_type seq_comp_status_desc1_t {
-  fields {
-    src_hbm_pa		: 64;
-    dst_hbm_pa		: 64;
-    sgl_pdma_in_pa	: 64;	// SGL in/out addresses for PDMA
-    sgl_pdma_out_pa	: 64;
-    sgl_vec_pa	    : 64;   // SGL vector for multi-block hash
-    pad_buf_pa	    : 64;   // pad buffer address
-    data_len		: 16;	// Length of the compression data
-    pad_len_shift	:  5;	// Padding length (power of 2)
-    stop_chain_on_error	:  1; // 1: don't ring next DB on error
-    data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
-				// 0 => Use the data lenghth in the status
-    aol_pad_en     :  1;
-    sgl_pad_hash_en:  1;
-    sgl_pdma_en         :  1;
-    sgl_pdma_pad_only   :  1;
-    copy_src_dst_on_error: 1;
-  }
-}
-
-// Compression destination SGL metadata
-header_type seq_comp_sgl_t {
-  fields {
-    addr0		: 64;	// SGL data buffer 0 address
-    addr1		: 64;	// SGL data buffer 1 address
-    addr2		: 64;	// SGL data buffer 2 address
-    addr3		: 64;	// SGL data buffer 3 address
-    len0		: 16;	// SGL data buffer 0 length
-    len1		: 16;	// SGL data buffer 1 length
-    len2		: 16;	// SGL data buffer 2 length
-    len3		: 16;	// SGL data buffer 3 length
-  }
-}
-
-// Compression status metadata
-header_type seq_comp_status_t {
-  fields {
-    status		: 16;	// Valid bit and error status
-    output_data_len	: 16;	// Output bits
-    rsvd		: 32;	// Reserved
-  }
-}
-
-// Sequencer metadata XTS status entry
-header_type seq_xts_status_desc_t {
-  fields {
-    next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
-    next_db_data	: 64;	// 64 bit data of the next doorbell to ring
-                            // also represents barco_desc_addr when next_db_action_barco_push is set
-    barco_pndx_addr	: 34;	// producer index address
-    barco_pndx_shadow_addr: 34;
-    barco_desc_size	:  4;	// descriptor size (power of 2 exponent)
-    barco_pndx_size	:  3;	// producer index size (power of 2 exponent)
-    barco_ring_size	:  5;	// log2(ring_size)
-    status_hbm_addr	: 64;	// Address where HW compression status was placed
-    status_host_addr    : 64;	// Address where a copy of above status can be made
-    intr_addr		: 64;	// Address where interrupt needs to be written
-    intr_data		: 32;	// Data that needs to be written for interrupt
-    status_len		: 16;	// Length of the compression status
-    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA 
-    next_db_en		:  1;	// 1 => Ring next sequencer doorbell, 0 => don't ring
-    intr_en		:  1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
-				// NOTE: Don't enable intr_en and next_db_en together
-				//       as only one will be serviced
-				// Order of evaluation: 1. next_db_en 2. intr_en
-    next_db_action_barco_push: 1; // next_db action is actually Barco push
-    stop_chain_on_error :  1;   // 1: don't ring next DB on error
-  }
-}
-
-// XTS status metadata
-header_type seq_xts_status_t {
-  fields {
-    err			: 64;	// Error status (0: success: >0: failure)
-  }
-}
-
-// Barco AOL (used by XTS)
-header_type barco_aol_t {
-  fields {
-    A0              : 64;
-    O0              : 32;
-    L0              : 32;
-    A1              : 64;
-    O1              : 32;
-    L1              : 32;
-    A2              : 64;
-    O2              : 32;
-    L2              : 32;
-    next_addr       : 64;
-    rsvd            : 64;
-  }
-}
-
-// Barco SGL (used by comp/decomp engines)
-header_type barco_sgl_t {
-  fields {
-    addr0		: 64;	// SGL data buffer 0 address
-    len0		: 32;	// SGL data buffer 0 length
-    rsvd0		: 32;
-    addr1		: 64;	// SGL data buffer 1 address
-    len1		: 32;	// SGL data buffer 1 length
-    rsvd1		: 32;
-    addr2		: 64;	// SGL data buffer 2 address
-    len2		: 32;	// SGL data buffer 2 length
-    rsvd2		: 32;
-    link        : 64;
-    rsvd        : 64;
-  }
-}
-
-#define BARCO_SGL_DESC_SIZE         64
-#define BARCO_SGL_DESC_SIZE_SHIFT   6
-
-// Accelerator chaining state structure:
-// these fields are grouped together to make it easier to
-// overlay the structure over other structs
-header_type acc_chain_state_t {
-  fields {
-    pad_buf_addr    : 64;
-    data_len        : 32;
-    pad_len         : 32;
-    total_len       : 32;
-  }
-}
 
 // Storage K+I vectors
 
@@ -490,14 +313,6 @@ header_type storage_kivec2_t {
   }
 }
 
-// kivec2acc: header union with to_stage_2, used by acclerator chaining (128 bits max)
-header_type storage_kivec2acc_t {
-  fields {
-    sgl_pdma_out_addr: 64;	// SGL address where data will be placed for PDMA
-    sgl_vec_addr    : 64;	// address of SGL vector for hash after compression
-  }
-}
-
 // kivec3: header union with to_stage_3  (128 bits max)
 header_type storage_kivec3_t {
   fields {
@@ -506,49 +321,6 @@ header_type storage_kivec3_t {
   }
 }
 
-// kivec3cc: header union with to_stage_3, used by acclerator chaining (128 bits max)
-header_type storage_kivec3acc_t {
-  fields {
-    data_addr	: 64;
-    pad_buf_addr: 34;   // pad buffer in HBM
-    pad_len     : 16;
-  }
-}
-
-// kivec4: header union with stage_2_stage for table 0 (160 bits max)
-header_type storage_kivec4_t {
-  fields {
-    barco_alt_desc_addr: 64;
-    barco_ring_addr : 34;
-    barco_pndx_shadow_addr: 34;
-    barco_desc_size	: 4;
-    barco_pndx_size	: 3;
-    barco_ring_size	: 5;
-    barco_num_descs	: 5;
-  }
-}
-
-// kivec5: header union with global (128 bits max)
-header_type storage_kivec5_t {
-  fields {
-    intr_addr		: 64;
-    data_len		: 16;	// Length of compression data (either from descriptor or 
-				// from the compression status)
-    pad_len_shift       : 5;
-    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA status
-    next_db_en          :  1;
-    intr_en	        :  1;
-    next_db_action_barco_push: 1; // next_db action is actually Barco push
-    stop_chain_on_error :  1;
-    data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
-                                // 0 => Use the data lenghth in the status
-    aol_pad_en          :  1;
-    sgl_pad_hash_en     :  1;
-    sgl_pdma_en         :  1;
-    sgl_pdma_pad_only   :  1;
-    copy_src_dst_on_error: 1;
-  }
-}
 
 // kivec6: header union with to_stage_1  (128 bits max)
 header_type storage_kivec6_t {
@@ -590,6 +362,22 @@ header_type storage_kivec6_t {
   modify_field(q_state.desc1_next_pc_valid, desc1_next_pc_valid);\
   modify_field(q_state.desc1_next_pc, desc1_next_pc);\
 
+#define ACC_Q_STATE_COPY_STAGE0(q_state)			\
+  Q_STATE_COPY_INTRINSIC(q_state)			\
+  modify_field(q_state.p_ndx, p_ndx);			\
+  modify_field(q_state.c_ndx, c_ndx);			\
+  modify_field(q_state.w_ndx, w_ndx);			\
+  modify_field(q_state.num_entries, num_entries);   \
+  modify_field(q_state.base_addr, base_addr);		\
+  modify_field(q_state.entry_size, entry_size);		\
+  modify_field(q_state.next_pc, next_pc);		\
+  modify_field(q_state.dst_lif, dst_lif);		\
+  modify_field(q_state.dst_qtype, dst_qtype);	        \
+  modify_field(q_state.dst_qid, dst_qid);		\
+  modify_field(q_state.dst_qaddr, dst_qaddr);		\
+  modify_field(q_state.desc1_next_pc_valid, desc1_next_pc_valid);\
+  modify_field(q_state.desc1_next_pc, desc1_next_pc);\
+  
 #define Q_STATE_COPY(q_state)				\
   Q_STATE_COPY_STAGE0(q_state)				\
   modify_field(q_state.pad, pad);			\
@@ -693,43 +481,9 @@ header_type storage_kivec6_t {
   modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\
   modify_field(scratch.ssd_q_size, kivec.ssd_q_size);			\
 
-#define STORAGE_KIVEC2ACC_USE(scratch, kivec)				\
-  modify_field(scratch.sgl_pdma_out_addr, kivec.sgl_pdma_out_addr);\
-  modify_field(scratch.sgl_vec_addr, kivec.sgl_vec_addr);			\
-
 #define STORAGE_KIVEC3_USE(scratch, kivec)				\
   modify_field(scratch.roce_msn, kivec.roce_msn);			\
   modify_field(scratch.data_addr, kivec.data_addr);			\
-
-#define STORAGE_KIVEC3ACC_USE(scratch, kivec)				\
-  modify_field(scratch.data_addr, kivec.data_addr);			\
-  modify_field(scratch.pad_buf_addr, kivec.pad_buf_addr);		\
-  modify_field(scratch.pad_len, kivec.pad_len);		\
-
-#define STORAGE_KIVEC4_USE(scratch, kivec)				\
-  modify_field(scratch.barco_alt_desc_addr, kivec.barco_alt_desc_addr);			\
-  modify_field(scratch.barco_pndx_shadow_addr, kivec.barco_pndx_shadow_addr);\
-  modify_field(scratch.barco_desc_size, kivec.barco_desc_size);			\
-  modify_field(scratch.barco_pndx_size, kivec.barco_pndx_size);			\
-  modify_field(scratch.barco_ring_size, kivec.barco_ring_size);			\
-  modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);			\
-  modify_field(scratch.barco_num_descs, kivec.barco_num_descs);			\
-
-#define STORAGE_KIVEC5_USE(scratch, kivec)				\
-  modify_field(scratch.intr_addr, kivec.intr_addr);			\
-  modify_field(scratch.data_len, kivec.data_len);		        \
-  modify_field(scratch.pad_len_shift, kivec.pad_len_shift);		\
-  modify_field(scratch.status_dma_en, kivec.status_dma_en);	        \
-  modify_field(scratch.next_db_en, kivec.next_db_en);	                \
-  modify_field(scratch.intr_en, kivec.intr_en);	                        \
-  modify_field(scratch.next_db_action_barco_push, kivec.next_db_action_barco_push);\
-  modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
-  modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);	\
-  modify_field(scratch.aol_pad_en, kivec.aol_pad_en);	        \
-  modify_field(scratch.sgl_pad_hash_en, kivec.sgl_pad_hash_en);	        \
-  modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
-  modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
-  modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
 
 #define STORAGE_KIVEC6_USE(scratch, kivec)				\
   modify_field(scratch.ssd_ci_addr, kivec.ssd_ci_addr);			\
@@ -746,18 +500,13 @@ header_type storage_kivec6_t {
 #define nvme_be_wqe_release_start	0x80008000
 #define nvme_be_wqe_handler_start	0x80009000
 #define nvme_be_cmd_handler_start	0x8000A000
-#define seq_barco_ring_push_start	0x8000B000
-#define roce_sq_xlate_start		0x8000C000
-#define roce_r2n_wqe_prep_start		0x8000D000
-#define pvm_roce_sq_cb_update_start	0x8000E000
-#define roce_rq_push_start		0x8000F000
-#define pvm_roce_sq_cb_push_start	0x80010000
-#define seq_pvm_roce_sq_cb_push_start	0x80020000
-#define seq_comp_status_handler_start	0x80030000
-#define seq_comp_sgl_handler_start	0x80040000
-#define seq_xts_status_handler_start	0x80050000
-#define seq_barco_ring_pndx_read_start	0x80060000
-#define nvme_be_save_iob_addr_start	0x80070000
+#define roce_sq_xlate_start		0x8000B000
+#define roce_r2n_wqe_prep_start		0x8000C000
+#define pvm_roce_sq_cb_update_start	0x8000D000
+#define roce_rq_push_start		0x8000E000
+#define pvm_roce_sq_cb_push_start	0x8000F000
+#define seq_pvm_roce_sq_cb_push_start	0x80010000
+#define nvme_be_save_iob_addr_start	0x80020000
 
 
 #endif     // STORAGE_TX_P4_HDR_H

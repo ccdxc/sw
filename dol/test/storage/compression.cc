@@ -163,24 +163,33 @@ comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
                      uint32_t num_blks)
 {
     cp_sgl_t    *comp_sgl;
-    uint64_t    comp_buf_pa;
+    uint64_t    comp_buf_addr;
+    uint32_t    comp_buf_size;
     uint32_t    block_no;
+    uint32_t    save_curr_line;
 
     assert(comp_sgl_vec->num_lines_get() >= num_blks);
-    comp_buf_pa = comp_buf->pa();
+    comp_buf_addr = comp_buf->pa();
+    comp_buf_size = comp_buf->line_size_get();
+    save_curr_line = comp_sgl_vec->line_get();
+
     for (block_no = 0; block_no < num_blks; block_no++) {
         comp_sgl_vec->line_set(block_no);
         comp_sgl_vec->clear();
 
         comp_sgl = (cp_sgl_t *)comp_sgl_vec->read();
-        comp_sgl->addr0 = comp_buf_pa;
-        comp_sgl->len0 = blk_size;
+        comp_sgl->addr0 = comp_buf_addr;
+        comp_sgl->len0 = comp_buf_size >= blk_size ? blk_size : comp_buf_size;
+        assert(comp_sgl->len0);
+
         if (block_no < (num_blks - 1)) {
-            comp_sgl->link = comp_sgl_vec->pa() + sizeof(*comp_sgl);
+            comp_sgl->link = comp_sgl_vec->pa() + comp_sgl_vec->line_size_get();
         }
         comp_sgl_vec->write_thru();
-        comp_buf_pa += blk_size;
+        comp_buf_addr += comp_sgl->len0;
+        comp_buf_size -= comp_sgl->len0;
     }
+    comp_sgl_vec->line_set(save_curr_line);
 }
 
 bool
@@ -606,8 +615,7 @@ compression_buf_init()
                                         comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                         comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                         destructor_free_buffers(true));
-    max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(kCompAppMaxSize, sizeof(cp_hdr_t),
-                                                  kCompAppHashBlkSize);
+    max_hash_blks = COMP_MAX_HASH_BLKS(kCompAppMaxSize, kCompAppHashBlkSize);
     hash_status_host_vec = new dp_mem_t(max_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
                                         DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                         kMinHostMemAllocSize);
@@ -1133,13 +1141,12 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   acc_chain_params_t chain_params = {0};
   status_host_buf->clear_thru();
   chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
-  chain_params.chain_ent.status_hbm_pa = status_buf->pa();
-  chain_params.chain_ent.status_host_pa = status_host_buf->pa();
-  chain_params.chain_ent.src_hbm_pa = d.src;
-  chain_params.chain_ent.dst_hbm_pa = d.dst;
-  chain_params.chain_ent.sgl_pdma_out_pa = seq_sgl->pa();
+  chain_params.chain_ent.status_addr0 = status_buf->pa();
+  chain_params.chain_ent.status_addr1 = status_host_buf->pa();
+  chain_params.chain_ent.flat_dst_buf_addr = d.dst;
+  chain_params.chain_ent.aol_dst_vec_addr = seq_sgl->pa();
   chain_params.chain_ent.sgl_pdma_en = 1;
-  chain_params.chain_ent.intr_pa = opaque_host_buf->pa();
+  chain_params.chain_ent.intr_addr = opaque_host_buf->pa();
   chain_params.chain_ent.intr_data = kCompSeqIntrData;
 
   // Clear the area where interrupt from sequencer is going to come.

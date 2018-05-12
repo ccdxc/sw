@@ -133,9 +133,9 @@ typedef struct xts_prot_info_ {
 typedef struct xts_status_desc_ {
   uint64_t     db_addr;
   uint64_t     db_data;
-  uint64_t     status_hbm_pa;
-  uint64_t     status_host_pa;
-  uint64_t     intr_pa;		// MSI-X Interrupt address
+  uint64_t     status_addr0;
+  uint64_t     status_addr1;
+  uint64_t     intr_addr;	// MSI-X Interrupt address
   uint32_t     intr_data;	// MSI-X Interrupt data
   uint16_t     status_len;
   uint8_t      status_dma_en:1,
@@ -259,6 +259,10 @@ int xts_multi_blk_128req();
 int xts_multi_blk_noc_stress_from_host();
 int xts_multi_blk_noc_stress_from_hbm();
 
+void xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
+                         dp_mem_t *xts_buf,
+                         uint32_t blk_size,
+                         uint32_t num_blks);
 
 }  // namespace tests
 

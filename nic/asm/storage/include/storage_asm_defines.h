@@ -28,7 +28,7 @@
 #define STORAGE_KIVEC0_DST_QID                  \
     k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR                \
-    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit10_ebit33}
+    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST               \
     k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0                    \
@@ -55,9 +55,9 @@
 #define STORAGE_KIVEC1_SRC_QID                  \
     k.{storage_kivec1_src_qid_sbit0_ebit1...storage_kivec1_src_qid_sbit18_ebit23}
 #define STORAGE_KIVEC1_SRC_QADDR                \
-    k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit26_ebit33}
+    k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC1_DEVICE_ADDR              \
-    k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
+    k.{storage_kivec1_device_addr_sbit0_ebit31...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD          \
     k.storage_kivec1_roce_cq_new_cmd
 #define STORAGE_KIVEC1_ROCE_POST_BUF            \
@@ -68,70 +68,15 @@
 #define STORAGE_KIVEC2_SSD_Q_SIZE               \
     k.storage_kivec2_ssd_q_size
 
-#define STORAGE_KIVEC2ACC_SGL_PDMA_OUT_ADDR     \
-    k.{storage_kivec2acc_sgl_pdma_out_addr_sbit0_ebit15...storage_kivec2acc_sgl_pdma_out_addr_sbit32_ebit63}
-#define STORAGE_KIVEC2ACC_SGL_VEC_ADDR          \
-    k.storage_kivec2acc_sgl_vec_addr
-
 #define STORAGE_KIVEC3_ROCE_MSN                 \
     k.storage_kivec3_roce_msn
 #define STORAGE_KIVEC3_DATA_ADDR                \
     k.storage_kivec3_data_addr
 
-#define STORAGE_KIVEC3ACC_DATA_ADDR             \
-    k.{storage_kivec3acc_data_addr_sbit0_ebit31...storage_kivec3acc_data_addr_sbit32_ebit63}
-#define STORAGE_KIVEC3ACC_PAD_BUF_ADDR          \
-    k.{storage_kivec3acc_pad_buf_addr_sbit0_ebit31...storage_kivec3acc_pad_buf_addr_sbit32_ebit33}
-#define STORAGE_KIVEC3ACC_PAD_LEN               \
-    k.{storage_kivec3acc_pad_len_sbit0_ebit5...storage_kivec3acc_pad_len_sbit14_ebit15}
-
-#define STORAGE_KIVEC4_BARCO_ALT_DESC_ADDR      \
-    k.{storage_kivec4_barco_alt_desc_addr_sbit0_ebit15...storage_kivec4_barco_alt_desc_addr_sbit56_ebit63}
-#define STORAGE_KIVEC4_BARCO_RING_ADDR          \
-    k.{storage_kivec4_barco_ring_addr_sbit0_ebit23...storage_kivec4_barco_ring_addr_sbit32_ebit33}
-#define STORAGE_KIVEC4_BARCO_DESC_SIZE          \
-    k.storage_kivec4_barco_desc_size
-#define STORAGE_KIVEC4_BARCO_PNDX_SHADOW_ADDR   \
-    k.{storage_kivec4_barco_pndx_shadow_addr_sbit0_ebit5...storage_kivec4_barco_pndx_shadow_addr_sbit30_ebit33}
-#define STORAGE_KIVEC4_BARCO_PNDX_SIZE          \
-    k.storage_kivec4_barco_pndx_size
-#define STORAGE_KIVEC4_BARCO_RING_SIZE          \
-    k.storage_kivec4_barco_ring_size
-#define STORAGE_KIVEC4_BARCO_NUM_DESCS          \
-    k.storage_kivec4_barco_num_descs
-
-#define STORAGE_KIVEC5_INTR_ADDR                \
-    k.{storage_kivec5_intr_addr_sbit0_ebit7...storage_kivec5_intr_addr_sbit40_ebit63}
-#define STORAGE_KIVEC5_DATA_LEN                 \
-    k.{storage_kivec5_data_len_sbit0_ebit7...storage_kivec5_data_len_sbit8_ebit15}
-#define STORAGE_KIVEC5_PAD_LEN_SHIFT            \
-    k.storage_kivec5_pad_len_shift
-#define STORAGE_KIVEC5_STATUS_DMA_EN            \
-    k.storage_kivec5_status_dma_en
-#define STORAGE_KIVEC5_DATA_LEN_FROM_DESC       \
-    k.storage_kivec5_data_len_from_desc
-#define STORAGE_KIVEC5_STOP_CHAIN_ON_ERROR      \
-    k.storage_kivec5_stop_chain_on_error
-#define STORAGE_KIVEC5_COPY_SRC_DST_ON_ERROR    \
-    k.storage_kivec5_copy_src_desc_on_error
-#define STORAGE_KIVEC5_NEXT_DB_EN               \
-    k.storage_kivec5_next_db_en
-#define STORAGE_KIVEC5_AOL_PAD_EN               \
-    k.storage_kivec5_aol_pad_en
-#define STORAGE_KIVEC5_SGL_PAD_HASH_EN          \
-    k.storage_kivec5_sgl_pad_hash_en
-#define STORAGE_KIVEC5_SGL_PDMA_EN              \
-    k.storage_kivec5_sgl_pdma_en
-#define STORAGE_KIVEC5_SGL_PDMA_PAD_ONLY        \
-    k.storage_kivec5_sgl_pdma_pad_only
-#define STORAGE_KIVEC5_INTR_EN                  \
-    k.storage_kivec5_intr_en
-#define STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH\
-    k.storage_kivec5_next_db_action_barco_push
 
 #define STORAGE_KIVEC6_SSD_CI_ADDR              \
     k.storage_kivec6_ssd_ci_addr
-
+    
 #define STAGE0_KIVEC_LIF                        \
     k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
 #define STAGE0_KIVEC_QTYPE                      \
@@ -242,16 +187,99 @@
     k.{nvme_kivec_arm_dst7_rrq_desc_addr_sbit0_ebit31...nvme_kivec_arm_dst7_rrq_desc_addr_sbit32_ebit33}
 
 
+#define SEQ_KIVEC1_SRC_LIF                      \
+    k.{seq_kivec1_src_lif_sbit0_ebit7...seq_kivec1_src_lif_sbit8_ebit10}
+#define SEQ_KIVEC1_SRC_QTYPE                    \
+    k.seq_kivec1_src_qtype
+#define SEQ_KIVEC1_SRC_QID                      \
+    k.{seq_kivec1_src_qid_sbit0_ebit1...seq_kivec1_src_qid_sbit18_ebit23}
+#define SEQ_KIVEC1_SRC_QADDR                    \
+    k.{seq_kivec1_src_qaddr_sbit0_ebit1...seq_kivec1_src_qaddr_sbit26_ebit33}
+#define SEQ_KIVEC1_BARCO_RING_ADDR              \
+    k.{seq_kivec1_barco_ring_addr_sbit0_ebit7...seq_kivec1_barco_ring_addr_sbit32_ebit33}
+
+#define SEQ_KIVEC2_SGL_PDMA_DST_ADDR            \
+    k.seq_kivec2_sgl_pdma_dst_addr
+#define SEQ_KIVEC2_SGL_VEC_ADDR                 \
+    k.seq_kivec2_sgl_vec_addr
+
+#define SEQ_KIVEC3_FLAT_BUF_ADDR                \
+    k.seq_kivec3_flat_buf_addr
+#define SEQ_KIVEC3_PAD_BUF_ADDR                 \
+    k.{seq_kivec3_pad_buf_addr_sbit0_ebit31...seq_kivec3_pad_buf_addr_sbit32_ebit33}
+#define SEQ_KIVEC3_PAD_LEN                      \
+    k.{seq_kivec3_pad_len_sbit0_ebit5...seq_kivec3_pad_len_sbit14_ebit15}
+#define SEQ_KIVEC3_NUM_BLKS                     \
+    k.seq_kivec3_num_blks
+
+#define SEQ_KIVEC4_BARCO_ALT_DESC_ADDR          \
+    k.{seq_kivec4_barco_alt_desc_addr_sbit0_ebit15...seq_kivec4_barco_alt_desc_addr_sbit56_ebit63}
+#define SEQ_KIVEC4_BARCO_RING_ADDR              \
+    k.{seq_kivec4_barco_ring_addr_sbit0_ebit23...seq_kivec4_barco_ring_addr_sbit32_ebit33}
+#define SEQ_KIVEC4_BARCO_DESC_SIZE              \
+    k.seq_kivec4_barco_desc_size
+#define SEQ_KIVEC4_BARCO_PNDX_SHADOW_ADDR       \
+    k.{seq_kivec4_barco_pndx_shadow_addr_sbit0_ebit5...seq_kivec4_barco_pndx_shadow_addr_sbit30_ebit33}
+#define SEQ_KIVEC4_BARCO_PNDX_SIZE              \
+    k.seq_kivec4_barco_pndx_size
+#define SEQ_KIVEC4_BARCO_RING_SIZE              \
+    k.seq_kivec4_barco_ring_size
+#define SEQ_KIVEC4_BARCO_NUM_DESCS              \
+    k.seq_kivec4_barco_num_descs
+
+#define SEQ_KIVEC5_INTR_ADDR                    \
+    k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
+#define SEQ_KIVEC5_DATA_LEN                     \
+    k.{seq_kivec5_data_len_sbit0_ebit7...seq_kivec5_data_len_sbit8_ebit15}
+#define SEQ_KIVEC5_PAD_LEN_SHIFT                \
+    k.seq_kivec5_pad_len_shift
+#define SEQ_KIVEC5_STATUS_DMA_EN                \
+    k.seq_kivec5_status_dma_en
+#define SEQ_KIVEC5_DATA_LEN_FROM_DESC           \
+    k.seq_kivec5_data_len_from_desc
+#define SEQ_KIVEC5_STOP_CHAIN_ON_ERROR          \
+    k.seq_kivec5_stop_chain_on_error
+#define SEQ_KIVEC5_COPY_SRC_DST_ON_ERROR        \
+    k.seq_kivec5_copy_src_desc_on_error
+#define SEQ_KIVEC5_NEXT_DB_EN                   \
+    k.seq_kivec5_next_db_en
+#define SEQ_KIVEC5_AOL_PAD_EN                   \
+    k.seq_kivec5_aol_pad_en
+#define SEQ_KIVEC5_SGL_PAD_EN                   \
+    k.seq_kivec5_sgl_pad_en
+#define SEQ_KIVEC5_SGL_PDMA_EN                  \
+    k.seq_kivec5_sgl_pdma_en
+#define SEQ_KIVEC5_SGL_PDMA_PAD_ONLY            \
+    k.seq_kivec5_sgl_pdma_pad_only
+#define SEQ_KIVEC5_INTR_EN                      \
+    k.seq_kivec5_intr_en
+#define SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH    \
+    k.seq_kivec5_next_db_action_barco_push
+#define SEQ_KIVEC5_DESC_VEC_PUSH_EN             \
+    k.seq_kivec5_desc_vec_push_en
+
+#define SEQ_KIVEC6_AOL_SRC_VEC_ADDR             \
+    k.seq_kivec6_aol_src_vec_addr
+#define SEQ_KIVEC6_AOL_DST_VEC_ADDR             \
+    k.seq_kivec6_aol_dst_vec_addr
+    
 /*
  * Debug flags
  */
-#define STORAGE_COMP_SGL_PDMA_XFER_DEBUG 1
+#define SEQ_COMP_SGL_PDMA_XFER_DEBUG            1
+#define SEQ_COMP_SGL_PDMA_PAD_ONLY_DEBUG        1
 
 /*
  * Barco SGL descriptor size
  */
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
+
+/*
+ * Barco AOL descriptor size
+ */
+#define BARCO_AOL_DESC_SIZE         64
+#define BARCO_AOL_DESC_SIZE_SHIFT   6
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_NOP               0
@@ -296,6 +324,15 @@ struct capri_dma_cmd_mem2mem_t {
   addi      r1, r0, _pc[33:6];                                          \
   phvwri    p.app_header_table##_num##_valid, 1;                        \
   phvwri.e  p.{common_te##_num##_phv_table_lock_en...                   \
+               common_te##_num##_phv_table_raw_table_size},             \
+              (0 << 3 | STORAGE_TBL_LOAD_SIZE_0_BITS);                  \
+  phvwrpair p.common_te##_num##_phv_table_pc, r1,                       \
+            p.common_te##_num##_phv_table_addr, r0;                     \
+        
+#define LOAD_TABLE_NO_LKUP_PC_IMM(_num, _pc)                            \
+  addi      r1, r0, _pc[33:6];                                          \
+  phvwri    p.app_header_table##_num##_valid, 1;                        \
+  phvwri    p.{common_te##_num##_phv_table_lock_en...                   \
                common_te##_num##_phv_table_raw_table_size},             \
               (0 << 3 | STORAGE_TBL_LOAD_SIZE_0_BITS);                  \
   phvwrpair p.common_te##_num##_phv_table_pc, r1,                       \
@@ -487,6 +524,16 @@ struct capri_dma_cmd_mem2mem_t {
   phvwri.e  p.app_header_table2_valid, 0;                               \
   nop;                                                                  \
 
+#define SET_TABLE3                                                      \
+  phvwri    p.app_header_table3_valid, 1;                               \
+
+#define CLEAR_TABLE3                                                    \
+  phvwri    p.app_header_table3_valid, 0;                               \
+
+#define CLEAR_TABLE3_e                                                  \
+  phvwri.e  p.app_header_table3_valid, 0;                               \
+  nop;                                                                  \
+
 // Used to clear all table valid bits and exit the pipeline
 #define LOAD_NO_TABLES                                                  \
   phvwri.e  p.{app_header_table0_valid...app_header_table3_valid}, 0;   \
@@ -571,6 +618,21 @@ struct capri_dma_cmd_mem2mem_t {
    DMA_MEM2MEM_SETUP_REG_ADDR(_type, r1, _size, _use_override_lif,      \
                               _override_lif, _dma_cmd_X)                \
    
+// Mem2Mem DMA:
+// assume no LIF override
+// _addr is given in a register
+#define DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(_type, _addr, _size,          \
+                                          _dma_cmd_X)                   \
+   phvwrpair p._dma_cmd_X##_dma_cmd_mem2mem_type, _type,                \
+             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_MEM2MEM;            \
+   phvwrpair p._dma_cmd_X##_dma_cmd_size, _size,                        \
+             p._dma_cmd_X##_dma_cmd_addr, _addr;                        \
+   phvwr     p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];            \
+
+#define DMA_MEM2MEM_NO_LIF_SETUP(_type, _addr, _size, _dma_cmd_X)       \
+   add      r1, r0, _addr;                                              \
+   DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(_type, r1, _size, _dma_cmd_X)      \
+   
 // Mem2Mem DMA setup via pointer:
 // assume no LIF override
 // _addr is 64 bits
@@ -616,6 +678,12 @@ struct capri_dma_cmd_mem2mem_t {
                                         sizeof(p._start) - 1))/16);     \
    phvwri   p._dma_cmd_eop, 1;                                          \
 
+#define DMA_PTR_SETUP_e(_start, _dma_cmd_eop, _dma_cmd_ptr)             \
+   phvwri.e p._dma_cmd_ptr,                                             \
+                ((CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) +           \
+                                        sizeof(p._start) - 1))/16);     \
+   phvwri   p._dma_cmd_eop, 1;                                          \
+   
 // Cancel a previously set DMA descriptor
 #define DMA_CMD_CANCEL(_dma_cmd_X)                                      \
    phvwri   p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_NOP;                 \
@@ -1000,10 +1068,10 @@ struct capri_dma_cmd_mem2mem_t {
    sle      c2, r_src_len, r_xfer_len;                                  \
    add.c2   r_xfer_len, r0, r_src_len;                                  \
    add      r_dst_addr, r0, _addr;                                      \
-   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r_src_addr,       \
-                              r_xfer_len, 0, 0, _dma_cmd_ptr_src)       \
-   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_dst_addr,       \
-                              r_xfer_len, 0, 0, _dma_cmd_ptr_dst)       \
+   DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r_src_addr,\
+                                     r_xfer_len, _dma_cmd_ptr_src)      \
+   DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_dst_addr,\
+                                     r_xfer_len, _dma_cmd_ptr_dst)      \
    add      r_src_addr, r_src_addr, r_xfer_len;                         \
    add      r_dst_addr, r_dst_addr, r_xfer_len;                         \
    sub      r_sgl_len, _len, r_xfer_len;                                \
@@ -1046,24 +1114,24 @@ struct capri_dma_cmd_mem2mem_t {
 /*
  * Compression SGL PDMA transfer length error
  */
-#if STORAGE_COMP_SGL_PDMA_XFER_DEBUG
-#define STORAGE_COMP_SGL_PDMA_XFER_ERROR_TRAP()                         \
+#if SEQ_COMP_SGL_PDMA_XFER_DEBUG
+#define SEQ_COMP_SGL_PDMA_XFER_ERROR_TRAP()                             \
         illegal;                                                        \
         nop;
 #else
-#define STORAGE_COMP_SGL_PDMA_XFER_ERROR_TRAP()                         \
+#define SEQ_COMP_SGL_PDMA_XFER_ERROR_TRAP()                             \
         nop;
 #endif
 
 /*
  * Compression SGL PDMA pad-only error
  */
-#if STORAGE_COMP_SGL_PDMA_PAD_ONLY_DEBUG
-#define STORAGE_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()                     \
+#if SEQ_COMP_SGL_PDMA_PAD_ONLY_DEBUG
+#define SEQ_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()                         \
         illegal;                                                        \
         nop;
 #else
-#define STORAGE_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()                     \
+#define SEQ_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()                         \
         nop;
 #endif
 

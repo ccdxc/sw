@@ -16,8 +16,6 @@
 
 #define tx_table_s1_t1		s1_tbl1
 #define tx_table_s2_t1		s2_tbl1
-#define tx_table_s3_t1		s3_tbl1
-#define tx_table_s3_t2		s3_tbl2
 
 #define tx_table_s0_t0_action	q_state_pop
 #define tx_table_s0_t0_action1	pri_q_state_pop
@@ -31,13 +29,8 @@
 #define tx_table_s1_t0_action4	nvme_be_cq_handler
 #define tx_table_s1_t0_action5	seq_pdma_entry_handler
 #define tx_table_s1_t0_action6	seq_r2n_entry_handler
-#define tx_table_s1_t0_action7	seq_barco_entry_handler
 #define tx_table_s1_t0_action8	roce_cq_handler
 #define tx_table_s1_t0_action9	pvm_roce_sq_wqe_process
-#define tx_table_s1_t0_action10	seq_comp_status_desc0_handler
-#define tx_table_s1_t0_action11	seq_xts_status_desc_handler
-
-#define tx_table_s1_t1_action	seq_comp_status_desc1_handler
 
 #define tx_table_s2_t0_action	q_state_push
 #define tx_table_s2_t0_action1	seq_q_state_push
@@ -48,9 +41,6 @@
 #define tx_table_s2_t0_action7	roce_sq_xlate
 #define tx_table_s2_t0_action8	roce_rq_push
 #define tx_table_s2_t0_action9	seq_pvm_roce_sq_cb_push
-#define tx_table_s2_t0_action10	seq_comp_status_handler
-#define tx_table_s2_t0_action11	seq_xts_status_handler
-#define tx_table_s2_t0_action12	seq_barco_ring_pndx_read
 
 #define tx_table_s2_t1_action	nvme_be_save_iob_addr
 
@@ -59,11 +49,6 @@
 #define tx_table_s3_t0_action2	pri_q_state_decr
 #define tx_table_s3_t0_action3	roce_r2n_wqe_prep
 #define tx_table_s3_t0_action4	pvm_roce_sq_cb_update
-#define tx_table_s3_t0_action5	seq_barco_ring_push
-#define tx_table_s3_t0_action6	seq_barco_chain_action
-
-#define tx_table_s3_t1_action	seq_comp_sgl_handler
-#define tx_table_s3_t2_action	seq_comp_sgl_pad_only
 
 #define tx_table_s4_t0_action	nvme_be_wqe_save
 #define tx_table_s4_t0_action1	nvme_be_wqe_release
@@ -77,7 +62,7 @@
 #include "../common-p4+/common_txdma.p4"
 
 #include "storage_queues.p4"
-#include "storage_seq.p4"
+#include "storage_tx_seq.p4"
 
 
 /*****************************************************************************
@@ -88,22 +73,14 @@
 // Global and stage to stage K+I vectors
 @pragma pa_header_union ingress common_t0_s2s
 metadata storage_kivec0_t storage_kivec0;
-@pragma pa_header_union ingress common_t0_s2s
-metadata storage_kivec4_t storage_kivec4;
 @pragma pa_header_union ingress common_global
 metadata storage_kivec1_t storage_kivec1;
-@pragma pa_header_union ingress common_global
-metadata storage_kivec5_t storage_kivec5;
 @pragma pa_header_union ingress to_stage_1
 metadata storage_kivec6_t storage_kivec6;
 @pragma pa_header_union ingress to_stage_2
 metadata storage_kivec2_t storage_kivec2;
-@pragma pa_header_union ingress to_stage_2
-metadata storage_kivec2acc_t storage_kivec2acc;
 @pragma pa_header_union ingress to_stage_3
 metadata storage_kivec3_t storage_kivec3;
-@pragma pa_header_union ingress to_stage_3
-metadata storage_kivec3acc_t storage_kivec3acc;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -122,10 +99,6 @@ metadata storage_pci_data_t pci_intr_data;
 // R2N work queue entry 
 @pragma dont_trim
 metadata r2n_wqe_t r2n_wqe;
-
-// Barco ring doorbell data
-@pragma dont_trim
-metadata barco_ring_t barco_doorbell_data;
 
 // Keep the WQEs/commands that occupy full flit aligned at flit boundaries
 
@@ -163,11 +136,6 @@ metadata ssd_ci_t ssd_ci;
 // for RDMA Write command
 @pragma dont_trim
 metadata storage_capri_addr_t r2n_data_buff_addr;
-
-// Accelerator chaining state
-@pragma pa_header_union ingress nvme_cmd
-@pragma dont_trim
-metadata acc_chain_state_t acc_chain;
 
 // DMA commands metadata
 @pragma dont_trim
@@ -260,9 +228,6 @@ metadata pri_q_state_t pri_q_state_scratch;
 metadata pci_q_state_t pci_q_state_scratch;
 
 @pragma scratch_metadata
-metadata barco_ring_t barco_ring_scratch;
-
-@pragma scratch_metadata
 metadata roce_cq_cb_t roce_cq_cb_scratch;
 
 @pragma scratch_metadata
@@ -290,19 +255,7 @@ metadata storage_kivec1_t storage_kivec1_scratch;
 metadata storage_kivec2_t storage_kivec2_scratch;
 
 @pragma scratch_metadata
-metadata storage_kivec2acc_t storage_kivec2acc_scratch;
-
-@pragma scratch_metadata
 metadata storage_kivec3_t storage_kivec3_scratch;
-
-@pragma scratch_metadata
-metadata storage_kivec3acc_t storage_kivec3acc_scratch;
-
-@pragma scratch_metadata
-metadata storage_kivec4_t storage_kivec4_scratch;
-
-@pragma scratch_metadata
-metadata storage_kivec5_t storage_kivec5_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec6_t storage_kivec6_scratch;
@@ -323,9 +276,6 @@ metadata seq_pdma_entry_t seq_pdma_entry_scratch;
 metadata seq_r2n_entry_t seq_r2n_entry_scratch;
 
 @pragma scratch_metadata
-metadata seq_barco_entry_t seq_barco_entry_scratch;
-
-@pragma scratch_metadata
 metadata roce_cq_wqe_t roce_cq_wqe_scratch;
 
 @pragma scratch_metadata
@@ -336,27 +286,6 @@ metadata roce_rq_wqe_t roce_rq_wqe_scratch;
 
 @pragma scratch_metadata
 metadata roce_sq_xlate_entry_t roce_sq_xlate_entry_scratch;
-
-@pragma scratch_metadata
-metadata seq_comp_status_desc0_t seq_comp_status_desc0_scratch;
-
-@pragma scratch_metadata
-metadata seq_comp_status_desc1_t seq_comp_status_desc1_scratch;
-
-@pragma scratch_metadata
-metadata seq_comp_status_t seq_comp_status_scratch;
-
-@pragma scratch_metadata
-metadata seq_comp_sgl_t seq_comp_sgl_scratch;
-
-@pragma scratch_metadata
-metadata barco_sgl_t barco_sgl_scratch;
-
-@pragma scratch_metadata
-metadata seq_xts_status_desc_t seq_xts_status_desc_scratch;
-
-@pragma scratch_metadata
-metadata seq_xts_status_t seq_xts_status_scratch;
 
 @pragma scratch_metadata
 metadata iob_addr_t iob_addr_scratch;
@@ -1139,9 +1068,4 @@ action pvm_roce_sq_wqe_process(wrid, op_type, complete_notify, fence,
   }
 }
 
-
-
-/*****************************************************************************
- * Storage Tx PVM target BEGIN
- *****************************************************************************/
 

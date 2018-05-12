@@ -458,9 +458,8 @@ comp_hash_chain_scale_t::comp_hash_chain_scale_t(comp_hash_chain_scale_params_t 
 
     // Note that RTL expects each opaque tag as uint64_t and writes
     // exp_opaque_data to the first 4 bytes, followed by 0 in the next 4 bytes
-    max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(params.chc_params_.app_max_size_,
-                                                  sizeof(cp_hdr_t),
-                                                  kCompAppHashBlkSize);
+    max_hash_blks = COMP_MAX_HASH_BLKS(params.chc_params_.app_max_size_,
+                                       kCompAppHashBlkSize);
     exp_opaque_data_buf = new dp_mem_t(1, max_hash_blks * sizeof(uint64_t),
                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                        kMinHostMemAllocSize);
@@ -686,9 +685,8 @@ chksum_decomp_chain_scale_t::chksum_decomp_chain_scale_t(chksum_decomp_chain_sca
 
     // Set up a common exp_opaque_data_buf that can be used to verify both
     // checksum opaque as well as decomp opaque.
-    max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(params.cdc_params_.app_max_size_,
-                                                  sizeof(cp_hdr_t),
-                                                  kCompAppHashBlkSize);
+    max_hash_blks = COMP_MAX_HASH_BLKS(params.cdc_params_.app_max_size_,
+                                       kCompAppHashBlkSize);
     max_opaque_blks = std::max(max_hash_blks, params.num_chains_);
     exp_opaque_data_buf = new dp_mem_t(1, max_opaque_blks * sizeof(uint64_t),
                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,

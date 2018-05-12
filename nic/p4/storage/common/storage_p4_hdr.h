@@ -130,6 +130,12 @@ header_type storage_capri_addr_t {
   }
 }
 
+header_type storage_capri_len32_t {
+  fields {
+    len     : 32;
+  }
+}
+
 header_type storage_doorbell_data_t {
   fields {
     data	: 64;	// 64 bit data

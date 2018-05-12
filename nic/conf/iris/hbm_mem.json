@@ -177,11 +177,11 @@
         },
         {
             "name": "brq-ring-xts0",
-            "size_kb": 128
+            "size_kb": 512
         },
         {
             "name": "brq-ring-xts1",
-            "size_kb": 128
+            "size_kb": 512
         },
         {
             "name": "tls_proxy_pad_table",

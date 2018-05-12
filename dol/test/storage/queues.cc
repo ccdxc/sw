@@ -67,13 +67,13 @@ const static char	*kNvmeBeSqHandler	 = "storage_tx_nvme_be_sq_handler.bin";
 const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
-const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
-const static char	*kSeqXtsStatusSqHandler = "storage_tx_seq_xts_status_desc_handler.bin";
+const static char	*kSeqXtsSqHandler	 = "storage_seq_barco_entry_handler.bin";
+const static char	*kSeqXtsStatusSqHandler = "storage_seq_xts_status_desc_handler.bin";
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
-const static char	*kSeqCompSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
-const static char	*kSeqCompStatusDesc0SqHandler = "storage_tx_seq_comp_status_desc0_handler.bin";
-const static char	*kSeqCompStatusDesc1SqHandler = "storage_tx_seq_comp_status_desc1_handler.bin";
+const static char	*kSeqCompSqHandler	 = "storage_seq_barco_entry_handler.bin";
+const static char	*kSeqCompStatusDesc0SqHandler = "storage_seq_comp_status_desc0_handler.bin";
+const static char	*kSeqCompStatusDesc1SqHandler = "storage_seq_comp_status_desc1_handler.bin";
 const static char	*kArmQTimeoutHandler		 = "storage_nvme_timeout_iob_addr.bin";
 const static char	*kArmQFreeHandler		 = "storage_nvme_free_iob_addr.bin";
 
@@ -186,6 +186,9 @@ int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
                     uint16_t total_rings, uint16_t host_rings,
                     dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
+int storage_tx_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
+                           uint16_t total_rings, uint16_t host_rings,
+                           dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
 
 static uint32_t log_2(uint32_t x);
 
@@ -314,12 +317,35 @@ int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin,
   printf("Initialized PVM Seq SQ %d \n", qid);
 
   // Setup the queue state in Capri:
+  if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, qid, pgm_bin, 
+                                   total_rings, host_rings, 
+                                   kSeqNumEntries, q_ptr->mem->pa(),
+                                   kDefaultEntrySize, false, 0, 0, 0) < 0) {
+    printf("Failed to setup Seq SQ %d state \n", qid);
+    return -1;
+  }
+  return 0;
+}
+
+int storage_tx_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
+                           uint16_t total_rings, uint16_t host_rings,
+                           dp_mem_type_t mem_type) {
+
+  // Initialize the queue in the DOL enviroment
+  if (queue_init(q_ptr, NUM_TO_VAL(kSeqNumEntries),
+                 NUM_TO_VAL(kDefaultEntrySize), mem_type) < 0) {
+    printf("Unable to allocate host memory for PVM Seq SQ %d\n", qid);
+    return -1;
+  }
+  printf("Initialized PVM Seq SQ %d \n", qid);
+
+  // Setup the queue state in Capri:
   if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, qid, pgm_bin, 
-                               total_rings, host_rings, 
-                               kSeqNumEntries, q_ptr->mem->pa(),
-                               kDefaultEntrySize, false, 0, 0,
-                               0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
-    printf("Failed to setup PVM Seq SQ %d state \n", qid);
+                                   total_rings, host_rings, 
+                                   kSeqNumEntries, q_ptr->mem->pa(),
+                                   kDefaultEntrySize, false, 0, 0,
+                                   0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+    printf("Failed to setup PVM Storage Tx SQ %d state \n", qid);
     return -1;
   }
   return 0;
@@ -949,8 +975,8 @@ seq_queues_setup() {
   // Initialize PVM SQs for processing Sequencer commands for PDMA
   pvm_seq_pdma_sq_base = 0;
   for (i = 0, j = 0; j < (int) NUM_TO_VAL(SeqNumPdmaSQs); j++, i++) {
-    if (seq_queue_setup(&seq_sqs[i], i, (char *) kSeqPdmaSqHandler,
-                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+    if (storage_tx_queue_setup(&seq_sqs[i], i, (char *) kSeqPdmaSqHandler,
+                               kDefaultTotalRings, kDefaultHostRings) < 0) {
       printf("Failed to setup PVM Seq PDMA queue %d \n", i);
       return -1;
     }
@@ -960,8 +986,8 @@ seq_queues_setup() {
   // Initialize PVM SQs for processing Sequencer commands for R2N
   pvm_seq_r2n_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumR2nSQs); j++, i++) {
-    if (seq_queue_setup(&seq_sqs[i], i, (char *) kSeqR2nSqHandler,
-                        kDefaultTotalRings, kDefaultNoHostRings) < 0) {
+    if (storage_tx_queue_setup(&seq_sqs[i], i, (char *) kSeqR2nSqHandler,
+                               kDefaultTotalRings, kDefaultNoHostRings) < 0) {
       printf("Failed to setup PVM Seq R2n queue %d \n", i);
       return -1;
     }
@@ -979,11 +1005,10 @@ seq_queues_setup() {
     }
 
     // Setup the queue state in Capri:
-    if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqXtsSqHandler, 
-                                 kDefaultTotalRings, kDefaultHostRings, 
-                                 kSeqNumAccEntries, seq_sqs[i].mem->pa(),
-                                 kDefaultEntrySize, false, 0, 0,
-                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqXtsSqHandler, 
+                                     kDefaultTotalRings, kDefaultHostRings, 
+                                     kSeqNumAccEntries, seq_sqs[i].mem->pa(),
+                                     kDefaultEntrySize, false, 0, 0, 0) < 0) {
       printf("Failed to setup Seq Xts SQ %d state \n", i);
       return -1;
     }
@@ -1005,8 +1030,8 @@ seq_queues_setup() {
   // Initialize PVM SQs for processing Sequencer commands for ROCE
   pvm_seq_roce_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumRoceSQs); j++, i++) {
-    if (seq_queue_setup(&seq_sqs[i], i, (char *) kSeqR2nSqHandler,
-                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+    if (storage_tx_queue_setup(&seq_sqs[i], i, (char *) kSeqR2nSqHandler,
+                               kDefaultTotalRings, kDefaultHostRings) < 0) {
       printf("Failed to setup PVM Seq ROCE queue %d \n", i);
       return -1;
     }
@@ -1024,11 +1049,10 @@ seq_queues_setup() {
     }
 
     // Setup the queue state in Capri:
-    if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqCompSqHandler, 
-                                 kDefaultTotalRings, kDefaultHostRings, 
-                                 kSeqNumAccEntries, seq_sqs[i].mem->pa(),
-                                 kDefaultEntrySize, false, 0, 0,
-                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqCompSqHandler, 
+                                     kDefaultTotalRings, kDefaultHostRings, 
+                                     kSeqNumAccEntries, seq_sqs[i].mem->pa(),
+                                     kDefaultEntrySize, false, 0, 0, 0) < 0) {
       printf("Failed to setup Seq Comp SQ %d state \n", i);
       return -1;
     }
@@ -1047,12 +1071,11 @@ seq_queues_setup() {
     }
 
     // Setup the queue state in Capri:
-    if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqCompStatusDesc0SqHandler,
-                                 kDefaultTotalRings, kDefaultHostRings, 
-                                 kSeqNumEntries, seq_sqs[i].mem->pa(),
-                                 kSeqCompStatusSQEntrySize, false, 0, 0,
-                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0,
-                                 (char *) kSeqCompStatusDesc1SqHandler) < 0) {
+    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqCompStatusDesc0SqHandler,
+                                     kDefaultTotalRings, kDefaultHostRings, 
+                                     kSeqNumEntries, seq_sqs[i].mem->pa(),
+                                     kSeqCompStatusSQEntrySize, false, 0, 0, 0,
+                                     (char *) kSeqCompStatusDesc1SqHandler) < 0) {
       printf("Failed to setup Comp Status SQ %d state \n", i);
       return -1;
     }
