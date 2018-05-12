@@ -22,8 +22,7 @@ representing the datacenter) and hence REST APIs can be invoked using curl.
 
 Examples:
 
-In this example, we will use the pre-created "default" tenant. The following
-config is to be posted on NAT VPN gateway in kingdom 1.
+In this example, we will use the pre-created "default" tenant.
 
 Use default tenant:
 
@@ -40,137 +39,8 @@ curl -d'{"Kind":"Namespace","meta":{"Name":"kg1","Tenant":"default"}}' -X POST -
 curl -d'{"Kind":"Namespace","meta":{"Name":"kg2","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
 curl -d'{"Kind":"Namespace","meta":{"Name":"public","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
 
-Create Network object for local Kingdom (kg1) and "public" Network:
-
-curl -d'{"Kind":"Network","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"IPv4Subet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" localhost:9007/api/networks/
-curl -d'{"Kind":"Network","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"IPv4Subet": "20.1.1.0/24", "IPv4Gateway":"20.1.1.1", "VlanID":200}}' -X POST -H "Content-Type: application/json" localhost:9007/api/networks/
-
-Create (remote) GW EPs:
-
-curl -d'{"Kind":"Endpoint","Meta":{"Name":"kg1-router","Tenant":"default","Namespace":"kg1"},"spec":{"NetworkName":"kg1","Interface":"default-uplink-0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/endpoints/
-curl -d'{"kind":"Endpoint","Meta":{"Name":"public-router","Tenant":"default","Namespace":"public"},"spec":{"NetworkName":"public","Interface":"default-uplink-1"},"status":{"IPv4Address":"20.1.1.1/24","MacAddress":"00:33:33:33:33:33","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/endpoints/
-
-Create Routes:
-
-curl -d'{"Kind":"Route","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"ip-prefix": "10.1.1.0/24", "interface":"default-uplink-0", "gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-curl -d'{"Kind":"Route","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"ip-prefix":"20.1.1.0/24", "interface":"default-uplink-1","gateway-ip":"20.1.1.1"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-curl -d'{"Kind":"Route","meta":{"Name":"kg2","Tenant":"default","Namespace":"kg2"}, "spec":{"IPPrefix": "0.0.0.0/24", "Interface":"kg2-IPSecTunnel"}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-curl -d'{"Kind":"Route","meta":{"Name":"kg3","Tenant":"default","Namespace":"kg3"}, "spec":{"IPPrefix": "0.0.0.0/24", "Interface":"kg3-IPSecTunnel"}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-...
-...
-
-Create NAT pool:
-
-curl -d'{"kind":"NatPool","meta":{"name":"pool-1","tenant":"default","namespace":"kg1"},"spec":{"ip-range":"10.100.0.0-10.100.0.255"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/natpools/
-
-Create NAT Mappings for remote services (running in kg2):
-
-curl -d'{"Kind":"NatBinding","meta":{"Name":"kg2-svc1","Tenant":"default","Namespace":"kg2"}, "spec":{"nat-pool":"kg1/pool-1", "ip-address":"10.0.2.15"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/natbindings/
-
-Create NAT policy:
-
-curl -d'{"kind":"NatPolicy","meta":{"name":"testNatPolicy","tenant":"tenant-1","namespace":"ns-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{"rules":[{"from":{"match-type":"IPRange","match":"10.0.0.0 - 10.0.1.0"},"to":{"match-type":"IPRange","match":"192.168.0.0 - 192.168.1.1"},"protocol":"","from-port":"","to-port":"","nat-pool":"preCreatedNatPool","action":"SNAT"}]},"status":{}}' -X POST -H "Content-Type: application/json" localhost:9007/api/natpolicies/
-
-
-The following config applies to kg2:
-
-Create Namespaces:
-
-curl -d'{"Kind":"Namespace","meta":{"Name":"kg1","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
-curl -d'{"Kind":"Namespace","meta":{"Name":"kg2","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
-curl -d'{"Kind":"Namespace","meta":{"Name":"public","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
-
-
-Create Network object for local Kingdom (kg2) and "public" Network:
-
-curl -d'{"Kind":"Network","meta":{"Name":"kg2","Tenant":"default","Namespace":"kg2"}, "spec":{"IPv4Subet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" localhost:9007/api/networks/
-curl -d'{"Kind":"Network","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"IPv4Subet": "20.1.1.0/24", "IPv4Gateway":"20.1.1.2", "VlanID":200}}' -X POST -H "Content-Type: application/json" localhost:9007/api/networks/
-
-
-Create (remote) GW EPs:
-
-curl -d'{"Kind":"Endpoint","Meta":{"Name":"kg2-router","Tenant":"default","Namespace":"kg2"},"spec":{"NetworkName":"kg2","Interface":"default-uplink-0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/endpoints/
-curl -d'{"kind":"Endpoint","Meta":{"Name":"public-router","Tenant":"default","Namespace":"public"},"spec":{"NetworkName":"public","Interface":"default-uplink-1"},"status":{"IPv4Address":"20.1.1.2/24","MacAddress":"00:33:33:33:33:33","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/endpoints/
-
-
-Create Routes:
-
-curl -d'{"Kind":"Route","meta":{"Name":"kg2","Tenant":"default","Namespace":"kg2"}, "spec":{"ip-prefix": "10.1.1.0/24", "interface":"default-uplink-0", "gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-curl -d'{"Kind":"Route","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"ip-prefix":"20.1.1.0/24", "interface":"default-uplink-1","gateway-ip":"20.1.1.2"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-curl -d'{"Kind":"Route","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"IPPrefix": "0.0.0.0/24", "Interface":"kg1-IPSecTunnel"}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-curl -d'{"Kind":"Route","meta":{"Name":"kg3","Tenant":"default","Namespace":"kg3"}, "spec":{"IPPrefix": "0.0.0.0/24", "Interface":"kg3-IPSecTunnel"}' -X POST -H "Content-Type: application/json" localhost:9007/api/routes/
-
-
-Create NAT pool:
-
-curl -d'{"kind":"NatPool","meta":{"name":"kg2-natpool","tenant":"default","namespace":"kg2"},"spec":{"ip-range":"10.1.2.1-10.1.2.200"}' -X POST -H "Content-Type: application/json" localhost:9007/api/natpools/
-
-=====
-
-Get all NAT policies:
-curl localhost:9007/api/natpolicies/ | jq .
-[
-  {
-    "kind": "NatPolicy",
-    "meta": {
-      "name": "testNatPolicy",
-      "tenant": "tenant-1",
-      "namespace": "ns-1",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "rules": [
-        {
-          "from": {
-            "match-type": "IPRange",
-            "match": "10.0.0.0 - 10.0.1.0"
-          },
-          "to": {
-            "match-type": "IPRange",
-            "match": "192.168.0.0 - 192.168.1.1"
-          },
-          "protocol": "",
-          "from-port": "",
-          "to-port": "",
-          "nat-pool": "preCreatedNatPool",
-          "action": "SNAT"
-        }
-      ]
-    },
-    "status": {
-      "id": 1
-    }
-  }
-]
-
-
-## Sample APP
-
-### Start server on Node2 (kingdom2)
-
-1. Create kg2 local subnet
-
-    [vagrant@node2 ~]$ docker network create kg2 --subnet 10.100.2.0/24
-
-2. Start iperf3-server attached to kg2 subent
-
-    [vagrant@node2 ~]$ docker run -it --rm --net=kg2 --name=iperf3-server networkstatic/iperf3 -s
-
-3. Get the IP address of the iperf server 
-    
-    [vagrant@node2 ~]$ docker inspect --format "{{ .NetworkSettings.Networks.kg2.IPAddress }}" iperf3-server
-    10.100.2.2
-    
-### Start client on Node1 (kingdom1) 
-    
-1. creaste kg1 local subnet
-    
-    [vagrant@node1 ~] docker network create kg1 --subnet 10.100.1.0/24
-
-2. Start the client
-
-    [vagrant@node1 ~] docker run  -it --rm --net=kg1 networkstatic/iperf3 -c 10.100.2.2
+Please refer to the packaged json files (located in the the home directory
+inside each kingdom VM) for full config for kingdom1 and kingdom2.
 
 NOTE:
 
