@@ -13,7 +13,17 @@ using namespace std;
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual void UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error UpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStateUpgReqRcvd(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStatePreUpgState(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStatePostBinRestart(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStateProcessesQuiesced(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStateDataplaneDowntimeStart(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStateCleanup(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStateUpgSuccess(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStateUpgFailed(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error HandleStateInvalidUpgState(delphi::objects::UpgReqStatusPtr req);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

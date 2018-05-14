@@ -16,14 +16,15 @@ enum UpgReqCmdType {
 
 // Upgrade Request Status
 enum UpgReqStateType {
-    InvalidUpgState     = 0;
-    UpgReqRcvd          = 1;
-    PreUpgState         = 2;
-    PostBinRestart      = 3;
-    ProcessesQuiesced   = 4;
-    DataplaneDowntime   = 5;
-    UpgSuccess          = 6;
-    UpgFailed           = 7;
+    InvalidUpgState          = 0;
+    UpgReqRcvd               = 1;
+    PreUpgState              = 2;
+    ProcessesQuiesced        = 3;
+    PostBinRestart           = 4;
+    DataplaneDowntimeStart   = 5;
+    Cleanup                  = 6;
+    UpgSuccess               = 7;
+    UpgFailed                = 8;
 }
 
 // spec part of the object

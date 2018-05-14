@@ -39,8 +39,44 @@ typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;
 class ExSvcHandler : public upgrade::UpgHandler {
 public:
     ExSvcHandler(){}
-    void UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
+    delphi::error UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
          LogInfo("UpgHandler UpgReqStatusCreate called for the SVC!!");
+        return delphi::error::OK();
+    }
+
+    delphi::error UpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler UpgReqStatusDelete called for the SVC!!");
+        return delphi::error::OK();
+    }
+
+    delphi::error HandleStateUpgReqRcvd(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler HandleStateUpgReqRcvd called for the SVC!!");
+        return delphi::error::OK();
+    }
+
+    delphi::error HandleStateProcessesQuiesced(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler HandleStateProcessesQuiesced called for the SVC!!");
+        return delphi::error::OK();
+    }
+
+    delphi::error HandleStateDataplaneDowntimeStart(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler HandleStateDataplaneDowntimeStart called for the SVC!!");
+        return delphi::error::OK();
+    }
+
+    delphi::error HandleStateCleanup(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler HandleStateCleanup called for the SVC!!");
+        return delphi::error::OK();
+    }
+
+    delphi::error HandleStateUpgSuccess(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler HandleStateUpgSuccess called for the SVC!!");
+        return delphi::error::OK();
+    }
+
+    delphi::error HandleStateUpgFailed(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler HandleStateUpgFailed called for the SVC!!");
+        return delphi::error::OK();
     }
 };
 

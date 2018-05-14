@@ -17,7 +17,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     auto upgReqStatus = this->findUpgReqStatus(req->key().id());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        RETURN_IF_FAILED(this->createUpgReqStatus(req->key().id(), upgrade::UpgReqRcvd));
+        RETURN_IF_FAILED(this->createUpgReqStatus(req->key().id(), upgrade::InvalidUpgState));
     }
 
     return delphi::error::OK();
@@ -44,11 +44,33 @@ delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     }
 
     // set the oper state on status object
-    auto upgReqStatus = this->findUpgReqStatus(req->key().id());
+    delphi::objects::UpgReqStatusPtr upgReqStatus = this->findUpgReqStatus(req->key().id());
     if (upgReqStatus != NULL) {
         LogInfo("Updated Upgrade Request Status");
         upgReqStatus->set_upgreqstate(upgrade::UpgReqRcvd);
         sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status UpgReqRcvd");
+        sleep(1);
+        upgReqStatus->set_upgreqstate(upgrade::PreUpgState);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status PreUpgState");
+#if 0
+        upgReqStatus->set_upgreqstate(upgrade::ProcessesQuiesced);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status ProcessesQuiesced");
+        upgReqStatus->set_upgreqstate(upgrade::PostBinRestart);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status PostBinRestart");
+        upgReqStatus->set_upgreqstate(upgrade::DataplaneDowntimeStart);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status DataplaneDowntimeStart");
+        upgReqStatus->set_upgreqstate(upgrade::UpgSuccess);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status UpgSuccess");
+        upgReqStatus->set_upgreqstate(upgrade::Cleanup);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status Cleanup");
+#endif
     }
 
     return delphi::error::OK();
