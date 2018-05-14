@@ -1,20 +1,29 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
-
-filegroup(
-    name = "delphi_protos",
-    srcs = [
-        "delphi.proto",
+genrule(
+    name = "delphi_gen_proto",
+    srcs = ["delphi.proto"],
+    outs = [
+        "delphi.pb.cc",
+        "delphi.pb.h",
     ],
+    local = 1,
+    tools = [
+        "//nic/hal/third-party:protoc",
+	"//nic/hal/third-party:google_includes",
+    ],
+    cmd = "LD_LIBRARY_PATH=nic/hal/third-party/google/x86_64/lib/ $(location //nic/hal/third-party:protoc) -I ./ -I nic/hal/third-party/google/include/ --cpp_out=$(GENDIR) $(SRCS)",
 )
 
-cc_proto_library(
-  name = "delphi_cc_proto",
-  protos = [":delphi_protos"],
-  with_grpc = True,
-  imports = [
-      "/usr/local/include/",
-      "/sw/nic/hal/third-party/google/include/",
-  ]
+cc_library(
+    name = "delphi_cc_proto",
+    srcs = [
+        "delphi.pb.cc",
+        "delphi.pb.h",
+    ],
+    deps = [
+        "//nic/hal/third-party:libprotobuf",
+	"//nic/hal/third-party:google_includes",
+    ]
 )
+

@@ -2,8 +2,6 @@
 
 """ Rules for delphi compiler """
 
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
-
 def delphi_compile(name, srcs, ):
     genfiles = []
     for src in srcs:
@@ -27,7 +25,7 @@ def delphi_compile(name, srcs, ):
         local = 1,
         tools = [
             "//nic/delphi/compiler:delphi_compiler",
-            "//nic/delphi/proto/delphi:delphi_cc_proto",
+            "//nic/delphi/proto/delphi:delphi_gen_proto",
         ],
         cmd = "/usr/bin/python $(location //nic/delphi/compiler:delphi_compiler) -outdir $(GENDIR)/ -workspace ./ -input $(SRCS) ",
 

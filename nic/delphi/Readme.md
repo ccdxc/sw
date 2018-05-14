@@ -217,7 +217,6 @@ Main function does three things:
 Delphi provides convenient bazel macros for compiling protobuf object model into source files. Below shows an example of bazel `BUILD` file.
 
 ```
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
 load("//nic/delphi/compiler:delphi.bzl", "delphi_compile")
 
 # compile the proto file

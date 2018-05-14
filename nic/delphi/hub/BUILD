@@ -11,6 +11,9 @@ cc_binary(
         "//nic/delphi/hub:delphi_server",
         "@third_party//:libev",
     ],
+    linkopts = [
+        "-lpthread",
+    ],
 )
 
 cc_library(

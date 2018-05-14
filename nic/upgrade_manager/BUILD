@@ -1,6 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
 load("//nic/delphi/compiler:delphi.bzl", "delphi_compile")
 
 # compile the proto file
@@ -59,6 +58,9 @@ cc_binary(
         "@third_party//:libev",
         "@third_party//:libev_includes",
     ],
+    linkopts = [
+        "-lpthread",
+    ],
 )
 
 
@@ -95,6 +97,9 @@ cc_binary(
         "//nic/delphi/sdk",
         "@third_party//:libev",
         "@third_party//:libev_includes",
+    ],
+    linkopts = [
+        "-lpthread",
     ],
 )
 

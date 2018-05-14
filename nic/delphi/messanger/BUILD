@@ -30,7 +30,7 @@ cc_library(
     include_prefix = "nic/delphi/messanger",
     deps = [
         "//nic/delphi/utils",
-        "//nic/delphi/messanger/proto:types_cc_proto",
+        "//nic/delphi/messanger/proto:messanger_cc_proto",
         "@third_party//:libev_includes",
         "@third_party//:libev",
     ],

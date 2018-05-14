@@ -202,6 +202,13 @@ cc_library(
     }),
 )
 
+filegroup(
+    name = "protoc",
+    srcs = [
+        "google/x86_64/bin/protoc",
+    ],
+)
+
 config_setting(
     name = "aarch64_mode",
     values = { "cpu": "aarch64-linux" }
