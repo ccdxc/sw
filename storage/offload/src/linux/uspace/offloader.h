@@ -29,7 +29,7 @@ struct thread_chain {
 
 struct thread_buffer {
 	uint8_t buf[PNSO_TEST_SESSION_MEM];
-	struct pnso_hash_or_chksum_tag tags[PNSO_NUM_TAGS];
+	struct pnso_hash_tag hash_tags[PNSO_NUM_TAGS];
 };
 
 struct io_ctx {
