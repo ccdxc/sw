@@ -36,6 +36,14 @@ public:
 };
 typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;
 
+class ExSvcHandler : public upgrade::UpgHandler {
+public:
+    ExSvcHandler(){}
+    void UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
+         LogInfo("UpgHandler UpgReqStatusCreate called for the SVC!!");
+    }
+};
+
 } // namespace example
 
 #endif // __EXAMPLE_H__

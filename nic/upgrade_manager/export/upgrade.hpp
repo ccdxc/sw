@@ -12,10 +12,8 @@ using namespace std;
 
 class UpgHandler {
 public:
-
     UpgHandler() {}
-
-    void UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
+    virtual void UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 
