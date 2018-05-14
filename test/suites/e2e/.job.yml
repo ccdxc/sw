@@ -8,7 +8,7 @@ rebase: true
 warmd:
   target: [ "go", "run", "e2e.go" ]
   create:
-    image: build-8
+    image: build-11
     count: 1
     resources:
       cpus: 32
