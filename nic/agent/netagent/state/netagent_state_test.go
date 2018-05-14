@@ -236,7 +236,7 @@ func (dp *mockDatapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.N
 }
 
 // CreateIPSecPolicy creates an IPSec Policy in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+func (dp *mockDatapath) CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*IPSecRuleRef) error {
 	return nil
 }
 
@@ -1671,6 +1671,18 @@ func TestNatPoolUpdate(t *testing.T) {
 		},
 	}
 
+	updatedNp := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "updateNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			IPRange: "192.168.1.1 - 192.168.1.100",
+		},
+	}
+
 	// create nat pool
 	err := ag.CreateNatPool(&np)
 	AssertOk(t, err, "Error creating nat pool")
@@ -1678,13 +1690,7 @@ func TestNatPoolUpdate(t *testing.T) {
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, natPool.Name == "updateNatPool", "Nat Pool names did not match", natPool)
 
-	npSpec := netproto.NatPoolSpec{
-		IPRange: "192.168.1.1-192.168.1.100",
-	}
-
-	np.Spec = npSpec
-
-	err = ag.UpdateNatPool(&np)
+	err = ag.UpdateNatPool(&updatedNp)
 	AssertOk(t, err, "Error updating nat pool")
 }
 
@@ -2478,31 +2484,24 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						Address:   "192.168.0.1 - 192.168.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						Address:   "192.168.0.1 - 192.168.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
 					SAName: "testIPSecSADecrypt",
 					SAType: "DECRYPT",
+					SPI:    42,
 				},
 			},
 		},
@@ -2534,109 +2533,6 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 	Assert(t, err != nil, "deleting non-existing nat policy succeeded", ag)
 }
 
-func TestIPSecPolicyUpdate(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// Create backing Encrypt and Decrypt rules
-	saEncrypt := netproto.IPSecSAEncrypt{
-		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testIPSecSAEncrypt",
-		},
-		Spec: netproto.IPSecSAEncryptSpec{
-			Protocol:      "ESP",
-			AuthAlgo:      "AES_GCM",
-			AuthKey:       "someRandomString",
-			EncryptAlgo:   "AES_GCM_256",
-			EncryptionKey: "someRandomKey",
-			LocalGwIP:     "10.0.0.1",
-			RemoteGwIP:    "192.168.1.1",
-		},
-	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
-	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
-
-	saDecrypt := netproto.IPSecSADecrypt{
-		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "updatedDecryptSA",
-		},
-		Spec: netproto.IPSecSADecryptSpec{
-			Protocol:           "ESP",
-			AuthAlgo:           "AES_GCM",
-			AuthKey:            "someRandomString",
-			DecryptAlgo:        "AES_GCM_256",
-			DecryptionKey:      "someRandomKey",
-			RekeyDecryptAlgo:   "DES3",
-			RekeyDecryptionKey: "someRandomString",
-			LocalGwIP:          "10.0.0.1",
-			RemoteGwIP:         "192.168.1.1",
-		},
-	}
-	err = ag.CreateIPSecSADecrypt(&saDecrypt)
-	AssertOk(t, err, "Error creating IPSec SA Decrypt rule")
-
-	ipSecPolicy := netproto.IPSecPolicy{
-		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testIPSecPolicy",
-		},
-		Spec: netproto.IPSecPolicySpec{
-			Rules: []netproto.IPSecRule{
-				{
-					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
-					},
-					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
-					},
-					SAName: "testIPSecSAEncrypt",
-					SAType: "ENCRYPT",
-				},
-				{
-					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
-					},
-					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
-					},
-					SAName: "testIPSecSADecrypt",
-					SAType: "DECRYPT",
-				},
-			},
-		},
-	}
-
-	// create nat policy
-	err = ag.CreateIPSecPolicy(&ipSecPolicy)
-	AssertOk(t, err, "Error creating nat policy")
-	natPool, err := ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
-	AssertOk(t, err, "Tenant was not found in DB")
-	Assert(t, natPool.Name == "testIPSecPolicy", "IPSec Pool names did not match", natPool)
-
-	ipSpec := netproto.IPSecPolicySpec{
-		Rules: []netproto.IPSecRule{
-			{
-				SAName: "updatedDecryptSA",
-			},
-		},
-	}
-
-	ipSecPolicy.Spec = ipSpec
-
-	err = ag.UpdateIPSecPolicy(&ipSecPolicy)
-	AssertOk(t, err, "Error updating nat policy")
-}
-
 func TestIPSecSAEncryptCreateDelete(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
@@ -2659,6 +2555,25 @@ func TestIPSecSAEncryptCreateDelete(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
+		},
+	}
+	dupSAEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+			SPI:           42,
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -2671,6 +2586,10 @@ func TestIPSecSAEncryptCreateDelete(t *testing.T) {
 	// verify duplicate sa encrypt creations succeed
 	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating duplicate IPSec SA Encrypt rule")
+
+	// verify duplicate sa encrypt with changed spec doesn't succeed.
+	err = ag.CreateIPSecSAEncrypt(&dupSAEncrypt)
+	Assert(t, err != nil, "Error creating duplicate IPSec SA Encrypt rule")
 
 	// verify list api works.
 	npList := ag.ListIPSecSAEncrypt()
@@ -2709,6 +2628,25 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
+		},
+	}
+	saEncryptUpdate := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+			SPI:           42,
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -2718,13 +2656,7 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 	AssertOk(t, err, "IPSec SA Encrypt rule was not found in DB")
 	Assert(t, foundSA.Name == "testIPSecSAEncrypt", "IPSec SA Encrypt rule names did not match", foundSA)
 
-	ipSpec := netproto.IPSecSAEncryptSpec{
-		Protocol: "AH",
-	}
-
-	saEncrypt.Spec = ipSpec
-
-	err = ag.UpdateIPSecSAEncrypt(&saEncrypt)
+	err = ag.UpdateIPSecSAEncrypt(&saEncryptUpdate)
 	AssertOk(t, err, "Error updating IPSec SA Encrypt rule")
 }
 
@@ -2752,6 +2684,28 @@ func TestIPSecSADecryptCreateDelete(t *testing.T) {
 			RekeyDecryptionKey: "someRandomString",
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
+			SPI:                1,
+		},
+	}
+
+	dupSADecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:           "ESP",
+			AuthAlgo:           "AES_GCM",
+			AuthKey:            "someRandomString",
+			DecryptAlgo:        "AES_GCM_256",
+			DecryptionKey:      "someRandomKey",
+			RekeyDecryptAlgo:   "DES3",
+			RekeyDecryptionKey: "someRandomString",
+			LocalGwIP:          "10.0.0.1",
+			RemoteGwIP:         "192.168.1.1",
+			SPI:                42,
 		},
 	}
 	err := ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -2764,6 +2718,10 @@ func TestIPSecSADecryptCreateDelete(t *testing.T) {
 	// verify duplicate sa encrypt creations succeed
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
 	AssertOk(t, err, "Error creating duplicate IPSec SA Decrypt rule")
+
+	// verify duplicate sa encrypt with changed spec doesn't succeed.
+	err = ag.CreateIPSecSADecrypt(&dupSADecrypt)
+	Assert(t, err != nil, "Error creating duplicate IPSec SA Decrypt rule")
 
 	// verify list api works.
 	npList := ag.ListIPSecSADecrypt()
@@ -2804,6 +2762,27 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 			RekeyDecryptionKey: "someRandomString",
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
+			SPI:                1,
+		},
+	}
+	saDecryptUpdate := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:           "ESP",
+			AuthAlgo:           "AES_GCM",
+			AuthKey:            "someRandomString",
+			DecryptAlgo:        "AES_GCM_256",
+			DecryptionKey:      "someRandomKey",
+			RekeyDecryptAlgo:   "DES3",
+			RekeyDecryptionKey: "someRandomString",
+			LocalGwIP:          "10.0.0.1",
+			RemoteGwIP:         "192.168.1.1",
+			SPI:                42,
 		},
 	}
 	err := ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -2813,12 +2792,463 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 	AssertOk(t, err, "IPSec SA Decrypt rule was not found in DB")
 	Assert(t, foundSA.Name == "testIPSecSADecrypt", "IPSec SA Decrypt rule names did not match", foundSA)
 
-	ipSpec := netproto.IPSecSADecryptSpec{
-		Protocol: "AH",
+	err = ag.UpdateIPSecSADecrypt(&saDecryptUpdate)
+	AssertOk(t, err, "Error updating IPSec SA Decrypt rule")
+}
+
+func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// Create remote NS
+	rns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "remoteNS",
+		},
+	}
+	err := ag.CreateNamespace(&rns)
+	AssertOk(t, err, "Could not create remote namespace")
+
+	// Create remote NS backing Encrypt and Decrypt rules
+	saEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "remoteNS",
+			Name:      "kg2-ipsec-sa-encrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			LocalGwIP:     "20.1.1.1",
+			RemoteGwIP:    "20.1.1.2",
+			SPI:           1,
+		},
+	}
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
+	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
+
+	saDecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "remoteNS",
+			Name:      "kg2-ipsec-sa-decrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			DecryptAlgo:   "AES_GCM_256",
+			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			SPI:           1,
+		},
+	}
+	err = ag.CreateIPSecSADecrypt(&saDecrypt)
+	AssertOk(t, err, "Error creating IPSec SA Decrypt rule")
+
+	ipSecPolicy := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "kg2-ipsec-decrypt-policy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "10.0.0.0-10.0.255.255",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "10.0.0.0-10.0.255.255",
+					},
+					SAName: "remoteNS/kg2-ipsec-sa-encrypt",
+					SAType: "ENCRYPT",
+				},
+				{
+					Src: &netproto.MatchSelector{
+						Address: "20.1.1.2 - 20.1.1.2",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "20.1.1.1 - 20.1.1.1",
+					},
+					SPI:    1,
+					SAName: "remoteNS/kg2-ipsec-sa-decrypt",
+					SAType: "DECRYPT",
+				},
+			},
+		},
 	}
 
-	saDecrypt.Spec = ipSpec
+	// create IPSec policy
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	AssertOk(t, err, "Error creating IPSec policy")
+	foundIPSecPolicy, err := ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
+	AssertOk(t, err, "IPSec Policy was not found in DB")
+	Assert(t, foundIPSecPolicy.Name == "kg2-ipsec-decrypt-policy", "IPSecPolicy names did not match", foundIPSecPolicy)
 
-	err = ag.UpdateIPSecSADecrypt(&saDecrypt)
-	AssertOk(t, err, "Error updating IPSec SA Decrypt rule")
+	// verify duplicate tenant creations succeed
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	AssertOk(t, err, "Error creating duplicate IPSec policy")
+
+	// verify list api works.
+	npList := ag.ListIPSecPolicy()
+	Assert(t, len(npList) == 1, "Incorrect number of IPSec policies")
+}
+
+func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	saEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+		},
+	}
+
+	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
+
+	saDecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "kg2-ipsec-sa-decrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			DecryptAlgo:   "AES_GCM_256",
+			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			SPI:           1,
+		},
+	}
+	err = ag.CreateIPSecSADecrypt(&saDecrypt)
+	AssertOk(t, err, "Error creating IPSec SA Decrypt rule")
+
+	ipSecPolicy := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "kg2-ipsec-decrypt-policy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "10.0.0.0-10.0.255.255",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "10.0.0.0-10.0.255.255",
+					},
+					SAName: "nonExistentEncryptSA",
+					SAType: "ENCRYPT",
+				},
+				{
+					Src: &netproto.MatchSelector{
+						Address: "20.1.1.2 - 20.1.1.2",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "20.1.1.1 - 20.1.1.1",
+					},
+					SPI:    1,
+					SAName: "remoteNS/kg2-ipsec-sa-decrypt",
+					SAType: "DECRYPT",
+				},
+			},
+		},
+	}
+
+	// create IPSec policy
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	Assert(t, err != nil, "IPSec policy creates on non existen encrypt SA Rules should fail")
+	_, err = ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
+	Assert(t, err != nil, "IPSec Policy was not found in DB")
+
+	ipSecPolicy = netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "kg2-ipsec-decrypt-policy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "20.1.1.2 - 20.1.1.2",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "20.1.1.1 - 20.1.1.1",
+					},
+					SPI:    1,
+					SAName: "nonExistentDecryptPolicy",
+					SAType: "DECRYPT",
+				},
+			},
+		},
+	}
+
+	// create IPSec policy
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	Assert(t, err != nil, "IPSec policy creates on non existent decrypt SA Rules should fail")
+	_, err = ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
+	Assert(t, err != nil, "IPSec Policy was not found in DB")
+
+	// IPSec POlicy with missing decrypt SA
+	ipSecPolicy = netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "kg2-ipsec-decrypt-policy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "20.1.1.2 - 20.1.1.2",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "20.1.1.1 - 20.1.1.1",
+					},
+					SPI:    1,
+					SAName: "nonExistentDecryptSA",
+					SAType: "DECRYPT",
+				},
+			},
+		},
+	}
+
+	// create IPSec policy
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	Assert(t, err != nil, "IPSec policy creates on non existent decrypt SA Rules should fail")
+	_, err = ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
+	Assert(t, err != nil, "IPSec Policy was not found in DB")
+
+	// IPSec Policy with SPI Value in encrypt policy
+	ipSecPolicy = netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "spi-on-encrypt-policy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "20.1.1.2 - 20.1.1.2",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "20.1.1.1 - 20.1.1.1",
+					},
+					SPI:    1,
+					SAName: "testIPSecSAEncrypt",
+					SAType: "ENCRYPT",
+				},
+			},
+		},
+	}
+
+	// create IPSec policy
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	Assert(t, err != nil, "IPSec policy creates on non existent decrypt SA Rules should fail")
+	_, err = ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
+	Assert(t, err != nil, "IPSec Policy was not found in DB")
+}
+
+func TestDefaultNamespaceTenantDeleteCornerCases(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// namespace
+	defaultNS := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "default",
+		},
+	}
+
+	// create backing tenant
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testTenant",
+		},
+	}
+	err := ag.CreateTenant(&tn)
+	AssertOk(t, err, "Error creating tenant")
+
+	err = ag.DeleteNamespace(&defaultNS)
+	Assert(t, err != nil, "default namespace deletes under default tenant should fail. It passed instead")
+
+	// Delete a non-default tenant and ensure that the default ns under it is gone
+	err = ag.DeleteTenant(&tn)
+	AssertOk(t, err, "Non default tenant deletes should be disallowed.")
+
+	_, err = ag.FindNamespace("testTenant", "default")
+	Assert(t, err != nil, "deleting a non default tenant should automatically trigger the deletion of the default namespace under it.")
+}
+
+func TestIPSecPolicyCreateInvalidRule(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// Create backing Encrypt and Decrypt rules
+	saEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+		},
+	}
+	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
+
+	ipSecPolicy := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecPolicy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "192.168.0.1 - 192.168.1.0",
+					},
+					SAName: "testIPSecSAEncrypt",
+					SAType: "BADRULE TYPE",
+				},
+			},
+		},
+	}
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	Assert(t, err != nil, "IPSec Policy with invalid rules should fail")
+
+}
+
+func TestIPSecPolicyUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// Create backing Encrypt and Decrypt rules
+	saEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+		},
+	}
+	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
+
+	ipSecPolicy := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecPolicy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "192.168.0.1 - 192.168.1.0",
+					},
+					SAName: "testIPSecSAEncrypt",
+					SAType: "ENCRYPT",
+				},
+			},
+		},
+	}
+
+	ipSecPolicyUpdate := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecPolicy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "20.0.0.0 -  20.1.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "192.168.0.1 - 192.168.1.0",
+					},
+					SAName: "testIPSecSAEncrypt",
+					SAType: "ENCRYPT",
+				},
+			},
+		},
+	}
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	AssertOk(t, err, "IPSec Policy creation failed")
+
+	err = ag.UpdateIPSecPolicy(&ipSecPolicyUpdate)
+	AssertOk(t, err, "IPSec Policy update failed")
+
 }

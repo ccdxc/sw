@@ -37,7 +37,7 @@ func TestIPSecPolicyList(t *testing.T) {
 
 func TestIPSecPolicyPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var ipsecpolicyList []*netproto.IPSecPolicy
 
@@ -52,31 +52,24 @@ func TestIPSecPolicyPost(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						Address:   "192.168.0.1 - 192.168.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
-					SAName: "preCreatedEncryptSA",
+					SAName: "preCreatedIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "10.0.0.0 - 10.0.1.0",
 					},
 					Dst: &netproto.MatchSelector{
-						Address:   "192.168.0.1 - 192.168.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Address: "192.168.0.1 - 192.168.1.0",
 					},
-					SAName: "preCreatedDecryptSA",
+					SAName: "preCreatedIPSecSADecrypt",
 					SAType: "DECRYPT",
+					SPI:    42,
 				},
 			},
 		},
@@ -100,7 +93,7 @@ func TestIPSecPolicyPost(t *testing.T) {
 
 func TestIPSecPolicyUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ipsecpolicyList []*netproto.IPSecPolicy
 
 	var actualIPSecPolicySpec netproto.IPSecPolicySpec
@@ -137,7 +130,7 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 
 func TestIPSecPolicyDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var ipsecpolicyList []*netproto.IPSecPolicy
 
@@ -161,7 +154,7 @@ func TestIPSecPolicyDelete(t *testing.T) {
 						App:       "ESP",
 						AppConfig: "1",
 					},
-					SAName: "preCreatedEncryptSA",
+					SAName: "preCreatedIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
@@ -175,8 +168,9 @@ func TestIPSecPolicyDelete(t *testing.T) {
 						App:       "ESP",
 						AppConfig: "1",
 					},
-					SAName: "preCreatedDecryptSA",
+					SAName: "preCreatedIPSecSADecrypt",
 					SAType: "DECRYPT",
+					SPI:    42,
 				},
 			},
 		},
@@ -200,12 +194,57 @@ func TestIPSecPolicyDelete(t *testing.T) {
 
 }
 
+func TestIPSecPolicyCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/policies/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestIPSecPolicyDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/policies/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestIPSecPolicyUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/policies/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
 func TestIPSecSADecryptList(t *testing.T) {
 	t.Parallel()
 	var ok bool
 	var ipsecsadecryptList []*netproto.IPSecSADecrypt
 
-	err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &ipsecsadecryptList)
+	err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &ipsecsadecryptList)
 
 	AssertOk(t, err, "Error getting ipsecsadecrypts from the REST Server")
 	for _, o := range ipsecsadecryptList {
@@ -222,7 +261,7 @@ func TestIPSecSADecryptList(t *testing.T) {
 
 func TestIPSecSADecryptPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var ipsecsadecryptList []*netproto.IPSecSADecrypt
 
@@ -243,10 +282,11 @@ func TestIPSecSADecryptPost(t *testing.T) {
 			RekeyDecryptionKey: "someRandomString",
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
+			SPI:                1,
 		},
 	}
-	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &postData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &ipsecsadecryptList)
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &postData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &ipsecsadecryptList)
 
 	AssertOk(t, err, "Error posting ipsecsadecrypt to REST Server")
 	AssertOk(t, getErr, "Error getting ipsecsadecrypts from the REST Server")
@@ -264,7 +304,7 @@ func TestIPSecSADecryptPost(t *testing.T) {
 
 func TestIPSecSADecryptUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ipsecsadecryptList []*netproto.IPSecSADecrypt
 
 	var actualIPSecSADecryptSpec netproto.IPSecSADecryptSpec
@@ -280,10 +320,10 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 		},
 		Spec: updatedIPSecSADecryptSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/decrypt/default/default/preCreatedIPSecSADecrypt", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/decryption/default/default/preCreatedIPSecSADecrypt", &putData, &resp)
 	AssertOk(t, err, "Error updating ipsecsadecrypt to REST Server")
 
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &ipsecsadecryptList)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &ipsecsadecryptList)
 	AssertOk(t, getErr, "Error getting ipsecsadecrypts from the REST Server")
 	for _, o := range ipsecsadecryptList {
 		if o.Name == "preCreatedIPSecSADecrypt" {
@@ -297,7 +337,7 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 
 func TestIPSecSADecryptDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var ipsecsadecryptList []*netproto.IPSecSADecrypt
 
@@ -316,11 +356,12 @@ func TestIPSecSADecryptDelete(t *testing.T) {
 			DecryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
 		},
 	}
-	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decrypt/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/decrypt/default/default/testDeleteIPSecSADecrypt", &deleteData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decrypt/", &ipsecsadecryptList)
+	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/decryption/default/default/testDeleteIPSecSADecrypt", &deleteData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/decryption/", &ipsecsadecryptList)
 
 	AssertOk(t, postErr, "Error posting ipsecsadecrypt to REST Server")
 	AssertOk(t, err, "Error deleting ipsecsadecrypt from REST Server")
@@ -337,12 +378,57 @@ func TestIPSecSADecryptDelete(t *testing.T) {
 
 }
 
+func TestIPSecSADecryptCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestIPSecSADecryptDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/decryption/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestIPSecSADecryptUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/decryption/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
 func TestIPSecSAEncryptList(t *testing.T) {
 	t.Parallel()
 	var ok bool
 	var ipsecsaencryptList []*netproto.IPSecSAEncrypt
 
-	err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &ipsecsaencryptList)
+	err := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &ipsecsaencryptList)
 
 	AssertOk(t, err, "Error getting ipsecsaencrypts from the REST Server")
 	for _, o := range ipsecsaencryptList {
@@ -359,7 +445,7 @@ func TestIPSecSAEncryptList(t *testing.T) {
 
 func TestIPSecSAEncryptPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var ipsecsaencryptList []*netproto.IPSecSAEncrypt
 
@@ -378,10 +464,11 @@ func TestIPSecSAEncryptPost(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
 		},
 	}
-	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &postData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &ipsecsaencryptList)
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &postData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &ipsecsaencryptList)
 
 	AssertOk(t, err, "Error posting ipsecsaencrypt to REST Server")
 	AssertOk(t, getErr, "Error getting ipsecsaencrypts from the REST Server")
@@ -399,7 +486,7 @@ func TestIPSecSAEncryptPost(t *testing.T) {
 
 func TestIPSecSAEncryptUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ipsecsaencryptList []*netproto.IPSecSAEncrypt
 
 	var actualIPSecSAEncryptSpec netproto.IPSecSAEncryptSpec
@@ -415,10 +502,10 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 		},
 		Spec: updatedIPSecSAEncryptSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/encrypt/default/default/preCreatedIPSecSAEncrypt", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/encryption/default/default/preCreatedIPSecSAEncrypt", &putData, &resp)
 	AssertOk(t, err, "Error updating ipsecsaencrypt to REST Server")
 
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &ipsecsaencryptList)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &ipsecsaencryptList)
 	AssertOk(t, getErr, "Error getting ipsecsaencrypts from the REST Server")
 	for _, o := range ipsecsaencryptList {
 		if o.Name == "preCreatedIPSecSAEncrypt" {
@@ -432,7 +519,7 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 
 func TestIPSecSAEncryptDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var ipsecsaencryptList []*netproto.IPSecSAEncrypt
 
@@ -451,11 +538,12 @@ func TestIPSecSAEncryptDelete(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
 		},
 	}
-	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encrypt/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/encrypt/default/default/testDeleteIPSecSAEncrypt", &deleteData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encrypt/", &ipsecsaencryptList)
+	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/encryption/default/default/testDeleteIPSecSAEncrypt", &deleteData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/encryption/", &ipsecsaencryptList)
 
 	AssertOk(t, postErr, "Error posting ipsecsaencrypt to REST Server")
 	AssertOk(t, err, "Error deleting ipsecsaencrypt from REST Server")
@@ -470,4 +558,49 @@ func TestIPSecSAEncryptDelete(t *testing.T) {
 		t.Errorf("Found testDeleteIPSecSAEncrypt in Response after deleting: %v", ipsecsaencryptList)
 	}
 
+}
+
+func TestIPSecSAEncryptCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestIPSecSAEncryptDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/encryption/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestIPSecSAEncryptUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/ipsec/encryption/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }

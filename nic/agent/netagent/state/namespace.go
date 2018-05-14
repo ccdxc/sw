@@ -16,7 +16,10 @@ import (
 
 // CreateNamespace creates a namespace
 func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
-
+	err := na.validateMeta(ns.Kind, ns.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldNs, err := na.FindNamespace(ns.Tenant, ns.Name)
 	if err == nil {
 		// check if the contents are same
@@ -65,7 +68,7 @@ func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace
 	// Find the corresponding tenant
 	_, err := na.FindTenant(meta.Tenant)
 	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", meta)
+		log.Errorf("Could not find the tenant: {%+v}", tenant)
 		return nil, err
 	}
 	// lock the db
@@ -76,7 +79,7 @@ func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace
 	key := objectKey(meta, nsTypeMeta)
 	ns, ok := na.namespaceDB[key]
 	if !ok {
-		return nil, fmt.Errorf("namespace not found %v", ns)
+		return nil, fmt.Errorf("namespace not found %v", namespace)
 	}
 
 	return ns, nil
@@ -120,8 +123,8 @@ func (na *NetAgent) UpdateNamespace(ns *netproto.Namespace) error {
 
 // DeleteNamespace deletes a namespace
 func (na *NetAgent) DeleteNamespace(ns *netproto.Namespace) error {
-	if ns.Name == "default" {
-		return errors.New("default namespaces can not be deleted")
+	if ns.Name == "default" && ns.Tenant == "default" {
+		return errors.New("default namespaces under default tenant cannot be deleted")
 	}
 
 	existingNamespace, err := na.FindNamespace(ns.Tenant, ns.Name)

@@ -12,20 +12,29 @@ export MODEL_ZMQ_TYPE_TCP=1
 export ZMQ_SOC_DIR=$NIC_DIR
 ulimit -c unlimited
 
+exec > $LOG_DIR/start-naples.log
+exec 2>&1
+set -x
+
 # create directory for logs/traces
 mkdir -p $LOG_DIR
 if [ -f /tmp/naples-netagent.db ]; then
     rm -f /tmp/naples-netagent.db
 fi
-exec > $LOG_DIR/start-naples.log
-exec 2>&1
-set -x
+
+# make the example configs visible to the VM outside
+if [ -d /naples/nic/data/examples ]; then
+    mkdir -p /naples/data/examples/
+    cp /naples/nic/tools/bootstrap.sh /naples/data/
+    cp /naples/nic/data/examples/* /naples/data/examples/
+fi
 
 # starting the processes from log directory so that cores are saved there
 cd $LOG_DIR
 
 echo "Starting CAPRI model ..."
-$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
+#$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
+$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
 PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
 if [[ "" ==  "$PID" ]]; then
     echo "Failed to start CAPRI model"
@@ -89,7 +98,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Starting netagent ..."
-$NIC_DIR/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath hal &
+$NIC_DIR/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath mock &
 PID=`ps -eaf | grep netagent | grep -v grep | awk '{print $2}'`
 if [[ "" ==  "$PID" ]]; then
     echo "Failed to start netagent"

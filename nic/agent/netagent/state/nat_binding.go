@@ -18,6 +18,10 @@ import (
 
 // CreateNatBinding creates a nat binding
 func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
+	err := na.validateMeta(nb.Kind, nb.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldNp, err := na.FindNatBinding(nb.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
@@ -136,6 +140,10 @@ func (na *NetAgent) UpdateNatBinding(nb *netproto.NatBinding) error {
 
 // DeleteNatBinding deletes a nat binding
 func (na *NetAgent) DeleteNatBinding(nb *netproto.NatBinding) error {
+	err := na.validateMeta(nb.Kind, nb.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(nb.Tenant, nb.Namespace)
 	if err != nil {

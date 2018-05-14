@@ -48,11 +48,8 @@ bool nat_pool_compare_key_func(void *key1, void *key2);
 
 hal_ret_t nat_pool_address_alloc(nat_pool_t *pool, ip_addr_t *nat_addr);
 hal_ret_t nat_pool_address_free(nat_pool_t *pool, ip_addr_t *nat_addr);
-nat_pool_t *
-find_nat_pool_by_handle (hal_handle_t handle);
-nat_pool_t *
-find_nat_pool_by_key_or_handle (const NatPoolKeyHandle& kh);
-
+nat_pool_t *find_nat_pool_by_handle(hal_handle_t handle);
+nat_pool_t *find_nat_pool_by_key_or_handle(const NatPoolKeyHandle& kh);
 }    // namespace hal
 
 #endif    // __NAT_POOL_HPP__

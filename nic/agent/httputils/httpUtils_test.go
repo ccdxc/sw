@@ -5,6 +5,7 @@ package httputils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -15,6 +16,11 @@ import (
 
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+type testResponse struct {
+	StatusCode int    `json:"status-code"`
+	SelfLink   string `json:"self-link"`
+}
 
 func TestHTTPUtils(t *testing.T) {
 	listenURL := "/tmp/test.sock"
@@ -37,6 +43,8 @@ func TestHTTPUtils(t *testing.T) {
 		reqCount++
 		return "success", nil
 	}))
+
+	sr.Methods("POST").Subrouter().HandleFunc("/dummy_resp", MakeHTTPHandler(dummyRespErrHandler))
 
 	// create a listener
 	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: listenURL, Net: "unix"})
@@ -68,6 +76,13 @@ func TestHTTPUtils(t *testing.T) {
 	Assert(t, (r.StatusCode == 200), "Incorrect http error code")
 	Assert(t, (reqCount == 1), "incorrect req count")
 
+	// make a call to cni server
+	buf, _ = json.Marshal("test")
+	body = bytes.NewBuffer(buf)
+	r, err = client.Post("http://localhost/dummy_resp", "application/json", body)
+	AssertOk(t, err, "Making http call")
+	r.Body.Close()
+
 	// verify failures are handled correctly
 	buf, _ = json.Marshal("fail")
 	body = bytes.NewBuffer(buf)
@@ -75,4 +90,12 @@ func TestHTTPUtils(t *testing.T) {
 	AssertOk(t, err, "Making http call")
 	r.Body.Close()
 	Assert(t, (r.StatusCode != 200), "http succes while expecting failure")
+}
+
+func dummyRespErrHandler(r *http.Request) (interface{}, error) {
+	resp := testResponse{
+		StatusCode: http.StatusBadRequest,
+		SelfLink:   r.RequestURI,
+	}
+	return &resp, errors.New("bad request test")
 }

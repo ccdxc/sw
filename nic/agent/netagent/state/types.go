@@ -25,6 +25,7 @@ const (
 	IPSecPolicyID    = "ipSecPolicyID"
 	IPSecSAEncryptID = "ipSecSAEncryptID"
 	IPSecSADecryptID = "ipSecSADencryptID"
+	IPSecRuleID      = "ipSecRuleID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -38,6 +39,13 @@ type IntfInfo struct {
 type NatPoolRef struct {
 	NamespaceID uint64
 	PoolID      uint64
+}
+
+// IPSecRuleRef keeps the mapping between a ipsec encrypt/decrypt ID and its corresponding NamespaceID.
+// We need this to build a look up table between the ipsec SA encrypt/decrypt rule and its refs which can be in non local namespaces
+type IPSecRuleRef struct {
+	NamespaceID uint64
+	RuleID      uint64
 }
 
 // NetAgent is the network agent instance
@@ -60,6 +68,7 @@ type NetAgent struct {
 	ipSecPolicyDB    map[string]*netproto.IPSecPolicy    // IPSecPolicy Object DB
 	ipSecSAEncryptDB map[string]*netproto.IPSecSAEncrypt // IPSecSAEncrypt Object DB
 	ipSecSADecryptDB map[string]*netproto.IPSecSADecrypt // IPSecSADecrypt Object DB
+	ipSecPolicyLUT   map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
 	natPoolLUT       map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	hwIfDB           map[string]*netproto.Interface      // Has all the Uplinks and Lifs
 }
@@ -178,7 +187,7 @@ type NetDatapathAPI interface {
 	CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) (*netproto.NatBinding, error)                 // creates a nat policy in the datapath
 	UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error                                                                                    // updates a nat policy in the datapath
 	DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error                                                                                    // deletes a nat policy in the datapath
-	CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error                                                                                  // creates a IPSec policy in the datapath
+	CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*IPSecRuleRef) error                                               // creates a IPSec policy in the datapath
 	UpdateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error                                                                                  // updates a IPSec policy in the datapath
 	DeleteIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error                                                                                  // deletes a IPSec policy in the datapath
 	CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error                                                                            // creates a IPSecSA encrypt rule in the datapath

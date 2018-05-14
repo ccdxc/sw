@@ -7,6 +7,8 @@ Input file: {{.Name}}
 package restapi
 import (
     "github.com/gorilla/mux"
+    "github.com/pensando/sw/api"
+    "github.com/gogo/protobuf/types"
 )
 {{range .Services}}
     {{$svcname := .Name}}
@@ -38,19 +40,9 @@ import (
                     func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
                         return s.agent.List{{title $crudObject}}(), nil
                     }
-                {{else if and (strEq $crudObject "Endpoint") (strEq . "post")}}
-                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
-                        var o netproto.{{title $crudObject}}
-                        b, _ := ioutil.ReadAll(r.Body)
-                        err := json.Unmarshal(b, &o)
-                        if err != nil {
-                            return nil, err
-                        }
-                         _, err = s.agent.Create{{title $crudObject}}(&o)
-                        return nil, err
-                    }
                 {{else}}
                     func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
+                        var res Response
                         var o netproto.{{title $crudObject}}
                         b, _ := ioutil.ReadAll(r.Body)
                         err := json.Unmarshal(b, &o)
@@ -58,12 +50,45 @@ import (
                             return nil, err
                         }
                         {{if strEq . "post"}}
-                             return nil, s.agent.Create{{title $crudObject}}(&o)
+                            c, _ := types.TimestampProto(time.Now())
+                            o.CreationTime = api.Timestamp{
+                                Timestamp: *c,
+                            }
+                            o.ModTime = api.Timestamp{
+                                Timestamp: *c,
+                            }
+                          {{if strEq $crudObject "Endpoint"}}
+                              _, err = s.agent.Create{{title $crudObject}}(&o)
+                          {{else}}
+                             err = s.agent.Create{{title $crudObject}}(&o)
+                          {{end}}
                         {{else if strEq . "put"}}
-                             return nil, s.agent.Update{{title $crudObject}}(&o)
+                             m, _ := types.TimestampProto(time.Now())
+                             o.ModTime = api.Timestamp{
+                                Timestamp: *m,
+                             }
+                             err = s.agent.Update{{title $crudObject}}(&o)
                         {{else if strEq . "delete"}}
-                             return nil, s.agent.Delete{{title $crudObject}}(&o)
+                             err = s.agent.Delete{{title $crudObject}}(&o)
                         {{end}}
+                        if err != nil {
+                          res.StatusCode = http.StatusInternalServerError
+                          res.Error = err.Error()
+                          return res, err
+                        }
+                        {{if strEq . "post"}}
+                          {{if strEq $crudObject "Tenant"}}
+                            res.SelfLink = fmt.Sprintf("%s%s",r.RequestURI, o.Name)
+                          {{else if strEq $crudObject "Namespace"}}
+                            res.SelfLink = fmt.Sprintf("%s%s/%s",r.RequestURI, o.Tenant, o.Name)
+                          {{else}}
+                            res.SelfLink = fmt.Sprintf("%s%s/%s/%s",r.RequestURI, o.Tenant, o.Namespace, o.Name)
+                          {{end}}
+                        {{else}}
+                          res.SelfLink = r.RequestURI
+                        {{end}}
+                        res.StatusCode = http.StatusOK
+                        return res, err
                     }
                 {{end}}
            {{end}}

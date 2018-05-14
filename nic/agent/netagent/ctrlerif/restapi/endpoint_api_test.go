@@ -37,7 +37,7 @@ func TestEndpointList(t *testing.T) {
 
 func TestEndpointPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var endpointList []*netproto.Endpoint
 
@@ -77,7 +77,7 @@ func TestEndpointPost(t *testing.T) {
 
 func TestEndpointUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var endpointList []*netproto.Endpoint
 
 	var actualEndpointSpec netproto.EndpointSpec
@@ -117,7 +117,7 @@ func TestEndpointUpdate(t *testing.T) {
 
 func TestEndpointDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var endpointList []*netproto.Endpoint
 
@@ -155,4 +155,49 @@ func TestEndpointDelete(t *testing.T) {
 		t.Errorf("Found testDeleteEndpoint in Response after deleting: %v", endpointList)
 	}
 
+}
+
+func TestEndpointCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestEndpointDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/endpoints/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestEndpointUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }

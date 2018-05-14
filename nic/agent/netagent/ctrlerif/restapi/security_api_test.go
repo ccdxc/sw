@@ -37,7 +37,7 @@ func TestSecurityGroupList(t *testing.T) {
 
 func TestSecurityGroupPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var securitygroupList []*netproto.SecurityGroup
 
@@ -78,7 +78,7 @@ func TestSecurityGroupPost(t *testing.T) {
 
 func TestSecurityGroupUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var securitygroupList []*netproto.SecurityGroup
 
 	var actualSecurityGroupSpec netproto.SecurityGroupSpec
@@ -119,7 +119,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 
 func TestSecurityGroupDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var securitygroupList []*netproto.SecurityGroup
 
@@ -158,4 +158,49 @@ func TestSecurityGroupDelete(t *testing.T) {
 		t.Errorf("Found testDeleteSecurityGroup in Response after deleting: %v", securitygroupList)
 	}
 
+}
+
+func TestSecurityGroupCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestSecurityGroupDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestSecurityGroupUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }

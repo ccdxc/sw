@@ -7,10 +7,23 @@ BOX_IMAGE = "centos/7"
 NODE_COUNT = 2
 
 NAPLES_VER = "v1"
-NAPLES_IMAGE = "naples:#{NAPLES_VER}"
+NAPLES_IMAGE = "pensando/naples:#{NAPLES_VER}"
 NAPLES_IMAGE_FILE = "naples-docker-#{NAPLES_VER}.tgz"
 NAPLES_DATA_DIR = "/var/run/naples/"
 AGENT_PORT=9007
+
+unless Vagrant.has_plugin?("vagrant-docker-login")
+  system("vagrant plugin install vagrant-docker-login")
+  puts "vagrant-docker-login dependency installed, please try the command again"
+  exit
+end
+
+if File.exist?(NAPLES_IMAGE_FILE) == false
+    unless ENV["DOCKER_USERNAME"] && ENV["DOCKER_PASSWORD"]
+      puts "Please set your DOCKER_USERNAME, DOCKER_PASSWORD environment variables"
+      exit
+    end
+end
 
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
@@ -28,45 +41,52 @@ Vagrant.configure("2") do |config|
       #agent port forwarding
       subconfig.vm.network  "forwarded_port", guest: AGENT_PORT, host: 9000+i+11
 
-      # Copy postman scripts
-      subconfig.vm.provision "file",
-                             source: "SF-Kingdom#{i+1}.postman_collection.json",
-                             destination: "$HOME/postman_collection.json"
-      subconfig.vm.provision "file",
-                             source: "postman_env.json",
-                             destination: "$HOME/postman_env.json"
+      subconfig.vm.provider "virtualbox" do |vb|
+        vb.memory = "2096"
+        vb.cpus = 2
+        vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-vms"]
+      end
+
+      # install app docker images
+      subconfig.vm.provision "docker" do |d|
+        d.pull_images "networkstatic/iperf3"
+      end
+      if File.exist?(NAPLES_IMAGE_FILE) == false
+          subconfig.vm.provision :docker_login
+      end
+
+      # one time setup
+      subconfig.vm.provision "shell", inline: <<-SCRIPT
+        yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        yum install -y bridge-utils tcpdump net-tools nodejs npm nc
+        npm install -g newman
+        mkdir -p #{NAPLES_DATA_DIR}
+        if [ -f /vagrant/#{NAPLES_IMAGE_FILE} ]; then
+          docker images purge
+          docker rmi -f #{NAPLES_IMAGE}
+          docker load --input /vagrant/#{NAPLES_IMAGE_FILE}
+        else
+          docker pull #{NAPLES_IMAGE}
+        fi
+      SCRIPT
+
+      # bringup naples container
+      subconfig.vm.provision "docker" do |d|
+        d.run "naples-sim", image: NAPLES_IMAGE,
+          args: "--privileged -p #{AGENT_PORT}:#{AGENT_PORT} --mount type=bind,source=#{NAPLES_DATA_DIR},target=/naples/data"
+      end
+
+      # Copy config samples and bootstrap script
+      subconfig.vm.provision "shell", inline: <<-SCRIPT
+        cp #{NAPLES_DATA_DIR}/examples/SF-Kingdom#{i+1}.postman_collection.json /home/vagrant/postman_collection.json
+        cp #{NAPLES_DATA_DIR}/examples/postman_env.json /home/vagrant/postman_env.json
+        cp #{NAPLES_DATA_DIR}/examples/README /home/vagrant/README
+        cp #{NAPLES_DATA_DIR}/bootstrap.sh /usr/bin/naples-bootstrap.sh
+        chmod +x /usr/bin/naples-bootstrap.sh
+      SCRIPT
+
+      # Run this on every boot
+      subconfig.vm.provision "shell", run: 'always', inline: "/usr/bin/naples-bootstrap.sh"
     end
   end
-  
-  config.vm.provider "virtualbox" do |vb|
-     vb.memory = "2096"
-     vb.cpus = 2
-     vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-vms"]
-  end
-
-  #install docker
-  config.vm.provision "docker" do |d|
-    d.pull_images "networkstatic/iperf3"
-  end
-
-  # one time setup
-  config.vm.provision "shell", inline: <<-SCRIPT
-      yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-      yum install -y bridge-utils tcpdump net-tools nodejs npm
-      npm install -g newman
-      mkdir -p #{NAPLES_DATA_DIR}
-      docker images purge
-      docker rmi -f #{NAPLES_IMAGE}
-      docker load --input /vagrant/#{NAPLES_IMAGE_FILE}
-  SCRIPT
-
-  # bringup naples container
-  config.vm.provision "docker" do |d|
-    d.run "naples-sim", image: NAPLES_IMAGE, 
-          args: "--privileged -p #{AGENT_PORT}:#{AGENT_PORT} --mount type=bind,source=#{NAPLES_DATA_DIR},target=/naples/data"
-  end
-
-  # Run this on every boot
-  config.vm.provision "shell", path: "bootstrap.sh", run: 'always'
-  
 end

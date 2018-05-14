@@ -55,6 +55,10 @@ func (na *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 
 // CreateSecurityGroup creates a security group. ToDo Handle creates in datapath
 func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+	err := na.validateMeta(sg.Kind, sg.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// check if sg already exists
 	oldSg, err := na.FindSecurityGroup(sg.ObjectMeta)
 	if err == nil {
@@ -193,8 +197,12 @@ func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 
 // DeleteSecurityGroup deletes a security group. ToDo handle deletes in datapath
 func (na *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+	err := na.validateMeta(sg.Kind, sg.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
-	_, err := na.FindNamespace(sg.Tenant, sg.Namespace)
+	_, err = na.FindNamespace(sg.Tenant, sg.Namespace)
 	if err != nil {
 		return err
 	}

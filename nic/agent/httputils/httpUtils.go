@@ -25,6 +25,13 @@ func MakeHTTPHandler(handlerFunc HTTPAPIFunc) http.HandlerFunc {
 			log.Errorf("Handler for %s %s returned error: %s", r.Method, r.URL, err)
 
 			// Send HTTP response
+			if resp != nil {
+				err = WriteJSON(w, http.StatusInternalServerError, resp)
+				if err != nil {
+					log.Errorf("Error generating json. Err: %v", err)
+				}
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			// Send HTTP response as Json

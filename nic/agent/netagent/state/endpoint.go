@@ -49,6 +49,10 @@ func (na *NetAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 // CreateEndpoint creates an endpoint
 func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	// check if the endpoint already exists and convert it to an update
+	err := na.validateMeta(ep.Kind, ep.ObjectMeta)
+	if err != nil {
+		return nil, err
+	}
 	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
 	oldEp, ok := na.endpointDB[key]
@@ -115,7 +119,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 		uplink, ok := na.findIntfByName(pinnedUplink)
 		if !ok {
 			log.Errorf("could not find an uplink")
-			return nil, err
+			return nil, fmt.Errorf("could not find the specified interface %v", pinnedUplink)
 		}
 		err = na.datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink, ns)
 		if err != nil {
@@ -146,12 +150,14 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	na.Lock()
 	oldEp, ok := na.endpointDB[key]
 	na.Unlock()
-	if ok {
-		// check if endpoint contents are same
-		if proto.Equal(oldEp, ep) {
-			log.Infof("Received duplicate endpoint create for ep {%+v}", ep)
-			return nil
-		}
+	if !ok {
+		return fmt.Errorf("endpoint not found")
+
+	}
+	// check if endpoint contents are same
+	if proto.Equal(oldEp, ep) {
+		log.Infof("Received duplicate endpoint create for ep {%+v}", ep)
+		return nil
 	}
 
 	// verify endpoint's network is not changing
@@ -205,8 +211,12 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 
 // DeleteEndpoint deletes an endpoint. ToDo Handle deletes in datapath
 func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
+	err := na.validateMeta(ep.Kind, ep.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
-	_, err := na.FindNamespace(ep.Tenant, ep.Namespace)
+	_, err = na.FindNamespace(ep.Tenant, ep.Namespace)
 	if err != nil {
 		return err
 	}

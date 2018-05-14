@@ -19,6 +19,7 @@ LOGDIR=/var/run/naples/logs
 ########################################################################
 function setup_intf1()
 {
+    set +x
     while true; do
         sleep 5
         pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
@@ -53,6 +54,7 @@ function setup_intf1()
 #######################################################################
 function setup_intf2()
 {
+    set +x
     while true; do
         sleep 5
         pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)

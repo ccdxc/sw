@@ -44,7 +44,7 @@ message NamespaceSpec {
 }
 // Namespace Status
 message NamespaceStatus {
-    uint64 NamespaceID  = 1;     // Namespace identifier
+    uint64 NamespaceID  = 1 [(gogoproto.jsontag) = "namespace-id,omitempty"];     // Namespace identifier
 }
 
 
