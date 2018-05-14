@@ -1964,8 +1964,11 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 		Request: []*halproto.IpsecRuleSpec{
 			{
 				KeyOrHandle: &halproto.IpsecRuleKeyHandle{
-					KeyOrHandle: &halproto.IpsecRuleKeyHandle_RuleId{
-						RuleId: ipSec.Status.IPSecPolicyID,
+					KeyOrHandle: &halproto.IpsecRuleKeyHandle_RuleKey{
+						RuleKey: &halproto.IPSecRuleKey{
+							IpsecRuleId:    ipSec.Status.IPSecPolicyID,
+							VrfKeyOrHandle: vrfKey,
+						},
 					},
 				},
 				VrfKeyHandle: vrfKey,
@@ -2092,29 +2095,6 @@ func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 
 // CreateIPSecSADecrypt creates an IPSecSA decrypt rule in the datapath
 func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
-	var localGw *halproto.IPAddress
-	var remoteGw *halproto.IPAddress
-
-	localGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.LocalGwIP))
-	if len(localGwIP) != 0 {
-		localGw = &halproto.IPAddress{
-			IpAf: halproto.IPAddressFamily_IP_AF_INET,
-			V4OrV6: &halproto.IPAddress_V4Addr{
-				V4Addr: ipv4Touint32(localGwIP),
-			},
-		}
-	}
-
-	remoteGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.RemoteGwIP))
-	if len(remoteGwIP) != 0 {
-		remoteGw = &halproto.IPAddress{
-			IpAf: halproto.IPAddressFamily_IP_AF_INET,
-			V4OrV6: &halproto.IPAddress_V4Addr{
-				V4Addr: ipv4Touint32(remoteGwIP),
-			},
-		}
-	}
-
 	ipSecSADecryptReqMsg := &halproto.IpsecSADecryptRequestMsg{
 		Request: []*halproto.IpsecSADecrypt{
 			{
@@ -2148,9 +2128,7 @@ func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netpro
 					},
 				},
 
-				LocalGatewayIp:  localGw,
-				RemoteGatewayIp: remoteGw,
-				Spi:             sa.Spec.SPI,
+				Spi: sa.Spec.SPI,
 			},
 		},
 	}

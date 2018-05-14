@@ -205,13 +205,13 @@ func (_mr *MockIpsecClientMockRecorder) IpsecRuleDelete(arg0, arg1 interface{}, 
 }
 
 // IpsecRuleGet mocks base method
-func (_m *MockIpsecClient) IpsecRuleGet(ctx context.Context, in *IpsecRuleGetRequestMsg, opts ...grpc.CallOption) (*IpsecRuleGetRequestMsg, error) {
+func (_m *MockIpsecClient) IpsecRuleGet(ctx context.Context, in *IpsecRuleGetRequestMsg, opts ...grpc.CallOption) (*IpsecRuleGetResponseMsg, error) {
 	_s := []interface{}{ctx, in}
 	for _, _x := range opts {
 		_s = append(_s, _x)
 	}
 	ret := _m.ctrl.Call(_m, "IpsecRuleGet", _s...)
-	ret0, _ := ret[0].(*IpsecRuleGetRequestMsg)
+	ret0, _ := ret[0].(*IpsecRuleGetResponseMsg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -429,9 +429,9 @@ func (_mr *MockIpsecServerMockRecorder) IpsecRuleDelete(arg0, arg1 interface{}) 
 }
 
 // IpsecRuleGet mocks base method
-func (_m *MockIpsecServer) IpsecRuleGet(_param0 context.Context, _param1 *IpsecRuleGetRequestMsg) (*IpsecRuleGetRequestMsg, error) {
+func (_m *MockIpsecServer) IpsecRuleGet(_param0 context.Context, _param1 *IpsecRuleGetRequestMsg) (*IpsecRuleGetResponseMsg, error) {
 	ret := _m.ctrl.Call(_m, "IpsecRuleGet", _param0, _param1)
-	ret0, _ := ret[0].(*IpsecRuleGetRequestMsg)
+	ret0, _ := ret[0].(*IpsecRuleGetResponseMsg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
