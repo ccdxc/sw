@@ -212,8 +212,8 @@
 #define SEQ_KIVEC3_NUM_BLKS                     \
     k.seq_kivec3_num_blks
 
-#define SEQ_KIVEC4_BARCO_ALT_DESC_ADDR          \
-    k.{seq_kivec4_barco_alt_desc_addr_sbit0_ebit15...seq_kivec4_barco_alt_desc_addr_sbit56_ebit63}
+#define SEQ_KIVEC4_BARCO_DESC_ADDR              \
+    k.{seq_kivec4_barco_desc_addr_sbit0_ebit15...seq_kivec4_barco_desc_addr_sbit56_ebit63}
 #define SEQ_KIVEC4_BARCO_RING_ADDR              \
     k.{seq_kivec4_barco_ring_addr_sbit0_ebit23...seq_kivec4_barco_ring_addr_sbit32_ebit33}
 #define SEQ_KIVEC4_BARCO_DESC_SIZE              \
@@ -224,8 +224,10 @@
     k.seq_kivec4_barco_pndx_size
 #define SEQ_KIVEC4_BARCO_RING_SIZE              \
     k.seq_kivec4_barco_ring_size
+#define SEQ_KIVEC4_BARCO_DESC_SET_TOTAL         \
+    k.seq_kivec4_barco_desc_set_total
 #define SEQ_KIVEC4_BARCO_NUM_DESCS              \
-    k.seq_kivec4_barco_num_descs
+    k.{seq_kivec4_barco_num_descs_sbit0_ebit1...seq_kivec4_barco_num_descs_sbit2_ebit7}
 
 #define SEQ_KIVEC5_INTR_ADDR                    \
     k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
@@ -291,6 +293,9 @@
 // Copied from rdma/common/include/capri.h
 #define DMA_CMD_MEM2MEM_T struct capri_dma_cmd_mem2mem_t
 
+// mem2mem size below is maximally 14 bits
+#define DMA_CMD_MEM2MEM_SIZE_MAX    ((1 << 14) - 1)
+
 struct capri_dma_cmd_mem2mem_t {
     rsvd            : 16;
     size            : 14;
@@ -346,6 +351,13 @@ struct capri_dma_cmd_mem2mem_t {
 #define LOAD_TABLE0_FOR_ADDR64(_table_addr, _load_size, _pc)            \
   phvwri    p.app_header_table0_valid, 1;                               \
   phvwrpair.e p.common_te0_phv_table_lock_en, 1,                        \
+            p.common_te0_phv_table_raw_table_size, _load_size;          \
+  phvwrpair p.common_te0_phv_table_pc, _pc,                             \
+            p.common_te0_phv_table_addr, _table_addr;                   \
+
+#define LOAD_TABLE0_FOR_ADDR64_CONT(_table_addr, _load_size, _pc)       \
+  phvwri    p.app_header_table0_valid, 1;                               \
+  phvwrpair p.common_te0_phv_table_lock_en, 1,                          \
             p.common_te0_phv_table_raw_table_size, _load_size;          \
   phvwrpair p.common_te0_phv_table_pc, _pc,                             \
             p.common_te0_phv_table_addr, _table_addr;                   \
@@ -689,18 +701,23 @@ struct capri_dma_cmd_mem2mem_t {
    phvwri   p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_NOP;                 \
 
 // Setup the doorbell data. Write back the data in little endian format
+#define DOORBELL_DATA_SETUP_REG(_reg, _index, _ring, _qid, _pid)        \
+   add      _reg, _index, _ring, DOORBELL_DATA_RING_SHIFT;              \
+   add      _reg, _reg, _qid, DOORBELL_DATA_QID_SHIFT;                  \
+   add      _reg, _reg, _pid, DOORBELL_DATA_PID_SHIFT;                  \
+
 #define DOORBELL_DATA_SETUP(_db_data, _index, _ring, _qid, _pid)        \
-   add      r1, _index, _ring, DOORBELL_DATA_RING_SHIFT;                \
-   add      r1, r1, _qid, DOORBELL_DATA_QID_SHIFT;                      \
-   add      r1, r1, _pid, DOORBELL_DATA_PID_SHIFT;                      \
+   DOORBELL_DATA_SETUP_REG(r1, _index, _ring, _qid, _pid)               \
    phvwr    p._db_data, r1.dx;                                          \
 
-// Setup the doorbell address. Output will be stored in GPR r7.
-#define DOORBELL_ADDR_SETUP(_lif, _qtype, _sched_wr, _upd)              \
-   addi     r7, r0, DOORBELL_ADDR_WA_LOCAL_BASE + _sched_wr + _upd;     \
-   add      r7, r7, _qtype, DOORBELL_ADDR_QTYPE_SHIFT;                  \
-   add      r7, r7, _lif, DOORBELL_ADDR_LIF_SHIFT;                      \
+// Setup the doorbell address. Output will be stored in GPR.
+#define DOORBELL_ADDR_SETUP_REG(_reg, _lif, _qtype, _sched_wr, _upd)    \
+   addi     _reg, r0, DOORBELL_ADDR_WA_LOCAL_BASE + _sched_wr + _upd;   \
+   add      _reg, _reg, _qtype, DOORBELL_ADDR_QTYPE_SHIFT;              \
+   add      _reg, _reg, _lif, DOORBELL_ADDR_LIF_SHIFT;                  \
 
+#define DOORBELL_ADDR_SETUP(_lif, _qtype, _sched_wr, _upd)              \
+   DOORBELL_ADDR_SETUP_REG(r7, _lif, _qtype, _sched_wr, _upd)           \
 
 // Clear the doorbell as there was no work to be done. Note index can
 // be 0 (r0) as there is no update.
@@ -709,6 +726,15 @@ struct capri_dma_cmd_mem2mem_t {
    DOORBELL_ADDR_SETUP(_lif, _qtype, _wr_sched, DOORBELL_UPDATE_NONE)   \
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,  \
                      r7, dma_p2m_0)                                     \
+
+// Same as QUEUE_DOORBELL_CLEAR but execute the op inline without DMA.
+#define QUEUE_DOORBELL_CLEAR_INLINE_e(_ring, _wr_sched,                 \
+                                      _lif, _qtype, _qid)               \
+   DOORBELL_DATA_SETUP_REG(r_db_data_scratch, r0, _ring, _qid, r0)      \
+   DOORBELL_ADDR_SETUP_REG(r_db_addr_scratch, _lif, _qtype,             \
+                           _wr_sched, DOORBELL_UPDATE_NONE)             \
+   memwr.dx.e r_db_addr_scratch, r_db_data_scratch;                     \
+   nop;                                                                 \
 
 // Queue pop doorbell clear is done in two stages:
 // 1. table write of w_ndx to c_ndx (this should make p_ndx == c_ndx)
@@ -1132,6 +1158,18 @@ struct capri_dma_cmd_mem2mem_t {
         nop;
 #else
 #define SEQ_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()                         \
+        nop;
+#endif
+
+/*
+ * MEM2MEM transfer length error
+ */
+#if DMA_CMD_MEM2MEM_SIZE_DEBUG
+#define DMA_CMD_MEM2MEM_SIZE_ERROR_TRAP()                               \
+        illegal;                                                        \
+        nop;
+#else
+#define DMA_CMD_MEM2MEM_SIZE_ERROR_TRAP()                               \
         nop;
 #endif
 

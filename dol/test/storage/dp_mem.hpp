@@ -76,6 +76,7 @@ public:
     void all_lines_clear_thru(void);
     void fill(uint8_t fill_byte);
     void fill_thru(uint8_t fill_byte);
+    void all_lines_fill_thru(uint8_t fill_byte);
     uint8_t *read(void);
     uint8_t *read_thru(void);
     void write_bit_fields(uint32_t start_bit_offset,

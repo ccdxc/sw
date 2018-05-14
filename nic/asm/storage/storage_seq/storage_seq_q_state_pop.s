@@ -13,23 +13,38 @@ struct s0_tbl_k k;
 struct s0_tbl_seq_q_state_pop_d d;
 struct phv_ p;
 
+/*
+ * Registers usage
+ */
+#define r_ci                        r1  // my_txq onsumer index
+#define r_pi                        r2  // my_txq producer index
+#define r_qdesc_size                r3  // queue descriptor size
+#define r_qdesc0                    r4  // desc0 pointer
+#define r_qdesc1                    r5  // desc1 pointer
+#define r_db_addr_scratch           r6  // doorbell address
+#define r_db_data_scratch           r7  // doorbell data
 %%
 
 storage_seq_q_state_pop_start:
-   // If queue is empty, exit
-   QUEUE_EMPTY(d.p_ndx, d.w_ndx, clear_doorbell)
 
-   // Pop the entry from the queue. Note: The working consumer index is updated
-   // in the pop operation to ensure that 2 consumers don't pop the same entry.
-   // The update of the consumer index happens via DMA write to c_ndx only after 
-   // the popped entry has been fully consumed in subsequent stages. Also, the
-   // w_ndx to be used is saved in GPR r6 for use later as the tblmincr alters 
-   // the d-vector.
-   add		r6, r0, d.w_ndx
-   QUEUE_POP(d.w_ndx, d.num_entries)
+   /*
+    * Stage 0 table engine always fetches the qstate (in d-vector)
+    * for processing by the stage 0 MPUs.
+    * 
+    * In addition, 
+    * R1 = table lookup hash value
+    * R2 = packet size
+    * R3 = random number
+    * R4 = current time
+    * R5 = programmable table constant
+    * R6 = phv timestamp
+    * R7 = qstate ring_not_empty
+    */
+   seq          c1, r7[0:0], r0
+   bcf          [c1], drop_n_exit
+   add		r_ci, r0, d.c_ndx         // delay slot
 
    // Store fields needed in the K+I vector into the PHV
-   phvwr        p.seq_kivec0_w_ndx, d.w_ndx
    phvwr        p.{seq_kivec0_dst_lif...seq_kivec0_dst_qaddr}, \
                 d.{dst_lif...dst_qaddr}
                 
@@ -39,33 +54,36 @@ storage_seq_q_state_pop_start:
    	        p.seq_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
    
    // Set the table and program address for the next stage to process
-   // the popped entry (based on the working consumer index in GPR r6).
-   TABLE_ADDR_FOR_INDEX(d.base_addr, r6, d.entry_size)
+   // the popped entry
+   add          r_qdesc_size, r0, d.entry_size
+   sll          r_qdesc0, r_ci, r_qdesc_size
+   add          r_qdesc0, r_qdesc0, d.base_addr
+
    bbeq         d.desc1_next_pc_valid, 0, load_table_default
-   add          r1, r7, STORAGE_DEFAULT_TBL_LOAD_SIZE_BYTES // delay slot
-   LOAD_TABLE1_FOR_ADDR64(r1, STORAGE_DEFAULT_TBL_LOAD_SIZE, d.desc1_next_pc)
-   LOAD_TABLE0_FOR_ADDR64(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE, d.next_pc)
+   add          r_qdesc1, r_qdesc0, STORAGE_DEFAULT_TBL_LOAD_SIZE_BYTES // delay slot
+   add          r_qdesc_size, r0, STORAGE_DEFAULT_TBL_LOAD_SIZE
+   LOAD_TABLE1_FOR_ADDR64(r_qdesc1, r_qdesc_size, d.desc1_next_pc)
 
 load_table_default:   
-   LOAD_TABLE0_FOR_ADDR64(r7, d.entry_size[2:0], d.next_pc)
+   LOAD_TABLE0_FOR_ADDR64_CONT(r_qdesc0, r_qdesc_size, d.next_pc)
    
-clear_doorbell:
-   QUEUE_EMPTY(d.c_ndx, d.w_ndx, drop_n_exit)
+   mincr        r_ci, d.num_entries, 1
+   add          r_pi, r0, d.p_ndx
+   mincr        r_pi, d.num_entries, r0
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_CLEAR
+   /*
+    * if new CI now == PI, clear scheduler bit
+    */
+   sne          c1, r_ci, r_pi
+   nop.c1.e
+   tblmincri.f  d.c_ndx, d.num_entries, 1       // delay slot
 
-   // Setup the start and end DMA pointers to the doorbell pop
-   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad,
-                 dma_p2m_0_dma_cmd_eop,
-                 p4_txdma_intr_dma_cmd_ptr)
-
-   b 		exit
-   nop
-
+   QUEUE_DOORBELL_CLEAR_INLINE_e(r0,
+                                 DOORBELL_SCHED_WR_EVAL,
+                                 STAGE0_KIVEC_LIF,
+                                 STAGE0_KIVEC_QTYPE,
+                                 STAGE0_KIVEC_QID)
 drop_n_exit:
-   phvwr	p.p4_intr_global_drop, 1
 
-exit:
-   // Nothing more to process in subsequent stages
-   LOAD_NO_TABLES
+   phvwr.e	p.p4_intr_global_drop, 1
+   CLEAR_TABLE0 // delay slot

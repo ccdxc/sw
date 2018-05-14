@@ -108,7 +108,7 @@ chksum_decomp_chain_t::push(chksum_decomp_chain_push_params_t params)
      */
     comp_hash_chain = params.comp_hash_chain_;
     actual_hash_blks = comp_hash_chain->actual_hash_blks_get(
-                                               COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE);
+                                               TEST_RESOURCE_NON_BLOCKING_QUERY);
     if ((actual_hash_blks <= 0) || (actual_hash_blks > (int)max_hash_blks)) {
         printf("%s invalid actual_hash_blks %d in relation to max_hash_blks %u\n",
                __FUNCTION__, actual_hash_blks, max_hash_blks);

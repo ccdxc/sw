@@ -241,7 +241,7 @@ dp_mem_t::fill(uint8_t fill_byte)
 
 
 /*
- * Clear memory at current cache line and its corresponding
+ * Fill memory at current cache line and its corresponding
  * datapath memory.
  */
 void
@@ -249,6 +249,22 @@ dp_mem_t::fill_thru(uint8_t fill_byte)
 {
     fill(fill_byte);
     write_thru();
+}
+
+
+/*
+ * Fill memory at all cache lines and their corresponding
+ * datapath memory.
+ */
+void
+dp_mem_t::all_lines_fill_thru(uint8_t fill_byte)
+{
+    uint32_t    save_curr_line = curr_line;
+
+    for (curr_line = 0; curr_line < num_lines; curr_line++) {
+        fill_thru(fill_byte);
+    }
+    curr_line = save_curr_line;
 }
 
 
@@ -281,12 +297,7 @@ dp_mem_t::clear_thru(void)
 void
 dp_mem_t::all_lines_clear_thru(void)
 {
-    uint32_t    save_curr_line = curr_line;
-
-    for (curr_line = 0; curr_line < num_lines; curr_line++) {
-        clear_thru();
-    }
-    curr_line = save_curr_line;
+    all_lines_fill_thru(0);
 }
 
 

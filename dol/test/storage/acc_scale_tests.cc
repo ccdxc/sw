@@ -36,8 +36,9 @@ comp_encrypt_chain_scale_t::comp_encrypt_chain_scale_t(comp_encrypt_chain_scale_
     success(false)
 {
     comp_encrypt_chain_pre_push_params_t pre_push;
-    dp_mem_t    *xts_status_frag;
-    dp_mem_t    *xts_opaque_frag;
+    dp_mem_t    *curr_xts_status_host;
+    dp_mem_t    *curr_xts_opaque_host;
+    uint32_t    max_enc_blks;
     uint32_t    i;
 
     // Instantiate unique comp_encrypt_chain_t tests one by one, as opposed to
@@ -49,29 +50,26 @@ comp_encrypt_chain_scale_t::comp_encrypt_chain_scale_t(comp_encrypt_chain_scale_
     }
 
     // Allocate status and opaque tags as a byte streams for fast memcmp.
-    xts_status_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
-    exp_status_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint64_t),
+    max_enc_blks = COMP_MAX_HASH_BLKS(params.cec_params_.app_max_size_,
+                                      params.cec_params_.app_enc_size_);
+    exp_opaque_data_buf = new dp_mem_t(1, max_enc_blks * sizeof(uint64_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-    xts_opaque_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
-    exp_opaque_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint64_t),
-                                       DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-
     exp_opaque_data = 0xcccccccccccccccc;
     exp_opaque_data_buf->fill_thru(0xcc);
 
     // Other inits
 
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
-        xts_status_frag = xts_status_host_buf->fragment_find(i * sizeof(uint64_t),
-                                                             sizeof(uint64_t));
-        xts_opaque_frag = xts_opaque_host_buf->fragment_find(i * sizeof(uint64_t),
-                                                             sizeof(uint64_t));
+        curr_xts_status_host = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
+        curr_xts_opaque_host = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
         comp_encrypt_chain_vec[i]->pre_push(pre_push.caller_comp_pad_buf(comp_pad_buf).
-                                                     caller_xts_status_buf(xts_status_frag).
-                                                     caller_xts_opaque_buf(xts_opaque_frag).
+                                                     caller_xts_status_vec(curr_xts_status_host).
+                                                     caller_xts_opaque_vec(curr_xts_opaque_host).
                                                      caller_xts_opaque_data(exp_opaque_data));
+        xts_status_host_vec.push_back(curr_xts_status_host);
+        xts_opaque_host_vec.push_back(curr_xts_opaque_host);
     }
 }
 
@@ -92,15 +90,17 @@ comp_encrypt_chain_scale_t::~comp_encrypt_chain_scale_t()
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
         delete comp_encrypt_chain_vec[i];
     }
-    comp_encrypt_chain_vec.clear();
 
     if (success && destructor_free_buffers) {
-
-        delete xts_status_host_buf;
-        delete xts_opaque_host_buf;
-        delete exp_status_data_buf;
+        for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
+            delete xts_status_host_vec[i];
+            delete xts_opaque_host_vec[i];
+        }
+        xts_status_host_vec.clear();
+        xts_opaque_host_vec.clear();
         delete exp_opaque_data_buf;
     }
+    comp_encrypt_chain_vec.clear();
 }
 
 
@@ -126,9 +126,8 @@ comp_encrypt_chain_scale_t::push(void)
     uint32_t    i;
 
     success = false;
-    xts_opaque_host_buf->clear_thru();
-
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
+        xts_status_host_vec[i]->all_lines_clear_thru();
 
         // Encryption is last in chain so does not require status sequencer
         push_params.seq_xts_status_qid_ = 0;
@@ -177,10 +176,24 @@ comp_encrypt_chain_scale_t::post_push(void)
 int 
 comp_encrypt_chain_scale_t::completion_check(void)
 {
+    int         actual_enc_blks;
+    uint32_t    i;
+
+    success = true;
     verification_time_advance();
-    success = memcmp(xts_opaque_host_buf->read_thru(),
-                     exp_opaque_data_buf->read_thru(),
-                     xts_opaque_host_buf->line_size_get()) == 0;
+    for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
+        actual_enc_blks = 
+            comp_encrypt_chain_vec[i]->actual_enc_blks_get(TEST_RESOURCE_NON_BLOCKING_QUERY);
+        xts_opaque_host_vec[i]->line_set(0);
+        if ((actual_enc_blks < 0) ||
+            memcmp(xts_opaque_host_vec[i]->read_thru(),
+                   exp_opaque_data_buf->read_thru(),
+                   actual_enc_blks * sizeof(uint64_t))) {
+            success = false;
+            break;
+        }
+    }
+
     return success ? 0 : -1;
 }
 
@@ -193,9 +206,17 @@ comp_encrypt_chain_scale_t::completion_check(void)
 int 
 comp_encrypt_chain_scale_t::fast_verify(void)
 {
-    success = memcmp(xts_status_host_buf->read_thru(),
-                     exp_status_data_buf->read_thru(),
-                     xts_status_host_buf->line_size_get()) == 0;
+    uint32_t    i;
+
+    success = true;
+    for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
+        if (comp_encrypt_chain_vec[i]->fast_verify()) {
+            printf("ERROR: %s submission #%u failed\n",
+                   __FUNCTION__, i);
+            success = false;
+        }
+    }
+
     return success ? 0 : -1;
 }
 
@@ -599,7 +620,7 @@ comp_hash_chain_scale_t::completion_check(void)
     verification_time_advance();
     for (i = 0; i < comp_hash_chain_vec.size(); i++) {
         actual_hash_blks = 
-            comp_hash_chain_vec[i]->actual_hash_blks_get(COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE);
+            comp_hash_chain_vec[i]->actual_hash_blks_get(TEST_RESOURCE_NON_BLOCKING_QUERY);
         hash_opaque_host_vec[i]->line_set(0);
         if ((actual_hash_blks < 0) ||
             memcmp(hash_opaque_host_vec[i]->read_thru(),
@@ -839,7 +860,7 @@ chksum_decomp_chain_scale_t::completion_check(void)
                      decomp_opaque_host_buf->line_size_get()) == 0;
     if (success) {
         actual_hash_blks = push_params.comp_hash_chain_->actual_hash_blks_get(
-                                       COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE);
+                                       TEST_RESOURCE_NON_BLOCKING_QUERY);
         success = (actual_hash_blks > 0);
     }
     for (i = 0; success && (i < chksum_decomp_chain_vec.size()); i++) {
@@ -1107,6 +1128,7 @@ acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
     comp_encrypt_chain_scale = 
         new comp_encrypt_chain_scale_t(cec_scale.num_chains(num_submissions).
                                                  cec_params(cec_params.app_max_size(app_blk_size).
+                                                                       app_enc_size(kCompAppHashBlkSize).
                                                                        uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                                                        comp_mem_type(DP_MEM_TYPE_HBM).
                                                                        comp_status_mem_type1(DP_MEM_TYPE_HBM).
@@ -1115,7 +1137,8 @@ acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
                                                                        destructor_free_buffers(true).
                                                                        suppress_info_log(true)).
                                                  destructor_free_buffers(true));
-    comp_encrypt_chain_scale->push_params_set(cec_push.app_blk_size(app_blk_size).
+    comp_encrypt_chain_scale->push_params_set(cec_push.enc_dec_blk_type(XTS_ENC_DEC_PER_HASH_BLK).
+                                                       app_blk_size(app_blk_size).
                                                        comp_queue(cp_queue).
                                                        push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
                                                        seq_comp_qid(queues::get_seq_comp_sq(sq_idx)).
@@ -1143,6 +1166,7 @@ acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
     decrypt_decomp_chain_scale = 
         new decrypt_decomp_chain_scale_t(ddc_scale.num_chains(num_submissions).
                                                    ddc_params(ddc_params.app_max_size(app_blk_size).
+                                                                         app_enc_size(kCompAppHashBlkSize).
                                                                          uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                                                          xts_status_mem_type1(DP_MEM_TYPE_HBM).
                                                                          xts_status_mem_type2(DP_MEM_TYPE_HOST_MEM).

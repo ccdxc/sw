@@ -71,9 +71,10 @@ header_type seq_comp_status_desc0_t {
                             // also represents barco_desc_addr when next_db_action_barco_push is set
     barco_pndx_addr : 34;   // producer index address
     barco_pndx_shadow_addr: 34;
-    barco_desc_size :  4;   // descriptor size (power of 2 exponent)
-    barco_pndx_size :  3;   // producer index size (power of 2 exponent)
+    barco_desc_size :  4;   // log2(descriptor size)
+    barco_pndx_size :  3;   // log2(producer index size)
     barco_ring_size :  5;   // log2(ring_size)
+    barco_desc_set_total: 6; // log2(descriptor set size) to advance to alternate descriptor set
     status_addr0    : 64;   // Address where compression status will be placed
     status_addr1    : 64;   // 2nd address where compression status will be placed
     intr_addr       : 64;   // Address where interrupt needs to be written
@@ -262,13 +263,14 @@ header_type seq_kivec3_t {
 // kivec4: header union with stage_2_stage for table 0 (160 bits max)
 header_type seq_kivec4_t {
   fields {
-    barco_alt_desc_addr     : 64;
+    barco_desc_addr         : 64;
     barco_ring_addr         : 34;
     barco_pndx_shadow_addr  : 34;
     barco_desc_size         : 4;
     barco_pndx_size         : 3;
     barco_ring_size         : 5;
-    barco_num_descs         : 5;
+    barco_desc_set_total    : 6;
+    barco_num_descs         : 8;
   }
 }
 
@@ -358,12 +360,13 @@ header_type seq_kivec6_t {
   modify_field(scratch.num_blks, kivec.num_blks);                       \
 
 #define SEQ_KIVEC4_USE(scratch, kivec)                                  \
-  modify_field(scratch.barco_alt_desc_addr, kivec.barco_alt_desc_addr); \
+  modify_field(scratch.barco_desc_addr, kivec.barco_desc_addr);         \
   modify_field(scratch.barco_pndx_shadow_addr, kivec.barco_pndx_shadow_addr);\
   modify_field(scratch.barco_desc_size, kivec.barco_desc_size);         \
   modify_field(scratch.barco_pndx_size, kivec.barco_pndx_size);         \
   modify_field(scratch.barco_ring_size, kivec.barco_ring_size);         \
   modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);         \
+  modify_field(scratch.barco_desc_set_total, kivec.barco_desc_set_total);\
   modify_field(scratch.barco_num_descs, kivec.barco_num_descs);         \
 
 #define SEQ_KIVEC5_USE(scratch, kivec)                                  \
@@ -388,7 +391,7 @@ header_type seq_kivec6_t {
   modify_field(scratch.aol_dst_vec_addr, kivec.aol_dst_vec_addr);       \
 
 // Macros for ASM param addresses (hardcoded in P4)
-#define seq_barco_ring_push_start	    0x82000000
+#define seq_barco_chain_action_start	0x82000000
 #define seq_comp_status_handler_start   0x82010000
 #define seq_comp_sgl_pdma_xfer_start    0x82020000
 #define seq_xts_status_handler_start    0x82030000

@@ -12,11 +12,11 @@ struct s2_tbl_k k;
 struct phv_ p;
 
 %%
-   .param storage_seq_barco_ring_push
+   .param storage_seq_barco_chain_action
 
 storage_seq_barco_ring_pndx_read:
 
    LOAD_TABLE_FOR_ADDR34_PC_IMM(SEQ_KIVEC4_BARCO_PNDX_SHADOW_ADDR,
                                 SEQ_KIVEC4_BARCO_PNDX_SIZE,
-                                storage_seq_barco_ring_push)
+                                storage_seq_barco_chain_action)
 

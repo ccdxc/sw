@@ -237,14 +237,6 @@ public:
 };
 
 /*
- * Method for certain types of resource retrieval
- */
-typedef enum {
-    COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE,
-    COMP_HASH_CHAIN_BLOCKING_RETRIEVE
-} comp_hash_chain_retrieve_method_t;
-
-/*
  * Accelerator compression to hash (for dedup) chaining DOL
  */
 class comp_hash_chain_t
@@ -315,7 +307,7 @@ public:
         return integrity_type;
     }
 
-    int actual_hash_blks_get(comp_hash_chain_retrieve_method_t method);
+    int actual_hash_blks_get(test_resource_query_method_t query_method);
 
 private:
 

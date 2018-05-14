@@ -49,8 +49,6 @@ xts_error:
    nop
 
    // cancel any barco push prep
-   DMA_CMD_CANCEL(dma_m2m_19)
-   DMA_CMD_CANCEL(dma_m2m_20)
    DMA_CMD_CANCEL(dma_p2m_21)
    
    // else if intr_en then complete any status DMA and 

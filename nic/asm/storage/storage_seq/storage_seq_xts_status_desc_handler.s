@@ -32,22 +32,8 @@ storage_tx_seq_xts_status_desc_handler:
 
    // if doorbell is actually a Barco push action, handle accordingly
    bbeq		d.next_db_action_barco_push, 0, next_db_ring
-   sll          r7, 1, d.barco_desc_size        // delay slot
+   nop
                 
-   // Setup the source of the mem2mem DMA into DMA cmd 1.
-   // Note: next_db_data doubles as barco_desc_addr in this case
-   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.next_db_data, r7,
-                            dma_m2m_19)
-
-   // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
-   // the size).
-   DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, r7,
-                                     dma_m2m_20)
-
-   // Copy the data for the doorbell into the PHV and setup a DMA command
-   // to ring it. Form the doorbell DMA command in this stage as opposed 
-   // the push stage (as is the norm) to avoid carrying the doorbell address 
-   // in K+I vector.
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr, dma_p2m_21)
    DMA_PHV2MEM_FENCE(dma_p2m_21)
@@ -57,14 +43,9 @@ storage_tx_seq_xts_status_desc_handler:
    phvwrpair	p.seq_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
                 p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_ring_size}, \
                 d.{barco_pndx_shadow_addr...barco_ring_size}
-   b            status_dma_setup
-   phvwri       p.seq_kivec4_barco_num_descs, 1     // delay slot
+   phvwrpair    p.seq_kivec4_barco_desc_addr, d.next_db_data, \
+                p.seq_kivec4_barco_num_descs, 1
                 
-next_db_ring:
-
-   // Ring the sequencer doorbell based on addr/data provided in the descriptor
-   SEQUENCER_DOORBELL_RING(dma_p2m_21)
-
 status_dma_setup:
 
    // Set up further status xfer if applicable
@@ -93,4 +74,11 @@ intr_check:
    b            status_dma_setup
    nop
 
+
+next_db_ring:
+
+   // Ring the sequencer doorbell based on addr/data provided in the descriptor
+   SEQUENCER_DOORBELL_RING(dma_p2m_21)
+   b            status_dma_setup
+   nop
 

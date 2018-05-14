@@ -150,10 +150,9 @@ private:
     const char      *scale_test_name;
     comp_encrypt_chain_push_params_t    push_params;
 
-    dp_mem_t        *xts_status_host_buf;
-    dp_mem_t        *xts_opaque_host_buf;
+    std::vector<dp_mem_t*> xts_status_host_vec;
+    std::vector<dp_mem_t*> xts_opaque_host_vec;
 
-    dp_mem_t        *exp_status_data_buf;
     dp_mem_t        *exp_opaque_data_buf;
     uint64_t        exp_opaque_data;
 

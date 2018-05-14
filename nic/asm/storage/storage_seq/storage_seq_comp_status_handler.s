@@ -44,8 +44,6 @@ struct barco_sgl_le_t {
  * Registers reuse, post padding calculations
  */
 #define r_last_blk_len              r1  // length of last block
-#define r_desc_vec_len              r2  // total descriptor vector length
-
 #define r_status                    r7  // comp status, briefly used at beginning
 
 %%
@@ -146,15 +144,11 @@ endif0:
 
 possible_per_block_descs:
 
-    // In addition, storage_seq_comp_status_desc0_handler has already set up
-    // DMA transfer of a descriptor for the Barco ring. In the per-block hash or
-    // encryption case, the descriptor address actually points to the 1st of a 
-    // vector of descriptors. We now correct the transfer length based on r_num_blks.
+    // In the per-block hash or encryption case, we now indicate to
+    // storage_seq_barco_chain_action the correct number of descriptors.
     
     bbeq        SEQ_KIVEC5_DESC_VEC_PUSH_EN, 0, possible_sgl_pdma_xfer
-    sll         r_desc_vec_len, r_num_blks, SEQ_KIVEC4_BARCO_DESC_SIZE  // delay slot
-    DMA_SIZE_UPDATE(r_desc_vec_len, dma_m2m_19)
-    DMA_SIZE_UPDATE(r_desc_vec_len, dma_m2m_20)
+    nop
     phvwr       p.seq_kivec4_barco_num_descs, r_num_blks
     
 possible_sgl_pdma_xfer:
@@ -213,10 +207,8 @@ comp_error:
     nop
 
     // cancel any barco push prep
-    DMA_CMD_CANCEL(dma_m2m_19)
-    DMA_CMD_CANCEL(dma_m2m_20)
     DMA_CMD_CANCEL(dma_p2m_21)
-    
+   
     // else if intr_en then complete any status DMA and 
     // override doorbell to raising an interrupt
     bbeq        SEQ_KIVEC5_INTR_EN, 0, all_dma_complete

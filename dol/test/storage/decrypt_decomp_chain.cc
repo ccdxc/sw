@@ -30,10 +30,13 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     comp_encrypt_chain(nullptr),
     app_max_size(params.app_max_size_),
     app_blk_size(0),
+    app_enc_size(params.app_enc_size_),
     caller_comp_status_buf(nullptr),
     caller_comp_opaque_buf(nullptr),
     caller_comp_opaque_data(0),
     decomp_queue(nullptr),
+    actual_enc_blks(-1),
+    num_enc_blks(0),
     last_dc_output_data_len(0),
     last_decrypt_output_data_len(0),
     destructor_free_buffers(params.destructor_free_buffers_),
@@ -43,34 +46,33 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     uncomp_buf = new dp_mem_t(1, app_max_size,
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
                               0, DP_MEM_ALLOC_NO_FILL);
-    // size of compressed buffers accounts any for compression failure,
-    // i.e., must be as large as uncompressed buffer plus cp_hdr_t
-    xts_decrypt_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
+    xts_decrypt_buf = new dp_mem_t(1, app_max_size,
                           DP_MEM_ALIGN_PAGE, params.decrypt_mem_type_,
                           0, DP_MEM_ALLOC_NO_FILL);
-    // for XTS status, caller can elect to have 2 status buffers, e.g.
+    // for XTS status, caller can elect to have 2 status vectors, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
-    xts_status_buf1 = new dp_mem_t(1, sizeof(uint64_t),
+    max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, app_enc_size);
+    xts_status_vec1 = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
                           DP_MEM_ALIGN_SPEC, params.xts_status_mem_type1_,
-                          kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
+                          sizeof(uint64_t), DP_MEM_ALLOC_NO_FILL);
     if (params.xts_status_mem_type2_ != DP_MEM_TYPE_VOID) {
-        xts_status_buf2 = new dp_mem_t(1, sizeof(uint64_t),
+        xts_status_vec2 = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
                               DP_MEM_ALIGN_SPEC, params.xts_status_mem_type2_,
-                              kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
+                              sizeof(uint64_t), DP_MEM_ALLOC_NO_FILL);
     } else {
-        xts_status_buf2 = xts_status_buf1;
+        xts_status_vec2 = xts_status_vec1;
     }
     xts_opaque_buf = new dp_mem_t(1, sizeof(uint64_t),
                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
-                                  kMinHostMemAllocSize);
+                                  sizeof(uint64_t));
 
     // XTS AOL must be 512 byte aligned
-    xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
-    xts_out_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
-    xts_desc_buf = new dp_mem_t(1, sizeof(xts::xts_desc_t),
+    xts_src_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
+    xts_dst_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
+    xts_desc_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_desc_t),
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(xts::xts_desc_t));
     xts_decomp_cp_desc = new dp_mem_t(1, sizeof(cp_desc_t), DP_MEM_ALIGN_SPEC,
@@ -91,14 +93,15 @@ decrypt_decomp_chain_t::~decrypt_decomp_chain_t()
     if (success && destructor_free_buffers) {
         delete uncomp_buf;
         delete xts_decrypt_buf;
-        if (xts_status_buf1 != xts_status_buf2) {
-            delete xts_status_buf2;
+        if (xts_status_vec1 != xts_status_vec2) {
+            delete xts_status_vec2;
         }
-        delete xts_status_buf1;
+        delete xts_status_vec1;
         delete xts_opaque_buf;
-        delete xts_in_aol;
-        delete xts_out_aol;
-        delete xts_desc_buf;
+        delete xts_src_aol_vec;
+        delete xts_dst_aol_vec;
+        delete xts_desc_vec;
+        delete xts_decomp_cp_desc;
     }
 }
 
@@ -121,20 +124,32 @@ int
 decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
 {
     acc_chain_params_t  chain_params = {0};
+    uint32_t            block_no;
 
     // validate app_blk_size
-    app_blk_size = params.comp_encrypt_chain_->app_blk_size_get();
+    comp_encrypt_chain = params.comp_encrypt_chain_;
+    app_blk_size = comp_encrypt_chain->app_blk_size_get();
+    app_enc_size = comp_encrypt_chain->app_enc_size_get();
+    enc_dec_blk_type = comp_encrypt_chain->enc_dec_blk_type_get();
+    actual_enc_blks = 
+        comp_encrypt_chain->actual_enc_blks_get(TEST_RESOURCE_NON_BLOCKING_QUERY);
     if (app_blk_size > app_max_size) {
         printf("%s app_blk_size %u exceeds app_max_size %u\n", __FUNCTION__,
                app_blk_size, app_max_size);
         assert(app_blk_size <= app_max_size);
         return -1;
     }
+    if (actual_enc_blks <= 0) {
+        printf("%s invalid actual_enc_blks %d\n", __FUNCTION__, actual_enc_blks);
+        assert(actual_enc_blks > 0);
+        return -1;
+    }
 
     if (!suppress_info_log) {
-        printf("Starting testcase decrypt_decomp_chain app_blk_size %u "
-               "seq_xts_qid %u seq_xts_status_qid %u seq_comp_status_qid %u\n",
-               app_blk_size, params.seq_xts_qid_,
+        printf("Starting testcase decrypt_decomp_chain enc_dec_blk_type %u "
+               "app_blk_size %u app_enc_size %u seq_xts_qid %u seq_xts_status_qid %u "
+               "seq_comp_status_qid %u\n", enc_dec_blk_type, app_blk_size,
+               app_enc_size, params.seq_xts_qid_,
                params.seq_xts_status_qid_, params.seq_comp_status_qid_);
     }
 
@@ -145,7 +160,6 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     xts_decrypt_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
     uncomp_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
-    comp_encrypt_chain = params.comp_encrypt_chain_;
     decomp_queue = params.decomp_queue_;
     success = false;
     decompress_cp_desc_template_fill(cp_desc, xts_decrypt_buf, uncomp_buf,
@@ -168,23 +182,30 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     // Decompression will use direct barco push action
     chain_params.chain_ent.next_doorbell_en = 1;
     chain_params.chain_ent.next_db_action_barco_push = 1;
-    chain_params.chain_ent.push_entry.barco_ring_addr = decomp_queue->q_base_mem_pa_get();
-    chain_params.chain_ent.push_entry.barco_pndx_addr = decomp_queue->cfg_q_pd_idx_get();
-    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = decomp_queue->shadow_pd_idx_pa_get();
+    chain_params.chain_ent.push_entry.barco_ring_addr =
+                           decomp_queue->q_base_mem_pa_get();
+    chain_params.chain_ent.push_entry.barco_pndx_addr =
+                           decomp_queue->cfg_q_pd_idx_get();
+    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr =
+                           decomp_queue->shadow_pd_idx_pa_get();
     chain_params.chain_ent.push_entry.barco_desc_addr = xts_decomp_cp_desc->pa();
     chain_params.chain_ent.push_entry.barco_desc_size = 
                            (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
     chain_params.chain_ent.push_entry.barco_pndx_size = 
                            (uint8_t)log2(sizeof(uint32_t));
-    chain_params.chain_ent.push_entry.barco_ring_size = (uint8_t)log2(decomp_queue->q_size_get());
-    if (xts_status_buf1 != xts_status_buf2) {
+    chain_params.chain_ent.push_entry.barco_ring_size =
+                           (uint8_t)log2(decomp_queue->q_size_get());
+    if (xts_status_vec1 != xts_status_vec2) {
 
-        // xts_status_buf2 will receive the content of xts_status_buf1
+        // xts_status_vec2 will receive the content of xts_status_vec1
         // so we can freely initialize it with any non-zero (invalid) value.
-        xts_status_buf2->fill_thru(0xff);
-        chain_params.chain_ent.status_addr0 = xts_status_buf1->pa();
-        chain_params.chain_ent.status_addr1 = xts_status_buf2->pa();
-        chain_params.chain_ent.status_len = xts_status_buf2->line_size_get();
+        xts_status_vec1->line_set(0);
+        xts_status_vec2->line_set(0);
+        xts_status_vec2->all_lines_fill_thru(0xff);
+        chain_params.chain_ent.status_addr0 = xts_status_vec1->pa();
+        chain_params.chain_ent.status_addr1 = xts_status_vec2->pa();
+        chain_params.chain_ent.status_len = 
+                     xts_status_vec2->line_size_get() * (uint32_t)actual_enc_blks;
         chain_params.chain_ent.status_dma_en = 1;
     }
 
@@ -201,7 +222,27 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     }
 
     // Set up decryption
-    decrypt_setup(chain_params);
+    xts_src_aol_vec->line_set(0);
+    xts_dst_aol_vec->line_set(0);
+    num_enc_blks = comp_encrypt_chain->encrypt_output_data_len_get() / 
+                   app_enc_size;
+    xts_aol_sparse_fill(enc_dec_blk_type, xts_src_aol_vec,
+                        comp_encrypt_chain->xts_encrypt_buf_get(),
+                        app_enc_size, num_enc_blks);
+    xts_aol_sparse_fill(enc_dec_blk_type, xts_dst_aol_vec,
+                        xts_decrypt_buf, app_enc_size, num_enc_blks);
+    if (enc_dec_blk_type == XTS_ENC_DEC_PER_HASH_BLK) {
+
+        /*
+         * Per-block deryption will require setup of multiple descriptors
+         */
+        for (block_no = 0; block_no < num_enc_blks; block_no++) {
+            decrypt_setup(block_no, chain_params);
+        }
+
+    } else {
+        decrypt_setup(0, chain_params);
+    }
 
     // Barco push action will operate on the following descriptor
     memcpy(xts_decomp_cp_desc->read(), &cp_desc,
@@ -223,15 +264,17 @@ decrypt_decomp_chain_t::post_push(void)
 
 
 /*
- * Set up of XTS encryption
+ * Set up of XTS decryption
  */
 void 
-decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
+decrypt_decomp_chain_t::decrypt_setup(uint32_t block_no,
+                                      acc_chain_params_t& chain_params)
 {
     xts::xts_cmd_t  cmd;
     xts::xts_desc_t *xts_desc_addr;
 
-    xts_ctx.status = xts_status_buf1;
+    xts_status_vec1->line_set(block_no);
+    xts_ctx.status = xts_status_vec1->fragment_find(0, xts_status_vec1->line_size_get());
     xts_ctx.caller_status_en = true;
 
     // Calling xts_ctx init only to get its xts_db/status initialized
@@ -243,31 +286,26 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
     xts_ctx.copy_desc = false;
     xts_ctx.ring_db = false;
 
-    xts_in_aol->clear();
-    xts::xts_aol_t *xts_in = (xts::xts_aol_t *)xts_in_aol->read();
+    // Set up XTS encrypt descriptor
+    xts_src_aol_vec->line_set(block_no);
+    xts_dst_aol_vec->line_set(block_no);
+    xts_desc_vec->line_set(block_no);
 
-    xts_in->a0 = comp_encrypt_chain->xts_encrypt_buf_get()->pa();
-    xts_in->l0 = comp_encrypt_chain->encrypt_output_data_len_get();
-    xts_in_aol->write_thru();
-
-    xts_out_aol->clear();
-    xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read();
-    xts_out->a0 = xts_decrypt_buf->pa();
-    xts_out->l0 = xts_in->l0;
-    xts_out_aol->write_thru();
-
-    // Set up XTS decrypt descriptor
     xts_ctx.cmd_eval_seq_xts(cmd);
-    xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
-    xts_desc_addr->in_aol = xts_in_aol->pa();
-    xts_desc_addr->out_aol = xts_out_aol->pa();
+    xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_vec);
+    xts_desc_addr->in_aol = xts_src_aol_vec->pa();
+    xts_desc_addr->out_aol = xts_dst_aol_vec->pa();
     xts_desc_addr->cmd = cmd;
 
-    // Chain XTS decrypt to XTS status sequencer 
-    xts_desc_addr->db_addr = chain_params.ret_doorbell_addr;
-    xts_desc_addr->db_data = chain_params.ret_doorbell_data;
-    xts_desc_buf->write_thru();
-    xts_ctx.desc_write_seq_xts(xts_desc_buf);
+    // Chain XTS decrypt of the last block to XTS status sequencer
+    if ((enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK) ||
+        (block_no == (num_enc_blks - 1))) {
+
+        xts_desc_addr->db_addr = chain_params.ret_doorbell_addr;
+        xts_desc_addr->db_data = chain_params.ret_doorbell_data;
+    }
+    xts_desc_vec->write_thru();
+    xts_ctx.desc_write_seq_xts(xts_desc_vec);
 }
 
 
@@ -282,12 +320,19 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
 int 
 decrypt_decomp_chain_t::fast_verify(void)
 {
-    // Validate XTS status
-    success = false;
-    uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read_thru());
-    if (curr_xts_status) {
-      printf("ERROR: decrypt_decomp_chain XTS error 0x%lx\n", curr_xts_status);
-      return -1;
+    uint64_t    xts_status;
+    uint32_t    block_no;
+
+    // Validate XTS status;
+    // The actual number of statuses written is based on actual_enc_blks
+    // which equals 1 or num_enc_blks.
+    for (block_no = 0; block_no < (uint32_t)actual_enc_blks; block_no++) {
+        xts_status_vec2->line_set(block_no);
+        xts_status = *((uint64_t *)xts_status_vec2->read_thru());
+        if (xts_status) {
+          printf("ERROR: decrypt_decomp_chain XTS error 0x%lx\n", xts_status);
+          return -1;
+        }
     }
 
     // Validate decomp status
@@ -312,17 +357,29 @@ decrypt_decomp_chain_t::fast_verify(void)
 int 
 decrypt_decomp_chain_t::full_verify(void)
 {
-    uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
+    xts::xts_aol_t  *xts_aol;
+    uint32_t        max_blks;
+    uint32_t        block_no;
+    uint64_t        xts_status = 0;
+    uint32_t        poll_factor = app_blk_size / kCompAppMinSize;
 
     // Don't call xts_ctx.verify_doorbell() as XTS completion would go
     // to XTS status sequenceer in the decrypt chaining case.
 
     // Poll for XTS status
-    auto xts_status_poll_func = [this] () -> int {
-      uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read_thru());
-      if (!curr_xts_status)
-        return 0;
-      return 1;
+    auto xts_status_poll_func = [this, &xts_status] () -> int {
+        uint32_t    block_no;
+
+        // The actual number of statuses written is based on actual_enc_blks
+        // which equals 1 or num_enc_blks.
+        for (block_no = 0; block_no < (uint32_t)actual_enc_blks; block_no++) {
+            xts_status_vec2->line_set(block_no);
+            xts_status = *((uint64_t *)xts_status_vec2->read_thru());
+            if (!xts_status) {
+              return 0;
+            }
+        }
+        return 1;
     };
 
     assert(poll_factor);
@@ -330,8 +387,7 @@ decrypt_decomp_chain_t::full_verify(void)
     success = false;
 
     if (xts_poll(xts_status_poll_func) != 0) {
-      uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read());
-      printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", curr_xts_status);
+      printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", xts_status);
       return -1;
     }
 
@@ -364,8 +420,26 @@ decrypt_decomp_chain_t::full_verify(void)
     }
 
     // Status verification done.
-    xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read_thru();
-    last_decrypt_output_data_len = xts_out->l0;
+    // Ensure AOL lengths were set correctly.
+    max_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ?
+               xts_dst_aol_vec->num_lines_get() : num_enc_blks;
+    last_decrypt_output_data_len = 0;
+    for (block_no = 0; block_no < max_blks; block_no++) {
+        xts_dst_aol_vec->line_set(block_no);
+        xts_aol = (xts::xts_aol_t *)xts_dst_aol_vec->read_thru();
+        last_decrypt_output_data_len += xts_aol->l0 + xts_aol->l1 + xts_aol->l2;
+        if ((enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK) && !xts_aol->next) {
+            break;
+        }
+    }
+
+    if (last_decrypt_output_data_len != 
+        comp_encrypt_chain->encrypt_output_data_len_get()) {
+        printf("ERROR: decrypt_decomp_chain last_decrypt_output_data_len %u != "
+               "exp_encrypt_output_data_len %u\n", last_decrypt_output_data_len,
+               comp_encrypt_chain->encrypt_output_data_len_get());
+        return -1;
+    }
 
     if (!suppress_info_log) {
         printf("Testcase decrypt_decomp_chain full_verify passed: "

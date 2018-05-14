@@ -16,6 +16,7 @@ public:
 
     comp_encrypt_chain_params_t() :
         app_max_size_(0),
+        app_enc_size_(kCompAppHashBlkSize),
         uncomp_mem_type_(DP_MEM_TYPE_VOID),
         comp_mem_type_(DP_MEM_TYPE_VOID),
         comp_status_mem_type1_(DP_MEM_TYPE_VOID),
@@ -27,6 +28,7 @@ public:
     }
 
     uint32_t        app_max_size_;
+    uint32_t        app_enc_size_;
     dp_mem_type_t   uncomp_mem_type_;
     dp_mem_type_t   comp_mem_type_;
     dp_mem_type_t   comp_status_mem_type1_;
@@ -39,6 +41,12 @@ public:
     app_max_size(uint32_t app_max_size)
     {
         app_max_size_ = app_max_size;
+        return *this;
+    }
+    comp_encrypt_chain_params_t&
+    app_enc_size(uint32_t app_enc_size)
+    {
+        app_enc_size_ = app_enc_size;
         return *this;
     }
     comp_encrypt_chain_params_t&
@@ -95,15 +103,15 @@ public:
 
     comp_encrypt_chain_pre_push_params_t() :
         caller_comp_pad_buf_(nullptr),
-        caller_xts_status_buf_(nullptr),
-        caller_xts_opaque_buf_(nullptr),
+        caller_xts_status_vec_(nullptr),
+        caller_xts_opaque_vec_(nullptr),
         caller_xts_opaque_data_(0)
     {
     }
 
     dp_mem_t    *caller_comp_pad_buf_;
-    dp_mem_t    *caller_xts_status_buf_;
-    dp_mem_t    *caller_xts_opaque_buf_;
+    dp_mem_t    *caller_xts_status_vec_;
+    dp_mem_t    *caller_xts_opaque_vec_;
     uint64_t    caller_xts_opaque_data_;
 
     comp_encrypt_chain_pre_push_params_t&
@@ -113,15 +121,15 @@ public:
         return *this;
     }
     comp_encrypt_chain_pre_push_params_t&
-    caller_xts_status_buf(dp_mem_t *caller_xts_status_buf)
+    caller_xts_status_vec(dp_mem_t *caller_xts_status_vec)
     {
-        caller_xts_status_buf_ = caller_xts_status_buf;
+        caller_xts_status_vec_ = caller_xts_status_vec;
         return *this;
     }
     comp_encrypt_chain_pre_push_params_t&
-    caller_xts_opaque_buf(dp_mem_t *caller_xts_opaque_buf)
+    caller_xts_opaque_vec(dp_mem_t *caller_xts_opaque_vec)
     {
-        caller_xts_opaque_buf_ = caller_xts_opaque_buf;
+        caller_xts_opaque_vec_ = caller_xts_opaque_vec;
         return *this;
     }
     comp_encrypt_chain_pre_push_params_t&
@@ -141,6 +149,7 @@ class comp_encrypt_chain_push_params_t
 public:
 
     comp_encrypt_chain_push_params_t() :
+        enc_dec_blk_type_(XTS_ENC_DEC_ENTIRE_APP_BLK),
         app_blk_size_(0),
         comp_queue_(nullptr),
         push_type_(COMP_QUEUE_PUSH_SEQUENCER),
@@ -150,6 +159,7 @@ public:
     {
     }
 
+    xts_enc_dec_blk_type_t enc_dec_blk_type_;
     uint32_t            app_blk_size_;
     comp_queue_t        *comp_queue_;
     comp_queue_push_t   push_type_;
@@ -157,6 +167,12 @@ public:
     uint32_t            seq_comp_status_qid_;
     uint32_t            seq_xts_status_qid_;
 
+    comp_encrypt_chain_push_params_t&
+    enc_dec_blk_type(xts_enc_dec_blk_type_t enc_dec_blk_type)
+    {
+        enc_dec_blk_type_ = enc_dec_blk_type;
+        return *this;
+    }
     comp_encrypt_chain_push_params_t&
     app_blk_size(uint32_t app_blk_size)
     {
@@ -217,6 +233,16 @@ public:
         return app_blk_size;
     }
 
+    uint32_t app_enc_size_get(void)
+    {
+        return app_enc_size;
+    }
+
+    xts_enc_dec_blk_type_t enc_dec_blk_type_get(void)
+    {
+        return enc_dec_blk_type;
+    }
+
     uint32_t cp_output_data_len_get(void)
     {
         return last_cp_output_data_len;
@@ -237,12 +263,17 @@ public:
         return uncomp_buf->read_thru();
     }
 
+    int actual_enc_blks_get(test_resource_query_method_t query_method);
+
 private:
 
-    void  encrypt_setup(acc_chain_params_t& chain_params);
+    void  encrypt_setup(uint32_t block_no,
+                        acc_chain_params_t& chain_params);
 
+    xts_enc_dec_blk_type_t enc_dec_blk_type;
     uint32_t        app_max_size;
     uint32_t        app_blk_size;
+    uint32_t        app_enc_size;
 
     // Buffers used for compression->encryption operations
     dp_mem_t        *uncomp_buf;
@@ -256,13 +287,14 @@ private:
     // XTS uses AOL for input/output;
     dp_mem_t        *xts_src_aol_vec;
     dp_mem_t        *xts_dst_aol_vec;
-    dp_mem_t        *xts_desc_buf;
+    dp_mem_t        *xts_desc_vec;
+    dp_mem_t        *xts_opaque_vec;
 
     // Since XTS is last in the chain, allow the caller to supply
     // their own opaque and status buffers
     dp_mem_t        *caller_comp_pad_buf;
-    dp_mem_t        *caller_xts_status_buf;
-    dp_mem_t        *caller_xts_opaque_buf;
+    dp_mem_t        *caller_xts_status_vec;
+    dp_mem_t        *caller_xts_opaque_vec;
     uint64_t        caller_xts_opaque_data;
 
     // other context info
@@ -272,6 +304,7 @@ private:
     comp_queue_push_t push_type;
     uint32_t        seq_comp_qid;
 
+    int             actual_enc_blks;
     uint32_t        max_enc_blks;
     uint32_t        num_enc_blks;
 
