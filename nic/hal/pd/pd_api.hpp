@@ -275,6 +275,16 @@ typedef struct pd_nwsec_profile_make_clone_args_s {
     nwsec_profile_t    *clone_profile;
 } __PACK__ pd_nwsec_profile_make_clone_args_t;
 
+typedef struct pd_nwsec_profile_restore_args_s {
+    nwsec_profile_t   *nwsec_profile;
+    const SecurityProfileStatus *status;
+} pd_nwsec_profile_restore_args_t;
+
+typedef struct pd_nwsec_profile_get_args_s {
+    nwsec_profile_t *nwsec_profile;
+    SecurityProfileGetResponse *rsp;
+} __PACK__ pd_nwsec_profile_get_args_t;
+
 static inline void
 pd_nwsec_profile_create_args_init (pd_nwsec_profile_create_args_t *args)
 {
@@ -2789,7 +2799,9 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_GET,         240, "PD_FUNC_ID_IPSEC_DECRYPT_GET")    \
     ENTRY(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, 241, "PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY")\
     ENTRY(PD_FUNC_ID_L2SEG_RESTORE,             242, "PD_FUNC_ID_L2SEG_RESTORE")    \
-    ENTRY(PD_FUNC_ID_MAX,                       243, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_NWSEC_PROF_RESTORE,         243, "PD_FUNC_ID_NWSEC_PROF_RESTORE") \
+    ENTRY(PD_FUNC_ID_NWSEC_PROF_GET,             244, "PD_FUNC_ID_NWSEC_PROF_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      245, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2843,6 +2855,8 @@ PD_FUNCP_TYPEDEF(pd_nwsec_profile_delete);
 PD_FUNCP_TYPEDEF(pd_nwsec_profile_update);
 PD_FUNCP_TYPEDEF(pd_nwsec_profile_mem_free);
 PD_FUNCP_TYPEDEF(pd_nwsec_profile_make_clone);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_restore);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_get);
 
 // dos_policy pd calls
 PD_FUNCP_TYPEDEF(pd_dos_policy_create);
@@ -3211,6 +3225,8 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_nwsec_profile_update);
         PD_UNION_FIELD(pd_nwsec_profile_mem_free);
         PD_UNION_FIELD(pd_nwsec_profile_make_clone);
+        PD_UNION_FIELD(pd_nwsec_profile_restore);
+        PD_UNION_FIELD(pd_nwsec_profile_get);
 
         // dos_policy pd calls
         PD_UNION_FIELD(pd_dos_policy_create);

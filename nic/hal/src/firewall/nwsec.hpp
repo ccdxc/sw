@@ -175,6 +175,7 @@ nwsec_profile_unlock(nwsec_profile_t *nwsec_profile, const char *fname,
 
 extern nwsec_profile_t *find_nwsec_profile_by_id(nwsec_profile_id_t profile_id);
 extern nwsec_profile_t *find_nwsec_profile_by_handle(hal_handle_t handle);
+nwsec_profile_t *nwsec_prof_lookup_key_or_handle (const SecurityProfileKeyHandle& kh);
 extern void *nwsec_profile_id_get_key_func(void *entry);
 extern uint32_t nwsec_profile_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool nwsec_profile_id_compare_key_func(void *key1, void *key2);
@@ -234,6 +235,13 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&   req,
 hal_ret_t
 securitypolicy_get(nwsec::SecurityPolicyGetRequest&      req,
                    nwsec::SecurityPolicyGetResponseMsg   *res);
+
+
+// upgrade APIs
+hal_ret_t nwsec_prof_store_cb (void *obj, uint8_t *mem, uint32_t len,
+                               uint32_t *mlen);
+uint32_t nwsec_prof_restore_cb (void *obj, uint32_t len);
+
 }    // namespace hal
 
 #endif    // __NWSEC_HPP__

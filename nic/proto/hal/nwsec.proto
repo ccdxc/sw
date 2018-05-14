@@ -117,7 +117,7 @@ message SecurityProfileSpec {
   uint32                       tcp_timeout                        = 12 [(gogoproto.moretags) = "range:1-172800, venice:default=3600"];
   uint32                       udp_timeout                        = 13 [(gogoproto.moretags) = "range:1-172800, venice:default=30"];
   uint32                       icmp_timeout                       = 14 [(gogoproto.moretags) = "range:1-172800, venice:default=6"];
- 
+
   bool                         cnxn_tracking_en                   = 15 [(gogoproto.moretags) = "venice:default=true"];
   bool                         ipsg_en                            = 16 [(gogoproto.moretags) = "venice:default=false"];
   bool                         tcp_rtt_estimate_en                = 17 [(gogoproto.moretags) = "venice:default=false"];
@@ -230,9 +230,22 @@ message SecurityProfileRequestMsg {
   repeated SecurityProfileSpec    request = 1;    // batched request
 }
 
+// Security profile oper state for enterprise pipeline
+message SecurityProfileStatusEpd {
+    uint32  hw_sec_profile_id       = 1;    // security profile hw table index
+}
+
+// Security profile oper state for cloud pipeline
+message SecurityProfileStatusCpd {
+}
+
 // SecurityProfile operational status
 message SecurityProfileStatus {
-  fixed64    profile_handle = 1;    // id of the security profile returned by HAL
+  fixed64    profile_handle                 = 1;    // id of the security profile returned by HAL
+  oneof profile_pd_status {
+      SecurityProfileStatusEpd  epd_status  = 2;    // Security Profile oper state for enterprise pipeline
+      SecurityProfileStatusCpd  cpd_status  = 3;    // Security Profile oper state for cloud pipeline
+  }
 }
 
 // SecurityProfileResponse is response to SecurityProfileSpec
@@ -324,7 +337,7 @@ message FirewallRuleSpec {
   repeated  Service   svc                = 2;    // application service
   repeated  string    apps               = 3;    // For appid based policy enforcement
   FirewallAction      action             = 4;    // action to take
-  bool                log                = 5;    // log if this rule is hit 
+  bool                log                = 5;    // log if this rule is hit
 }
 
 // ingress policy for the security group
@@ -571,10 +584,10 @@ message SecurityRuleAction {
 }
 
 message SecurityRule {
-  uint64                          rule_id            = 1[(gogoproto.moretags) = "venice:mandatory"];      // Identifier supplied by agent  
-  types.RuleMatch                 match              = 2;      // match conditions 
-  SecurityRuleAction              action             = 3;      // action related to the rule 
-  repeated string                 appid              = 4;      // Future For appid based policy enforcment - can be moved into RuleMatch 
+  uint64                          rule_id            = 1[(gogoproto.moretags) = "venice:mandatory"];      // Identifier supplied by agent
+  types.RuleMatch                 match              = 2;      // match conditions
+  SecurityRuleAction              action             = 3;      // action related to the rule
+  repeated string                 appid              = 4;      // Future For appid based policy enforcment - can be moved into RuleMatch
 }
 
 // SecurityPolicySpec that contains set of SecurityRules
@@ -603,10 +616,10 @@ message SecurityPolicyResponseMsg {
   repeated SecurityPolicyResponse response = 1;
 }
 
-// SecurityPolicyDeleteRequest is used to delete a security rule 
+// SecurityPolicyDeleteRequest is used to delete a security rule
 message SecurityPolicyDeleteRequest {
   types.ObjectMeta                meta                  = 1; // object meta
-  kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle 
+  kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle
 }
 
 // SecurityPolicyDeleteRequestMsg is used to delete a batch of security policy

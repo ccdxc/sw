@@ -55,7 +55,9 @@ nwsec_profile_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+//----------------------------------------------------------------------------
 // allocate a security profile instance
+//----------------------------------------------------------------------------
 static inline nwsec_profile_t *
 nwsec_profile_alloc (void)
 {
@@ -68,7 +70,9 @@ nwsec_profile_alloc (void)
     return sec_prof;
 }
 
+//----------------------------------------------------------------------------
 // initialize a security profile instance
+//----------------------------------------------------------------------------
 static inline nwsec_profile_t *
 nwsec_profile_init (nwsec_profile_t *sec_prof)
 {
@@ -86,14 +90,18 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     return sec_prof;
 }
 
+//----------------------------------------------------------------------------
 // allocate and initialize a security profile instance
+//----------------------------------------------------------------------------
 static inline nwsec_profile_t *
 nwsec_profile_alloc_init (void)
 {
     return nwsec_profile_init(nwsec_profile_alloc());
 }
 
+//----------------------------------------------------------------------------
 // free security profile instance
+//----------------------------------------------------------------------------
 static inline hal_ret_t
 nwsec_profile_free (nwsec_profile_t *sec_prof)
 {
@@ -102,7 +110,17 @@ nwsec_profile_free (nwsec_profile_t *sec_prof)
     return HAL_RET_OK;
 }
 
+static inline hal_ret_t
+nwsec_profile_cleanup (nwsec_profile_t *sec_prof)
+{
+    nwsec_profile_free(sec_prof);
+
+    return HAL_RET_OK;
+}
+
+//----------------------------------------------------------------------------
 // find a security profile instance by its id
+//----------------------------------------------------------------------------
 nwsec_profile_t *
 find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
 {
@@ -123,7 +141,9 @@ find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
     return NULL;
 }
 
+//----------------------------------------------------------------------------
 // find a security profile instance by its handle
+//----------------------------------------------------------------------------
 nwsec_profile_t *
 find_nwsec_profile_by_handle (hal_handle_t handle)
 {
@@ -145,7 +165,7 @@ find_nwsec_profile_by_handle (hal_handle_t handle)
 }
 
 //------------------------------------------------------------------------------
-// lookup nwsec from key or handle
+// Deprecated: lookup nwsec from key or handle. Use nwsec_lookup_key_or_handle
 //------------------------------------------------------------------------------
 hal_ret_t
 find_nwsec_by_key_or_handle (const SecurityProfileKeyHandle& kh,
@@ -168,6 +188,24 @@ find_nwsec_by_key_or_handle (const SecurityProfileKeyHandle& kh,
     }
 
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// lookup nwsec from key or handle
+//------------------------------------------------------------------------------
+nwsec_profile_t *
+nwsec_prof_lookup_key_or_handle (const SecurityProfileKeyHandle& kh)
+{
+    nwsec_profile_t *nwsec = NULL;
+
+    if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileId) {
+        nwsec = find_nwsec_profile_by_id(kh.profile_id());
+    } else if (kh.key_or_handle_case() ==
+        SecurityProfileKeyHandle::kProfileHandle) {
+        nwsec = find_nwsec_profile_by_handle(kh.profile_handle());
+    }
+
+    return nwsec;
 }
 
 //------------------------------------------------------------------------------
@@ -339,7 +377,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
 // initialize security profile object from the config spec
 static inline void
 nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
-                              nwsec::SecurityProfileSpec& spec,
+                              const nwsec::SecurityProfileSpec& spec,
                               bool update_profile_id = false)
 {
 
@@ -548,33 +586,11 @@ end:
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// nwsec_create_add_cb was a failure
-// 1. call delete to PD
-//      a. Deprogram HW
-//      b. Clean up resources
-//      c. Free PD object
-// 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI vrf
-//------------------------------------------------------------------------------
-hal_ret_t
-nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+static hal_ret_t
+nwsec_create_abort_cleanup (nwsec_profile_t *nwsec, hal_handle_t hal_handle)
 {
     hal_ret_t                           ret = HAL_RET_OK;
     pd::pd_nwsec_profile_delete_args_t  pd_nwsec_args = { 0 };
-    dllist_ctxt_t                       *lnode = NULL;
-    dhl_entry_t                         *dhl_entry = NULL;
-    nwsec_profile_t                     *nwsec = NULL;
-    hal_handle_t                        hal_handle = 0;
-
-    HAL_ASSERT(cfg_ctxt != NULL);
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-
-    nwsec = (nwsec_profile_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
-
-    HAL_TRACE_DEBUG("Create abort cb {}", nwsec->profile_id);
 
     // 1. delete call to PD
     if (nwsec->pd) {
@@ -590,8 +606,36 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 2. remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // 3. free PI vrf
-    nwsec_profile_free(nwsec);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// nwsec_create_add_cb was a failure
+// 1. call delete to PD
+//      a. Deprogram HW
+//      b. Clean up resources
+//      c. Free PD object
+// 2. Remove object from hal_handle id based hash table in infra
+// 3. Free PI vrf
+//------------------------------------------------------------------------------
+hal_ret_t
+nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    dllist_ctxt_t                       *lnode = NULL;
+    dhl_entry_t                         *dhl_entry = NULL;
+    nwsec_profile_t                     *nwsec = NULL;
+    hal_handle_t                        hal_handle = 0;
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    nwsec = (nwsec_profile_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("Create abort cb {}", nwsec->profile_id);
+    nwsec_create_abort_cleanup(nwsec, hal_handle);
     return ret;
 }
 
@@ -813,7 +857,7 @@ end:
 
     if (ret != HAL_RET_OK) {
         if (sec_prof) {
-            // if there is an error, if will be freed in abort cb
+            nwsec_profile_cleanup(sec_prof);
             sec_prof = NULL;
         }
         HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_CREATE_FAIL);
@@ -1320,6 +1364,147 @@ end:
 }
 
 hal_ret_t
+nwsec_prof_process_get (nwsec_profile_t *sec_prof,
+                        SecurityProfileGetResponse *rsp)
+{
+    hal_ret_t                         ret = HAL_RET_OK;
+    nwsec::SecurityProfileSpec        *spec;
+    pd::pd_nwsec_profile_get_args_t   args   = {0};
+
+    // fill in the config spec of this profile
+    spec = rsp->mutable_spec();
+    spec->mutable_key_or_handle()->set_profile_id(sec_prof->profile_id);
+    spec->set_cnxn_tracking_en(sec_prof->cnxn_tracking_en);
+    spec->set_ipsg_en(sec_prof->ipsg_en);
+    spec->set_tcp_rtt_estimate_en(sec_prof->tcp_rtt_estimate_en);
+    spec->set_session_idle_timeout(sec_prof->session_idle_timeout);
+    spec->set_tcp_cnxn_setup_timeout(sec_prof->tcp_cnxn_setup_timeout);
+    spec->set_tcp_close_timeout(sec_prof->tcp_close_timeout);
+    spec->set_tcp_drop_timeout(sec_prof->tcp_drop_timeout);
+    spec->set_udp_drop_timeout(sec_prof->udp_drop_timeout);
+    spec->set_icmp_drop_timeout(sec_prof->icmp_drop_timeout);
+    spec->set_drop_timeout(sec_prof->drop_timeout);
+    spec->set_tcp_timeout(sec_prof->tcp_timeout);
+    spec->set_udp_timeout(sec_prof->udp_timeout);
+    spec->set_icmp_timeout(sec_prof->icmp_timeout);
+
+    spec->set_ip_normalization_en(sec_prof->ip_normalization_en);
+    spec->set_tcp_normalization_en(sec_prof->tcp_normalization_en);
+    spec->set_icmp_normalization_en(sec_prof->icmp_normalization_en);
+
+    spec->set_ip_ttl_change_detect_en(sec_prof->ip_ttl_change_detect_en);
+    spec->set_ip_rsvd_flags_action(
+             static_cast<nwsec::NormalizationAction>(sec_prof->ip_rsvd_flags_action));
+    spec->set_ip_df_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->ip_df_action));
+    spec->set_ip_options_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->ip_options_action));
+    spec->set_ip_invalid_len_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->ip_invalid_len_action));
+    spec->set_ip_normalize_ttl(sec_prof->ip_normalize_ttl);
+
+    spec->set_icmp_invalid_code_action(
+          static_cast<nwsec::NormalizationAction>(sec_prof->icmp_invalid_code_action));
+    spec->set_icmp_deprecated_msgs_drop(sec_prof->icmp_deprecated_msgs_drop);
+    spec->set_icmp_redirect_msg_drop(sec_prof->icmp_redirect_msg_drop);
+
+    spec->set_tcp_non_syn_first_pkt_drop(sec_prof->tcp_non_syn_first_pkt_drop);
+    spec->set_tcp_split_handshake_drop(sec_prof->tcp_split_handshake_drop);
+    spec->set_tcp_rsvd_flags_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_rsvd_flags_action));
+    spec->set_tcp_unexpected_mss_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_mss_action));
+    spec->set_tcp_unexpected_win_scale_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_win_scale_action));
+    spec->set_tcp_unexpected_sack_perm_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_sack_perm_action));
+    spec->set_tcp_urg_ptr_not_set_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_urg_ptr_not_set_action));
+    spec->set_tcp_urg_flag_not_set_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_urg_flag_not_set_action));
+    spec->set_tcp_urg_payload_missing_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_urg_payload_missing_action));
+    spec->set_tcp_rst_with_data_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_rst_with_data_action));
+    spec->set_tcp_data_len_gt_mss_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_data_len_gt_mss_action));
+    spec->set_tcp_data_len_gt_win_size_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_data_len_gt_win_size_action));
+    spec->set_tcp_unexpected_ts_option_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_ts_option_action));
+    spec->set_tcp_unexpected_sack_option_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_sack_option_action));
+    spec->set_tcp_unexpected_echo_ts_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_echo_ts_action));
+    spec->set_tcp_ts_not_present_drop(sec_prof->tcp_ts_not_present_drop);
+    spec->set_tcp_invalid_flags_drop(sec_prof->tcp_invalid_flags_drop);
+    spec->set_tcp_nonsyn_noack_drop(sec_prof->tcp_nonsyn_noack_drop);
+    spec->set_tcp_normalize_mss(sec_prof->tcp_normalize_mss);
+
+    // fill operational state of this profile
+    rsp->mutable_status()->set_profile_handle(sec_prof->hal_handle);
+
+    HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_SUCCESS);
+
+
+    // Get PD information
+    args.nwsec_profile = sec_prof;
+    args.rsp = rsp;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for nwsec profile id : {}. ret : {}",
+                      sec_prof->profile_id, ret);
+    }
+
+    return HAL_RET_OK;
+}
+
+
+//------------------------------------------------------------------------------
+// callback invoked from vrf hash table while processing vrf get request
+//------------------------------------------------------------------------------
+static bool
+nwsec_prof_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t        *entry    = (hal_handle_id_ht_entry_t *)ht_entry;
+    SecurityProfileGetResponseMsg   *rsp      = (SecurityProfileGetResponseMsg *)ctxt;
+    SecurityProfileGetResponse      *response = rsp->add_response();
+    nwsec_profile_t                 *nwsec    = NULL;
+
+    nwsec = (nwsec_profile_t *)hal_handle_get_obj(entry->handle_id);
+    nwsec_prof_process_get(nwsec, response);
+
+    // return false here, so that we walk through all hash table entries.
+    return false;
+}
+
+hal_ret_t
+securityprofile_get (nwsec::SecurityProfileGetRequest& req,
+                     nwsec::SecurityProfileGetResponseMsg *rsp)
+{
+    nwsec_profile_t *nwsec = NULL;
+
+    if (!req.has_key_or_handle()) {
+        g_hal_state->nwsec_profile_id_ht()->walk(nwsec_prof_get_ht_cb, rsp);
+    } else {
+        auto kh = req.key_or_handle();
+        nwsec = nwsec_prof_lookup_key_or_handle(kh);
+        auto response = rsp->add_response();
+        if (nwsec == NULL) {
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
+            HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_FAIL);
+            return HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+        } else {
+            nwsec_prof_process_get(nwsec, response);
+        }
+    }
+
+    HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_SUCCESS);
+    return HAL_RET_OK;
+}
+
+#if 0
+hal_ret_t
 securityprofile_get (nwsec::SecurityProfileGetRequest& req,
                      nwsec::SecurityProfileGetResponseMsg *resp)
 {
@@ -1421,6 +1606,7 @@ securityprofile_get (nwsec::SecurityProfileGetRequest& req,
 
     return HAL_RET_OK;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Adds vrf into nwsec profile list
@@ -1481,6 +1667,160 @@ nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
     return ret;
 }
+
+//-----------------------------------------------------------------------------
+// stores nwsec state for updgrade
+//-----------------------------------------------------------------------------
+hal_ret_t
+nwsec_prof_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    SecurityProfileGetResponse  nwsec_info;
+    uint32_t                    serialized_state_sz;
+    nwsec_profile_t             *sec_prof = (nwsec_profile_t *)obj;
+
+    HAL_ASSERT((sec_prof != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this security profile (includes spec,
+    // status & stats)
+    nwsec_prof_process_get(sec_prof, &nwsec_info);
+    serialized_state_sz = nwsec_info.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall Nwsec Profile {}, not enough room, "
+                      "required size {}, available size {}",
+                      sec_prof->profile_id, serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (nwsec_info.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize Nwsec Profile {}",
+                      sec_prof->profile_id);
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled Nwsec profile {}, len {}",
+                    sec_prof->profile_id, serialized_state_sz);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a nwsec prof's oper status from its status object
+//------------------------------------------------------------------------------
+static hal_ret_t
+nwsec_prof_init_from_status (nwsec_profile_t *nwsec,
+                             const SecurityProfileStatus& status)
+{
+    nwsec->hal_handle = status.profile_handle();
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a vrf's oper stats from its stats object
+//------------------------------------------------------------------------------
+static hal_ret_t
+nwsec_prof_init_from_stats (nwsec_profile_t *nwsec,
+                            const SecurityProfileStats& stats)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// restore nwsec profile after upgrade
+//------------------------------------------------------------------------------
+static hal_ret_t
+nwsec_prof_restore_add (nwsec_profile_t *nwsec,
+                        const SecurityProfileGetResponse& nwsec_info)
+{
+    hal_ret_t                               ret;
+    pd::pd_nwsec_profile_restore_args_t    pd_nwsec_prof_args = { 0 };
+
+    // restore pd state
+    pd_nwsec_prof_args.nwsec_profile = nwsec;
+    pd_nwsec_prof_args.status = &nwsec_info.status();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_RESTORE,
+                          &pd_nwsec_prof_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore Nwsec profile {} pd, err : {}",
+                      nwsec->profile_id, ret);
+    }
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// commits nwsec profile after upgrade
+//------------------------------------------------------------------------------
+static hal_ret_t
+nwsec_prof_restore_commit (nwsec_profile_t *nwsec,
+                           const SecurityProfileGetResponse& nwsec_info)
+{
+    hal_ret_t          ret;
+
+    HAL_TRACE_DEBUG("Committing Nwsec profile:{} restore", nwsec->profile_id);
+
+    ret = nwsec_add_to_db(nwsec, nwsec->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore Nwsec profile {} to db, err : {}",
+                      nwsec->profile_id, ret);
+    }
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// aborts nwsec profile after upgrade
+//------------------------------------------------------------------------------
+static hal_ret_t
+nwsec_prof_restore_abort (nwsec_profile_t *nwsec,
+                          const SecurityProfileGetResponse& nwsec_info)
+{
+    HAL_TRACE_ERR("Aborting Nwsec Profile: {} restore", nwsec->profile_id);
+    nwsec_create_abort_cleanup(nwsec, nwsec->hal_handle);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Nwsec prof's restore cb.
+//  - restores nwsec prof to the PI and PD state before the upgrade
+//------------------------------------------------------------------------------
+uint32_t
+nwsec_prof_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t                   ret;
+    SecurityProfileGetResponse  nwsec_info;
+    nwsec_profile_t             *nwsec = NULL;
+
+    // de-serialize the object
+    if (nwsec_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized vrf obj");
+        HAL_ASSERT(0);
+        return 0;
+    }
+
+    // allocate VRF obj from slab
+    nwsec = nwsec_profile_alloc_init();
+    if (nwsec == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init nwsec profile, err : {}", ret);
+        return 0;
+    }
+
+    // initialize vrf attrs from its spec
+    nwsec_profile_init_from_spec(nwsec, nwsec_info.spec(), true);
+    nwsec_prof_init_from_status(nwsec, nwsec_info.status());
+    nwsec_prof_init_from_stats(nwsec, nwsec_info.stats());
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_SECURITY_PROFILE, nwsec->hal_handle,
+                      (void *)nwsec);
+
+    ret = nwsec_prof_restore_add(nwsec, nwsec_info);
+    if (ret != HAL_RET_OK) {
+        nwsec_prof_restore_abort(nwsec, nwsec_info);
+    }
+    nwsec_prof_restore_commit(nwsec, nwsec_info);
+    return 0;    // TODO: fix me
+}
+
+
 
 hal_ret_t
 hal_fw_init_cb (hal_cfg_t *hal_cfg)

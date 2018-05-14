@@ -59,6 +59,9 @@ using nwsec::NwSecurity;
 using nwsec::SecurityGroupSpec;
 using nwsec::SecurityGroupRequestMsg;
 using nwsec::SecurityGroupResponseMsg;
+using nwsec::SecurityProfileSpec;
+using nwsec::SecurityProfileRequestMsg;
+using nwsec::SecurityProfileResponseMsg;
 using kh::SecurityGroupKeyHandle;
 
 using session::Session;
@@ -210,6 +213,7 @@ public:
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
     telemetry_stub_(Telemetry::NewStub(channel)) {}
+
 
     int mpu_trace_enable(int stage_id,
                          int mpu,
@@ -583,6 +587,31 @@ public:
             }
         }
 
+        return 0;
+    }
+
+    uint64_t security_profile_create(uint64_t prof_id) {
+        SecurityProfileSpec           *spec;
+        SecurityProfileRequestMsg     req_msg;
+        SecurityProfileResponseMsg    rsp_msg;
+        ClientContext     context;
+        Status            status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_profile_id(prof_id);
+
+        status = sg_stub_->SecurityProfileCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert((rsp_msg.response(0).api_status() == types::API_STATUS_OK) ||
+                   (rsp_msg.response(0).api_status() == types::API_STATUS_EXISTS_ALREADY));
+            std::cout << "Security Profile create succeeded, handle = "
+                      << rsp_msg.response(0).profile_status().profile_handle()
+                      << std::endl;
+            return rsp_msg.response(0).profile_status().profile_handle();
+        }
+        std::cout << "Security Profile create failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
         return 0;
     }
 
@@ -2060,7 +2089,7 @@ main (int argc, char** argv)
 {
     uint64_t     vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
     uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
-    uint64_t     lif_handle, enic_if_handle;
+    uint64_t     lif_handle, enic_if_handle, sec_prof_handle;
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint64_t     lif_id = 100;
     uint64_t     enic_if_id = 200;
@@ -2266,6 +2295,10 @@ main (int argc, char** argv)
 
     // delete a non-existent vrf
     hclient.vrf_delete_by_id(1);
+
+    // create a security profile
+    sec_prof_handle = hclient.security_profile_create(1);
+    assert(sec_prof_handle != 0);
 
     // create a vrf and perform GETs
     vrf_handle = hclient.vrf_create(vrf_id);

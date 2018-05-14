@@ -50,8 +50,8 @@ hash::factory(char *name, uint32_t dleft_table_id,
                                     sizeof(uint64_t) * STATS_MAX);
 
     SDK_TRACE_DEBUG("hash::%-30s: dleft_tid: %-3d otcam_tid: %-3d "
-                    "swkey_len: %-4d hwkey_len_: %-4d "
-                    "hwdata_len_: %-4d",
+                    "swkey_len(B): %-4d hwkey_len(B): %-4d "
+                    "hwdata_len(B): %-4d",
                     h->name_, dleft_table_id, otcam_table_id, h->swkey_len_,
                     h->hwkey_len_, h->hwdata_len_);
 

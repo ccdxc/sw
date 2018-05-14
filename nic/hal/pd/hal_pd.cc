@@ -100,6 +100,8 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_NWSEC_PROF_UPDATE, pd_nwsec_profile_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_NWSEC_PROF_MEM_FREE, pd_nwsec_profile_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_NWSEC_PROF_MAKE_CLONE, pd_nwsec_profile_make_clone);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_NWSEC_PROF_RESTORE, pd_nwsec_profile_restore);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_NWSEC_PROF_GET, pd_nwsec_profile_get);
 
     // dos policy pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_DOS_POLICY_CREATE, pd_dos_policy_create);
@@ -219,7 +221,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 
+    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE,
                    pd_qos_class_periodic_stats_update);
 
     // copp
@@ -479,6 +481,8 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_NWSEC_PROF_UPDATE, pd_nwsec_profile_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_NWSEC_PROF_MEM_FREE, pd_nwsec_profile_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_NWSEC_PROF_MAKE_CLONE, pd_nwsec_profile_make_clone);
+    PD_SYMBOL_CALL(PD_FUNC_ID_NWSEC_PROF_RESTORE, pd_nwsec_profile_restore);
+    PD_SYMBOL_CALL(PD_FUNC_ID_NWSEC_PROF_GET, pd_nwsec_profile_get);
 
     // dos policy pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_DOS_POLICY_CREATE, pd_dos_policy_create);
@@ -598,7 +602,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
-    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 
+    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE,
                    pd_qos_class_periodic_stats_update);
 
     // copp
@@ -942,7 +946,7 @@ pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t args = {0};
-    
+
     args.key_idx = key_idx;
     args.p = n;
     args.n = n;

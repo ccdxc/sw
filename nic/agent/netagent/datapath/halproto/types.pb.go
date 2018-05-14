@@ -631,6 +631,8 @@
 		NexthopGetResponseMsg
 		SecurityProfileSpec
 		SecurityProfileRequestMsg
+		SecurityProfileStatusEpd
+		SecurityProfileStatusCpd
 		SecurityProfileStatus
 		SecurityProfileResponse
 		SecurityProfileResponseMsg

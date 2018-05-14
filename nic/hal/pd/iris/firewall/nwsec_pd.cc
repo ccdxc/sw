@@ -41,7 +41,7 @@ pd_nwsec_profile_create (pd_nwsec_profile_create_args_t *args)
     }
 
     // Program HW
-    ret = nwsec_pd_program_hw(pd_nwsec, TRUE);
+    ret = nwsec_pd_program_hw(pd_nwsec, true, false);
 
 end:
     if (ret != HAL_RET_OK) {
@@ -64,7 +64,7 @@ pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
                     __FUNCTION__);
 
     pd_nwsec = (pd_nwsec_profile_t *)args->clone_profile->pd;
-    ret = nwsec_pd_program_hw(pd_nwsec, FALSE);
+    ret = nwsec_pd_program_hw(pd_nwsec, false, false);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
         HAL_TRACE_ERR("{}: unable to program hw, ret : {}",
@@ -124,6 +124,83 @@ pd_nwsec_profile_delete (pd_nwsec_profile_delete_args_t *args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// pd nwsec profile get pd data
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_nwsec_profile_get (pd_nwsec_profile_get_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    nwsec_profile_t *nwsec = args->nwsec_profile;
+    pd_nwsec_profile_t  *nwsec_pd = (pd_nwsec_profile_t *)nwsec->pd;
+    SecurityProfileGetResponse *rsp = args->rsp;
+
+    auto nwsec_info = rsp->mutable_status()->mutable_epd_status();
+    nwsec_info->set_hw_sec_profile_id(nwsec_pd->nwsec_hw_id);
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// pd nwsec profile restore pd data
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_nwsec_profile_restore_data (pd_nwsec_profile_restore_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    nwsec_profile_t *nwsec = args->nwsec_profile;
+    pd_nwsec_profile_t  *nwsec_pd = (pd_nwsec_profile_t *)nwsec->pd;
+
+    auto nwsec_info = args->status->epd_status();
+    nwsec_pd->nwsec_hw_id = nwsec_info.hw_sec_profile_id();
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// pd nwsec profile restore
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_nwsec_profile_restore (pd_nwsec_profile_restore_args_t *args)
+{
+    hal_ret_t           ret;
+    pd_nwsec_profile_t  *nwsec_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("Restoring pd state for vrf {}",
+                    args->nwsec_profile->profile_id);
+
+    // allocate PD vrf state
+    nwsec_pd = nwsec_pd_alloc_init();
+    if (nwsec_pd == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // link pi & pd
+    nwsec_link_pi_pd(nwsec_pd, args->nwsec_profile);
+
+    ret = pd_nwsec_profile_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore pd data for nwsec prof:{}, err: {}",
+                      args->nwsec_profile->profile_id, ret);
+        goto end;
+    }
+
+    ret = nwsec_pd_program_hw(nwsec_pd, true, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to program hw");
+        goto end;
+    }
+
+end:
+    if (ret != HAL_RET_OK) {
+        nwsec_pd_cleanup(nwsec_pd);
+    }
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // DeProgram HW
 // ----------------------------------------------------------------------------
@@ -170,7 +247,8 @@ nwsec_pd_depgm_l4_prof_tbl (pd_nwsec_profile_t *nwsec_pd)
 
 
 hal_ret_t
-nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
+nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create,
+                               bool is_upgrade)
 {
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
@@ -249,7 +327,11 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
         profile->tcp_normalize_mss;
 
     if (create) {
-        sdk_ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
+        if (is_upgrade) {
+            sdk_ret = dm->insert_withid(&data, (uint32_t)pd_nw->nwsec_hw_id);
+        } else {
+            sdk_ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
+        }
     } else {
         sdk_ret = dm->update(pd_nw->nwsec_hw_id, &data);
     }
@@ -324,12 +406,12 @@ end:
 // Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-nwsec_pd_program_hw(pd_nwsec_profile_t *pd_nw, bool create)
+nwsec_pd_program_hw(pd_nwsec_profile_t *pd_nw, bool create, bool is_upgrade)
 {
     hal_ret_t            ret = HAL_RET_OK;
 
     // Program L4 Profile Table
-    ret = nwsec_pd_pgm_l4_profile_table(pd_nw, create);
+    ret = nwsec_pd_pgm_l4_profile_table(pd_nw, create, is_upgrade);
 
     return ret;
 }
@@ -394,6 +476,8 @@ pd_nwsec_profile_mem_free(pd_nwsec_profile_mem_free_args_t *args)
 
     return ret;
 }
+
+
 
 }    // namespace pd
 }    // namespace hal

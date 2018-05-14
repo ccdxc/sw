@@ -60,6 +60,8 @@ PD_FUNC_STUB(pd_nwsec_profile_delete);
 PD_FUNC_STUB(pd_nwsec_profile_update);
 PD_FUNC_STUB(pd_nwsec_profile_mem_free);
 PD_FUNC_STUB(pd_nwsec_profile_make_clone);
+PD_FUNC_STUB(pd_nwsec_profile_restore);
+PD_FUNC_STUB(pd_nwsec_profile_get);
 
 // dos_policy pd calls
 PD_FUNC_STUB(pd_dos_policy_create);

@@ -11,6 +11,64 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+// MockisSecurityProfileStatus_ProfilePdStatus is a mock of isSecurityProfileStatus_ProfilePdStatus interface
+type MockisSecurityProfileStatus_ProfilePdStatus struct {
+	ctrl     *gomock.Controller
+	recorder *MockisSecurityProfileStatus_ProfilePdStatusMockRecorder
+}
+
+// MockisSecurityProfileStatus_ProfilePdStatusMockRecorder is the mock recorder for MockisSecurityProfileStatus_ProfilePdStatus
+type MockisSecurityProfileStatus_ProfilePdStatusMockRecorder struct {
+	mock *MockisSecurityProfileStatus_ProfilePdStatus
+}
+
+// NewMockisSecurityProfileStatus_ProfilePdStatus creates a new mock instance
+func NewMockisSecurityProfileStatus_ProfilePdStatus(ctrl *gomock.Controller) *MockisSecurityProfileStatus_ProfilePdStatus {
+	mock := &MockisSecurityProfileStatus_ProfilePdStatus{ctrl: ctrl}
+	mock.recorder = &MockisSecurityProfileStatus_ProfilePdStatusMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisSecurityProfileStatus_ProfilePdStatus) EXPECT() *MockisSecurityProfileStatus_ProfilePdStatusMockRecorder {
+	return _m.recorder
+}
+
+// isSecurityProfileStatus_ProfilePdStatus mocks base method
+func (_m *MockisSecurityProfileStatus_ProfilePdStatus) isSecurityProfileStatus_ProfilePdStatus() {
+	_m.ctrl.Call(_m, "isSecurityProfileStatus_ProfilePdStatus")
+}
+
+// isSecurityProfileStatus_ProfilePdStatus indicates an expected call of isSecurityProfileStatus_ProfilePdStatus
+func (_mr *MockisSecurityProfileStatus_ProfilePdStatusMockRecorder) isSecurityProfileStatus_ProfilePdStatus() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isSecurityProfileStatus_ProfilePdStatus", reflect.TypeOf((*MockisSecurityProfileStatus_ProfilePdStatus)(nil).isSecurityProfileStatus_ProfilePdStatus))
+}
+
+// MarshalTo mocks base method
+func (_m *MockisSecurityProfileStatus_ProfilePdStatus) MarshalTo(_param0 []byte) (int, error) {
+	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (_mr *MockisSecurityProfileStatus_ProfilePdStatusMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisSecurityProfileStatus_ProfilePdStatus)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (_m *MockisSecurityProfileStatus_ProfilePdStatus) Size() int {
+	ret := _m.ctrl.Call(_m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (_mr *MockisSecurityProfileStatus_ProfilePdStatusMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisSecurityProfileStatus_ProfilePdStatus)(nil).Size))
+}
+
 // MockisService_L4Info is a mock of isService_L4Info interface
 type MockisService_L4Info struct {
 	ctrl     *gomock.Controller

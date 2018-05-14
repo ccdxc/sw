@@ -74,11 +74,13 @@ nwsec_pd_mem_free (pd_nwsec_profile_t *nwsec_pd)
 hal_ret_t nwsec_pd_alloc_res(pd_nwsec_profile_t *pd_nw);
 hal_ret_t nwsec_pd_dealloc_res(pd_nwsec_profile_t *pd_nw);
 hal_ret_t nwsec_pd_cleanup(pd_nwsec_profile_t *nwsec_pd);
-hal_ret_t nwsec_pd_program_hw(pd_nwsec_profile_t *pd_nw, bool create);
+hal_ret_t nwsec_pd_program_hw(pd_nwsec_profile_t *pd_nw, bool create,
+                              bool is_upgrade);
 hal_ret_t pd_nwsec_free (pd_nwsec_profile_t *pd_nw);
 void nwsec_link_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t *pi_nw);
 void nwsec_delink_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t  *pi_nw);
-hal_ret_t nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create);
+hal_ret_t nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create,
+                                         bool is_upgrade);
 hal_ret_t nwsec_pd_depgm_l4_prof_tbl (pd_nwsec_profile_t *nwsec_pd);
 hal_ret_t nwsec_pd_deprogram_hw (pd_nwsec_profile_t *nwsec_pd);
 

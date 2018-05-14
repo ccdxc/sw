@@ -8,6 +8,7 @@
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 
 namespace hal {
 
@@ -52,8 +53,8 @@ hal_obj_meta_init (void)
                          hal_default_unmarshall_cb);
     g_obj_meta[HAL_OBJ_ID_SECURITY_PROFILE] =
         new hal_obj_meta(HAL_SLAB_SECURITY_PROFILE,
-                         hal_default_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         nwsec_prof_store_cb,
+                         nwsec_prof_restore_cb);
     g_obj_meta[HAL_OBJ_ID_ENDPOINT] =
         new hal_obj_meta(HAL_SLAB_EP,
                          hal_default_marshall_cb,
