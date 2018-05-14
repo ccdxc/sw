@@ -235,6 +235,9 @@ hal_ret_t network_update_sg_relation(dllist_ctxt_t *sg_list,
 hal_ret_t hal_nw_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_nw_cleanup_cb(void);
 
+hal_ret_t nw_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
+uint32_t  nw_restore_cb(void *obj, uint32_t len);
+
 hal_ret_t network_create(nw::NetworkSpec& spec,
                          nw::NetworkResponse *rsp);
 hal_ret_t network_update(nw::NetworkSpec& spec,

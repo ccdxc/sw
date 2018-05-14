@@ -154,6 +154,9 @@ network_dump (NetworkSpec& spec)
 static hal_ret_t
 validate_network_create (NetworkSpec& spec, NetworkResponse *rsp)
 {
+    vrf_id_t    tid;
+    vrf_t       *vrf;
+
     // key-handle field must be set
     if (!spec.has_key_or_handle() ||
         !spec.key_or_handle().has_nw_key() ||
@@ -163,8 +166,18 @@ validate_network_create (NetworkSpec& spec, NetworkResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (spec.key_or_handle().nw_key().vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
+    tid = spec.key_or_handle().nw_key().vrf_key_handle().vrf_id();
+    if (tid == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("{}:vrf not found", __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // fetch the vrf information
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("{}: unable to retrieve vrf_id:{}",
+                __FUNCTION__, tid);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -303,7 +316,7 @@ network_prepare_rsp (NetworkResponse *rsp, hal_ret_t ret,
 // Reads security groups from spec and populate SG object
 //------------------------------------------------------------------------------
 hal_ret_t
-network_read_security_groups (network_t *nw, NetworkSpec& spec)
+network_read_security_groups (network_t *nw, const NetworkSpec& spec)
 {
     hal_ret_t               ret        = HAL_RET_OK;
     uint32_t                num_sgs    = 0, i        = 0;
@@ -328,45 +341,18 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// process a vrf create request
-// TODO: if vrf exists, treat this as modify
-//------------------------------------------------------------------------------
 hal_ret_t
-network_create (NetworkSpec& spec, NetworkResponse *rsp)
+nw_init_from_spec (network_t *nw, const NetworkSpec& spec)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
-    network_t                       *nw = NULL;
     vrf_id_t                        tid;
-    vrf_t                           *vrf = NULL;
-    network_create_app_ctxt_t       app_ctxt;
-    dhl_entry_t                     dhl_entry = { 0 };
-    cfg_op_ctxt_t                   cfg_ctxt = { 0 };
-    ip_prefix_t                     ip_pfx;
     hal_handle_t                    gw_ep_handle = HAL_HANDLE_INVALID;
-
-    HAL_TRACE_DEBUG("Received network create request");
-    // dump incoming config
-    network_dump(spec);
+    hal_ret_t                       ret = HAL_RET_OK;
 
     auto kh = spec.key_or_handle();
     auto nw_pfx = kh.nw_key().ip_prefix();
 
-    // validate the request message
-    ret = validate_network_create(spec, rsp);
-    if (ret != HAL_RET_OK) {
-        goto end;
-    }
-
     // fetch the vrf information
     tid = spec.key_or_handle().nw_key().vrf_key_handle().vrf_id();
-    vrf = vrf_lookup_by_id(tid);
-    if (vrf == NULL) {
-        HAL_TRACE_ERR("{}: unable to retrieve vrf_id:{}",
-                __FUNCTION__, tid);
-        ret = HAL_RET_VRF_NOT_FOUND;
-        goto end;
-    }
 
     // check if gateway IP is present
     if (spec.gateway_ip().v4_or_v6_case()) {
@@ -383,12 +369,57 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
                         " flows using this network will not have reachability info.");
     }
 
+    nw->nw_key.vrf_id = tid;
+    nw->gw_ep_handle = gw_ep_handle;
+    MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
+    ret = ip_pfx_spec_to_pfx(&nw->nw_key.ip_pfx, nw_pfx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
+        goto end;
+    }
+    network_read_security_groups(nw, spec);
+
+end:
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// process a vrf create request
+// TODO: if vrf exists, treat this as modify
+//------------------------------------------------------------------------------
+hal_ret_t
+network_create (NetworkSpec& spec, NetworkResponse *rsp)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    network_t                       *nw = NULL;
+    network_create_app_ctxt_t       app_ctxt;
+    dhl_entry_t                     dhl_entry = { 0 };
+    cfg_op_ctxt_t                   cfg_ctxt = { 0 };
+    ip_prefix_t                     ip_pfx;
+    vrf_id_t                        tid;
+
+    auto kh = spec.key_or_handle();
+    auto nw_pfx = kh.nw_key().ip_prefix();
+
+    HAL_TRACE_DEBUG("Received network create request");
+    // dump incoming config
+    network_dump(spec);
+
+    // validate the request message
+    ret = validate_network_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
     // check if network with pfx already exists
     ret = ip_pfx_spec_to_pfx(&ip_pfx, nw_pfx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
         goto end;
     }
+
+    tid = spec.key_or_handle().nw_key().vrf_key_handle().vrf_id();
     if (find_network_by_key(tid, &ip_pfx)) {
         HAL_TRACE_ERR("{}:network already exists (tid,ippfx) : {}:{}",
                       __FUNCTION__, tid, ippfx2str(&ip_pfx));
@@ -410,19 +441,19 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
         HAL_TRACE_ERR("{}: failed to alloc handle",
                       __FUNCTION__);
         network_cleanup(nw);
+        nw = NULL;
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
 
-    nw->nw_key.vrf_id = tid;
-    nw->gw_ep_handle = gw_ep_handle;
-    MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
-    ret = ip_pfx_spec_to_pfx(&nw->nw_key.ip_pfx, nw_pfx);
+    // Network init from spec
+    ret = nw_init_from_spec(nw, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
+        HAL_TRACE_ERR("Failed to init Network from Spec");
+        network_cleanup(nw);
+        nw = NULL;
         goto end;
     }
-    network_read_security_groups(nw, spec);
 
     HAL_TRACE_DEBUG("{}:nw: {}, rmac: {}",
                     __FUNCTION__,
@@ -1041,6 +1072,17 @@ end:
 
 }
 
+hal_ret_t
+network_process_get (network_t *nw, NetworkGetResponse *response)
+{
+    response->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
+    ip_pfx_to_spec(response->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix(), &nw->nw_key.ip_pfx);
+    response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
+    response->mutable_status()->set_nw_handle(nw->hal_handle);
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // process a vrf get request
 //------------------------------------------------------------------------------
@@ -1097,10 +1139,8 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
         return HAL_RET_EP_NOT_FOUND;
     }
 
-    // fill config spec of this vrf
-    response->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
-    response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
-    response->mutable_status()->set_nw_handle(nw->hal_handle);
+    // fill config spec of this network
+    network_process_get(nw, response);
 
     response->set_api_status(types::API_STATUS_OK);
 	HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
@@ -1485,6 +1525,109 @@ hal_ret_t
 hal_nw_cleanup_cb (void)
 {
     return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// given a nw, marshall it for persisting the nw state (spec, status, stats)
+//
+// obj points to nw object i.e., network_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
+//-----------------------------------------------------------------------------
+hal_ret_t
+nw_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    NetworkGetResponse      nw_info;
+    uint32_t                serialized_state_sz;
+    network_t               *nw = (network_t *)obj;
+
+    HAL_ASSERT((nw != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this network (includes spec, status & stats)
+    network_process_get(nw, &nw_info);
+    serialized_state_sz = nw_info.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall network {}, not enough room, "
+                      "required size {}, available size {}",
+                      network_to_str(nw), serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (nw_info.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize network {}", network_to_str(nw));
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled network {}, len {}",
+                    network_to_str(nw), serialized_state_sz);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nw_init_from_status (network_t *nw, const NetworkStatus& status)
+{
+    nw->hal_handle = status.nw_handle();
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nw_restore_commit (network_t *nw, NetworkGetResponse& nw_info)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+
+    // Add network to key DB
+    ret = network_add_to_db (nw, nw->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to add network to DB");
+        goto end;
+    }
+
+    // Setup backward refs
+    ret = network_update_sg_relation(&nw->sg_list_head, nw, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add sg -> network"
+                      " relation ret:{}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+uint32_t
+nw_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t               ret;
+    NetworkGetResponse      nw_info;
+    network_t               *nw;
+
+    // de-serialize the object
+    if (nw_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized network obj");
+        HAL_ASSERT(0);
+        return 0;
+    }
+
+    // allocate network obj from slab
+    nw = network_alloc_init();
+    if (nw == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init network, err : {}", ret);
+        return 0;
+    }
+
+    // initialize network attrs from its spec
+    nw_init_from_spec(nw, nw_info.spec());
+    nw_init_from_status(nw, nw_info.status());
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_NETWORK, nw->hal_handle, (void *)nw);
+
+    nw_restore_commit(nw, nw_info);
+
+    return 0;    // TODO: fix me
 }
 
 }    // namespace hal
