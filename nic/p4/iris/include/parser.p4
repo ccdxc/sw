@@ -293,12 +293,13 @@ header p4_to_p4plus_ip_addr_t p4_to_p4plus_cpu_ip;
 @pragma pa_field_union egress p4_to_p4plus_cpu_tcp_pkt.tcp_ws       tcp_option_ws.value
 header p4_to_p4plus_cpu_tcp_pkt_t p4_to_p4plus_cpu_tcp_pkt;
 
-@pragma pa_header_union egress p4_to_p4plus_p4pt p4_to_p4plus_ipsec p4_to_p4plus_cpu_pkt
+@pragma pa_header_union egress p4_to_p4plus_p4pt p4_to_p4plus_ipsec p4_to_p4plus_cpu_pkt p4_to_p4plus_mirror
 header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
 header p4_to_p4plus_p4pt_header_t p4_to_p4plus_p4pt;
 header p4_to_p4plus_ipsec_header_t p4_to_p4plus_ipsec;
 header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 header p4_to_p4plus_cpu_pkt_t p4_to_p4plus_cpu_pkt;
+header p4_to_p4plus_mirror_t p4_to_p4plus_mirror;
 
 header p4plus_to_p4_s1_t p4plus_to_p4;
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
@@ -420,6 +421,7 @@ parser deparse_rxdma {
     extract(p4_to_p4plus_cpu_pkt);
     extract(p4_to_p4plus_cpu_tcp_pkt);
     extract(p4_to_p4plus_p4pt);
+    extract(p4_to_p4plus_mirror);
     return parse_ethernet;
 }
 

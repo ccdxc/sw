@@ -236,7 +236,6 @@ header_type p4_to_p4plus_cpu_pkt_t {
 
 header_type p4_to_p4plus_cpu_tcp_pkt_t {
     fields {
-        // tcp
         tcp_flags           : 8;
         tcp_seqNo           : 32;
         tcp_ackNo           : 32;
@@ -244,6 +243,24 @@ header_type p4_to_p4plus_cpu_tcp_pkt_t {
         tcp_options         : 8;
         tcp_mss             : 16;
         tcp_ws              : 8;
+    }
+}
+
+header_type p4_to_p4plus_mirror_t {
+    fields {
+        p4plus_app_id       : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
+        payload_len         : 16;
+
+        session_id          : 8;
+        direction           : 8;
+        lif                 : 16;
+        timestamp           : 64;
+        capture_len         : 16;
+        original_len        : 16;
     }
 }
 

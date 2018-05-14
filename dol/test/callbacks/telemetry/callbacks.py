@@ -325,6 +325,30 @@ def GetCollectorVlan(testcase, pkt, args):
         return None
     return cs[args.sessionid].vlan
 
+def GetErspanSessionid(testcase, inpkt, args):
+    case = testcase.pvtdata.span_case
+    ssns = telemetry.spanSessionData.getSessions(case)
+    sessionid = 0
+    for (id, direc, spantype, pkt, intf, pktlen) in ssns:
+        if pkt == args.pktid:
+            if direc == "ingress":
+                sessionid = id
+            else:
+                sessionid = id + 3
+            break
+    return sessionid
+
+def GetErspanTruncateBit(testcase, inpkt, args):
+    basepkt = testcase.packets.Get(args.basepkt)
+    case = testcase.pvtdata.span_case
+    ssns = telemetry.spanSessionData.getSessions(case)
+    for (id, direc, spantype, pkt, intf, pktlen) in ssns:
+        if pkt == args.pktid:
+            if pktlen != 0 and basepkt.size > pktlen:
+                return 1
+            break
+    return 0
+
 def GetErspanPayload(testcase, inpkt, args):
     basepkt = testcase.packets.Get(args.basepkt)
     case = testcase.pvtdata.span_case

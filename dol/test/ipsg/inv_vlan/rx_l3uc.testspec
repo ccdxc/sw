@@ -105,8 +105,9 @@ packets:
                 dst : callback://networking/packets/GetDropPacketERSPANDstIp
             erspangre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : const/1
+                ver       : const/2
+                gra       : const/3
 
 buffers:
     - buffer:

@@ -10,13 +10,6 @@ header_type copp_metadata_t {
 
 metadata copp_metadata_t copp_metadata;
 
-meter copp {
-    type           : bytes;
-    static         : copp;
-    result         : copp_metadata.policer_color;
-    instance_count : COPP_TABLE_SIZE;
-}
-
 action execute_copp(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
                     color_aware, rsvd, axi_wr_pend,
                     burst, rate, tbkt) {

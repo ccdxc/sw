@@ -143,7 +143,7 @@ p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
   or          r4, k.ipsec_metadata_seq_no_sbit24_ebit31, \
-                  k.ipsec_metadata_seq_no_sbit0_ebit23, 8 
+                  k.ipsec_metadata_seq_no_sbit0_ebit23, 8
   phvwr       p.p4_to_p4plus_ipsec_seq_no, r4
   add         r4, k.flow_lkp_metadata_lkp_dport,k.flow_lkp_metadata_lkp_sport, 16
   phvwr       p.p4_to_p4plus_ipsec_spi, r4
@@ -229,6 +229,27 @@ p4plus_app_p4pt:
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, r1
   phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
   phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+p4plus_app_mirror:
+  phvwr       p.p4_to_p4plus_mirror_p4plus_app_id, \
+                k.control_metadata_p4plus_app_id
+  or          r1, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r2, r1, P4PLUS_MIRROR_PKT_SZ
+  phvwrpair   p.p4_to_p4plus_mirror_payload_len, r2, \
+                p.p4_to_p4plus_mirror_capture_len, r1
+  seq         c1, k.capri_intrinsic_tm_iport, TM_PORT_EGRESS
+  phvwr.c1    p.p4_to_p4plus_mirror_direction, 1
+#ifndef CAPRI_IGNORE_TIMESTAMP
+  phvwr       p.p4_to_p4plus_mirror_timestamp, r6
+#endif
+  phvwrpair.e p.p4_to_p4plus_mirror_valid, TRUE, \
+                p.capri_rxdma_intrinsic_valid, TRUE
+  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+                (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +\
+                 P4PLUS_MIRROR_HDR_SZ)
 
 // input r6 : packet start offset
 // do not use c7 in this function

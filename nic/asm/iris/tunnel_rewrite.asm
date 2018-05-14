@@ -80,17 +80,20 @@ encap_vlan:
 encap_erspan:
   phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
                   k.{ethernet_dstAddr...ethernet_etherType}
-  phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
-  phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
+  phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
+                  p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
   phvwri      p.{gre_C...gre_proto}, GRE_PROTO_ERSPAN_T3
   phvwr       p.{erspan_t3_version,erspan_t3_vlan}, 0x2000
-  phvwr       p.erspan_t3_priority, 0
-  phvwr       p.erspan_t3_span_id, k.capri_intrinsic_tm_span_session
+  phvwr       p.{erspan_t3_cos,erspan_t3_bso}, 0
 #ifndef CAPRI_IGNORE_TIMESTAMP
   phvwr       p.erspan_t3_timestamp, r6
 #endif
-  phvwr       p.{erspan_t3_sgt,erspan_t3_ft_d_other}, 0
+  seq         c1, k.capri_intrinsic_tm_iport, TM_PORT_EGRESS
+  phvwr.c1    p.erspan_t3_direction, 1
+  phvwr       p.erspan_t3_granularity, 0x3
+  phvwrpair   p.{erspan_t3_sgt...erspan_t3_hw_id}, 0, \
+                  p.{erspan_t3_granularity,erspan_t3_options}, 0x6
 
   phvwr       p.inner_ethernet_valid, 1
   phvwr       p.gre_valid, 1

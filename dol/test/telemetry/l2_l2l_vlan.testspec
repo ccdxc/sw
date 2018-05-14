@@ -59,7 +59,7 @@ packets:
     - packet:
         id          : PKT1     # Input packet 1
         clone       : ref://testcase/packets/id=BASE
-        encaps      : 
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             qtag:
@@ -103,7 +103,7 @@ packets:
         headers     :
             outerqtag:
                 prio: 0
-                vlan: callback://telemetry/callbacks/GetRspanVlan 
+                vlan: callback://telemetry/callbacks/GetRspanVlan
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
 
@@ -115,7 +115,7 @@ packets:
         headers     :
             outerqtag:
                 prio: 0
-                vlan: callback://telemetry/callbacks/GetRspanVlan 
+                vlan: callback://telemetry/callbacks/GetRspanVlan
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: callback://networking/packets/GetExpectedPacketCos
@@ -140,8 +140,9 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=ingress
             outergre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=ERSPAN_PKT1
+                ver       : const/2
+                gra       : 0x3
 
     - packet:
         id          : ERSPAN_PKT2
@@ -162,8 +163,9 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=ingress
             outergre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=ERSPAN_PKT2
+                ver       : const/2
+                gra       : 0x3
 
     - packet:
         id          : ERSPAN_PKT3
@@ -184,9 +186,9 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=ingress
             outergre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
-
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=ERSPAN_PKT3
+                ver       : const/2
+                gra       : 0x3
 
     - packet:
         id          : EG_ERSPAN_PKT1
@@ -207,8 +209,10 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=egress
             outergre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=EG_ERSPAN_PKT1
+                ver       : const/2
+                gra       : 0x3
+                d         : 1
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: callback://networking/packets/GetExpectedPacketCos
@@ -232,8 +236,10 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=egress
             outergre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=EG_ERSPAN_PKT2
+                ver       : const/2
+                gra       : 0x3
+                d         : 1
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: callback://networking/packets/GetExpectedPacketCos
@@ -257,8 +263,10 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=egress
             outergre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=EG_ERSPAN_PKT3
+                ver       : const/2
+                gra       : 0x3
+                d         : 1
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: callback://networking/packets/GetExpectedPacketCos

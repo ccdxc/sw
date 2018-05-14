@@ -451,11 +451,18 @@ header_type erspan_header_t3_t {
     fields {
         version : 4;
         vlan : 12;
-        priority : 6;
+        cos : 3;
+        bso : 2;
+        truncated : 1;
         span_id : 10;
         timestamp : 32;
-        sgt       : 16;
-        ft_d_other: 16;
+        sgt : 16;
+        pdu : 1;
+        frame_type : 5;
+        hw_id : 6;
+        direction : 1;
+        granularity : 2;
+        options : 1;
     }
 }
 

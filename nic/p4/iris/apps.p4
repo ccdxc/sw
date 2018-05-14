@@ -527,6 +527,24 @@ action p4plus_app_p4pt() {
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
 }
 
+action p4plus_app_mirror() {
+    add_header(p4_to_p4plus_mirror);
+    modify_field(p4_to_p4plus_mirror.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
+    add(p4_to_p4plus_mirror.payload_len, capri_p4_intrinsic.packet_len,
+        P4PLUS_MIRROR_PKT_SZ);
+    modify_field(p4_to_p4plus_mirror.capture_len,
+                 capri_p4_intrinsic.packet_len);
+    if (capri_intrinsic.tm_iport == TM_PORT_EGRESS) {
+        modify_field(p4_to_p4plus_mirror.direction, 1);
+    }
+
+    add_header(capri_rxdma_intrinsic);
+    modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_MIRROR_HDR_SZ));
+}
+
 @pragma stage 5
 table p4plus_app {
     reads {
@@ -540,6 +558,7 @@ table p4plus_app {
         p4plus_app_cpu;
         p4plus_app_raw_redir;
         p4plus_app_p4pt;
+        p4plus_app_mirror;
         p4plus_app_default;
     }
     default_action : p4plus_app_default;

@@ -76,7 +76,7 @@ packets:
     - packet:
         id          : EXP_PKT     # Input packet 1
         clone       : ref://testcase/packets/id=BASE
-        encaps      : 
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
@@ -123,7 +123,7 @@ packets:
                 dst     : ref://testcase/config/src/segment/macaddr
             outerqtag:
                 prio: 0
-                vlan: callback://telemetry/callbacks/GetRspanVlan 
+                vlan: callback://telemetry/callbacks/GetRspanVlan
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
@@ -144,7 +144,7 @@ packets:
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             outerqtag:
                 prio: 0
-                vlan: callback://telemetry/callbacks/GetRspanVlan 
+                vlan: callback://telemetry/callbacks/GetRspanVlan
             qtag:
                 vlan    : ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: callback://networking/packets/GetExpectedPacketCos
@@ -157,7 +157,6 @@ packets:
         id          : ERSPAN_PKT1
         template    : ref://testcase/packets/id=RAW
         payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT1,basepkt=PKT1
-        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT1,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -174,8 +173,10 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=ingress
             erspangre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=ERSPAN_PKT1
+                ver       : const/2
+                gra       : 0x3
+                t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=ERSPAN_PKT1,basepkt=PKT1
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT1,basepkt=PKT1
 
@@ -183,7 +184,6 @@ packets:
         id          : ERSPAN_PKT2
         template    : ref://testcase/packets/id=RAW
         payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT2,basepkt=PKT1
-        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT2,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -200,8 +200,10 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=ingress
             erspangre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=ERSPAN_PKT2
+                ver       : const/2
+                gra       : 0x3
+                t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=ERSPAN_PKT2,basepkt=PKT1
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT2,basepkt=PKT1
 
@@ -209,7 +211,6 @@ packets:
         id          : ERSPAN_PKT3
         template    : ref://testcase/packets/id=RAW
         payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT3,basepkt=PKT1
-        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT3,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -226,8 +227,10 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=ingress
             erspangre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=ERSPAN_PKT3
+                ver       : const/2
+                gra       : 0x3
+                t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=ERSPAN_PKT3,basepkt=PKT1
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT3,basepkt=PKT1
 
@@ -236,7 +239,6 @@ packets:
         id          : EG_ERSPAN_PKT1
         template    : ref://testcase/packets/id=RAW
         payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
-        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -253,8 +255,11 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=egress
             erspangre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=EG_ERSPAN_PKT1
+                ver       : const/2
+                gra       : 0x3
+                d         : 1
+                t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
 
@@ -262,7 +267,6 @@ packets:
         id          : EG_ERSPAN_PKT2
         template    : ref://testcase/packets/id=RAW
         payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
-        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -279,8 +283,11 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=egress
             erspangre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=EG_ERSPAN_PKT2
+                ver       : const/2
+                gra       : 0x3
+                d         : 1
+                t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
 
@@ -288,7 +295,6 @@ packets:
         id          : EG_ERSPAN_PKT3
         template    : ref://testcase/packets/id=RAW
         payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
-        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -305,8 +311,11 @@ packets:
                 dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=egress
             erspangre:
             erspan:
-                sessionid: const/0
-                ver     : const/2
+                sessionid : callback://telemetry/callbacks/GetErspanSessionid/pktid=EG_ERSPAN_PKT3
+                ver       : const/2
+                gra       : 0x3
+                d         : 1
+                t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
 

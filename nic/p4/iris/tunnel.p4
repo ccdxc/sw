@@ -446,9 +446,12 @@ action f_insert_erspan_t3_header(mac_sa, mac_da) {
     modify_field(gre.ver, 0);
     modify_field(gre.proto, GRE_PROTO_ERSPAN_T3);
     modify_field(erspan_t3.timestamp, capri_intrinsic.timestamp);
-    modify_field(erspan_t3.span_id, capri_intrinsic.tm_span_session);
     modify_field(erspan_t3.version, 2);
     modify_field(erspan_t3.sgt, 0);
+    if (capri_intrinsic.tm_iport == TM_PORT_EGRESS) {
+        modify_field(erspan_t3.direction, 1);
+    }
+    modify_field(erspan_t3.granularity, 0x3);
 }
 
 action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {

@@ -359,77 +359,6 @@ table flow_hash {
     size : FLOW_HASH_TABLE_SIZE;
 }
 
-action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src,
-                          lkp_dst, lkp_proto, lkp_sport, lkp_dport,
-                          entry_valid, export_en, flow_index,
-                          hash1, hint1, hash2, hint2, hash3, hint3,
-                          hash4, hint4, hash5, hint5,
-                          more_hashs, more_hints) {
-    // remove the recirc header
-    remove_header(recirc_header);
-
-    // check if the key matches the entry data
-    if ((lkp_inst == flow_lkp_metadata.lkp_inst) and
-        (lkp_dir == flow_lkp_metadata.lkp_dir) and
-        (lkp_type == flow_lkp_metadata.lkp_type) and
-        (lkp_vrf == flow_lkp_metadata.lkp_vrf) and
-        (lkp_src == flow_lkp_metadata.lkp_src) and
-        (lkp_dst == flow_lkp_metadata.lkp_dst) and
-        (lkp_proto == flow_lkp_metadata.lkp_proto) and
-        (lkp_sport == flow_lkp_metadata.lkp_sport) and
-        (lkp_dport == flow_lkp_metadata.lkp_dport)) {
-        modify_field(flow_info_metadata.flow_index, flow_index);
-        modify_field(rewrite_metadata.entropy_hash,
-                     scratch_metadata.entropy_hash);
-    } else {
-        modify_field(control_metadata.flow_miss, TRUE);
-        modify_field(control_metadata.flow_miss_ingress, TRUE);
-        modify_field(flow_info_metadata.flow_index, 0);
-    }
-
-    // pack fields into control_metadata.lkp_flags_egress to transfer to egress
-    modify_field(scratch_metadata.cpu_flags, 0);
-    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-           flow_lkp_metadata.lkp_dir << 7);
-    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-           flow_lkp_metadata.lkp_inst << 6);
-    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-           flow_lkp_metadata.lkp_type << 5);
-    modify_field(control_metadata.lkp_flags_egress, scratch_metadata.cpu_flags);
-
-    // dummy ops to keep compiler happy
-    modify_field(scratch_metadata.lkp_inst, lkp_inst);
-    modify_field(scratch_metadata.lkp_dir, lkp_dir);
-    modify_field(scratch_metadata.lkp_type, lkp_type);
-    modify_field(scratch_metadata.lkp_vrf, lkp_vrf);
-    modify_field(scratch_metadata.lkp_src, lkp_src);
-    modify_field(scratch_metadata.lkp_dst, lkp_dst);
-    modify_field(scratch_metadata.lkp_proto, lkp_proto);
-    modify_field(scratch_metadata.lkp_sport, lkp_sport);
-    modify_field(scratch_metadata.lkp_dport, lkp_dport);
-    modify_field(scratch_metadata.entry_valid, entry_valid);
-    modify_field(scratch_metadata.export_en, export_en);
-    modify_field(scratch_metadata.flow_hash1, hash1);
-    modify_field(scratch_metadata.flow_hash2, hash2);
-    modify_field(scratch_metadata.flow_hash3, hash3);
-    modify_field(scratch_metadata.flow_hash4, hash4);
-    modify_field(scratch_metadata.flow_hash5, hash5);
-    modify_field(scratch_metadata.flow_hint1, hint1);
-    modify_field(scratch_metadata.flow_hint2, hint2);
-    modify_field(scratch_metadata.flow_hint3, hint3);
-    modify_field(scratch_metadata.flow_hint4, hint4);
-    modify_field(scratch_metadata.flow_hint5, hint5);
-    modify_field(scratch_metadata.more_hashs, more_hashs);
-    modify_field(scratch_metadata.more_hints, more_hints);
-
-    // resolve hint and pick next hash for recirc path
-    if ((control_metadata.flow_miss == TRUE) and
-        (hash1 == scratch_metadata.flow_hash1)) {
-        recirc_packet(RECIRC_FLOW_HASH_OVERFLOW);
-        // modify_field(recirc_header.overflow_entry_index, hint1);
-    }
-}
-
 @pragma stage 1
 @pragma hbm_table
 @pragma overflow_table flow_hash
@@ -438,7 +367,7 @@ table flow_hash_overflow {
         recirc_header.overflow_entry_index : exact;
     }
     actions {
-        flow_hash_info; // Use the same function as hash table.. need to fix the asm code
+        flow_hash_info; // Use the same function as hash table
     }
     size : FLOW_HASH_OVERFLOW_TABLE_SIZE;
 }
