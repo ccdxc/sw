@@ -50,7 +50,7 @@ resp_tx_rqcb_process:
         // There is always a possibility of RxDMA seeing this
         // change in a delayed manner, irrespective of whether we 
         // update using tblwr, memwr or DMA.
-        memwr.h         r2, RQ_P_INDEX
+        memwr.hx        r2, RQ_P_INDEX
         phvwr.e         p.common.p4_intr_global_drop, 1
         nop             //Exit Slot
 

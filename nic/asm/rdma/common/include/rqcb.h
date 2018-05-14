@@ -146,12 +146,6 @@ struct rqcb1_t {
     msn:24;                 //rw by S0 ?
     header_template_size: 8;    //Ronly
 
-    // place holder for a copy of c_index/p_index to avoid
-    // scheduler ringing RQ all the time.
-    proxy_cindex: 16;   // written by S4, read by S0
-    proxy_pindex: 16;   // written by TxDMA, read by RxDMA
-                       
-
     cq_id: 24;                  //Ronly
     bt_in_progress: 8;  // set to 1 by rxdma, to 0 by txdma
 
@@ -164,6 +158,13 @@ struct rqcb1_t {
     current_sge_id: 8;
     num_sges: 8;
 
+    // place holder for a copy of c_index/p_index to avoid
+    // scheduler ringing RQ all the time.
+    // proxy_pindex variable is updated using memwr from resp_tx,
+    // hence it should be at 16-bit boundary.
+    proxy_cindex: 16;   // written by S4, read by S0
+    proxy_pindex: 16;   // written by TxDMA, read by RxDMA
+                       
     srq_id: 24;
     pad: 8;  //1B
 };

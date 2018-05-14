@@ -121,9 +121,6 @@ class RdmaRQstate(Packet):
         X3BytesField("msn", 0),
         ByteField("header_template_size", 0),
 
-        LEShortField("proxy_cindex", 0),
-        LEShortField("proxy_pindex", 0),
-
         X3BytesField("cq_id", 0),
         ByteField("rqcb1_bt_in_progress", 0),
 
@@ -133,6 +130,9 @@ class RdmaRQstate(Packet):
         IntField("current_sge_offset", 0),
         ByteField("current_sge_id", 0),
         ByteField("num_sges", 0),
+
+        LEShortField("proxy_cindex", 0),
+        LEShortField("proxy_pindex", 0),
 
         X3BytesField("srq_id", 0),
         BitField("rqcb1_pad", 0, 8),

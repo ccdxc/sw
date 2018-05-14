@@ -1140,6 +1140,8 @@ typedef struct rqcb0_s {
 typedef struct rqcb1_s {
     uint8_t     pad;
     uint32_t    srq_id: 24;
+    uint16_t    proxy_pindex;
+    uint16_t    proxy_cindex;
     uint8_t     num_sges;
     uint8_t     current_sge_id;
     uint32_t    current_sge_offset;
@@ -1147,8 +1149,6 @@ typedef struct rqcb1_s {
     uint8_t     rsq_pindex;
     uint32_t    bt_in_progress : 8;
     uint32_t    cq_id : 24;
-    uint16_t    proxy_pindex;
-    uint16_t    proxy_cindex;
     uint32_t    header_template_size : 8;
     uint32_t    msn : 24;
     uint32_t    rsvd3 : 8;
