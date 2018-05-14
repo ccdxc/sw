@@ -9,6 +9,7 @@
 
 #include <infiniband/driver.h>
 #include <util/udma_barrier.h>
+#include <ccan/list.h>
 
 #include "ionic-abi.h"
 
@@ -41,6 +42,7 @@ struct ionic_cq {
 	uint32_t		cqid;
 
 	pthread_spinlock_t	lock;
+	struct list_head	qp_poll;
 	struct ionic_queue	q;
 };
 
@@ -63,7 +65,9 @@ struct ionic_qpcap {
 struct ionic_sq_meta {
 	uint64_t		wrid;
 	uint32_t		len;
+	uint16_t		seq;
 	uint8_t			op;
+	uint8_t			status;
 	bool			signal;
 };
 
@@ -85,18 +89,19 @@ struct ionic_qp {
 
 	bool			sig_all;
 
+	struct list_node	cq_poll_ent;
+
 	pthread_spinlock_t	sq_lock;
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
+	uint16_t		*sq_msn_idx;
+	uint16_t		sq_msn_prod;
+	uint16_t		sq_msn_cons;
+	uint16_t		sq_npg_prod;
+	uint16_t		sq_npg_cons;
 
 	void			*sq_hbm_ptr;
 	uint16_t		sq_hbm_prod;
-
-	/* last sequence number produced, next sequence number to complete */
-	uint32_t		sq_prod_local;
-	uint32_t		sq_cons_local;
-	uint32_t		sq_prod_msn;
-	uint32_t		sq_cons_msn;
 
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;
