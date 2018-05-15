@@ -102,6 +102,7 @@ public:
     slab *wring_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)]; }
     slab *ipseccb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)]; }
     slab *ipseccb_decrypt_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_DECRYPT_PD)]; }
+    slab *ipsec_sa_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSEC_SA_PD)]; }
     slab *l4lb_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)]; }
     slab *rw_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RW_PD)]; }
     slab *tnnl_rw_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNEL_RW_PD)]; }
@@ -122,6 +123,7 @@ public:
     ht *wring_hwid_ht(void) const { return wring_hwid_ht_; }
     ht *ipseccb_hwid_ht(void) const { return ipseccb_hwid_ht_; }
     ht *ipseccb_decrypt_hwid_ht(void) const { return ipseccb_decrypt_hwid_ht_; }
+    ht *ipsec_sa_hwid_ht(void) const { return ipsec_sa_hwid_ht_; }
     ht *cpucb_hwid_ht(void) const { return cpucb_hwid_ht_; }
     ht *rawrcb_hwid_ht(void) const { return rawrcb_hwid_ht_; }
     ht *rawccb_hwid_ht(void) const { return rawccb_hwid_ht_; }
@@ -281,6 +283,7 @@ private:
     // ipseccb related state
     struct {
         ht         *ipseccb_hwid_ht_;
+        ht         *ipsec_sa_hwid_ht_;
         ht         *ipseccb_decrypt_hwid_ht_;
     } __PACK__;
 

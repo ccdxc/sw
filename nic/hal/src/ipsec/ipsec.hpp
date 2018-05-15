@@ -145,11 +145,13 @@ typedef struct ipsec_sa_s {
     uint8_t               icv_size;
     uint8_t               block_size;
     int32_t               key_index;
-    types::CryptoKeyType  key_type;
+    //types::CryptoKeyType  key_type;
+    uint32_t              key_type;
     uint32_t              key_size;
     uint8_t               key[MAX_IPSEC_KEY_SIZE];
     int32_t               new_key_index;
-    types::CryptoKeyType  new_key_type;
+    //types::CryptoKeyType  new_key_type;
+    uint32_t              new_key_type;
     uint32_t              new_key_size;
     uint8_t               new_key[MAX_IPSEC_KEY_SIZE];
     uint32_t              barco_enc_cmd;
@@ -247,14 +249,14 @@ static inline hal_ret_t
 ipsec_sa_free (ipsec_sa_t *ipsec_sa)
 {
     HAL_SPINLOCK_DESTROY(&ipsec_sa->slock);
-    hal::delay_delete_to_slab(HAL_SLAB_IPSECCB, ipsec_sa);
+    hal::delay_delete_to_slab(HAL_SLAB_IPSEC_SA, ipsec_sa);
     return HAL_RET_OK;
 }
 
 static inline ipsec_sa_t *
 find_ipsec_sa_by_id (ipsec_sa_id_t ipsec_sa_id)
 {
-    return (ipsec_sa_t *)g_hal_state->ipseccb_id_ht()->lookup(&ipsec_sa_id);
+    return (ipsec_sa_t *)g_hal_state->ipsec_sa_id_ht()->lookup(&ipsec_sa_id);
 }
 
 static inline void *
@@ -377,13 +379,13 @@ ipsec_cfg_pol_create_db_handle (ipsec_cfg_pol_t *pol)
     return ret;
 }
 
-extern void *ipsec_sa_encrypt_get_key_func(void *entry);
-extern uint32_t ipsec_sa_encrypt_compute_hash_func(void *key, uint32_t ht_size);
-extern bool ipsec_sa_encrypt_compare_key_func(void *key1, void *key2);
+extern void *ipsec_sa_get_key_func(void *entry);
+extern uint32_t ipsec_sa_compute_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_sa_compare_key_func(void *key1, void *key2);
 
-extern void *ipsec_sa_encrypt_get_handle_key_func(void *entry);
-extern uint32_t ipsec_sa_encrypt_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool ipsec_sa_encryptcompare_handle_key_func(void *key1, void *key2);
+extern void *ipsec_sa_get_handle_key_func(void *entry);
+extern uint32_t ipsec_sa_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_sa_compare_handle_key_func(void *key1, void *key2);
 
 hal_ret_t ipsec_saencrypt_create(ipsec::IpsecSAEncrypt& spec,
                        ipsec::IpsecSAEncryptResponse *rsp);
@@ -397,6 +399,7 @@ hal_ret_t ipsec_saencrypt_delete(ipsec::IpsecSAEncryptDeleteRequest& req,
 hal_ret_t ipsec_saencrypt_get(ipsec::IpsecSAEncryptGetRequest& req,
                     ipsec::IpsecSAEncryptGetResponseMsg *rsp);
 
+#if 0
 extern void *ipsec_sa_decrypt_get_key_func(void *entry);
 extern uint32_t ipsec_sa_decrypt_compute_hash_func(void *key, uint32_t ht_size);
 extern bool ipsec_sa_decrypt_compare_key_func(void *key1, void *key2);
@@ -404,6 +407,8 @@ extern bool ipsec_sa_decrypt_compare_key_func(void *key1, void *key2);
 extern void *ipsec_sa_decrypt_get_handle_key_func(void *entry);
 extern uint32_t ipsec_sa_decrypt_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool ipsec_sa_decryptcompare_handle_key_func(void *key1, void *key2);
+#endif
+
 
 hal_ret_t ipsec_sadecrypt_create(ipsec::IpsecSADecrypt& spec,
                        ipsec::IpsecSADecryptResponse *rsp);

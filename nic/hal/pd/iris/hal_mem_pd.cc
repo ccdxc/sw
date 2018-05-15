@@ -30,7 +30,6 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/internal/crypto_keys_pd.hpp"
 #include "nic/hal/pd/iris/internal/ipseccb_pd.hpp"
-#include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/hal/pd/iris/l4lb/l4lb_pd.hpp"
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
@@ -47,6 +46,7 @@
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 #include "nic/p4/iris/include/defines.h"
+#include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 
 namespace hal {
 extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
@@ -327,6 +327,13 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)] != NULL),
                       false);
 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSEC_SA_PD)] =
+        slab::factory("IPSECSA PD", HAL_SLAB_IPSEC_SA_PD,
+                      sizeof(hal::pd::pd_ipsec_t), 128,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSEC_SA_PD)] != NULL),
+                      false);
+
     HAL_HT_CREATE("ipseccb-hw-id", ipseccb_hwid_ht_,
                   HAL_MAX_HW_IPSECCBS >> 1,
                   hal::pd::ipseccb_pd_get_hw_key_func,
@@ -348,6 +355,13 @@ hal_state_pd::init(void)
                   hal::pd::ipseccb_pd_decrypt_compute_hw_hash_func,
                   hal::pd::ipseccb_pd_decrypt_compare_hw_key_func);
     HAL_ASSERT_RETURN((ipseccb_decrypt_hwid_ht_ != NULL), false);
+
+    HAL_HT_CREATE("ipsec-sa-hw-id", ipsec_sa_hwid_ht_,
+                  HAL_MAX_HW_IPSECCBS >> 1,
+                  hal::pd::ipsec_pd_get_hw_key_func,
+                  hal::pd::ipsec_pd_compute_hw_hash_func,
+                  hal::pd::ipsec_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((ipsec_sa_hwid_ht_ != NULL), false);
 
     // initialize L4LB PD related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] =
@@ -532,6 +546,7 @@ hal_state_pd::hal_state_pd()
     wring_hwid_ht_           = NULL;
     ipseccb_hwid_ht_         = NULL;
     ipseccb_decrypt_hwid_ht_ = NULL;
+    ipsec_sa_hwid_ht_        = NULL;
     rw_table_ht_             = NULL;
     cpucb_hwid_ht_           = NULL;
     rawrcb_hwid_ht_          = NULL;
@@ -572,6 +587,7 @@ hal_state_pd::~hal_state_pd()
     wring_hwid_ht_ ? ht::destroy(wring_hwid_ht_) : HAL_NOP;
     ipseccb_hwid_ht_ ? ht::destroy(ipseccb_hwid_ht_) : HAL_NOP;
     ipseccb_decrypt_hwid_ht_ ? ht::destroy(ipseccb_decrypt_hwid_ht_) : HAL_NOP;
+    ipsec_sa_hwid_ht_ ? ht::destroy(ipsec_sa_hwid_ht_) : HAL_NOP;
     cpucb_hwid_ht_ ? ht::destroy(cpucb_hwid_ht_) : HAL_NOP;
     rw_table_ht_ ? ht::destroy(rw_table_ht_) : HAL_NOP;
     rawrcb_hwid_ht_ ? ht::destroy(rawrcb_hwid_ht_) : HAL_NOP;
@@ -1212,6 +1228,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB_PD:
         g_hal_state_pd->ipseccb_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_IPSEC_SA_PD:
+        g_hal_state_pd->ipsec_sa_slab()->free(elem);
         break;
 
     case HAL_SLAB_IPSECCB_DECRYPT_PD:

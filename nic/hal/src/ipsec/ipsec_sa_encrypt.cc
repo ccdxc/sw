@@ -13,20 +13,20 @@
 
 namespace hal {
 void *
-ipsec_sa_encrypt_get_key_func (void *entry)
+ipsec_sa_get_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
     return (void *)&(((ipsec_sa_t *)entry)->sa_id);
 }
 
 uint32_t
-ipsec_sa_encrypt_compute_hash_func (void *key, uint32_t ht_size)
+ipsec_sa_compute_hash_func (void *key, uint32_t ht_size)
 {
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipsec_sa_id_t)) % ht_size;
 }
 
 bool
-ipsec_sa_encrypt_compare_key_func (void *key1, void *key2)
+ipsec_sa_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(ipsec_sa_id_t *)key1 == *(ipsec_sa_id_t *)key2) {
@@ -36,20 +36,20 @@ ipsec_sa_encrypt_compare_key_func (void *key1, void *key2)
 }
 
 void *
-ipsec_sa_encrypt_get_handle_key_func (void *entry)
+ipsec_sa_get_handle_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
     return (void *)&(((ipsec_sa_t *)entry)->hal_handle);
 }
 
 uint32_t
-ipsec_sa_encrypt_compute_handle_hash_func (void *key, uint32_t ht_size)
+ipsec_sa_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool
-ipsec_sa_encrypt_compare_handle_key_func (void *key1, void *key2)
+ipsec_sa_compare_handle_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
@@ -87,7 +87,7 @@ validate_ipsec_sa_encrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *
 static inline hal_ret_t
 add_ipsec_sa_to_db (ipsec_sa_t *ipsec)
 {
-    g_hal_state->ipseccb_id_ht()->insert(ipsec, &ipsec->ht_ctxt);
+    g_hal_state->ipsec_sa_id_ht()->insert(ipsec, &ipsec->ht_ctxt);
     return HAL_RET_OK;
 }
 

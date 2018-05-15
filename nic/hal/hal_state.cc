@@ -447,6 +447,11 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                                   false, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSECCB] != NULL), false);
 
+    slabs_[HAL_SLAB_IPSEC_SA] = slab::factory("ipsec_sa", HAL_SLAB_IPSEC_SA,
+                                  sizeof(hal::ipsec_sa_t), 16,
+                                  false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSEC_SA] != NULL), false);
+
     // initialize CPU CB related data structures
     slabs_[HAL_SLAB_CPUCB] = slab::factory("cpucb", HAL_SLAB_CPUCB,
                                 sizeof(hal::cpucb_t), 16,
@@ -1011,6 +1016,14 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::ipseccb_compute_hash_func,
                   hal::ipseccb_compare_key_func);
     HAL_ASSERT_RETURN((ipseccb_id_ht_ != NULL), false);
+
+    // initialize IPSEC SA related data structures
+    HAL_HT_CREATE("ipsec_sa", ipsec_sa_id_ht_,
+                  HAL_MAX_IPSECCB/2,
+                  hal::ipsec_sa_get_key_func,
+                  hal::ipsec_sa_compute_hash_func,
+                  hal::ipsec_sa_compare_key_func);
+    HAL_ASSERT_RETURN((ipsec_sa_id_ht_ != NULL), false);
 
     // initialize CPU CB related data structures
     HAL_HT_CREATE("cpucb", cpucb_id_ht_,
@@ -1751,6 +1764,11 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB:
         g_hal_state->ipseccb_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_IPSEC_SA:
+        g_hal_state->ipsec_sa_slab()->free(elem);
+        break;
 
     case HAL_SLAB_CPUCB:
         g_hal_state->cpucb_slab()->free(elem);

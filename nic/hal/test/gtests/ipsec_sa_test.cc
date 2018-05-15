@@ -82,6 +82,10 @@ using nw::RouteSpec;
 using nw::RouteResponse;
 using ipsec::IpsecSAEncrypt;
 using ipsec::IpsecSADecrypt;
+using ipsec::IpsecSAEncryptDeleteRequest;
+using ipsec::IpsecSAEncryptDeleteResponseMsg;
+using ipsec::IpsecSADecryptDeleteRequest;
+using ipsec::IpsecSADecryptDeleteResponseMsg;
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -240,6 +244,11 @@ TEST_F(ipsec_encrypt_test, test1)
     IpsecSADecrypt              decrypt_spec;
     IpsecSADecryptResponse      decrypt_resp;
 
+    IpsecSAEncryptDeleteRequest del_enc_req;
+    IpsecSADecryptDeleteRequest del_dec_req;
+    IpsecSAEncryptDeleteResponseMsg del_enc_rsp;
+    IpsecSADecryptDeleteResponseMsg del_dec_rsp;
+ 
     ::google::protobuf::uint32  ip1 = 0x0a010001;
     ::google::protobuf::uint32  ip2 = 0x0a010002;
     NetworkKeyHandle            *nkh = NULL;
@@ -415,8 +424,25 @@ TEST_F(ipsec_encrypt_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     //::google::protobuf::uint64 encrypt_hdl = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+    encrypt_spec.mutable_key_or_handle()->set_cb_id(1);
+    encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
+    encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
+    encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
+    encrypt_spec.mutable_authentication_key()->set_key("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    encrypt_spec.mutable_encryption_key()->set_key("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    encrypt_spec.mutable_remote_gateway_ip()->set_ip_af(types::IP_AF_INET);
+    encrypt_spec.mutable_remote_gateway_ip()->set_v4_addr(ip2);
+    encrypt_spec.mutable_local_gateway_ip()->set_ip_af(types::IP_AF_INET);
+    encrypt_spec.mutable_local_gateway_ip()->set_v4_addr(ip1);
+    encrypt_spec.set_salt(0xdddddddd);
+    encrypt_spec.set_iv(0xbbbbbbbbbbbbbbbb);
+    encrypt_spec.set_spi(0);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_update(encrypt_spec, &encrypt_resp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
  
-    decrypt_spec.mutable_key_or_handle()->set_cb_id(1);
+    decrypt_spec.mutable_key_or_handle()->set_cb_id(2);
     decrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     decrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     decrypt_spec.set_decryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
@@ -430,6 +456,33 @@ TEST_F(ipsec_encrypt_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     //::google::protobuf::uint64 decrypt_hdl = decrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
     // Uncomment these to have gtest work for CLI
+    decrypt_spec.mutable_key_or_handle()->set_cb_id(2);
+    decrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
+    decrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
+    decrypt_spec.set_decryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
+    decrypt_spec.mutable_authentication_key()->set_key("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    decrypt_spec.mutable_decryption_key()->set_key("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    decrypt_spec.set_salt(0xbbbbbbbb);
+    decrypt_spec.set_spi(0);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_sadecrypt_create(decrypt_spec, &decrypt_resp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
+    del_enc_req.mutable_key_or_handle()->set_cb_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    del_dec_req.mutable_key_or_handle()->set_cb_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_sadecrypt_delete(del_dec_req, &del_dec_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
+
 #if 0
     svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
     hal::hal_wait();

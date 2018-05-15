@@ -12,6 +12,8 @@
 #include <google/protobuf/util/json_util.h>
 
 namespace hal {
+
+#if 0
 void *
 ipsec_sa_decrypt_get_key_func (void *entry)
 {
@@ -58,6 +60,8 @@ ipsec_sa_decrypt_compare_handle_key_func (void *key1, void *key2)
     return false;
 }
 
+#endif
+
 //------------------------------------------------------------------------------
 // validate an incoming IPSEC-SA create request
 // TODO:
@@ -86,7 +90,7 @@ validate_ipsec_sa_decrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *
 static inline hal_ret_t
 add_ipsec_sa_to_db (ipsec_sa_t *ipsec)
 {
-    g_hal_state->ipseccb_id_ht()->insert(ipsec, &ipsec->ht_ctxt);
+    g_hal_state->ipsec_sa_id_ht()->insert(ipsec, &ipsec->ht_ctxt);
     return HAL_RET_OK;
 }
 
@@ -200,7 +204,6 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
         goto cleanup;
     }
 
-    // add this L2 segment to our db
     ret = add_ipsec_sa_to_db(ipsec);
     HAL_ASSERT(ret == HAL_RET_OK);
 

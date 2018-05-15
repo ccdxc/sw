@@ -1,5 +1,5 @@
-#ifndef __HAL_PD_IPSECCB_HPP__
-#define __HAL_PD_IPSECCB_HPP__
+#ifndef __HAL_PD_IPSEC_HPP__
+#define __HAL_PD_IPSEC_HPP__
 
 #include "nic/include/base.h"
 #include "sdk/ht.hpp"
@@ -20,34 +20,24 @@ namespace pd {
 
 #define UDP_PORT_NAT_T 4500
 
-typedef enum ipseccb_hwid_order_ {
-    P4PD_HWID_IPSEC_RX_STAGE0 = 0,
-    P4PD_HWID_IPSEC_IP_HDR = 1,
-} ipseccb_hwid_order_t;
+typedef enum ipsec_sa_hwid_order_ {
+    P4PD_HWID_IPSEC_QSTATE1 = 0,
+    P4PD_HWID_IPSEC_ETH_IP_HDR = 1,
+} ipsec_sa_hwid_order_t;
 
-typedef enum ipsec_decrypt_hwid_order_ {
-    P4PD_HWID_IPSEC_PART2 = 1,
-} ipsec_decrypt_hwid_order_t;
+typedef enum ipsec_sa_hwid_order2_ {
+    P4PD_HWID_IPSEC_QSTATE2 = 1,
+} ipsec_sa_hwid_order2_t;
 
 typedef uint64_t    ipsec_sa_hw_id_t;
 
-// ipseccb pd state
+// ipsec_sa pd state
 
-struct pd_ipsec_encrypt_s {
+struct pd_ipsec_s {
     ipsec_sa_t           *ipsec_sa;              // PI IPSEC CB
 
-    // operational state of ipseccb pd
-    ipsec_sa_hw_id_t      hw_id;               // hw id for this ipseccb
-
-    // meta data maintained for IPSEC CB pd
-    ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
-} __PACK__;
-
-struct pd_ipsec_decrypt_s {
-    ipsec_sa_t           *ipsec_sa;              // PI IPSEC CB
-
-    // operational state of ipseccb pd
-    ipsec_sa_hw_id_t      hw_id;               // hw id for this ipseccb
+    // operational state of ipsec_sa pd
+    ipsec_sa_hw_id_t      hw_id;               // hw id for this ipsec_sa
 
     // meta data maintained for IPSEC CB pd
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
@@ -105,144 +95,145 @@ typedef struct pd_ipsec_qstate_addr_part2_s {
 } __PACK__ pd_ipsec_qstate_addr_part2_t;
 
  
-// allocate a ipseccb pd instance
-static inline pd_ipsec_encrypt_t *
+// allocate a ipsec_sa pd instance
+static inline pd_ipsec_t *
 ipsec_pd_encrypt_alloc (void)
 {
-    pd_ipsec_encrypt_t    *ipseccb_pd;
+    pd_ipsec_t    *ipsec_sa_pd;
 
-    ipseccb_pd = (pd_ipsec_encrypt_t *)g_hal_state_pd->ipseccb_slab()->alloc();
-    if (ipseccb_pd == NULL) {
+    ipsec_sa_pd = (pd_ipsec_t *)g_hal_state_pd->ipsec_sa_slab()->alloc();
+    if (ipsec_sa_pd == NULL) {
         return NULL;
     }
 
-    return ipseccb_pd;
+    return ipsec_sa_pd;
 }
 
-// allocate a ipseccb pd instance
-static inline pd_ipsec_decrypt_t *
+// allocate a ipsec_sa pd instance
+static inline pd_ipsec_t *
 ipsec_pd_decrypt_alloc (void)
 {
-    pd_ipsec_decrypt_t    *ipseccb_pd;
+    pd_ipsec_t    *ipsec_sa_pd;
 
-    ipseccb_pd = (pd_ipsec_decrypt_t *)g_hal_state_pd->ipseccb_decrypt_slab()->alloc();
-    if (ipseccb_pd == NULL) {
+    ipsec_sa_pd = (pd_ipsec_t *)g_hal_state_pd->ipsec_sa_slab()->alloc();
+    if (ipsec_sa_pd == NULL) {
         return NULL;
     }
 
-    return ipseccb_pd;
+    return ipsec_sa_pd;
 }
 
-// initialize a ipseccb pd instance
-static inline pd_ipsec_encrypt_t *
-ipsec_pd_encrypt_init (pd_ipsec_encrypt_t *ipseccb_pd)
+// initialize a ipsec_sa pd instance
+static inline pd_ipsec_t *
+ipsec_pd_encrypt_init (pd_ipsec_t *ipsec_sa_pd)
 {
-    if (!ipseccb_pd) {
+    if (!ipsec_sa_pd) {
         return NULL;
     }
-    ipseccb_pd->ipsec_sa = NULL;
+    ipsec_sa_pd->ipsec_sa = NULL;
 
     // initialize meta information
-    ipseccb_pd->hw_ht_ctxt.reset();
+    ipsec_sa_pd->hw_ht_ctxt.reset();
 
-    return ipseccb_pd;
+    return ipsec_sa_pd;
 }
 
-// initialize a ipseccb pd instance
-static inline pd_ipsec_decrypt_t *
-ipsec_pd_decrypt_init (pd_ipsec_decrypt_t *ipseccb_pd)
+// initialize a ipsec_sa pd instance
+static inline pd_ipsec_t *
+ipsec_pd_decrypt_init (pd_ipsec_t *ipsec_sa_pd)
 {
-    if (!ipseccb_pd) {
+    if (!ipsec_sa_pd) {
         return NULL;
     }
-    ipseccb_pd->ipsec_sa = NULL;
+    ipsec_sa_pd->ipsec_sa = NULL;
 
     // initialize meta information
-    ipseccb_pd->hw_ht_ctxt.reset();
+    ipsec_sa_pd->hw_ht_ctxt.reset();
 
-    return ipseccb_pd;
+    return ipsec_sa_pd;
 }
 
-// allocate and initialize a ipseccb pd instance
-static inline pd_ipsec_encrypt_t *
+// allocate and initialize a ipsec_sa pd instance
+static inline pd_ipsec_t *
 ipsec_pd_alloc_init (void)
 {
     return ipsec_pd_encrypt_init(ipsec_pd_encrypt_alloc());
 }
 
-// allocate and initialize a ipseccb pd instance
-static inline pd_ipsec_decrypt_t *
+// allocate and initialize a ipsec_sa pd instance
+static inline pd_ipsec_t *
 ipsec_pd_decrypt_alloc_init (void)
 {
     return ipsec_pd_decrypt_init(ipsec_pd_decrypt_alloc());
 }
 
-// free ipseccb pd instance
+// free ipsec_sa pd instance
 static inline hal_ret_t
-ipsec_pd_free (pd_ipsec_encrypt_t *ipseccb_pd)
+ipsec_pd_free (pd_ipsec_t *ipsec_sa_pd)
 {
-    hal::pd::delay_delete_to_slab(HAL_SLAB_IPSECCB_PD, ipseccb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_IPSEC_SA_PD, ipsec_sa_pd);
     return HAL_RET_OK;
 }
 
 static inline hal_ret_t
-ipsec_pd_decrypt_free (pd_ipsec_decrypt_t *ipseccb_pd)
+ipsec_pd_decrypt_free (pd_ipsec_t *ipsec_sa_pd)
 {
-    hal::pd::delay_delete_to_slab(HAL_SLAB_IPSECCB_DECRYPT_PD, ipseccb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_IPSEC_SA_PD, ipsec_sa_pd);
     return HAL_RET_OK;
 }
 
-// insert ipseccb pd state in all meta data structures
+// insert ipsec_sa pd state in all meta data structures
 static inline hal_ret_t
-add_ipsec_pd_to_db (pd_ipsec_encrypt_t *ipseccb_pd)
+add_ipsec_pd_to_db (pd_ipsec_t *ipsec_sa_pd)
 {
-    g_hal_state_pd->ipseccb_hwid_ht()->insert(ipseccb_pd, &ipseccb_pd->hw_ht_ctxt);
+    g_hal_state_pd->ipsec_sa_hwid_ht()->insert(ipsec_sa_pd, &ipsec_sa_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 
-// insert ipseccb pd state in all meta data structures
+// insert ipsec_sa pd state in all meta data structures
 static inline hal_ret_t
-add_ipsec_pd_decrypt_to_db (pd_ipsec_decrypt_t *ipseccb_pd)
+add_ipsec_pd_decrypt_to_db (pd_ipsec_t *ipsec_sa_pd)
 {
-    g_hal_state_pd->ipseccb_hwid_ht()->insert(ipseccb_pd, &ipseccb_pd->hw_ht_ctxt);
-    return HAL_RET_OK;
-}
-
-static inline hal_ret_t
-del_ipsec_pd_from_db(pd_ipsec_encrypt_t *ipseccb_pd)
-{
-    g_hal_state_pd->ipseccb_hwid_ht()->remove(&ipseccb_pd->hw_ht_ctxt);
+    g_hal_state_pd->ipsec_sa_hwid_ht()->insert(ipsec_sa_pd, &ipsec_sa_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 
 static inline hal_ret_t
-del_ipsec_pd_decrypt_from_db(pd_ipsec_decrypt_t *ipseccb_pd)
+del_ipsec_pd_from_db(pd_ipsec_t *ipsec_sa_pd)
 {
-    g_hal_state_pd->ipseccb_hwid_ht()->remove(&ipseccb_pd->hw_ht_ctxt);
+    g_hal_state_pd->ipsec_sa_hwid_ht()->remove(&ipsec_sa_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 
-// find a ipseccb pd instance given its hw id
-static inline pd_ipsec_encrypt_t *
+static inline hal_ret_t
+del_ipsec_pd_decrypt_from_db(pd_ipsec_t *ipsec_sa_pd)
+{
+    g_hal_state_pd->ipsec_sa_hwid_ht()->remove(&ipsec_sa_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+// find a ipsec_sa pd instance given its hw id
+static inline pd_ipsec_t *
 find_ipsec_by_hwid (ipsec_sa_hw_id_t hwid)
 {
-    return (pd_ipsec_encrypt_t *)g_hal_state_pd->ipseccb_hwid_ht()->lookup(&hwid);
+    return (pd_ipsec_t *)g_hal_state_pd->ipsec_sa_hwid_ht()->lookup(&hwid);
 }
 
-// find a ipseccb pd instance given its hw id
-static inline pd_ipsec_decrypt_t *
+// find a ipsec_sa pd instance given its hw id
+static inline pd_ipsec_t *
 find_ipsec_decrypt_by_hwid (ipsec_sa_hw_id_t hwid)
 {
-    return (pd_ipsec_decrypt_t *)g_hal_state_pd->ipseccb_hwid_ht()->lookup(&hwid);
+    return (pd_ipsec_t *)g_hal_state_pd->ipsec_sa_hwid_ht()->lookup(&hwid);
 }
 
 extern void *ipsec_pd_get_hw_key_func(void *entry);
 extern uint32_t ipsec_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool ipsec_pd_compare_hw_key_func(void *key1, void *key2);
-
+#if 0
 extern void *ipsec_pd_decrypt_get_hw_key_func(void *entry);
 extern uint32_t ipsec_pd_decrypt_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool ipsec_pd_decrypt_compare_hw_key_func(void *key1, void *key2);
+#endif
 
 }   // namespace pd
 }   // namespace hal

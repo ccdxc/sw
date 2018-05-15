@@ -136,6 +136,7 @@ public:
     slab *acl_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ACL]); }
     slab *wring_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_WRING]); }
     slab *ipseccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSECCB]); }
+    slab *ipsec_sa_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_SA]); }
     slab *cpucb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_CPUCB]); }
     slab *rawrcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RAWRCB]); }
     slab *rawccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RAWCCB]); }
@@ -477,7 +478,9 @@ public:
 
     // get APIs for IPSEC CB state
     slab *ipseccb_slab(void) const { return cfg_db_->ipseccb_slab(); }
+    slab *ipsec_sa_slab(void) const { return cfg_db_->ipsec_sa_slab(); }
     ht *ipseccb_id_ht(void) const { return oper_db_->ipseccb_id_ht(); }
+    ht *ipsec_sa_id_ht(void) const { return oper_db_->ipsec_sa_id_ht(); }
 
     // get APIs for CPU CB state
     slab *cpucb_slab(void) const { return cfg_db_->cpucb_slab(); }
