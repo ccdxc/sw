@@ -1651,12 +1651,12 @@ int _compress_clear_insert_header(comp_queue_push_t push_type,
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
           __func__, push_type, seq_comp_qid);
 
-  /* flat 64K buf in hbm */
+  // flat 64K buf in hbm
   compress_cp_desc_template_fill(d, uncompressed_buf, compressed_buf,
                                  status_buf, compressed_buf,
                                  kUncompressedDataSize);
 
-  /* reset the bit to not to insert the header */
+  // reset the bit to not to insert the header
   d.cmd_bits.insert_header = 0;
 
   if (run_cp_test(d, compressed_buf, status_buf, push_type, seq_comp_qid) < 0) {
@@ -1682,13 +1682,14 @@ int _decompress_clear_header_present(comp_queue_push_t push_type,
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
           __func__, push_type, seq_comp_qid);
 
-  /* flat 64K buf in hbm */
+  // flat 64K buf in hbm
   decompress_cp_desc_template_fill(d, compressed_buf, uncompressed_buf,
                                    status_buf, last_cp_output_data_len,
                                    kUncompressedDataSize);
 
-  /* reset the bit to indicate header is not present */
+  // reset the bits to invalidate the verification against header
   d.cmd_bits.header_present = 0;
+  d.cmd_bits.cksum_verify_en = 0;
 
   if (run_dc_test(d, status_buf, 0, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
