@@ -6,10 +6,10 @@
 
 static std::unique_ptr<utils::HostMem> g_host_mem;
 
-static int _init_host_mem() {
+static int _init_host_mem(bool bhalf = false) {
   if (g_host_mem.get() != nullptr)
     return 0;
-  g_host_mem.reset(utils::HostMem::New());
+  g_host_mem.reset(utils::HostMem::New(bhalf));
   if (g_host_mem.get() == nullptr)
     return -ENOENT;
   return 0;
@@ -46,6 +46,10 @@ extern "C" {
 
 int init_host_mem() {
   return _init_host_mem();
+}
+
+int init_host_mem_bhalf() {
+  return _init_host_mem(true);
 }
 
 void *alloc_host_mem(size_t size) {

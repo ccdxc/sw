@@ -254,6 +254,7 @@ int common_setup() {
   printf("HAL client initialized\n");
 
   // Initialize host memory
+  //if (init_host_mem_bhalf() < 0) {
   if (init_host_mem() < 0) {
     printf("Host mem init failed (is model running?)\n");
     return -1;

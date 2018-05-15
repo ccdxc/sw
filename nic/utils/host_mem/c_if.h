@@ -9,6 +9,7 @@
 extern "C" {
 
 int init_host_mem();
+int init_host_mem_bhalf();
 void *alloc_host_mem(size_t size);
 void *alloc_page_aligned_host_mem(size_t size);
 void *alloc_spec_aligned_host_mem(size_t size, size_t spec_align_size);
