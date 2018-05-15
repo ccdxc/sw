@@ -15,19 +15,19 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1 
-#    maxrdmasessions     : 4 
+#   maxrdmasessions     : 1 
 
 packets:
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
-        template    : ref://factory/packets/id=PAYLOAD
+        payloadsize :  ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    :  ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
-        id          : IN_PKT    # Input packet
+        id          : IN_FIRST_PKT    # Input packet
         payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
@@ -98,11 +98,149 @@ packets:
                 data    : None
 
    - packet:
-        id          : EXP_PKT    # Expected Ack packet
+        id          : IN_FIRST_SEQ_ERR_PKT    # Input packet 
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 0 
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                #purposely inject invalid psn
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=10
+            payload:
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+   - packet:
+        id          : IN_SECOND_SEQ_ERR_PKT    # Input packet 
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 0 
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                #purposely inject invalid psn again
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=11
+            payload:
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+   - packet:
+        id          : IN_SECOND_PKT    # Input packet 
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 4 
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2
+                a       : 1
+            payload:
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+   - packet:
+        id          : EXP_NAK_PKT    # Expected Nak packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # ACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2
+            aeth:
+                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=0 #NAK_CODE_SEQ_ERR
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+   - packet:
+        id          : EXP_FIRST_ACK_PKT    # Expected Ack packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             # Add all possible headers, the final headers will be selected
@@ -205,6 +343,42 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
+   - packet:
+        id          : EXP_SECOND_ACK_PKT    # Expected Ack packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # ACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=3
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
 buffers:
     - buffer:
         id      : RQ_BUF
@@ -280,7 +454,7 @@ session:
             # inject a send request
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
+                    object  : ref://testcase/packets/id=IN_FIRST_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
         expect:
             # expect receive buffer transfer and completion posting
@@ -295,7 +469,7 @@ session:
             # expect an ACK packet
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=EXP_PKT
+                    object  : ref://testcase/packets/id=EXP_FIRST_ACK_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
     - step:
@@ -314,16 +488,73 @@ session:
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
     - step:
+        # send a packet with PSN > ePSN
         trigger:
-            # send a duplicate send request
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
+                    object  : ref://testcase/packets/id=IN_FIRST_SEQ_ERR_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        expect:
+            # expect a NAK packet with sequence error
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_NAK_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
+    - step:
+        trigger:
+            # send another packet with PSN > ePSN
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_SECOND_SEQ_ERR_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
         expect:
-            # expect an ACK packet
+            # NAK pruning is enabled. No NAK expected
+
+    - step:
+        trigger:
+            # inject a duplicate send request
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_FIRST_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        expect:
+            # expect an ACK packet even though NAK pruning is enabled
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=EXP_DUP_ACK_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+    - step:
+        trigger:
+            # post a receive descriptor
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=RQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+
+            # inject a new send request
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_SECOND_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        expect:
+            # expect receive buffer transfer and completion posting
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
+
+            # expect an ACK packet
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_SECOND_ACK_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports

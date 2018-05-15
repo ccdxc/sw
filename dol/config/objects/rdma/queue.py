@@ -107,7 +107,8 @@ class RdmaRQstate(Packet):
         BitField("cache", 0, 1),
         BitField("immdt_as_dbell", 0, 1),
         BitField("rq_in_hbm", 0, 1),
-        BitField("rqcb1_rsvd0", 0, 4),
+        BitField("nak_prune", 0, 1),
+        BitField("rqcb1_rsvd0", 0, 3),
 
         BitField("disable_speculation", 0, 1),
         BitField("rqcb1_rsvd1", 0, 7),

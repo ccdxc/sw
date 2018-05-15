@@ -131,7 +131,8 @@ struct rqcb1_t {
     cache: 1;               //Ronly
     immdt_as_dbell: 1;      //Ronly
     rq_in_hbm: 1;           //Ronly
-    rsvd0: 4;
+    nak_prune: 1;           //rw by S0
+    rsvd0: 3;
 
     disable_speculation: 1; //rw by S0
     rsvd1: 7;

@@ -92,10 +92,10 @@ packets:
             bth:
                 opcode  : 17 # ACK
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : callback://rdma/rdma/GetRqAckNakPsn
+                psn     : callback://rdma/rdma/GetRqDupPsn/pkt_num=1
             aeth:
-                syndrome: callback://rdma/rdma/GetRqAethSyndrome
-                msn     : callback://rdma/rdma/GetRqAethMsn
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 

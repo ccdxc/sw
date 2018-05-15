@@ -17,16 +17,6 @@ def TestCaseSetup(tc):
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
-
-    #Set the aeth and ack_nak_psn fields in rqcb as if these are the
-    #previously recorded aeth values
-    rs.lqp.rq.qstate.data.ack_nak_psn = (rs.lqp.rq.qstate.data.e_psn - 5) & 0xFFFFFF
-    rs.lqp.rq.qstate.data.aeth_msn = (rs.lqp.rq.qstate.data.msn - 3) & 0xFFFFFF
-    rs.lqp.rq.qstate.data.aeth_syndrome = (0 << 5) | 13
-    rs.lqp.rq.qstate.WriteWithDelay();
-
-    # Read RQ pre state
-    rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
 
     # ARM CQ and Set EQ's CI=PI for EQ enablement

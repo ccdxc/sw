@@ -1158,7 +1158,8 @@ typedef struct rqcb1_s {
     uint8_t     in_progress : 1;
     uint8_t     rsvd1 : 7;
     uint8_t     disable_speculation : 1;
-    uint8_t     rsvd0 : 4;
+    uint8_t     rsvd0 : 3;
+    uint8_t     nak_prune: 1;
     uint8_t     rq_in_hbm : 1;
     uint8_t     immdt_as_dbell : 1;
     uint8_t     cache : 1;
