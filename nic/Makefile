@@ -128,6 +128,7 @@ delphi:
 
 upgrade-manager:
 	bazel build //nic/upgrade_manager/...
+	bazel build //nic/moveable_objects/...
 
 #################################################
 #################### HAL ########################
