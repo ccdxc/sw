@@ -50,27 +50,6 @@ delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
         upgReqStatus->set_upgreqstate(upgrade::UpgReqRcvd);
         sdk_->SetObject(upgReqStatus);
         LogInfo("Updated Upgrade Request Status UpgReqRcvd");
-        sleep(1);
-        upgReqStatus->set_upgreqstate(upgrade::PreUpgState);
-        sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status PreUpgState");
-#if 0
-        upgReqStatus->set_upgreqstate(upgrade::ProcessesQuiesced);
-        sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status ProcessesQuiesced");
-        upgReqStatus->set_upgreqstate(upgrade::PostBinRestart);
-        sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status PostBinRestart");
-        upgReqStatus->set_upgreqstate(upgrade::DataplaneDowntimeStart);
-        sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status DataplaneDowntimeStart");
-        upgReqStatus->set_upgreqstate(upgrade::UpgSuccess);
-        sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status UpgSuccess");
-        upgReqStatus->set_upgreqstate(upgrade::Cleanup);
-        sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status Cleanup");
-#endif
     }
 
     return delphi::error::OK();
