@@ -438,11 +438,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		if (qp->sq.ptr)
 			ionic_q_show(s, "sq.", &qp->sq);
 
-		/* TODO: replace sq_mr with sq_umem */
-		//if (qp->sq_umem)
-		//	ionic_umem_show(s, "sq.", qp->sq_umem);
-		if (qp->sq_mr)
-			seq_printf(s, "sq.lkey:\t%u\n", qp->sq_mr->lkey);
+		if (qp->sq_umem)
+			ionic_umem_show(s, "sq.", qp->sq_umem);
 
 		seq_printf(s, "sq_is_hbm:\t%d\n", qp->sq_is_hbm);
 		if (qp->sq_is_hbm) {
@@ -456,11 +453,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		if (qp->rq.ptr)
 			ionic_q_show(s, "rq.", &qp->rq);
 
-		/* TODO: replace rq_mr with rq_umem */
-		//if (qp->rq_umem)
-		//	ionic_umem_show(s, "rq.", qp->rq_umem);
-		if (qp->rq_mr)
-			seq_printf(s, "rq.lkey:\t%u\n", qp->rq_mr->lkey);
+		if (qp->rq_umem)
+			ionic_umem_show(s, "rq.", qp->rq_umem);
 	}
 
 	return 0;
@@ -503,9 +497,7 @@ static int ionic_qp_sq_umem_show(struct seq_file *s, void *v)
 {
 	struct ionic_qp *qp = s->private;
 
-	/* TODO: replace sq_mr with sq_umem */
-	//ionic_umem_dump(s, &qp->sq_umem);
-	seq_printf(s, "sq.lkey:\t%u\n", qp->sq_mr->lkey);
+	ionic_umem_dump(s, qp->sq_umem);
 
 	return 0;
 }
@@ -547,9 +539,7 @@ static int ionic_qp_rq_umem_show(struct seq_file *s, void *v)
 {
 	struct ionic_qp *qp = s->private;
 
-	/* TODO: replace rq_mr with rq_umem */
-	//ionic_umem_dump(s, &qp->rq_umem);
-	seq_printf(s, "rq.lkey:\t%u\n", qp->rq_mr->lkey);
+	ionic_umem_dump(s, qp->rq_umem);
 
 	return 0;
 }
@@ -589,9 +579,7 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 			debugfs_create_file("sq", 0220, qp->debug, qp,
 					    &ionic_qp_sq_fops);
 
-		/* TODO: replace sq_mr with sq_umem */
-		//if (qp->sq_umem)
-		if (qp->sq_mr)
+		if (qp->sq_umem)
 			debugfs_create_file("sq_umem", 0220, qp->debug, qp,
 					    &ionic_qp_sq_umem_fops);
 	}
@@ -601,9 +589,7 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 			debugfs_create_file("rq", 0220, qp->debug, qp,
 					    &ionic_qp_rq_fops);
 
-		/* TODO: replace rq_mr with rq_umem */
-		//if (qp->rq_umem)
-		if (qp->rq_mr)
+		if (qp->rq_umem)
 			debugfs_create_file("rq_umem", 0220, qp->debug, qp,
 					    &ionic_qp_rq_umem_fops);
 	}

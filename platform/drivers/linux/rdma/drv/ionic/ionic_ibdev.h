@@ -140,15 +140,18 @@ struct ionic_cq {
 
 	u32			cqid;
 
-	spinlock_t		lock;
+	spinlock_t		lock; /* for polling */
+	struct list_head	qp_poll;
 	struct ionic_queue	q;
-	struct ib_umem		*umem;
 
+	/* infrequently accessed, keep at end */
+	struct ib_umem		*umem;
 	u32			tbl_pos;
 	int			tbl_order;
 
 	/* XXX cleanup */
 	u32			lkey;
+	struct delayed_work	notify_work;
 
 	struct dentry		*debug;
 };
@@ -156,7 +159,15 @@ struct ionic_cq {
 struct ionic_sq_meta {
 	u64			wrid;
 	u32			len;
+	u16			seq;
 	u8			op;
+	u8			status;
+	bool			signal;
+};
+
+/* XXX this rq_meta will go away */
+struct ionic_rq_meta {
+	u32			len; /* XXX byte_len must come from cqe */
 };
 
 struct ionic_qp {
@@ -170,18 +181,25 @@ struct ionic_qp {
 	bool			has_rq;
 	bool			is_srq;
 
-	spinlock_t		sq_lock;
+	bool			sig_all;
+
+	struct list_head	cq_poll_ent;
+
+	spinlock_t		sq_lock; /* for posting and polling */
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
-
-	u32			sq_local;
-	u32			sq_msn;
+	u16			*sq_msn_idx;
+	u16			sq_msn_prod;
+	u16			sq_msn_cons;
+	u16			sq_npg_prod;
+	u16			sq_npg_cons;
 
 	void			*sq_hbm_ptr;
 	u16			sq_hbm_prod;
 
-	spinlock_t		rq_lock;
+	spinlock_t		rq_lock; /* for posting and polling */
 	struct ionic_queue	rq;
+	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
 
 	/* infrequently accessed, keep at end */
 	bool			sq_is_hbm;
@@ -190,9 +208,17 @@ struct ionic_qp {
 	phys_addr_t		sq_hbm_addr;
 	struct ionic_mmap_info	sq_hbm_mmap;
 
+	struct ib_umem		*sq_umem;
+	int			sq_tbl_order;
+	u32			sq_tbl_pos;
+
+	struct ib_umem		*rq_umem;
+	int			rq_tbl_order;
+	u32			rq_tbl_pos;
+
 	/* XXX cleanup */
-	struct ib_mr		*rq_mr;
-	struct ib_mr		*sq_mr;
+	u32			sq_lkey;
+	u32			rq_lkey;
 
 	struct dentry		*debug;
 };
@@ -223,6 +249,21 @@ static inline struct ionic_ibdev *to_ionic_ibdev(struct ib_device *ibdev)
 static inline struct ionic_ctx *to_ionic_ctx(struct ib_ucontext *ibctx)
 {
 	return container_of(ibctx, struct ionic_ctx, ibctx);
+}
+
+static inline struct ionic_ctx *to_ionic_ctx_fb(struct ib_ucontext *ibctx)
+{
+	struct ionic_ctx *ctx;
+
+	if (!ibctx)
+		return NULL;
+
+	ctx = to_ionic_ctx(ibctx);
+
+	if (ctx->fallback)
+		return NULL;
+
+	return ctx;
 }
 
 static inline struct ionic_ctx *to_ionic_ctx_uobj(struct ib_uobject *uobj)
