@@ -46,22 +46,6 @@ struct ionic_cq {
 	struct ionic_queue	q;
 };
 
-struct ionic_wrid {
-	struct ionic_psns	*psns;
-	uint64_t		wrid;
-	uint32_t		bytes;
-	uint8_t			sig;
-};
-
-struct ionic_qpcap {
-	uint32_t		max_swr;
-	uint32_t		max_rwr;
-	uint32_t		max_ssge;
-	uint32_t		max_rsge;
-	uint32_t		max_inline;
-	uint8_t			sqsig;
-};
-
 struct ionic_sq_meta {
 	uint64_t		wrid;
 	uint32_t		len;
@@ -299,26 +283,26 @@ static inline enum ibv_wc_opcode ionic_to_ibv_wc_opcd(uint8_t ionic_opcd)
 	case OP_TYPE_SEND:
 	case OP_TYPE_SEND_INV:
 	case OP_TYPE_SEND_IMM:
-		ionic_opcd = IBV_WC_SEND;
+		ibv_opcd = IBV_WC_SEND;
 		break;
 	case OP_TYPE_READ:
-		ionic_opcd = IBV_WC_RDMA_READ;
+		ibv_opcd = IBV_WC_RDMA_READ;
 		break;
 	case OP_TYPE_WRITE:
 	case OP_TYPE_WRITE_IMM:
-		ionic_opcd = IBV_WC_RDMA_WRITE;
+		ibv_opcd = IBV_WC_RDMA_WRITE;
 		break;
 	case OP_TYPE_CMP_N_SWAP:
-		ionic_opcd = IBV_WC_COMP_SWAP;
+		ibv_opcd = IBV_WC_COMP_SWAP;
 		break;
 	case OP_TYPE_FETCH_N_ADD:
-		ionic_opcd = IBV_WC_FETCH_ADD;
+		ibv_opcd = IBV_WC_FETCH_ADD;
 		break;
 	case OP_TYPE_LOCAL_INV:
-		ionic_opcd = IBV_WC_LOCAL_INV;
+		ibv_opcd = IBV_WC_LOCAL_INV;
 		break;
 	case OP_TYPE_BIND_MW:
-		ionic_opcd = IBV_WC_BIND_MW;
+		ibv_opcd = IBV_WC_BIND_MW;
 		break;
 	default:
 		ibv_opcd = 0;
@@ -377,8 +361,7 @@ static inline uint8_t ionic_to_ibv_wc_status(uint8_t wcst)
 
 static inline bool ionic_op_is_local(uint8_t opcd)
 {
-	return opcd == OP_TYPE_LOCAL_INV ||
-		opcd == OP_TYPE_BIND_MW;
+	return opcd == OP_TYPE_LOCAL_INV || opcd == OP_TYPE_BIND_MW;
 }
 
 #if 0
