@@ -13,54 +13,6 @@
 
 namespace hal {
 
-#if 0
-void *
-ipsec_sa_decrypt_get_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((ipsec_sa_t *)entry)->sa_id);
-}
-
-uint32_t
-ipsec_sa_decrypt_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipsec_sa_id_t)) % ht_size;
-}
-
-bool
-ipsec_sa_decrypt_compare_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(ipsec_sa_id_t *)key1 == *(ipsec_sa_id_t *)key2) {
-        return true;
-    }
-    return false;
-}
-
-void *
-ipsec_sa_decrypt_get_handle_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((ipsec_sa_t *)entry)->hal_handle);
-}
-
-uint32_t
-ipsec_sa_decrypt_compute_handle_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-ipsec_sa_decrypt_compare_handle_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
-}
-
-#endif
 
 //------------------------------------------------------------------------------
 // validate an incoming IPSEC-SA create request

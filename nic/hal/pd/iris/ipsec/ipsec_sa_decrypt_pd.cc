@@ -369,7 +369,7 @@ pd_ipsec_decrypt_create (pd_ipsec_decrypt_create_args_t *args)
         HAL_TRACE_ERR("Failed to create key index");
         goto cleanup;    
     }
-    ipsec_sa_pd->ipsec_sa->key_index = *(key_index_args.key_idx);
+    //ipsec_sa_pd->ipsec_sa->key_index = key_index_args.key_idx;
     crypto_key.key_type = (types::CryptoKeyType)ipsec_sa->key_type;
     crypto_key.key_size = ipsec_sa->key_size;
     memcpy(crypto_key.key, ipsec_sa->key, ipsec_sa->key_size);

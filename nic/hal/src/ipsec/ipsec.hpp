@@ -198,7 +198,7 @@ typedef struct ipsec_rule_s {
 } __PACK__ ipsec_rule_t;
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_IPSECCB                           4
+#define HAL_MAX_IPSEC_SA                          2048 
 #define IPSEC_BARCO_ENCRYPT_AES_GCM_256           0x30000000
 #define IPSEC_BARCO_DECRYPT_AES_GCM_256           0x30100000
 

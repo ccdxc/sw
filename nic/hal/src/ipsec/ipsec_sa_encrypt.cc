@@ -29,7 +29,7 @@ bool
 ipsec_sa_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(ipsec_sa_id_t *)key1 == *(ipsec_sa_id_t *)key2) {
+    if (*((ipsec_sa_id_t *)key1) == *((ipsec_sa_id_t *)key2)) {
         return true;
     }
     return false;

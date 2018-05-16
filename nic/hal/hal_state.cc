@@ -1019,11 +1019,18 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
 
     // initialize IPSEC SA related data structures
     HAL_HT_CREATE("ipsec_sa", ipsec_sa_id_ht_,
-                  HAL_MAX_IPSECCB/2,
+                  HAL_MAX_IPSEC_SA/2,
                   hal::ipsec_sa_get_key_func,
                   hal::ipsec_sa_compute_hash_func,
                   hal::ipsec_sa_compare_key_func);
     HAL_ASSERT_RETURN((ipsec_sa_id_ht_ != NULL), false);
+
+    HAL_HT_CREATE("ipsec_sa_hal_hdl", ipsec_sa_hal_hdl_ht_,
+                  HAL_MAX_IPSEC_SA/2,
+                  hal::ipsec_sa_get_handle_key_func,
+                  hal::ipsec_sa_compute_handle_hash_func,
+                  hal::ipsec_sa_compare_handle_key_func);
+    HAL_ASSERT_RETURN((ipsec_sa_hal_hdl_ht_ != NULL), false);
 
     // initialize CPU CB related data structures
     HAL_HT_CREATE("cpucb", cpucb_id_ht_,
@@ -1153,6 +1160,7 @@ hal_oper_db::hal_oper_db()
     proxy_type_ht_ = NULL;
     ipseccb_id_ht_ = NULL;
     ipsec_sa_id_ht_ = NULL;
+    ipsec_sa_hal_hdl_ht_ = NULL;
     cpucb_id_ht_ = NULL;
     rawrcb_id_ht_ = NULL;
     app_redir_if_id_ = HAL_IFINDEX_INVALID;
@@ -1205,6 +1213,7 @@ hal_oper_db::~hal_oper_db()
     proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
     ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
     ipsec_sa_id_ht_ ? ht::destroy(ipsec_sa_id_ht_) : HAL_NOP;
+    ipsec_sa_hal_hdl_ht_ ? ht::destroy(ipsec_sa_hal_hdl_ht_) : HAL_NOP;
     cpucb_id_ht_ ? ht::destroy(cpucb_id_ht_) : HAL_NOP;
     rawrcb_id_ht_ ? ht::destroy(rawrcb_id_ht_) : HAL_NOP;
     rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;

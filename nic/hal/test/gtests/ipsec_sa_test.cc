@@ -58,6 +58,7 @@
 #include "nic/gen/hal/svc/gft_svc_gen.hpp"
 #include "nic/gen/hal/svc/nat_svc_gen.hpp"
 #include "nic/gen/hal/svc/ipsec_svc_gen.hpp"
+#include <google/protobuf/util/json_util.h>
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -86,6 +87,12 @@ using ipsec::IpsecSAEncryptDeleteRequest;
 using ipsec::IpsecSAEncryptDeleteResponseMsg;
 using ipsec::IpsecSADecryptDeleteRequest;
 using ipsec::IpsecSADecryptDeleteResponseMsg;
+using ipsec::IpsecSAEncryptGetRequest;
+using ipsec::IpsecSADecryptGetRequest;
+using ipsec::IpsecSAEncryptGetResponse;
+using ipsec::IpsecSADecryptGetResponse;
+using ipsec::IPSecSAEncryptGetSpec;
+using ipsec::IPSecSADecryptGetSpec;
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -218,6 +225,36 @@ protected:
 
 };
 
+static inline void
+ipsec_sa_encrypt_test_spec_dump (IpsecSAEncryptGetResponseMsg& rsp)
+{
+    std::string    ipsec_sa_encrypt_cfg_str;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return;
+    }
+
+    google::protobuf::util::MessageToJsonString(rsp, &ipsec_sa_encrypt_cfg_str);
+    HAL_TRACE_DEBUG("IPSec SA Encrypt Config:");
+    HAL_TRACE_DEBUG("{}", ipsec_sa_encrypt_cfg_str.c_str());
+    return;
+}
+
+static inline void
+ipsec_sa_decrypt_test_spec_dump (IpsecSADecryptGetResponseMsg& rsp)
+{
+    std::string    ipsec_sa_decrypt_cfg_str;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return;
+    }
+
+    google::protobuf::util::MessageToJsonString(rsp, &ipsec_sa_decrypt_cfg_str);
+    HAL_TRACE_DEBUG("IPSec SA Decrypt Config:");
+    HAL_TRACE_DEBUG("{}", ipsec_sa_decrypt_cfg_str.c_str());
+    return;
+}
+
 // ----------------------------------------------------------------------------
 // Creating a route
 // ----------------------------------------------------------------------------
@@ -243,6 +280,13 @@ TEST_F(ipsec_encrypt_test, test1)
     IpsecSAEncryptResponse      encrypt_resp;
     IpsecSADecrypt              decrypt_spec;
     IpsecSADecryptResponse      decrypt_resp;
+
+    IpsecSAEncryptGetRequest       enc_get_req;
+    IpsecSAEncryptGetResponse      enc_get_rsp;
+    IpsecSAEncryptGetResponseMsg   enc_get_rsp_msg;
+    IpsecSADecryptGetRequest       dec_get_req;
+    IpsecSADecryptGetResponse      dec_get_rsp;
+    IpsecSADecryptGetResponseMsg   dec_get_rsp_msg;
 
     IpsecSAEncryptDeleteRequest del_enc_req;
     IpsecSADecryptDeleteRequest del_dec_req;
@@ -447,6 +491,7 @@ TEST_F(ipsec_encrypt_test, test1)
     decrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     decrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     decrypt_spec.set_decryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
+    decrypt_spec.set_rekey_dec_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
     decrypt_spec.mutable_authentication_key()->set_key("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
     decrypt_spec.mutable_decryption_key()->set_key("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
     decrypt_spec.set_salt(0xbbbbbbbb);
@@ -462,14 +507,33 @@ TEST_F(ipsec_encrypt_test, test1)
     decrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     decrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     decrypt_spec.set_decryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
+    decrypt_spec.set_rekey_dec_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
     decrypt_spec.mutable_authentication_key()->set_key("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     decrypt_spec.mutable_decryption_key()->set_key("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     decrypt_spec.set_salt(0xbbbbbbbb);
     decrypt_spec.set_spi(0);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::ipsec_sadecrypt_create(decrypt_spec, &decrypt_resp);
+    ret = hal::ipsec_sadecrypt_update(decrypt_spec, &decrypt_resp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
+    enc_get_req.mutable_key_or_handle()->set_cb_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_get(enc_get_req, &enc_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ipsec_sa_encrypt_test_spec_dump(enc_get_rsp_msg);
+
+
+    dec_get_req.mutable_key_or_handle()->set_cb_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_sadecrypt_get(dec_get_req, &dec_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ipsec_sa_decrypt_test_spec_dump(dec_get_rsp_msg);
+#endif
+
 
     del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
