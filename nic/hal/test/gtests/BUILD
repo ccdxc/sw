@@ -355,3 +355,18 @@ cc_test(
     copts = sdk_copts,
 )
 
+cc_test(
+    name = "nwsec_prof_upgrade_test",
+    srcs = ["nwsec_prof_upgrade_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)
+
+cc_test(
+    name = "vrf_upgrade_test",
+    srcs = ["vrf_upgrade_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)

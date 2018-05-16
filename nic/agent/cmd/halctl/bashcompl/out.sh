@@ -226,10 +226,818 @@ __handle_word()
     __handle_word
 }
 
+_halctl_show_endpoint_detail()
+{
+    last_command="halctl_show_endpoint_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_endpoint_pd()
+{
+    last_command="halctl_show_endpoint_pd"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_endpoint()
+{
+    last_command="halctl_show_endpoint"
+    commands=()
+    commands+=("detail")
+    commands+=("pd")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_cpu_detail()
+{
+    last_command="halctl_show_if_cpu_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_cpu()
+{
+    last_command="halctl_show_if_cpu"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_detail()
+{
+    last_command="halctl_show_if_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_enic_detail()
+{
+    last_command="halctl_show_if_enic_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_enic()
+{
+    last_command="halctl_show_if_enic"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_tunnel_detail()
+{
+    last_command="halctl_show_if_tunnel_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_tunnel()
+{
+    last_command="halctl_show_if_tunnel"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_uplink_detail()
+{
+    last_command="halctl_show_if_uplink_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_uplink()
+{
+    last_command="halctl_show_if_uplink"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_uplink-pc_detail()
+{
+    last_command="halctl_show_if_uplink-pc_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if_uplink-pc()
+{
+    last_command="halctl_show_if_uplink-pc"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_if()
+{
+    last_command="halctl_show_if"
+    commands=()
+    commands+=("cpu")
+    commands+=("detail")
+    commands+=("enic")
+    commands+=("tunnel")
+    commands+=("uplink")
+    commands+=("uplink-pc")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_l2seg_detail()
+{
+    last_command="halctl_show_l2seg_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_l2seg_pd()
+{
+    last_command="halctl_show_l2seg_pd"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--brief")
+    local_nonpersistent_flags+=("--brief")
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_l2seg()
+{
+    last_command="halctl_show_l2seg"
+    commands=()
+    commands+=("detail")
+    commands+=("pd")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--brief")
+    local_nonpersistent_flags+=("--brief")
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_lif_detail()
+{
+    last_command="halctl_show_lif_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_lif()
+{
+    last_command="halctl_show_lif"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nat_mapping_detail()
+{
+    last_command="halctl_show_nat_mapping_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nat_mapping()
+{
+    last_command="halctl_show_nat_mapping"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nat_policy()
+{
+    last_command="halctl_show_nat_policy"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nat_pool_detail()
+{
+    last_command="halctl_show_nat_pool_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--handle=")
+    local_nonpersistent_flags+=("--handle=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nat_pool()
+{
+    last_command="halctl_show_nat_pool"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--handle=")
+    local_nonpersistent_flags+=("--handle=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nat()
+{
+    last_command="halctl_show_nat"
+    commands=()
+    commands+=("mapping")
+    commands+=("policy")
+    commands+=("pool")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_network_detail()
+{
+    last_command="halctl_show_network_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_network()
+{
+    last_command="halctl_show_network"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nexthop_detail()
+{
+    last_command="halctl_show_nexthop_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_nexthop()
+{
+    last_command="halctl_show_nexthop"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_route_detail()
+{
+    last_command="halctl_show_route_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_route()
+{
+    last_command="halctl_show_route"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_sec_prof()
+{
+    last_command="halctl_show_sec_prof"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_session_detail()
+{
+    last_command="halctl_show_session_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--handle=")
+    local_nonpersistent_flags+=("--handle=")
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_session()
+{
+    last_command="halctl_show_session"
+    commands=()
+    commands+=("detail")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--handle=")
+    local_nonpersistent_flags+=("--handle=")
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_table_dump()
+{
+    last_command="halctl_show_table_dump"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--entry-id=")
+    local_nonpersistent_flags+=("--entry-id=")
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_table()
+{
+    last_command="halctl_show_table"
+    commands=()
+    commands+=("dump")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_vrf_detail()
+{
+    last_command="halctl_show_vrf_detail"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_vrf_pd()
+{
+    last_command="halctl_show_vrf_pd"
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--brief")
+    local_nonpersistent_flags+=("--brief")
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show_vrf()
+{
+    last_command="halctl_show_vrf"
+    commands=()
+    commands+=("detail")
+    commands+=("pd")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--brief")
+    local_nonpersistent_flags+=("--brief")
+    flags+=("--id=")
+    local_nonpersistent_flags+=("--id=")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
+_halctl_show()
+{
+    last_command="halctl_show"
+    commands=()
+    commands+=("endpoint")
+    commands+=("if")
+    commands+=("l2seg")
+    commands+=("lif")
+    commands+=("nat")
+    commands+=("network")
+    commands+=("nexthop")
+    commands+=("route")
+    commands+=("sec_prof")
+    commands+=("session")
+    commands+=("table")
+    commands+=("vrf")
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
 _halctl()
 {
     last_command="halctl"
     commands=()
+    commands+=("show")
 
     flags=()
     two_word_flags=()

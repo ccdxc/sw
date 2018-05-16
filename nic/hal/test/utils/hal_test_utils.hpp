@@ -28,12 +28,19 @@ void hal_test_utils_trace(slab_stats_t *pre, slab_stats_t *post);
 void hal_test_utils_slab_disable_delete(void);
 slab_stats_t *hal_test_utils_collect_slab_stats();
 void hal_test_utils_slab_stats_free(slab_stats_t *stats);
-void hal_test_utils_check_slab_leak(slab_stats_t *pre, slab_stats_t *post, 
+void hal_test_utils_check_slab_leak(slab_stats_t *pre, slab_stats_t *post,
                                     bool *is_leak);
 
 // Mtrack related APIs
 mtrack_info_t *hal_test_utils_collect_mtrack_stats();
-void hal_test_utils_check_mtrack_leak(mtrack_info_t *pre, 
+void hal_test_utils_check_mtrack_leak(mtrack_info_t *pre,
                                       mtrack_info_t *post, bool *is_leak);
 void hal_test_utils_mtrack_info_free(mtrack_info_t *minfo);
+
+namespace hal {
+namespace test {
+void hal_test_preserve_state(void);
+void hal_test_restore_state(void);
+}
+}
 #endif // __HAL_TEST_UTILS_HPP__

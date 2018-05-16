@@ -14,6 +14,7 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include <google/protobuf/util/json_util.h>
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -64,21 +65,21 @@ protected:
 // ----------------------------------------------------------------------------
 TEST_F(vrf_upgrade_test, test1)
 {
-    hal_ret_t               ret;
-    VrfSpec                 ten_spec;
-    VrfResponse             ten_rsp;
-    SecurityProfileSpec     sp_spec;
-    SecurityProfileResponse sp_rsp;
-    VrfDeleteRequest        del_req;
-    VrfDeleteResponse       del_rsp;
-    slab_stats_t            *pre      = NULL   , *post = NULL;
-    bool                    is_leak   = false;
-    hal::hal_obj_id_t       obj_id;
-    void                    *obj;
-    hal::vrf_t              *vrf = NULL;
-    VrfGetResponseMsg       get_rsp_msg;
-    VrfGetRequest           get_req;
-    hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal_ret_t                           ret;
+    VrfSpec                             ten_spec;
+    VrfResponse                         ten_rsp;
+    SecurityProfileSpec                 sp_spec;
+    SecurityProfileResponse             sp_rsp;
+    SecurityProfileGetRequest           sec_pre_get_req, sec_del_get_req, sec_post_get_req;
+    SecurityProfileGetResponseMsg       sec_pre_get_rsp_msg, sec_del_get_rsp_msg, sec_post_get_rsp_msg;
+    SecurityProfileDeleteRequest        sec_del_req;
+    SecurityProfileDeleteResponse       sec_del_rsp;
+    VrfDeleteRequest                    vrf_del_req;
+    VrfDeleteResponse                   vrf_del_rsp;
+    VrfGetRequest                       vrf_pre_get_req, vrf_del_get_req, vrf_post_get_req;
+    VrfGetResponseMsg                   vrf_pre_get_rsp_msg, vrf_del_get_rsp_msg, vrf_post_get_rsp_msg;
+    uint32_t                            size1 = 0, size2 = 0;
+    uint8_t                                 *mem1 = NULL, *mem2 = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -89,8 +90,6 @@ TEST_F(vrf_upgrade_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    pre = hal_test_utils_collect_slab_stats();
-
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(1);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
@@ -100,35 +99,92 @@ TEST_F(vrf_upgrade_test, test1)
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    args.flow_lkupid = 4096;
-    args.obj_id = &obj_id;
-    args.pi_obj = &obj;
-    // ret = hal::pd::pd_get_object_from_flow_lkupid(4096, &obj_id, &obj);
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    vrf = (hal::vrf_t *)obj;
-    ASSERT_TRUE(vrf->vrf_id == 1);
 
-    // Get vrf
-    get_req.mutable_key_or_handle()->set_vrf_id(1);
+    // Get Vrf and Nwsec
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::vrf_get(get_req, &get_rsp_msg);
+    ret = hal::securityprofile_get(sec_pre_get_req, &sec_pre_get_rsp_msg);
     hal::hal_cfg_db_close();
-    HAL_TRACE_DEBUG("ret: {}", ret);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_l2_segments() == 0);
-    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_security_groups() == 0);
-    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_l4lb_services() == 0);
-    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_endpoints() == 0);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_get(vrf_pre_get_req, &vrf_pre_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    // Preserve hal state
+    hal::test::hal_test_preserve_state();
+
+    // Delete vrf and nwsec
+    vrf_del_req.mutable_key_or_handle()->set_vrf_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_delete(vrf_del_req, &vrf_del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    sec_del_req.mutable_key_or_handle()->set_profile_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_delete(sec_del_req, &sec_del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    // Get nwsec and vrf. Should be empty
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_get(sec_del_get_req, &sec_del_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_get(vrf_del_get_req, &vrf_del_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(sec_del_get_rsp_msg.response_size(), 0);
+    EXPECT_EQ(vrf_del_get_rsp_msg.response_size(), 0);
+
+    // Restore hal state
+    hal::test::hal_test_restore_state();
+
+    // Get nwsec and vrf.
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_get(sec_post_get_req, &sec_post_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_get(vrf_post_get_req, &vrf_post_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    // compare responses
+    EXPECT_EQ(vrf_pre_get_rsp_msg.ByteSizeLong(), vrf_post_get_rsp_msg.ByteSizeLong());
+    EXPECT_EQ(sec_pre_get_rsp_msg.ByteSizeLong(), sec_post_get_rsp_msg.ByteSizeLong());
+    size1 = vrf_pre_get_rsp_msg.ByteSizeLong();
+    size2 = sec_pre_get_rsp_msg.ByteSizeLong();
+    mem1 = (uint8_t *)malloc(size1);
+    mem2 = (uint8_t *)malloc(size1);
+    vrf_pre_get_rsp_msg.SerializeToArray(mem1, size1);
+    vrf_post_get_rsp_msg.SerializeToArray(mem2, size1);
+    EXPECT_EQ(memcmp(mem1, mem2, size1), 0);
+    free(mem1);
+    free(mem2);
+    mem1 = (uint8_t *)malloc(size2);
+    mem2 = (uint8_t *)malloc(size2);
+    sec_pre_get_rsp_msg.SerializeToArray(mem1, size2);
+    sec_post_get_rsp_msg.SerializeToArray(mem2, size2);
+    EXPECT_EQ(memcmp(mem1, mem2, size2), 0);
+    free(mem1);
+    free(mem2);
 
 
-    // Create nwsec
-    // Create vrf
-    // Get nwsec and vrf, store them as state1.
-    // Delete nwsec and vrf
-    // Restore nwsec and vrf.
-    // Get nwsec and vrf, store them as state2.
-    // state1 and state2 have to match.
+    std::string pre, post;
+    google::protobuf::util::MessageToJsonString(sec_pre_get_rsp_msg, &pre);
+    google::protobuf::util::MessageToJsonString(sec_post_get_rsp_msg, &post);
+    HAL_TRACE_DEBUG("Sec Pre: {}", pre);
+    HAL_TRACE_DEBUG("Sec Post: {}", post);
+    google::protobuf::util::MessageToJsonString(vrf_pre_get_rsp_msg, &pre);
+    google::protobuf::util::MessageToJsonString(vrf_post_get_rsp_msg, &post);
+    HAL_TRACE_DEBUG("Vrf Pre: {}", pre);
+    HAL_TRACE_DEBUG("Vrf Post: {}", post);
+
 }
 
 int main(int argc, char **argv) {

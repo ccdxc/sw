@@ -1622,9 +1622,21 @@ vrf_restore_cb (void *obj, uint32_t len)
     }
 
     // initialize vrf attrs from its spec
-    vrf_init_from_spec(vrf, vrf_info.spec());
-    vrf_init_from_status(vrf, vrf_info.status());
-    vrf_init_from_stats(vrf, vrf_info.stats());
+    ret = vrf_init_from_spec(vrf, vrf_info.spec());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to init VRF from spec. err:{}", ret);
+        HAL_ASSERT(0);
+    }
+    ret = vrf_init_from_status(vrf, vrf_info.status());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to init VRF from status. err:{}", ret);
+        HAL_ASSERT(0);
+    }
+    ret = vrf_init_from_stats(vrf, vrf_info.stats());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to init VRF from stats. err:{}", ret);
+        HAL_ASSERT(0);
+    }
 
     // repopulate handle db
     hal_handle_insert(HAL_OBJ_ID_VRF, vrf->hal_handle, (void *)vrf);
