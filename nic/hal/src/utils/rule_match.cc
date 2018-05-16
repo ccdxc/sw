@@ -400,8 +400,10 @@ rule_lib_alloc()
 
 static ipv4_rule_t *
 construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
+                       mac_addr_list_elem_t *mac_sa_entry,
+                       mac_addr_list_elem_t *mac_da_entry,
                        port_list_elem_t *sp_entry, port_list_elem_t *dp_entry,
-                       IPProtocol proto)
+                       IPProtocol proto, uint16_t ethertype)
 {
     ipv4_rule_t     *rule = NULL;
     bool            alloc = false;
@@ -429,6 +431,22 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
     }
     if (proto != types::IPPROTO_NONE) {
         rule->field[PROTO].value.u32 = proto;
+        rule->field[PROTO].mask_range.u32 = proto;
+        alloc = true;
+    }
+    if (mac_sa_entry->addr != 0) {
+        rule->field[MAC_SRC].value.u32 = mac_sa_entry->addr;
+        rule->field[MAC_SRC].mask_range.u32 = mac_sa_entry->addr;
+        alloc = true;
+    }
+    if (mac_da_entry->addr != 0) {
+        rule->field[MAC_DST].value.u32 = mac_da_entry->addr;
+        rule->field[MAC_DST].mask_range.u32 = mac_da_entry->addr;
+        alloc = true;
+    }
+    if (ethertype != 0) {
+        rule->field[ETHERTYPE].value.u32 = ethertype;
+        rule->field[ETHERTYPE].mask_range.u32 = ethertype;
         alloc = true;
     }
     if (!alloc) {
@@ -452,11 +470,11 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     ipv4_rule_t          *rule;
     rule_match_app_t     *app_match = &match->app;
     hal_ret_t            ret = HAL_RET_OK;
-    //mac_addr_list_elem_t *mac_src_addr, *mac_dst_addr;
+    mac_addr_list_elem_t *mac_src_addr, *mac_dst_addr;
     addr_list_elem_t     *src_addr, *dst_addr;
     port_list_elem_t     *dst_port, *src_port;
     dllist_ctxt_t        *sa_entry, *da_entry, *sp_entry, *dp_entry;
-    //dllist_ctxt_t        *mac_sa_entry, *mac_da_entry;
+    dllist_ctxt_t        *mac_sa_entry, *mac_da_entry;
     port_list_elem_t     dst_port_new = {0}, src_port_new = {0};
     addr_list_elem_t     src_addr_new = {0}, dst_addr_new = {0};
     mac_addr_list_elem_t mac_src_addr_new = {0}, mac_dst_addr_new = {0};
@@ -469,34 +487,41 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     dllist_add(&app_match->l4dstport_list, &dst_port_new.list_ctxt);
     dllist_add(&app_match->l4srcport_list, &src_port_new.list_ctxt);
     
+    /* MAC-SA loop */
+    dllist_for_each(mac_sa_entry, &match->src_mac_addr_list) {
+        mac_src_addr = RULE_MATCH_GET_MAC_ADDR(mac_sa_entry);
+    /* MAC-DA loop */
+    dllist_for_each(mac_da_entry, &match->dst_mac_addr_list) {
+        mac_dst_addr = RULE_MATCH_GET_MAC_ADDR(mac_da_entry);
     /* IP-SA loop */
     dllist_for_each(sa_entry, &match->src_addr_list) {
         src_addr = RULE_MATCH_GET_ADDR(sa_entry);
-        /* IP-DA loop */
-        dllist_for_each(da_entry, &match->dst_addr_list) {
-            dst_addr = RULE_MATCH_GET_ADDR(da_entry);
-            /* L4 Src-Port loop */
-            dllist_for_each(sp_entry, &app_match->l4srcport_list) {
-                src_port = RULE_MATCH_GET_PORT(sp_entry);
-                /* L4 Dst-Port loop */
-                dllist_for_each(dp_entry, &app_match->l4dstport_list) {
-                    dst_port = RULE_MATCH_GET_PORT(dp_entry);
-                    rule = construct_rule_fields(src_addr, dst_addr, src_port,
-                                                 dst_port, match->proto);
-                    if (!rule) {
-                        continue;
-                    }
-                    rule->data.priority = rule_prio;
-                    rule->data.userdata = (void *)data;
-                    ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
-                    if (ret != HAL_RET_OK) {
-                        HAL_TRACE_ERR("Unable to create the acl rules");
-                        return ret;
-                    }
-                }//  << push it to the vector of ipv4_rule_t >>>
+    /* IP-DA loop */
+    dllist_for_each(da_entry, &match->dst_addr_list) {
+        dst_addr = RULE_MATCH_GET_ADDR(da_entry);
+    /* L4 Src-Port loop */
+    dllist_for_each(sp_entry, &app_match->l4srcport_list) {
+        src_port = RULE_MATCH_GET_PORT(sp_entry);
+        /* L4 Dst-Port loop */
+        dllist_for_each(dp_entry, &app_match->l4dstport_list) {
+            dst_port = RULE_MATCH_GET_PORT(dp_entry);
+            rule = construct_rule_fields(src_addr, dst_addr,  mac_src_addr,
+                                         mac_dst_addr, src_port,
+                                         dst_port, match->proto,
+                                         match->ethertype);
+            if (!rule) {
+                continue;
             }
-        }
-    }
+            rule->data.priority = rule_prio;
+            rule->data.userdata = (void *)data;
+            ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to create the acl rules");
+                return ret;
+            }
+        }//  << push it to the vector of ipv4_rule_t >>>
+    } } } } }
+    
     /* Delete dummy node at the head of the list */
     dllist_del(&mac_src_addr_new.list_ctxt);
     dllist_del(&mac_dst_addr_new.list_ctxt);

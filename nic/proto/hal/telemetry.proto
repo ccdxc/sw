@@ -395,7 +395,7 @@ message DropMonitorRuleGetResponseMsg {
 
 // RspanSpec is the configuration specification for RSPAN.
 message RSpanSpec {
-  kh.InterfaceKeyHandle     intf         = 1; // Interface handle
+  kh.InterfaceKeyHandle     intf         = 1 [(gogoproto.moretags) = "venice:ref"]; // Interface handle
   types.EncapInfo           rspan_encap  = 2; // VLAN encapsulation
 }
 
@@ -413,7 +413,7 @@ message MirrorSessionSpec {
   kh.MirrorSessionKeyHandle key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\",venice:constraints={range:0-7}"]; // MirrorSession key or handle
   uint32                    snaplen         = 3; // maximum  bytes of packet to mirror.
   oneof destination {
-    kh.InterfaceKeyHandle   local_span_if   = 4; // Local span destination
+    kh.InterfaceKeyHandle   local_span_if   = 4 [(gogoproto.moretags) = "venice:ref"]; // Local span destination
     RSpanSpec               rspan_spec      = 5; // VLAN encap to use when configuration is for RSPAN
     ERSpanSpec              erspan_spec     = 6; // ERSPAN configuration in case of ERSPAN
   }

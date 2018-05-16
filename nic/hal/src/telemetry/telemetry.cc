@@ -150,29 +150,62 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     return ret;
 }
 
+static hal_ret_t
+mirror_session_process_get (MirrorSessionGetRequest &req,
+                            pd_mirror_session_get_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("{}: Mirror Session ID {}", __FUNCTION__,
+            req.key_or_handle().mirrorsession_id());
+    memset(args->session, 0, sizeof(mirror_session_t));
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: PD API failed {}", __FUNCTION__, ret);
+        return ret;
+    }
+    return ret;
+}
+
 hal_ret_t
 mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rsp)
 {
     pd_mirror_session_get_args_t args;
     mirror_session_t session;
     hal_ret_t ret;
-
-    auto response = rsp->add_response();
-    HAL_TRACE_DEBUG("{}: Mirror Session ID {}", __FUNCTION__,
-            req.key_or_handle().mirrorsession_id());
-    memset(&session, 0, sizeof(session));
-    session.id = req.key_or_handle().mirrorsession_id();
+    bool exists = false;
+    
     args.session = &session;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, (void *)&args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: PD API failed {}", __FUNCTION__, ret);
-        response->set_api_status(types::API_STATUS_INVALID_ARG);
-        return ret;
+    if (!req.has_key_or_handle()) {
+        /* Iterate over all the sessions */
+        for (int i = 0; i < 8; i++) {
+            args.session->id = i;
+            ret = mirror_session_process_get(req, &args);
+            if (ret == HAL_RET_OK) {
+                exists = true;
+                auto response = rsp->add_response();
+                response->set_api_status(types::API_STATUS_OK);
+                response->mutable_spec()->mutable_key_or_handle()->set_mirrorsession_id(i);
+                response->mutable_spec()->set_snaplen(session.truncate_len);
+            }
+        }
+        if (!exists) {
+            auto response = rsp->add_response();
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
+        }
+    } else {
+        auto response = rsp->add_response();
+        args.session->id = req.key_or_handle().mirrorsession_id();
+        ret = mirror_session_process_get(req, &args);
+        if (ret == HAL_RET_OK) {
+            response->set_api_status(types::API_STATUS_OK);
+            response->mutable_spec()->mutable_key_or_handle()->set_mirrorsession_id(args.session->id);
+            response->mutable_spec()->set_snaplen(session.truncate_len);
+        } else {
+            response->set_api_status(types::API_STATUS_INVALID_ARG);
+        }
     }
 
-    response->set_api_status(types::API_STATUS_OK);
-    response->mutable_spec()->mutable_key_or_handle()->set_mirrorsession_id(session.id);
-    response->mutable_spec()->set_snaplen(session.truncate_len);
     /* TODO: Find the interface ID depending on interface type.
        verify against local cache of session.
        switch (session->type) {
