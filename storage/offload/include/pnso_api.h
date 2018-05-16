@@ -40,22 +40,6 @@ enum pnso_service_type {
 	PNSO_SVC_TYPE_MAX
 };
 
-/**
- * Pensando accelerators can be exercised by submitting one request at a time or
- * a batch of requests.
- *
- * Following constants enable to distinguish the mode of request submission.
- * When requests are submitted in batch mode, the beginning and ending phase is
- * indicated by continue/flush markers.
- *
- */
-enum pnso_batch_request {
-	PNSO_BATCH_REQ_NONE = 0,
-	PNSO_BATCH_REQ_FLUSH = PNSO_BATCH_REQ_NONE,
-	PNSO_BATCH_REQ_CONTINUE = 1,
-	PNSO_BATCH_REQ_MAX
-};
-
 /* Algorithms for compression/decompression */
 enum pnso_compressor_type {
 	PNSO_COMPRESSOR_TYPE_NONE = 0,
@@ -342,7 +326,7 @@ struct pnso_chksum_tag {
  * @hash: specifies a pointer to an allocated memory for number of
  * hashes as specified in 'num_hashes'.  When 'num_hashes' is 0, this
  * parameter is NULL.
- * @chksum: specifies a pointer to an allocated memory for number of 
+ * @chksum: specifies a pointer to an allocated memory for number of
  * checksums as specified in 'num_chksums'.  When 'num_chksums' is 0, this
  * parameter is NULL.
  * @dst: specifies a sgl that to be used as output buffer for this service.
@@ -447,7 +431,7 @@ struct pnso_service_request {
  *
  */
 typedef void (*completion_t) (void *cb_ctx,
-			      struct pnso_service_result * svc_res);
+			      struct pnso_service_result *svc_res);
 
 /**
  * typedef pnso_poll_fn_t: the caller to use this polling function to detect
@@ -463,9 +447,7 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
 
 /**
  * pnso_submit_request() - routine that accepts one or more service(s) as a
- * request, and batches two or more such requests internally.
- * @batch_req:		[in]	specifies whether the request is an independent
- *				one or belongs to a group of requests.
+ * request and submits the request for further processing.
  * @svc_req:		[in]	specifies a set of service requests that to be
  *				used to complete the services within the
  *				request.
@@ -494,13 +476,68 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  *	-ENOMEM - on failing to allocate memory
  *
  */
-pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
-				 struct pnso_service_request *svc_req,
+pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 				 struct pnso_service_result *svc_res,
 				 completion_t cb,
 				 void *cb_ctx,
 				 pnso_poll_fn_t *pnso_poll_fn,
 				 void **pnso_poll_ctx);
+/**
+ * pnso_add_to_batch() - routine that batches multiple requests and defers
+ * processing.
+ * @svc_req:		[in]	specifies a set of service requests that to be
+ *				used to complete the services within the
+ *				request.
+ * @svc_res:		[out]	specifies a set of service results structures to
+ *				report the status of each service within a
+ *				request upon its completion.
+ *
+ * Caller is responsible for allocation and deallocation of memory for both
+ * input and output parameters. Caller should keep the memory intact (ex:
+ * svc_req/svc_res) until the Pensando accelerator returns the result via
+ * completion callback.
+ *
+ * None of the requests will be processed until the caller triggers a 'post'
+ * operation.
+ *
+ * Even if any one of the request processing fails, the entire batch of requests
+ * will be dropped from further processing.
+ *
+ * Return:
+ *	PNSO_OK - on success
+ *	-EINVAL - on invalid input parameters
+ *	-ENOMEM - on failing to allocate memory
+ *
+ */
+pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
+		struct pnso_service_result *svc_res);
+
+/**
+ * pnso_flush_batch() - routine that starts submitting the batched requests for
+ * further processing.
+ * @cb:			[in]	specifies the caller-supplied completion
+ *				callback routine.
+ * @cb_ctx:		[in]	specifies the caller-supplied context
+ *				information.
+ * @pnso_poll_fn:	[in]	specifies the polling function, which the caller
+ *				will use to poll for completion of the request.
+ * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
+ *
+ * Refer to 'pnso_service_result' and 'pnso_service_status' notes above for
+ * handling the output data.
+ *
+ * Even if just the processing of flush request fails, the entire batch of
+ * requests will be dropped from further processing.
+ *
+ * Return:
+ *	PNSO_OK - on success
+ *	-EINVAL - on invalid input parameters
+ *
+ */
+pnso_error_t pnso_flush_batch(completion_t cb,
+		void *cb_ctx,
+		pnso_poll_fn_t *pnso_poll_fn,
+		void **pnso_poll_ctx);
 
 /**
  * pnso_set_key_desc_idx() - sets the key descriptor index.
