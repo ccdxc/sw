@@ -98,7 +98,7 @@ typedef int32_t pnso_error_t;
 struct pnso_flat_buffer {
 	uint32_t len;
 	uint64_t buf;
-} __attribute__ ((packed));
+} __packed;
 
 /**
  * struct pnso_buffer_list - describes a scatter/gather buffer list.
