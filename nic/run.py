@@ -41,6 +41,14 @@ sample_client_log = nic_dir + "/sample_client.log"
 bullseye_model_cov_file = nic_dir + "/coverage/bullseye_model.cov"
 bullseye_hal_cov_file = nic_dir + "/../bazel-out/../../bullseye_hal.cov"
 
+nic_container_image_dir = nic_dir + "/obj/images"
+#This should be changed to pick up the current version automatically.
+nic_container_image = "naples-release-v1.tgz"
+nic_container_name = "naples-v1"
+
+#Naples start script
+nic_container_startup_script = nic_dir + "/sim/naples/start-naples-docker.sh"
+
 lock_file = nic_dir + "/.run.pid"
 
 # Environment
@@ -460,6 +468,8 @@ def run_dol(args):
         cmd.append("--verbose")
     if args.agent:
         cmd.append("--agent")
+    if args.niccontainer:
+        cmd.append("--niccontainer")
 
     if args.coveragerun:
         #Increasing timeout for coverage runs only.
@@ -521,6 +531,8 @@ def is_running(pid):
         return False
 
 def cleanup(keep_logs=True):
+    print_nic_container_cores()
+    bringdown_nic_container()
     print "* Killing running processes:"
 
     if not os.path.exists(lock_file):
@@ -599,12 +611,13 @@ def run_e2e_l7_dol():
     return p.returncode
 # main()
 
-
-def run_e2e_infra_dol(mode, e2espec = None):
+def run_e2e_infra_dol(mode, e2espec = None, niccontainer = None):
     os.chdir(nic_dir)
     cmd = ['./e2etests/main.py', '--e2e-mode', mode]
     if e2espec:
         cmd.extend(['--e2e-spec', e2espec])
+    if niccontainer:
+        cmd.extend(["--niccontainer-name", niccontainer])
     p = Popen(cmd)
     print "* Starting E2E , pid (" + str(p.pid) + ")"
     lock = open(lock_file, "a+")
@@ -614,12 +627,84 @@ def run_e2e_infra_dol(mode, e2espec = None):
     print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E ,DOL, exit code ", p.returncode
     return p.returncode
 
+def bringup_nic_container():
+    bringdown_nic_container()
+    hal_log_file = os.environ['HOME'] + "/naples/data/logs/hal.log"
+    def get_hal_port(log_file):
+        log2 = open(log_file, "r")
+        loop = 1
+        while loop == 1:
+            for line in log2.readlines():
+                if "listening on" in line:
+                    return line.split(":")[-1].strip()  
+        log2.close()
+        return
 
+    if os.path.isfile(hal_log_file):
+        os.remove(hal_log_file)
+    
+    os.chdir(nic_container_image_dir)
+    if not os.path.isfile(nic_container_image):
+        print ("Nic Container image %s was not found", nic_container_image)
+        sys.exit(1) 
+    #Extract the container image
+    print ("Extracting Container image")
+    retcode = call(['tar', '-xzvf', nic_container_image])
+    if retcode:
+        print ("Extraction failed!")
+        sys.exit(1)
+    retcode = call(nic_container_startup_script)
+    if retcode:
+        print ("Bringing up Nic container failed")
+        sys.exit(1)
+    os.chdir(nic_dir)
+    time.sleep(5)
+    print ("Waiting for HAL to be up..")
+    os.environ["HAL_GRPC_PORT"] = get_hal_port(hal_log_file)
+    print ("Nic container bring up was successfull.")
+
+
+def bringdown_nic_container():
+    print ("Bringing down nic container")
+    try: 
+        os.chdir(nic_container_image_dir)
+        retcode = call(["docker", "stop", nic_container_name])
+    except:
+        retcode = 0
+    if retcode:
+        print("Bringdown of Nic Container failed")
+    os.chdir(nic_dir)
+    
+def print_nic_container_cores():
+    print_core_script = "/naples/nic/tools/print-cores.sh"
+    try: 
+        retcode = call(["docker", "exec", "-it", nic_container_name, print_core_script])
+    except:
+        retcode = 0
+    if retcode:
+        print("Printing container cores failed.")
+
+def run_dol_test(args):
+    status = run_dol(args)
+    if status == 0:
+        if (args.e2etls):
+            status = run_e2e_tlsproxy_dol()
+        elif (args.e2el7):
+            status = run_e2e_l7_dol()
+        elif (args.v6e2etls):
+                status = run_v6_e2e_tlsproxy_dol()
+        elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
+            status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec,
+                                        niccontainer = nic_container_name if args.niccontainer else None)
+    return status
+                
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--build", action="store_true", help="run build")
     parser.add_argument("-c", "--cleanup", action="store_true",
                         help="cleanup running process")
+    parser.add_argument("--niccontainer", action="store_true",
+                        help="run with Nic container image")
     parser.add_argument("--modellogs", action="store_true",
                         help="run with model logs enabled")
     parser.add_argument("--coveragerun", action="store_true",
@@ -783,12 +868,15 @@ def main():
         os.environ['MODEL_ZMQ_TCP_PORT'] = str(zmq_tcp_port)
 
     if args.dryrun is False:
-        if args.rtl:
-            run_rtl(args)
+        if args.niccontainer:
+            bringup_nic_container()
         else:
-            run_model(args)
-        if args.gft_gtest is False:
-            run_hal(args)
+            if args.rtl:
+                run_rtl(args)
+            else:
+                run_model(args)
+            if args.gft_gtest is False:
+                run_hal(args)
 
     if args.storage:
         status = run_storage_dol(port, args)
@@ -805,34 +893,14 @@ def main():
     elif args.mbt_test:
         mbt_port = int(os.environ["MBT_GRPC_PORT"])
         print "* Using port (" + str(mbt_port) + ") for mbt\n"
-
-        status = run_dol(args)
-        if status == 0:
-            if (args.e2etls):
-                status = run_e2e_tlsproxy_dol()
-            elif (args.e2el7):
-                status = run_e2e_l7_dol()
-            elif (args.v6e2etls):
-                    status = run_v6_e2e_tlsproxy_dol()
-            elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
-                status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec)
+        status = run_dol_test(args)
     else:
         if args.mbt:
             mbt_port = find_port()
             print "* Using port (" + str(mbt_port) + ") for mbt\n"
             os.environ["MBT_GRPC_PORT"] = str(mbt_port)
             run_mbt(args, standalone=False)
-
-        status = run_dol(args)
-        if status == 0:
-            if (args.e2etls):
-                status = run_e2e_tlsproxy_dol()
-            elif (args.e2el7):
-                status = run_e2e_l7_dol()
-            elif (args.v6e2etls):
-                    status = run_v6_e2e_tlsproxy_dol()
-            elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
-                status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec)
+        status = run_dol_test(args)
 
     if args.coveragerun:
         dump_coverage_data()

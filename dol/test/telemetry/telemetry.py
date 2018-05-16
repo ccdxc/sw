@@ -588,7 +588,7 @@ def setup_span(infra, module, case):
             count = count + 1
         dintf = None
         if intf == "AnyLocalEP":
-            ten = infra.ConfigStore.objects.Get("Ten0002")
+            ten = infra.ConfigStore.objects.Get("Ten0012")
             #for ten in Store.objects.GetAllByClass(tenant.TenantObject):
             eps = ten.GetLocalEps()
             if spantype == "ERSPAN":

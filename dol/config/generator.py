@@ -37,6 +37,7 @@ from config.objects.security_policy     import SecurityGroupPolicyHelper
 from infra.common.logging               import logger as logger
 from infra.asic.model                   import ModelConnector
 from config.store                       import Store
+from infra.common.glopts                import GlobalOptions
 
 def process(topospec):
     # Security Profiles
@@ -104,14 +105,16 @@ def process(topospec):
 def main(topofile):
     timeprofiler.ConfigTimeProfiler.Start()
     halapi.init()
-    logger.info("Initializing Resmgr")
-    resmgr.init()
+    if not GlobalOptions.niccontainer:
+        logger.info("Initializing Resmgr")
+        resmgr.init()
     logger.info("Generating Config Objects for Topology = %s" % topofile)
     topospec = parser.ParseFile('config/topology/', topofile)
     if topospec:
         process(topospec)
     timeprofiler.ConfigTimeProfiler.Stop()
-    ModelConnector.ConfigDone()
+    if not GlobalOptions.niccontainer:
+        ModelConnector.ConfigDone()
     return
 
 def dump_configuration(conf_file):

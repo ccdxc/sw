@@ -235,6 +235,10 @@ class NS(AppEngine):
         cmd = self._cmd_prefix + " arp -s %s  %s" % (ipaddress, mac_addr)
         run(cmd)
 
+    def MoveInterface(self, interface, ns):
+        cmd = self._cmd_prefix  + " ip link set " + interface + " netns " + str(ns)
+        return run(cmd)
+        
 class Container(NS):
     
     def __init__(self, name, config_file, container_id=None):
@@ -262,10 +266,10 @@ class Container(NS):
     def BringUp(self):
         pass
     
-    def RunCommand(self, cmd, timeout=None, background=False):
+    def RunCommand(self, cmd, timeout=None, background=False, tty=True):
         print ("Running command ", cmd)
         cmd_to_run = ["sh", "-c", cmd]
-        cmd_out = self._container_obj.exec_run(cmd_to_run, detach=background, stdout=True, tty=True)
+        cmd_out = self._container_obj.exec_run(cmd_to_run, detach=background, stdout=True, tty=tty)
         if not background:
             sys.stdout.buffer.write(cmd_out.output)
         return cmd_out.exit_code

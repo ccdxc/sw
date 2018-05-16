@@ -25,25 +25,25 @@ def get_test_specs():
     config_specs = [parse_yaml_file(spec) for spec in spec_files]
     return config_specs
 
-def run_tests_in_auto_mode(spec=None):
+def run_tests_in_auto_mode(spec=None, niccontainer=None):
     test_specs = get_test_specs()
     global e2e_test
     for cfg in test_specs:
         if not cfg["enabled"]:
             continue
-        e2e_test = E2eTest(cfg)
+        e2e_test = E2eTest(cfg, niccontainer)
         ret = e2e_test.Run()
         if not ret:
             print ("Test %s Failed" % str(e2e_test))
             sys.exit(1)
         print ("Test %s Passed" % str(e2e_test))
 
-def bringup_test_spec_env(spec, nomodel):
+def bringup_test_spec_env(spec, nomodel, niccontainer=None):
     test_specs = get_test_specs()
     global e2e_test
     for test_spec in test_specs:
         if test_spec["name"] == spec:
-            e2e_test = E2eTest(test_spec)
+            e2e_test = E2eTest(test_spec, niccontainer)
             print ("Bring up E2E environment for testspec : ",  spec)
             e2e_test.BringUp(nomodel)
             print ("E2E environment up for testspec : ",  spec)
@@ -55,7 +55,7 @@ def bringup_test_spec_env(spec, nomodel):
                 pass
             e2e_test.Teardown()    
 
-def setup_cfg_env(e2e_cfg, nomodel):
+def setup_cfg_env(e2e_cfg, nomodel, niccontainer=None):
     print ("Setting up E2E Environment for config : ",  e2e_cfg)
     env = E2eEnv(e2e_cfg)
     env.BringUp(nomodel)
@@ -88,14 +88,17 @@ def main():
                     help='E2E Configuration file if running in setup mode.')    
     parser.add_argument('--nomodel', dest='nomodel', action="store_true",
                         help='No Model mode, connect each other.')  
+    parser.add_argument('--niccontainer-name', dest='niccontainer', default=None,
+                    help='Nic Container image name')    
     args = parser.parse_args()
 
     os.chdir(consts.nic_e2e_dir)
 
     if args.test_mode == "auto":
-        run_tests_in_auto_mode()
+        run_tests_in_auto_mode(niccontainer=args.niccontainer)
     elif args.test_mode == "manual":
-        bringup_test_spec_env(args.e2e_spec, args.nomodel)
+        bringup_test_spec_env(args.e2e_spec, args.nomodel,
+                               niccontainer=args.niccontainer)
     elif args.test_mode == "setup":
         setup_cfg_env(args.e2e_cfg, args.nomodel)
         

@@ -95,7 +95,8 @@ def exit_cleanup():
     if not GlobalOptions.dryrun:
         print("Sending exit_simulation message to Model.")
         try:
-            model_wrap.exit_simulation()
+            if not GlobalOptions.niccontainer:
+                model_wrap.exit_simulation()
         except:
             print("Error in sending exit_simulation to Model.")
     return

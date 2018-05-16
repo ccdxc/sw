@@ -31,11 +31,12 @@ class EthRingObject(ring.RingObject):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
-        # Make sure ring_size is a power of 2
-        self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
-        resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
-        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-            self._sgmem = resmgr.HostMemoryAllocator.get(IONIC_TX_MAX_SG_ELEMS * self.size * self.sg_desc_size)
+        if not GlobalOptions.niccontainer:
+            #Make sure ring_size is a power of 2
+            self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
+            resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
+            if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+                self._sgmem = resmgr.HostMemoryAllocator.get(IONIC_TX_MAX_SG_ELEMS * self.size * self.sg_desc_size)
 
         logger.info("Creating Ring %s" % self)
 
