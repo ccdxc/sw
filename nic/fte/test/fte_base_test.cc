@@ -1,10 +1,12 @@
 #include "nic/fte/test/fte_base_test.hpp"
 #include "nic/fte/fte_flow.hpp"
+#include "nic/fte/fte.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/nat/nat.hpp"
 #include "nic/hal/src/firewall/nwsec_group.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -12,6 +14,7 @@
 #include "nic/gen/proto/hal/endpoint.pb.h"
 #include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
+#include "nic/gen/proto/hal/nat.pb.h"
 #include "nic/p4/iris/include/defines.h"
 
 uint32_t fte_base_test::vrf_id_ = 0;
@@ -19,10 +22,8 @@ uint32_t fte_base_test::l2seg_id_ = 0;
 uint32_t fte_base_test::intf_id_ = 0;
 uint32_t fte_base_test::nwsec_id_ = 0;
 uint32_t fte_base_test::nh_id_ = 0;
+uint32_t fte_base_test::pool_id_ = 0;
 fte::ctx_t fte_base_test::ctx_ = {};
-uint16_t fte_base_test::num_features_ = 0;
-fte::feature_state_t *fte_base_test::feature_state_ = NULL;
-
 
 hal_handle_t fte_base_test::add_vrf()
 {
@@ -226,28 +227,85 @@ hal_handle_t fte_base_test::add_route(hal_handle_t vrfh,
     return route_rsp.mutable_status()->route_handle();
 }
 
+hal_handle_t fte_base_test::add_nat_pool(hal_handle_t vrfh, uint32_t v4_addr, uint8_t prefix_len)
+{
+    hal_ret_t ret;
+    nat::NatPoolSpec spec;
+    nat::NatPoolResponse resp;
+
+    spec.mutable_key_or_handle()->mutable_pool_key()->mutable_vrf_kh()->set_vrf_handle(vrfh);
+    spec.mutable_key_or_handle()->mutable_pool_key()->set_pool_id(++pool_id_);
+    types::IPPrefix *prefix = spec.add_address()->mutable_prefix()->mutable_ipv4_subnet();
+    prefix->set_prefix_len(prefix_len);
+    prefix->mutable_address()->set_ip_af(types::IP_AF_INET);
+    prefix->mutable_address()->set_v4_addr(v4_addr);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nat_pool_create(spec, &resp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    return resp.mutable_pool_status()->pool_handle();
+}
+
+hal_handle_t fte_base_test::add_nat_mapping(hal_handle_t vrfh, uint32_t v4_addr,
+                                            hal_handle_t poolh, uint32_t *mapped_ip)
+{
+    hal_ret_t ret;
+    nat::NatMappingSpec spec;
+    nat::NatMappingResponse resp;
+
+    spec.mutable_key_or_handle()->mutable_svc()->mutable_vrf_kh()->set_vrf_handle(vrfh);
+    spec.mutable_key_or_handle()->mutable_svc()->mutable_ip_addr()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_key_or_handle()->mutable_svc()->mutable_ip_addr()->set_v4_addr(v4_addr);
+    spec.mutable_nat_pool()->set_pool_handle(poolh);
+    spec.set_bidir(true);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nat_mapping_create(spec, &resp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    if (mapped_ip) {
+        *mapped_ip = resp.mutable_status()->mapped_ip().v4_addr();
+    }
+
+    return resp.mutable_status()->handle();
+}
+
 hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
                                     uint8_t *pkt, size_t pkt_len)
 {
-    hal_ret_t ret;
-    fte::flow_t iflow_[fte::ctx_t::MAX_STAGES], rflow_[fte::ctx_t::MAX_STAGES];
+    // process the pkt in fte ctx
+    struct fn_ctx_t {
+        fte::ctx_t *ctx;
+        fte::cpu_rxhdr_t *cpu_rxhdr;
+        uint8_t *pkt;
+        size_t pkt_len;
+        hal_ret_t ret;
+    } fn_ctx = { &ctx_, cpu_rxhdr, pkt, pkt_len, HAL_RET_OK };
 
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    ret = ctx_.init(cpu_rxhdr, pkt, pkt_len, iflow_, rflow_, feature_state_, num_features_);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
-        hal::hal_cfg_db_close();
-        return ret;
-    }
+    fte::fte_execute(FTE_ID, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
+            fte::ctx_t *ctx = fn_ctx->ctx;
 
-    ret = ctx_.process();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
-        hal::hal_cfg_db_close();
-        return ret;
-    }
+            fte::flow_t iflow[fte::ctx_t::MAX_STAGES], rflow[fte::ctx_t::MAX_STAGES];
+            uint16_t num_features;
+            size_t fstate_size = fte::feature_state_size(&num_features);
+            fte::feature_state_t *feature_state = (fte::feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
 
-    return HAL_RET_OK;
+            hal::hal_cfg_db_open(hal::CFG_OP_READ);
+            fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, fn_ctx->pkt, fn_ctx->pkt_len,
+                                    iflow, rflow, feature_state, num_features);
+            if (fn_ctx->ret == HAL_RET_OK) {
+                fn_ctx->ret = ctx->process();
+            }
+            HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
+
+            hal::hal_cfg_db_close();
+        }, &fn_ctx );
+    
+    return fn_ctx.ret;
 }
 
 static inline ip_addr_t ep_ip(hal::ep_t *ep) {

@@ -64,7 +64,7 @@ public:
 
 hal_handle_t ftp_test::client_eph, ftp_test::server_eph;
 
-void ftp_test::ftp_session_create (void *ptr)
+TEST_F(ftp_test, ftp_session)
 {
     SessionGetRequest  req;
     SessionGetResponse rsp;
@@ -129,12 +129,6 @@ void ftp_test::ftp_session_create (void *ptr)
     EXPECT_EQ(rsp.status().alg(), nwsec::APP_SVC_FTP);
     EXPECT_TRUE(rsp.status().has_ftp_info());
     EXPECT_EQ(rsp.status().ftp_info().parse_error(), 0);
-}
-
-TEST_F(ftp_test, ftp_session)
-{
-    fte_softq_enqueue(FTE_ID, ftp_session_create, NULL);
-    sleep(1);
 }
 
 TEST_F(ftp_test, app_sess_force_delete) {

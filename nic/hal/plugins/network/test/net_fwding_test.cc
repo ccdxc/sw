@@ -52,7 +52,8 @@ public:
 hal_handle_t fwding_test::eph_, fwding_test::gwh_, fwding_test::vrfh_, fwding_test::nwh_,
     fwding_test::l2segh1_, fwding_test::l2segh2_, fwding_test::intfh1_, fwding_test::intfh2_;
 
-void fwding_test::route_lookup_test (void *ptr)
+
+TEST_F (fwding_test, route_lookup)
 {
     hal_ret_t ret;
 
@@ -80,10 +81,4 @@ void fwding_test::route_lookup_test (void *ptr)
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.lport, args.lport_id); 
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_sa_rewrite, 1);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_da_rewrite, 1);
-}
-
-TEST_F (fwding_test, route_lookup)
-{
-    fte_softq_enqueue(FTE_ID, route_lookup_test, NULL);
-    sleep(1);
 }

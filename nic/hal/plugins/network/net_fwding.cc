@@ -12,8 +12,8 @@
 #include "nic/hal/src/nw/route_acl.hpp"
 
 namespace hal {
-namespace net {
-
+namespace plugins {
+namespace network {
 
 static inline hal_ret_t
 update_rewrite_info(fte::ctx_t&ctx)
@@ -125,7 +125,7 @@ update_fwding_info(fte::ctx_t&ctx)
     } 
 
     if (dif == NULL) {
-        ret = route_lookup(&ctx.key(), &flowupd.fwding.dep,
+        ret = route_lookup(&ctx.get_key(), &flowupd.fwding.dep,
                            &flowupd.fwding.dif, &flowupd.fwding.dl2seg);
         dif = flowupd.fwding.dif;
         if (ret != HAL_RET_OK){
@@ -201,5 +201,6 @@ fwding_pre_stage_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
+} // namespace network
+} // namespace plugins
 } // namespace hal
-} // namespace net

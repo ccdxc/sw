@@ -45,10 +45,10 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
 
     // fte state to store the original vrf/ip/port for rflow
     nat_info_t *nat_info = (nat_info_t *)ctx.feature_state();
-    if (ctx.key().flow_type == FLOW_TYPE_V4) {
+    if (ctx.get_key().flow_type == FLOW_TYPE_V4) {
         src_addr_key.ip_addr.af = IP_AF_IPV4;
         dst_addr_key.ip_addr.af = IP_AF_IPV4;
-    } else if (ctx.key().flow_type == FLOW_TYPE_V6){
+    } else if (ctx.get_key().flow_type == FLOW_TYPE_V6){
         src_addr_key.ip_addr.af = IP_AF_IPV6;
         dst_addr_key.ip_addr.af = IP_AF_IPV6;
     } else {
@@ -56,40 +56,40 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
     }
 
     // snat 
-    src_addr_key.vrf_id = ctx.key().svrf_id;
-    src_addr_key.ip_addr.addr = ctx.key().sip;
+    src_addr_key.vrf_id = ctx.get_key().svrf_id;
+    src_addr_key.ip_addr.addr = ctx.get_key().sip;
     src_addr_entry = hal::utils::nat::addr_entry_get(&src_addr_key);
 
     // dnat
-    dst_addr_key.vrf_id = ctx.key().dvrf_id;
-    dst_addr_key.ip_addr.addr = ctx.key().dip;
+    dst_addr_key.vrf_id = ctx.get_key().dvrf_id;
+    dst_addr_key.ip_addr.addr = ctx.get_key().dip;
     dst_addr_entry = hal::utils::nat::addr_entry_get(&dst_addr_key);
 
     if (!src_addr_entry || !dst_addr_entry) {
-        const char *ctx_name = nat_acl_ctx_name(ctx.key().svrf_id);
+        const char *ctx_name = nat_acl_ctx_name(ctx.get_key().svrf_id);
         acl_ctx = acl::acl_get(ctx_name);
         if (acl_ctx == NULL) {
             HAL_TRACE_DEBUG("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
             ret = HAL_RET_ERR;
             goto fall_thro;
         }
-        acl_key.proto = ctx.key().proto;
-        acl_key.ip_src = ctx.key().sip.v4_addr;
-        acl_key.ip_dst = ctx.key().dip.v4_addr;
-        switch ( ctx.key().proto) {
+        acl_key.proto = ctx.get_key().proto;
+        acl_key.ip_src = ctx.get_key().sip.v4_addr;
+        acl_key.ip_dst = ctx.get_key().dip.v4_addr;
+        switch ( ctx.get_key().proto) {
         case types::IPPROTO_ICMP:
         case types::IPPROTO_ICMPV6:
-            acl_key.port_src =  ctx.key().icmp_id;
-            acl_key.port_dst = ((ctx.key().icmp_type << 8) |  ctx.key().icmp_code);
+            acl_key.port_src =  ctx.get_key().icmp_id;
+            acl_key.port_dst = ((ctx.get_key().icmp_type << 8) |  ctx.get_key().icmp_code);
             break;
         case types::IPPROTO_ESP:
-            acl_key.port_src = ctx.key().spi >> 16 & 0xFFFF;
-            acl_key.port_dst = ctx.key().spi & 0xFFFF;
+            acl_key.port_src = ctx.get_key().spi >> 16 & 0xFFFF;
+            acl_key.port_dst = ctx.get_key().spi & 0xFFFF;
             break;
         case types::IPPROTO_TCP:
         case types::IPPROTO_UDP:
-            acl_key.port_src = ctx.key().sport;
-            acl_key.port_dst = ctx.key().dport;
+            acl_key.port_src = ctx.get_key().sport;
+            acl_key.port_dst = ctx.get_key().dport;
             break;
         default:
             HAL_ASSERT(true);
@@ -142,14 +142,14 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
     }
 
     if (src_addr_entry) {
-        if (ctx.key().flow_type == FLOW_TYPE_V4) {
-            if (src_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
+        if (ctx.get_key().flow_type == FLOW_TYPE_V4) {
+            if (src_addr_entry->tgt_vrf_id != ctx.get_key().svrf_id) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, svrf_id, src_addr_entry->tgt_vrf_id);
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, src_addr_entry->tgt_vrf_id);
             }
             HEADER_SET_FLD(flowupd.header_rewrite, ipv4, sip, src_addr_entry->tgt_ip_addr.addr.v4_addr);
         } else {
-            if (src_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
+            if (src_addr_entry->tgt_vrf_id != ctx.get_key().svrf_id) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv6, svrf_id, src_addr_entry->tgt_vrf_id);
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, src_addr_entry->tgt_vrf_id);
             }
@@ -158,18 +158,18 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
 
         // Store the original info for rflow dnat
         nat_info->nat_dip.af = src_addr_key.ip_addr.af;
-        nat_info->nat_dip.addr = ctx.key().sip;
-        if (src_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
-            nat_info->nat_dvrf = ctx.key().svrf_id;
-            nat_info->nat_svrf = ctx.key().dvrf_id;
+        nat_info->nat_dip.addr = ctx.get_key().sip;
+        if (src_addr_entry->tgt_vrf_id != ctx.get_key().svrf_id) {
+            nat_info->nat_dvrf = ctx.get_key().svrf_id;
+            nat_info->nat_svrf = ctx.get_key().dvrf_id;
         }
 
         // TODO  port nat not supported yet
         // if (addr_entry->tgt_port) {
-        //     nat_info->nat_dport = ctx.key().sport;
-        //     if (ctx.key().proto == IPPROTO_TCP) {
+        //     nat_info->nat_dport = ctx.get_key().sport;
+        //     if (ctx.get_key().proto == IPPROTO_TCP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, tcp, sport, addr_entry->tgt_port);
-        //     } else (ctx.key().proto == IPPROTO_UDP) {
+        //     } else (ctx.get_key().proto == IPPROTO_UDP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, udp, sport, addr_entry->tgt_port);
         //     }
         // }
@@ -177,13 +177,13 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
     }
 
     if (dst_addr_entry) {
-        if (ctx.key().flow_type == FLOW_TYPE_V4) {
-            if (dst_addr_entry->tgt_vrf_id != ctx.key().dvrf_id) {
+        if (ctx.get_key().flow_type == FLOW_TYPE_V4) {
+            if (dst_addr_entry->tgt_vrf_id != ctx.get_key().dvrf_id) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dvrf_id, dst_addr_entry->tgt_vrf_id);
             }
             HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dip, dst_addr_entry->tgt_ip_addr.addr.v4_addr);
         } else {
-            if (dst_addr_entry->tgt_vrf_id != ctx.key().dvrf_id) {
+            if (dst_addr_entry->tgt_vrf_id != ctx.get_key().dvrf_id) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dvrf_id, dst_addr_entry->tgt_vrf_id);
             }
             HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dip, dst_addr_entry->tgt_ip_addr.addr.v6_addr);
@@ -191,17 +191,17 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
 
         // Store the original info for rflow snat
         nat_info->nat_sip.af = dst_addr_key.ip_addr.af;
-        nat_info->nat_sip.addr = ctx.key().dip;
-        if (dst_addr_entry->tgt_vrf_id != ctx.key().svrf_id) {
-            nat_info->nat_svrf = ctx.key().dvrf_id;
+        nat_info->nat_sip.addr = ctx.get_key().dip;
+        if (dst_addr_entry->tgt_vrf_id != ctx.get_key().svrf_id) {
+            nat_info->nat_svrf = ctx.get_key().dvrf_id;
         }
 
         // TODO port nat not supported yet
         // if (addr_entry->tgt_port) {
-        //     nat_info->nat_sport = ctx.key().dport;
-        //     if (ctx.key().proto == IPPROTO_TCP) {
+        //     nat_info->nat_sport = ctx.get_key().dport;
+        //     if (ctx.get_key().proto == IPPROTO_TCP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, tcp, dport, addr_entry->tgt_port);
-        //     } else if (ctx.key().proto == IPPROTO_UDP) {
+        //     } else if (ctx.get_key().proto == IPPROTO_UDP) {
         //         HEADER_SET_FLD(flowupd.header_rewrite, udp, dport, addr_entry->tgt_port);
         //     }
         // }
@@ -237,9 +237,9 @@ update_rflow_from_nat_info (fte::ctx_t& ctx)
     }
 
     if (nat_info->nat_sport) {
-        if (ctx.key().proto == IPPROTO_TCP) {
+        if (ctx.get_key().proto == IPPROTO_TCP) {
             HEADER_SET_FLD(flowupd.header_rewrite, tcp, sport, nat_info->nat_sport);
-        } else if (ctx.key().proto == IPPROTO_UDP) {
+        } else if (ctx.get_key().proto == IPPROTO_UDP) {
             HEADER_SET_FLD(flowupd.header_rewrite, udp, sport, nat_info->nat_sport);
         }
     }
@@ -260,9 +260,9 @@ update_rflow_from_nat_info (fte::ctx_t& ctx)
     }
 
     if (nat_info->nat_dport) {
-        if (ctx.key().proto == IPPROTO_TCP) {
+        if (ctx.get_key().proto == IPPROTO_TCP) {
             HEADER_SET_FLD(flowupd.header_rewrite, tcp, dport, nat_info->nat_dport);
-        } else if (ctx.key().proto == IPPROTO_UDP) {
+        } else if (ctx.get_key().proto == IPPROTO_UDP) {
             HEADER_SET_FLD(flowupd.header_rewrite, udp, dport, nat_info->nat_dport);
         }
     }

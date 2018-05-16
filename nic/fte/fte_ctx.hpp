@@ -610,6 +610,7 @@ protected:
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
+    hal::flow_key_t       rkey_; // rflow key
     bool                  vlan_tag_valid_;
 
     // pkts queued for tx

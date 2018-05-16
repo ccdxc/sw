@@ -36,12 +36,12 @@ protected:
     static hal_handle_t client_eph, server_eph;
 
 public:
-    static void fte_session_create(void *);
+    static void fte_session_create();
 };
 
 hal_handle_t fte_session_test::client_eph, fte_session_test::server_eph;
 
-void fte_session_test::fte_session_create(void *data)
+void fte_session_test::fte_session_create()
 {
     hal_ret_t  ret = HAL_RET_OK;
 
@@ -55,8 +55,8 @@ void* send_flow_miss(void *ptr)
     fte_session_test *test = (fte_session_test *)ptr;
 
     for (int i=0; i<10; i++) {
-       sleep(1);
-       fte_softq_enqueue(FTE_ID, test->fte_session_create, NULL);
+        sleep(1);
+        test->fte_session_create();
     }
 
     return NULL;

@@ -7,7 +7,9 @@
 #include "nic/include/pd_api.hpp"
 
 namespace hal {
-namespace net {
+namespace plugins {
+namespace network {
+
 
 static inline hal_ret_t
 update_flow_from_qos_spec(fte::ctx_t& ctx)
@@ -120,5 +122,6 @@ qos_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-}
-}
+} // namespace network
+} // namespace plugins
+} // namespace hal

@@ -60,7 +60,7 @@ public:
 
 hal_handle_t rtsp_test::client_eph, rtsp_test::server_eph;
 
-void rtsp_test::rtsp_session_create (void *ptr)
+TEST_F(rtsp_test, rtsp_session)
 {
     hal_ret_t ret;
 
@@ -130,8 +130,3 @@ void rtsp_test::rtsp_session_create (void *ptr)
     CHECK_DENY_UDP(server_eph, client_eph, 4589, 6257, "s:4589 <- c:6257");
 }
 
-TEST_F(rtsp_test, rtsp_session)
-{
-    fte_softq_enqueue(FTE_ID, rtsp_session_create, NULL);
-    sleep(1);
-}

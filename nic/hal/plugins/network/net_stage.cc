@@ -5,7 +5,8 @@
 #include "net_plugin.hpp"
 
 namespace hal {
-namespace net {
+namespace plugins {
+namespace network {
 
 fte::pipeline_action_t
 stage_exec(fte::ctx_t& ctx)
@@ -21,5 +22,7 @@ stage_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-} // namespace net
+} // namespace network
+} // namespace plugins
 } // namespace hal
+

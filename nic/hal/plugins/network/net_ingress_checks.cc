@@ -9,7 +9,9 @@
 #include "nic/include/pd_api.hpp"
 
 namespace hal {
-namespace net {
+namespace plugins {
+namespace network {
+
 
 static inline hal_ret_t
 update_src_if(fte::ctx_t&ctx)
@@ -66,5 +68,7 @@ ingress_checks_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
+} // namespace network
+} // namespace plugins
 } // namespace hal
-} // namespace net
+

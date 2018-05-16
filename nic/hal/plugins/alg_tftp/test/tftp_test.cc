@@ -63,7 +63,7 @@ public:
 
 hal_handle_t tftp_test::client_eph, tftp_test::server_eph;
 
-void tftp_test::tftp_session_create(void *ptr)
+TEST_F(tftp_test, tftp_session)
 {
     SessionGetRequest  req;
     SessionGetResponse rsp;
@@ -99,12 +99,6 @@ void tftp_test::tftp_session_create(void *ptr)
     EXPECT_TRUE(rsp.status().has_tftp_info());
     EXPECT_EQ(rsp.status().tftp_info().parse_error(), 0);
     EXPECT_EQ(rsp.status().tftp_info().unknown_opcode(), 1);
-}
-
-TEST_F(tftp_test, tftp_session)
-{
-    fte_softq_enqueue(FTE_ID, tftp_session_create, NULL);
-    sleep(1);
 }
 
 TEST_F(tftp_test, app_sess_force_delete) {

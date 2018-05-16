@@ -232,21 +232,11 @@ ctx_t::lookup_flow_objs()
 const hal::flow_key_t&
 ctx_t::get_key(hal::flow_role_t role) const
 {
-    flow_t *flow = NULL;
-
     if (role == hal::FLOW_ROLE_NONE) {
         role = role_;
     }
 
-    if (role == hal::FLOW_ROLE_INITIATOR) {
-        flow = iflow_[istage_];
-    } else {
-        flow = rflow_[rstage_];
-    }
-
-    HAL_ASSERT(flow != NULL);
-
-    return flow->key();
+    return (role == hal::FLOW_ROLE_INITIATOR) ? key_ : rkey_;
 }
 
 //------------------------------------------------------------------------------
@@ -294,6 +284,8 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
         key_ = hflow->config.key;
         swap_flow_objs();
     }
+
+    
 
     // Init feature sepcific session state
     sdk::lib::dllist_ctxt_t   *entry;
@@ -344,6 +336,10 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
 
         valid_rflow_ = true;
     }
+
+    if (valid_rflow_) {
+        rkey_ = rflow_[0]->key();
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -368,31 +364,68 @@ ctx_t::lookup_session()
     return HAL_RET_OK;
 }
 
+static inline void swap_flow_key(const hal::flow_key_t &key, hal::flow_key_t *rkey)
+{
+    rkey->flow_type = key.flow_type;
+    rkey->svrf_id = key.dvrf_id;
+    rkey->dvrf_id = key.svrf_id;
+    
+    if (key.flow_type == hal::FLOW_TYPE_L2) {
+        memcpy(rkey->smac, key.dmac, sizeof(rkey->smac));
+        memcpy(rkey->dmac, key.smac, sizeof(rkey->dmac));
+        rkey->ether_type = key.ether_type;
+    } else {
+        rkey->sip = key.dip;
+        rkey->dip = key.sip;
+        rkey->proto = key.proto;
+        switch (key.proto) {
+        case IP_PROTO_TCP:
+        case IP_PROTO_UDP:
+            rkey->sport = key.dport;
+            rkey->dport = key.sport;
+            break;
+        case IP_PROTO_ICMP:
+            rkey->icmp_type = key.icmp_type ? 0 : 8; // flip echo to reply
+            rkey->icmp_code = key.icmp_code;
+            rkey->icmp_id = key.icmp_id;
+            break;
+        case IP_PROTO_ICMPV6:
+            rkey->icmp_type = key.icmp_type == 128 ? 129 : 128; // flip echo to reply
+            rkey->icmp_code = key.icmp_code;
+            rkey->icmp_id = key.icmp_id;
+            break;
+        case IPPROTO_ESP:
+            rkey->spi = key.spi;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 //------------------------------------------------------------------------------
 // Creates new seesion for the pkt's flow
 //------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::create_session()
 {
-    hal::flow_key_t rkey = {};
-    hal::flow_key_t ikey = {};
     hal_ret_t ret;
 
     HAL_TRACE_DEBUG("fte: create session");
 
-    ikey = key_;
     for (int i = 0; i < MAX_STAGES; i++) {
-        iflow_[i]->set_key(ikey);
+        iflow_[i]->set_key(key_);
     }
 
     cleanup_hal_ = false;
 
     valid_iflow_ = true;
+
     // read rkey from spec
     if (protobuf_request()) {
         if (sess_spec_->has_responder_flow()) {
             ret = extract_flow_key_from_spec(sess_spec_->meta().vrf_id(),
-                                             &rkey,
+                                             &rkey_,
                                              sess_spec_->responder_flow().flow_key());
 
             if (ret != HAL_RET_OK) {
@@ -401,50 +434,21 @@ ctx_t::create_session()
             valid_rflow_ = true;
         }
     } else {
-        valid_rflow_ = true;
-        rkey.flow_type = key_.flow_type;
-        rkey.svrf_id = key_.dvrf_id;
-        rkey.dvrf_id = key_.svrf_id;
-
-        // TODO(goli) check valid ether types for rflow
-        if (key_.flow_type == hal::FLOW_TYPE_L2) {
-            memcpy(rkey.smac, key_.dmac, sizeof(rkey.smac));
-            memcpy(rkey.dmac, key_.smac, sizeof(rkey.dmac));
-            rkey.ether_type = key_.ether_type;
+        if (key_.flow_type == hal::FLOW_TYPE_L2 ||
+            key_.proto == IP_PROTO_TCP || key_.proto == IP_PROTO_UDP ||
+            key_.proto == IP_PROTO_ICMP || key_.proto == IP_PROTO_ICMPV6) {
+            swap_flow_key(key_, &rkey_);
+            valid_rflow_ = true;
         } else {
-            rkey.sip = key_.dip;
-            rkey.dip = key_.sip;
-            rkey.proto = key_.proto;
-            switch (key_.proto) {
-            case IP_PROTO_TCP:
-            case IP_PROTO_UDP:
-                rkey.sport = key_.dport;
-                rkey.dport = key_.sport;
-                break;
-            case IP_PROTO_ICMP:
-                rkey.icmp_type = key_.icmp_type ? 0 : 8; // flip echo to reply
-                rkey.icmp_code = key_.icmp_code;
-                rkey.icmp_id = key_.icmp_id;
-                break;
-            case IP_PROTO_ICMPV6:
-                rkey.icmp_type = key_.icmp_type == 128 ? 129 : 128; // flip echo to reply
-                rkey.icmp_code = key_.icmp_code;
-                rkey.icmp_id = key_.icmp_id;
-                break;
-            case IPPROTO_ESP:
-                rkey.spi = key_.spi;
-            default:
-                valid_rflow_ = false;
-                break;
-            }
+            valid_rflow_ = false;
         }
     }
 
     if (valid_rflow_) {
-        rkey.dir = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
+        rkey_.dir = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
             FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
         for (int i = 0; i < MAX_STAGES; i++) {
-            rflow_[i]->set_key(rkey);
+            rflow_[i]->set_key(rkey_);
         }
     }
 
@@ -691,18 +695,19 @@ hal_ret_t
 ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& header)
 {
     ipvx_addr_t dip = {};
+    hal::flow_key_t *key = (role == hal::FLOW_ROLE_INITIATOR) ? &key_ : &rkey_;
 
     if (header.valid_flds.dvrf_id) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-            key_.dvrf_id = header.ipv4.dvrf_id;
+            key->dvrf_id = header.ipv4.dvrf_id;
         } else {
-            key_.dvrf_id = header.ipv6.dvrf_id;
+            key->dvrf_id = header.ipv6.dvrf_id;
         }
 
-        dvrf_ =  hal::vrf_lookup_by_id(key_.dvrf_id);
+        dvrf_ =  hal::vrf_lookup_by_id(key->dvrf_id);
 
         if (dvrf_ == NULL) {
-            HAL_TRACE_ERR("DNAT vrf not found vrf={}", key_.dvrf_id);
+            HAL_TRACE_ERR("DNAT vrf not found vrf={}", key->dvrf_id);
             return HAL_RET_VRF_NOT_FOUND;
         }
     }
@@ -720,15 +725,13 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
         }
 
         if (!this->protobuf_request()) {
-            key_.dip = dip;
+            key->dip = dip;
         }
 
     } else if (dep_ == NULL && header.valid_flds.dmac && sl2seg_ != NULL) {
         /* L2 DSR - lookup EP using mac */
         dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id,
                                       header.ether.dmac.ether_addr_octet);
-    } else {
-        return HAL_RET_OK;
     }
 
     if (dep_) {
@@ -739,17 +742,20 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     }
 
     // If we are doing dnat on iflow, update the rflow's key
-    if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_ &&  header.valid_flds.dip) {
-        hal::flow_key_t rkey = {};
+    if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_) {
+        // update ctx rkey
+        if (!this->protobuf_request()) {
+            if (header.valid_flds.dip) 
+                rkey_.sip = key_.dip;
+            if (header.valid_flds.dvrf_id)
+                rkey_.svrf_id = key_.dvrf_id;
+        }
+        rkey_.dir = (dep_ && dep_->ep_flags & EP_FLAGS_LOCAL) ?
+            FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
+
+        // update rflow key
         for (int i = 0; i < MAX_STAGES; i++) {
-            rkey = rflow_[i]->key();
-            if (!this->protobuf_request()) {
-                rkey.sip = dip;
-                rkey.svrf_id = dvrf_->vrf_id;
-            }
-            rkey.dir = (dep_ && dep_->ep_flags & EP_FLAGS_LOCAL) ?
-                FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
-            rflow_[i]->set_key(rkey);
+            rflow_[i]->set_key(rkey_);
         }
     }
 
@@ -762,41 +768,46 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 hal_ret_t
 ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& header)
 {
+    hal::flow_key_t *key = (role == hal::FLOW_ROLE_INITIATOR) ? &key_ : &rkey_;
+
     if (this->protobuf_request()) {
         return HAL_RET_OK;
     }
 
     if (header.valid_flds.svrf_id) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-            key_.svrf_id = header.ipv4.svrf_id;
+            key->svrf_id = header.ipv4.svrf_id;
         } else {
-            key_.svrf_id = header.ipv6.svrf_id;
+            key->svrf_id = header.ipv6.svrf_id;
         }
 
-        svrf_ =  hal::vrf_lookup_by_id(key_.svrf_id);
+        svrf_ =  hal::vrf_lookup_by_id(key->svrf_id);
 
         if (svrf_ == NULL) {
-            HAL_TRACE_ERR("SNAT vrf not found vrf={}", key_.svrf_id);
+            HAL_TRACE_ERR("SNAT vrf not found vrf={}", key->svrf_id);
             return HAL_RET_VRF_NOT_FOUND;
         }
     }
 
     if (header.valid_flds.sip) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-            key_.sip.v4_addr = header.ipv4.sip;
+            key->sip.v4_addr = header.ipv4.sip;
         } else {
-            key_.sip.v6_addr = header.ipv6.sip;
+            key->sip.v6_addr = header.ipv6.sip;
         }
     }
 
     // If we are doing snat on iflow, update the rflow's key
     if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_) {
-        hal::flow_key_t rkey = {};
+        // update ctx rkey
+        if (header.valid_flds.sip)
+            rkey_.dip = key_.sip;
+        if (header.valid_flds.svrf_id) 
+            rkey_.dvrf_id = key_.svrf_id;
+
+        // update rflow key
         for (int i = 0; i < MAX_STAGES; i++) {
-            rkey = rflow_[i]->key();
-            rkey.dip = key_.sip;
-            rkey.dvrf_id = svrf_->vrf_id;
-            rflow_[i]->set_key(rkey);
+            rflow_[i]->set_key(rkey_);
         }
     }
 

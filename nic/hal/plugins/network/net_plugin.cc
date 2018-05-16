@@ -5,7 +5,8 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
 
 namespace hal {
-namespace net {
+namespace plugins {
+namespace network {
 
 //------------------------------------------------------------------------------
 // Network plugin
@@ -38,5 +39,6 @@ extern "C" void network_exit() {
 }
 
 
+}
 }
 }

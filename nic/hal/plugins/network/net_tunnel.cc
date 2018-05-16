@@ -8,7 +8,8 @@
 #include <net/ethernet.h>
 
 namespace hal {
-namespace net {
+namespace plugins {
+namespace network {
 
 static inline hal_ret_t
 update_tunnel_info(fte::ctx_t&ctx)
@@ -51,5 +52,6 @@ tunnel_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-} // namespace net
-} // namesapce hal
+} // namespace network
+} // namespace plugins
+} // namespace hal

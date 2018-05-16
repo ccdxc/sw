@@ -38,6 +38,11 @@ public:
 
     static hal_handle_t add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_rule_t> &rules);
 
+    static hal_handle_t add_nat_pool(hal_handle_t vrfh,
+                                     uint32_t v4_addr, uint8_t prefix_len);
+
+    static hal_handle_t add_nat_mapping(hal_handle_t vrfh, uint32_t v4_addr,
+                                        hal_handle_t poolh, uint32_t *mapped_ip);
 
     static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len);
     static hal_ret_t inject_eth_pkt(const fte::lifqid_t &lifq,
@@ -45,6 +50,7 @@ public:
                                     Tins::EthernetII &eth);
     static hal_ret_t inject_ipv4_pkt(const fte::lifqid_t &lifq,
                                      hal_handle_t dep, hal_handle_t sep, Tins::PDU &l4pdu);
+
 
 protected:
     fte_base_test() {}
@@ -60,18 +66,11 @@ protected:
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
         hal_base_test::SetUpTestCase();
-
-        // init fte feature state memory
-        size_t fstate_size = fte::feature_state_size(&num_features_);
-        feature_state_ = (fte::feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
-
     }
     static fte::ctx_t ctx_;
 
 private:
-    static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_, nh_id_;
-    static uint16_t num_features_;
-    static fte::feature_state_t *feature_state_;
+    static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_, nh_id_, pool_id_;
 };
 
 #define CHECK_ALLOW_TCP(dep, sep, dport, sport, msg) {                  \
