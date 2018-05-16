@@ -54,7 +54,7 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://networking/packets/GetVlanId
             tcp:
                 flags: ack
 
@@ -95,6 +95,8 @@ packets:
                 sessionid : const/1
                 ver       : const/2
                 gra       : const/3
+                vlan      : callback://networking/packets/GetErspanVlanId
+                cos       : callback://networking/packets/GetErspanVlanCos
 
 buffers:
     - buffer:

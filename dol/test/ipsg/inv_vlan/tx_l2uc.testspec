@@ -51,7 +51,7 @@ packets:
     - packet:
         id          : PKT1 # Base packet
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : 
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             qtag    :
@@ -97,6 +97,8 @@ packets:
                 sessionid : const/1
                 ver       : const/2
                 gra       : const/3
+                vlan      : ref://testcase/config/src/tenant/bhseg/vlan_id
+                cos       : const/7
 
 buffers:
     - buffer:

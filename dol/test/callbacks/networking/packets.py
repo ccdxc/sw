@@ -434,3 +434,15 @@ def GetExpectedSpanPacket(testcase, args = None):
         return testcase.packets.Get('SPAN_PKT')
 
     return None
+
+def GetErspanVlanId(testcase, packet):
+    if __get_packet_encap_vlan(testcase, testcase.config.src) is None:
+        return 0
+    else:
+        return GetVlanId(testcase, packet)
+
+def GetErspanVlanCos(testcase, packet):
+    if __get_packet_encap_vlan(testcase, testcase.config.src) is None:
+        return 0
+    else:
+        return 7

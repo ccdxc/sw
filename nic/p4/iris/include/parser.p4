@@ -83,13 +83,11 @@ metadata parser_ohi_t ohi;
 
 #define PARSE_ETHERTYPE                                    \
         ETHERTYPE_VLAN : parse_vlan;                       \
-        ETHERTYPE_MPLS : parse_mpls;                       \
         ETHERTYPE_IPV4 : parse_ipv4;                       \
         ETHERTYPE_IPV6 : parse_ipv6;                       \
         default: ingress
 
 #define PARSE_ETHERTYPE_MINUS_VLAN                         \
-        ETHERTYPE_MPLS : parse_mpls;                       \
         ETHERTYPE_IPV4 : parse_ipv4;                       \
         ETHERTYPE_IPV6 : parse_ipv6;                       \
         default: ingress
@@ -385,8 +383,9 @@ parser parse_i2e_metadata {
 @pragma xgress egress
 @pragma allow_set_meta control_metadata.span_copy
 parser parse_span_copy_set {
-    // This state is created as span_copy is used as predicate (goes into flit0)
-    // while i2e_metadata can go into flit1 which causes problem (go back in flits) for parser
+    // This state is created as span_copy is used as predicate (goes into
+    // flit0) while i2e_metadata can go into flit1 which causes problem
+    // (go back in flits) for parser
     set_metadata(control_metadata.span_copy, 1);
     return parse_i2e_metadata1;
 }
@@ -399,8 +398,19 @@ parser parse_span_copy {
 }
 
 @pragma xgress egress
+@pragma capture_payload_offset
 parser parse_ethernet_span_copy {
     extract(ethernet);
+    return select(latest.etherType) {
+        ETHERTYPE_VLAN : parse_vlan_span_copy;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+@pragma dont_capture_payload_offset
+parser parse_vlan_span_copy {
+    extract(vlan_tag);
     return ingress;
 }
 
@@ -661,7 +671,7 @@ field_list_calculation inner_ipv6_roce_icrc {
 
 calculated_field parser_metadata.icrc {
     // Header instance specified within if condition that checks validity
-    // of the header, will be used to trigger icrc calculation. In below 
+    // of the header, will be used to trigger icrc calculation. In below
     // case "roce_bth" header instance will be used to enable icrc.
     // In the parse state where roce_bth becomes valid, icrc computation
     // is enabled.
@@ -682,7 +692,7 @@ parser parse_ipv4_frag {
     extract(ipv4);
     set_metadata(ohi.ipv4_options_blob___hdr_len, (ipv4.ihl << 2) - 20);
     // ipv6_options_len is set to header-size - 20 because
-    // ipv6_options_len is used to compute icrc_len and 
+    // ipv6_options_len is used to compute icrc_len and
     // in parse_udp 28 bytes are added. 8 Extra bytes because
     // icrc include 8 bytes of 1's
     set_metadata(parser_metadata.ipv6_options_len, (ipv4.ihl << 2) - 20);
@@ -697,7 +707,7 @@ parser parse_inner_ipv4_frag {
     extract(inner_ipv4);
     set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (inner_ipv4.ihl << 2) - 20);
     // inner_ipv6_options_len is set to header-size - 20 because
-    // inner_ipv6_options_len is used to compute icrc_len and 
+    // inner_ipv6_options_len is used to compute icrc_len and
     // in parse_udp 28 bytes are added. 8 Extra bytes because
     // icrc include 8 bytes of 1's
     set_metadata(parser_metadata.inner_ipv6_options_len, (inner_ipv4.ihl << 2) - 20);
@@ -712,7 +722,7 @@ parser parse_base_ipv4 {
     extract(ipv4);
     set_metadata(ohi.ipv4_options_blob___hdr_len, (ipv4.ihl << 2) - 20);
     // ipv6_options_len is set to header-size - 20 because
-    // ipv6_options_len is used to compute icrc_len and 
+    // ipv6_options_len is used to compute icrc_len and
     // in parse_udp 28 bytes are added. 8 Extra bytes because
     // icrc include 8 bytes of 1's
     set_metadata(parser_metadata.ipv6_options_len, (ipv4.ihl << 2) - 20);
@@ -797,7 +807,7 @@ parser parse_ipv4_options {
 #endif
 
 parser parse_ipv4_options_blob {
-    // Separate state is created to set options_seen flag 
+    // Separate state is created to set options_seen flag
     // Otherwise options can be extracted blindly.. if they happen to be 0 len
     // hw (deparser) can handle it
 
@@ -938,7 +948,7 @@ parser parse_inner_ipv4_tcp {
     return parse_tcp_ipv4;
 }
 
-@pragma header_ordering v6_generic 
+@pragma header_ordering v6_generic
 parser parse_ipv6_extn_hdrs {
     set_metadata(l3_metadata.ip_option_seen, 1);
     // To store back into OHI payloadLen - Sum of option hdr len,
@@ -1129,7 +1139,7 @@ parser parse_tcp_ipv4 {
 }
 
 @pragma dont_advance_packet
-@pragma capture_payload_offset 
+@pragma capture_payload_offset
 parser parse_tcp_options_blob {
     set_metadata(parser_metadata.parse_tcp_counter, parser_metadata.parse_tcp_counter + 0);
     extract(tcp_options_blob);
@@ -1262,7 +1272,7 @@ parser parse_tcp_unknown_option {
     }
 }
 
-@pragma dont_capture_payload_offset 
+@pragma dont_capture_payload_offset
 parser parse_tcp_option_error {
     set_metadata(control_metadata.parse_tcp_option_error, 1);
     return ingress;
@@ -1652,7 +1662,7 @@ parser parse_inner_ipv4_options {
 #endif
 
 parser parse_inner_ipv4_options_blob {
-    // Separate state is created to set options_seen flag 
+    // Separate state is created to set options_seen flag
     // Otherwise options can be extracted blindly.. if they happen to be 0 len
     // hw (deparser) can handle it
 
@@ -1873,7 +1883,7 @@ parser parse_inner_roce_v2_pre {
 
 @pragma deparse_only
 parser parse_dummy {
-    // This state is added as a work-around until NCC has a fix for handling 
+    // This state is added as a work-around until NCC has a fix for handling
     // hdr unions and same set_metadata from multiple states while computing topo-graph
     return select (current(0,16)) {
         default: ingress;

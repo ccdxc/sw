@@ -36,9 +36,9 @@ encap_vxlan:
   phvwr       p.{udp_srcPort...udp_checksum}, r2
 
   // set inner_ethernet_valid, vxlan_valid and udp_valid
-  .assert(offsetof(p, inner_ethernet_valid) - offsetof(p, vxlan_valid) == 4)
+  .assert(offsetof(p, inner_ethernet_valid) - offsetof(p, vxlan_valid) == 1)
   .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 3)
-  phvwrmi     p.{inner_ethernet_valid...udp_valid}, 0xFF, 0x89
+  phvwrmi     p.{inner_ethernet_valid...udp_valid}, 0x1F, 0x19
 
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
@@ -84,8 +84,7 @@ encap_erspan:
                   p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
   phvwri      p.{gre_C...gre_proto}, GRE_PROTO_ERSPAN_T3
-  phvwr       p.{erspan_t3_version,erspan_t3_vlan}, 0x2000
-  phvwr       p.{erspan_t3_cos,erspan_t3_bso}, 0
+  phvwrpair   p.erspan_t3_version, 0x2, p.erspan_t3_bso, 0
 #ifndef CAPRI_IGNORE_TIMESTAMP
   phvwr       p.erspan_t3_timestamp, r6
 #endif

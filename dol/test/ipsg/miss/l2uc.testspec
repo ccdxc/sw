@@ -92,6 +92,8 @@ packets:
                 sessionid : const/1
                 ver       : const/2
                 gra       : const/3
+                vlan      : callback://networking/packets/GetErspanVlanId
+                cos       : callback://networking/packets/GetErspanVlanCos
 
 trigger:
     packets:

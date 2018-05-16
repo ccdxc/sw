@@ -54,7 +54,7 @@ class spanSessionData:
                 (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "UplinkPc1", 0),
                 ],
             "XSPAN2_UPLINK_PC_ING_EG_SNAP32": [
-                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 36), 
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 36),
                 (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink2", 32),
                 (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 32),
                 (1, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink1", 32),
@@ -580,7 +580,7 @@ def setup_span(infra, module, case):
             else:
                 tnl = data.getCurErspanSession(count)
             data.setErspanSession(id - 1, tnl)
-            logger.info("Setting SpanSession %s(%d) Dst: %s Src: %s " % (sessname, id - 1, tnl.rtep.get(), tnl.ltep.get())) 
+            logger.info("Setting SpanSession %s(%d) Dst: %s Src: %s " % (sessname, id - 1, tnl.rtep.get(), tnl.ltep.get()))
             sess.erspan_dest = tnl.GetDestIp()
             sess.erspan_src = tnl.GetSrcIp()
             sess.tenant = tnl.tenant
@@ -596,7 +596,7 @@ def setup_span(infra, module, case):
                 data.setLocalSession(lspancount, id, direc, spantype, pkt, pktlen, lobj)
             else:
                 if lspancount <= len(eps):
-                    dintf = eps[lspancount - 1].intf 
+                    dintf = eps[lspancount - 1].intf
                     data.addLocalEpDest(eps[lspancount - 1])
                 else:
                     dintf = eps[lspancount % len(eps)]

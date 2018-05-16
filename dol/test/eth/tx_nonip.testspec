@@ -64,6 +64,8 @@ packets:
                 sessionid : const/1
                 ver       : const/2
                 gra       : const/3
+                vlan      : ref://testcase/config/src/endpoint/intf/encap_vlan_id
+                cos       : const/7
 
 buffers:
     - buffer:

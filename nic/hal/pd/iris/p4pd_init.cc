@@ -135,12 +135,10 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
-    key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
     mask.entry_inactive_input_mapping_mask = 0xFF;
-    mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
@@ -168,14 +166,12 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
-    key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
     mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
-    mask.mpls_0_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
@@ -201,14 +197,12 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
-    key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
     mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
-    mask.mpls_0_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
@@ -250,14 +244,12 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
-    key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
     mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
-    mask.mpls_0_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
@@ -282,14 +274,12 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
-    key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
     mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
-    mask.mpls_0_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
@@ -315,14 +305,12 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
-    key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
     mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
-    mask.mpls_0_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action

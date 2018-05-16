@@ -126,6 +126,9 @@ packets:
                 ver       : const/2
                 gra       : 0x3
                 t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=ERSPAN_PKT1,basepkt=PKT1
+                vlan      : ref://testcase/config/src/segment/vlan_id
+                cos       : 7
+
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT1,basepkt=PKT1
 
@@ -153,6 +156,8 @@ packets:
                 ver       : const/2
                 gra       : 0x3
                 t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=ERSPAN_PKT2,basepkt=PKT1
+                vlan      : ref://testcase/config/src/segment/vlan_id
+                cos       : 7
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT2,basepkt=PKT1
 
@@ -180,6 +185,8 @@ packets:
                 ver       : const/2
                 gra       : 0x3
                 t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=ERSPAN_PKT3,basepkt=PKT1
+                vlan      : ref://testcase/config/src/segment/vlan_id
+                cos       : 7
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT3,basepkt=PKT1
 
@@ -209,6 +216,8 @@ packets:
                 gra       : 0x3
                 d         : 1
                 t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
+                vlan      : ref://testcase/config/src/segment/vlan_id
+                cos       : 7
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
 
@@ -237,6 +246,8 @@ packets:
                 gra       : 0x3
                 d         : 1
                 t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
+                vlan      : ref://testcase/config/src/segment/vlan_id
+                cos       : 7
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
 
@@ -265,6 +276,8 @@ packets:
                 gra       : 0x3
                 d         : 1
                 t         : callback://telemetry/callbacks/GetErspanTruncateBit/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
+                vlan      : ref://testcase/config/src/segment/vlan_id
+                cos       : 7
             payload :
                 data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
 
