@@ -48,8 +48,8 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/route_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/route_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/nat_pool_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nat_pool_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/nat_policy_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nat_policy_test.xml"
-	#$(CMD_OPTS) ./nic/hal/test/gtests/nwsec_prof_upgrade_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_prof_upgrade_test.xml"
-	#$(CMD_OPTS) ./nic/hal/test/gtests/vrf_upgrade_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/vrf_upgrade_test.xml"
+	$(CMD_OPTS) ./nic/hal/test/gtests/nwsec_prof_upgrade_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_prof_upgrade_test.xml"
+	$(CMD_OPTS) ./nic/hal/test/gtests/vrf_upgrade_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/vrf_upgrade_test.xml"
 	@# FTE Plugins
 	$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"

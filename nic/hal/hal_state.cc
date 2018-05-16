@@ -50,7 +50,7 @@
 #define HAL_STATE_STORE                         "h2s"
 #define HAL_STATE_STORE_SIZE                    0x20000000     // 500 MB
 #define HAL_SERIALIZED_STATE_STORE              "h3s"
-#define HAL_SERIALIZED_STATE_STORE_SIZE         0x20000000     // 500 MB
+#define HAL_SERIALIZED_STATE_STORE_SIZE         0x20000000/100 // 5 MB
 #define HAL_STATE_STORE_VADDR                   0x400000000    // starting from 16G
 #define HAL_SERIALIZED_STATE_STORE_VADDR        0x480000000    // starting from 18G
 #define HAL_STATE_OBJ                           "halstate"
@@ -1412,6 +1412,7 @@ hal_state::preserve_state(void)
                         (void *)HAL_SERIALIZED_STATE_STORE_VADDR);
     if (g_h3s_shmmgr == NULL) {
         HAL_TRACE_ERR("Failed to create HAL serialized state store");
+        HAL_ASSERT(0);
         return 0;
     }
 
