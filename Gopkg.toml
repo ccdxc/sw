@@ -18,7 +18,9 @@ required = ["github.com/GeertJohan/go.rice",
             "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway",
             "github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger",
             "golang.org/x/tools/cmd/goimports",
-            "github.com/haya14busa/gopkgs/cmd/gopkgs"]
+            "github.com/haya14busa/gopkgs/cmd/gopkgs",
+            "github.com/cpuguy83/go-md2man",
+            "github.com/russross/blackfriday",]
 
 [[constraint]]
   branch = "master"
@@ -267,7 +269,15 @@ required = ["github.com/GeertJohan/go.rice",
     name = "github.com/pensando/grpc-gateway"
     unused-packages = false
     non-go = false
+  [[prune.project]]
+    name = "github.com/spf13/cobra"
+    unused-packages = false
+
 
 [[constraint]]
   name = "github.com/patrickmn/go-cache"
   version = "2.1.0"
+
+[[constraint]]
+  name = "github.com/cpuguy83/go-md2man"
+  version = "1.0.8"

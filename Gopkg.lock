@@ -285,6 +285,15 @@
   version = "v3"
 
 [[projects]]
+  name = "github.com/cpuguy83/go-md2man"
+  packages = [
+    ".",
+    "md2man"
+  ]
+  revision = "20f5889cbdc3c73dbd2862796665e7c465ade7d1"
+  version = "v1.0.8"
+
+[[projects]]
   branch = "master"
   name = "github.com/daaku/go.zipexe"
   packages = ["."]
@@ -984,7 +993,7 @@
     "third_party/googleapis/google/api",
     "utilities"
   ]
-  revision = "f73a9cb2c49c426c4f6b8cb9aec7da98f2029e52"
+  revision = "e33155b27614f49f8d9055f83a2d7a405b4c7bad"
 
 [[projects]]
   branch = "master"
@@ -1063,6 +1072,12 @@
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
   revision = "e181e095bae94582363434144c61a9653aff6e50"
+
+[[projects]]
+  name = "github.com/russross/blackfriday"
+  packages = ["."]
+  revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
+  version = "v1.5.1"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -1643,6 +1658,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ee88e201ae0f0554764d739faa52640b6d00e9802a5cd80a844950e91e941fff"
+  inputs-digest = "0ce680b8d2e7f92f274ddd6f0e36f233d081d6492edebaa90a4ca35ee0364f33"
   solver-name = "gps-cdcl"
   solver-version = 1
