@@ -180,6 +180,10 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_r
         port_range->set_port_low(rule.app.dport_low);
         port_range->set_port_high(rule.app.dport_high);
 
+        if (rule.app.proto) {
+            match->set_protocol((types::IPProtocol)rule.app.proto);
+        }
+
         if (rule.app.alg) {
             nwsec::AppData *app_data = rule_spec->mutable_action()->add_app_data();
             app_data->set_alg(rule.app.alg);

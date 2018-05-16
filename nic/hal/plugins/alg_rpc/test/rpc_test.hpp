@@ -48,7 +48,7 @@ protected:
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
-                        app: { proto:IPPROTO_TCP,
+                        app: { proto:0,
                                dport_low: 0, dport_high: 0xFFFF,
                                alg: nwsec::APP_SVC_NONE} },
         };

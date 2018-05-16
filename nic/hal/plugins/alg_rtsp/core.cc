@@ -61,6 +61,7 @@ add_expected_flows(alg_utils::app_session_t *app_sess, rtsp_transport_t *spec)
     // TODO (goli) - revisit - may be we need to preserve the flow direction
     key.dir = 0;
     key.svrf_id = rtsp_sess->sess_key.vrf_id;
+    key.dvrf_id = rtsp_sess->sess_key.vrf_id;
     key.flow_type = spec->client_ip.af == IP_AF_IPV6 ?
         hal::FLOW_TYPE_V6 : hal::FLOW_TYPE_V4;
     key.sip = spec->server_ip.addr;

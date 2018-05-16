@@ -47,6 +47,12 @@ protected:
                         app: { proto:IPPROTO_TCP,
                                dport_low: 0, dport_high: 0xFFFF,
                                alg: nwsec::APP_SVC_NONE} },
+            v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
+                        from: {},
+                        to: {},
+                        app: { proto:0,
+                               dport_low: 0, dport_high: 0xFFFF,
+                               alg: nwsec::APP_SVC_NONE} },
         };
 
         add_nwsec_policy(vrfh, rules);
