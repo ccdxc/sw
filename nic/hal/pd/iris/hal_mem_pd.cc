@@ -357,7 +357,7 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((ipseccb_decrypt_hwid_ht_ != NULL), false);
 
     HAL_HT_CREATE("ipsec-sa-hw-id", ipsec_sa_hwid_ht_,
-                  HAL_MAX_HW_IPSECCBS >> 1,
+                  HAL_MAX_HW_IPSEC_SA >> 1,
                   hal::pd::ipsec_pd_get_hw_key_func,
                   hal::pd::ipsec_pd_compute_hw_hash_func,
                   hal::pd::ipsec_pd_compare_hw_key_func);
