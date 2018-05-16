@@ -1329,8 +1329,8 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     HAL_TRACE_DEBUG("cqwqe_size: {} num_cq_wqes: {}", cqwqe_size, num_cq_wqes);
 
     memset(&cqcb, 0, sizeof(cqcb_t));
-    // EQ does not need scheduling, so set one less (meaning #rings as zero)
-    cqcb.ring_header.total_rings = MAX_CQ_RINGS - 1;
+    cqcb.ring_header.total_rings = MAX_CQ_RINGS;
+    cqcb.ring_header.host_rings = MAX_CQ_HOST_RINGS;
     int32_t cq_pt_base = rdma_mr_pt_base_get(lif, spec.cq_lkey());
     cqcb.pt_base_addr =
         rdma_pt_addr_get(lif, cq_pt_base) >> PT_BASE_ADDR_SHIFT;

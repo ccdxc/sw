@@ -1286,6 +1286,7 @@ typedef struct srqcb_s {
 
 #define CQ_RING_ID  RING_ID_0
 #define MAX_CQ_RINGS 1
+#define MAX_CQ_HOST_RINGS 1
 
 typedef struct cqcb_s {
     uint8_t   rsvd5[12];
