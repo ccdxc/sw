@@ -1,0 +1,5 @@
+# Ignore everything in this directory.
+*
+# expect the below files. 
+!.gitignore
+!Dockerfile
