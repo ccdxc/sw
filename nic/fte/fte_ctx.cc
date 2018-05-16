@@ -458,6 +458,33 @@ ctx_t::create_session()
 }
 
 //------------------------------------------------------------------------------
+// Add FTE Flow logging information in logging infra
+//------------------------------------------------------------------------------
+void
+ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl, 
+                        fwlog::FWEvent *fwlog) {
+    if (logger_ == NULL)
+        return;
+
+    HAL_TRACE_DEBUG("FWEvent size: {}", fwlog->ByteSizeLong());
+    fwlog->set_source_vrf(key.svrf_id);
+    fwlog->set_dest_vrf(key.dvrf_id);
+    if (key.flow_type == hal::FLOW_TYPE_V4) {
+        fwlog->set_sipv4(key.sip.v4_addr);
+        fwlog->set_dipv4(key.dip.v4_addr);
+    } 
+    fwlog->set_sport(key.sport);
+    fwlog->set_dport(key.dport);
+    fwlog->set_ipprot(key.proto);
+    fwlog->set_direction(key.dir);
+    if (pipeline_event() == FTE_SESSION_DELETE)
+        fwlog->set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
+    fwlog->set_session_id(sess_hdl); 
+
+    logger_->fw_log(*fwlog);
+}
+
+//------------------------------------------------------------------------------
 // Create/update session and flow table entries in hardware
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -648,6 +675,7 @@ ctx_t::update_flow_table()
     session_args.spec        = sess_spec_;
     session_args.rsp         = sess_resp_;
     session_args.valid_rflow = valid_rflow_;
+    session_handle           = (session_)?session_->hal_handle:HAL_HANDLE_INVALID;
 
     if (hal_cleanup() == true) {
         // Cleanup session if hal_cleanup is set
@@ -681,6 +709,15 @@ ctx_t::update_flow_table()
         return ret;
     }
 
+    uint8_t istage = 0, rstage = 0;
+    add_flow_logging(key_, session_handle, &iflow_log_[istage]);
+    if (++istage <= istage_)
+        add_flow_logging(key_, session_handle, &iflow_log_[istage]);
+
+    add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
+    if (++rstage <= rstage_)
+        add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
+        
     if (protobuf_request()) {
         sess_resp_->mutable_status()->set_session_handle(session_handle);
     }
@@ -883,7 +920,7 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
     if (num_features) {
         feature_state_init(feature_state_, num_features_);
     }
-
+ 
     return HAL_RET_OK;
 }
 
@@ -910,7 +947,6 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                     cpu_rxhdr->lkp_dir, cpu_rxhdr->lkp_inst, cpu_rxhdr->lkp_type,
                     cpu_rxhdr->flags, cpu_rxhdr->l2_offset, cpu_rxhdr->l3_offset,
                     cpu_rxhdr->l4_offset, cpu_rxhdr->payload_offset);
-
 
     lifqid_t lifq =  {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
@@ -1338,6 +1374,12 @@ ctx_t::process()
 {
     hal_ret_t ret;
 
+    // We are not in FTE thread for GET
+    // and we do not want to log the get
+    if (!ipc_logging_disable() &&
+        pipeline_event() != FTE_SESSION_GET)
+        logger_  = get_current_ipc_logger_inst();
+ 
     // execute the pipeline
     ret = execute_pipeline(*this);
     if (ret != HAL_RET_OK) {

@@ -32,5 +32,7 @@ cc_test(
     copts = sdk_copts,
     linkopts =  ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     tags = ["gtests"],
-    deps =  ["//nic/fte:fte_base_test"] + [":alg_rtsp"] + gl_deps_list + test_deps_list, 
+    deps =  ["//nic/fte:fte_base_test",
+             ":alg_rtsp",
+            ] + gl_deps_list + test_deps_list, 
 )

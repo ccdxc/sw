@@ -35,6 +35,7 @@ public:
                        uint8_t* pkt, size_t pkt_len);
     hal_ret_t softq_enqueue(softq_fn_t fn, void *data);
     uint8_t get_id() const {return id_;};
+    ipc_logger *get_ipc_logger() const { return logger_; } 
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -46,6 +47,7 @@ private:
     uint16_t                num_features_;
     flow_t                 *iflow_;
     flow_t                 *rflow_;
+    ipc_logger             *logger_;
 
     void process_arq();
     void process_softq();
@@ -103,6 +105,21 @@ fte_id()
 
     HAL_ASSERT_RETURN(g_inst, HAL_RET_INVALID_ARG);
     return g_inst->get_id();
+}
+
+//------------------------------------------------------------------------------
+// Get ipc_logger
+// Should be called from FTE thread
+//------------------------------------------------------------------------------
+ipc_logger*
+get_current_ipc_logger_inst()
+{
+    if (fte_disabled_) {
+        return 0;
+    }
+
+    HAL_ASSERT_RETURN(g_inst, NULL);
+    return g_inst->get_ipc_logger();
 }
 
 
@@ -281,6 +298,11 @@ void inst_t::start()
     hal::hal_cfg_t *hal_cfg =
                 (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     HAL_ASSERT(hal_cfg);
+
+    // Init logger for this instance    
+    logger_ = ipc_logger::factory();
+    HAL_ASSERT(logger_);
+
     while(true) {
         if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
             usleep(1000000/3);

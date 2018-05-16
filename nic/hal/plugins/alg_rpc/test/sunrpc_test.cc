@@ -92,6 +92,13 @@ TEST_F(rpc_test, sunrpc_session)
     EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
     EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sipv4(), ctx_.key().sip.v4_addr);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dipv4(), ctx_.key().dip.v4_addr);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sport()), ctx_.key().sport);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dport()), ctx_.key().dport);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg(), nwsec::APP_SVC_SUN_RPC);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
     hal::session_t *session = ctx_.session();
 
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
@@ -118,7 +125,11 @@ TEST_F(rpc_test, sunrpc_session)
     EXPECT_EQ(ctx_.session(), session);
 
     CHECK_ALLOW_TCP(server_eph, client_eph, 54890, 49153, "c:49153 -> s:54890");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->parent_session_id(), session->hal_handle);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
     CHECK_ALLOW_UDP(server_eph, client_eph, 32776, 59374, "c:59374 -> s:32776");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->parent_session_id(), session->hal_handle);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
     CHECK_DENY_UDP(server_eph, client_eph, 54890, 49153, "c:49153 -> s:54890");
     CHECK_DENY_TCP(server_eph, client_eph, 32776, 59374, "c:59374 -> s:32776");
 

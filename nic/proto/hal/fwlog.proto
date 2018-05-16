@@ -1,20 +1,44 @@
 // protobuf definition for firewall log
 
 syntax = "proto3";
+import "nwsec.proto";
+import "nat.proto";
+import "types.proto";
 
 package fwlog;
 
+// Type of action on the flow while the log was generated
+enum FlowLogEventType {
+  FLOW_LOG_EVENT_TYPE_CREATE  = 0;
+  FLOW_LOG_EVENT_TYPE_DELETE  = 1;
+};
+
+// On receiver side, the enums can be converted back to strings using the
+// ##enum##_Name() APIs in the generated file for a better readability
 message FWEvent {
-    int32 action = 1;
-    int32 ipVer = 2;
-    uint32 sipV4 = 3;
-    uint32 dipV4 = 4;
-    uint32 sport = 5;
-    uint32 dport = 6;
-    uint32 ipProt = 7;
-    uint32 direction = 8;
-    uint64 sipv61 = 9;
-    uint64 sipv62 = 10;
-    uint64 dipv61 = 11;
-    uint64 dipv62 = 12;
+    FlowLogEventType      flowaction         = 1;  // flow log event type
+    uint64                source_vrf         = 2;  // flow key: Source Vrf
+    uint64                dest_vrf           = 3;  // flow key: Destination Vrf
+    int32                 ipVer              = 4;  // flow key: IP address version
+    uint32                sipv4              = 5;  // flow key: V4 Source IP
+    uint32                dipv4              = 6;  // flow key: V4 Destination IP
+    uint32                sport              = 7;  // flow key: Sport
+    uint32                dport              = 8;  // flow key: dport
+    types.IPProtocol      ipProt             = 9;  // flow key: Protocol
+    uint32                direction          = 10;  // flow key: flow direction
+    uint64                sipv61             = 11;  // flow key: V6 Source IP lower 64 bits
+    uint64                sipv62             = 12;  // flow key: V6 Source IP 
+    uint64                dipv61             = 13; // flow key: V6 Destination IP lower 64 bits
+    uint64                dipv62             = 14; // flow key: V6 Destination IP 
+    nwsec.SecurityAction  fwaction           = 15; // flow action: firewall action
+    nwsec.ALGName         alg                = 16; // flow action: firewall action ALG 
+    nat.NatAction         snataction         = 17; // flow action: Source NAT action 
+    nat.NatAction         dnataction         = 18; // flow action: Dest NAT action
+    uint32                natsipv4           = 19; // flow action: Source NAT IPv4 address
+    uint32                natdipv4           = 20; // flow action: Destination NAT IPv4 address
+    uint32                natsport           = 21; // flow action: NAT sport
+    uint32                natdport           = 22; // flow action: NAT dport
+    int64                 timestamp          = 23; // flow timestamp
+    uint64                session_id         = 24; // Session that got spawned for the flow
+    uint64                parent_session_id  = 25; // Parent session that opened pin hole (ALG)
 }

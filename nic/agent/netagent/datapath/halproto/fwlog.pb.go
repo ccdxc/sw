@@ -14,19 +14,56 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Type of action on the flow while the log was generated
+type FlowLogEventType int32
+
+const (
+	FlowLogEventType_FLOW_LOG_EVENT_TYPE_CREATE FlowLogEventType = 0
+	FlowLogEventType_FLOW_LOG_EVENT_TYPE_DELETE FlowLogEventType = 1
+)
+
+var FlowLogEventType_name = map[int32]string{
+	0: "FLOW_LOG_EVENT_TYPE_CREATE",
+	1: "FLOW_LOG_EVENT_TYPE_DELETE",
+}
+var FlowLogEventType_value = map[string]int32{
+	"FLOW_LOG_EVENT_TYPE_CREATE": 0,
+	"FLOW_LOG_EVENT_TYPE_DELETE": 1,
+}
+
+func (x FlowLogEventType) String() string {
+	return proto.EnumName(FlowLogEventType_name, int32(x))
+}
+func (FlowLogEventType) EnumDescriptor() ([]byte, []int) { return fileDescriptorFwlog, []int{0} }
+
+// On receiver side, the enums can be converted back to strings using the
+// ##enum##_Name() APIs in the generated file for a better readability
 type FWEvent struct {
-	Action    int32  `protobuf:"varint,1,opt,name=action,proto3" json:"action,omitempty"`
-	IpVer     int32  `protobuf:"varint,2,opt,name=ipVer,proto3" json:"ipVer,omitempty"`
-	SipV4     uint32 `protobuf:"varint,3,opt,name=sipV4,proto3" json:"sipV4,omitempty"`
-	DipV4     uint32 `protobuf:"varint,4,opt,name=dipV4,proto3" json:"dipV4,omitempty"`
-	Sport     uint32 `protobuf:"varint,5,opt,name=sport,proto3" json:"sport,omitempty"`
-	Dport     uint32 `protobuf:"varint,6,opt,name=dport,proto3" json:"dport,omitempty"`
-	IpProt    uint32 `protobuf:"varint,7,opt,name=ipProt,proto3" json:"ipProt,omitempty"`
-	Direction uint32 `protobuf:"varint,8,opt,name=direction,proto3" json:"direction,omitempty"`
-	Sipv61    uint64 `protobuf:"varint,9,opt,name=sipv61,proto3" json:"sipv61,omitempty"`
-	Sipv62    uint64 `protobuf:"varint,10,opt,name=sipv62,proto3" json:"sipv62,omitempty"`
-	Dipv61    uint64 `protobuf:"varint,11,opt,name=dipv61,proto3" json:"dipv61,omitempty"`
-	Dipv62    uint64 `protobuf:"varint,12,opt,name=dipv62,proto3" json:"dipv62,omitempty"`
+	Flowaction      FlowLogEventType `protobuf:"varint,1,opt,name=flowaction,proto3,enum=fwlog.FlowLogEventType" json:"flowaction,omitempty"`
+	SourceVrf       uint64           `protobuf:"varint,2,opt,name=source_vrf,json=sourceVrf,proto3" json:"source_vrf,omitempty"`
+	DestVrf         uint64           `protobuf:"varint,3,opt,name=dest_vrf,json=destVrf,proto3" json:"dest_vrf,omitempty"`
+	IpVer           int32            `protobuf:"varint,4,opt,name=ipVer,proto3" json:"ipVer,omitempty"`
+	Sipv4           uint32           `protobuf:"varint,5,opt,name=sipv4,proto3" json:"sipv4,omitempty"`
+	Dipv4           uint32           `protobuf:"varint,6,opt,name=dipv4,proto3" json:"dipv4,omitempty"`
+	Sport           uint32           `protobuf:"varint,7,opt,name=sport,proto3" json:"sport,omitempty"`
+	Dport           uint32           `protobuf:"varint,8,opt,name=dport,proto3" json:"dport,omitempty"`
+	IpProt          IPProtocol       `protobuf:"varint,9,opt,name=ipProt,proto3,enum=types.IPProtocol" json:"ipProt,omitempty"`
+	Direction       uint32           `protobuf:"varint,10,opt,name=direction,proto3" json:"direction,omitempty"`
+	Sipv61          uint64           `protobuf:"varint,11,opt,name=sipv61,proto3" json:"sipv61,omitempty"`
+	Sipv62          uint64           `protobuf:"varint,12,opt,name=sipv62,proto3" json:"sipv62,omitempty"`
+	Dipv61          uint64           `protobuf:"varint,13,opt,name=dipv61,proto3" json:"dipv61,omitempty"`
+	Dipv62          uint64           `protobuf:"varint,14,opt,name=dipv62,proto3" json:"dipv62,omitempty"`
+	Fwaction        SecurityAction   `protobuf:"varint,15,opt,name=fwaction,proto3,enum=nwsec.SecurityAction" json:"fwaction,omitempty"`
+	Alg             ALGName          `protobuf:"varint,16,opt,name=alg,proto3,enum=nwsec.ALGName" json:"alg,omitempty"`
+	Snataction      NatAction        `protobuf:"varint,17,opt,name=snataction,proto3,enum=nat.NatAction" json:"snataction,omitempty"`
+	Dnataction      NatAction        `protobuf:"varint,18,opt,name=dnataction,proto3,enum=nat.NatAction" json:"dnataction,omitempty"`
+	Natsipv4        uint32           `protobuf:"varint,19,opt,name=natsipv4,proto3" json:"natsipv4,omitempty"`
+	Natdipv4        uint32           `protobuf:"varint,20,opt,name=natdipv4,proto3" json:"natdipv4,omitempty"`
+	Natsport        uint32           `protobuf:"varint,21,opt,name=natsport,proto3" json:"natsport,omitempty"`
+	Natdport        uint32           `protobuf:"varint,22,opt,name=natdport,proto3" json:"natdport,omitempty"`
+	Timestamp       int64            `protobuf:"varint,23,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	SessionId       uint64           `protobuf:"varint,24,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	ParentSessionId uint64           `protobuf:"varint,25,opt,name=parent_session_id,json=parentSessionId,proto3" json:"parent_session_id,omitempty"`
 }
 
 func (m *FWEvent) Reset()                    { *m = FWEvent{} }
@@ -34,9 +71,23 @@ func (m *FWEvent) String() string            { return proto.CompactTextString(m)
 func (*FWEvent) ProtoMessage()               {}
 func (*FWEvent) Descriptor() ([]byte, []int) { return fileDescriptorFwlog, []int{0} }
 
-func (m *FWEvent) GetAction() int32 {
+func (m *FWEvent) GetFlowaction() FlowLogEventType {
 	if m != nil {
-		return m.Action
+		return m.Flowaction
+	}
+	return FlowLogEventType_FLOW_LOG_EVENT_TYPE_CREATE
+}
+
+func (m *FWEvent) GetSourceVrf() uint64 {
+	if m != nil {
+		return m.SourceVrf
+	}
+	return 0
+}
+
+func (m *FWEvent) GetDestVrf() uint64 {
+	if m != nil {
+		return m.DestVrf
 	}
 	return 0
 }
@@ -48,16 +99,16 @@ func (m *FWEvent) GetIpVer() int32 {
 	return 0
 }
 
-func (m *FWEvent) GetSipV4() uint32 {
+func (m *FWEvent) GetSipv4() uint32 {
 	if m != nil {
-		return m.SipV4
+		return m.Sipv4
 	}
 	return 0
 }
 
-func (m *FWEvent) GetDipV4() uint32 {
+func (m *FWEvent) GetDipv4() uint32 {
 	if m != nil {
-		return m.DipV4
+		return m.Dipv4
 	}
 	return 0
 }
@@ -76,11 +127,11 @@ func (m *FWEvent) GetDport() uint32 {
 	return 0
 }
 
-func (m *FWEvent) GetIpProt() uint32 {
+func (m *FWEvent) GetIpProt() IPProtocol {
 	if m != nil {
 		return m.IpProt
 	}
-	return 0
+	return IPProtocol_IPPROTO_NONE
 }
 
 func (m *FWEvent) GetDirection() uint32 {
@@ -118,8 +169,86 @@ func (m *FWEvent) GetDipv62() uint64 {
 	return 0
 }
 
+func (m *FWEvent) GetFwaction() SecurityAction {
+	if m != nil {
+		return m.Fwaction
+	}
+	return SecurityAction_SECURITY_RULE_ACTION_NONE
+}
+
+func (m *FWEvent) GetAlg() ALGName {
+	if m != nil {
+		return m.Alg
+	}
+	return ALGName_APP_SVC_NONE
+}
+
+func (m *FWEvent) GetSnataction() NatAction {
+	if m != nil {
+		return m.Snataction
+	}
+	return NatAction_NAT_TYPE_NONE
+}
+
+func (m *FWEvent) GetDnataction() NatAction {
+	if m != nil {
+		return m.Dnataction
+	}
+	return NatAction_NAT_TYPE_NONE
+}
+
+func (m *FWEvent) GetNatsipv4() uint32 {
+	if m != nil {
+		return m.Natsipv4
+	}
+	return 0
+}
+
+func (m *FWEvent) GetNatdipv4() uint32 {
+	if m != nil {
+		return m.Natdipv4
+	}
+	return 0
+}
+
+func (m *FWEvent) GetNatsport() uint32 {
+	if m != nil {
+		return m.Natsport
+	}
+	return 0
+}
+
+func (m *FWEvent) GetNatdport() uint32 {
+	if m != nil {
+		return m.Natdport
+	}
+	return 0
+}
+
+func (m *FWEvent) GetTimestamp() int64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+func (m *FWEvent) GetSessionId() uint64 {
+	if m != nil {
+		return m.SessionId
+	}
+	return 0
+}
+
+func (m *FWEvent) GetParentSessionId() uint64 {
+	if m != nil {
+		return m.ParentSessionId
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*FWEvent)(nil), "fwlog.FWEvent")
+	proto.RegisterEnum("fwlog.FlowLogEventType", FlowLogEventType_name, FlowLogEventType_value)
 }
 func (m *FWEvent) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -136,65 +265,150 @@ func (m *FWEvent) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Action != 0 {
+	if m.Flowaction != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintFwlog(dAtA, i, uint64(m.Action))
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Flowaction))
+	}
+	if m.SourceVrf != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.SourceVrf))
+	}
+	if m.DestVrf != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.DestVrf))
 	}
 	if m.IpVer != 0 {
-		dAtA[i] = 0x10
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.IpVer))
 	}
-	if m.SipV4 != 0 {
-		dAtA[i] = 0x18
+	if m.Sipv4 != 0 {
+		dAtA[i] = 0x28
 		i++
-		i = encodeVarintFwlog(dAtA, i, uint64(m.SipV4))
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Sipv4))
 	}
-	if m.DipV4 != 0 {
-		dAtA[i] = 0x20
+	if m.Dipv4 != 0 {
+		dAtA[i] = 0x30
 		i++
-		i = encodeVarintFwlog(dAtA, i, uint64(m.DipV4))
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Dipv4))
 	}
 	if m.Sport != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x38
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.Sport))
 	}
 	if m.Dport != 0 {
-		dAtA[i] = 0x30
+		dAtA[i] = 0x40
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.Dport))
 	}
 	if m.IpProt != 0 {
-		dAtA[i] = 0x38
+		dAtA[i] = 0x48
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.IpProt))
 	}
 	if m.Direction != 0 {
-		dAtA[i] = 0x40
+		dAtA[i] = 0x50
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.Direction))
 	}
 	if m.Sipv61 != 0 {
-		dAtA[i] = 0x48
+		dAtA[i] = 0x58
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.Sipv61))
 	}
 	if m.Sipv62 != 0 {
-		dAtA[i] = 0x50
+		dAtA[i] = 0x60
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.Sipv62))
 	}
 	if m.Dipv61 != 0 {
-		dAtA[i] = 0x58
+		dAtA[i] = 0x68
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.Dipv61))
 	}
 	if m.Dipv62 != 0 {
-		dAtA[i] = 0x60
+		dAtA[i] = 0x70
 		i++
 		i = encodeVarintFwlog(dAtA, i, uint64(m.Dipv62))
+	}
+	if m.Fwaction != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Fwaction))
+	}
+	if m.Alg != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Alg))
+	}
+	if m.Snataction != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Snataction))
+	}
+	if m.Dnataction != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Dnataction))
+	}
+	if m.Natsipv4 != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Natsipv4))
+	}
+	if m.Natdipv4 != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Natdipv4))
+	}
+	if m.Natsport != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Natsport))
+	}
+	if m.Natdport != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Natdport))
+	}
+	if m.Timestamp != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.Timestamp))
+	}
+	if m.SessionId != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.SessionId))
+	}
+	if m.ParentSessionId != 0 {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFwlog(dAtA, i, uint64(m.ParentSessionId))
 	}
 	return i, nil
 }
@@ -211,17 +425,23 @@ func encodeVarintFwlog(dAtA []byte, offset int, v uint64) int {
 func (m *FWEvent) Size() (n int) {
 	var l int
 	_ = l
-	if m.Action != 0 {
-		n += 1 + sovFwlog(uint64(m.Action))
+	if m.Flowaction != 0 {
+		n += 1 + sovFwlog(uint64(m.Flowaction))
+	}
+	if m.SourceVrf != 0 {
+		n += 1 + sovFwlog(uint64(m.SourceVrf))
+	}
+	if m.DestVrf != 0 {
+		n += 1 + sovFwlog(uint64(m.DestVrf))
 	}
 	if m.IpVer != 0 {
 		n += 1 + sovFwlog(uint64(m.IpVer))
 	}
-	if m.SipV4 != 0 {
-		n += 1 + sovFwlog(uint64(m.SipV4))
+	if m.Sipv4 != 0 {
+		n += 1 + sovFwlog(uint64(m.Sipv4))
 	}
-	if m.DipV4 != 0 {
-		n += 1 + sovFwlog(uint64(m.DipV4))
+	if m.Dipv4 != 0 {
+		n += 1 + sovFwlog(uint64(m.Dipv4))
 	}
 	if m.Sport != 0 {
 		n += 1 + sovFwlog(uint64(m.Sport))
@@ -246,6 +466,39 @@ func (m *FWEvent) Size() (n int) {
 	}
 	if m.Dipv62 != 0 {
 		n += 1 + sovFwlog(uint64(m.Dipv62))
+	}
+	if m.Fwaction != 0 {
+		n += 1 + sovFwlog(uint64(m.Fwaction))
+	}
+	if m.Alg != 0 {
+		n += 2 + sovFwlog(uint64(m.Alg))
+	}
+	if m.Snataction != 0 {
+		n += 2 + sovFwlog(uint64(m.Snataction))
+	}
+	if m.Dnataction != 0 {
+		n += 2 + sovFwlog(uint64(m.Dnataction))
+	}
+	if m.Natsipv4 != 0 {
+		n += 2 + sovFwlog(uint64(m.Natsipv4))
+	}
+	if m.Natdipv4 != 0 {
+		n += 2 + sovFwlog(uint64(m.Natdipv4))
+	}
+	if m.Natsport != 0 {
+		n += 2 + sovFwlog(uint64(m.Natsport))
+	}
+	if m.Natdport != 0 {
+		n += 2 + sovFwlog(uint64(m.Natdport))
+	}
+	if m.Timestamp != 0 {
+		n += 2 + sovFwlog(uint64(m.Timestamp))
+	}
+	if m.SessionId != 0 {
+		n += 2 + sovFwlog(uint64(m.SessionId))
+	}
+	if m.ParentSessionId != 0 {
+		n += 2 + sovFwlog(uint64(m.ParentSessionId))
 	}
 	return n
 }
@@ -294,9 +547,9 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Flowaction", wireType)
 			}
-			m.Action = 0
+			m.Flowaction = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowFwlog
@@ -306,12 +559,50 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Action |= (int32(b) & 0x7F) << shift
+				m.Flowaction |= (FlowLogEventType(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceVrf", wireType)
+			}
+			m.SourceVrf = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceVrf |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DestVrf", wireType)
+			}
+			m.DestVrf = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DestVrf |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IpVer", wireType)
 			}
@@ -330,45 +621,45 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SipV4", wireType)
-			}
-			m.SipV4 = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowFwlog
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.SipV4 |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DipV4", wireType)
-			}
-			m.DipV4 = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowFwlog
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.DipV4 |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sipv4", wireType)
+			}
+			m.Sipv4 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sipv4 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dipv4", wireType)
+			}
+			m.Dipv4 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dipv4 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sport", wireType)
 			}
@@ -387,7 +678,7 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Dport", wireType)
 			}
@@ -406,7 +697,7 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IpProt", wireType)
 			}
@@ -420,12 +711,12 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.IpProt |= (uint32(b) & 0x7F) << shift
+				m.IpProt |= (IPProtocol(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 8:
+		case 10:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Direction", wireType)
 			}
@@ -444,7 +735,7 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 9:
+		case 11:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sipv61", wireType)
 			}
@@ -463,7 +754,7 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 10:
+		case 12:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sipv62", wireType)
 			}
@@ -482,7 +773,7 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 11:
+		case 13:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Dipv61", wireType)
 			}
@@ -501,7 +792,7 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 12:
+		case 14:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Dipv62", wireType)
 			}
@@ -516,6 +807,215 @@ func (m *FWEvent) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Dipv62 |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fwaction", wireType)
+			}
+			m.Fwaction = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Fwaction |= (SecurityAction(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Alg", wireType)
+			}
+			m.Alg = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Alg |= (ALGName(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Snataction", wireType)
+			}
+			m.Snataction = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Snataction |= (NatAction(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dnataction", wireType)
+			}
+			m.Dnataction = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dnataction |= (NatAction(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Natsipv4", wireType)
+			}
+			m.Natsipv4 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Natsipv4 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 20:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Natdipv4", wireType)
+			}
+			m.Natdipv4 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Natdipv4 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 21:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Natsport", wireType)
+			}
+			m.Natsport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Natsport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 22:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Natdport", wireType)
+			}
+			m.Natdport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Natdport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 23:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 24:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
+			}
+			m.SessionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SessionId |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 25:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ParentSessionId", wireType)
+			}
+			m.ParentSessionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFwlog
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ParentSessionId |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -649,20 +1149,38 @@ var (
 func init() { proto.RegisterFile("fwlog.proto", fileDescriptorFwlog) }
 
 var fileDescriptorFwlog = []byte{
-	// 228 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4e, 0x2b, 0xcf, 0xc9,
-	0x4f, 0xd7, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x73, 0x94, 0x96, 0x32, 0x71, 0xb1,
-	0xbb, 0x85, 0xbb, 0x96, 0xa5, 0xe6, 0x95, 0x08, 0x89, 0x71, 0xb1, 0x25, 0x26, 0x97, 0x64, 0xe6,
-	0xe7, 0x49, 0x30, 0x2a, 0x30, 0x6a, 0xb0, 0x06, 0x41, 0x79, 0x42, 0x22, 0x5c, 0xac, 0x99, 0x05,
-	0x61, 0xa9, 0x45, 0x12, 0x4c, 0x60, 0x61, 0x08, 0x07, 0x24, 0x5a, 0x9c, 0x59, 0x10, 0x66, 0x22,
-	0xc1, 0xac, 0xc0, 0xa8, 0xc1, 0x1b, 0x04, 0xe1, 0x80, 0x44, 0x53, 0xc0, 0xa2, 0x2c, 0x10, 0xd1,
-	0x14, 0x98, 0x68, 0x71, 0x41, 0x7e, 0x51, 0x89, 0x04, 0x2b, 0x54, 0x2d, 0x88, 0x03, 0x56, 0x0b,
-	0x16, 0x65, 0x83, 0xaa, 0x05, 0x8b, 0x8a, 0x71, 0xb1, 0x65, 0x16, 0x04, 0x14, 0xe5, 0x97, 0x48,
-	0xb0, 0x83, 0x85, 0xa1, 0x3c, 0x21, 0x19, 0x2e, 0xce, 0x94, 0xcc, 0xa2, 0x54, 0x88, 0x03, 0x39,
-	0xc0, 0x52, 0x08, 0x01, 0x90, 0xae, 0xe2, 0xcc, 0x82, 0x32, 0x33, 0x43, 0x09, 0x4e, 0x05, 0x46,
-	0x0d, 0x96, 0x20, 0x28, 0x0f, 0x2e, 0x6e, 0x24, 0xc1, 0x85, 0x24, 0x6e, 0x04, 0x12, 0x4f, 0x81,
-	0xa8, 0xe7, 0x86, 0x88, 0xa7, 0xc0, 0xd5, 0xa7, 0x40, 0xd4, 0xf3, 0x20, 0x89, 0x1b, 0x39, 0x09,
-	0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x33, 0x1e, 0xcb,
-	0x31, 0x24, 0xb1, 0x81, 0xc3, 0xd1, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x44, 0xcf, 0x89, 0x34,
-	0x56, 0x01, 0x00, 0x00,
+	// 526 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x93, 0xdd, 0x6e, 0xda, 0x3c,
+	0x18, 0xc7, 0x9b, 0x97, 0xf2, 0xf5, 0xf0, 0x96, 0x82, 0xd7, 0x0f, 0x17, 0x75, 0x28, 0xda, 0x11,
+	0xeb, 0x41, 0xa4, 0xb2, 0x69, 0x3b, 0x66, 0x5b, 0xa8, 0x2a, 0x21, 0x8a, 0x52, 0x44, 0xb5, 0xa3,
+	0x28, 0xc3, 0x06, 0x45, 0x82, 0x38, 0x4a, 0x5c, 0x10, 0x77, 0xb2, 0xd3, 0xdd, 0xcd, 0x0e, 0x77,
+	0x09, 0x13, 0xbb, 0x91, 0xc9, 0x8f, 0x4d, 0x12, 0x4d, 0xdb, 0x19, 0xff, 0xdf, 0xff, 0x67, 0x2b,
+	0xf6, 0x63, 0xa0, 0xb1, 0xd8, 0xae, 0xc4, 0xd2, 0x89, 0x13, 0x21, 0x05, 0x29, 0x63, 0xe8, 0x34,
+	0xa2, 0x6d, 0xca, 0xe7, 0x9a, 0x75, 0xea, 0x51, 0x20, 0xcd, 0xcf, 0x86, 0xdc, 0xc5, 0x3c, 0xd5,
+	0xe1, 0xd5, 0xb7, 0x0a, 0x54, 0x87, 0x4f, 0xee, 0x86, 0x47, 0x92, 0xbc, 0x07, 0x58, 0xac, 0xc4,
+	0x36, 0x98, 0xcb, 0x50, 0x44, 0xd4, 0xb2, 0xad, 0x5e, 0xb3, 0x7f, 0xe9, 0xe8, 0x9d, 0x87, 0x2b,
+	0xb1, 0x1d, 0x89, 0x25, 0x8a, 0xd3, 0x5d, 0xcc, 0xbd, 0x82, 0x4a, 0x5e, 0x02, 0xa4, 0xe2, 0x39,
+	0x99, 0x73, 0x7f, 0x93, 0x2c, 0xe8, 0x7f, 0xb6, 0xd5, 0x3b, 0xf6, 0xea, 0x9a, 0xcc, 0x92, 0x05,
+	0xb9, 0x82, 0x1a, 0xe3, 0xa9, 0xc4, 0xb2, 0x84, 0x65, 0x55, 0x65, 0x55, 0x9d, 0x41, 0x39, 0x8c,
+	0x67, 0x3c, 0xa1, 0xc7, 0xb6, 0xd5, 0x2b, 0x7b, 0x3a, 0x28, 0x9a, 0x86, 0xf1, 0xe6, 0x2d, 0x2d,
+	0xdb, 0x56, 0xef, 0xc4, 0xd3, 0x41, 0x51, 0x86, 0xb4, 0xa2, 0x29, 0x3b, 0xd0, 0x34, 0x16, 0x89,
+	0xa4, 0x55, 0xe3, 0xaa, 0x80, 0x2e, 0xd2, 0x9a, 0x71, 0x91, 0xbe, 0x86, 0x4a, 0x18, 0x4f, 0x12,
+	0x21, 0x69, 0x1d, 0x0f, 0xd7, 0x76, 0xf4, 0x55, 0xdc, 0x4f, 0x14, 0x14, 0x73, 0xb1, 0xf2, 0x8c,
+	0x40, 0xae, 0xa1, 0xce, 0xc2, 0x84, 0xeb, 0xab, 0x00, 0xdc, 0x24, 0x07, 0xe4, 0x02, 0x2a, 0xea,
+	0x9b, 0xde, 0xdd, 0xd2, 0x06, 0x9e, 0xc7, 0xa4, 0x8c, 0xf7, 0xe9, 0xff, 0x05, 0xde, 0x57, 0x9c,
+	0x69, 0xff, 0x44, 0x73, 0x96, 0xf9, 0x4c, 0xfb, 0xcd, 0x02, 0xef, 0x93, 0x5b, 0xa8, 0x2d, 0x0e,
+	0x73, 0x38, 0xc5, 0x4f, 0x3d, 0x77, 0xf4, 0x34, 0x1f, 0xf9, 0xfc, 0x39, 0x09, 0xe5, 0x6e, 0x80,
+	0xa5, 0x97, 0x69, 0xc4, 0x86, 0x52, 0xb0, 0x5a, 0xd2, 0x16, 0xda, 0x4d, 0x63, 0x0f, 0x46, 0x77,
+	0xe3, 0x60, 0xcd, 0x3d, 0x55, 0x11, 0x07, 0x20, 0x8d, 0x02, 0x69, 0xb6, 0x6d, 0x1f, 0xc4, 0x40,
+	0x3a, 0xe3, 0x40, 0x9a, 0xfd, 0x0a, 0x86, 0xf2, 0x59, 0xee, 0x93, 0xbf, 0xfb, 0xb9, 0x41, 0x3a,
+	0x50, 0x8b, 0x02, 0xa9, 0x07, 0xf7, 0x02, 0x6f, 0x2c, 0xcb, 0xa6, 0xd3, 0xe3, 0x3b, 0xcb, 0x3a,
+	0x56, 0xe8, 0xf4, 0x10, 0xcf, 0xf3, 0x75, 0x38, 0x31, 0xb3, 0x0e, 0xbb, 0x8b, 0x7c, 0x1d, 0x76,
+	0xd7, 0x50, 0x97, 0xe1, 0x9a, 0xa7, 0x32, 0x58, 0xc7, 0xf4, 0xd2, 0xb6, 0x7a, 0x25, 0x2f, 0x07,
+	0xf8, 0x26, 0x79, 0x9a, 0x86, 0x22, 0xf2, 0x43, 0x46, 0xa9, 0x79, 0x93, 0x9a, 0xdc, 0x33, 0x72,
+	0x03, 0xed, 0x38, 0x48, 0x78, 0x24, 0xfd, 0x82, 0x75, 0x85, 0xd6, 0xa9, 0x2e, 0x1e, 0x0f, 0xee,
+	0x8d, 0x07, 0xad, 0x3f, 0x9f, 0x3f, 0xe9, 0x42, 0x67, 0x38, 0x7a, 0x78, 0xf2, 0x47, 0x0f, 0x77,
+	0xbe, 0x3b, 0x73, 0xc7, 0x53, 0x7f, 0xfa, 0x79, 0xe2, 0xfa, 0x1f, 0x3d, 0x77, 0x30, 0x75, 0x5b,
+	0x47, 0xff, 0xea, 0x3f, 0xb9, 0x23, 0x77, 0xea, 0xb6, 0xac, 0x0f, 0xad, 0xef, 0xfb, 0xae, 0xf5,
+	0x63, 0xdf, 0xb5, 0x7e, 0xee, 0xbb, 0xd6, 0xd7, 0x5f, 0xdd, 0xa3, 0x2f, 0x15, 0xfc, 0x43, 0xbe,
+	0xf9, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x36, 0x1e, 0x0d, 0x24, 0xcb, 0x03, 0x00, 0x00,
 }

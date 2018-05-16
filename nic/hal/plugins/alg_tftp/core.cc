@@ -141,6 +141,8 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_TFTP.c_str());
     ctx.register_feature_session_state(&entry->fte_feature_state);
+    ctx.flow_log()->set_alg(entry->alg);
+    ctx.flow_log()->set_parent_session_id(entry->sess_hdl);
 
     return HAL_RET_OK;
 }
@@ -178,6 +180,7 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
             exp_flow->entry.handler = expected_flow_handler;
             exp_flow->alg = nwsec::APP_SVC_TFTP;
             exp_flow->info = l4_sess->info;
+            exp_flow->sess_hdl = l4_sess->sess_hdl;
             HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
             l4_sess->info = (tftp_info_t *)g_tftp_state->alg_info_slab()->alloc();
             HAL_ASSERT(l4_sess->info != NULL);

@@ -12,7 +12,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	ipcproto "github.com/pensando/sw/nic/agent/ipc/proto"
+	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -139,7 +139,7 @@ func (ipc *IPC) processMsg(offset uint32) {
 
 	ipc.rxCount++
 
-	log.Infof("=> sip: %v dip: %v sport: %v dport: %v", ev.GetSipV4(), ev.GetDipV4(), ev.GetSport(), ev.GetDport())
+	log.Infof("=> sip: %v dip: %v sport: %v dport: %v", ev.GetSipv4(), ev.GetDipv4(), ev.GetSport(), ev.GetDport())
 }
 
 // GetSharedConstant gets a shared constant from cgo

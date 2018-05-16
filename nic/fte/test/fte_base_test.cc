@@ -24,6 +24,7 @@ uint32_t fte_base_test::nwsec_id_ = 0;
 uint32_t fte_base_test::nh_id_ = 0;
 uint32_t fte_base_test::pool_id_ = 0;
 fte::ctx_t fte_base_test::ctx_ = {};
+bool  fte_base_test::ipc_logging_disable_ = false;
 
 hal_handle_t fte_base_test::add_vrf()
 {

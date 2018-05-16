@@ -81,6 +81,13 @@ TEST_F(tftp_test, tftp_session)
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
     EXPECT_FALSE(ctx_.drop_flow());
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sipv4(), ctx_.key().sip.v4_addr);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dipv4(), ctx_.key().dip.v4_addr);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sport()), ctx_.key().sport);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dport()), ctx_.key().dport);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg(), nwsec::APP_SVC_TFTP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
     hal::session_t *session = ctx_.session();
 
     //send response 
@@ -90,6 +97,14 @@ TEST_F(tftp_test, tftp_session)
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
     EXPECT_NE(ctx_.session(), session);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sipv4(), ctx_.key().sip.v4_addr);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dipv4(), ctx_.key().dip.v4_addr);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sport()), ctx_.key().sport);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dport()), ctx_.key().dport);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_NONE);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg(), nwsec::APP_SVC_TFTP);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->parent_session_id(), session->hal_handle);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
 
     req.set_session_handle(session->hal_handle);
     req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);

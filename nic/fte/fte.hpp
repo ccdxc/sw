@@ -71,6 +71,9 @@ hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
 // FTE pkt loop (infinite loop)
 void fte_start(uint8_t fte_id);
 
+// Get logger instance for the current thread
+ipc_logger *get_current_ipc_logger_inst(void);
+
 // diable all fte threads
 void disable_fte();
 

@@ -457,6 +457,8 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_FTP.c_str());
     ctx.register_feature_session_state(&entry->fte_feature_state);
+    ctx.flow_log()->set_alg(entry->alg);
+    ctx.flow_log()->set_parent_session_id(entry->sess_hdl);
 
     return HAL_RET_OK;
 }
@@ -484,6 +486,7 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->isCtrl = FALSE;
     exp_flow->alg = l4_sess->alg;
+    exp_flow->sess_hdl = l4_sess->sess_hdl;
     data_ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
     HAL_ASSERT(data_ftp_info != NULL);
 

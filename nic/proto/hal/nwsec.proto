@@ -650,6 +650,10 @@ message SecurityPolicyGetRequestMsg {
 
 // SecurityPolicyStats - place holder
 message SecurityPolicyStats {
+  fixed64    num_hits              = 1;
+  fixed64    num_tcp_hits          = 2;
+  fixed64    num_udp_hits          = 3;
+  fixed64    num_icmp_hits         = 4;  
 }
 
 // SecurityPolicyGetResponse caputres all the information about a security policy

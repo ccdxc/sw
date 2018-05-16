@@ -111,6 +111,10 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
         utils::hal_logger()->flush();
     }
 
+    if (!getenv("DISABLE_FTE")) {
+        ipc_logger::deinit();
+    }
+
     switch (sig) {
     case SIGINT:
     case SIGTERM:
@@ -424,7 +428,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     try {
-		std::string mode = pt.get<std::string>("mode");
+	std::string mode = pt.get<std::string>("mode");
         if (mode == "sim") {
             hal_cfg->platform_mode = HAL_PLATFORM_MODE_SIM;
         } else if (mode == "hw") {
@@ -661,9 +665,17 @@ hal_init (hal_cfg_t *hal_cfg)
 
     if (!getenv("DISABLE_FTE") &&
         !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)) {
+        
+        //Set the number of instances as read from config
+        ipc_logger::set_ipc_instances(hal_cfg->num_data_threads);
+
         // start fte threads
         for (uint32_t i = 0; (i < hal_cfg->num_data_threads &&
                    hal_cfg->features != HAL_FEATURE_SET_GFT); i++) {
+            // Init IPC logger infra for FTE
+            if (!i && ipc_logger::init() != HAL_RET_OK) {
+                HAL_TRACE_ERR("IPC logger init failed");
+            }
             tid = HAL_THREAD_ID_FTE_MIN + i;
             g_hal_threads[tid]->start(g_hal_threads[tid]);
         }

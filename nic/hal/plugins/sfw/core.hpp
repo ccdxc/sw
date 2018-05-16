@@ -8,7 +8,7 @@
 
 using session::FlowAction;
 using nwsec::ALGName;
-using nwsec::FirewallAction;
+using nwsec::SecurityAction;
 
 namespace hal {
 namespace plugins {
@@ -30,7 +30,7 @@ typedef struct net_sfw_match_result_s {
     FlowAction      action;
     ALGName         alg;
     bool            log;
-    FirewallAction  sfw_action;
+    SecurityAction  sfw_action;
 } net_sfw_match_result_t;
 std::ostream& operator<<(std::ostream& os, const net_sfw_match_result_t& val);
 

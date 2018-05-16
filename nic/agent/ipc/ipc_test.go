@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	. "github.com/pensando/sw/nic/agent/ipc/proto"
+	. "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -63,12 +63,12 @@ func (ic *ipcClient) putBuffer(buf []byte, size int) {
 
 func wrFWLog(buf []byte, sport uint16) (int, error) {
 	ev := &FWEvent{
-		SipV4:     0xc0000001,
-		DipV4:     0x80000001,
+		Sipv4:     0xc0000001,
+		Dipv4:     0x80000001,
 		Sport:     uint32(sport),
 		Dport:     2000,
 		Direction: 1,
-		Action:    1,
+		Fwaction:  1,
 	}
 
 	out, err := proto.Marshal(ev)

@@ -21,6 +21,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic/hal/plugins/app_redir:app_redir_includes",
+        "//nic/utils/agent_api:agent_api",
     ],
     alwayslink = 1,
 )
@@ -32,14 +33,17 @@ cc_library(
         "fte_ctx.hpp",
         "acl/acl.hpp",
         "acl/ref.hpp"
-    ]
+    ],
+    deps = [ "//nic/utils/agent_api:agent_api",
+           ],
 )
 
 cc_test(
     name = "fte_test",
     srcs = glob(["test/*.cc", "test/*.hpp"]),
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
-    deps = gl_deps_list + test_deps_list,
+    deps = [ "//nic/utils/agent_api:agent_api", 
+           ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
 )
 
@@ -47,7 +51,8 @@ cc_library(
     name = "fte_base_test",
     srcs = [ "test/fte_base_test.cc" ],
     hdrs = [ "test/fte_base_test.hpp" ],
-    deps =  gl_deps_list + test_deps_list,
+    deps = [ "//nic/utils/agent_api:agent_api",
+           ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
-    alwayslink = 1,
+    tags = ["gtests"],
 )

@@ -1,7 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
-
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
 load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
@@ -11,12 +10,19 @@ cc_library(
     name = "agent_api",
     srcs = glob(["*.cc","*.c"]),
     hdrs = glob(["*.hpp","*.h"]),
-    copts = sdk_copts,
+    linkopts = gl_linkopts_list,
     deps = [
         "//nic/include:base_includes",
         "//nic:spdlog",
-        "//nic/hal:hal_src",
+        "//nic:gen_proto_includes",
+        "//nic/hal:hal_hdrs",
+        "//nic:hal_gen_includes",
+        "//nic:libprotobuf",
+        "//nic:halproto",
+        "//nic:google_includes",
     ],
+    alwayslink = 1,
+    copts = sdk_copts,
 )
 
 cc_test(

@@ -28,6 +28,7 @@ cc_binary(
             "//nic:libprotobuf",
             "//nic:grpc",
             "//nic/utils/mtrack",
+            "//nic/utils/agent_api",
 
             # PD
             "@sdk//obj:sdk_catalog",

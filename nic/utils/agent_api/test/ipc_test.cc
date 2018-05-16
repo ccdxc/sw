@@ -14,10 +14,10 @@
 #include "nic/gen/proto/hal/fwlog.pb.h"
 #define TEST_THREAD_COUNT 8
 #define TEST_ALLOC_SIZE 8
-#define TEST_IPC_SIZE 128
+#define TEST_IPC_SIZE 256 
 #define EXP_BUF_COUNT (TEST_IPC_SIZE/TEST_ALLOC_SIZE - 1)
 #define FWLOG_SHM "/fwlog_ipc_shm"
-#define TEST_SHM_SIZE 512
+#define TEST_SHM_SIZE 2048 
 #define TEST_QSIZE 7
 #define TEST_FW_SHM_SIZE 64*1024
 
@@ -155,7 +155,7 @@ TEST_F(ipc_test, multi) {
     ipc::tear_down_shm();
 }
 
-void verify_fw_log(hal::flow_key_t &key, volatile uint8_t *shm) {
+void verify_fw_log(fwlog::FWEvent fwlog, volatile uint8_t *shm) {
     uint32_t offset;
     volatile uint8_t *datap;
 
@@ -174,12 +174,12 @@ void verify_fw_log(hal::flow_key_t &key, volatile uint8_t *shm) {
     bool ok = ev.ParseFromArray((const void *)datap, msgSize);
     ASSERT_EQ(ok, true);
 
-    ASSERT_EQ(ev.sipv4(), key.sip.v4_addr);
-    ASSERT_EQ(ev.dipv4(), key.dip.v4_addr);
-    ASSERT_EQ(ev.ipprot(), key.proto);
-    ASSERT_EQ(ev.sport(), key.sport);
-    ASSERT_EQ(ev.dport(), key.dport);
-    ASSERT_EQ(ev.direction(), key.dir);
+    ASSERT_EQ(ev.sipv4(), fwlog.sipv4());
+    ASSERT_EQ(ev.dipv4(), fwlog.dipv4());
+    ASSERT_EQ(ev.ipprot(), fwlog.ipprot());
+    ASSERT_EQ(ev.sport(), fwlog.sport());
+    ASSERT_EQ(ev.dport(), fwlog.dport());
+    ASSERT_EQ(ev.direction(), fwlog.direction());
 
     // advance readIndex
     *ri = (*ri + 1) % qsize;
@@ -204,18 +204,16 @@ TEST_F(ipc_test, fw_log_api) {
     ASSERT_NE(p, MAP_FAILED);
 
     // setup a test context
-    fte::ctx_t ctx = {};
-    hal::flow_key_t fk;
+    fwlog::FWEvent fk;
 
     for (ix = 0; ix < 10000; ix++) {
-        fk.flow_type = hal::FLOW_TYPE_V4;
-        fk.sip.v4_addr = 0x0A0A0101;
-        fk.dip.v4_addr = 0x0A0A0201;
-        fk.sport = 16000 + ix;
-        fk.dport = 12018;
-        fk.proto = (types::IPProtocol)IP_PROTO_TCP;
-        ctx.set_key(fk);
-        il->firew_log(&ctx, nwsec::FIREWALL_ACTION_DENY);
+        fk.set_sipv4(0x0A0A0101);
+        fk.set_dipv4(0x0A0A0201);
+        fk.set_sport(16000 + ix);
+        fk.set_dport(12018);
+        fk.set_ipprot(types::IPProtocol::IPPROTO_TCP);
+        fk.set_fwaction(nwsec::SECURITY_RULE_ACTION_DENY);
+        il->fw_log(fk);
         verify_fw_log(fk, (volatile uint8_t*)p);
     }
 }
@@ -251,7 +249,7 @@ TEST_F(ipc_test, looper) {
         fk.dport = 12018;
         fk.proto = (types::IPProtocol)IP_PROTO_TCP;
         ctx.set_key(fk);
-        il->firew_log(&ctx, nwsec::FIREWALL_ACTION_DENY);
+        il->fw_log(&ctx, nwsec::FIREWALL_ACTION_DENY);
         if ((ix % 10) == 0) {
 	    sleep(1);
         }

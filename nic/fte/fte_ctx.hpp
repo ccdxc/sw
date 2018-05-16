@@ -10,6 +10,10 @@
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/app_redir_headers.hpp"
 #include "nic/include/app_redir_shared.h"
+#include "nic/gen/proto/hal/fwlog.pb.h"
+#include "nic/utils/agent_api/agent_api.hpp"
+
+using fwlog::FWEvent;
 
 namespace fte {
 
@@ -598,6 +602,20 @@ public:
     bool force_delete() { return force_delete_; }
     void set_force_delete(bool val) { force_delete_ = val; }
 
+    fwlog::FWEvent* flow_log(hal::flow_role_t role=hal::FLOW_ROLE_NONE) {
+        if (role == hal::FLOW_ROLE_NONE) role = role_;
+
+        if (role == hal::FLOW_ROLE_INITIATOR) {
+            return &iflow_log_[istage_];
+        } else {
+            return &rflow_log_[rstage_];
+        }
+    }
+    void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl, 
+                          fwlog::FWEvent *fwlog);
+    void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
+    bool ipc_logging_disable(void) { return ipc_logging_disable_; }
+
     // protected methods accessed by gtest
 protected:
     hal_ret_t init(const lifqid_t &lifq, feature_state_t feature_state[],
@@ -654,6 +672,10 @@ private:
     hal_handle_t          dep_handle_;
     pipeline_event_t      event_;
     bool                  update_session_;
+    fwlog::FWEvent        iflow_log_[MAX_STAGES];
+    fwlog::FWEvent        rflow_log_[MAX_STAGES];
+    ipc_logger            *logger_;
+    bool                  ipc_logging_disable_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

@@ -87,6 +87,13 @@ TEST_F(rpc_test, msrpc_session)
     EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
     EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sipv4(), ctx_.key().sip.v4_addr);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dipv4(), ctx_.key().dip.v4_addr);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sport()), ctx_.key().sport);
+    EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dport()), ctx_.key().dport);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg(), nwsec::APP_SVC_MSFT_RPC);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
     hal::session_t *session = ctx_.session();
 
     // TCP SYN re-transmit on ALG_CFLOW_LIFQ
@@ -134,9 +141,19 @@ TEST_F(rpc_test, msrpc_session)
     EXPECT_EQ(ctx_.session(), session);
 
     CHECK_ALLOW_TCP(server_eph, client_eph, 49154, 49153, "c:49153 -> s:49154");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_NONE);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg(), nwsec::APP_SVC_MSFT_RPC);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->parent_session_id(), session->hal_handle);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
     CHECK_ALLOW_TCP(server_eph, client_eph, 49154, 59374, "c:59374 -> s:49154");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_NONE);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg(), nwsec::APP_SVC_MSFT_RPC);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->parent_session_id(), session->hal_handle);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->session_id(), 0);
     CHECK_DENY_UDP(server_eph, client_eph, 49154, 49153, "c:49153 -> s:49154");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_DENY);
     CHECK_DENY_UDP(server_eph, client_eph, 49154, 59374, "c:59374 -> s:49154");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->fwaction(), nwsec::SECURITY_RULE_ACTION_DENY);
 
     req.set_session_handle(session->hal_handle);
     req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
@@ -157,7 +174,7 @@ TEST_F(rpc_test, msrpc_exp_flow_timeout) {
     app_sess_key.sip.v4_addr = 0x14000001;
     app_sess_key.dip.v4_addr = 0x14000002;
     app_sess_key.sport = 12345;
-    app_sess_key.dport = 111;
+    app_sess_key.dport = 135;
 
     g_rpc_state->alloc_and_init_app_sess(app_sess_key, &app_sess);
 

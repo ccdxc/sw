@@ -89,7 +89,7 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
     }
     
     HAL_TRACE_DEBUG("fte::{}: Received session Delete for session id {} in Vrf id {}",
-                    __FUNCTION__, session->config.session_id, 
+                    __FUNCTION__, session->hal_handle, 
                     (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
     
     HAL_TRACE_DEBUG("num features: {} feature state size: {}", num_features, fstate_size);

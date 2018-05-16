@@ -158,7 +158,7 @@ uint8_t *alloc_rpc_pkt(void) {
  * Expected flow callback. FTE issues this callback with the expected flow data
  */
 hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
-    l4_alg_status_t      *entry = NULL;
+    l4_alg_status_t      *entry = NULL, *l4_sess = NULL;
     rpc_info_t           *rpc_info = NULL;
     sfw_info_t           *sfw_info = (sfw_info_t*)\
                             ctx.feature_state(FTE_FEATURE_SFW);
@@ -171,6 +171,10 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_RPC.c_str());
     ctx.register_feature_session_state(&entry->fte_feature_state);
+    ctx.flow_log()->set_alg(entry->alg);
+    l4_sess = g_rpc_state->get_ctrl_l4sess(entry->app_session);
+    if (l4_sess)
+        ctx.flow_log()->set_parent_session_id(l4_sess->sess_hdl);
 
     return HAL_RET_OK;
 }

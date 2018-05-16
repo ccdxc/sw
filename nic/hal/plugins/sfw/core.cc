@@ -107,7 +107,7 @@ net_sfw_match_rules(ctx_t                  &ctx,
                                 match_rslt->action = session::FLOW_ACTION_DROP;
                             }
                             match_rslt->log    = nwsec_plcy_rules->log;
-                            match_rslt->sfw_action = nwsec_plcy_rules->action;
+                            match_rslt->sfw_action = (nwsec::SecurityAction)nwsec_plcy_rules->action;
                             return HAL_RET_OK;
                         }
                     }
@@ -123,7 +123,7 @@ net_sfw_match_rules(ctx_t                  &ctx,
                 match_rslt->action = session::FLOW_ACTION_DROP;
             }
             match_rslt->log    = nwsec_plcy_rules->log;
-            match_rslt->sfw_action = nwsec_plcy_rules->action;
+            match_rslt->sfw_action = (nwsec::SecurityAction)nwsec_plcy_rules->action;
             return HAL_RET_OK;
         }
     }
@@ -240,6 +240,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
         match_rslt->action = session::FLOW_ACTION_DROP;
     }
     match_rslt->alg = nwsec_rule->fw_rule_action.alg;
+    match_rslt->sfw_action = nwsec_rule->fw_rule_action.sec_action;
 
  end:
     if (ret != HAL_RET_OK) {
@@ -406,7 +407,7 @@ sfw_exec(ctx_t& ctx)
                 sfw_info->sfw_done = true;
                 //ctx.log         = match_rslt.log;
                 HAL_TRACE_DEBUG("Match result: {}", match_rslt);
-                if (match_rslt.sfw_action == nwsec::FIREWALL_ACTION_REJECT &&
+                if (match_rslt.sfw_action == nwsec::SECURITY_RULE_ACTION_REJECT &&
                     ctx.valid_rflow()) {
                     // Register completion handler to send a reject packet out
                     // We need the forwarding information to use the CPU bypass
@@ -419,6 +420,8 @@ sfw_exec(ctx_t& ctx)
                 // to handle the case if it happens
             }
         }
+        ctx.flow_log()->set_fwaction(match_rslt.sfw_action);
+        ctx.flow_log()->set_alg(match_rslt.alg);
     } else {
         //Responder Role: Not checking explicitly
         if (ctx.drop_flow()) {

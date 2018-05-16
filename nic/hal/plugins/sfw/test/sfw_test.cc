@@ -61,6 +61,7 @@ protected:
         };
 
         nwsech_ = add_nwsec_policy(vrfh_, rules);
+        fte_base_test::set_logging_disable(true);
     }
 
     static hal_handle_t vrfh_, nwh_, l2segh_, eph1_, eph2_,  intfh1_, intfh2_, nwsech_;
