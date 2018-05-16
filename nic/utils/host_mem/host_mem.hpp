@@ -28,7 +28,7 @@ class HostMem {
   // allocations_ track the sizes of different allocations which
   // are then used to free the allocations.
   std::map<int, uint32_t> allocations_;
-	int offset_ = 0;
+  int offset_ = 0;
 };
 
 }  // namespace utils

@@ -16,6 +16,7 @@ DECLARE_uint64(acc_scale_blk_size);
 DECLARE_uint64(acc_scale_iters);
 DECLARE_string(acc_scale_verify_method);
 DECLARE_bool(with_rtl_skipverify);
+DECLARE_bool(combined);
 
 extern bool run_pdma_tests;
 

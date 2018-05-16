@@ -9,9 +9,9 @@ static uint32_t NumUnits(size_t size) {
 
 HostMem *HostMem::New(bool bhalf){
   std::unique_ptr<HostMem> mem(new HostMem());
-	if(bhalf) {
-		mem->offset_ = kShmSize/2;
-	}
+  if(bhalf) {
+    mem->offset_ = kShmSize/2;
+  }
   mem->shmid_ = shmget(HostMemHandle(), kShmSize, 0666);
   if (mem->shmid_ < 0)
     return nullptr;
@@ -46,7 +46,7 @@ void *HostMem::Alloc(size_t size, uint32_t align) {
 }
 
 void HostMem::Free(void *addr) {
-	addr = (void *)((uint8_t*)addr - offset_);
+  addr = (void *)((uint8_t*)addr - offset_);
   uint64_t offset = VirtToPhys(addr);
   assert ((offset & (kAllocUnit - 1)) == 0);
   offset >>= kAllocUnitShift;
