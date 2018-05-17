@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import json
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
@@ -41,6 +42,19 @@ class AgentSegmentObject(base.AgentObjectBase):
         super().__init__("Network", seg.GID(), seg.tenant.GID())
         self.spec = AgentSegmentObjectSpec(seg)
         return
+    def to_JSON(self):
+        seg = dict()
+        seg["kind"] = "Network"
+        seg["meta"] = {"name":self.meta.Name, "tenant":self.meta.Tenant, "namespace": self.meta.Namespace}
+        seg["spec"] = {\
+            "ipv4-subnet": self.spec.IPv4Subnet,\
+            "ipv4-gateway": self.spec.IPv4Gateway,\
+            "ipv6-subnet": self.spec.IPv6Subnet,\
+            "ipv6-gateway": self.spec.IPv6Gateway,\
+            "vlan-id": self.spec.VlanID,\
+            "vxlan-vni": self.spec.VxlanVNI\
+        }
+        return json.dumps(seg)
 
 class SegmentObject(base.ConfigObjectBase):
     def __init__(self):
@@ -96,9 +110,9 @@ class SegmentObject(base.ConfigObjectBase):
             self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
 
         self.gipo = resmgr.GIPoAddressAllocator.get()
-        
+
         self.eplearn = getattr(spec, 'eplearn', False)
-            
+
         self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
         self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
 
@@ -351,14 +365,14 @@ class SegmentObject(base.ConfigObjectBase):
             req_spec.wire_encap.encap_value   = self.vlan_id
         req_spec.mcast_fwd_policy = self.multicast_policy
         req_spec.bcast_fwd_policy = self.broadcast_policy
-        
+
         if self.eplearn:
             if self.eplearn.arp_entry_timeout:
                 req_spec.eplearn_cfg.arp.entry_timeout =  int(self.eplearn.arp_entry_timeout)
             if self.eplearn.dhcp:
                 dhcp_server = req_spec.eplearn_cfg.dhcp.trusted_servers.add()
                 dhcp_server = self.ipv4_pool.GetLast()
-                
+
         if (self.pinnedif != None):
             req_spec.pinned_uplink_if_handle = self.pinnedif.hal_handle
 

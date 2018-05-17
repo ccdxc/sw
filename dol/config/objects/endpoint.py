@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import json
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -43,6 +44,22 @@ class AgentEndpointObject(base.AgentObjectBase):
         self.spec = AgentEndpointObjectSpec(ep)
         self.status = AgentEndpointObjectStatus(ep)
         return
+    def to_JSON(self):
+        ep = dict()
+        ep["kind"] = "Endpoint"
+        ep["meta"] = {"name":self.meta.Name, "tenant":self.meta.Tenant, "namespace": self.meta.Namespace}
+        ep["spec"] = {\
+            "endpoint-uuid": self.spec.EndpointUUID,\
+            "workload-uuid": self.spec.WorkloadUUID,\
+            "workload-name": self.spec.WorkloadName,\
+            "network-name": self.spec.NetworkName,\
+        }
+        ep["status"] = {\
+            "ipv4-address": self.status.IPv4Address,\
+            "mac-address": self.status.MacAddress,\
+            "node-uuid": self.status.NodeUUID,\
+        }
+        return json.dumps(ep)
 
 class EndpointObject(base.ConfigObjectBase):
     def __init__(self):
@@ -322,7 +339,7 @@ class EndpointObject(base.ConfigObjectBase):
 
     def GetSlabid(self):
         return self.slab_allocator.get()
-    
+
     def GetNewSlab(self):
         self.last_slab_id += 1
         logger.info("- # New slab on EP %s assigned: %s" % (self.GID(), 'SLAB%04d' % self.last_slab_id))

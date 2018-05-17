@@ -14,7 +14,11 @@ from infra.common.logging import logger as logger
 AGENT_URL='http://localhost:9007/'
 
 def __rest_api_handler(url, obj):
-    json_data = json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o)))
+    # check if the object has an overridden to_JSON method
+    if hasattr(obj, "to_JSON"):
+        json_data = obj.to_JSON()
+    else:
+        json_data = json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o)))
     logger.info("JSON Data = ", json_data)
     headers = {'Content-type': 'application/json'}
     response = requests.post(url, data=json_data, headers=headers)
@@ -61,4 +65,3 @@ def ConfigureEndpoints(objlist):
     url = AGENT_URL + 'api/endpoints/'
     __config(objlist, url)
     return
-
