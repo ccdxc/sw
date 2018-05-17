@@ -8,11 +8,15 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
@@ -35,17 +39,38 @@ func (s *RestServer) listEndpointHandler(r *http.Request) (interface{}, error) {
 }
 
 func (s *RestServer) postEndpointHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
+
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
 	_, err = s.agent.CreateEndpoint(&o)
-	return nil, err
+
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putEndpointHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -53,11 +78,26 @@ func (s *RestServer) putEndpointHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateEndpoint(&o)
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
+	err = s.agent.UpdateEndpoint(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteEndpointHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -65,6 +105,16 @@ func (s *RestServer) deleteEndpointHandler(r *http.Request) (interface{}, error)
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteEndpoint(&o)
+	err = s.agent.DeleteEndpoint(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

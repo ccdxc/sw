@@ -8,11 +8,15 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
@@ -35,6 +39,7 @@ func (s *RestServer) listInterfaceHandler(r *http.Request) (interface{}, error) 
 }
 
 func (s *RestServer) postInterfaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +47,30 @@ func (s *RestServer) postInterfaceHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
-	return nil, s.agent.CreateInterface(&o)
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
 
+	err = s.agent.CreateInterface(&o)
+
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteInterfaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +78,22 @@ func (s *RestServer) deleteInterfaceHandler(r *http.Request) (interface{}, error
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteInterface(&o)
+	err = s.agent.DeleteInterface(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putInterfaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Interface
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,6 +101,20 @@ func (s *RestServer) putInterfaceHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateInterface(&o)
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
+	err = s.agent.UpdateInterface(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

@@ -8,11 +8,15 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
@@ -35,6 +39,7 @@ func (s *RestServer) listNamespaceHandler(r *http.Request) (interface{}, error) 
 }
 
 func (s *RestServer) postNamespaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +47,30 @@ func (s *RestServer) postNamespaceHandler(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
-	return nil, s.agent.CreateNamespace(&o)
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
 
+	err = s.agent.CreateNamespace(&o)
+
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s", r.RequestURI, o.Tenant, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +78,22 @@ func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteNamespace(&o)
+	err = s.agent.DeleteNamespace(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putNamespaceHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,6 +101,20 @@ func (s *RestServer) putNamespaceHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateNamespace(&o)
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
+	err = s.agent.UpdateNamespace(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

@@ -41,6 +41,12 @@ var ErrInvalidMatchType = errors.New("invalid match selector type")
 // ErrInvalidNatActionType is returned on an invalid NAT Action
 var ErrInvalidNatActionType = errors.New("invalid NAT Action Type")
 
+// ErrInvalidIPSecSAType is returned on an invalid IPSec Policy SA Action
+var ErrInvalidIPSecSAType = errors.New("invalid IPSec SA Action")
+
+// ErrIPMissing is returned when the IP field is not specified in an Encrypt SA Action
+var ErrIPMissing = errors.New("ipsec encrypt SA needs local and remote gateway IP")
+
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
 type Kind string
 
@@ -58,6 +64,7 @@ type Hal struct {
 	Sessclient  halproto.SessionClient
 	Tnclient    halproto.VrfClient
 	Natclient   halproto.NatClient
+	IPSecclient halproto.IpsecClient
 }
 
 // MockClients stores references for mockclients to be used for setting expectations
@@ -71,6 +78,7 @@ type mockClients struct {
 	MockSessclient  *halproto.MockSessionClient
 	MockTnclient    *halproto.MockVrfClient
 	MockNatClient   *halproto.MockNatClient
+	MockIPSecClient *halproto.MockIpsecClient
 }
 
 // DB holds all the state information.
@@ -145,6 +153,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		hal.Sessclient = halproto.NewSessionClient(hal.client.ClientConn)
 		hal.Tnclient = halproto.NewVrfClient(hal.client.ClientConn)
 		hal.Natclient = halproto.NewNatClient(hal.client.ClientConn)
+		hal.IPSecclient = halproto.NewIpsecClient(hal.client.ClientConn)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
@@ -159,6 +168,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		MockSessclient:  halproto.NewMockSessionClient(hal.mockCtrl),
 		MockTnclient:    halproto.NewMockVrfClient(hal.mockCtrl),
 		MockNatClient:   halproto.NewMockNatClient(hal.mockCtrl),
+		MockIPSecClient: halproto.NewMockIpsecClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
@@ -170,6 +180,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 	hal.Sessclient = hal.MockClients.MockSessclient
 	hal.Tnclient = hal.MockClients.MockTnclient
 	hal.Natclient = hal.MockClients.MockNatClient
+	hal.IPSecclient = hal.MockClients.MockIPSecClient
 	haldp.Hal = hal
 	haldp.Hal.setExpectations()
 	return &haldp, nil
@@ -229,6 +240,18 @@ func (hd *Hal) setExpectations() {
 
 	hd.MockClients.MockNatClient.EXPECT().NatMappingCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockNatClient.EXPECT().NatMappingDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecSAEncryptCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecSAEncryptUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecSAEncryptDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
@@ -400,7 +423,11 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
-	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
+	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
+
+	if err != nil {
+		return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+	}
 
 	// convert v4 address
 	v4Addr := halproto.IPAddress{
@@ -409,14 +436,6 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
-
-	// convert v6 address
-	//	v6Addr := halproto.IPAddress{
-	//		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-	//		V4OrV6: &halproto.IPAddress_V6Addr{
-	//			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
-	//		},
-	//	}
 
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
@@ -793,8 +812,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 
 	gwIP := net.ParseIP(nw.Spec.IPv4Gateway)
 	if len(gwIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", gwIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from {%v}", nw.Spec.IPv4Gateway)
 	}
 
 	halGwIP := &halproto.IPAddress{
@@ -807,8 +825,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	if len(nw.Spec.IPv4Subnet) != 0 {
 		ip, net, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
 		if err != nil {
-			log.Errorf("Error parsing the subnet mask. Err: %v", err)
-			return err
+			return fmt.Errorf("error parsing the subnet mask from {%v}. Err: %v", nw.Spec.IPv4Subnet, err)
 		}
 		prefixLen, _ := net.Mask.Size()
 
@@ -927,7 +944,6 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		ifL2SegReqMsg := halproto.InterfaceL2SegmentRequestMsg{
 			Request: make([]*halproto.InterfaceL2SegmentSpec, 0),
 		}
-		//var req []*halproto.InterfaceL2SegmentSpec
 		_, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
 			log.Errorf("Error creating tenant. Err: %v", err)
@@ -1492,19 +1508,16 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 
 	ipRange := strings.Split(np.Spec.IPRange, "-")
 	if len(ipRange) != 2 {
-		log.Errorf("could not parse IP Range from the NAT Pool. {%v}", np)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP Range from the NAT Pool IPRange. {%v}", np.Spec.IPRange)
 	}
 
 	startIP := net.ParseIP(strings.TrimSpace(ipRange[0]))
 	if len(startIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", startIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from {%v}", startIP)
 	}
 	endIP := net.ParseIP(strings.TrimSpace(ipRange[1]))
 	if len(endIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", endIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from {%v}", endIP)
 	}
 
 	lowIP := halproto.IPAddress{
@@ -1685,8 +1698,7 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 
 	epIP := net.ParseIP(rt.Spec.GatewayIP)
 	if len(epIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", epIP)
-		return ErrIPParse
+		return fmt.Errorf("could not parse IP from %v", rt.Spec.GatewayIP)
 	}
 
 	gwIPAddr := &halproto.IPAddress{
@@ -1743,8 +1755,8 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 	// build route object
 	ip, net, err := net.ParseCIDR(rt.Spec.IPPrefix)
 	if err != nil {
-		log.Errorf("Error parsing the IP Prefix mask. Err: %v", err)
-		return err
+		return fmt.Errorf("error parsing the IP Prefix mask from %v. Err: %v", rt.Spec.IPPrefix, err)
+
 	}
 	prefixLen, _ := net.Mask.Size()
 	ipPrefix := &halproto.IPPrefix{
@@ -1898,47 +1910,258 @@ func (hd *Datapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Names
 }
 
 // CreateIPSecPolicy creates an IPSec Policy in the datapath
-func (hd *Datapath) CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*state.IPSecRuleRef) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
+	var ipSecRules []*halproto.IpsecRuleMatchSpec
+
+	for _, r := range ipSec.Spec.Rules {
+		// Match source and dest attributes
+		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		if err != nil {
+			log.Errorf("Could not convert match criteria Err: %v", err)
+			return err
+		}
+
+		// Populate esp info in the match selector.
+		appInfo := []*halproto.RuleMatch_AppMatchInfo{
+			{
+				App: &halproto.RuleMatch_AppMatchInfo_EspInfo{
+					EspInfo: &halproto.RuleMatch_ESPInfo{
+						Spi: r.SPI,
+					},
+				},
+			},
+		}
+		ruleMatch.AppMatch = appInfo
+
+		// Lookup corresponding SA
+		lookupKey := fmt.Sprintf("%s|%s", r.SAType, r.SAName)
+
+		ipSecRuleRef, ok := ipSecLUT[lookupKey]
+		if !ok {
+			return fmt.Errorf("IPSec SA Rule not found. {%v}", r.SAName)
+		}
+
+		ipSecAction, err := hd.convertIPSecRuleAction(r.SAType, ipSecRuleRef.NamespaceID, ipSecRuleRef.RuleID)
+		if err != nil {
+			log.Errorf("Could not convert IPSec rule action. Rule: %v. Err: %v", r, err)
+		}
+
+		rule := &halproto.IpsecRuleMatchSpec{
+			RuleId:   r.ID,
+			Match:    ruleMatch,
+			SaAction: ipSecAction,
+		}
+		ipSecRules = append(ipSecRules, rule)
+	}
+
+	ipSecPolicyReqMsg := &halproto.IpsecRuleRequestMsg{
+		Request: []*halproto.IpsecRuleSpec{
+			{
+				KeyOrHandle: &halproto.IpsecRuleKeyHandle{
+					KeyOrHandle: &halproto.IpsecRuleKeyHandle_RuleKey{
+						RuleKey: &halproto.IPSecRuleKey{
+							IpsecRuleId:    ipSec.Status.IPSecPolicyID,
+							VrfKeyOrHandle: vrfKey,
+						},
+					},
+				},
+				VrfKeyHandle: vrfKey,
+				Rules:        ipSecRules,
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.IPSecclient.IpsecRuleCreate(context.Background(), ipSecPolicyReqMsg)
+		if err != nil {
+			log.Errorf("EError creating IPSec Policy. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.IPSecclient.IpsecRuleCreate(context.Background(), ipSecPolicyReqMsg)
+		if err != nil {
+			log.Errorf("Error creating IPSec Policy. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
 // UpdateIPSecPolicy updates an IPSec Policy in the datapath
-func (hd *Datapath) UpdateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace) error {
 	return nil
 }
 
 // DeleteIPSecPolicy deletes an IPSec Policy in the datapath
-func (hd *Datapath) DeleteIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace) error {
 	return nil
 }
 
 // CreateIPSecSAEncrypt creates an IPSecSA encrypt rule in the datapath
-func (hd *Datapath) CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+	localGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.LocalGwIP))
+	if len(localGwIP) == 0 {
+		return fmt.Errorf("could not parse IP from {%v}", localGwIP)
+	}
+	remoteGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.RemoteGwIP))
+	if len(remoteGwIP) == 0 {
+		return fmt.Errorf("could not parse IP from {%v}", remoteGwIP)
+	}
+
+	localGw := &halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(localGwIP),
+		},
+	}
+
+	remoteGw := &halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(remoteGwIP),
+		},
+	}
+
+	ipSecSAEncryptReqMsg := &halproto.IpsecSAEncryptRequestMsg{
+		Request: []*halproto.IpsecSAEncrypt{
+			{
+				KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle{
+					KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle_CbId{
+						CbId: sa.Status.IPSecSAEncryptID,
+					},
+				},
+				Protocol:                halproto.IpsecProtocol_IPSEC_PROTOCOL_ESP,
+				AuthenticationAlgorithm: convertAuthAlgorithm(sa.Spec.AuthAlgo),
+				AuthenticationKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.AuthKey),
+					},
+				},
+				EncryptionAlgorithm: convertEncryptionAlgorithm(sa.Spec.EncryptAlgo),
+				EncryptionKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.EncryptionKey),
+					},
+				},
+				LocalGatewayIp:  localGw,
+				RemoteGatewayIp: remoteGw,
+				Spi:             sa.Spec.SPI,
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.IPSecclient.IpsecSAEncryptCreate(context.Background(), ipSecSAEncryptReqMsg)
+		if err != nil {
+			log.Errorf("Error creating IPSec Encrypt SA Rule. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.IPSecclient.IpsecSAEncryptCreate(context.Background(), ipSecSAEncryptReqMsg)
+		if err != nil {
+			log.Errorf("Error creating IPSec Encrypt SA Rule. Err: %v", err)
+			return err
+		}
+	}
+
 	return nil
 }
 
 // UpdateIPSecSAEncrypt updates an IPSecSA encrypt rule in the datapath
-func (hd *Datapath) UpdateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
 	return nil
 }
 
 // DeleteIPSecSAEncrypt deletes an IPSecSA encrypt rule in the datapath
-func (hd *Datapath) DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
 	return nil
 }
 
 // CreateIPSecSADecrypt creates an IPSecSA decrypt rule in the datapath
-func (hd *Datapath) CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+	ipSecSADecryptReqMsg := &halproto.IpsecSADecryptRequestMsg{
+		Request: []*halproto.IpsecSADecrypt{
+			{
+				KeyOrHandle: &halproto.IpsecSADecryptKeyHandle{
+					KeyOrHandle: &halproto.IpsecSADecryptKeyHandle_CbId{
+						CbId: sa.Status.IPSecSADecryptID,
+					},
+				},
+				Protocol:                halproto.IpsecProtocol_IPSEC_PROTOCOL_ESP,
+				AuthenticationAlgorithm: convertAuthAlgorithm(sa.Spec.AuthAlgo),
+				AuthenticationKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.AuthKey),
+					},
+				},
+				DecryptionAlgorithm: convertEncryptionAlgorithm(sa.Spec.DecryptAlgo),
+				DecryptionKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.DecryptionKey),
+					},
+				},
+				RekeyDecAlgorithm: convertEncryptionAlgorithm(sa.Spec.RekeyDecryptAlgo),
+				RekeyDecryptionKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.RekeyDecryptionKey),
+					},
+				},
+				RekeyAuthenticationKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.RekeyAuthKey),
+					},
+				},
+
+				Spi: sa.Spec.SPI,
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.IPSecclient.IpsecSADecryptCreate(context.Background(), ipSecSADecryptReqMsg)
+		if err != nil {
+			log.Errorf("Error creating IPSec Decrypt SA Rule. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.IPSecclient.IpsecSADecryptCreate(context.Background(), ipSecSADecryptReqMsg)
+		if err != nil {
+			log.Errorf("Error creating IPSec Decrypt SA Rule. Err: %v", err)
+			return err
+		}
+	}
+
 	return nil
 }
 
 // UpdateIPSecSADecrypt updates an IPSecSA decrypt rule in the datapath
-func (hd *Datapath) UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
 	return nil
 }
 
 // DeleteIPSecSADecrypt deletes an IPSecSA decrypt rule in the datapath
-func (hd *Datapath) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
 	return nil
 }
 
@@ -2139,6 +2362,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) (*hal
 	var ruleMatch halproto.RuleMatch
 	var err error
 
+	// Match source attributes
 	if src != nil {
 		// ToDo implement IP, Prefix Match address converters.
 		srcIPRange, err = hd.convertIPRange(src.Address)
@@ -2149,6 +2373,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) (*hal
 		ruleMatch.SrcAddress = srcIPRange
 	}
 
+	// Match dest attributes
 	if dst != nil {
 		dstIPRange, err = hd.convertIPRange(dst.Address)
 		if err != nil {
@@ -2260,6 +2485,39 @@ func (hd *Datapath) convertNatRuleAction(action string, vrfID, poolID uint64) (*
 	}
 }
 
+func (hd *Datapath) convertIPSecRuleAction(saType string, vrfID, ruleID uint64) (*halproto.IpsecSAAction, error) {
+	switch saType {
+	case "ENCRYPT":
+		encryptAction := &halproto.IpsecSAAction{
+			SaActionType: halproto.IpsecSAActionType_IPSEC_SA_ACTION_TYPE_ENCRYPT,
+			SaHandle: &halproto.IpsecSAAction_EncHandle{
+				EncHandle: &halproto.IpsecSAEncryptKeyHandle{
+					KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle_CbId{
+						CbId: ruleID,
+					},
+				},
+			},
+		}
+		return encryptAction, nil
+	case "DECRYPT":
+		decryptAction := &halproto.IpsecSAAction{
+			SaActionType: halproto.IpsecSAActionType_IPSEC_SA_ACTION_TYPE_DECRYPT,
+			SaHandle: &halproto.IpsecSAAction_DecHandle{
+				DecHandle: &halproto.IpsecSADecryptKeyHandle{
+					KeyOrHandle: &halproto.IpsecSADecryptKeyHandle_CbId{
+						CbId: ruleID,
+					},
+				},
+			},
+		}
+		return decryptAction, nil
+	default:
+		log.Errorf("Invalid IPSec Action type. %s", saType)
+		return nil, ErrInvalidIPSecSAType
+	}
+
+}
+
 func ipv4Touint32(ip net.IP) uint32 {
 	if len(ip) == 16 {
 		return binary.BigEndian.Uint32(ip[12:16])
@@ -2271,4 +2529,46 @@ func intToIPv4(intIP uint32) net.IP {
 	ip := make(net.IP, 4)
 	binary.BigEndian.PutUint32(ip, intIP)
 	return ip
+}
+
+func convertAuthAlgorithm(algorithm string) halproto.AuthenticationAlgorithm {
+	switch algorithm {
+	case "AES_GCM":
+		return halproto.AuthenticationAlgorithm_AUTHENTICATION_AES_GCM
+	case "AES_CCM":
+		return halproto.AuthenticationAlgorithm_AUTHENTICATION_AES_CCM
+	case "HMAC":
+		return halproto.AuthenticationAlgorithm_AUTHENTICATION_HMAC
+	case "AES_CBC_SHA":
+		return halproto.AuthenticationAlgorithm_AUTHENTICATION_AES_CBC_SHA
+	default:
+		return halproto.AuthenticationAlgorithm_AUTHENTICATION_ALGORITHM_NONE
+	}
+}
+
+func convertEncryptionAlgorithm(algorithm string) halproto.EncryptionAlgorithm {
+	switch algorithm {
+	case "AES_GCM_128":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_GCM_128
+	case "AES_GCM_256":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_GCM_256
+	case "AES_CCM_128":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_CCM_128
+	case "AES_CCM_192":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_CCM_192
+	case "AES_CCM_256":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_CCM_256
+	case "AES_CBC_128":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_CBC_128
+	case "AES_CBC_192":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_CBC_192
+	case "AES_CBC_256":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_AES_CBC_256
+	case "DES3":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_DES3
+	case "CHA_CHA":
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_CHA_CHA
+	default:
+		return halproto.EncryptionAlgorithm_ENCRYPTION_ALGORITHM_NONE
+	}
 }

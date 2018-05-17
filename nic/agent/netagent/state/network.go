@@ -16,6 +16,10 @@ import (
 
 // CreateNetwork creates a network
 func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
+	err := na.validateMeta(nt.Kind, nt.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// check if network already exists
 	oldNt, err := na.FindNetwork(nt.ObjectMeta)
 	if err == nil {
@@ -88,7 +92,7 @@ func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) 
 	key := objectKey(meta, typeMeta)
 	nt, ok := na.networkDB[key]
 	if !ok {
-		return nil, fmt.Errorf("network not found %v", nt)
+		return nil, fmt.Errorf("network not found %v", meta.Name)
 	}
 
 	return nt, nil
@@ -124,6 +128,10 @@ func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
 
 // DeleteNetwork deletes a network. ToDo implement network deletes in datapath
 func (na *NetAgent) DeleteNetwork(nt *netproto.Network) error {
+	err := na.validateMeta(nt.Kind, nt.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
 	if err != nil {

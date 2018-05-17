@@ -15,12 +15,12 @@ ln -f nic.tgz sim/naples
 echo "Building and saving a docker image ..."
 cd sim/naples
 
-docker build -t naples:$VER . && docker save -o naples-docker-$VER.tar naples:$VER
+docker build -t pensando/naples:$VER . && docker save -o naples-docker-$VER.tar pensando/naples:$VER
 if [ $? -eq 0 ]; then
     gzip naples-docker-$VER.tar
     mv naples-docker-$VER.tar.gz naples-docker-$VER.tgz
     dangling_images=$(docker images -qa -f 'dangling=true')
-    if [ x$dangling_images != x ]; then
+    if [ "x$dangling_images" != "x" ]; then
         docker rmi -f $dangling_images
     fi
 else
@@ -30,7 +30,7 @@ fi
 
 # prepare the release tar ball now
 echo "Preparing final image ..."
-tar cvzf $IMAGE_DIR/naples-release-$VER.tgz README Vagrantfile naples-docker-$VER.tgz bootstrap.sh postman_env.json SF-Kingdom1.postman_collection.json SF-Kingdom2.postman_collection.json
+tar cvzf $IMAGE_DIR/naples-release-$VER.tgz README Vagrantfile naples-docker-$VER.tgz 
 
 echo "Image ready in $IMAGE_DIR"
 exit 0

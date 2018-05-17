@@ -37,7 +37,7 @@ func TestInterfaceList(t *testing.T) {
 
 func TestInterfacePost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var interfaceList []*netproto.Interface
 
@@ -75,7 +75,7 @@ func TestInterfacePost(t *testing.T) {
 
 func TestInterfaceDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var interfaceList []*netproto.Interface
 
@@ -112,7 +112,7 @@ func TestInterfaceDelete(t *testing.T) {
 
 func TestInterfaceUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var interfaceList []*netproto.Interface
 
 	var actualInterfaceSpec netproto.InterfaceSpec
@@ -143,4 +143,49 @@ func TestInterfaceUpdate(t *testing.T) {
 	}
 	AssertEquals(t, updatedInterfaceSpec, actualInterfaceSpec, "Could not validate updated spec.")
 
+}
+
+func TestInterfaceCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestInterfaceDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestInterfaceUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }

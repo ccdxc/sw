@@ -61,6 +61,9 @@ message IPSecRule {
     // Security Association type
     string SAType       = 5 [(venice.check) = "StrEnum(IPSecRule.Type)",
                             (gogoproto.jsontag) = "sa-type,omitempty"];
+    // ESP SPI
+    uint32 SPI          = 6 [(gogoproto.jsontag) = "spi,omitempty"];
+
 }
 
 // IPSecPolicy Status
@@ -126,6 +129,9 @@ message IPSecSAEncryptSpec {
 
     // Remote Gateway IP
     string RemoteGwIP       = 7 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+
+    // SPI Value
+    uint32 SPI              = 8 [(gogoproto.jsontag) = "spi,omitempty"];
 
 }
 
@@ -238,6 +244,9 @@ message IPSecSADecryptSpec {
 
     // Remote Gateway IP
     string RemoteGwIP           = 10 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+
+    // SPI information
+    uint32 SPI                  = 11 [(gogoproto.jsontag) = "spi,omitempty"];
 
 }
 

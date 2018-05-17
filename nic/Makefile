@@ -356,6 +356,7 @@ nic:
 
 all:    nic
 	$(MAKE) tests
+	$(MAKE) package-tests
 
 clean: platform-clean capsim-master-clean
 	bazel clean

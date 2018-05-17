@@ -28,7 +28,7 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
                                   nat_cfg_rule_action_t *action)
 {
     hal_ret_t ret = HAL_RET_OK;
-    nat_pool_t  *pool;
+    nat_pool_t *pool;
 
     action->src_nat_action = spec.src_nat_action();
     action->dst_nat_action = spec.dst_nat_action();
@@ -54,6 +54,7 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
             return ret;
         }
     }
+
     return ret;
 }
 

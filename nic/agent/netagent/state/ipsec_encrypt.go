@@ -16,6 +16,10 @@ import (
 
 // CreateIPSecSAEncrypt creates an IPSec SA Encrypt rule
 func (na *NetAgent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) error {
+	err := na.validateMeta(ipSecSAEncrypt.Kind, ipSecSAEncrypt.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	oldEncryptSA, err := na.FindIPSecSAEncrypt(ipSecSAEncrypt.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
@@ -32,6 +36,11 @@ func (na *NetAgent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt
 	ns, err := na.FindNamespace(ipSecSAEncrypt.Tenant, ipSecSAEncrypt.Namespace)
 	if err != nil {
 		return err
+	}
+
+	// Only ESP Protocol supported for encrypt SA
+	if ipSecSAEncrypt.Spec.Protocol != "ESP" {
+		return fmt.Errorf("ipsec sa encrypt protocol should be ESP")
 	}
 
 	ipSecSAEncrypt.Status.IPSecSAEncryptID, err = na.store.GetNextID(IPSecSAEncryptID)
@@ -71,7 +80,7 @@ func (na *NetAgent) FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEn
 	key := objectKey(meta, typeMeta)
 	ipSecEncryptSA, ok := na.ipSecSAEncryptDB[key]
 	if !ok {
-		return nil, fmt.Errorf("IPSec encrypt SA not found %v", ipSecEncryptSA)
+		return nil, fmt.Errorf("IPSec encrypt SA not found %v", meta.Name)
 	}
 
 	return ipSecEncryptSA, nil
@@ -120,6 +129,10 @@ func (na *NetAgent) UpdateIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt
 
 // DeleteIPSecSAEncrypt deletes an IPSec encrypt SA
 func (na *NetAgent) DeleteIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) error {
+	err := na.validateMeta(ipSecEncryptSA.Kind, ipSecEncryptSA.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(ipSecEncryptSA.Tenant, ipSecEncryptSA.Namespace)
 	if err != nil {

@@ -24,6 +24,13 @@ type RestServer struct {
 	httpServer *http.Server     // HTTP server
 }
 
+// Response captures the HTTP Response sent by Agent REST Server
+type Response struct {
+	StatusCode int    `json:"status-code"`
+	Error      string `json:"error"`
+	SelfLink   string `json:"self-link"`
+}
+
 type routeAddFunc func(*mux.Router, *RestServer)
 
 // NewRestServer creates a new HTTP server servicg REST api
@@ -42,19 +49,19 @@ func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error
 	// setup the top level routes
 	router := mux.NewRouter()
 	prefixRoutes := map[string]routeAddFunc{
-		"/api/networks/":       addNetworkAPIRoutes,
-		"/api/endpoints/":      addEndpointAPIRoutes,
-		"/api/sgs/":            addSecurityGroupAPIRoutes,
-		"/api/tenants/":        addTenantAPIRoutes,
-		"/api/interfaces/":     addInterfaceAPIRoutes,
-		"/api/namespaces/":     addNamespaceAPIRoutes,
-		"/api/natpools/":       addNatPoolAPIRoutes,
-		"/api/natpolicies/":    addNatPolicyAPIRoutes,
-		"/api/routes/":         addRouteAPIRoutes,
-		"/api/natbindings/":    addNatBindingAPIRoutes,
-		"/api/ipsec/policies/": addIPSecPolicyAPIRoutes,
-		"/api/ipsec/encrypt/":  addIPSecSAEncryptAPIRoutes,
-		"/api/ipsec/decrypt/":  addIPSecSADecryptAPIRoutes,
+		"/api/networks/":         addNetworkAPIRoutes,
+		"/api/endpoints/":        addEndpointAPIRoutes,
+		"/api/sgs/":              addSecurityGroupAPIRoutes,
+		"/api/tenants/":          addTenantAPIRoutes,
+		"/api/interfaces/":       addInterfaceAPIRoutes,
+		"/api/namespaces/":       addNamespaceAPIRoutes,
+		"/api/nat/pools/":        addNatPoolAPIRoutes,
+		"/api/nat/policies/":     addNatPolicyAPIRoutes,
+		"/api/routes/":           addRouteAPIRoutes,
+		"/api/nat/bindings/":     addNatBindingAPIRoutes,
+		"/api/ipsec/policies/":   addIPSecPolicyAPIRoutes,
+		"/api/ipsec/encryption/": addIPSecSAEncryptAPIRoutes,
+		"/api/ipsec/decryption/": addIPSecSADecryptAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

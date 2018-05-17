@@ -37,7 +37,7 @@ func TestTenantList(t *testing.T) {
 
 func TestTenantPost(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var ok bool
 	var tenantList []*netproto.Tenant
 
@@ -69,7 +69,7 @@ func TestTenantPost(t *testing.T) {
 
 func TestTenantDelete(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var found bool
 	var tenantList []*netproto.Tenant
 
@@ -101,7 +101,7 @@ func TestTenantDelete(t *testing.T) {
 
 func TestTenantUpdate(t *testing.T) {
 	t.Parallel()
-	var resp error
+	var resp Response
 	var tenantList []*netproto.Tenant
 
 	var actualTenantSpec netproto.TenantSpec
@@ -133,4 +133,49 @@ func TestTenantUpdate(t *testing.T) {
 	}
 	AssertEquals(t, updatedTenantSpec, actualTenantSpec, "Could not validate updated spec.")
 
+}
+
+func TestTenantCreateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badPostData := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "",
+		},
+	}
+
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/tenants/", &badPostData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestTenantDeleteErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/tenants/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
+}
+
+func TestTenantUpdateErr(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	badDelData := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "default",
+			Name:      "badObject"},
+	}
+
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/tenants/badObject", &badDelData, &resp)
+
+	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }

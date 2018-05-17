@@ -8,11 +8,15 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
@@ -35,6 +39,7 @@ func (s *RestServer) listSecurityGroupHandler(r *http.Request) (interface{}, err
 }
 
 func (s *RestServer) postSecurityGroupHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -42,11 +47,30 @@ func (s *RestServer) postSecurityGroupHandler(r *http.Request) (interface{}, err
 		return nil, err
 	}
 
-	return nil, s.agent.CreateSecurityGroup(&o)
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
 
+	err = s.agent.CreateSecurityGroup(&o)
+
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) putSecurityGroupHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -54,11 +78,26 @@ func (s *RestServer) putSecurityGroupHandler(r *http.Request) (interface{}, erro
 		return nil, err
 	}
 
-	return nil, s.agent.UpdateSecurityGroup(&o)
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
+	err = s.agent.UpdateSecurityGroup(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }
 
 func (s *RestServer) deleteSecurityGroupHandler(r *http.Request) (interface{}, error) {
+	var res Response
 	var o netproto.SecurityGroup
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
@@ -66,6 +105,16 @@ func (s *RestServer) deleteSecurityGroupHandler(r *http.Request) (interface{}, e
 		return nil, err
 	}
 
-	return nil, s.agent.DeleteSecurityGroup(&o)
+	err = s.agent.DeleteSecurityGroup(&o)
 
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+
+	res.SelfLink = r.RequestURI
+
+	res.StatusCode = http.StatusOK
+	return res, err
 }

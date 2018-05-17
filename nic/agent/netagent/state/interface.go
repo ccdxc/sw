@@ -16,6 +16,10 @@ import (
 
 // CreateInterface creates an interface
 func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
+	err := na.validateMeta(intf.Kind, intf.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	var ok bool
 	var lif *netproto.Interface
 
@@ -96,7 +100,7 @@ func (na *NetAgent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, err
 	key := objectKey(meta, typeMeta)
 	tn, ok := na.enicDB[key]
 	if !ok {
-		return nil, fmt.Errorf("interface not found %v", tn)
+		return nil, fmt.Errorf("interface not found %v", meta.Name)
 	}
 
 	return tn, nil
@@ -146,6 +150,10 @@ func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
 
 // DeleteInterface deletes an interface
 func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
+	err := na.validateMeta(intf.Kind, intf.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
 	if err != nil {

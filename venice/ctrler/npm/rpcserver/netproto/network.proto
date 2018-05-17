@@ -35,20 +35,20 @@ message Network {
 
 // network spec
 message NetworkSpec {
-    string IPv4Subnet  = 1;   // IPv4 subnet CIDR
-    string IPv4Gateway = 2;   // IPv4 gateway
-    string IPv6Subnet  = 3;   // IPv6 subnet CIDR
-    string IPv6Gateway = 4;   // IPv6 gateway
-    uint32 VlanID      = 5;   // VLAN ID
-    uint32 VxlanVNI    = 6;   // Vxlan VNI
+    string IPv4Subnet  = 1[(gogoproto.jsontag)="ipv4-subnet,omitempty"];   // IPv4 subnet CIDR
+    string IPv4Gateway = 2[(gogoproto.jsontag)="ipv4-gateway,omitempty"];   // IPv4 gateway
+    string IPv6Subnet  = 3[(gogoproto.jsontag)="ipv6-subnet,omitempty"];   // IPv6 subnet CIDR
+    string IPv6Gateway = 4[(gogoproto.jsontag)="ipv6-gateway,omitempty"];   // IPv6 gateway
+    uint32 VlanID      = 5[(gogoproto.jsontag)="vlan-id,omitempty"];        // VLAN ID
+    uint32 VxlanVNI    = 6[(gogoproto.jsontag)="vxlan-vni,omitempty"];   // Vxlan VNI
 }
 
 // network status
 message NetworkStatus {
-    uint32 AllocatedVlanID   = 1;  // allocated Vlan ID
-    uint32 AllocatedVxlanVNI = 2;  // Allocated VXLAN VNI
-    uint64 NetworkID         = 3;  // Network identifier
-    uint64 NetworkHandle     = 4;  // datapath handle for the network
+    uint32 AllocatedVlanID   = 1[(gogoproto.jsontag)="allocated-vlan-id,omitempty"];  // allocated Vlan ID
+    uint32 AllocatedVxlanVNI = 2[(gogoproto.jsontag)="allocated-vxlan-vni,omitempty"];  // Allocated VXLAN VNI
+    uint64 NetworkID         = 3[(gogoproto.jsontag)="network-id,omitempty"];  // Network identifier
+    uint64 NetworkHandle     = 4[(gogoproto.jsontag)="network-handle,omitempty"];  // datapath handle for the network
 }
 
 // list of networks

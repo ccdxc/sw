@@ -134,4 +134,11 @@ sanity-tests:
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:all
     endif
 
+package-tests:
+	@cp ../bazel-bin/nic/hal/test/nic_mgr_app ../fake_root_target/nic/bin/
+	@rm -f nic.tar nic.tgz
+	@cd ../fake_root_target && tar --exclude=*.debug -cf ../nic/nic.tar *
+	@gzip -c nic.tar > nic.tgz
+	@chmod 766 nic.tgz
+
 tests: gtests sanity-tests

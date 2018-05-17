@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
@@ -26,9 +27,12 @@ var _ = Describe("Agent create delete loop tests", func() {
 			networkURL     = fmt.Sprintf("http://%s/api/networks/", lis.ListenURL.String())
 			epURL          = fmt.Sprintf("http://%s/api/endpoints/", lis.ListenURL.String())
 			routeURL       = fmt.Sprintf("http://%s/api/routes/", lis.ListenURL.String())
-			natPoolURL     = fmt.Sprintf("http://%s/api/natpools/", lis.ListenURL.String())
-			natBindingURL  = fmt.Sprintf("http://%s/api/natbindings/", lis.ListenURL.String())
-			natPolicyURL   = fmt.Sprintf("http://%s/api/natpolicies/", lis.ListenURL.String())
+			natPoolURL     = fmt.Sprintf("http://%s/api/nat/pools/", lis.ListenURL.String())
+			natBindingURL  = fmt.Sprintf("http://%s/api/nat/bindings/", lis.ListenURL.String())
+			natPolicyURL   = fmt.Sprintf("http://%s/api/nat/policies/", lis.ListenURL.String())
+			encryptURL     = fmt.Sprintf("http://%s/api/ipsec/encryption/", lis.ListenURL.String())
+			decryptURL     = fmt.Sprintf("http://%s/api/ipsec/decryption/", lis.ListenURL.String())
+			ipSecPolicyURL = fmt.Sprintf("http://%s/api/ipsec/policies/", lis.ListenURL.String())
 		)
 
 		// Verify if NetAgent is up
@@ -55,6 +59,15 @@ var _ = Describe("Agent create delete loop tests", func() {
 				},
 				{
 					Kind: "NatPolicy",
+				},
+				{
+					Kind: "IPSecSAEncrypt",
+				},
+				{
+					Kind: "IPSecSADecrypt",
+				},
+				{
+					Kind: "IPSecPolicy",
 				},
 			}
 			if lisErr != nil {
@@ -159,6 +172,36 @@ var _ = Describe("Agent create delete loop tests", func() {
 			}
 			if len(natPolicyList) != 0 {
 				Fail(fmt.Sprintf("expected no nat policies after symmetric create delete. But found %v. Err: %v", rtList, err))
+			}
+
+			// validate encrypt sa
+			var ipSecSAEncryptList []*netproto.IPSecSAEncrypt
+			err = netutils.HTTPGet(encryptURL, &ipSecSAEncryptList)
+			if err != nil {
+				Fail(fmt.Sprintf("could not get ipsec encrypt SA rules, %v", err))
+			}
+			if len(ipSecSAEncryptList) != 0 {
+				Fail(fmt.Sprintf("expected no nat ipsec sa encrypt rules after symmetric create delete. But found %v. Err: %v", rtList, err))
+			}
+
+			// validate decrypt sa
+			var ipSecSADecryptList []*netproto.IPSecSADecrypt
+			err = netutils.HTTPGet(decryptURL, &ipSecSADecryptList)
+			if err != nil {
+				Fail(fmt.Sprintf("could not get ipsec decrypt SA rules, %v", err))
+			}
+			if len(ipSecSADecryptList) != 0 {
+				Fail(fmt.Sprintf("expected no nat ipsec sa decrypt rules after symmetric create delete. But found %v. Err: %v", rtList, err))
+			}
+
+			// validate ipsec policy
+			var ipSecPolicyList []*netproto.IPSecPolicy
+			err = netutils.HTTPGet(ipSecPolicyURL, &ipSecPolicyList)
+			if err != nil {
+				Fail(fmt.Sprintf("could not get ipsec policies, %v", err))
+			}
+			if len(ipSecPolicyList) != 0 {
+				Fail(fmt.Sprintf("expected no ipsec policies after symmetric create delete. But found %v. Err: %v", rtList, err))
 			}
 		})
 
@@ -392,6 +435,115 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 			fmt.Println("Namespace deletes failed during nat policy create delete loops")
 			return err
 		}
+	case "IPSecSAEncrypt":
+		// Create backing namespaces
+		err := createNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace creates failed during ipsec sa encrypt create delete loops")
+			return err
+		}
+
+		for i := 0; i < crudLoopCount; i++ {
+			fmt.Printf("####### Creating IPSec SA Encrypt Iteration: %v #######\n", i)
+			err := createIPSecSAEncrypt(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped create ipsec encrypt sa failed. %v", err)
+			}
+			fmt.Println("OK")
+			fmt.Printf("####### Deleting IPSec SA Encrypt Iteration: %v #######\n", i)
+			time.Sleep(addDelSleepDuration)
+			err = deleteIPSecSAEncrypt(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped delete ipsec encrypt failed. %v", err)
+			}
+			fmt.Println("OK")
+		}
+		// delete the backing namespaces
+		err = deleteNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace deletes failed during ipsec encrypt sa create delete loops")
+			return err
+		}
+	case "IPSecSADecrypt":
+		// Create backing namespaces
+		err := createNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace creates failed during ipsec sa decrypt create delete loops")
+			return err
+		}
+
+		for i := 0; i < crudLoopCount; i++ {
+			fmt.Printf("####### Creating IPSec SA Decrypt Iteration: %v #######\n", i)
+			err := createIPSecSADecrypt(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped create ipsec decrypt sa failed. %v", err)
+			}
+			fmt.Println("OK")
+			fmt.Printf("####### Deleting IPSec SA Decrypt Iteration: %v #######\n", i)
+			time.Sleep(addDelSleepDuration)
+			err = deleteIPSecSADecrypt(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped delete ipsec decrypt failed. %v", err)
+			}
+			fmt.Println("OK")
+		}
+		// delete the backing namespaces
+		err = deleteNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace deletes failed during ipsec decrypt sa create delete loops")
+			return err
+		}
+	case "IPSecPolicy":
+		// Create backing namespaces and SA rules
+		err := createNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace creates failed during ipsec policy create delete loops")
+			return err
+		}
+
+		err = createIPSecSAEncrypt(baseURL)
+		if err != nil {
+			fmt.Println("IPsec SA Encrypt creates failed during ipsec policy create delete loops")
+			return err
+		}
+		err = createIPSecSADecrypt(baseURL)
+		if err != nil {
+			fmt.Println("IPSec SA Decrypt creates failed during ipsec policy create delete loops")
+			return err
+		}
+
+		for i := 0; i < crudLoopCount; i++ {
+			fmt.Printf("####### Creating IPSec Policy Iteration: %v #######\n", i)
+			err := createIPSecPolicy(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped create ipsec policu failed. %v", err)
+			}
+			fmt.Println("OK")
+			fmt.Printf("####### Deleting IPSec Policy Iteration: %v #######\n", i)
+			time.Sleep(addDelSleepDuration)
+			err = deleteIPSecPolicy(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped delete ipsec policy failed. %v", err)
+			}
+			fmt.Println("OK")
+		}
+		// delete the backing namespaces and sa rules in reverse order
+		err = deleteIPSecSAEncrypt(baseURL)
+		if err != nil {
+			fmt.Println("IPsec SA Encrypt deletes failed during ipsec policy create delete loops")
+			return err
+		}
+		err = deleteIPSecSADecrypt(baseURL)
+		if err != nil {
+			fmt.Println("IPSec SA Decrypt deletes failed during ipsec policy create delete loops")
+			return err
+		}
+		err = deleteNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace deletes failed during ipsec policy create delete loops")
+			return err
+		}
+
 	}
 
 	return nil
@@ -401,7 +553,7 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 
 // creates three namespaces
 func createNS(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 	nsURL := fmt.Sprintf("http://%s/api/namespaces/", baseURL)
 
 	ns1 := netproto.Namespace{
@@ -446,7 +598,7 @@ func createNS(baseURL string) error {
 
 // deletes three namespaces
 func deleteNS(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 	ns1 := netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
@@ -492,7 +644,7 @@ func deleteNS(baseURL string) error {
 
 // creates three networks
 func createNetwork(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	nwURL := fmt.Sprintf("http://%s/api/networks/", baseURL)
 
@@ -559,7 +711,7 @@ func createNetwork(baseURL string) error {
 
 // deletes three networks
 func deleteNetwork(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	nw1 := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -614,7 +766,7 @@ func deleteNetwork(baseURL string) error {
 
 // creates three endpoints
 func createEndpoint(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	epURL := fmt.Sprintf("http://%s/api/endpoints/", baseURL)
 
@@ -693,7 +845,7 @@ func createEndpoint(baseURL string) error {
 
 // deletes three endpoints
 func deleteEndpoint(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	ep1 := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -747,7 +899,7 @@ func deleteEndpoint(baseURL string) error {
 
 // creates three routes
 func createRoute(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	rtURL := fmt.Sprintf("http://%s/api/routes/", baseURL)
 
@@ -814,7 +966,7 @@ func createRoute(baseURL string) error {
 
 // deletes three routes
 func deleteRoute(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	rt1 := netproto.Route{
 		TypeMeta: api.TypeMeta{Kind: "Route"},
@@ -869,9 +1021,9 @@ func deleteRoute(baseURL string) error {
 
 // creates nat pool
 func createNatPool(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
-	natPoolURL := fmt.Sprintf("http://%s/api/natpools/", baseURL)
+	natPoolURL := fmt.Sprintf("http://%s/api/nat/pools/", baseURL)
 
 	np1 := netproto.NatPool{
 		TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -895,7 +1047,7 @@ func createNatPool(baseURL string) error {
 
 // deletes a nat pool
 func deleteNatPool(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	np1 := netproto.NatPool{
 		TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -906,7 +1058,7 @@ func deleteNatPool(baseURL string) error {
 		},
 	}
 	// Delete the nat pool
-	natPoolDeleteURL := fmt.Sprintf("http://%s/api/natpools/default/kg1/pool-1", baseURL)
+	natPoolDeleteURL := fmt.Sprintf("http://%s/api/nat/pools/default/kg1/pool-1", baseURL)
 	err := netutils.HTTPDelete(natPoolDeleteURL, &np1, &resp)
 	if err != nil {
 		fmt.Println("Could not delete nat pool")
@@ -918,9 +1070,9 @@ func deleteNatPool(baseURL string) error {
 
 // creates nat binding
 func createNatBinding(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
-	natBindingURL := fmt.Sprintf("http://%s/api/natbindings/", baseURL)
+	natBindingURL := fmt.Sprintf("http://%s/api/nat/bindings/", baseURL)
 
 	nb1 := netproto.NatBinding{
 		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
@@ -945,7 +1097,7 @@ func createNatBinding(baseURL string) error {
 
 // deletes a nat binding
 func deleteNatBinding(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	nb1 := netproto.NatBinding{
 		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
@@ -956,7 +1108,7 @@ func deleteNatBinding(baseURL string) error {
 		},
 	}
 	// Delete the nat pool
-	natPoolDeleteURL := fmt.Sprintf("http://%s/api/natbindings/default/kg2/svc1", baseURL)
+	natPoolDeleteURL := fmt.Sprintf("http://%s/api/nat/bindings/default/kg2/svc1", baseURL)
 	err := netutils.HTTPDelete(natPoolDeleteURL, &nb1, &resp)
 	if err != nil {
 		fmt.Println("Could not delete nat binding")
@@ -968,9 +1120,9 @@ func deleteNatBinding(baseURL string) error {
 
 // creates nat policy
 func createNatPolicy(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
-	natPolicyURL := fmt.Sprintf("http://%s/api/natpolicies/", baseURL)
+	natPolicyURL := fmt.Sprintf("http://%s/api/nat/policies/", baseURL)
 
 	np1 := netproto.NatPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
@@ -999,7 +1151,7 @@ func createNatPolicy(baseURL string) error {
 
 // deletes a nat policy
 func deleteNatPolicy(baseURL string) error {
-	var resp error
+	var resp restapi.Response
 
 	np1 := netproto.NatPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
@@ -1010,10 +1162,181 @@ func deleteNatPolicy(baseURL string) error {
 		},
 	}
 	// Delete the nat policy
-	natPolicyDeleteURL := fmt.Sprintf("http://%s/api/natpolicies/default/kg2/kg2", baseURL)
+	natPolicyDeleteURL := fmt.Sprintf("http://%s/api/nat/policies/default/kg2/kg2", baseURL)
 	err := netutils.HTTPDelete(natPolicyDeleteURL, &np1, &resp)
 	if err != nil {
 		fmt.Println("Could not delete nat policy")
+		return err
+	}
+
+	return nil
+}
+
+// creates ipsec sa encrypt
+func createIPSecSAEncrypt(baseURL string) error {
+	var resp restapi.Response
+
+	ipSecSAEncryptURL := fmt.Sprintf("http://%s/api/ipsec/encryption/", baseURL)
+
+	sa1 := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "kg2",
+			Name:      "kg2-ipsec-sa-encrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			LocalGwIP:     "20.1.1.1",
+			RemoteGwIP:    "20.1.1.2",
+			SPI:           1,
+		},
+	}
+	// Create the nat pool
+	err := netutils.HTTPPost(ipSecSAEncryptURL, &sa1, &resp)
+	if err != nil {
+		fmt.Println("Could not create ipsec sa encrypt")
+		return err
+	}
+	return nil
+}
+
+// deletes a ipsec sa encrypt
+func deleteIPSecSAEncrypt(baseURL string) error {
+	var resp restapi.Response
+
+	sa1 := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "kg2",
+			Name:      "kg2-ipsec-sa-encrypt",
+		},
+	}
+	// Delete the encrypt sa
+	ipSecSAEncryptDeleteURL := fmt.Sprintf("http://%s/api/ipsec/encryption/default/kg2/kg2-ipsec-sa-encrypt", baseURL)
+	err := netutils.HTTPDelete(ipSecSAEncryptDeleteURL, &sa1, &resp)
+	if err != nil {
+		fmt.Println("Could not delete ipsec sa encrypt")
+		return err
+	}
+
+	return nil
+}
+
+// creates ipsec sa decrypt
+func createIPSecSADecrypt(baseURL string) error {
+	var resp restapi.Response
+
+	ipSecSADecryptURL := fmt.Sprintf("http://%s/api/ipsec/decryption/", baseURL)
+
+	sa1 := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "kg2",
+			Name:      "kg2-ipsec-sa-decrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			DecryptAlgo:   "AES_GCM_256",
+			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+			SPI:           1,
+		},
+	}
+	// Create the nat pool
+	err := netutils.HTTPPost(ipSecSADecryptURL, &sa1, &resp)
+	if err != nil {
+		fmt.Println("Could not create ipsec sa decrypt")
+		return err
+	}
+	return nil
+}
+
+// deletes a ipsec sa decrypt
+func deleteIPSecSADecrypt(baseURL string) error {
+	var resp restapi.Response
+
+	sa1 := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "kg2",
+			Name:      "kg2-ipsec-sa-decrypt",
+		},
+	}
+	// Delete the decrypt sa
+	ipSecSADecryptDeleteURL := fmt.Sprintf("http://%s/api/ipsec/decryption/default/kg2/kg2-ipsec-sa-decrypt", baseURL)
+	err := netutils.HTTPDelete(ipSecSADecryptDeleteURL, &sa1, &resp)
+	if err != nil {
+		fmt.Println("Could not delete ipsec sa decrypt")
+		return err
+	}
+
+	return nil
+}
+
+// creates ipsec policy
+func createIPSecPolicy(baseURL string) error {
+	var resp restapi.Response
+
+	ipSecSAPolicyURL := fmt.Sprintf("http://%s/api/ipsec/policies/", baseURL)
+
+	ipSec := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "public",
+			Name:      "kg2-ipsec-decrypt-policy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Address: "20.1.1.2 - 20.1.1.2",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "20.1.1.1 - 20.1.1.1",
+					},
+					SPI:    1,
+					SAName: "kg2/kg2-ipsec-sa-decrypt",
+					SAType: "DECRYPT",
+				},
+			},
+		},
+	}
+	// Create the ipsec policy
+	err := netutils.HTTPPost(ipSecSAPolicyURL, &ipSec, &resp)
+	if err != nil {
+		fmt.Println("Could not create ipsec policy")
+		return err
+	}
+	return nil
+}
+
+// deletes an ipsec policy
+func deleteIPSecPolicy(baseURL string) error {
+	var resp restapi.Response
+
+	ipSec := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "public",
+			Name:      "kg2-ipsec-decrypt-policy",
+		},
+	}
+	// Delete the decrypt sa
+	ipSecPolicyDeleteURL := fmt.Sprintf("http://%s/api/ipsec/policies/default/public/kg2-ipsec-decrypt-policy", baseURL)
+	err := netutils.HTTPDelete(ipSecPolicyDeleteURL, &ipSec, &resp)
+	if err != nil {
+		fmt.Println("Could not delete ipsec policy")
 		return err
 	}
 
