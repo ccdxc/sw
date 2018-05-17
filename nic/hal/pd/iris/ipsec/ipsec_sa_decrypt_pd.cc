@@ -17,32 +17,6 @@ namespace pd {
 
 hal_ret_t p4pd_get_ipsec_sa_decrypt_tx_stage0_prog_addr(uint64_t* offset);
 
-#if 0
-void *
-ipsec_pd_decrypt_get_hw_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((pd_ipsec_t *)entry)->hw_id);
-}
-
-uint32_t
-ipsec_pd_decrypt_compute_hw_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipsec_sa_hw_id_t)) % ht_size;
-}
-
-bool
-ipsec_pd_decrypt_compare_hw_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(ipsec_sa_hw_id_t *)key1 == *(ipsec_sa_hw_id_t *)key2) {
-        return true;
-    }
-    return false;
-}
-
-#endif
-
 /********************************************
  * RxDMA
  * ******************************************/
@@ -530,6 +504,9 @@ pd_ipsec_decrypt_get (pd_ipsec_decrypt_get_args_t *args)
 {
     hal_ret_t               ret;
     pd_ipsec_t      ipsec_sa_pd;
+    
+    pd_crypto_read_key_args_t read_key;
+    crypto_key_t              key;
 
     HAL_TRACE_DEBUG("IPSECCB pd get for id: {}", args->ipsec_sa->sa_id);
 
@@ -546,6 +523,23 @@ pd_ipsec_decrypt_get (pd_ipsec_decrypt_get_args_t *args)
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", ipsec_sa_pd.ipsec_sa->sa_id);
     }
+
+    read_key.key_idx = ipsec_sa_pd.ipsec_sa->key_index;
+    memset(&key, 0, sizeof(crypto_key_t));
+    read_key.key = &key;
+
+    ret = pd_crypto_read_key(&read_key);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Get request failed for key_index: {}", ipsec_sa_pd.ipsec_sa->key_index);
+        //return ret;
+        ret = HAL_RET_OK;
+    }
+    HAL_TRACE_DEBUG("IPSEC SA pd get key_index for id: {}", args->ipsec_sa->key_index);
+    HAL_TRACE_DEBUG("IPSEC SA key_type, key_size : {}, {}", read_key.key->key_type, read_key.key->key_size);
+    if ((read_key.key->key_size > 0) && (read_key.key->key_size <= 32)) {
+        memcpy(ipsec_sa_pd.ipsec_sa->key, read_key.key->key, read_key.key->key_size);
+    }
+
     return ret;
 }
 

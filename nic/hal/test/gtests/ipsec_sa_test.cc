@@ -486,7 +486,22 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::ipsec_saencrypt_update(encrypt_spec, &encrypt_resp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
- 
+
+    enc_get_req.mutable_key_or_handle()->set_cb_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_get(enc_get_req, &enc_get_rsp_msg);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ipsec_sa_encrypt_test_spec_dump(enc_get_rsp_msg);
+
+    del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    //Decrypt
     decrypt_spec.mutable_key_or_handle()->set_cb_id(2);
     decrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     decrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
@@ -517,14 +532,6 @@ TEST_F(ipsec_encrypt_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-#if 0
-    enc_get_req.mutable_key_or_handle()->set_cb_id(1);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::ipsec_saencrypt_get(enc_get_req, &enc_get_rsp_msg);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    ipsec_sa_encrypt_test_spec_dump(enc_get_rsp_msg);
-
 
     dec_get_req.mutable_key_or_handle()->set_cb_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -532,14 +539,7 @@ TEST_F(ipsec_encrypt_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     ipsec_sa_decrypt_test_spec_dump(dec_get_rsp_msg);
-#endif
 
-
-    del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
 
     del_dec_req.mutable_key_or_handle()->set_cb_handle(decrypt_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

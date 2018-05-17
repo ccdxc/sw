@@ -163,6 +163,7 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_ipsec_sa_status()->set_ipsec_sa_handle(ipsec->hal_handle);
 
+    HAL_TRACE_DEBUG("Returning Success for SA ID {}", ipsec->sa_id);
     return HAL_RET_OK;
 
 cleanup:
@@ -254,6 +255,7 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     }
 
     rsp->set_api_status(types::API_STATUS_OK);
+    HAL_TRACE_DEBUG("Returning Success for SA ID {}", ipsec->sa_id);
 
     return HAL_RET_OK;
 }

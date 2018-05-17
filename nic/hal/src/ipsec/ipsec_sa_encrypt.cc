@@ -16,6 +16,7 @@ void *
 ipsec_sa_get_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
+    HAL_TRACE_DEBUG("Got id as {}\n", (((ipsec_sa_t *)entry)->sa_id));
     return (void *)&(((ipsec_sa_t *)entry)->sa_id);
 }
 
@@ -135,6 +136,8 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     }
 
     ipsec->sa_id = spec.key_or_handle().cb_id();
+   
+    HAL_TRACE_DEBUG("Got with SA ID {}", ipsec->sa_id);
 
     if ((spec.encryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
         (spec.authentication_algorithm() != ipsec::AUTHENTICATION_AES_GCM)) {
@@ -206,6 +209,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_ipsec_sa_status()->set_ipsec_sa_handle(ipsec->hal_handle);
 
+    HAL_TRACE_DEBUG("Returning Success for SA ID {}", ipsec->sa_id);
     return HAL_RET_OK;
 
 cleanup:
@@ -230,6 +234,7 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
 
     ipsec_sa_encrypt_spec_dump(spec);
     auto kh = spec.key_or_handle();
+    HAL_TRACE_DEBUG("Got with SA ID {}", kh.cb_id());
 
     ipsec = find_ipsec_sa_by_id(kh.cb_id());
     if (ipsec == NULL) {
@@ -308,6 +313,7 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
 
     auto kh = req.key_or_handle();
 
+    HAL_TRACE_DEBUG("Got with SA ID {}\n", kh.cb_id());
     ipsec = find_ipsec_sa_by_id(kh.cb_id());
     if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
