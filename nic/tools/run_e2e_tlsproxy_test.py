@@ -96,9 +96,9 @@ def set_proxy_tls_bypass_mode(bypass_mode):
     print("Set TLS Proxy bypass mode:%d" % bypass_mode)
     return    
 
-def run_hntap(tcp_port):
+def run_hntap(tcp_port, ul2ul_mode=0):
     log = open(hntap_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_hntap', '-p', tcp_port]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_hntap', '-p', tcp_port, '-m', str(ul2ul_mode)]
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p
@@ -247,11 +247,15 @@ def print_logs():
       for line in sock_stats:
           print("    " + line)
 
-def run_test(testnum, testname, tcp_port, bypass_tls, cipher, certfile, keyfile, clientCAfile, client_dir):
+def run_test(testnum, testname, tcp_port, bypass_tls, cipher, certfile, keyfile, clientCAfile, client_dir, proxy_mode):
     print("Test %d: Running E2E %s test, tcp-port %s\n" % (testnum, testname, tcp_port))
     start_time = time.time()
 
-    run_hntap(tcp_port)
+    if proxy_mode == 'N2N':
+       run_hntap(tcp_port, ul2ul_mode=1)
+    else:
+       #return 0
+       run_hntap(tcp_port)
     
     if client_dir == DIR_HOST:    
         if (bypass_tls == 1):
@@ -313,55 +317,65 @@ def main():
              {
                 'id': 1, 'name': "TLS Proxy-GCM", 'port': 80, 'bypass_tls': 0,
                 'cipher': TLS_GCM_CIPHER, 'certfile': TLS_GCM_CERTFILE,
-                'keyfile': TLS_GCM_KEYFILE, 'clientCAfile': None, 'client_dir': DIR_HOST
+                'keyfile': TLS_GCM_KEYFILE, 'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
              {
                 'id': 2, 'name': "TCP Proxy", 'port': 81, 'bypass_tls': 1,
                 'cipher': None, 'certfile': None, 'keyfile': None,
-                'clientCAfile': None, 'client_dir': DIR_HOST
+                'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
              {
                 'id': 3, 'name': "TLS Proxy with APP-redirect", 'port': 89,
                 'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
                 'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': None, 'client_dir': DIR_HOST
+                'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
              {
                 'id': 4, 'name': "TLS Proxy with APP-redirect(SPAN mode)",
                 'port': 8089, 'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
                 'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': None, 'client_dir': DIR_HOST
+                'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
              {
                 'id': 5, 'name': "TLS Proxy - RSA",
                 'port': 82, 'bypass_tls': 0, 'cipher': TLS_RSA_CIPHER, 
                 'certfile': TLS_RSA_CERTFILE, 'keyfile': TLS_RSA_KEYFILE,
-                'clientCAfile': None, 'client_dir': DIR_HOST 
+                'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
              {
                 'id': 6, 'name': "TLS Proxy - RSA - Client Auth", 'port': 83, 'bypass_tls': 0,
                 'cipher': TLS_RSA_CIPHER, 'certfile': TLS_RSA_CERTFILE,
-                'keyfile': TLS_RSA_KEYFILE, 'clientCAfile': TLS_RSA_CLIENTCA_FILE, 'client_dir': DIR_HOST
+                'keyfile': TLS_RSA_KEYFILE, 'clientCAfile': TLS_RSA_CLIENTCA_FILE, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
              {
                 'id': 7, 'name': "TLS Proxy - ECDSA - Client Auth", 'port': 84, 'bypass_tls': 0,
                 'cipher': TLS_GCM_CIPHER, 'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': TLS_GCM_CLIENTCA_FILE, 'client_dir': DIR_HOST
+                'clientCAfile': TLS_GCM_CLIENTCA_FILE, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
              {
                 'id': 8, 'name': "TCP Server Proxy - GCM", 'port': 85, 'bypass_tls': 1,
                 'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
-                'client_dir': DIR_NET
+                'client_dir': DIR_NET, 'proxy_mode': 'H2N'
              },
              {
                  'id': 9, 'name': "TLS Server Proxy - RSA", 'port': 86, 'bypass_tls': 0,
                  'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
-                 'client_dir': DIR_NET
+                 'client_dir': DIR_NET, 'proxy_mode': 'H2N'
              },
              {
                  'id': 10, 'name': "TLS Server Proxy - GCM", 'port': 87, 'bypass_tls': 0,
                  'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
-                 'client_dir': DIR_NET
+                 'client_dir': DIR_NET, 'proxy_mode': 'H2N'
+             },
+             {
+                'id': 11, 'name': "TLS Proxy-GCM-Uplink-to-Uplink", 'port': 88, 'bypass_tls': 0,
+                'cipher': TLS_GCM_CIPHER, 'certfile': TLS_GCM_CERTFILE,
+                'keyfile': TLS_GCM_KEYFILE, 'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'N2N'
+             },
+             {
+                'id': 12, 'name': "TCP Proxy-Uplink-to-Uplink", 'port': 90, 'bypass_tls': 1,
+                'cipher': None, 'certfile': None, 'keyfile': None,
+                'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'N2N'
              },
             ]
 
@@ -369,7 +383,7 @@ def main():
         status = run_test(test['id'], test['name'], str(test['port']),
                           test['bypass_tls'], test['cipher'],
                           test['certfile'], test['keyfile'],
-                          test['clientCAfile'], test['client_dir'])
+                          test['clientCAfile'], test['client_dir'], test['proxy_mode'])
         if status != 0:
             break;
         else:

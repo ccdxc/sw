@@ -381,7 +381,7 @@ int main(int argv, char *argc[])
   dev_handle_t *dev_handles[MAX_DEV_HANDLES];
 
   int opt = 0;
-  while ((opt = getopt(argv, argc, "p:n:x")) != -1) {
+  while ((opt = getopt(argv, argc, "p:n:m:x")) != -1) {
     switch (opt) {
     case 'p':
         hntap_port = atoi(optarg);
@@ -393,6 +393,10 @@ int main(int argv, char *argc[])
     break;
     case 'x':
     hntap_drop_rexmit = true;
+        break;
+    case 'm':
+        hntap_proxy_uplink_to_uplink_mode = atoi(optarg);
+        TLOG( "Proxy Uplink-to-Uplink mode = %d\n", hntap_proxy_uplink_to_uplink_mode);
         break;
     case '?':
     default:
