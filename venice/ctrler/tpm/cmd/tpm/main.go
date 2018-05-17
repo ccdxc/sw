@@ -26,8 +26,9 @@ func main() {
 	var (
 		nsURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort,
 			"comma separated list of resolver URLs of the form 'ip:port'")
-		logFile   = flag.String("logfile", "/var/log/pensando/"+pkgName+".log", "redirect logs to file")
-		debugFlag = flag.Bool("debug", false, "enable debug mode")
+		logFile         = flag.String("logfile", "/var/log/pensando/"+pkgName+".log", "redirect logs to file")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		debugFlag       = flag.Bool("debug", false, "enable debug mode")
 	)
 
 	flag.Parse()
@@ -39,7 +40,7 @@ func main() {
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugFlag,
 		CtxSelector: log.ContextAll,
-		LogToStdout: true,
+		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logFile,

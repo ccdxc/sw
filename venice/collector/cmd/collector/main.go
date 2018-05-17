@@ -16,32 +16,13 @@ import (
 )
 
 type cliOpts struct {
-	listenURL    string
-	resolverURLs string
+	listenURL       string
+	resolverURLs    string
+	logToStdoutFlag bool
 }
 
 func main() {
 	var opts cliOpts
-
-	// Fill logger config params
-	logConfig := &log.Config{
-		Module:      "collector",
-		Format:      log.LogFmt,
-		Filter:      log.AllowAllFilter,
-		Debug:       false,
-		LogToStdout: true,
-		LogToFile:   true,
-		CtxSelector: log.ContextAll,
-		FileCfg: log.FileConfig{
-			Filename:   "/var/log/pensando/collector.log",
-			MaxSize:    10, // TODO: These needs to be part of Service Config Object
-			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
-			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
-		},
-	}
-
-	// Initialize logger config
-	log.SetConfig(logConfig)
 
 	flagSet := flag.NewFlagSet("collector", flag.ContinueOnError)
 	flagSet.StringVar(&opts.listenURL,
@@ -52,6 +33,10 @@ func main() {
 		"resolver-urls",
 		":"+globals.CMDResolverPort,
 		"Comma separated list of resolver URLs of the form 'ip:port'")
+	flagSet.BoolVar(&opts.logToStdoutFlag,
+		"logtostdout",
+		false,
+		"Enable logging to stdout")
 
 	err := flagSet.Parse(os.Args[1:])
 
@@ -59,6 +44,26 @@ func main() {
 		log.Errorf("Error %v parsing args", err)
 		os.Exit(1)
 	}
+
+	// Fill logger config params
+	logConfig := &log.Config{
+		Module:      "collector",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       false,
+		LogToStdout: opts.logToStdoutFlag,
+		LogToFile:   true,
+		CtxSelector: log.ContextAll,
+		FileCfg: log.FileConfig{
+			Filename:   "/var/log/pensando/collector.log",
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
+		},
+	}
+
+	// Initialize logger config
+	log.SetConfig(logConfig)
 
 	// Wait until we get a backend
 	beList := getBackEnds(opts.resolverURLs)

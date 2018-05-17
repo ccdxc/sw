@@ -5,6 +5,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/appc/cni/pkg/version"
 	cni "github.com/containernetworking/cni/pkg/skel"
 
@@ -13,6 +15,11 @@ import (
 )
 
 func main() {
+	var (
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+	)
+	flag.Parse()
+
 	// Fill logger config params
 	logConfig := &log.Config{
 		Module:      "K8sAgent",
@@ -20,13 +27,13 @@ func main() {
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
 		CtxSelector: log.ContextAll,
-		LogToStdout: true,
+		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   "/tmp/pensandonet-plugin.log",
-			MaxSize:    10, // TODO: These needs to be part of Service Config Object
-			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
-			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
 		},
 	}
 

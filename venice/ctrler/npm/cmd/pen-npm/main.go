@@ -18,11 +18,12 @@ import (
 func main() {
 
 	var (
-		debugflag    = flag.Bool("debug", false, "Enable debug mode")
-		logToFile    = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
-		listenURL    = flag.String("listen-url", ":"+globals.NpmRPCPort, "gRPC listener URL")
-		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
-		restURL      = flag.String("rest-url", ":"+globals.NpmRESTPort, "rest listener URL")
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToFile       = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		listenURL       = flag.String("listen-url", ":"+globals.NpmRPCPort, "gRPC listener URL")
+		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
+		restURL         = flag.String("rest-url", ":"+globals.NpmRESTPort, "rest listener URL")
 	)
 	flag.Parse()
 
@@ -33,13 +34,13 @@ func main() {
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
-		LogToStdout: true,
+		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,
-			MaxSize:    10, // TODO: These needs to be part of Service Config Object
-			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
-			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
 		},
 	}
 

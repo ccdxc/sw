@@ -46,7 +46,7 @@ func main() {
 		httpaddr        = flag.String("port", ":"+globals.APIGwRESTPort, "HTTP port to listen on")
 		debugflag       = flag.Bool("debug", false, "enable debug mode")
 		host            = flag.String("host", "localhost", "host identity")
-		logToStdoutFlag = flag.Bool("logtostdout", true, "enable logging to stdout")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")

@@ -24,10 +24,11 @@ const (
 )
 
 type cliOpts struct {
-	listenURL   string
-	storeType   string
-	storeURL    string
-	vcenterList []*url.URL
+	listenURL       string
+	storeType       string
+	storeURL        string
+	vcenterList     []*url.URL
+	logToStdoutFlag bool
 }
 
 func printUsage(f *flag.FlagSet) {
@@ -57,6 +58,10 @@ func parseOpts(opts *cliOpts) error {
 		"resolver-urls",
 		":"+globals.CMDResolverPort,
 		"Comma separated list of resolver URLs of the form 'ip:port'")
+	flagSet.BoolVar(&opts.logToStdoutFlag,
+		"logtostdout",
+		false,
+		"Enable logging to stdout")
 
 	err := flagSet.Parse(os.Args[1:])
 
@@ -142,29 +147,30 @@ func launchVCHub(opts *cliOpts) {
 func main() {
 	var opts cliOpts
 
+	err := parseOpts(&opts)
+	if err != nil {
+		os.Exit(1)
+	}
+
 	// Fill logger config params
 	logConfig := &log.Config{
 		Module:      "vchub",
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
-		LogToStdout: true,
+		LogToStdout: opts.logToStdoutFlag,
 		LogToFile:   true,
 		CtxSelector: log.ContextAll,
 		FileCfg: log.FileConfig{
 			Filename:   "/tmp/vchub.log",
-			MaxSize:    10, // TODO: These needs to be part of Service Config Object
-			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
-			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
 		},
 	}
 
 	// Initialize logger config
 	log.SetConfig(logConfig)
-	err := parseOpts(&opts)
-	if err != nil {
-		os.Exit(1)
-	}
 
 	launchVCHub(&opts)
 	waitForever()

@@ -27,7 +27,7 @@ func main() {
 		kvstore         = flag.String("kvdest", "localhost:2379", "Comma separated list of etcd servers")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		version         = flag.String("version", "v1", "Version string for native version")
-		logToStdoutFlag = flag.Bool("logtostdout", true, "enable logging to stdout")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apiserver.log", "redirect logs to file")
 		poolsize        = flag.Int("kvpoolsize", apisrv.DefaultKvPoolSize, "size of KV Store connection pool")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")

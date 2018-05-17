@@ -30,6 +30,12 @@ func main() {
 			"Path of the log file",
 		)
 
+		logToStdoutFlag = flag.Bool(
+			"logtostdout",
+			false,
+			"enable logging to stdout",
+		)
+
 		resolverURLs = flag.String(
 			"resolver-urls",
 			":"+globals.CMDResolverPort,
@@ -52,7 +58,7 @@ func main() {
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
-		LogToStdout: true,
+		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,

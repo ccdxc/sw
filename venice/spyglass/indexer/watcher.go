@@ -352,7 +352,8 @@ func (idr *Indexer) startWriter(id int) {
 			case kvstore.Created:
 				reqType = "index"
 			case kvstore.Updated:
-				reqType = "update"
+				// TODO: Change this to update once BULK api supports it
+				reqType = "index"
 			case kvstore.Deleted:
 				reqType = "delete"
 			}

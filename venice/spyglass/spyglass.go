@@ -17,11 +17,12 @@ import (
 func main() {
 
 	var (
-		debugflag     = flag.Bool("debug", false, "Enable debug mode")
-		logToFile     = flag.String("logtofile", "/var/log/pensando/spyglass.log", "Redirect logs to file")
-		apiServerAddr = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
-		finderAddr    = flag.String("finder-addr", ":"+globals.SpyglassRPCPort, "Finder search gRPC endpoint")
-		resolverAddrs = flag.String("resolver-addrs", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToFile       = flag.String("logtofile", "/var/log/pensando/spyglass.log", "Redirect logs to file")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		apiServerAddr   = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
+		finderAddr      = flag.String("finder-addr", ":"+globals.SpyglassRPCPort, "Finder search gRPC endpoint")
+		resolverAddrs   = flag.String("resolver-addrs", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
 	)
 
 	flag.Parse()
@@ -32,7 +33,7 @@ func main() {
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
-		LogToStdout: true,
+		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,
 		CtxSelector: log.ContextAll,
 		FileCfg: log.FileConfig{
