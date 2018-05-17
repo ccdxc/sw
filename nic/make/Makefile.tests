@@ -136,6 +136,7 @@ sanity-tests:
 
 package-tests:
 	@cp ../bazel-bin/nic/hal/test/nic_mgr_app ../fake_root_target/nic/bin/
+	@chmod 775 ../fake_root_target/nic/bin/nic_mgr_app
 	@rm -f nic.tar nic.tgz
 	@cd ../fake_root_target && tar --exclude=*.debug -cf ../nic/nic.tar *
 	@gzip -c nic.tar > nic.tgz

@@ -58,3 +58,4 @@ nic.tgz
 naples.tgz
 debug_cli/cli/cli.py
 nic/debug_cli/cli/cli_wrap.cc
+debug_cli/cli/cli_wrap.cc
