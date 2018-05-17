@@ -28,13 +28,15 @@ namespace tests {
 comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     app_max_size(params.app_max_size_),
     app_blk_size(0),
+    app_enc_size(params.app_enc_size_),
     caller_comp_pad_buf(nullptr),
-    caller_xts_status_buf(nullptr),
-    caller_xts_opaque_buf(nullptr),
+    caller_xts_status_vec(nullptr),
+    caller_xts_opaque_vec(nullptr),
     caller_xts_opaque_data(0),
     comp_queue(nullptr),
     push_type(COMP_QUEUE_PUSH_INVALID),
     seq_comp_qid(0),
+    actual_enc_blks(-1),
     num_enc_blks(0),
     last_cp_output_data_len(0),
     last_encrypt_output_data_len(0),
@@ -70,14 +72,17 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
                                    kMinHostMemAllocSize);
 
     // XTS AOL must be 512 byte aligned
-    max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, kCompAppHashBlkSize);
+    max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, app_enc_size);
     xts_src_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
                                    DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
     xts_dst_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
                                    DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
-    xts_desc_buf = new dp_mem_t(1, sizeof(xts::xts_desc_t),
+    xts_desc_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_desc_t),
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(xts::xts_desc_t));
+    xts_opaque_vec = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
+                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                  sizeof(uint64_t));
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncomp_buf->read();
     for (uint64_t i = 0; i < (app_max_size / sizeof(uint64_t)); i++) {
@@ -108,7 +113,8 @@ comp_encrypt_chain_t::~comp_encrypt_chain_t()
         delete comp_opaque_buf;
         delete xts_src_aol_vec;
         delete xts_dst_aol_vec;
-        delete xts_desc_buf;
+        delete xts_desc_vec;
+        delete xts_opaque_vec;
     }
 }
 
@@ -120,9 +126,20 @@ void
 comp_encrypt_chain_t::pre_push(comp_encrypt_chain_pre_push_params_t params)
 {
     caller_comp_pad_buf = params.caller_comp_pad_buf_;
-    caller_xts_status_buf = params.caller_xts_status_buf_;
-    caller_xts_opaque_buf = params.caller_xts_opaque_buf_;
+    caller_xts_status_vec = params.caller_xts_status_vec_;
+    caller_xts_opaque_vec = params.caller_xts_opaque_vec_;
     caller_xts_opaque_data = params.caller_xts_opaque_data_;
+
+    /*
+     * XTS opaque data is needed in full_verify() to ensure completion of
+     * the decrypt op which is last in the chain, before there's any chance
+     * of the caller resubmitting the same chain for another run.
+     */
+    if (!caller_xts_opaque_vec) {
+        caller_xts_opaque_vec = xts_opaque_vec;
+        caller_xts_opaque_data = 0xa1a1a1a1a1a1a1a1;
+
+    }
 }
 
 /*
@@ -131,7 +148,8 @@ comp_encrypt_chain_t::pre_push(comp_encrypt_chain_pre_push_params_t params)
 int 
 comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 {
-    acc_chain_params_t    chain_params = {0};
+    acc_chain_params_t  chain_params = {0};
+    uint32_t            block_no;
 
     // validate app_blk_size
     if (params.app_blk_size_ > app_max_size) {
@@ -142,9 +160,11 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     }
 
     if (!suppress_info_log) {
-        printf("Starting testcase comp_encrypt_chain app_blk_size %u push_type %d "
+        printf("Starting testcase comp_encrypt_chain enc_dec_blk_type %u "
+               "app_blk_size %u app_enc_size %u push_type %d "
                "seq_comp_qid %u seq_comp_status_qid %u seq_xts_status_qid %u\n",
-               params.app_blk_size_, params.push_type_, params.seq_comp_qid_,
+               params.enc_dec_blk_type_, params.app_blk_size_, app_enc_size,
+               params.push_type_, params.seq_comp_qid_,
                params.seq_comp_status_qid_, params.seq_xts_status_qid_);
     }
 
@@ -154,8 +174,17 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
      */
     xts_encrypt_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
+    enc_dec_blk_type = params.enc_dec_blk_type_;
     app_blk_size = params.app_blk_size_;
-    num_enc_blks = COMP_MAX_HASH_BLKS(app_blk_size, kCompAppHashBlkSize);
+    num_enc_blks = COMP_MAX_HASH_BLKS(app_blk_size, app_enc_size);
+    actual_enc_blks = -1;
+    if (num_enc_blks > max_enc_blks) {
+        printf("%s num_enc_blks %u exceeds max_enc_blks %u\n",
+               __FUNCTION__, num_enc_blks, max_enc_blks);
+        assert(num_enc_blks <= max_enc_blks);
+        return -1;
+    }
+
     comp_queue = params.comp_queue_;
     success = false;
     compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf,
@@ -167,20 +196,65 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     chain_params.seq_q = params.seq_comp_qid_;
     chain_params.seq_status_q = params.seq_comp_status_qid_;
 
-    // Set up encryption
+    // The compression status sequencer will use the AOLs given below
+    // only to update the length fields with the correct output data length
+    // and pad length.
     xts_src_aol_vec->line_set(0);
     xts_dst_aol_vec->line_set(0);
-    encrypt_setup(chain_params);
+    chain_params.chain_ent.aol_src_vec_addr = xts_src_aol_vec->pa();
+    chain_params.chain_ent.aol_dst_vec_addr = xts_dst_aol_vec->pa();
+
+    // Note: p4+ will modify AOL vectors below based on compression
+    // output_data_len and any required padding
+    xts_aol_sparse_fill(enc_dec_blk_type, xts_src_aol_vec,
+                        comp_buf, app_enc_size, num_enc_blks);
+    xts_aol_sparse_fill(enc_dec_blk_type, xts_dst_aol_vec,
+                        xts_encrypt_buf, app_enc_size, num_enc_blks);
+    /*
+     * Ensure caller supplied enough status and opaque buffers
+     */
+    if (enc_dec_blk_type == XTS_ENC_DEC_PER_HASH_BLK) {
+        if (caller_xts_status_vec &&
+            (caller_xts_status_vec->num_lines_get() < num_enc_blks)) {
+            printf("%s number of status buffers %u is less than num_enc_blks %u\n",
+                   __FUNCTION__, caller_xts_status_vec->num_lines_get(),
+                   num_enc_blks);
+            assert(caller_xts_status_vec->num_lines_get() >= num_enc_blks);
+            return -1;
+        }
+
+        if (caller_xts_opaque_vec &&
+            (caller_xts_opaque_vec->num_lines_get() < num_enc_blks)) {
+            printf("%s number of opaque buffers %u is less than num_enc_blks %u\n",
+                   __FUNCTION__, caller_xts_opaque_vec->num_lines_get(),
+                   num_enc_blks);
+            assert(caller_xts_opaque_vec->num_lines_get() >= num_enc_blks);
+            return -1;
+        }
+
+        /*
+         * Per-block enryption will require setup of multiple descriptors
+         */
+        chain_params.chain_ent.desc_vec_push_en = 1;
+        for (block_no = 0; block_no < num_enc_blks; block_no++) {
+            encrypt_setup(block_no, chain_params);
+        }
+
+    } else {
+        encrypt_setup(0, chain_params);
+    }
+
 
     // encryption will use direct Barco push action
+    xts_desc_vec->line_set(0);
     chain_params.chain_ent.next_doorbell_en = 1;
     chain_params.chain_ent.next_db_action_barco_push = 1;
     chain_params.chain_ent.push_entry.barco_ring_addr = xts_ctx.xts_ring_base_addr;
     chain_params.chain_ent.push_entry.barco_pndx_addr = xts_ctx.xts_ring_pi_addr;
     chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = xts_ctx.xts_ring_pi_shadow_addr->pa();
-    chain_params.chain_ent.push_entry.barco_desc_addr = xts_desc_buf->pa();
+    chain_params.chain_ent.push_entry.barco_desc_addr = xts_desc_vec->pa();
     chain_params.chain_ent.push_entry.barco_desc_size =
-                           (uint8_t)log2(xts_desc_buf->line_size_get());
+                           (uint8_t)log2(xts_desc_vec->line_size_get());
     chain_params.chain_ent.push_entry.barco_pndx_size =
                            (uint8_t)log2(xts::kXtsPISize);
     chain_params.chain_ent.push_entry.barco_ring_size = (uint8_t)log2(kXtsQueueSize);
@@ -195,11 +269,6 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
         chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
     }
 
-    // The compression status sequencer will use the AOLs given below
-    // only to update the length fields with the correct output data length
-    // and pad length.
-    chain_params.chain_ent.aol_src_vec_addr = xts_src_aol_vec->pa();
-    chain_params.chain_ent.aol_dst_vec_addr = xts_dst_aol_vec->pa();
     chain_params.chain_ent.pad_buf_addr = caller_comp_pad_buf->pa();
     chain_params.chain_ent.stop_chain_on_error = 1;
     chain_params.chain_ent.aol_pad_en = 1;
@@ -244,20 +313,25 @@ comp_encrypt_chain_t::post_push(void)
  * Set up of XTS encryption
  */
 void 
-comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
+comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
+                                    acc_chain_params_t& chain_params)
 {
     xts::xts_cmd_t cmd;
     xts::xts_desc_t *xts_desc_addr;
 
     // Use caller's XTS opaque info and status, if any
-    if (caller_xts_opaque_buf) {
-        xts_ctx.xts_db = caller_xts_opaque_buf;
+    if (caller_xts_opaque_vec) {
+        caller_xts_opaque_vec->line_set(block_no);
+        xts_ctx.xts_db = 
+            caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
         xts_ctx.xts_db_addr = 0;
         xts_ctx.exp_db_data = caller_xts_opaque_data;
         xts_ctx.caller_xts_db_en = true;
     }
-    if (caller_xts_status_buf) {
-        xts_ctx.status = caller_xts_status_buf;
+    if (caller_xts_status_vec) {
+        caller_xts_status_vec->line_set(block_no);
+        xts_ctx.status = 
+            caller_xts_status_vec->fragment_find(0, caller_xts_status_vec->line_size_get());
         xts_ctx.caller_status_en = true;
     }
     xts_ctx.copy_desc = false;
@@ -274,21 +348,74 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts_ctx.copy_desc = false;
     xts_ctx.ring_db = false;
 
-    // Note: p4+ will modify AOL vectors below based on compression
-    // output_data_len and any required padding
-    xts_aol_sparse_fill(xts_src_aol_vec, comp_buf,
-                        kCompAppHashBlkSize, num_enc_blks);
-    xts_aol_sparse_fill(xts_dst_aol_vec, xts_encrypt_buf,
-                        kCompAppHashBlkSize, num_enc_blks);
 
     // Set up XTS encrypt descriptor
+    xts_src_aol_vec->line_set(block_no);
+    xts_dst_aol_vec->line_set(block_no);
+    xts_desc_vec->line_set(block_no);
+
     xts_ctx.cmd_eval_seq_xts(cmd);
-    xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
+    xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_vec);
     xts_desc_addr->in_aol = xts_src_aol_vec->pa();
     xts_desc_addr->out_aol = xts_dst_aol_vec->pa();
     xts_desc_addr->cmd = cmd;
-    xts_desc_buf->write_thru();
-    xts_ctx.desc_write_seq_xts(xts_desc_buf);
+    xts_desc_vec->write_thru();
+    xts_ctx.desc_write_seq_xts(xts_desc_vec);
+}
+
+
+/*
+ * Return actual number of encryption blocks based on the output data length
+ * from compression.
+ */
+int 
+comp_encrypt_chain_t::actual_enc_blks_get(test_resource_query_method_t query_method)
+{
+    bool    log_error = (query_method == TEST_RESOURCE_BLOCKING_QUERY);
+
+    if (actual_enc_blks < 0) {
+
+        switch (query_method) {
+
+        case TEST_RESOURCE_BLOCKING_QUERY:
+
+            // Poll for comp status
+            if (!comp_status_poll(comp_status_buf2, cp_desc, suppress_info_log)) {
+              printf("ERROR: comp_encrypt_chain compression status never came\n");
+              return -1;
+            }
+
+            /*
+             * Fall through!!!
+             */
+             
+        case TEST_RESOURCE_NON_BLOCKING_QUERY:
+        default:
+
+            // Validate comp status
+            if (compress_status_verify(comp_status_buf2, comp_buf, cp_desc, log_error)) {
+                if (log_error) {
+                    printf("ERROR: comp_encrypt_chain compression status verification failed\n");
+                }
+                return -1;
+            }
+            last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
+            actual_enc_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ? 1 :
+                              (int)COMP_MAX_HASH_BLKS(last_cp_output_data_len,
+                                                      app_enc_size);
+            if (!suppress_info_log) {
+                printf("comp_encrypt_chain: last_cp_output_data_len %u actual_enc_blks %u\n",
+                       last_cp_output_data_len, actual_enc_blks);
+            }
+            if ((actual_enc_blks == 0) || ((uint32_t)actual_enc_blks > num_enc_blks)) {
+                printf("comp_encrypt_chain: invalid actual_enc_blks %d in relation to "
+                       "num_enc_blks %u\n", actual_enc_blks, num_enc_blks);
+                actual_enc_blks = -1;
+            }
+        }
+    }
+
+    return actual_enc_blks;
 }
 
 
@@ -303,18 +430,22 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
 int 
 comp_encrypt_chain_t::fast_verify(void)
 {
-    // Validate comp status
+    uint64_t    xts_status;
+    uint32_t    block_no;
+
     success = false;
-    if (compress_status_verify(comp_status_buf2, comp_buf, cp_desc)) {
-        printf("ERROR: comp_encrypt_chain compression status verification failed\n");
+    if (actual_enc_blks_get(TEST_RESOURCE_NON_BLOCKING_QUERY) < 0) {
         return -1;
     }
 
     // Validate XTS status
-    uint64_t curr_xts_status = *((uint64_t *)caller_xts_status_buf->read_thru());
-    if (curr_xts_status) {
-      printf("ERROR: comp_encrypt_chain XTS error 0x%lx\n", curr_xts_status);
-      return -1;
+    for (block_no = 0; block_no < (uint32_t)actual_enc_blks; block_no++) {
+        caller_xts_status_vec->line_set(block_no);
+        xts_status = *((uint64_t *)caller_xts_status_vec->read_thru());
+        if (xts_status) {
+          printf("ERROR: comp_encrypt_chain XTS error 0x%lx\n", xts_status);
+          return -1;
+        }
     }
 
     if (!suppress_info_log) {
@@ -334,27 +465,14 @@ int
 comp_encrypt_chain_t::full_verify(void)
 {
     xts::xts_aol_t  *xts_aol;
+    uint32_t        max_blks;
     uint32_t        block_no;
+    uint32_t        exp_encrypt_output_data_len;
     uint32_t        poll_factor = app_blk_size / kCompAppMinSize;
 
-    // Poll for comp status
-    success = false;
-    if (!comp_status_poll(comp_status_buf2, cp_desc, suppress_info_log)) {
-      printf("ERROR: comp_encrypt_chain compression status never came\n");
-      return -1;
-    }
-
-    // Verify XTS engine doorbell
     assert(poll_factor);
-    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
-        printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
-        return -1;
-    }
-
-    /*
-     * Verify individual statuses
-     */
-    if (fast_verify()) {
+    success = false;
+    if (actual_enc_blks_get(TEST_RESOURCE_BLOCKING_QUERY) < 0) {
         return -1;
     }
 
@@ -363,17 +481,57 @@ comp_encrypt_chain_t::full_verify(void)
         printf("comp_encrypt_chain: last_cp_output_data_len %u\n",
                last_cp_output_data_len);
     }
-
-    // Status verification done.
+    exp_encrypt_output_data_len = COMP_MAX_HASH_BLKS(last_cp_output_data_len,
+                                                     app_enc_size) * app_enc_size;
+    /* 
+     * In XTS_ENC_DEC_ENTIRE_APP_BLK mode, P4+ would have calculated the
+     * actual # of blocks required and terminated the last AOL by setting
+     * its next pointer to NULL. In the loop below, in order to verify P4+
+     * had done the right thing, we iterate to the max # of blocks possible
+     * and break when next becomes NULL.
+     */
+    max_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ?
+               xts_dst_aol_vec->num_lines_get() : (uint32_t)actual_enc_blks;
     last_encrypt_output_data_len = 0;
-    for (block_no = 0; block_no < xts_dst_aol_vec->num_lines_get(); block_no++) {
+    for (block_no = 0; block_no < max_blks; block_no++) {
         xts_dst_aol_vec->line_set(block_no);
         xts_aol = (xts::xts_aol_t *)xts_dst_aol_vec->read_thru();
+        last_encrypt_output_data_len += xts_aol->l0 + xts_aol->l1 + xts_aol->l2;
 
-        last_encrypt_output_data_len += xts_aol->l0;
-        if (!xts_aol->next) {
+        /*
+         * Re-establish correct pointer to doorbell in XTS context
+         * for XTS_ENC_DEC_PER_HASH_BLK mode.
+         */
+        if (enc_dec_blk_type == XTS_ENC_DEC_PER_HASH_BLK) {
+            if (caller_xts_opaque_vec) {
+                caller_xts_opaque_vec->line_set(block_no);
+                xts_ctx.xts_db = 
+                    caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
+            }
+        }
+
+        if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
+            printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
+            return -1;
+        }
+
+        if ((enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK) && !xts_aol->next) {
             break;
         }
+    }
+
+    if (last_encrypt_output_data_len != exp_encrypt_output_data_len) {
+        printf("ERROR: comp_encrypt_chain last_encrypt_output_data_len %u != "
+               "exp_encrypt_output_data_len %u\n", last_encrypt_output_data_len,
+               exp_encrypt_output_data_len);
+        return -1;
+    }
+
+    /*
+     * Verify individual statuses
+     */
+    if (fast_verify()) {
+        return -1;
     }
 
     if (!suppress_info_log) {

@@ -24,33 +24,16 @@ storage_seq_barco_entry_handler:
    phvwrpair	p.seq_kivec4_barco_ring_addr, d.barco_ring_addr, \
                 p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_ring_size}, \
                 d.{barco_pndx_shadow_addr...barco_ring_size}
-  
-   // Save the descriptor size in bytes in r7
-   sll      r7, 1, d.barco_desc_size
-
-   // Setup the source of the mem2mem DMA into DMA cmd 1.
-   // For now, not using any override LIF parameters.
-   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.barco_desc_addr, r7,
-                            dma_m2m_2)
-
-   // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
-   // the size). For now, not using any override LIF parameters.
-   DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, r7,
-                                     dma_m2m_3)
-
-   // Copy the data for the doorbell into the PHV and setup a DMA command
-   // to ring it. Form the doorbell DMA command in this stage as opposed 
-   // the push stage (as is the norm) to avoid carrying the doorbell address 
-   // in K+I vector.
-   DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
-                            d.barco_pndx_addr, dma_p2m_4)
-
-   bbeq     d.barco_batch_mode, 1, barco_batch_mode
-   nop
+   bbeq         d.barco_batch_mode, 1, barco_batch_mode
+   phvwrpair    p.seq_kivec4_barco_desc_addr, d.barco_desc_addr, \
+                p.seq_kivec4_barco_num_descs, 1 // delay slot
    
-   // Set the fence bit for the doorbell 
-   DMA_PHV2MEM_FENCE(dma_p2m_4)
-
+   DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
+                            d.barco_pndx_addr, dma_p2m_21)
+   DMA_PHV2MEM_FENCE(dma_p2m_21)
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad,
+                 dma_p2m_21_dma_cmd_eop,
+                 p4_txdma_intr_dma_cmd_ptr)
 
    // Advance to a common stage for executing table lock read to get the
    // Barco ring pindex.
@@ -62,16 +45,20 @@ barco_batch_mode:
    // we can immediately use to set up the mem2mem destination
    QUEUE_PUSH_ADDR(d.barco_ring_addr, d.barco_batch_pndx, d.barco_desc_size)
    
-   // DMA command address update
-   DMA_ADDR_UPDATE(r7, dma_m2m_3)
-   
-   bbeq     d.barco_batch_last, 1, barco_batch_last
-   add      r6, d.barco_batch_pndx, 1   // delay slot
+   // Setup the source of the mem2mem DMA into DMA cmd 1.
+   // For now, not using any override LIF parameters.
+   sll          r6, 1, d.barco_desc_size
+   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.barco_desc_addr,
+                            r6, dma_m2m_16)
+   DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r7,
+                                     r6, dma_m2m_17)
+   bbeq         d.barco_batch_last, 1, barco_batch_last
+   add          r6, d.barco_batch_pndx, 1   // delay slot
    
    // not the last entry of the batch so don't ring barco doorbell
    // Setup the start and end DMA pointers
-   DMA_PTR_SETUP(dma_p2m_2_dma_cmd_pad,
-                 dma_p2m_3_dma_cmd_eop,
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad,
+                 dma_p2m_17_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
    LOAD_NO_TABLES
 
@@ -79,12 +66,12 @@ barco_batch_mode:
 barco_batch_last:
 
    // Need to word swap before writing back as the p_ndx is little endian
-   phvwr    p.barco_doorbell_data_p_ndx, r6.wx
-   
-   // Setup the start and end DMA pointers
-   DMA_PHV2MEM_FENCE(dma_p2m_4)
-   DMA_PTR_SETUP(dma_p2m_2_dma_cmd_pad,
-                 dma_p2m_4_dma_cmd_eop,
+   phvwr        p.barco_doorbell_data_p_ndx, r6.wx
+   DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
+                            d.barco_pndx_addr, dma_p2m_21)
+   DMA_PHV2MEM_FENCE(dma_p2m_21)
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad,
+                 dma_p2m_21_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
    LOAD_NO_TABLES
    

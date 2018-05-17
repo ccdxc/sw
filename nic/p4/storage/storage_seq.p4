@@ -28,8 +28,7 @@
 #define tx_table_s2_t0_action1  seq_xts_status_handler
 #define tx_table_s2_t0_action2  seq_barco_ring_pndx_read
 
-#define tx_table_s3_t0_action   seq_barco_ring_push
-#define tx_table_s3_t0_action1  seq_barco_chain_action
+#define tx_table_s3_t0_action   seq_barco_chain_action
 
 #define tx_table_s3_t1_action   seq_comp_sgl_pdma_xfer
 #define tx_table_s3_t2_action   seq_comp_sgl_pad_only_xfer
@@ -71,9 +70,6 @@ metadata seq_kivec6_t seq_kivec6;
 
 // Push/Pop doorbells
 @pragma dont_trim
-metadata storage_doorbell_data_t qpop_doorbell_data;
-@pragma dont_trim
-@pragma pa_header_union ingress qpop_doorbell_data
 metadata storage_doorbell_data_t seq_doorbell_data;
 
 // Interrupt data across PCI bus
@@ -381,7 +377,7 @@ action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shad
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
-  QUEUE_POP_DOORBELL_UPDATE
+  //QUEUE_POP_DOORBELL_UPDATE
 
   // Setup the DMA command to move the data from source to destination address
   // In ASM, set the host, fence bits etc correctly
@@ -417,43 +413,7 @@ action seq_barco_ring_pndx_read() {
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
                         seq_kivec4.barco_pndx_shadow_addr,
                         seq_kivec4.barco_pndx_size, 
-                        seq_barco_ring_push_start)
-}
-
-/*****************************************************************************
- *  seq_barco_ring_push: Push to Barco ring by issuing the mem2mem DMA 
- *                       commands and incrementing the p_ndx via ringing the 
- *                       doorbell. Assumes that data to be pushed has its 
- *                       source in DMA cmd 1 and destination in DMA cmd 2.
- *****************************************************************************/
-
-@pragma little_endian p_ndx
-action seq_barco_ring_push(p_ndx) {
-
-  // Store the K+I vector into scratch to get the K+I generated correctly
-  SEQ_KIVEC1_USE(seq_kivec1_scratch, seq_kivec1)
-  SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
-
-  // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(barco_ring_scratch.p_ndx, p_ndx);
-
-  // Copy the doorbell data to PHV
-  modify_field(barco_doorbell_data.p_ndx, barco_ring_scratch.p_ndx);
-
-  // Modify the DMA command 2 to fill the destination address based on p_ndx 
-  // NOTE: This API in P4 land will not work, but in ASM we can selectively
-  // overwrite the fields
-  DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
-                           seq_kivec1.barco_ring_addr +
-                           (barco_ring_scratch.p_ndx * 
-                            seq_kivec4.barco_desc_size),
-                           0, 0,
-                           0, 0, 0, 0)
-
-
-  // Doorbell has already been setup
-
-  // Exit the pipeline here 
+                        seq_barco_chain_action_start)
 }
 
 /*****************************************************************************
@@ -471,7 +431,7 @@ action seq_barco_ring_push(p_ndx) {
 action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
                                      barco_pndx_addr, barco_pndx_shadow_addr,
                                      barco_desc_size, barco_pndx_size, barco_ring_size,
-                                     status_addr0, status_addr1,
+                                     barco_desc_set_total, status_addr0, status_addr1,
                                      intr_addr, intr_data, status_len, status_dma_en,
                                      next_db_en, intr_en, next_db_action_barco_push) {
 
@@ -487,6 +447,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.barco_desc_size, barco_desc_size);
   modify_field(seq_comp_status_desc0_scratch.barco_pndx_size, barco_pndx_size);
   modify_field(seq_comp_status_desc0_scratch.barco_ring_size, barco_ring_size);
+  modify_field(seq_comp_status_desc0_scratch.barco_desc_set_total, barco_desc_set_total);
   modify_field(seq_comp_status_desc0_scratch.status_addr0, status_addr0);
   modify_field(seq_comp_status_desc0_scratch.status_addr1, status_addr1);
   modify_field(seq_comp_status_desc0_scratch.intr_addr, intr_addr);
@@ -503,6 +464,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec4.barco_desc_size, seq_comp_status_desc0_scratch.barco_desc_size);
   modify_field(seq_kivec4.barco_pndx_size, seq_comp_status_desc0_scratch.barco_pndx_size);
   modify_field(seq_kivec4.barco_ring_size, seq_comp_status_desc0_scratch.barco_ring_size);
+  modify_field(seq_kivec4.barco_desc_set_total, seq_comp_status_desc0_scratch.barco_desc_set_total);
   modify_field(seq_kivec5.intr_addr, seq_comp_status_desc0_scratch.intr_addr);
   modify_field(seq_kivec5.status_dma_en, seq_comp_status_desc0_scratch.status_dma_en);
   modify_field(seq_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
@@ -539,7 +501,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
-  QUEUE_POP_DOORBELL_UPDATE
+  //QUEUE_POP_DOORBELL_UPDATE
 
   // Load the address where compression status is stored for processing 
   // in the next stage
@@ -628,10 +590,10 @@ action seq_comp_status_handler(status, output_data_len, rsvd) {
 }
 
 /*****************************************************************************
- *  seq_barco_ring_push: Push to Barco ring by issuing the mem2mem DMA 
- *                       commands and incrementing the p_ndx via ringing the 
- *                       doorbell. Assumes that data to be pushed has its 
- *                       source in DMA cmd 1 and destination in DMA cmd 2.
+ *  seq_barco_chain_action: Push to Barco ring by issuing the mem2mem DMA 
+ *                          commands and incrementing the p_ndx via ringing the 
+ *                          doorbell. Assumes that data to be pushed has its 
+ *                          source in DMA cmd 1 and destination in DMA cmd 2.
  *****************************************************************************/
 
 @pragma little_endian p_ndx
@@ -900,7 +862,7 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data,
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
-  QUEUE_POP_DOORBELL_UPDATE
+  //QUEUE_POP_DOORBELL_UPDATE
 
   // Load the address where compression status is stored for processing 
   // in the next stage

@@ -129,7 +129,7 @@ static dp_mem_t *host_sgl3;
 static dp_mem_t *host_sgl4;
 static dp_mem_t *seq_sgl;
 
-static dp_mem_t *xts_status_host_buf;
+static dp_mem_t *xts_status_host_vec;
 
 static comp_encrypt_chain_t   *comp_encrypt_chain;
 static comp_hash_chain_t      *comp_hash_chain;
@@ -559,9 +559,6 @@ compression_buf_init()
                            DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
                            sizeof(cp_sq_ent_sgl_t));
 
-    xts_status_host_buf = new dp_mem_t(1, sizeof(uint64_t),
-                                       DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
-                                       kMinHostMemAllocSize);
     comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
     // Pre-fill input buffers.
@@ -580,22 +577,28 @@ compression_buf_init()
     comp_encrypt_chain_params_t cec_ctor;
     comp_encrypt_chain = 
          new comp_encrypt_chain_t(cec_ctor.app_max_size(kCompAppMaxSize).
+                                           app_enc_size(kCompAppHashBlkSize).
                                            uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                            comp_mem_type(DP_MEM_TYPE_HBM).
                                            comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                            comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                            encrypt_mem_type(DP_MEM_TYPE_HOST_MEM).
                                            destructor_free_buffers(true));
+    max_hash_blks = COMP_MAX_HASH_BLKS(kCompAppMaxSize, kCompAppHashBlkSize);
+    xts_status_host_vec = new dp_mem_t(max_hash_blks, sizeof(uint64_t),
+                                       DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                       sizeof(uint64_t));
     comp_encrypt_chain_pre_push_params_t cec_pre_push;
     comp_encrypt_chain->pre_push(cec_pre_push.caller_comp_pad_buf(comp_pad_buf).
-                                              caller_xts_status_buf(xts_status_host_buf).
-                                              caller_xts_opaque_buf(nullptr).
+                                              caller_xts_status_vec(xts_status_host_vec).
+                                              caller_xts_opaque_vec(nullptr).
                                               caller_xts_opaque_data(0));
 
     // Create and initialize XTS-decrypt->decompression chaining
     decrypt_decomp_chain_params_t ddc_ctor;
     decrypt_decomp_chain = 
          new decrypt_decomp_chain_t(ddc_ctor.app_max_size(kCompAppMaxSize).
+                                             app_enc_size(kCompAppHashBlkSize).
                                              uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                              xts_status_mem_type1(DP_MEM_TYPE_HBM).
                                              xts_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
@@ -615,7 +618,6 @@ compression_buf_init()
                                         comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                         comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                         destructor_free_buffers(true));
-    max_hash_blks = COMP_MAX_HASH_BLKS(kCompAppMaxSize, kCompAppHashBlkSize);
     hash_status_host_vec = new dp_mem_t(max_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
                                         DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                         kMinHostMemAllocSize);
@@ -1610,7 +1612,8 @@ int compress_output_encrypt_app_max_size() {
 
 int seq_compress_output_encrypt_app_max_size() {
     comp_encrypt_chain_push_params_t    params;
-    comp_encrypt_chain->push(params.app_blk_size(kCompAppMaxSize).
+    comp_encrypt_chain->push(params.enc_dec_blk_type(XTS_ENC_DEC_PER_HASH_BLK).
+                                    app_blk_size(kCompAppMaxSize).
                                     comp_queue(cp_queue).
                                     push_type(COMP_QUEUE_PUSH_SEQUENCER).
                                     seq_comp_qid(queues::get_seq_comp_sq(0)).
@@ -1634,7 +1637,8 @@ int compress_output_encrypt_app_nominal_size() {
 
 int seq_compress_output_encrypt_app_nominal_size() {
     comp_encrypt_chain_push_params_t    params;
-    comp_encrypt_chain->push(params.app_blk_size(kCompAppNominalSize).
+    comp_encrypt_chain->push(params.enc_dec_blk_type(XTS_ENC_DEC_PER_HASH_BLK).
+                                    app_blk_size(kCompAppNominalSize).
                                     comp_queue(cp_queue).
                                     push_type(COMP_QUEUE_PUSH_SEQUENCER).
                                     seq_comp_qid(queues::get_seq_comp_sq(0)).

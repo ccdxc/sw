@@ -19,6 +19,7 @@ public:
 
     decrypt_decomp_chain_params_t() :
         app_max_size_(0),
+        app_enc_size_(kCompAppHashBlkSize),
         uncomp_mem_type_(DP_MEM_TYPE_VOID),
         xts_status_mem_type1_(DP_MEM_TYPE_VOID),
         xts_status_mem_type2_(DP_MEM_TYPE_VOID),
@@ -29,6 +30,7 @@ public:
     }
 
     uint32_t        app_max_size_;
+    uint32_t        app_enc_size_;
     dp_mem_type_t   uncomp_mem_type_;
     dp_mem_type_t   xts_status_mem_type1_;
     dp_mem_type_t   xts_status_mem_type2_;
@@ -40,6 +42,12 @@ public:
     app_max_size(uint32_t app_max_size)
     {
         app_max_size_ = app_max_size;
+        return *this;
+    }
+    decrypt_decomp_chain_params_t&
+    app_enc_size(uint32_t app_enc_size)
+    {
+        app_enc_size_ = app_enc_size;
         return *this;
     }
     decrypt_decomp_chain_params_t&
@@ -203,24 +211,27 @@ public:
 
 private:
 
-    void  decrypt_setup(acc_chain_params_t& chain_params);
+    void  decrypt_setup(uint32_t block_no,
+                        acc_chain_params_t& chain_params);
 
     comp_encrypt_chain_t    *comp_encrypt_chain;
+    xts_enc_dec_blk_type_t  enc_dec_blk_type;
     uint32_t                app_max_size;
     uint32_t                app_blk_size;
+    uint32_t                app_enc_size;
 
     // Buffers used for decryption->decompression operations
     dp_mem_t                *uncomp_buf;
     dp_mem_t                *xts_decrypt_buf;
 
-    dp_mem_t                *xts_status_buf1;
-    dp_mem_t                *xts_status_buf2;
+    dp_mem_t                *xts_status_vec1;
+    dp_mem_t                *xts_status_vec2;
     dp_mem_t                *xts_opaque_buf;
 
     // XTS uses AOL for input/output;
-    dp_mem_t                *xts_in_aol;
-    dp_mem_t                *xts_out_aol;
-    dp_mem_t                *xts_desc_buf;
+    dp_mem_t                *xts_src_aol_vec;
+    dp_mem_t                *xts_dst_aol_vec;
+    dp_mem_t                *xts_desc_vec;
 
     // Decomp descriptor for use by XTS-decrypt to decomp chaining
     dp_mem_t                *xts_decomp_cp_desc;
@@ -235,6 +246,10 @@ private:
     cp_desc_t               cp_desc;
     XtsCtx                  xts_ctx;
     comp_queue_t            *decomp_queue;
+
+    int                     actual_enc_blks;
+    uint32_t                max_enc_blks;
+    uint32_t                num_enc_blks;
 
     uint32_t                last_dc_output_data_len;
     uint32_t                last_decrypt_output_data_len;

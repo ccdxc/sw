@@ -100,6 +100,47 @@ int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
  * less P4+ TxDMA descriptors.
  */
 void
+xts_aol_sparse_fill(xts_enc_dec_blk_type_t enc_dec_blk_type,
+                    dp_mem_t *xts_aol_vec,
+                    dp_mem_t *xts_buf,
+                    uint32_t blk_size,
+                    uint32_t num_blks)
+{
+    xts::xts_aol_t  *xts_aol;
+    uint64_t        xts_buf_addr;
+    uint32_t        xts_buf_size;
+    uint32_t        block_no;
+    uint32_t        save_curr_line;
+
+    assert(xts_aol_vec->num_lines_get() >= num_blks);
+    xts_buf_addr = xts_buf->pa();
+    xts_buf_size = xts_buf->line_size_get();
+    save_curr_line = xts_aol_vec->line_get();
+
+    for (block_no = 0; block_no < num_blks; block_no++) {
+        xts_aol_vec->line_set(block_no);
+        xts_aol_vec->clear();
+
+        xts_aol = (xts::xts_aol_t *)xts_aol_vec->read();
+        xts_aol->a0 = xts_buf_addr;
+        xts_aol->l0 = xts_buf_size >= blk_size ? blk_size : xts_buf_size;
+        assert(xts_aol->l0);
+
+        /*
+         * Set up next pointer based on block type
+         */
+        if ((enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK) &&
+            block_no < (num_blks - 1)) {
+
+            xts_aol->next = xts_aol_vec->pa() + xts_aol_vec->line_size_get();
+        }
+        xts_aol_vec->write_thru();
+        xts_buf_addr += xts_aol->l0;
+        xts_buf_size -= xts_aol->l0;
+    }
+    xts_aol_vec->line_set(save_curr_line);
+}
+void
 xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
                     dp_mem_t *xts_buf,
                     uint32_t blk_size,

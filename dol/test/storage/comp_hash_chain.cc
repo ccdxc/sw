@@ -451,15 +451,15 @@ comp_hash_chain_t::hash_setup(uint32_t block_no,
  * from compression.
  */
 int 
-comp_hash_chain_t::actual_hash_blks_get(comp_hash_chain_retrieve_method_t method)
+comp_hash_chain_t::actual_hash_blks_get(test_resource_query_method_t query_method)
 {
-    bool    log_error = (method == COMP_HASH_CHAIN_BLOCKING_RETRIEVE);
+    bool    log_error = (query_method == TEST_RESOURCE_BLOCKING_QUERY);
 
     if (actual_hash_blks < 0) {
 
-        switch (method) {
+        switch (query_method) {
 
-        case COMP_HASH_CHAIN_BLOCKING_RETRIEVE:
+        case TEST_RESOURCE_BLOCKING_QUERY:
 
             // Poll for comp status
             if (!comp_status_poll(comp_status_buf2, cp_desc, suppress_info_log)) {
@@ -471,7 +471,7 @@ comp_hash_chain_t::actual_hash_blks_get(comp_hash_chain_retrieve_method_t method
              * Fall through!!!
              */
              
-        case COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE:
+        case TEST_RESOURCE_NON_BLOCKING_QUERY:
         default:
 
             // Validate comp status
@@ -515,7 +515,7 @@ comp_hash_chain_t::fast_verify(void)
     uint32_t    block_no;
 
     success = false;
-    if (actual_hash_blks_get(COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE) < 0) {
+    if (actual_hash_blks_get(TEST_RESOURCE_NON_BLOCKING_QUERY) < 0) {
         return -1;
     }
 
@@ -562,7 +562,7 @@ comp_hash_chain_t::full_verify(void)
     uint64_t    total_accum_data_len;
 
     success = false;
-    if (actual_hash_blks_get(COMP_HASH_CHAIN_BLOCKING_RETRIEVE) < 0) {
+    if (actual_hash_blks_get(TEST_RESOURCE_BLOCKING_QUERY) < 0) {
         return -1;
     }
 

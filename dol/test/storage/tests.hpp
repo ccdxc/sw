@@ -49,6 +49,14 @@ using namespace dp_mem;
 
 namespace tests {
 
+/*
+ * Method for certain types of HW resource query
+ */
+typedef enum {
+    TEST_RESOURCE_NON_BLOCKING_QUERY,
+    TEST_RESOURCE_BLOCKING_QUERY
+} test_resource_query_method_t;
+
 const static uint32_t  kDefaultNlb           = 0;
 const static uint32_t  kDefaultNsid          = 1;
 const static uint32_t  kDefaultBufSize       = 4096;
@@ -65,9 +73,10 @@ typedef struct {
   uint64_t barco_pndx_addr;     // producer index address
   uint64_t barco_pndx_shadow_addr;// producer index shadow address
   uint64_t barco_desc_addr;     // descriptor to push
-  uint8_t  barco_desc_size;     // descriptor size (power of 2 exponent)
-  uint8_t  barco_pndx_size;     // producer index size (power of 2 exponent)
-  uint8_t  barco_ring_size;     // ring size (power of 2 exponent)
+  uint8_t  barco_desc_size;     // log2(descriptor size)
+  uint8_t  barco_pndx_size;     // log2)producer index size)
+  uint8_t  barco_ring_size;     // log2(ring size)
+  uint8_t  barco_desc_set_total;// log2(descriptor set size) to advance to alternate descriptor set
 } acc_chain_barco_push_entry_t;
 
 typedef struct acc_chain_entry {
@@ -92,7 +101,7 @@ typedef struct acc_chain_entry {
   uint32_t intr_data;		// MSI-X Interrupt data
   uint16_t status_len;		// Length of the status header
   uint16_t data_len;		// Remaining data length of compression buffer
-  uint8_t  pad_len_shift;   // Max padding length (power of 2)
+  uint8_t  pad_len_shift;   // log2(max padding length)
   uint8_t  unused;
   // TODO: These bitfields are interpretted in big endian 
   //       fashion by P4+. For DOL it won't matter as we set bitfields.

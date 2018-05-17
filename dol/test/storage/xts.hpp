@@ -174,6 +174,16 @@ typedef struct TestCtx_{
 
 namespace tests {
 
+/*
+ * Support 2 types of encryption/decryption (typically post compression):
+ *  - Encrypt/decrypt entire application block, or
+ *  - Encrypt/decrypt multiple individual blocks, each is of a "hash" block size
+ */
+typedef enum {
+    XTS_ENC_DEC_ENTIRE_APP_BLK,
+    XTS_ENC_DEC_PER_HASH_BLK
+} xts_enc_dec_blk_type_t;
+
 extern dp_mem_t *read_buf;
 extern  dp_mem_t *write_buf;
 extern  dp_mem_t *read_buf2;
@@ -259,7 +269,8 @@ int xts_multi_blk_128req();
 int xts_multi_blk_noc_stress_from_host();
 int xts_multi_blk_noc_stress_from_hbm();
 
-void xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
+void xts_aol_sparse_fill(xts_enc_dec_blk_type_t enc_dec_blk_type,
+                         dp_mem_t *xts_aol_vec,
                          dp_mem_t *xts_buf,
                          uint32_t blk_size,
                          uint32_t num_blks);
