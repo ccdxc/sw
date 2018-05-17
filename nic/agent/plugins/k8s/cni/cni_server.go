@@ -18,7 +18,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -49,10 +49,10 @@ type PodArgs struct {
 
 // Server is an instance of CNI http server
 type Server struct {
-	listenURL  string           // URL where this server is listening
-	listener   net.Listener     // listener socket
-	kubeclient *KubeClient      // k8s api server client
-	agent      state.PluginIntf // network agent
+	listenURL  string                // URL where this server is listening
+	listener   net.Listener          // listener socket
+	kubeclient *KubeClient           // k8s api server client
+	agent      agentTypes.PluginIntf // network agent
 }
 
 // Catchall for additional driver functions.
@@ -146,7 +146,7 @@ func parsePodArgs(r *http.Request, args *cniapi.CmdArgs, netconf *types.NetConf,
 }
 
 // NewCniServer starts the CNI http server and returns the instance
-func NewCniServer(listenURL string, nagent state.PluginIntf) (*Server, error) {
+func NewCniServer(listenURL string, nagent agentTypes.PluginIntf) (*Server, error) {
 	var err error
 
 	// Create an instance of CNI server

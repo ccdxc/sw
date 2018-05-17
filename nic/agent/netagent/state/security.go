@@ -8,12 +8,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // addSgRules adds sg rules
-func (na *NetAgent) addSgRules(sg *netproto.SecurityGroup) error {
+func (na *Nagent) addSgRules(sg *netproto.SecurityGroup) error {
 	for _, rule := range sg.Spec.Rules {
 		// find peer sg
 		if rule.PeerGroup != "" {
@@ -34,7 +35,7 @@ func (na *NetAgent) addSgRules(sg *netproto.SecurityGroup) error {
 }
 
 // delSgRules removes SG rules
-func (na *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
+func (na *Nagent) delSgRules(sg *netproto.SecurityGroup) error {
 	var err error
 
 	for _, rule := range sg.Spec.Rules {
@@ -54,7 +55,7 @@ func (na *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 }
 
 // CreateSecurityGroup creates a security group. ToDo Handle creates in datapath
-func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	err := na.validateMeta(sg.Kind, sg.ObjectMeta)
 	if err != nil {
 		return err
@@ -78,7 +79,7 @@ func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 		return err
 	}
 
-	sg.Status.SecurityGroupID, err = na.store.GetNextID(SecurityGroupID)
+	sg.Status.SecurityGroupID, err = na.Store.GetNextID(types.SecurityGroupID)
 
 	if err != nil {
 		log.Errorf("Could not allocate security group id. {%+v}", err)
@@ -86,7 +87,7 @@ func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateSecurityGroup(sg)
+	err = na.Datapath.CreateSecurityGroup(sg)
 	if err != nil {
 		log.Errorf("Error creating security group in datapath. Sg {%+v}. Err: %v", sg.ObjectMeta, err)
 		return err
@@ -102,16 +103,16 @@ func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// save it in db
 	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
-	na.secgroupDB[key] = sg
+	na.SecgroupDB[key] = sg
 	na.Unlock()
-	err = na.store.Write(sg)
+	err = na.Store.Write(sg)
 
 	return err
 }
 
 // ListSecurityGroup returns the list of sgs
-func (na *NetAgent) ListSecurityGroup() []*netproto.SecurityGroup {
-	sgList := make([]*netproto.SecurityGroup, len(na.secgroupDB))
+func (na *Nagent) ListSecurityGroup() []*netproto.SecurityGroup {
+	sgList := make([]*netproto.SecurityGroup, len(na.SecgroupDB))
 
 	// lock the db
 	na.Lock()
@@ -119,7 +120,7 @@ func (na *NetAgent) ListSecurityGroup() []*netproto.SecurityGroup {
 
 	// walk all sgs
 	idx := 0
-	for _, sg := range na.secgroupDB {
+	for _, sg := range na.SecgroupDB {
 		sgList[idx] = sg
 		idx++
 	}
@@ -128,7 +129,7 @@ func (na *NetAgent) ListSecurityGroup() []*netproto.SecurityGroup {
 }
 
 // FindSecurityGroup finds a security group
-func (na *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) {
+func (na *Nagent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "SecurityGroup",
 	}
@@ -138,7 +139,7 @@ func (na *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGr
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	sg, ok := na.secgroupDB[key]
+	sg, ok := na.SecgroupDB[key]
 	if !ok {
 		return nil, errors.New("Security group not found")
 	}
@@ -147,7 +148,7 @@ func (na *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGr
 }
 
 // UpdateSecurityGroup updates an existing security group. ToDo implement updates in datapath
-func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
+func (na *Nagent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// find the corresponding namespace
 	_, err := na.FindNamespace(sg.Tenant, sg.Namespace)
 	if err != nil {
@@ -164,7 +165,7 @@ func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	sg.Status.SecurityGroupID = esg.Status.SecurityGroupID
 
 	// update sg in datapath
-	err = na.datapath.UpdateSecurityGroup(sg)
+	err = na.Datapath.UpdateSecurityGroup(sg)
 	if err != nil {
 		log.Errorf("Error updating security group in datapath. Sg{%+v} Err: %v", sg.ObjectMeta, err)
 		return err
@@ -188,15 +189,15 @@ func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// update it in db
 	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
-	na.secgroupDB[key] = sg
+	na.SecgroupDB[key] = sg
 	na.Unlock()
-	err = na.store.Write(sg)
+	err = na.Store.Write(sg)
 
 	return err
 }
 
 // DeleteSecurityGroup deletes a security group. ToDo handle deletes in datapath
-func (na *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+func (na *Nagent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	err := na.validateMeta(sg.Kind, sg.ObjectMeta)
 	if err != nil {
 		return err
@@ -215,7 +216,7 @@ func (na *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// delete the sg in datapath
-	err = na.datapath.DeleteSecurityGroup(sgrp)
+	err = na.Datapath.DeleteSecurityGroup(sgrp)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", sgrp, err)
 	}
@@ -230,9 +231,9 @@ func (na *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	// delete from db
 	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
-	delete(na.secgroupDB, key)
+	delete(na.SecgroupDB, key)
 	na.Unlock()
-	err = na.store.Delete(sg)
+	err = na.Store.Delete(sg)
 
 	return err
 }

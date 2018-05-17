@@ -11,18 +11,19 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // ErrEndpointNotFound is returned when endpoint is not found
-var ErrEndpointNotFound = errors.New("Endpoint not found")
+var ErrEndpointNotFound = errors.New("endpoint not found")
 
 // EndpointCreateReq creates an endpoint
-func (na *NetAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *IntfInfo, error) {
+func (na *Nagent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *types.IntfInfo, error) {
 	// make an RPC call to controller
-	epinfo.Status.NodeUUID = na.nodeUUID
-	ep, err := na.ctrlerif.EndpointCreateReq(epinfo)
+	epinfo.Status.NodeUUID = na.NodeUUID
+	ep, err := na.Ctrlerif.EndpointCreateReq(epinfo)
 	if err != nil {
 		log.Errorf("Error resp from netctrler for ep create {%+v}. Err: %v", epinfo, err)
 		return nil, nil, err
@@ -34,9 +35,9 @@ func (na *NetAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endp
 }
 
 // EndpointDeleteReq deletes an endpoint
-func (na *NetAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
+func (na *Nagent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 	// make an RPC call to controller
-	ep, err := na.ctrlerif.EndpointDeleteReq(epinfo)
+	ep, err := na.Ctrlerif.EndpointDeleteReq(epinfo)
 	if err != nil {
 		log.Errorf("Error resp from netctrler for ep delete {%+v}. Err: %v", epinfo, err)
 		return err
@@ -47,7 +48,7 @@ func (na *NetAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 }
 
 // CreateEndpoint creates an endpoint
-func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
+func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error) {
 	// check if the endpoint already exists and convert it to an update
 	err := na.validateMeta(ep.Kind, ep.ObjectMeta)
 	if err != nil {
@@ -55,7 +56,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	}
 	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
-	oldEp, ok := na.endpointDB[key]
+	oldEp, ok := na.EndpointDB[key]
 	na.Unlock()
 
 	if ok {
@@ -97,9 +98,9 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	}
 
 	// call the datapath
-	var intfInfo *IntfInfo
-	if ep.Status.NodeUUID == na.nodeUUID {
-		intfInfo, err = na.datapath.CreateLocalEndpoint(ep, nw, sgs)
+	var intfInfo *types.IntfInfo
+	if ep.Status.NodeUUID == na.NodeUUID {
+		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -121,7 +122,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 			log.Errorf("could not find an uplink")
 			return nil, fmt.Errorf("could not find the specified interface %v", pinnedUplink)
 		}
-		err = na.datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink, ns)
+		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink, ns)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -130,16 +131,16 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 
 	// add the ep to database
 	na.Lock()
-	na.endpointDB[key] = ep
+	na.EndpointDB[key] = ep
 	na.Unlock()
-	err = na.store.Write(ep)
+	err = na.Store.Write(ep)
 
 	// done
 	return intfInfo, err
 }
 
 // UpdateEndpoint updates an endpoint. ToDo Handle updates in datapath
-func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
+func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	// find the corresponding namespace
 	_, err := na.FindNamespace(ep.Tenant, ep.Namespace)
 	if err != nil {
@@ -148,7 +149,7 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	// check if the endpoint already exists and convert it to an update
 	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
-	oldEp, ok := na.endpointDB[key]
+	oldEp, ok := na.EndpointDB[key]
 	na.Unlock()
 	if !ok {
 		return fmt.Errorf("endpoint not found")
@@ -186,14 +187,14 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// call the datapath
-	if ep.Status.NodeUUID == na.nodeUUID {
-		err = na.datapath.UpdateLocalEndpoint(ep, nw, sgs)
+	if ep.Status.NodeUUID == na.NodeUUID {
+		err = na.Datapath.UpdateLocalEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
 		}
 	} else {
-		err = na.datapath.UpdateRemoteEndpoint(ep, nw, sgs)
+		err = na.Datapath.UpdateRemoteEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
@@ -202,15 +203,15 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 
 	// add the ep to database
 	na.Lock()
-	na.endpointDB[key] = ep
+	na.EndpointDB[key] = ep
 	na.Unlock()
-	err = na.store.Write(ep)
+	err = na.Store.Write(ep)
 
 	return err
 }
 
 // DeleteEndpoint deletes an endpoint. ToDo Handle deletes in datapath
-func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
+func (na *Nagent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	err := na.validateMeta(ep.Kind, ep.ObjectMeta)
 	if err != nil {
 		return err
@@ -223,23 +224,21 @@ func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	// check if we have the endpoint
 	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
-	ep, ok := na.endpointDB[key]
+	ep, ok := na.EndpointDB[key]
 	na.Unlock()
 	if !ok {
 		log.Errorf("Endpoint %#v was not found", key)
 		return ErrEndpointNotFound
 	}
 
-	fmt.Println("BALERION IN EP: ", ep)
-
 	// call the datapath
-	if ep.Status.NodeUUID == na.nodeUUID {
-		err = na.datapath.DeleteLocalEndpoint(ep)
+	if ep.Status.NodeUUID == na.NodeUUID {
+		err = na.Datapath.DeleteLocalEndpoint(ep)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
 		}
 	} else {
-		err = na.datapath.DeleteRemoteEndpoint(ep)
+		err = na.Datapath.DeleteRemoteEndpoint(ep)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
 		}
@@ -247,16 +246,16 @@ func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 
 	// remove from the database
 	na.Lock()
-	delete(na.endpointDB, key)
+	delete(na.EndpointDB, key)
 	na.Unlock()
-	err = na.store.Delete(ep)
+	err = na.Store.Delete(ep)
 
 	// done
 	return err
 }
 
 // ListEndpoint returns the list of endpoints
-func (na *NetAgent) ListEndpoint() []*netproto.Endpoint {
+func (na *Nagent) ListEndpoint() []*netproto.Endpoint {
 	var epList []*netproto.Endpoint
 
 	// lock the db
@@ -264,14 +263,14 @@ func (na *NetAgent) ListEndpoint() []*netproto.Endpoint {
 	defer na.Unlock()
 
 	// walk all endpoints
-	for _, ep := range na.endpointDB {
+	for _, ep := range na.EndpointDB {
 		epList = append(epList, ep)
 	}
 
 	return epList
 }
 
-func (na *NetAgent) findPinnedUplink(uplinkCount uint64, IPAddress string) (string, error) {
+func (na *Nagent) findPinnedUplink(uplinkCount uint64, IPAddress string) (string, error) {
 	// convert the ip address to int
 	ip, _, err := net.ParseCIDR(IPAddress)
 	if err != nil {

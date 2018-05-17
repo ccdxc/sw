@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	gogoproto "github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	config "github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -19,8 +20,12 @@ import (
 // This will ensure that the agent interface ID will not clash with the datapath uplink ID
 const maxNumUplinks = 128
 
+// Nagent is an instance of network agent.
+type Nagent types.NetAgent
+
 // NewNetAgent creates a new network agent
-func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID string) (*NetAgent, error) {
+func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID string) (*Nagent, error) {
+	var na Nagent
 	var emdb emstore.Emstore
 	var err error
 
@@ -34,27 +39,7 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 		return nil, err
 	}
 
-	nagent := NetAgent{
-		store:            emdb,
-		nodeUUID:         nodeUUID,
-		datapath:         dp,
-		networkDB:        make(map[string]*netproto.Network),
-		endpointDB:       make(map[string]*netproto.Endpoint),
-		secgroupDB:       make(map[string]*netproto.SecurityGroup),
-		tenantDB:         make(map[string]*netproto.Tenant),
-		namespaceDB:      make(map[string]*netproto.Namespace),
-		enicDB:           make(map[string]*netproto.Interface),
-		natPoolDB:        make(map[string]*netproto.NatPool),
-		natPoolLUT:       make(map[string]*NatPoolRef),
-		natPolicyDB:      make(map[string]*netproto.NatPolicy),
-		natBindingDB:     make(map[string]*netproto.NatBinding),
-		hwIfDB:           make(map[string]*netproto.Interface),
-		routeDB:          make(map[string]*netproto.Route),
-		ipSecPolicyDB:    make(map[string]*netproto.IPSecPolicy),
-		ipSecSAEncryptDB: make(map[string]*netproto.IPSecSAEncrypt),
-		ipSecSADecryptDB: make(map[string]*netproto.IPSecSADecrypt),
-		ipSecPolicyLUT:   make(map[string]*IPSecRuleRef),
-	}
+	na.init(emdb, nodeUUID, dp)
 
 	c := config.Agent{
 		ObjectMeta: api.ObjectMeta{
@@ -78,7 +63,7 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 			return nil, err
 		}
 		// We need to create a default tenant and default namespace at startup.
-		err = nagent.createDefaultTenant()
+		err = na.createDefaultTenant()
 		if err != nil {
 			emdb.Close()
 			return nil, err
@@ -86,38 +71,38 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 		}
 	}
 
-	err = nagent.GetHwInterfaces()
+	err = na.GetHwInterfaces()
 	if err != nil {
 		return nil, err
 	}
 
-	err = dp.SetAgent(&nagent)
+	err = dp.SetAgent(&na)
 	if err != nil {
 		// cleanup emstore and return
 		emdb.Close()
 		return nil, err
 	}
 
-	return &nagent, nil
+	return &na, nil
 
 }
 
 // RegisterCtrlerIf registers a controller object
-func (na *NetAgent) RegisterCtrlerIf(ctrlerif CtrlerAPI) error {
+func (na *Nagent) RegisterCtrlerIf(ctrlerif types.CtrlerAPI) error {
 	// ensure two controller plugins dont register
-	if na.ctrlerif != nil {
+	if na.Ctrlerif != nil {
 		log.Fatalf("Multiple controllers registers to netagent.")
 	}
 
 	// add it to controller list
-	na.ctrlerif = ctrlerif
+	na.Ctrlerif = ctrlerif
 
 	return nil
 }
 
 // Stop stops the netagent
-func (na *NetAgent) Stop() error {
-	return na.store.Close()
+func (na *Nagent) Stop() error {
+	return na.Store.Close()
 }
 
 // objectKey returns object key from object meta
@@ -133,12 +118,12 @@ func objectKey(meta api.ObjectMeta, T api.TypeMeta) string {
 }
 
 // GetAgentID returns UUID of the agent
-func (na *NetAgent) GetAgentID() string {
-	return na.nodeUUID
+func (na *Nagent) GetAgentID() string {
+	return na.NodeUUID
 }
 
-func (na *NetAgent) createDefaultTenant() error {
-	c, _ := types.TimestampProto(time.Now())
+func (na *Nagent) createDefaultTenant() error {
+	c, _ := gogoproto.TimestampProto(time.Now())
 
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
@@ -155,9 +140,32 @@ func (na *NetAgent) createDefaultTenant() error {
 	return na.CreateTenant(&tn)
 }
 
-func (na *NetAgent) validateMeta(kind string, oMeta api.ObjectMeta) error {
+func (na *Nagent) validateMeta(kind string, oMeta api.ObjectMeta) error {
 	if len(oMeta.Name) == 0 {
 		return fmt.Errorf("%s name can't be empty", kind)
 	}
 	return nil
+}
+
+func (na *Nagent) init(emdb emstore.Emstore, nodeUUID string, dp types.NetDatapathAPI) {
+	na.Store = emdb
+	na.NodeUUID = nodeUUID
+	na.Datapath = dp
+	na.NetworkDB = make(map[string]*netproto.Network)
+	na.EndpointDB = make(map[string]*netproto.Endpoint)
+	na.SecgroupDB = make(map[string]*netproto.SecurityGroup)
+	na.TenantDB = make(map[string]*netproto.Tenant)
+	na.NamespaceDB = make(map[string]*netproto.Namespace)
+	na.EnicDB = make(map[string]*netproto.Interface)
+	na.NatPoolDB = make(map[string]*netproto.NatPool)
+	na.NatPoolLUT = make(map[string]*types.NatPoolRef)
+	na.NatPolicyDB = make(map[string]*netproto.NatPolicy)
+	na.NatBindingDB = make(map[string]*netproto.NatBinding)
+	na.HwIfDB = make(map[string]*netproto.Interface)
+	na.RouteDB = make(map[string]*netproto.Route)
+	na.IPSecPolicyDB = make(map[string]*netproto.IPSecPolicy)
+	na.IPSecSAEncryptDB = make(map[string]*netproto.IPSecSAEncrypt)
+	na.IPSecSADecryptDB = make(map[string]*netproto.IPSecSADecrypt)
+	na.IPSecPolicyLUT = make(map[string]*types.IPSecRuleRef)
+
 }

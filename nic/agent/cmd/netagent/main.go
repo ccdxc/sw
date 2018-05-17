@@ -10,8 +10,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
-	types "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	protos "github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -69,7 +69,7 @@ func main() {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 	}
 
-	var dp state.NetDatapathAPI
+	var dp types.NetDatapathAPI
 	// ToDo Remove mock hal datapath prior to FCS
 	if *datapath == "hal" {
 		dp, err = hal.NewHalDatapath("hal")
@@ -83,10 +83,10 @@ func main() {
 			log.Fatalf("Error creating mock datapath. Err: %v", err)
 		}
 	}
-	var agMode types.AgentMode
+	var agMode protos.AgentMode
 	var resolverClient resolver.Interface
 	if *mode == "managed" {
-		agMode = types.AgentMode_MANAGED
+		agMode = protos.AgentMode_MANAGED
 
 		// create a resolver
 		resolverClient = resolver.New(&resolver.Config{Name: "naples-netagent", Servers: strings.Split(*resolverURLs, ",")})
@@ -101,7 +101,7 @@ func main() {
 			log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 		}
 	} else {
-		agMode = types.AgentMode_CLASSIC
+		agMode = protos.AgentMode_CLASSIC
 	}
 
 	// create the new NetAgent

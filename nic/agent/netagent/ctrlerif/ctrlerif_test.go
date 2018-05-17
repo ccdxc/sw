@@ -9,7 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -47,7 +47,7 @@ func createFakeAgent(name string) *fakeAgent {
 		sgDeleted:  make(map[string]*netproto.SecurityGroup),
 	}
 }
-func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif state.CtrlerAPI) error {
+func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif types.CtrlerAPI) error {
 	return nil
 }
 
@@ -84,7 +84,7 @@ func (ag *fakeAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error)
 	return nil, nil
 }
 
-func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*state.IntfInfo, error) {
+func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error) {
 	ag.epAdded[objectKey(ep.ObjectMeta)] = ep
 	return nil, nil
 }

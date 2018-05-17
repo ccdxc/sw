@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package state
+package types
 
 import (
 	"sync"
@@ -51,26 +51,26 @@ type IPSecRuleRef struct {
 // NetAgent is the network agent instance
 type NetAgent struct {
 	sync.Mutex                                           // global lock for the agent
-	store            emstore.Emstore                     // embedded db
-	nodeUUID         string                              // Node's UUID
-	datapath         NetDatapathAPI                      // network datapath
-	ctrlerif         CtrlerAPI                           // controller object
-	networkDB        map[string]*netproto.Network        // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
-	endpointDB       map[string]*netproto.Endpoint       // Endpoint object db
-	secgroupDB       map[string]*netproto.SecurityGroup  // security group object db
-	tenantDB         map[string]*netproto.Tenant         // tenant object db
-	namespaceDB      map[string]*netproto.Namespace      // tenant object db
-	enicDB           map[string]*netproto.Interface      // ENIC interface object db
-	natPoolDB        map[string]*netproto.NatPool        // Nat Pool object DB
-	natPolicyDB      map[string]*netproto.NatPolicy      // Nat Policy Object DB
-	natBindingDB     map[string]*netproto.NatBinding     // Nat Binding Object DB
-	routeDB          map[string]*netproto.Route          // Route Object DB
-	ipSecPolicyDB    map[string]*netproto.IPSecPolicy    // IPSecPolicy Object DB
-	ipSecSAEncryptDB map[string]*netproto.IPSecSAEncrypt // IPSecSAEncrypt Object DB
-	ipSecSADecryptDB map[string]*netproto.IPSecSADecrypt // IPSecSADecrypt Object DB
-	ipSecPolicyLUT   map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
-	natPoolLUT       map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
-	hwIfDB           map[string]*netproto.Interface      // Has all the Uplinks and Lifs
+	Store            emstore.Emstore                     // embedded db
+	NodeUUID         string                              // Node's UUID
+	Datapath         NetDatapathAPI                      // network datapath
+	Ctrlerif         CtrlerAPI                           // controller object
+	NetworkDB        map[string]*netproto.Network        // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
+	EndpointDB       map[string]*netproto.Endpoint       // Endpoint object db
+	SecgroupDB       map[string]*netproto.SecurityGroup  // security group object db
+	TenantDB         map[string]*netproto.Tenant         // tenant object db
+	NamespaceDB      map[string]*netproto.Namespace      // tenant object db
+	EnicDB           map[string]*netproto.Interface      // ENIC interface object db
+	NatPoolDB        map[string]*netproto.NatPool        // Nat Pool object DB
+	NatPolicyDB      map[string]*netproto.NatPolicy      // Nat Policy Object DB
+	NatBindingDB     map[string]*netproto.NatBinding     // Nat Binding Object DB
+	RouteDB          map[string]*netproto.Route          // Route Object DB
+	IPSecPolicyDB    map[string]*netproto.IPSecPolicy    // IPSecPolicy Object DB
+	IPSecSAEncryptDB map[string]*netproto.IPSecSAEncrypt // IPSecSAEncrypt Object DB
+	IPSecSADecryptDB map[string]*netproto.IPSecSADecrypt // IPSecSADecrypt Object DB
+	IPSecPolicyLUT   map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
+	NatPoolLUT       map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
+	HwIfDB           map[string]*netproto.Interface      // Has all the Uplinks and Lifs
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent

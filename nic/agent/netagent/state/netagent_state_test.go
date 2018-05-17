@@ -4,337 +4,16 @@ package state
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	//"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
-
-type mockDatapath struct {
-	sync.Mutex
-	netdb map[string]*netproto.Network
-	epdb  map[string]*netproto.Endpoint
-	sgdb  map[string]*netproto.SecurityGroup
-	tndb  map[string]*netproto.Tenant
-}
-
-// SetAgent registers agent with datapath
-func (dp *mockDatapath) SetAgent(ag DatapathIntf) error {
-	return nil
-}
-
-func (dp *mockDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error) {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
-	dp.epdb[key] = ep
-	return nil, nil
-}
-
-func (dp *mockDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, intf *netproto.Interface, ns *netproto.Namespace) error {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
-	dp.epdb[key] = ep
-	return nil
-}
-
-func (dp *mockDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
-	dp.epdb[key] = ep
-	return nil
-}
-
-func (dp *mockDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
-	dp.epdb[key] = ep
-	return nil
-}
-
-func (dp *mockDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
-	delete(dp.epdb, key)
-	return nil
-}
-
-func (dp *mockDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
-	delete(dp.epdb, key)
-	return nil
-}
-
-// CreateNetwork creates a network in datapath
-func (dp *mockDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
-	return nil
-}
-
-// UpdateNetwork updates a network in datapath
-func (dp *mockDatapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
-	return nil
-}
-
-// DeleteNetwork deletes a network from datapath
-func (dp *mockDatapath) DeleteNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
-	return nil
-}
-
-// CreateSecurityGroup creates a security group
-func (dp *mockDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
-	dp.sgdb[key] = sg
-	return nil
-}
-
-// UpdateSecurityGroup updates a security group
-func (dp *mockDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
-	return nil
-}
-
-// DeleteSecurityGroup deletes a security group
-func (dp *mockDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
-	dp.Lock()
-	defer dp.Unlock()
-
-	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
-	delete(dp.epdb, key)
-	return nil
-}
-
-// AddSecurityRule adds a security rule
-func (dp *mockDatapath) AddSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error {
-	return nil
-}
-
-// DeleteSecurityRule deletes a security rule
-func (dp *mockDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error {
-	return nil
-}
-
-// CreateVrf creates a vrf. Stubbed out to satisfy the interface
-func (dp *mockDatapath) CreateVrf(vrfID uint64) error {
-	return nil
-}
-
-// DeleteVrf deletes a vrf. Stubbed out to satisfy the interface
-func (dp *mockDatapath) DeleteVrf(vrfID uint64) error {
-	return nil
-}
-
-// UpdateVrf updates a vrf. Stubbed out to satisfy the interface
-func (dp *mockDatapath) UpdateVrf(vrfID uint64) error {
-	return nil
-}
-
-// CreateInterface creates an interface. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, ns *netproto.Namespace) error {
-	return nil
-}
-
-// DeleteInterface deletes. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
-	return nil
-}
-
-// UpdateInterface updates an interface. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
-	return nil
-}
-
-// CreateNatPool creates a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// UpdateNatPool updates a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// DeleteNatPool deletes a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// CreateNatPolicy creates a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatPolicy(np *netproto.NatPolicy, npLUT map[string]*NatPoolRef, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// UpdateNatPolicy updates a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// DeleteNatPolicy deletes a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// CreateRoute creates a Route in the datapath. Stubbed out to satisfy the interface
-func (dp *mockDatapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// CreateNatBinding creates a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) (*netproto.NatBinding, error) {
-
-	return nb, nil
-}
-
-// UpdateRoute updates a Route in the datapath. Stubbed out to satisfy the interface
-func (dp *mockDatapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// UpdateNatBinding updates a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// DeleteRoute deletes a Route in the datapath. Stubbed out to satisfy the interface
-func (dp *mockDatapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// DeleteNatBinding deletes a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
-
-	return nil
-}
-
-// CreateIPSecPolicy creates an IPSec Policy in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*IPSecRuleRef) error {
-	return nil
-}
-
-// UpdateIPSecPolicy updates an IPSec Policy in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) UpdateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
-	return nil
-}
-
-// DeleteIPSecPolicy deletes an IPSec Policy in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) DeleteIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error {
-	return nil
-}
-
-// CreateIPSecSAEncrypt creates an IPSec Encrypt SA in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-// UpdateIPSecSAEncrypt updates an IPSec Encrypt SA in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) UpdateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-// DeleteIPSecSAEncrypt deletes an IPSec Encrypt SA in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-// CreateIPSecSADecrypt creates an IPSec Decrypt SA in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-// UpdateIPSecSADecrypt updates an IPSec Decrypt SA in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-// DeleteIPSecSADecrypt deletes an IPSec Decrypt SA in the datapath. Stubbed out to satisfy the datapath Interface
-func (dp *mockDatapath) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-func (dp *mockDatapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
-	var lifs halproto.LifGetResponseMsg
-	var uplinks halproto.InterfaceGetResponseMsg
-	mockLifs := []*halproto.LifGetResponse{
-		{
-			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-			Spec: &halproto.LifSpec{
-				KeyOrHandle: &halproto.LifKeyHandle{
-					KeyOrHandle: &halproto.LifKeyHandle_LifId{
-						LifId: 1,
-					},
-				},
-			},
-		},
-		{
-			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-			Spec: &halproto.LifSpec{
-				KeyOrHandle: &halproto.LifKeyHandle{
-					KeyOrHandle: &halproto.LifKeyHandle_LifId{
-						LifId: 2,
-					},
-				},
-			},
-		},
-	}
-	lifs.Response = append(lifs.Response, mockLifs...)
-
-	mockUplinks := []*halproto.InterfaceGetResponse{
-		{
-			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-			Spec: &halproto.InterfaceSpec{
-				KeyOrHandle: &halproto.InterfaceKeyHandle{
-					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-						InterfaceId: 3,
-					},
-				},
-				Type: halproto.IfType_IF_TYPE_UPLINK,
-			},
-		},
-		{
-			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-			Spec: &halproto.InterfaceSpec{
-				KeyOrHandle: &halproto.InterfaceKeyHandle{
-					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-						InterfaceId: 4,
-					},
-				},
-				Type: halproto.IfType_IF_TYPE_UPLINK,
-			},
-		},
-	}
-	uplinks.Response = append(uplinks.Response, mockUplinks...)
-
-	return &lifs, &uplinks, nil
-}
 
 type mockCtrler struct {
 	epdb map[string]*netproto.Endpoint
@@ -357,12 +36,10 @@ func (ctrler *mockCtrler) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netprot
 }
 
 // createNetAgent creates a netagent scaffolding
-func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
-	dp := &mockDatapath{
-		epdb:  make(map[string]*netproto.Endpoint),
-		netdb: make(map[string]*netproto.Network),
-		sgdb:  make(map[string]*netproto.SecurityGroup),
-		tndb:  make(map[string]*netproto.Tenant),
+func createNetAgent(t *testing.T) (*Nagent, *mockCtrler, *hal.Datapath) {
+	dp, err := hal.NewHalDatapath("mock")
+	if err != nil {
+		t.Fatalf("could not create a mock datapath")
 	}
 	ct := &mockCtrler{
 		epdb: make(map[string]*netproto.Endpoint),
@@ -378,8 +55,7 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 
 	// fake controller intf
 	nagent.RegisterCtrlerIf(ct)
-
-	return nagent, dp, ct
+	return nagent, ct, dp
 }
 
 func TestNetworkCreateDelete(t *testing.T) {
@@ -481,6 +157,11 @@ func TestNetworkUpdate(t *testing.T) {
 			Namespace: "updateNamespace",
 			Name:      "updateNetwork",
 		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.0.0.0/16",
+			IPv4Gateway: "10.0.0.1",
+			VlanID:      42,
+		},
 	}
 
 	// create network
@@ -501,9 +182,9 @@ func TestNetworkUpdate(t *testing.T) {
 	AssertOk(t, err, "Error updating network")
 }
 
-func TestEndpointCreateDelete(t *testing.T) {
+func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	// create netagent
-	ag, dp, ct := createNetAgent(t)
+	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
@@ -526,7 +207,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating network")
 
 	// endpoint message
-	epinfo := netproto.Endpoint{
+	epinfo := &netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
@@ -538,30 +219,30 @@ func TestEndpointCreateDelete(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+		},
 	}
 
 	// create the endpoint
-	ep, _, err := ag.EndpointCreateReq(&epinfo)
+	ep, _, err := ag.EndpointCreateReq(epinfo)
 	AssertOk(t, err, "Error creating endpoint")
+	var foundEp *netproto.Endpoint
+	eps := ag.ListEndpoint()
+	for _, e := range eps {
+		if ep.Name == "testEndpoint" {
+			foundEp = e
+			break
+		}
+	}
+	AssertEquals(t, epinfo, foundEp, "Agent should return the exact ep that we created.")
 
-	// verify both controller and datapath got called
-	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
-	nep, ok := ag.endpointDB[key]
-	Assert(t, ok, "Endpoint was not found in datapath", dp)
-	Assert(t, proto.Equal(nep, ep), "Datapath endpoint did not match", nep)
-	dep, ok := dp.epdb[key]
-	Assert(t, ok, "Endpoint was not found in datapath", dp)
-	Assert(t, proto.Equal(dep, ep), "Datapath endpoint did not match", dep)
-	cep, ok := ct.epdb[key]
-	Assert(t, ok, "Endpoint was not found in ctrler", dp)
-	Assert(t, proto.Equal(cep, ep), "Datapath endpoint did not match", cep)
-
-	// verify duplicate endpoint creations succeed
-	_, _, err = ag.EndpointCreateReq(&epinfo)
+	//verify duplicate endpoint creations succeed
+	_, _, err = ag.EndpointCreateReq(epinfo)
 	AssertOk(t, err, "Endpoint creation is not idempotent")
-
+	//
 	// verify endpoint create on non-existing network fails
-	ep2 := netproto.Endpoint{
+	ep2 := &netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
@@ -573,14 +254,17 @@ func TestEndpointCreateDelete(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "invalid",
 		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+		},
 	}
-	_, _, err = ag.EndpointCreateReq(&ep2)
-	Assert(t, (err != nil), "Endpoint create on non-existing network succeeded", ag)
+	_, _, err = ag.EndpointCreateReq(ep2)
+	Assert(t, err != nil, "Endpoint create on non-existing network succeeded", ag)
 
 	// verify list api works
 	epList := ag.ListEndpoint()
-	Assert(t, (len(epList) == 1), "Incorrect number of endpoints")
-
+	Assert(t, len(epList) == 1, "Incorrect number of endpoints")
+	//
 	// endpoint message
 	depinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -593,123 +277,31 @@ func TestEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID2",
 			WorkloadUUID: "testWorkloadUUID2",
 			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
 		},
 	}
 	_, _, err = ag.EndpointCreateReq(&depinfo)
-	Assert(t, (err != nil), "Conflicting endpoint creating succeeded", ag)
+	Assert(t, err != nil, "Conflicting endpoint creating succeeded", ag)
 
 	// delete the endpoint
-	err = ag.EndpointDeleteReq(&epinfo)
+	err = ag.EndpointDeleteReq(epinfo)
 	AssertOk(t, err, "Endpoint delete failed")
 
-	// verify endpoint is gone everywhere
-	_, ok = ag.endpointDB[key]
-	Assert(t, !ok, "Endpoint was still found in datapath", dp)
-	_, ok = dp.epdb[key]
-	Assert(t, !ok, "Endpoint was still found in datapath", dp)
-	_, ok = ct.epdb[key]
-	Assert(t, !ok, "Endpoint was still found in ctrler", dp)
+	// ensure that ep list returns 0 after delete
+	// verify list api works
+	epList = ag.ListEndpoint()
+	AssertEquals(t, 0, len(epList), "Incorrect number of endpoints")
 
 	// verify non-existing endpoint can not be deleted
-	err = ag.EndpointDeleteReq(&epinfo)
-	Assert(t, (err != nil), "Deleting non-existing endpoint succeeded", ag)
-}
-
-func TestCtrlerEndpointCreateDelete(t *testing.T) {
-	// create netagent
-	ag, dp, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// network message
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "default",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
-	}
-
-	// make create network call
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating network")
-
-	// endpoint message
-	epinfo := netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "testEndpoint",
-			Namespace: "default",
-		},
-		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			Interface:    "default-uplink-1",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.1.1.1/24",
-		},
-	}
-
-	// create the endpoint
-	_, err = ag.CreateEndpoint(&epinfo)
-	AssertOk(t, err, "Error creating endpoint")
-
-	// verify datapath got called
-	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
-	nep, ok := ag.endpointDB[key]
-	Assert(t, ok, "Endpoint was not found in datapath", dp)
-	Assert(t, proto.Equal(nep, &epinfo), "Datapath endpoint did not match", nep)
-	dep, ok := dp.epdb[key]
-	Assert(t, ok, "Endpoint was not found in datapath", dp)
-	Assert(t, proto.Equal(dep, &epinfo), "Datapath endpoint did not match", dep)
-
-	// verify duplicate endpoint creations succeed
-	_, err = ag.CreateEndpoint(&epinfo)
-	AssertOk(t, err, "Endpoint creation is not idempotent")
-
-	// endpoint message
-	depinfo := netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "testEndpoint",
-			Namespace: "default",
-		},
-		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID2",
-			WorkloadUUID: "testWorkloadUUID2",
-			NetworkName:  "default",
-		},
-	}
-	_, err = ag.CreateEndpoint(&depinfo)
-	Assert(t, (err != nil), "Conflicting endpoint creating succeeded", ag)
-
-	// delete the endpoint
-	err = ag.DeleteEndpoint(&epinfo)
-	AssertOk(t, err, "Endpoint delete failed")
-
-	// verify endpoint is gone everywhere
-	_, ok = ag.endpointDB[key]
-	Assert(t, !ok, "Endpoint was still found in datapath", dp)
-	_, ok = dp.epdb[key]
-	Assert(t, !ok, "Endpoint was still found in datapath", dp)
-
-	// verify non-existing endpoint can not be deleted
-	err = ag.DeleteEndpoint(&epinfo)
-	Assert(t, (err != nil), "Deleting non-existing endpoint succeeded", ag)
+	err = ag.EndpointDeleteReq(epinfo)
+	Assert(t, err != nil, "Deleting non-existing endpoint succeeded", ag)
 }
 
 func TestSecurityGroupCreateDelete(t *testing.T) {
 	// create netagent
-	ag, dp, _ := createNetAgent(t)
+	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
@@ -733,6 +325,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 							Port:     80,
 						},
 					},
+					Action: "Allow",
 				},
 			},
 		},
@@ -745,10 +338,6 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 	// verify list api works
 	sgList := ag.ListSecurityGroup()
 	Assert(t, (len(sgList) == 1), "Incorrect number of sgs")
-
-	// verify datapath has the security group
-	_, ok := dp.sgdb[objectKey(sg.ObjectMeta, sg.TypeMeta)]
-	Assert(t, ok, "Security group not found in datapath")
 
 	// network message
 	nt := netproto.Network{
@@ -816,7 +405,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 
 func TestEndpointUpdate(t *testing.T) {
 	// create netagent
-	ag, dp, _ := createNetAgent(t)
+	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
@@ -880,6 +469,7 @@ func TestEndpointUpdate(t *testing.T) {
 							Port:     80,
 						},
 					},
+					Action: "Allow",
 				},
 			},
 		},
@@ -894,15 +484,6 @@ func TestEndpointUpdate(t *testing.T) {
 	epupd.Spec.SecurityGroups = []string{"test-sg"}
 	err = ag.UpdateEndpoint(&epupd)
 	AssertOk(t, err, "Error updating endpoint")
-
-	// verify endpoint got updated
-	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
-	nep, ok := ag.endpointDB[key]
-	Assert(t, ok, "Endpoint was not found in datapath", dp)
-	Assert(t, proto.Equal(nep, &epupd), "Datapath endpoint did not match", nep)
-	dep, ok := dp.epdb[key]
-	Assert(t, ok, "Endpoint was not found in datapath", dp)
-	Assert(t, proto.Equal(dep, &epupd), "Datapath endpoint did not match", dep)
 
 	// try changing the network of endpoint
 	epupd2 := epupd
@@ -919,7 +500,7 @@ func TestEndpointUpdate(t *testing.T) {
 
 func TestSecurityGroupUpdate(t *testing.T) {
 	// create netagent
-	ag, dp, _ := createNetAgent(t)
+	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
@@ -937,6 +518,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 				{
 					Direction: "Incoming",
 					PeerGroup: "",
+					Action:    "Allow",
 				},
 			},
 		},
@@ -953,20 +535,18 @@ func TestSecurityGroupUpdate(t *testing.T) {
 		{
 			Direction: "Incoming",
 			PeerGroup: "test-sg",
+			Action:    "Allow",
 		},
 	}
 	err = ag.CreateSecurityGroup(&sg2)
 	AssertOk(t, err, "Error creating security group")
-
-	// verify datapath has the security group
-	_, ok := dp.sgdb[objectKey(sg2.ObjectMeta, sg2.TypeMeta)]
-	Assert(t, ok, "Security group not found in datapath")
 
 	// update first sg
 	sg.Spec.Rules = []netproto.SecurityRule{
 		{
 			Direction: "Incoming",
 			PeerGroup: "test-sg2",
+			Action:    "Allow",
 		},
 	}
 	err = ag.UpdateSecurityGroup(&sg)
@@ -978,6 +558,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 		{
 			Direction: "Incoming",
 			PeerGroup: "unknown",
+			Action:    "Allow",
 		},
 	}
 	err = ag.UpdateSecurityGroup(&sg3)

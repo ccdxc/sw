@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -19,7 +19,7 @@ import (
 // RestServer is the REST api server
 type RestServer struct {
 	listenURL  string           // URL where http server is listening
-	agent      state.CtrlerIntf // net Agent API
+	agent      types.CtrlerIntf // net Agent API
 	listener   net.Listener     // socket listener
 	httpServer *http.Server     // HTTP server
 }
@@ -34,7 +34,7 @@ type Response struct {
 type routeAddFunc func(*mux.Router, *RestServer)
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error) {
+func NewRestServer(agent types.CtrlerIntf, listenURL string) (*RestServer, error) {
 	// create server instance
 	srv := RestServer{
 		listenURL: listenURL,

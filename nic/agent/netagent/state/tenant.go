@@ -8,15 +8,16 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/gogo/protobuf/types"
+	gogoproto "github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateTenant creates a tenant
-func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
+func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 	err := na.validateMeta(tn.Kind, tn.ObjectMeta)
 	if err != nil {
 		return err
@@ -33,7 +34,7 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	tn.Status.TenantID, err = na.store.GetNextID(VrfID)
+	tn.Status.TenantID, err = na.Store.GetNextID(types.VrfID)
 
 	if err != nil {
 		log.Errorf("Could not allocate tenant id. {%+v}", err)
@@ -41,7 +42,7 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateVrf(tn.Status.TenantID)
+	err = na.Datapath.CreateVrf(tn.Status.TenantID)
 	if err != nil {
 		log.Errorf("Error creating tenant in datapath. Tenant {%+v}. Err: %v", tn, err)
 		return err
@@ -50,15 +51,15 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 	// save it in db
 	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
-	na.tenantDB[key] = tn
+	na.TenantDB[key] = tn
 	na.Unlock()
-	err = na.store.Write(tn)
+	err = na.Store.Write(tn)
 	if err != nil {
 		log.Errorf("Could not persist tenant object to the store. %v", err)
 		return err
 	}
 
-	c, _ := types.TimestampProto(time.Now())
+	c, _ := gogoproto.TimestampProto(time.Now())
 	// Create a default namespace for every tenant
 	defaultNS := &netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
@@ -77,7 +78,7 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 }
 
 // FindTenant finds a tenant in local db
-func (na *NetAgent) FindTenant(tenant string) (*netproto.Tenant, error) {
+func (na *Nagent) FindTenant(tenant string) (*netproto.Tenant, error) {
 	meta := api.ObjectMeta{
 		Name: tenant,
 	}
@@ -90,7 +91,7 @@ func (na *NetAgent) FindTenant(tenant string) (*netproto.Tenant, error) {
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	tn, ok := na.tenantDB[key]
+	tn, ok := na.TenantDB[key]
 	if !ok {
 		return nil, fmt.Errorf("tenant not found %v", tn)
 	}
@@ -99,13 +100,13 @@ func (na *NetAgent) FindTenant(tenant string) (*netproto.Tenant, error) {
 }
 
 // ListTenant returns the list of tenants
-func (na *NetAgent) ListTenant() []*netproto.Tenant {
+func (na *Nagent) ListTenant() []*netproto.Tenant {
 	var tenantList []*netproto.Tenant
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, tn := range na.tenantDB {
+	for _, tn := range na.TenantDB {
 		tenantList = append(tenantList, tn)
 	}
 
@@ -113,7 +114,7 @@ func (na *NetAgent) ListTenant() []*netproto.Tenant {
 }
 
 // UpdateTenant updates a tenant
-func (na *NetAgent) UpdateTenant(tn *netproto.Tenant) error {
+func (na *Nagent) UpdateTenant(tn *netproto.Tenant) error {
 	existingTn, err := na.FindTenant(tn.ObjectMeta.Name)
 	if err != nil {
 		log.Errorf("Tenant %v not found", tn.ObjectMeta)
@@ -125,17 +126,17 @@ func (na *NetAgent) UpdateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateVrf(tn.Status.TenantID)
+	err = na.Datapath.UpdateVrf(tn.Status.TenantID)
 	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
-	na.tenantDB[key] = tn
+	na.TenantDB[key] = tn
 	na.Unlock()
-	err = na.store.Write(tn)
+	err = na.Store.Write(tn)
 	return err
 }
 
 // DeleteTenant deletes a tenant
-func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
+func (na *Nagent) DeleteTenant(tn *netproto.Tenant) error {
 	if tn.Name == "default" {
 		return errors.New("default tenants can not be deleted")
 	}
@@ -159,7 +160,7 @@ func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteVrf(existingTenant.Status.TenantID)
+	err = na.Datapath.DeleteVrf(existingTenant.Status.TenantID)
 	if err != nil {
 		log.Errorf("Error deleting tenant {%+v}. Err: %v", tn, err)
 	}
@@ -167,9 +168,9 @@ func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
 	// delete from db
 	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
-	delete(na.tenantDB, key)
+	delete(na.TenantDB, key)
 	na.Unlock()
-	err = na.store.Delete(tn)
+	err = na.Store.Delete(tn)
 
 	return err
 }

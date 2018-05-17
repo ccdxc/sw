@@ -18,7 +18,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -319,12 +319,12 @@ func (hd *Datapath) GetEndpointCount() int {
 }
 
 // SetAgent sets the agent for this datapath
-func (hd *Datapath) SetAgent(ag state.DatapathIntf) error {
+func (hd *Datapath) SetAgent(ag types.DatapathIntf) error {
 	return nil
 }
 
 // CreateLocalEndpoint creates an endpoint
-func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
+func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*types.IntfInfo, error) {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -1599,7 +1599,7 @@ func (hd *Datapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 }
 
 // CreateNatPolicy creates a NAT Policy in the datapath
-func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*state.NatPoolRef, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*types.NatPoolRef, ns *netproto.Namespace) error {
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -1910,7 +1910,7 @@ func (hd *Datapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Names
 }
 
 // CreateIPSecPolicy creates an IPSec Policy in the datapath
-func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*state.IPSecRuleRef) error {
+func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*types.IPSecRuleRef) error {
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,

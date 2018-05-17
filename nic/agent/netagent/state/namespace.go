@@ -4,18 +4,18 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateNamespace creates a namespace
-func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
+func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 	err := na.validateMeta(ns.Kind, ns.ObjectMeta)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
 		return nil
 	}
 
-	ns.Status.NamespaceID, err = na.store.GetNextID(VrfID)
+	ns.Status.NamespaceID, err = na.Store.GetNextID(types.VrfID)
 
 	if err != nil {
 		log.Errorf("Could not allocate namespace id. {%+v}", err)
@@ -40,7 +40,7 @@ func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateVrf(ns.Status.NamespaceID)
+	err = na.Datapath.CreateVrf(ns.Status.NamespaceID)
 	if err != nil {
 		log.Errorf("Error creating namespace in datapath. Namespace {%+v}. Err: %v", ns, err)
 		return err
@@ -49,15 +49,15 @@ func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
 	// save it in db
 	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
-	na.namespaceDB[key] = ns
+	na.NamespaceDB[key] = ns
 	na.Unlock()
-	err = na.store.Write(ns)
+	err = na.Store.Write(ns)
 
 	return err
 }
 
 // FindNamespace finds a namespace in local db
-func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace, error) {
+func (na *Nagent) FindNamespace(tenant, namespace string) (*netproto.Namespace, error) {
 	nsTypeMeta := api.TypeMeta{
 		Kind: "Namespace",
 	}
@@ -77,7 +77,7 @@ func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace
 
 	// lookup the database
 	key := objectKey(meta, nsTypeMeta)
-	ns, ok := na.namespaceDB[key]
+	ns, ok := na.NamespaceDB[key]
 	if !ok {
 		return nil, fmt.Errorf("namespace not found %v", namespace)
 	}
@@ -86,13 +86,13 @@ func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace
 }
 
 // ListNamespace returns the list of namespaces
-func (na *NetAgent) ListNamespace() []*netproto.Namespace {
+func (na *Nagent) ListNamespace() []*netproto.Namespace {
 	var namespaceList []*netproto.Namespace
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, tn := range na.namespaceDB {
+	for _, tn := range na.NamespaceDB {
 		namespaceList = append(namespaceList, tn)
 	}
 
@@ -100,7 +100,7 @@ func (na *NetAgent) ListNamespace() []*netproto.Namespace {
 }
 
 // UpdateNamespace updates a namespace
-func (na *NetAgent) UpdateNamespace(ns *netproto.Namespace) error {
+func (na *Nagent) UpdateNamespace(ns *netproto.Namespace) error {
 	existingNs, err := na.FindNamespace(ns.Tenant, ns.Name)
 	if err != nil {
 		log.Errorf("Namespace %v not found", ns.ObjectMeta)
@@ -112,17 +112,17 @@ func (na *NetAgent) UpdateNamespace(ns *netproto.Namespace) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateVrf(ns.Status.NamespaceID)
+	err = na.Datapath.UpdateVrf(ns.Status.NamespaceID)
 	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
-	na.namespaceDB[key] = ns
+	na.NamespaceDB[key] = ns
 	na.Unlock()
-	err = na.store.Write(ns)
+	err = na.Store.Write(ns)
 	return err
 }
 
 // DeleteNamespace deletes a namespace
-func (na *NetAgent) DeleteNamespace(ns *netproto.Namespace) error {
+func (na *Nagent) DeleteNamespace(ns *netproto.Namespace) error {
 	if ns.Name == "default" && ns.Tenant == "default" {
 		return errors.New("default namespaces under default tenant cannot be deleted")
 	}
@@ -134,7 +134,7 @@ func (na *NetAgent) DeleteNamespace(ns *netproto.Namespace) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteVrf(existingNamespace.Status.NamespaceID)
+	err = na.Datapath.DeleteVrf(existingNamespace.Status.NamespaceID)
 	if err != nil {
 		log.Errorf("Error deleting namespace {%+v}. Err: %v", ns, err)
 	}
@@ -142,9 +142,9 @@ func (na *NetAgent) DeleteNamespace(ns *netproto.Namespace) error {
 	// delete from db
 	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
-	delete(na.namespaceDB, key)
+	delete(na.NamespaceDB, key)
 	na.Unlock()
-	err = na.store.Delete(ns)
+	err = na.Store.Delete(ns)
 
 	return err
 }

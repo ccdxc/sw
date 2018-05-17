@@ -4,18 +4,18 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateNetwork creates a network
-func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
+func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	err := na.validateMeta(nt.Kind, nt.ObjectMeta)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
-	nt.Status.NetworkID, err = na.store.GetNextID(NetworkID)
+	nt.Status.NetworkID, err = na.Store.GetNextID(types.NetworkID)
 	if err != nil {
 		log.Errorf("Could not allocate network id. {%+v}", err)
 		return err
@@ -47,7 +47,7 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	uplinks := na.getUplinks()
 
 	// create it in datapath
-	err = na.datapath.CreateNetwork(nt, uplinks, ns)
+	err = na.Datapath.CreateNetwork(nt, uplinks, ns)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err
@@ -56,15 +56,15 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	// save it in db
 	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
-	na.networkDB[key] = nt
+	na.NetworkDB[key] = nt
 	na.Unlock()
-	err = na.store.Write(nt)
+	err = na.Store.Write(nt)
 
 	return err
 }
 
 // ListNetwork returns the list of networks
-func (na *NetAgent) ListNetwork() []*netproto.Network {
+func (na *Nagent) ListNetwork() []*netproto.Network {
 	var netlist []*netproto.Network
 
 	// lock the db
@@ -72,7 +72,7 @@ func (na *NetAgent) ListNetwork() []*netproto.Network {
 	defer na.Unlock()
 
 	// walk all networks
-	for _, nw := range na.networkDB {
+	for _, nw := range na.NetworkDB {
 		netlist = append(netlist, nw)
 	}
 
@@ -80,7 +80,7 @@ func (na *NetAgent) ListNetwork() []*netproto.Network {
 }
 
 // FindNetwork dins a network in local db
-func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
+func (na *Nagent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "Network",
 	}
@@ -90,7 +90,7 @@ func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) 
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	nt, ok := na.networkDB[key]
+	nt, ok := na.NetworkDB[key]
 	if !ok {
 		return nil, fmt.Errorf("network not found %v", meta.Name)
 	}
@@ -99,7 +99,7 @@ func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) 
 }
 
 // UpdateNetwork updates a network. ToDo implement network updates in datapath
-func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
+func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
 	if err != nil {
@@ -117,17 +117,17 @@ func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateNetwork(nt, ns)
+	err = na.Datapath.UpdateNetwork(nt, ns)
 	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
-	na.networkDB[key] = nt
+	na.NetworkDB[key] = nt
 	na.Unlock()
-	err = na.store.Write(nt)
+	err = na.Store.Write(nt)
 	return err
 }
 
 // DeleteNetwork deletes a network. ToDo implement network deletes in datapath
-func (na *NetAgent) DeleteNetwork(nt *netproto.Network) error {
+func (na *Nagent) DeleteNetwork(nt *netproto.Network) error {
 	err := na.validateMeta(nt.Kind, nt.ObjectMeta)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (na *NetAgent) DeleteNetwork(nt *netproto.Network) error {
 	}
 
 	// delete the network in datapath
-	err = na.datapath.DeleteNetwork(nw, ns)
+	err = na.Datapath.DeleteNetwork(nw, ns)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
 	}
@@ -154,9 +154,9 @@ func (na *NetAgent) DeleteNetwork(nt *netproto.Network) error {
 	// delete from db
 	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
-	delete(na.networkDB, key)
+	delete(na.NetworkDB, key)
 	na.Unlock()
-	err = na.store.Delete(nt)
+	err = na.Store.Delete(nt)
 
 	return err
 }

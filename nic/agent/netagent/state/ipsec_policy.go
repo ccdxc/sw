@@ -4,20 +4,19 @@ package state
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
-	"strings"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateIPSecPolicy creates an IPSec Policy
-func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
 	if err != nil {
 		return err
@@ -41,7 +40,7 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 	// validate SA Policies
 	for _, r := range ipSec.Spec.Rules {
-		r.ID, err = na.store.GetNextID(IPSecRuleID)
+		r.ID, err = na.Store.GetNextID(types.IPSecRuleID)
 		switch r.SAType {
 		case "ENCRYPT":
 			// SPI should not be specified for encrypt rules
@@ -56,11 +55,11 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				return err
 			}
 			key := fmt.Sprintf("%s|%s", r.SAType, r.SAName)
-			saRef := &IPSecRuleRef{
+			saRef := &types.IPSecRuleRef{
 				NamespaceID: ns.Status.NamespaceID,
 				RuleID:      sa.Status.IPSecSAEncryptID,
 			}
-			na.ipSecPolicyLUT[key] = saRef
+			na.IPSecPolicyLUT[key] = saRef
 		case "DECRYPT":
 			sa, err := na.findIPSecSADecrypt(ipSec.ObjectMeta, r.SAName)
 			if err != nil {
@@ -68,18 +67,18 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				return err
 			}
 			key := fmt.Sprintf("%s|%s", r.SAType, r.SAName)
-			saRef := &IPSecRuleRef{
+			saRef := &types.IPSecRuleRef{
 				NamespaceID: ns.Status.NamespaceID,
 				RuleID:      sa.Status.IPSecSADecryptID,
 			}
-			na.ipSecPolicyLUT[key] = saRef
+			na.IPSecPolicyLUT[key] = saRef
 		default:
 			log.Errorf("Invalid IPSec Policy rule type")
 			return errors.New("invalid IPSec Policy rule type")
 		}
 	}
 
-	ipSec.Status.IPSecPolicyID, err = na.store.GetNextID(IPSecPolicyID)
+	ipSec.Status.IPSecPolicyID, err = na.Store.GetNextID(types.IPSecPolicyID)
 
 	if err != nil {
 		log.Errorf("Could not allocate IPSec policy id. {%+v}", err)
@@ -87,7 +86,7 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateIPSecPolicy(ipSec, ns, na.ipSecPolicyLUT)
+	err = na.Datapath.CreateIPSecPolicy(ipSec, ns, na.IPSecPolicyLUT)
 	if err != nil {
 		log.Errorf("Error creating ipsec policy in datapath. IPSecPolicy {%+v}. Err: %v", ipSec, err)
 		return err
@@ -96,15 +95,15 @@ func (na *NetAgent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	// save it in db
 	key := objectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
 	na.Lock()
-	na.ipSecPolicyDB[key] = ipSec
+	na.IPSecPolicyDB[key] = ipSec
 	na.Unlock()
-	err = na.store.Write(ipSec)
+	err = na.Store.Write(ipSec)
 
 	return err
 }
 
 // FindIPSecPolicy finds a nat policy in local db
-func (na *NetAgent) FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy, error) {
+func (na *Nagent) FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "IPSecPolicy",
 	}
@@ -114,7 +113,7 @@ func (na *NetAgent) FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy,
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	ipSec, ok := na.ipSecPolicyDB[key]
+	ipSec, ok := na.IPSecPolicyDB[key]
 	if !ok {
 		return nil, fmt.Errorf("IPSec policy not found %v", meta.Name)
 	}
@@ -123,13 +122,13 @@ func (na *NetAgent) FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy,
 }
 
 // ListIPSecPolicy returns the list of IPSec policies
-func (na *NetAgent) ListIPSecPolicy() []*netproto.IPSecPolicy {
+func (na *Nagent) ListIPSecPolicy() []*netproto.IPSecPolicy {
 	var ipSecPolicyList []*netproto.IPSecPolicy
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, ipSec := range na.ipSecPolicyDB {
+	for _, ipSec := range na.IPSecPolicyDB {
 		ipSecPolicyList = append(ipSecPolicyList, ipSec)
 	}
 
@@ -137,7 +136,7 @@ func (na *NetAgent) ListIPSecPolicy() []*netproto.IPSecPolicy {
 }
 
 // UpdateIPSecPolicy updates an IPSec policy
-func (na *NetAgent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+func (na *Nagent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(ipSec.Tenant, ipSec.Namespace)
 	if err != nil {
@@ -154,17 +153,17 @@ func (na *NetAgent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateIPSecPolicy(ipSec, ns)
+	err = na.Datapath.UpdateIPSecPolicy(ipSec, ns)
 	key := objectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
 	na.Lock()
-	na.ipSecPolicyDB[key] = ipSec
+	na.IPSecPolicyDB[key] = ipSec
 	na.Unlock()
-	err = na.store.Write(ipSec)
+	err = na.Store.Write(ipSec)
 	return err
 }
 
 // DeleteIPSecPolicy deletes an IPSec policy
-func (na *NetAgent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
 	if err != nil {
 		return err
@@ -182,7 +181,7 @@ func (na *NetAgent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteIPSecPolicy(existingIPSec, ns)
+	err = na.Datapath.DeleteIPSecPolicy(existingIPSec, ns)
 	if err != nil {
 		log.Errorf("Error deleting IPSec policy {%+v}. Err: %v", ipSec, err)
 	}
@@ -190,14 +189,14 @@ func (na *NetAgent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	// delete from db
 	key := objectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
 	na.Lock()
-	delete(na.ipSecPolicyDB, key)
+	delete(na.IPSecPolicyDB, key)
 	na.Unlock()
-	err = na.store.Delete(ipSec)
+	err = na.Store.Delete(ipSec)
 
 	return err
 }
 
-func (na *NetAgent) findIPSecSAEncrypt(policyMeta api.ObjectMeta, saName string) (*netproto.IPSecSAEncrypt, error) {
+func (na *Nagent) findIPSecSAEncrypt(policyMeta api.ObjectMeta, saName string) (*netproto.IPSecSAEncrypt, error) {
 	var saMeta api.ObjectMeta
 
 	sa := strings.Split(saName, "/")
@@ -220,7 +219,7 @@ func (na *NetAgent) findIPSecSAEncrypt(policyMeta api.ObjectMeta, saName string)
 
 }
 
-func (na *NetAgent) findIPSecSADecrypt(policyMeta api.ObjectMeta, saName string) (*netproto.IPSecSADecrypt, error) {
+func (na *Nagent) findIPSecSADecrypt(policyMeta api.ObjectMeta, saName string) (*netproto.IPSecSADecrypt, error) {
 	var saMeta api.ObjectMeta
 
 	sa := strings.Split(saName, "/")

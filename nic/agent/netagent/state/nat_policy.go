@@ -4,18 +4,18 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateNatPolicy creates a nat policy
-func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
+func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	for _, rule := range np.Spec.Rules {
-		rule.ID, err = na.store.GetNextID(NatRuleID)
+		rule.ID, err = na.Store.GetNextID(types.NatRuleID)
 		natPool, err := na.findNatPool(np.ObjectMeta, rule.NatPool)
 		if err != nil {
 			log.Errorf("could not find nat pool for the rule. Rule: {%v}. Err: %v", rule, err)
@@ -50,14 +50,14 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 			log.Errorf("could not find the nat pool namespace. NatPool Namespace: {%v}. Err: %v", natPoolNS, err)
 			return err
 		}
-		poolID := &NatPoolRef{
+		poolID := &types.NatPoolRef{
 			NamespaceID: natPoolNS.Status.NamespaceID,
 			PoolID:      natPool.Status.NatPoolID,
 		}
-		na.natPoolLUT[rule.NatPool] = poolID
+		na.NatPoolLUT[rule.NatPool] = poolID
 	}
 
-	np.Status.NatPolicyID, err = na.store.GetNextID(NatPolicyID)
+	np.Status.NatPolicyID, err = na.Store.GetNextID(types.NatPolicyID)
 
 	if err != nil {
 		log.Errorf("Could not allocate nat policy id. {%+v}", err)
@@ -65,7 +65,7 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateNatPolicy(np, na.natPoolLUT, ns)
+	err = na.Datapath.CreateNatPolicy(np, na.NatPoolLUT, ns)
 	if err != nil {
 		log.Errorf("Error creating nat policy in datapath. NatPolicy {%+v}. Err: %v", np, err)
 		return err
@@ -74,15 +74,15 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	// save it in db
 	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
-	na.natPolicyDB[key] = np
+	na.NatPolicyDB[key] = np
 	na.Unlock()
-	err = na.store.Write(np)
+	err = na.Store.Write(np)
 
 	return err
 }
 
 // FindNatPolicy finds a nat policy in local db
-func (na *NetAgent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, error) {
+func (na *Nagent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "NatPolicy",
 	}
@@ -92,7 +92,7 @@ func (na *NetAgent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, err
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	np, ok := na.natPolicyDB[key]
+	np, ok := na.NatPolicyDB[key]
 	if !ok {
 		return nil, fmt.Errorf("nat policy not found %v", meta.Name)
 	}
@@ -101,13 +101,13 @@ func (na *NetAgent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, err
 }
 
 // ListNatPolicy returns the list of nat policys
-func (na *NetAgent) ListNatPolicy() []*netproto.NatPolicy {
+func (na *Nagent) ListNatPolicy() []*netproto.NatPolicy {
 	var natPolicyList []*netproto.NatPolicy
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, np := range na.natPolicyDB {
+	for _, np := range na.NatPolicyDB {
 		natPolicyList = append(natPolicyList, np)
 	}
 
@@ -115,7 +115,7 @@ func (na *NetAgent) ListNatPolicy() []*netproto.NatPolicy {
 }
 
 // UpdateNatPolicy updates a nat policy
-func (na *NetAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
+func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
 	if err != nil {
@@ -132,17 +132,17 @@ func (na *NetAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateNatPolicy(np, ns)
+	err = na.Datapath.UpdateNatPolicy(np, ns)
 	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
-	na.natPolicyDB[key] = np
+	na.NatPolicyDB[key] = np
 	na.Unlock()
-	err = na.store.Write(np)
+	err = na.Store.Write(np)
 	return err
 }
 
 // DeleteNatPolicy deletes a nat policy
-func (na *NetAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
+func (na *Nagent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func (na *NetAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteNatPolicy(existingNatPolicy, ns)
+	err = na.Datapath.DeleteNatPolicy(existingNatPolicy, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat policy {%+v}. Err: %v", np, err)
 	}
@@ -168,9 +168,9 @@ func (na *NetAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 	// delete from db
 	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
-	delete(na.natPolicyDB, key)
+	delete(na.NatPolicyDB, key)
 	na.Unlock()
-	err = na.store.Delete(np)
+	err = na.Store.Delete(np)
 
 	return err
 }

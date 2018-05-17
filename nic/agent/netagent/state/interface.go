@@ -4,18 +4,18 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateInterface creates an interface
-func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
+func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 	err := na.validateMeta(intf.Kind, intf.ObjectMeta)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 		return err
 	}
 
-	intfID, err := na.store.GetNextID(InterfaceID)
+	intfID, err := na.Store.GetNextID(types.InterfaceID)
 
 	if err != nil {
 		log.Errorf("Could not allocate interface id. {%+v}", err)
@@ -70,7 +70,7 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateInterface(intf, lif, ns)
+	err = na.Datapath.CreateInterface(intf, lif, ns)
 	if err != nil {
 		log.Errorf("Error creating interface in datapath. Interface {%+v}. Err: %v", intf, err)
 		return err
@@ -79,15 +79,15 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 	// save it in db
 	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
-	na.enicDB[key] = intf
+	na.EnicDB[key] = intf
 	na.Unlock()
-	err = na.store.Write(intf)
+	err = na.Store.Write(intf)
 
 	return err
 }
 
 // FindInterface finds an interface in local db
-func (na *NetAgent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, error) {
+func (na *Nagent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "Interface",
 	}
@@ -98,7 +98,7 @@ func (na *NetAgent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, err
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	tn, ok := na.enicDB[key]
+	tn, ok := na.EnicDB[key]
 	if !ok {
 		return nil, fmt.Errorf("interface not found %v", meta.Name)
 	}
@@ -107,13 +107,13 @@ func (na *NetAgent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, err
 }
 
 // ListInterface returns the list of interfaces
-func (na *NetAgent) ListInterface() []*netproto.Interface {
+func (na *Nagent) ListInterface() []*netproto.Interface {
 	var intfList []*netproto.Interface
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, intf := range na.enicDB {
+	for _, intf := range na.EnicDB {
 		intfList = append(intfList, intf)
 	}
 
@@ -121,7 +121,7 @@ func (na *NetAgent) ListInterface() []*netproto.Interface {
 }
 
 // UpdateInterface updates an interface
-func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
+func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
 	if err != nil {
@@ -139,17 +139,17 @@ func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateInterface(intf, ns)
+	err = na.Datapath.UpdateInterface(intf, ns)
 	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
-	na.enicDB[key] = intf
+	na.EnicDB[key] = intf
 	na.Unlock()
-	err = na.store.Write(intf)
+	err = na.Store.Write(intf)
 	return err
 }
 
 // DeleteInterface deletes an interface
-func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
+func (na *Nagent) DeleteInterface(intf *netproto.Interface) error {
 	err := na.validateMeta(intf.Kind, intf.ObjectMeta)
 	if err != nil {
 		return err
@@ -167,7 +167,7 @@ func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteInterface(existingIntf, ns)
+	err = na.Datapath.DeleteInterface(existingIntf, ns)
 	if err != nil {
 		log.Errorf("Error deleting interface {%+v}. Err: %v", intf, err)
 	}
@@ -175,18 +175,18 @@ func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
 	// delete from db
 	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
-	delete(na.enicDB, key)
+	delete(na.EnicDB, key)
 	na.Unlock()
-	err = na.store.Delete(intf)
+	err = na.Store.Delete(intf)
 
 	return err
 }
 
 //GetHwInterfaces queries the datapath interface for uplinks and lifs created and populates the interface DB
-func (na *NetAgent) GetHwInterfaces() error {
+func (na *Nagent) GetHwInterfaces() error {
 	// LIFs and uplinks can be created outside of Agent's context, by nic mgr. We
 	// need the uplinks currently on the HAL to associate with remote EPs
-	lifs, uplinks, err := na.datapath.ListInterfaces()
+	lifs, uplinks, err := na.Datapath.ListInterfaces()
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (na *NetAgent) GetHwInterfaces() error {
 		}
 		key := objectKey(l.ObjectMeta, l.TypeMeta)
 		na.Lock()
-		na.hwIfDB[key] = l
+		na.HwIfDB[key] = l
 		na.Unlock()
 	}
 
@@ -232,7 +232,7 @@ func (na *NetAgent) GetHwInterfaces() error {
 		}
 		key := objectKey(u.ObjectMeta, u.TypeMeta)
 		na.Lock()
-		na.hwIfDB[key] = u
+		na.HwIfDB[key] = u
 		na.Unlock()
 	}
 
@@ -240,7 +240,7 @@ func (na *NetAgent) GetHwInterfaces() error {
 }
 
 // findIntfByName looks up either uplinks or lifs from the hw interfaces db
-func (na *NetAgent) findIntfByName(intfName string) (intf *netproto.Interface, ok bool) {
+func (na *Nagent) findIntfByName(intfName string) (intf *netproto.Interface, ok bool) {
 	lifMeta := api.ObjectMeta{
 		Name:      intfName,
 		Tenant:    "default",
@@ -251,15 +251,15 @@ func (na *NetAgent) findIntfByName(intfName string) (intf *netproto.Interface, o
 	}
 	key := objectKey(lifMeta, typeMeta)
 	na.Lock()
-	intf, ok = na.hwIfDB[key]
+	intf, ok = na.HwIfDB[key]
 	na.Unlock()
 	return
 }
 
-func (na *NetAgent) countIntfs(intfName string) (intfCount uint64, err error) {
+func (na *Nagent) countIntfs(intfName string) (intfCount uint64, err error) {
 	na.Lock()
 	defer na.Unlock()
-	for _, i := range na.hwIfDB {
+	for _, i := range na.HwIfDB {
 		if i.Spec.Type == intfName {
 			intfCount++
 		}
@@ -271,10 +271,10 @@ func (na *NetAgent) countIntfs(intfName string) (intfCount uint64, err error) {
 	return
 }
 
-func (na *NetAgent) getUplinks() (uplinks []*netproto.Interface) {
+func (na *Nagent) getUplinks() (uplinks []*netproto.Interface) {
 	na.Lock()
 	defer na.Unlock()
-	for _, intf := range na.hwIfDB {
+	for _, intf := range na.HwIfDB {
 		if intf.Spec.Type == "UPLINK" {
 			uplinks = append(uplinks, intf)
 		}

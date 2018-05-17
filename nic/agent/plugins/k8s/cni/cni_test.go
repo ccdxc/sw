@@ -16,7 +16,7 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -77,7 +77,7 @@ func httpCall(callURL string, args, result interface{}) error {
 type DummyAgent struct {
 }
 
-func (d *DummyAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *state.IntfInfo, error) {
+func (d *DummyAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *agentTypes.IntfInfo, error) {
 	// fail the operation if we are supposed to
 	if epinfo.Spec.EndpointUUID == "fail" {
 		return nil, nil, fmt.Errorf("Endpoint create failure")
@@ -99,7 +99,7 @@ func (d *DummyAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.End
 	sintf := fmt.Sprintf("svport-%s", epinfo.Spec.EndpointUUID[:8])
 
 	// create an interface info
-	intfInfo := state.IntfInfo{
+	intfInfo := agentTypes.IntfInfo{
 		ContainerIntfName: cintf,
 		SwitchIntfName:    sintf,
 	}

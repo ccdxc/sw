@@ -4,18 +4,18 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateIPSecSAEncrypt creates an IPSec SA Encrypt rule
-func (na *NetAgent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) error {
+func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) error {
 	err := na.validateMeta(ipSecSAEncrypt.Kind, ipSecSAEncrypt.ObjectMeta)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (na *NetAgent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt
 		return fmt.Errorf("ipsec sa encrypt protocol should be ESP")
 	}
 
-	ipSecSAEncrypt.Status.IPSecSAEncryptID, err = na.store.GetNextID(IPSecSAEncryptID)
+	ipSecSAEncrypt.Status.IPSecSAEncryptID, err = na.Store.GetNextID(types.IPSecSAEncryptID)
 
 	if err != nil {
 		log.Errorf("Could not allocate IPSec encrypt SA id. {%+v}", err)
@@ -51,7 +51,7 @@ func (na *NetAgent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateIPSecSAEncrypt(ipSecSAEncrypt, ns)
+	err = na.Datapath.CreateIPSecSAEncrypt(ipSecSAEncrypt, ns)
 	if err != nil {
 		log.Errorf("Error creating IPSec Encrypt rule in datapath. IPSecSAEncrypt {%+v}. Err: %v", ipSecSAEncrypt, err)
 		return err
@@ -60,15 +60,15 @@ func (na *NetAgent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt
 	// save it in db
 	key := objectKey(ipSecSAEncrypt.ObjectMeta, ipSecSAEncrypt.TypeMeta)
 	na.Lock()
-	na.ipSecSAEncryptDB[key] = ipSecSAEncrypt
+	na.IPSecSAEncryptDB[key] = ipSecSAEncrypt
 	na.Unlock()
-	err = na.store.Write(ipSecSAEncrypt)
+	err = na.Store.Write(ipSecSAEncrypt)
 
 	return err
 }
 
 // FindIPSecSAEncrypt finds an IPSec SA Encrypt rule in local db
-func (na *NetAgent) FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEncrypt, error) {
+func (na *Nagent) FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEncrypt, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "IPSecSAEncrypt",
 	}
@@ -78,7 +78,7 @@ func (na *NetAgent) FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEn
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	ipSecEncryptSA, ok := na.ipSecSAEncryptDB[key]
+	ipSecEncryptSA, ok := na.IPSecSAEncryptDB[key]
 	if !ok {
 		return nil, fmt.Errorf("IPSec encrypt SA not found %v", meta.Name)
 	}
@@ -87,13 +87,13 @@ func (na *NetAgent) FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEn
 }
 
 // ListIPSecSAEncrypt returns the list of IPSec encrypt SA
-func (na *NetAgent) ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt {
+func (na *Nagent) ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt {
 	var ipSecEncryptSAList []*netproto.IPSecSAEncrypt
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, ipSecEncryptSA := range na.ipSecSAEncryptDB {
+	for _, ipSecEncryptSA := range na.IPSecSAEncryptDB {
 		ipSecEncryptSAList = append(ipSecEncryptSAList, ipSecEncryptSA)
 	}
 
@@ -101,7 +101,7 @@ func (na *NetAgent) ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt {
 }
 
 // UpdateIPSecSAEncrypt updates an IPSec encrypt SA
-func (na *NetAgent) UpdateIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) error {
+func (na *Nagent) UpdateIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) error {
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(ipSecEncryptSA.Tenant, ipSecEncryptSA.Namespace)
 	if err != nil {
@@ -118,17 +118,17 @@ func (na *NetAgent) UpdateIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt
 		return nil
 	}
 
-	err = na.datapath.UpdateIPSecSAEncrypt(ipSecEncryptSA, ns)
+	err = na.Datapath.UpdateIPSecSAEncrypt(ipSecEncryptSA, ns)
 	key := objectKey(ipSecEncryptSA.ObjectMeta, ipSecEncryptSA.TypeMeta)
 	na.Lock()
-	na.ipSecSAEncryptDB[key] = ipSecEncryptSA
+	na.IPSecSAEncryptDB[key] = ipSecEncryptSA
 	na.Unlock()
-	err = na.store.Write(ipSecEncryptSA)
+	err = na.Store.Write(ipSecEncryptSA)
 	return err
 }
 
 // DeleteIPSecSAEncrypt deletes an IPSec encrypt SA
-func (na *NetAgent) DeleteIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) error {
+func (na *Nagent) DeleteIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) error {
 	err := na.validateMeta(ipSecEncryptSA.Kind, ipSecEncryptSA.ObjectMeta)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (na *NetAgent) DeleteIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteIPSecSAEncrypt(existingIPSecSAEncrypt, ns)
+	err = na.Datapath.DeleteIPSecSAEncrypt(existingIPSecSAEncrypt, ns)
 	if err != nil {
 		log.Errorf("Error deleting IPSec encrypt SA {%+v}. Err: %v", ipSecEncryptSA, err)
 	}
@@ -154,9 +154,9 @@ func (na *NetAgent) DeleteIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt
 	// delete from db
 	key := objectKey(ipSecEncryptSA.ObjectMeta, ipSecEncryptSA.TypeMeta)
 	na.Lock()
-	delete(na.ipSecSAEncryptDB, key)
+	delete(na.IPSecSAEncryptDB, key)
 	na.Unlock()
-	err = na.store.Delete(ipSecEncryptSA)
+	err = na.Store.Delete(ipSecEncryptSA)
 
 	return err
 }

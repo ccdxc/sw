@@ -5,8 +5,9 @@ package netagent
 import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
-	types "github.com/pensando/sw/nic/agent/netagent/protos"
+	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -41,15 +42,15 @@ import (
 
 // Agent contains agent state
 type Agent struct {
-	datapath     state.NetDatapathAPI
-	NetworkAgent *state.NetAgent
+	datapath     types.NetDatapathAPI
+	NetworkAgent *state.Nagent
 	npmClient    *ctrlerif.NpmClient
 	RestServer   *restapi.RestServer
-	Mode         types.AgentMode
+	Mode         protos.AgentMode
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenURL string, resolverClient resolver.Interface, mode types.AgentMode) (*Agent, error) {
+func NewAgent(dp types.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenURL string, resolverClient resolver.Interface, mode protos.AgentMode) (*Agent, error) {
 	var ag Agent
 	// create a new network agent
 	nagent, err := state.NewNetAgent(dp, mode, dbPath, nodeUUID)
@@ -67,7 +68,7 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenUR
 		return nil, err
 	}
 
-	if mode == types.AgentMode_MANAGED {
+	if mode == protos.AgentMode_MANAGED {
 		// create the NPM client
 		npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL, resolverClient)
 		if err != nil {
@@ -97,7 +98,7 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenUR
 
 // Stop stops the agent
 func (ag *Agent) Stop() {
-	if ag.Mode == types.AgentMode_CLASSIC {
+	if ag.Mode == protos.AgentMode_CLASSIC {
 		ag.RestServer.Stop()
 		ag.NetworkAgent.Stop()
 		return

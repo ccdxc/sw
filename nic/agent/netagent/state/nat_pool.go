@@ -4,18 +4,18 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateNatPool creates a nat pool
-func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
+func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
 
 	// validate nat pool message
 
-	np.Status.NatPoolID, err = na.store.GetNextID(NatPoolID)
+	np.Status.NatPoolID, err = na.Store.GetNextID(types.NatPoolID)
 
 	if err != nil {
 		log.Errorf("Could not allocate nat pool id. {%+v}", err)
@@ -48,7 +48,7 @@ func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateNatPool(np, ns)
+	err = na.Datapath.CreateNatPool(np, ns)
 	if err != nil {
 		log.Errorf("Error creating nat pool in datapath. NatPool {%+v}. Err: %v", np, err)
 		return err
@@ -57,15 +57,15 @@ func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
 	// save it in db
 	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
-	na.natPoolDB[key] = np
+	na.NatPoolDB[key] = np
 	na.Unlock()
-	err = na.store.Write(np)
+	err = na.Store.Write(np)
 
 	return err
 }
 
 // FindNatPool finds a nat pool in local db
-func (na *NetAgent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) {
+func (na *Nagent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "NatPool",
 	}
@@ -75,7 +75,7 @@ func (na *NetAgent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) 
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	tn, ok := na.natPoolDB[key]
+	tn, ok := na.NatPoolDB[key]
 	if !ok {
 		return nil, fmt.Errorf("nat pool not found %v", meta.Name)
 	}
@@ -84,13 +84,13 @@ func (na *NetAgent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) 
 }
 
 // ListNatPool returns the list of nat pools
-func (na *NetAgent) ListNatPool() []*netproto.NatPool {
+func (na *Nagent) ListNatPool() []*netproto.NatPool {
 	var natPoolList []*netproto.NatPool
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, np := range na.natPoolDB {
+	for _, np := range na.NatPoolDB {
 		natPoolList = append(natPoolList, np)
 	}
 
@@ -98,7 +98,7 @@ func (na *NetAgent) ListNatPool() []*netproto.NatPool {
 }
 
 // UpdateNatPool updates a nat pool
-func (na *NetAgent) UpdateNatPool(np *netproto.NatPool) error {
+func (na *Nagent) UpdateNatPool(np *netproto.NatPool) error {
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
 	if err != nil {
@@ -115,17 +115,17 @@ func (na *NetAgent) UpdateNatPool(np *netproto.NatPool) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateNatPool(np, ns)
+	err = na.Datapath.UpdateNatPool(np, ns)
 	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
-	na.natPoolDB[key] = np
+	na.NatPoolDB[key] = np
 	na.Unlock()
-	err = na.store.Write(np)
+	err = na.Store.Write(np)
 	return err
 }
 
 // DeleteNatPool deletes a nat pool
-func (na *NetAgent) DeleteNatPool(np *netproto.NatPool) error {
+func (na *Nagent) DeleteNatPool(np *netproto.NatPool) error {
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (na *NetAgent) DeleteNatPool(np *netproto.NatPool) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteNatPool(existingNatPool, ns)
+	err = na.Datapath.DeleteNatPool(existingNatPool, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat pool {%+v}. Err: %v", np, err)
 	}
@@ -151,9 +151,9 @@ func (na *NetAgent) DeleteNatPool(np *netproto.NatPool) error {
 	// delete from db
 	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
-	delete(na.natPoolDB, key)
+	delete(na.NatPoolDB, key)
 	na.Unlock()
-	err = na.store.Delete(np)
+	err = na.Store.Delete(np)
 
 	return err
 }

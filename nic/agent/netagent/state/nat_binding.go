@@ -4,20 +4,19 @@ package state
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 
-	"fmt"
-
-	"strings"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateNatBinding creates a nat binding
-func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
+func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	err := na.validateMeta(nb.Kind, nb.ObjectMeta)
 	if err != nil {
 		return err
@@ -54,7 +53,7 @@ func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
 		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
 	}
 
-	nb.Status.NatBindingID, err = na.store.GetNextID(NatBindingID)
+	nb.Status.NatBindingID, err = na.Store.GetNextID(types.NatBindingID)
 
 	if err != nil {
 		log.Errorf("Could not allocate nat binding id. {%+v}", err)
@@ -62,7 +61,7 @@ func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// create it in datapath
-	nb, err = na.datapath.CreateNatBinding(nb, np, natPoolNS.Status.NamespaceID, ns)
+	nb, err = na.Datapath.CreateNatBinding(nb, np, natPoolNS.Status.NamespaceID, ns)
 	if err != nil {
 		log.Errorf("Error creating nat binding in datapath. NatBinding {%+v}. Err: %v", nb, err)
 		return err
@@ -71,15 +70,15 @@ func (na *NetAgent) CreateNatBinding(nb *netproto.NatBinding) error {
 	// save it in db
 	key := objectKey(nb.ObjectMeta, nb.TypeMeta)
 	na.Lock()
-	na.natBindingDB[key] = nb
+	na.NatBindingDB[key] = nb
 	na.Unlock()
-	err = na.store.Write(nb)
+	err = na.Store.Write(nb)
 
 	return err
 }
 
 // FindNatBinding finds a nat binding in local db
-func (na *NetAgent) FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, error) {
+func (na *Nagent) FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "NatBinding",
 	}
@@ -89,7 +88,7 @@ func (na *NetAgent) FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, e
 
 	// lookup the database
 	key := objectKey(meta, typeMeta)
-	nb, ok := na.natBindingDB[key]
+	nb, ok := na.NatBindingDB[key]
 	if !ok {
 		return nil, fmt.Errorf("nat binding not found %v", nb)
 	}
@@ -98,13 +97,13 @@ func (na *NetAgent) FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, e
 }
 
 // ListNatBinding returns the list of nat bindings
-func (na *NetAgent) ListNatBinding() []*netproto.NatBinding {
+func (na *Nagent) ListNatBinding() []*netproto.NatBinding {
 	var natBindingList []*netproto.NatBinding
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, nb := range na.natBindingDB {
+	for _, nb := range na.NatBindingDB {
 		natBindingList = append(natBindingList, nb)
 	}
 
@@ -112,7 +111,7 @@ func (na *NetAgent) ListNatBinding() []*netproto.NatBinding {
 }
 
 // UpdateNatBinding updates a nat binding
-func (na *NetAgent) UpdateNatBinding(nb *netproto.NatBinding) error {
+func (na *Nagent) UpdateNatBinding(nb *netproto.NatBinding) error {
 	// find the corresponding namespace
 	ns, err := na.FindNamespace(nb.Tenant, nb.Namespace)
 	if err != nil {
@@ -129,17 +128,17 @@ func (na *NetAgent) UpdateNatBinding(nb *netproto.NatBinding) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateNatBinding(nb, ns)
+	err = na.Datapath.UpdateNatBinding(nb, ns)
 	key := objectKey(nb.ObjectMeta, nb.TypeMeta)
 	na.Lock()
-	na.natBindingDB[key] = nb
+	na.NatBindingDB[key] = nb
 	na.Unlock()
-	err = na.store.Write(nb)
+	err = na.Store.Write(nb)
 	return err
 }
 
 // DeleteNatBinding deletes a nat binding
-func (na *NetAgent) DeleteNatBinding(nb *netproto.NatBinding) error {
+func (na *Nagent) DeleteNatBinding(nb *netproto.NatBinding) error {
 	err := na.validateMeta(nb.Kind, nb.ObjectMeta)
 	if err != nil {
 		return err
@@ -157,7 +156,7 @@ func (na *NetAgent) DeleteNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteNatBinding(existingNatBinding, ns)
+	err = na.Datapath.DeleteNatBinding(existingNatBinding, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat binding {%+v}. Err: %v", nb, err)
 	}
@@ -165,9 +164,9 @@ func (na *NetAgent) DeleteNatBinding(nb *netproto.NatBinding) error {
 	// delete from db
 	key := objectKey(nb.ObjectMeta, nb.TypeMeta)
 	na.Lock()
-	delete(na.natBindingDB, key)
+	delete(na.NatBindingDB, key)
 	na.Unlock()
-	err = na.store.Delete(nb)
+	err = na.Store.Delete(nb)
 
 	return err
 }
@@ -176,7 +175,7 @@ func (na *NetAgent) DeleteNatBinding(nb *netproto.NatBinding) error {
 // The binding can refer to the nat pool outside its own namespace.
 // In such cases, we expect the natpool name to be written as <remote namespace>/<natpoolname>
 // These are expected to be tenant scoped
-func (na *NetAgent) findNatPool(natBindingMeta api.ObjectMeta, natPool string) (*netproto.NatPool, error) {
+func (na *Nagent) findNatPool(natBindingMeta api.ObjectMeta, natPool string) (*netproto.NatPool, error) {
 	var poolMeta api.ObjectMeta
 
 	np := strings.Split(natPool, "/")
