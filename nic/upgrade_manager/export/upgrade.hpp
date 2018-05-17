@@ -27,19 +27,59 @@ public:
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 
+//UpgAppRespHdlr class is used to create the object for 
+class UpgAppRespHdlr {
+    string appName_;
+    delphi::SdkPtr sdk_;
+    delphi::objects::UpgReqStatusPtr upgReqStatus_;
+public:
+    UpgAppRespHdlr(delphi::SdkPtr sk, string name) {
+        this->appName_ = name;
+        this->sdk_ = sk;
+    }
+
+    //CreateUpgAppResp creates the object UpgAppResp
+    delphi::error CreateUpgAppResp(delphi::objects::UpgReqStatusPtr ptr);
+
+    UpgRespStateType GetUpgAppRespNextPass(UpgReqStateType reqType);
+    UpgRespStateType GetUpgAppRespNextFail(UpgReqStateType reqType);
+    UpgRespStateType GetUpgAppRespNext(UpgReqStateType reqType, bool isReqSuccess);
+
+    //CreateOrUpdateUpgAppResp creates the response for upgrade_manager
+    delphi::error UpdateUpgAppResp(UpgRespStateType type);
+
+    //findUpgAppResp returns the UpgAppResp object for this application
+    delphi::objects::UpgAppRespPtr findUpgAppResp(string name);
+
+    //SetUpgReqStatusPtr will save the pointer for UpgReqStatus object
+    void SetUpgReqStatusPtr(delphi::objects::UpgReqStatusPtr ptr) {
+        upgReqStatus_ = ptr;
+    }
+
+    //GetUpgReqStatusPtr will return the pointer for UpgReqStatus object
+    delphi::objects::UpgReqStatusPtr GetUpgReqStatusPtr(void) {
+        return upgReqStatus_;
+    }
+};
+typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;
+
 // UpgReqReactor is the reactor for the UpgReqStatus object
 class UpgReqReactor : public delphi::objects::UpgReqStatusReactor {
     delphi::SdkPtr sdk_;
     UpgHandlerPtr upgHdlrPtr_;
+    UpgAppRespHdlrPtr upgAppRespPtr_;
+    delphi::objects::UpgReqStatusPtr upgReqStatus_;
 public:
-    UpgReqReactor(delphi::SdkPtr sk) {
+    UpgReqReactor(delphi::SdkPtr sk, string name, UpgAppRespHdlrPtr ptr) {
         this->sdk_ = sk;
-        upgHdlrPtr_ = make_shared<UpgHandler>();
+        this->upgHdlrPtr_ = make_shared<UpgHandler>();
+        this->upgAppRespPtr_ = ptr;
     }
 
-    UpgReqReactor(delphi::SdkPtr sk, UpgHandlerPtr uh) {
+    UpgReqReactor(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, UpgAppRespHdlrPtr ptr) {
         this->sdk_ = sk;
         this->upgHdlrPtr_ = uh;
+        this->upgAppRespPtr_ = ptr;
     }
 
     // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
@@ -55,27 +95,32 @@ typedef std::shared_ptr<UpgReqReactor> UpgReqReactorPtr;
 
 class UpgSdk : public delphi::Service {
     delphi::SdkPtr sdk_;
-    UpgHandlerPtr upgHdlrPtr_;
     UpgReqReactorPtr upgReqReactPtr_;
+    UpgAppRespHdlrPtr upgAppRespPtr_;
 public:
-    UpgSdk(delphi::SdkPtr sk) {
-        this->sdk_ = sk;
-        this->upgHdlrPtr_ = NULL;
-        upgReqReactPtr_ = make_shared<UpgReqReactor>(sk);
+    UpgSdk(delphi::SdkPtr sk, string name) {
+        sdk_ = sk;
+        upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
+        upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, name, upgAppRespPtr_);
         delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadMode);
         delphi::objects::UpgReqStatus::Watch(sdk_, upgReqReactPtr_);
+        delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadWriteMode);
     }
 
-    UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh) {
-        this->sdk_ = sk;
-        this->upgHdlrPtr_ = uh;
-        upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, uh);
+    UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name) {
+        sdk_ = sk;
+        upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
+        upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, uh, name, upgAppRespPtr_);
         delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadMode);
         delphi::objects::UpgReqStatus::Watch(sdk_, upgReqReactPtr_);
+        delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadWriteMode);
     }
 
     // OnMountComplete gets called when all the objects are mounted
     void OnMountComplete(void);
+
+    void SendAppRespSuccess(void);
+    void SendAppRespFail(void);
 };
 typedef std::shared_ptr<UpgSdk> UpgSdkPtr;
 

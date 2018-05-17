@@ -32,13 +32,40 @@ public:
 
     // findUpgReqStatus finds the upgrade request status object
     delphi::objects::UpgReqStatusPtr findUpgReqStatus(uint32_t id);
+
+    UpgReqStateType GetNextState(void);
+
+    bool CanMoveStateMachine(void);
+
+    delphi::error MoveStateMachine(UpgReqStateType type);
+
+    UpgRespStateType GetFailRespType(UpgReqStateType);
+    UpgRespStateType GetPassRespType(UpgReqStateType);
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
+
+class UpgAppRespHdlr : public delphi::objects::UpgAppRespReactor {
+    delphi::SdkPtr     sdk_;
+    UpgradeMgrPtr      upgMgr_;
+public:
+    UpgAppRespHdlr(delphi::SdkPtr sk, UpgradeMgrPtr upgmgr) {
+        this->sdk_ = sk;
+        this->upgMgr_ = upgmgr;
+    }
+
+    // OnUpgAppRespCreate gets called when UpgAppResp object is created
+    virtual delphi::error OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp);
+
+    // OnUpgAppRespVal gets called when UpgAppRespVal attribute changes
+    virtual delphi::error OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp);
+};
+typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;
 
 // UpgradeService is the service object for upgrade manager 
 class UpgradeService : public delphi::Service, public enable_shared_from_this<UpgradeService> {
 private:
     UpgradeMgrPtr      upgMgr_;
+    UpgAppRespHdlrPtr  upgAppRespHdlr_;
     delphi::SdkPtr     sdk_;
     string             svcName_;
 public:

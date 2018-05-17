@@ -64,10 +64,47 @@ delphi::error UpgHandler::HandleStateInvalidUpgState(delphi::objects::UpgReqStat
     return delphi::error::OK();
 }
 
+delphi::objects::UpgAppRespPtr UpgAppRespHdlr::findUpgAppResp(string name) {
+    delphi::objects::UpgAppRespPtr req = make_shared<delphi::objects::UpgAppResp>();
+    req->set_key(name);
+
+    // find the object
+    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
+
+    return static_pointer_cast<delphi::objects::UpgAppResp>(obj);
+}
+
+delphi::error UpgAppRespHdlr::CreateUpgAppResp(delphi::objects::UpgReqStatusPtr ptr) {
+    LogInfo("UpgAppRespHdlr::CreateUpgAppResp called");
+    auto upgAppResp = this->findUpgAppResp(this->appName_);
+    if (upgAppResp == NULL) {
+        upgAppResp = make_shared<delphi::objects::UpgAppResp>();
+        upgAppResp->set_key(this->appName_);
+        if (upgAppResp == NULL)
+            return delphi::error("application unable to create response object");
+    }
+    this->upgReqStatus_ = ptr;
+    this->sdk_->SetObject(upgAppResp);
+    return delphi::error::OK();
+}
+
+delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type) {
+    LogInfo("UpgAppRespHdlr::UpdateUpgAppResp called for {} with type {}", this->appName_, type);
+    auto upgAppResp = this->findUpgAppResp(this->appName_);
+    if (upgAppResp == NULL) {
+        LogInfo("UpgAppRespHdlr::UpdateUpgAppResp returning error for {}", this->appName_);
+        return delphi::error("application unable to find response object");
+    }
+    upgAppResp->set_upgapprespval(type);
+    this->sdk_->SetObject(upgAppResp);
+    return delphi::error::OK();
+}
+
 // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
 delphi::error UpgReqReactor::OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
     LogInfo("UpgReqReactor UpgReqStatus got created for {}/{}", req, req->meta().ShortDebugString());
     //create the object
+    upgAppRespPtr_->CreateUpgAppResp(req);
     if (this->upgHdlrPtr_)
         return (this->upgHdlrPtr_->UpgReqStatusCreate(req));
     return delphi::error::OK();
@@ -82,56 +119,119 @@ delphi::error UpgReqReactor::OnUpgReqStatusDelete(delphi::objects::UpgReqStatusP
     return delphi::error::OK();
 }
 
+UpgRespStateType
+UpgAppRespHdlr::GetUpgAppRespNextPass(UpgReqStateType reqType) {
+    LogInfo("UpgAppRespHdlr::GetUpgAppRespNextPass got called");
+    switch (reqType) {
+        case UpgReqRcvd:
+            return UpgReqRcvdPass;
+        case PreUpgState:
+            return PreUpgStatePass;
+        case PostBinRestart:
+            return PostBinRestartPass;
+        case ProcessesQuiesced:
+            return ProcessesQuiescedPass;
+        case DataplaneDowntimeStart:
+            return DataplaneDowntimeStartPass;
+        case Cleanup:
+            return CleanupPass;
+        case UpgSuccess:
+            return UpgSuccessPass;
+        case UpgFailed:
+            return UpgFailedPass;
+        case InvalidUpgState:
+            return InvalidUpgStatePass;
+        default:
+            return InvalidUpgStatePass;
+     }
+}
+
+UpgRespStateType
+UpgAppRespHdlr::GetUpgAppRespNextFail(UpgReqStateType reqType) {
+    switch (reqType) {
+        case UpgReqRcvd:
+            return UpgReqRcvdFail;
+        case PreUpgState:
+            return PreUpgStateFail;
+        case PostBinRestart:
+            return PostBinRestartFail;
+        case ProcessesQuiesced:
+            return ProcessesQuiescedFail;
+        case DataplaneDowntimeStart:
+            return DataplaneDowntimeStartFail;
+        case Cleanup:
+            return CleanupFail;
+        case UpgSuccess:
+            return UpgSuccessFail;
+        case UpgFailed:
+            return UpgFailedFail;
+        case InvalidUpgState:
+            return InvalidUpgStateFail;
+        default:
+            return InvalidUpgStateFail;
+     }
+}
+
+UpgRespStateType
+UpgAppRespHdlr::GetUpgAppRespNext(UpgReqStateType reqType, bool isReqSuccess) {
+    if (isReqSuccess) {
+        return GetUpgAppRespNextPass(reqType);
+    } else {
+        return GetUpgAppRespNextFail(reqType);
+    }
+}
+
 // OnUpgReqState gets called when UpgReqState attribute changes
 delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgReqStatusPtr req) {
     LogInfo("UpgReqReactor OnUpgReqState called");
-    delphi::error resp = delphi::error("Error processing OnUpgReqState");
+    delphi::error errResp = delphi::error("Error processing OnUpgReqState");
     if (!this->upgHdlrPtr_) {
         LogInfo("No handlers available");
-        return resp;
+        return errResp;
     }
     switch (req->upgreqstate()) {
-        case upgrade::UpgReqRcvd:
+        case UpgReqRcvd:
             LogInfo("Upgrade: Request Received");
-            resp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
+            errResp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
             break;
-        case upgrade::PreUpgState:
+        case PreUpgState:
             LogInfo("Upgrade: Pre-upgrade check");
-            resp = this->upgHdlrPtr_->HandleStatePreUpgState(req);
+            errResp = this->upgHdlrPtr_->HandleStatePreUpgState(req);
             break;
-        case upgrade::PostBinRestart:
+        case PostBinRestart:
             LogInfo("Upgrade: Post-binary restart");
-            resp = this->upgHdlrPtr_->HandleStatePostBinRestart(req);
+            errResp = this->upgHdlrPtr_->HandleStatePostBinRestart(req);
             break;
-        case upgrade::ProcessesQuiesced:
+        case ProcessesQuiesced:
             LogInfo("Upgrade: Processes Quiesced");
-            resp = this->upgHdlrPtr_->HandleStateProcessesQuiesced(req);
+            errResp = this->upgHdlrPtr_->HandleStateProcessesQuiesced(req);
             break;
-        case upgrade::DataplaneDowntimeStart:
+        case DataplaneDowntimeStart:
             LogInfo("Upgrade: Dataplane Downtime Start");
-            resp = this->upgHdlrPtr_->HandleStateDataplaneDowntimeStart(req);
+            errResp = this->upgHdlrPtr_->HandleStateDataplaneDowntimeStart(req);
             break;
-        case upgrade::Cleanup:
+        case Cleanup:
             LogInfo("Upgrade: Cleanup Request Received");
-            resp = this->upgHdlrPtr_->HandleStateCleanup(req);
+            errResp = this->upgHdlrPtr_->HandleStateCleanup(req);
             break;
-        case upgrade::UpgSuccess:
+        case UpgSuccess:
             LogInfo("Upgrade: Succeeded");
-            resp = this->upgHdlrPtr_->HandleStateUpgSuccess(req);
+            errResp = this->upgHdlrPtr_->HandleStateUpgSuccess(req);
             break;
-        case upgrade::UpgFailed:
+        case UpgFailed:
             LogInfo("Upgrade: Failed");
-            resp = this->upgHdlrPtr_->HandleStateUpgFailed(req);
+            errResp = this->upgHdlrPtr_->HandleStateUpgFailed(req);
             break;
-        case upgrade::InvalidUpgState:
+        case InvalidUpgState:
             LogInfo("Upgrade: Invalid Upgrade State");
-            resp = this->upgHdlrPtr_->HandleStateInvalidUpgState(req);
+            errResp = this->upgHdlrPtr_->HandleStateInvalidUpgState(req);
             break; 
         default:
             LogInfo("Upgrade: Default state");
             break; 
     }
-    return resp;
+    this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), errResp.IsOK()));
+    return errResp;
 }
 
 void UpgSdk::OnMountComplete(void) {
@@ -141,6 +241,20 @@ void UpgSdk::OnMountComplete(void) {
     for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
         this->upgReqReactPtr_->OnUpgReqStatusCreate(*reqStatus);
     }
+}
+
+void UpgSdk::SendAppRespSuccess(void) {
+    LogInfo("UpgSdk::SendAppRespSuccess");
+    this->upgAppRespPtr_->UpdateUpgAppResp(
+          this->upgAppRespPtr_->GetUpgAppRespNextPass(
+                this->upgAppRespPtr_->GetUpgReqStatusPtr()->upgreqstate()));
+}
+
+void UpgSdk::SendAppRespFail(void) {
+    LogInfo("UpgSdk::SendAppRespFail");
+    this->upgAppRespPtr_->UpdateUpgAppResp(
+          this->upgAppRespPtr_->GetUpgAppRespNextFail(
+                this->upgAppRespPtr_->GetUpgReqStatusPtr()->upgreqstate()));
 }
 
 } // namespace upgrade

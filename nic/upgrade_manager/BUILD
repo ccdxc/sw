@@ -6,4 +6,3 @@ package_group(
         "//nic/upgrade_manager/...",
     ],
 )
-

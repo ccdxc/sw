@@ -17,7 +17,7 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
     this->svcName_ = name;
 
     // create upgrade request status manager event handler
-    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<ExSvcHandler>());
+    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<ExSvcHandler>(), name);
 
     LogInfo("Example upgrade service constructor got called");
 }
@@ -25,5 +25,6 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
 // createTimerHandler creates a dummy code upgrade request
 void ExUpgSvc::createTimerHandler(ev::timer &watcher, int revents) {
     LogInfo("Creating the timer");
+    this->upgsdk_->SendAppRespSuccess();
 }
 } // namespace example 

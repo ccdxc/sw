@@ -27,6 +27,28 @@ enum UpgReqStateType {
     UpgFailed                = 8;
 }
 
+// Upgrade Request Status
+enum UpgRespStateType {
+    InvalidUpgStatePass          = 0;
+    InvalidUpgStateFail          = 1;
+    UpgReqRcvdPass               = 2;
+    UpgReqRcvdFail               = 3;
+    PreUpgStatePass              = 4;
+    PreUpgStateFail              = 5;
+    ProcessesQuiescedPass        = 6;
+    ProcessesQuiescedFail        = 7;
+    PostBinRestartPass           = 8;
+    PostBinRestartFail           = 9;
+    DataplaneDowntimeStartPass   = 10;
+    DataplaneDowntimeStartFail   = 11;
+    CleanupPass                  = 12;
+    CleanupFail                  = 13;
+    UpgSuccessPass               = 14;
+    UpgSuccessFail               = 15;
+    UpgFailedPass                = 16;
+    UpgFailedFail                = 17;
+}
+
 // spec part of the object
 message UpgReq {
     option (delphi.update_event) = true;
@@ -37,8 +59,16 @@ message UpgReq {
 
 // status part of the object
 message UpgReqStatus {
-    option (delphi.update_event) = false;
+    option (delphi.update_event) = true; 
     delphi.ObjectMeta      Meta              = 1;
     uint32                 Key               = 2;
     UpgReqStateType        UpgReqState       = 3 [(delphi.event) = true];
 }
+
+message UpgAppResp {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta      Meta              = 1;
+    string                 Key               = 2;
+    UpgRespStateType       UpgAppRespVal     = 3 [(delphi.event) = true];
+}
+
