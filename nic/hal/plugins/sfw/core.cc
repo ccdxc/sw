@@ -384,6 +384,7 @@ sfw_exec(ctx_t& ctx)
         HAL_TRACE_DEBUG("Looking up expected flow...");
         expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
         if (expected_flow) {
+            HAL_TRACE_DEBUG("Found expected alg flow - invoking handler...");
             ret = expected_flow->handler(ctx, expected_flow);
         }
     }
@@ -396,8 +397,11 @@ sfw_exec(ctx_t& ctx)
 
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction
-    HAL_TRACE_DEBUG("Firewall lookup {}", (sfw_info->skip_sfw)?"skipped":"begin");
-    HAL_TRACE_DEBUG("Firewall lookup {}", (sfw_info->sfw_done)?"skipped":"begin");
+    if (sfw_info->skip_sfw || sfw_info->sfw_done ) {
+        HAL_TRACE_DEBUG("Skipping firewall lookup - skip_sfw={}, sfw_done={}",
+                        sfw_info->skip_sfw, sfw_info->sfw_done);
+    }
+
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !sfw_info->skip_sfw && !sfw_info->sfw_done) {
         ret = net_sfw_pol_check_sg_policy(ctx, &match_rslt);
         if (ret == HAL_RET_OK) {

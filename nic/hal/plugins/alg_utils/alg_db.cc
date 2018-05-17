@@ -156,6 +156,14 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
         goto end;
     }
 
+    // Mask DIR only and do lookup (RTSP)
+    key = ikey;
+    key.dir = 0;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", key);
+        goto end;
+    }
+
 end:
     if (entry) {
         if (!entry->deleting) {

@@ -57,7 +57,7 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/plugins/alg_rpc/alg_rpc_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_rpc_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/alg_tftp/alg_tftp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_tftp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/alg_ftp/alg_ftp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_ftp_test.xml"
-	#$(CMD_OPTS) ./nic/hal/plugins/alg_rtsp/alg_rtsp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_rtsp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/alg_rtsp/alg_rtsp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_rtsp_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/offload_sim_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/offload_sim_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/network/network_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/network_test.xml"
 	$(CMD_OPTS) ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"

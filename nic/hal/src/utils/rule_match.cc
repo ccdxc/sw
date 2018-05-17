@@ -430,23 +430,23 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
         alloc = true;
     }
     if (proto != types::IPPROTO_NONE) {
-        rule->field[PROTO].value.u32 = proto;
-        rule->field[PROTO].mask_range.u32 = proto;
+        rule->field[PROTO].value.u8 = proto;
+        rule->field[PROTO].mask_range.u8 = 0xFF;
         alloc = true;
     }
     if (mac_sa_entry->addr != 0) {
         rule->field[MAC_SRC].value.u32 = mac_sa_entry->addr;
-        rule->field[MAC_SRC].mask_range.u32 = mac_sa_entry->addr;
+        rule->field[MAC_SRC].mask_range.u32 = 0xFFFFFFFF;
         alloc = true;
     }
     if (mac_da_entry->addr != 0) {
         rule->field[MAC_DST].value.u32 = mac_da_entry->addr;
-        rule->field[MAC_DST].mask_range.u32 = mac_da_entry->addr;
+        rule->field[MAC_DST].mask_range.u32 = 0xFFFFFFFF;
         alloc = true;
     }
     if (ethertype != 0) {
-        rule->field[ETHERTYPE].value.u32 = ethertype;
-        rule->field[ETHERTYPE].mask_range.u32 = ethertype;
+        rule->field[ETHERTYPE].value.u16 = ethertype;
+        rule->field[ETHERTYPE].mask_range.u16 = 0xFFFF;
         alloc = true;
     }
     if (!alloc) {
@@ -479,13 +479,27 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     addr_list_elem_t     src_addr_new = {0}, dst_addr_new = {0};
     mac_addr_list_elem_t mac_src_addr_new = {0}, mac_dst_addr_new = {0};
 
-    /* Add dummy node at the head of the list */
-    dllist_add(&match->src_mac_addr_list, &mac_src_addr_new.list_ctxt);
-    dllist_add(&match->dst_mac_addr_list, &mac_dst_addr_new.list_ctxt);
-    dllist_add(&match->src_addr_list, &src_addr_new.list_ctxt);
-    dllist_add(&match->dst_addr_list, &dst_addr_new.list_ctxt);
-    dllist_add(&app_match->l4dstport_list, &dst_port_new.list_ctxt);
-    dllist_add(&app_match->l4srcport_list, &src_port_new.list_ctxt);
+    /* Add dummy node at the head of the list if the list is empty. If the
+       list is not empty then we shouldn't insert a wildcard match for that
+       field, so no dummy node if the list is not empty */
+    if (dllist_empty(&match->src_mac_addr_list)) {
+        dllist_add(&match->src_mac_addr_list, &mac_src_addr_new.list_ctxt);
+    }
+    if (dllist_empty(&match->dst_mac_addr_list)) {
+        dllist_add(&match->dst_mac_addr_list, &mac_dst_addr_new.list_ctxt);
+    }
+    if (dllist_empty(&match->src_addr_list)) {
+        dllist_add(&match->src_addr_list, &src_addr_new.list_ctxt);
+    }
+    if (dllist_empty(&match->dst_addr_list)) {
+        dllist_add(&match->dst_addr_list, &dst_addr_new.list_ctxt);
+    }
+    if (dllist_empty(&app_match->l4dstport_list)) {
+        dllist_add(&app_match->l4dstport_list, &dst_port_new.list_ctxt);
+    }
+    if (dllist_empty(&app_match->l4srcport_list)) {
+        dllist_add(&app_match->l4srcport_list, &src_port_new.list_ctxt);
+    }
     
     /* MAC-SA loop */
     dllist_for_each(mac_sa_entry, &match->src_mac_addr_list) {
@@ -523,12 +537,25 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     } } } } }
     
     /* Delete dummy node at the head of the list */
-    dllist_del(&mac_src_addr_new.list_ctxt);
-    dllist_del(&mac_dst_addr_new.list_ctxt);
-    dllist_del(&src_addr_new.list_ctxt);
-    dllist_del(&dst_addr_new.list_ctxt);
-    dllist_del(&dst_port_new.list_ctxt);
-    dllist_del(&src_port_new.list_ctxt);
+    if (!dllist_empty(&mac_src_addr_new.list_ctxt)) {
+        dllist_del(&mac_src_addr_new.list_ctxt);
+    }
+    if (!dllist_empty(&mac_dst_addr_new.list_ctxt)) {
+        dllist_del(&mac_dst_addr_new.list_ctxt);
+    }
+    if (!dllist_empty(&src_addr_new.list_ctxt)) {
+        dllist_del(&src_addr_new.list_ctxt);
+    }
+    if (!dllist_empty(&dst_addr_new.list_ctxt)) {
+        dllist_del(&dst_addr_new.list_ctxt);
+    }
+    if (!dllist_empty(&dst_port_new.list_ctxt)) {
+        dllist_del(&dst_port_new.list_ctxt);
+    }
+    if (!dllist_empty(&src_port_new.list_ctxt)) {
+        dllist_del(&src_port_new.list_ctxt);
+    }
+
     //Added rule - lets increment the ref
     ref_inc(&data->ref_count);
     return ret;
