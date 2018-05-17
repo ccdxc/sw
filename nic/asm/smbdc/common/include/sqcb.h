@@ -66,7 +66,9 @@ struct sqcb0_t {
     struct capri_intrinsic_ring_t ring0;
     struct capri_intrinsic_ring_t ring1;
     struct capri_intrinsic_ring_t ring2;
-    pad                           : 32;
+
+    pad                           : 16;
+    send_credits                  : 16;
 
     //smbcd sq
     //assumption: this queue is in host contiguous memory
@@ -161,10 +163,10 @@ struct sqcb2_t {
     //smbdc protocol parameters
     //set by control plane, and used by req_tx
     //never chagned by data plane
-    credits_requested             : 16;
+    send_credit_target            : 16;
     //set by resp_rx, used and reset by req_tx
     //in s3_t0
-    credits_granted               : 16;
+    new_credits_offered           : 16;
     pad                           : 220;
 };
 

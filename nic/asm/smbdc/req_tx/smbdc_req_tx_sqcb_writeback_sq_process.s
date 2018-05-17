@@ -12,6 +12,7 @@ struct smbdc_req_tx_s4_t0_k k;
 
 #define K_CURRENT_SGE_ID     CAPRI_KEY_RANGE(IN_TO_S4_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_TO_S4_P, current_sge_offset_sbit0_ebit5, current_sge_offset_sbit30_ebit31)
+#define K_CLEAR_BUSY_AND_EXIT CAPRI_KEY_FIELD(IN_TO_S4_P, clear_busy_and_exit)
 
 %%
 
@@ -24,17 +25,20 @@ smbdc_req_tx_sqcb_writeback_sq_process:
     seq           c1, r1[4:2], STAGE_4
     bcf           [!c1], bubble_to_next_stage
 
-    tblwr         d.busy, 0
+    CAPRI_SET_TABLE_0_VALID(0)
+
+    bbeq          K_CLEAR_BUSY_AND_EXIT, 1, exit
+    tblwr         d.busy, 0 //BD Slot
     #restore flags
-    crestore      [c5], CAPRI_KEY_FIELD(IN_TO_S4_P, incr_sq_cindex), 0x1
+    crestore      [c5, c4], CAPRI_KEY_RANGE(IN_TO_S4_P, incr_sq_cindex, decr_send_credits), 0x3
     #c5 - incr_sq_cindex
+    #c4 - decr_send_credits
 
     tblwr         d.send_in_progress, CAPRI_KEY_FIELD(IN_TO_S4_P, in_progress)
     tblwr         d.current_sge_id, K_CURRENT_SGE_ID
     tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
     tblmincri.c5  SQ_C_INDEX, d.log_num_wqes, 1
-
-    CAPRI_SET_TABLE_0_VALID(0)
+    tblsub.c4     d.send_credits, 1
 
     nop.e
     nop

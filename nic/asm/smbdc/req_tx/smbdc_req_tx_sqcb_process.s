@@ -46,6 +46,7 @@ smbdc_req_tx_sqcb_process:
         // Check if cindex is pointing to yet to be filled wqe
         seq            c3, SQ_C_INDEX, SQ_P_INDEX //BD Slot
         bcf            [c3], exit
+        sne            c4, d.send_credits, 0
         
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
@@ -61,6 +62,7 @@ smbdc_req_tx_sqcb_process:
 
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, max_fragmented_size), d.max_fragmented_size, \
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, max_send_size), d.max_send_size
+        phvwr.c4  CAPRI_PHV_FIELD(SQCB_TO_WQE_P, send_credits_available), 1
 
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_wqe_process, r2)
         
@@ -95,6 +97,7 @@ in_progress:
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, max_send_size), d.max_send_size
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_id), d.current_sge_id, \
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.current_sge_offset
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, in_progress), 1
 
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_wqe_process, r2)
 

@@ -39,15 +39,15 @@ first_wqe:
                   p.rdma_wqe0.sge1.lkey, d.rdma_local_dma_lkey
 
     //Pass credits_granted only for the first rdma_wqe
-    //Assumption: Make sure d.credits_granted is updated/set in the same stage in a locked manner
-    phvwrpair     p.rdma_wqe_ctx0.smbdc_hdr.credits_requested, d.credits_requested, \
-                  p.rdma_wqe_ctx0.smbdc_hdr.credits_granted, d.credits_granted
+    //Assumption: Make sure d.new_credits_offered is updated/set in the same stage in a locked manner
+    phvwrpair     p.rdma_wqe_ctx0.smbdc_hdr.credits_requested, d.send_credit_target, \
+                  p.rdma_wqe_ctx0.smbdc_hdr.credits_granted, d.new_credits_offered
     //remaining_data_len field is set by sge_process
     //data_len field is set by sge_process
     phvwrpair     p.rdma_wqe_ctx0.smbdc_hdr.data_offset, sizeof(struct rdma_smbdc_header_t), \
                   p.rdma_wqe_ctx0.smbdc_hdr.padding, r0
     .assert(sizeof(struct rdma_smbdc_header_t) % 8 == 0)
-    tblwr         d.credits_granted, 0
+    tblwr         d.new_credits_offered, 0
 
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_REQ_BASE + 3)
     DMA_HBM_PHV2MEM_SETUP(r6, rdma_wqe_ctx0, rdma_wqe_ctx0, r4)
@@ -79,8 +79,8 @@ second_wqe:
                   p.rdma_wqe1.sge1.lkey, d.rdma_local_dma_lkey
 
     //Pass credits_granted as r0 for non-first rdma_wqe
-    //Assumption: Make sure d.credits_granted is updated/set in the same stage in a locked manner
-    phvwrpair     p.rdma_wqe_ctx1.smbdc_hdr.credits_requested, d.credits_requested, \
+    //Assumption: Make sure d.new_credits_offered is updated/set in the same stage in a locked manner
+    phvwrpair     p.rdma_wqe_ctx1.smbdc_hdr.credits_requested, d.send_credit_target, \
                   p.rdma_wqe_ctx1.smbdc_hdr.credits_granted, r0
     //remaining_data_len field is set by sge_process
     //data_len field is set by sge_process
@@ -118,8 +118,7 @@ third_wqe:
                   p.rdma_wqe2.sge1.lkey, d.rdma_local_dma_lkey
 
     //Pass credits_granted as r0 for non-first rdma_wqe
-    //Assumption: Make sure d.credits_granted is updated/set in the same stage in a locked manner
-    phvwrpair     p.rdma_wqe_ctx2.smbdc_hdr.credits_requested, d.credits_requested, \
+    phvwrpair     p.rdma_wqe_ctx2.smbdc_hdr.credits_requested, d.send_credit_target, \
                   p.rdma_wqe_ctx2.smbdc_hdr.credits_granted, r0
     //remaining_data_len field is set by sge_process
     //data_len field is set by sge_process
@@ -161,8 +160,7 @@ fourth_wqe:
                   p.rdma_wqe3.sge1.lkey, d.rdma_local_dma_lkey
 
     //Pass credits_granted as r0 for non-first rdma_wqe
-    //Assumption: Make sure d.credits_granted is updated/set in the same stage in a locked manner
-    phvwrpair.c5  p.rdma_wqe_ctx3.smbdc_hdr.credits_requested, d.credits_requested, \
+    phvwrpair.c5  p.rdma_wqe_ctx3.smbdc_hdr.credits_requested, d.send_credit_target, \
                   p.rdma_wqe_ctx3.smbdc_hdr.credits_granted, r0
     //remaining_data_len field is set by sge_process
     //data_len field is set by sge_process

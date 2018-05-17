@@ -11,6 +11,7 @@ struct smbdc_req_tx_s1_t0_k k;
 #define WQE_TO_SGE_P t0_s2s_wqe_to_sge_info
 
 #define TO_S2_P       to_s2_to_stage
+#define TO_S4_P       to_s4_to_stage_sq
 
 #define IN_P t0_s2s_sqcb_to_wqe_info
 
@@ -19,10 +20,12 @@ struct smbdc_req_tx_s1_t0_k k;
 #define K_CURRENT_SGE_ID CAPRI_KEY_FIELD(IN_P, current_sge_id)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_FIELD(IN_P, current_sge_offset)
 #define K_IN_PROGRESS CAPRI_KEY_FIELD(IN_P, in_progress)
+#define K_SEND_CREDITS_AVAILABLE CAPRI_KEY_FIELD(IN_P, send_credits_available)
 
 %%
     .param    smbdc_req_tx_mr_select_process
     .param    smbdc_req_tx_sge_process
+    .param    smbdc_req_tx_sqcb_writeback_sq_process
 
 .align
 smbdc_req_tx_wqe_process:
@@ -75,7 +78,9 @@ for_each_sg_list:
 
 process_send:
     
-    sle     c1, K_MAX_FRAGMENTED_SIZE, d.send.total_len 
+    bbeq    K_SEND_CREDITS_AVAILABLE, 0, skip_send_processing
+    
+    sle     c1, K_MAX_FRAGMENTED_SIZE, d.send.total_len  //BD Slot
     bcf     [c1], invalid_request
     nop
   
@@ -108,8 +113,7 @@ in_progress:
 
     mfspr   r2, spr_tbladdr //Branch Delay Slot
     add     r2, r2, offsetof(struct smbdc_sqwqe_send_t, sg0)
-    add     r5, r0, sizeof(struct smbdc_sge_t)
-    sll     r5, r5, K_CURRENT_SGE_ID
+    sll     r5, sizeof(struct smbdc_sge_t), K_CURRENT_SGE_ID
     add     r2, r2, r5
 
     sub     r1, d.send.num_sges, K_CURRENT_SGE_ID
@@ -130,3 +134,10 @@ exit:
     phvwr   p.common.p4_intr_global_drop, 1
     nop.e
     nop
+
+skip_send_processing:
+
+    phvwr     CAPRI_PHV_FIELD(TO_S4_P, clear_busy_and_exit), 1
+    CAPRI_RESET_TABLE_0_ARG()
+    SQCB0_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_sqcb_writeback_sq_process, r2)

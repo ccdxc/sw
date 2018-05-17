@@ -89,7 +89,8 @@ header_type smbdc_req_tx_sqcb_to_wqe_info_t {
         current_sge_id                   :   8;
         current_sge_offset               :   32;
         in_progress                      :   1;
-        pad                              :   55;
+        send_credits_available           :   1;
+        pad                              :   54;
     }
 }
 
@@ -194,11 +195,13 @@ header_type smbdc_req_tx_to_stage_s4_cq_t {
 header_type smbdc_req_tx_to_stage_s4_sq_t {
     fields {
         in_progress                      :   1;
-        incr_sq_cindex                   :   1;
+        clear_busy_and_exit              :   1;
         current_sge_id                   :   8;
         current_sge_offset               :   32;
         current_total_offset             :   32;
-        pad                              :   46;
+        incr_sq_cindex                   :   1;
+        decr_send_credits                :   1;
+        pad                              :   45;
     }
 }
 
@@ -343,6 +346,7 @@ action smbdc_req_tx_wqe_process () {
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.current_sge_id, t0_s2s_sqcb_to_wqe_info.current_sge_id);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.current_sge_offset, t0_s2s_sqcb_to_wqe_info.current_sge_offset);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.in_progress, t0_s2s_sqcb_to_wqe_info.in_progress);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.send_credits_available, t0_s2s_sqcb_to_wqe_info.send_credits_available);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pad, t0_s2s_sqcb_to_wqe_info.pad);
 
 }
@@ -480,9 +484,11 @@ action smbdc_req_tx_sqcb_writeback_sq_process () {
 
     // to stage
     modify_field(to_s4_to_stage_sq_scr.in_progress, to_s4_to_stage_sq.in_progress);
-    modify_field(to_s4_to_stage_sq_scr.incr_sq_cindex, to_s4_to_stage_sq.incr_sq_cindex);
+    modify_field(to_s4_to_stage_sq_scr.clear_busy_and_exit, to_s4_to_stage_sq.clear_busy_and_exit);
     modify_field(to_s4_to_stage_sq_scr.current_sge_id, to_s4_to_stage_sq.current_sge_id);
     modify_field(to_s4_to_stage_sq_scr.current_sge_offset, to_s4_to_stage_sq.current_sge_offset);
+    modify_field(to_s4_to_stage_sq_scr.incr_sq_cindex, to_s4_to_stage_sq.incr_sq_cindex);
+    modify_field(to_s4_to_stage_sq_scr.decr_send_credits, to_s4_to_stage_sq.decr_send_credits);
     modify_field(to_s4_to_stage_sq_scr.pad, to_s4_to_stage_sq.pad);
 
     // stage to stage
