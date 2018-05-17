@@ -155,7 +155,7 @@ comp_encrypt_chain_scale_t::post_push(void)
 
     /*
      * Only need to call post_push() once since all submissions went
-     * to the same comp_queue.
+     * to the same comp_ring.
      */
     assert(num_submissions);
     if (num_submissions) {
@@ -592,7 +592,7 @@ comp_hash_chain_scale_t::post_push(void)
 
     /*
      * Only need to call post_push() once since all submissions went
-     * to the same comp_queue.
+     * to the same comp_ring.
      */
     assert(num_submissions);
     if (num_submissions) {
@@ -830,7 +830,7 @@ chksum_decomp_chain_scale_t::post_push(void)
 
     /*
      * Only need to call post_push() once since all submissions went
-     * to the same comp_queue.
+     * to the same comp_ring.
      */
     assert(num_submissions);
     if (num_submissions) {
@@ -1139,8 +1139,8 @@ acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
                                                  destructor_free_buffers(true));
     comp_encrypt_chain_scale->push_params_set(cec_push.enc_dec_blk_type(XTS_ENC_DEC_PER_HASH_BLK).
                                                        app_blk_size(app_blk_size).
-                                                       comp_queue(cp_queue).
-                                                       push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
+                                                       comp_ring(cp_ring).
+                                                       push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
                                                        seq_comp_qid(queues::get_seq_comp_sq(sq_idx)).
                                                        seq_comp_status_qid(queues::get_seq_comp_status_sq(status_sq_start_idx)));
     return comp_encrypt_chain_scale;
@@ -1175,7 +1175,7 @@ acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
                                                                          suppress_info_log(true)).
                                                    destructor_free_buffers(true));
     decrypt_decomp_chain_scale->push_params_set(ddc_push.comp_encrypt_chain((comp_encrypt_chain_t *)seed_test_chain).
-                                                         decomp_queue(dc_queue).
+                                                         decomp_ring(dc_ring).
                                                          seq_xts_qid(queues::get_seq_xts_sq(sq_idx)).
                                                          seq_xts_status_qid(queues::get_seq_xts_status_sq(status_sq_start_idx)));
     return decrypt_decomp_chain_scale;
@@ -1212,9 +1212,9 @@ acc_comp_hash_chain_scale_create(uint32_t num_submissions,
     comp_hash_chain_scale->push_params_set(chc_push.app_blk_size(app_blk_size).
                                                     app_hash_size(kCompAppHashBlkSize).
                                                     integrity_type(COMP_INTEGRITY_M_ADLER32).
-                                                    comp_queue(cp_queue).
-                                                    hash_queue(cp_hotq).
-                                                    push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
+                                                    comp_ring(cp_ring).
+                                                    hash_ring(cp_hot_ring).
+                                                    push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
                                                     seq_comp_qid(queues::get_seq_comp_sq(sq_idx)).
                                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(status_sq_start_idx)));
     return comp_hash_chain_scale;
@@ -1245,9 +1245,9 @@ acc_chksum_decomp_chain_scale_create(uint32_t num_submissions,
                                                                         suppress_info_log(true)).
                                                   destructor_free_buffers(true));
     chksum_decomp_chain_scale->push_params_set(cdc_push.comp_hash_chain((comp_hash_chain_t *)seed_test_chain).
-                                                        chksum_queue(dc_queue).
-                                                        decomp_queue(dc_hotq).
-                                                        push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
+                                                        chksum_ring(dc_ring).
+                                                        decomp_ring(dc_hot_ring).
+                                                        push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
                                                         seq_chksum_qid(queues::get_seq_comp_sq(sq_idx)).
                                                         seq_decomp_qid(queues::get_seq_comp_sq(sq_idx + 1)));
     return chksum_decomp_chain_scale;
@@ -1279,7 +1279,7 @@ acc_encrypt_only_scale_create(uint32_t num_submissions,
                                                                  suppress_info_log(true)).
                                            destructor_free_buffers(true));
     encrypt_only_scale->push_params_set(enc_push.app_blk_size(app_blk_size).
-                                                 push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
+                                                 push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
                                                  seq_xts_qid(queues::get_seq_xts_sq(sq_idx)));
     return encrypt_only_scale;
 }

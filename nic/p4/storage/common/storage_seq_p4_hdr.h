@@ -56,10 +56,8 @@ header_type seq_barco_entry_t {
     barco_ring_size : 5;    // log2(ring_size)
     barco_ring_addr : 34;   // Address of the ring
 
-    // special test batch mode: pndx value is given in entry
-    barco_batch_pndx: 16;
-    barco_batch_mode: 1;
-    barco_batch_last: 1;
+    barco_batch_size: 16;   // barco_desc_addr is a vector of this many descriptors
+    barco_batch_mode: 1;    // when barco_batch_mode is set.
   }
 }
 
@@ -149,7 +147,7 @@ header_type seq_xts_status_desc_t {
     barco_pndx_shadow_addr: 34;
     barco_desc_size : 4;    // descriptor size (power of 2 exponent)
     barco_pndx_size : 3;    // producer index size (power of 2 exponent)
-    barco_ring_size :  5;   // log2(ring_size)
+    barco_ring_size : 5;    // log2(ring_size)
     status_addr0    : 64;   // Address where HW compression status was placed
     status_addr1    : 64;   // 2nd address where a copy of above status can be made
     intr_addr       : 64;   // Address where interrupt needs to be written
@@ -270,7 +268,7 @@ header_type seq_kivec4_t {
     barco_pndx_size         : 3;
     barco_ring_size         : 5;
     barco_desc_set_total    : 6;
-    barco_num_descs         : 8;
+    barco_num_descs         : 10;
   }
 }
 

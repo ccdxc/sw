@@ -227,7 +227,7 @@
 #define SEQ_KIVEC4_BARCO_DESC_SET_TOTAL         \
     k.seq_kivec4_barco_desc_set_total
 #define SEQ_KIVEC4_BARCO_NUM_DESCS              \
-    k.{seq_kivec4_barco_num_descs_sbit0_ebit1...seq_kivec4_barco_num_descs_sbit2_ebit7}
+    k.{seq_kivec4_barco_num_descs_sbit0_ebit1...seq_kivec4_barco_num_descs_sbit2_ebit9}
 
 #define SEQ_KIVEC5_INTR_ADDR                    \
     k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
@@ -270,6 +270,7 @@
  */
 #define SEQ_COMP_SGL_PDMA_XFER_DEBUG            1
 #define SEQ_COMP_SGL_PDMA_PAD_ONLY_DEBUG        1
+#define DMA_CMD_MEM2MEM_SIZE_DEBUG              1
 
 /*
  * Barco SGL descriptor size

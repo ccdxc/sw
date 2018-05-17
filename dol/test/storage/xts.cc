@@ -22,8 +22,10 @@ uint32_t gcm_exp_opaque_tag_encr = 0;
 uint32_t gcm_exp_opaque_tag_decr = 0;
 
 const static uint32_t  kAolSize              = 64;
-const static uint32_t  kXtsDescSize          = 128;
+const        uint32_t  kXtsDescSize          = 128;
 const        uint32_t  kXtsQueueSize         = 4096;
+const        uint32_t  kGcmDescSize          = 128;
+const        uint32_t  kGcmQueueSize         = 1024;
 
 using namespace dp_mem;
 extern size_t tcid;
@@ -34,18 +36,42 @@ extern std::vector<TestCtx> xts_tests;
 
 namespace tests {
 
-static dp_mem_t *xts0_ring_pi_shadow_addr;
-static dp_mem_t *xts1_ring_pi_shadow_addr;
-static dp_mem_t *gcm0_ring_pi_shadow_addr;
-static dp_mem_t *gcm1_ring_pi_shadow_addr;
+static acc_ring_t *xts0_ring;
+static acc_ring_t *xts1_ring;
+static acc_ring_t *gcm0_ring;
+static acc_ring_t *gcm1_ring;
+
+static uint64_t ring_base_addr_get(bool decr_en, bool is_gcm) {
+  uint64_t ring_base_addr;
+
+  if(hal_if::get_xts_ring_base_address(decr_en, &ring_base_addr, is_gcm) < 0) {
+    printf("can't get xts ring base address \n");
+    assert(0);
+  }
+  printf("decr_en %u is_gcm %u 0x%lx\n", decr_en, is_gcm, ring_base_addr);
+  return ring_base_addr;
+}
 
 int xts_init(void) {
+  uint64_t ring_base_addr;
 
- xts0_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
- xts1_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
- gcm0_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
- gcm1_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
- return 0;
+  ring_base_addr = ring_base_addr_get(false, false);
+  xts0_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX,
+                             kXtsQueueSize, kXtsDescSize, ring_base_addr,
+                             xts::kXtsPISize);
+  ring_base_addr = ring_base_addr_get(true, false);
+  xts1_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX,
+                             kXtsQueueSize, kXtsDescSize, ring_base_addr,
+                             xts::kXtsPISize);
+  ring_base_addr = ring_base_addr_get(false, true);
+  gcm0_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
+                             kGcmQueueSize, kGcmDescSize, ring_base_addr,
+                             xts::kXtsPISize);
+  ring_base_addr = ring_base_addr_get(true, true);
+  gcm1_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX,
+                             kGcmQueueSize, kGcmDescSize, ring_base_addr,
+                             xts::kXtsPISize);
+  return 0;
 }
 
 int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
@@ -308,7 +334,6 @@ XtsCtx::~XtsCtx() {
     //if(xts_db && !caller_xts_db_en) delete xts_db;
     return;
   }
-  if(xts_desc) delete xts_desc;
   if(status && !caller_status_en) delete status;
   // TODO: This seems to be crashing - needs investigation
   //if(xts_db && !caller_xts_db_en) delete xts_db;
@@ -377,10 +402,8 @@ XtsCtx::cmd_eval_seq_xts(xts::xts_cmd_t& cmd) {
 // Prefill an XTS descriptor as much as possible.
 // Unfilled that are left for the caller are: 
 //    in_aol, out_aol, db_addr, db_data, and cmd
-xts::xts_desc_t * 
-XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
-
-  xts::xts_desc_t *xts_desc_addr = (xts::xts_desc_t *)xts_desc->read();
+void
+XtsCtx::desc_prefill_seq_xts(xts::xts_desc_t *xts_desc) {
 
   if (!iv) {
     uint32_t alloc_size = ((kMinHostMemAllocSize < IV_SIZE) ? kMinHostMemAllocSize : IV_SIZE);
@@ -390,112 +413,89 @@ XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
   }
 
   // Fill the XTS ring descriptor
-  xts_desc->clear();
-  xts_desc_addr->iv_addr = host_mem_v2p(iv);
+  memset(xts_desc, 0, sizeof(*xts_desc));
+  xts_desc->iv_addr = host_mem_v2p(iv);
   if(is_gcm) {
     if(!decr_en) {
       assert(NULL == auth_tag_addr);
       auth_tag_addr = alloc_host_mem(kMinHostMemAllocSize);
       memset(auth_tag_addr, 0, kMinHostMemAllocSize);
-      xts_desc_addr->auth_tag = host_mem_v2p(auth_tag_addr);
+      xts_desc->auth_tag = host_mem_v2p(auth_tag_addr);
     } else {
       assert(NULL != auth_tag_addr);
-      xts_desc_addr->auth_tag = host_mem_v2p(auth_tag_addr);
+      xts_desc->auth_tag = host_mem_v2p(auth_tag_addr);
     }
   }
-  xts_desc_addr->opaque_tag_en = opa_tag_en;
+  xts_desc->opaque_tag_en = opa_tag_en;
   if(!opaque_tag) {
     if(!is_gcm)
-      xts_desc_addr->opaque_tag = decr_en? ++exp_opaque_tag_decr : ++exp_opaque_tag_encr;
+      xts_desc->opaque_tag = decr_en? ++exp_opaque_tag_decr : ++exp_opaque_tag_encr;
     else
-      xts_desc_addr->opaque_tag = decr_en? ++gcm_exp_opaque_tag_decr : ++gcm_exp_opaque_tag_encr;
+      xts_desc->opaque_tag = decr_en? ++gcm_exp_opaque_tag_decr : ++gcm_exp_opaque_tag_encr;
   } else {
-    xts_desc_addr->opaque_tag = opaque_tag;
+    xts_desc->opaque_tag = opaque_tag;
   }
 
   if(!xts_db_addr) {
     xts_db_addr = xts_db->pa();
   }
-  xts_desc_addr->db_addr = xts_db_addr;
-  xts_desc_addr->db_data = exp_db_data;
+  xts_desc->db_addr = xts_db_addr;
+  xts_desc->db_data = exp_db_data;
 
   if(t10_en) {
-    xts_desc_addr->sector_num = start_sec_num;
-    xts_desc_addr->sector_size = sector_size;
-    xts_desc_addr->app_tag = app_tag;
+    xts_desc->sector_num = start_sec_num;
+    xts_desc->sector_size = sector_size;
+    xts_desc->app_tag = app_tag;
   } else {
-    xts_desc_addr->sector_num = 0;
-    xts_desc_addr->sector_size = 0;
-    xts_desc_addr->app_tag = 0;
+    xts_desc->sector_num = 0;
+    xts_desc->sector_size = 0;
+    xts_desc->app_tag = 0;
   }
   // Ideally below key initialization lines need to be commented out if operation is T10 only
   // but barco is not fixing this bug - https://github.com/pensando/asic/issues/669
   if(!key_desc_inited) {
     if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES128, AES256_KEY_SIZE*2, &key128_desc_idx)) {
       printf("can't create or update xts 128bit key index \n");
-      return nullptr;
+      assert(0);
     }
     if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES256, AES256_KEY_SIZE*2, &key256_desc_idx)) {
       printf("can't create or update xts 256 key index \n");
-      return nullptr;
+      assert(0);
     }
     key_desc_inited = true;
   }
   if(key_size == AES128_KEY_SIZE)
-    xts_desc_addr->key_desc_idx = key128_desc_idx;
+    xts_desc->key_desc_idx = key128_desc_idx;
   else
-    xts_desc_addr->key_desc_idx = key256_desc_idx;
+    xts_desc->key_desc_idx = key256_desc_idx;
 
   status_invalidate();
-  xts_desc_addr->status = status->pa();
-
-  return xts_desc_addr;
+  xts_desc->status = status->pa();
 }
 
 // Calculate xts producer index addr globals;
 // then fill the next available seq_xts_desc with calculated info
 int
-XtsCtx::desc_write_seq_xts(dp_mem_t *xts_desc) {
+XtsCtx::desc_write_seq_xts(xts::xts_desc_t *xts_desc) {
 
-  dp_mem_t *seq_xts_desc;
-
-  // Fill xts producer index addr globals
+  // Choose the correct accelerator ring to push
   if(decr_en) {
     if(!is_gcm) {
-      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX;
-      xts_ring_pi_shadow_addr = xts1_ring_pi_shadow_addr;
+      acc_ring = xts1_ring;
     } else {
-      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX;
-      xts_ring_pi_shadow_addr = gcm1_ring_pi_shadow_addr;
+      acc_ring = gcm1_ring;
     }
   } else {
     if(!is_gcm) {
-      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX;
-      xts_ring_pi_shadow_addr = xts0_ring_pi_shadow_addr;
+      acc_ring = xts0_ring;
     } else {
-      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX;
-      xts_ring_pi_shadow_addr = gcm0_ring_pi_shadow_addr;
+      acc_ring = gcm0_ring;
     }
   }
 
-  if(hal_if::get_xts_ring_base_address(decr_en, &xts_ring_base_addr, is_gcm) < 0) {
-    printf("can't get xts ring base address \n");
-    return -1;
-  }
-
   // Fill the XTS Seq descriptor
-  if (use_seq) {
-      seq_xts_desc = queues::seq_sq_consume_entry(seq_xts_q, &seq_xts_index);
-      seq_xts_desc->clear();
-      seq_xts_desc->write_bit_fields(0, 64, xts_desc->pa());
-      seq_xts_desc->write_bit_fields(64, 34, xts_ring_pi_addr);
-      seq_xts_desc->write_bit_fields(98, 34, xts_ring_pi_shadow_addr->pa());
-      seq_xts_desc->write_bit_fields(132, 4, (uint8_t)log2(xts_desc->line_size_get()));
-      seq_xts_desc->write_bit_fields(136, 3, (uint8_t)log2(xts::kXtsPISize));
-      seq_xts_desc->write_bit_fields(139, 5, (uint8_t)log2(kXtsQueueSize));
-
-      seq_xts_desc->write_bit_fields(144, 34, xts_ring_base_addr);
-      seq_xts_desc->write_thru();
+  if (push_type != ACC_RING_PUSH_INVALID) {
+    acc_ring->push((const void *)xts_desc, push_type, seq_xts_q);
   }
 
   return 0;
@@ -518,7 +518,7 @@ XtsCtx::desc_write_seq_xts_status(dp_mem_t *xts_status_desc) {
 }
 
 int XtsCtx::test_seq_xts() {
-  xts::xts_desc_t *xts_desc_addr;
+  xts::xts_desc_t xts_desc;
   xts::xts_cmd_t cmd;
 
   cmd_eval_seq_xts(cmd);
@@ -526,8 +526,6 @@ int XtsCtx::test_seq_xts() {
   assert(num_aols <= MAX_AOLS); // Currently we only support upto 2 - min required to validate aol chaining
   assert(num_sub_aols <= MAX_SUB_AOLS); // Currently we only support upto 4 - min required to validate aol chaining
   assert(sizeof(xts::xts_desc_t) == kXtsDescSize);
-  xts_desc = new dp_mem_t(1, kXtsDescSize,
-                          DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
 
   assert(sizeof(xts::xts_aol_t) == kAolSize);
   memset(in_aol, 0x0, sizeof(in_aol));
@@ -594,53 +592,50 @@ int XtsCtx::test_seq_xts() {
   }
 
   // Fill the XTS ring descriptor
-  xts_desc_addr = desc_prefill_seq_xts(xts_desc);
-  xts_desc_addr->in_aol = host_mem_v2p(in_aol[0]);
-  xts_desc_addr->out_aol = host_mem_v2p(out_aol[0]);
-  xts_desc_addr->cmd = cmd;
-  xts_desc->write_thru();
+  desc_prefill_seq_xts(&xts_desc);
+  xts_desc.in_aol = host_mem_v2p(in_aol[0]);
+  xts_desc.out_aol = host_mem_v2p(out_aol[0]);
+  xts_desc.cmd = cmd;
 
-  desc_write_seq_xts(xts_desc);
+  desc_write_seq_xts(&xts_desc);
 
   int rv = 0;
-  if(copy_desc || ring_db) {
-    rv = ring_doorbell();
-    if(rv == 0 && verify_db)
-      rv = verify_doorbell();
+  switch (push_type) {
+
+  case ACC_RING_PUSH_SEQUENCER:
+  case ACC_RING_PUSH_HW_DIRECT:
+
+    // Only the above push_type's would have already pushed work to HW.
+    // Others would have deferred until ring_doorbell() is called.
+    if(verify_db) rv = verify_doorbell();
+    break;
+
+  default:
+    break;
   }
 
   return rv;
 }
 
-uint32_t pi;
-bool pi_inited = false;
 int XtsCtx::ring_doorbell() {
-  if(use_seq) {
-    // Kickstart the sequencer
-    test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
-  } else {
-    if(!pi_inited) {
-      read_reg(xts_ring_pi_addr, pi);
-      pi_inited = true;
-    }
+  assert(acc_ring);
+  switch (push_type) {
 
-    uint64_t ring_addr = xts_ring_base_addr + kXtsDescSize * pi;
-    write_mem(ring_addr, (uint8_t*)xts_desc->read(), kXtsDescSize);
-    pi += 1;
-    if(pi == kXtsQueueSize) pi = 0; // roll-over case
-    if(ring_db) {
+  case ACC_RING_PUSH_SEQUENCER_BATCH:
+    acc_ring->reentrant_tuple_set(push_type, seq_xts_q);
+    break;
 
-      // since we didn't go thru sequencer here, ensure the shadow pindex
-      // maintains up-to-date value
-      if (xts_ring_pi_shadow_addr) {
-        *((uint32_t *)xts_ring_pi_shadow_addr->read()) = pi;
-        xts_ring_pi_shadow_addr->write_thru();
-      }
-      write_reg(xts_ring_pi_addr, pi);
-      pi_inited = false;
-    }
+  default:
+    break;
   }
+
+  acc_ring->post_push();
   return 0;
+}
+
+uint16_t XtsCtx::seq_xts_index_get(void) {
+  assert(acc_ring);
+  return acc_ring->seq_pd_idx_get();
 }
 
 void XtsCtx::status_invalidate(void) {
@@ -834,15 +829,13 @@ const static uint32_t  kBufSize = kMaxReqs*(kDefaultBufSize);
 int fill_chain_ctx(XtsChainCtx* ctx, char* in_buff[kMaxReqs], char *stg_buff[kMaxReqs], char *out_buff[kMaxReqs]) {
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     ctx[i].xts_ctx1.op = xts::AES_ENCR_ONLY;
-    ctx[i].xts_ctx1.use_seq = false;
+    ctx[i].xts_ctx1.push_type = ACC_RING_PUSH_HW_DIRECT_BATCH;
     ctx[i].xts_ctx1.verify_db = false;
-    ctx[i].xts_ctx1.ring_db = false;
     ctx[i].xts_ctx1.num_sectors = kDefaultBufSize/kSectorSize;
 
     ctx[i].xts_ctx2.op = xts::AES_DECR_ONLY;
-    ctx[i].xts_ctx2.use_seq = false;
+    ctx[i].xts_ctx2.push_type = ACC_RING_PUSH_HW_DIRECT_BATCH;
     ctx[i].xts_ctx2.verify_db = false;
-    ctx[i].xts_ctx2.ring_db = false;
     ctx[i].xts_ctx2.num_sectors = kDefaultBufSize/kSectorSize;
 
     ctx[i].xts_ctx1.src_buf = (void*)in_buff[i];
@@ -895,6 +888,7 @@ int xts_multi_blk() {
   char* in_buffer = (char *)alloc_host_mem(kBufSize);
   char* stg_buffer = (char *)alloc_host_mem(kBufSize);
   char* out_buffer = (char *)alloc_host_mem(kBufSize);
+  uint32_t i;
 
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     in_buff[i] = in_buffer + i * (kDefaultBufSize);
@@ -912,11 +906,11 @@ int xts_multi_blk() {
   int iter = 1;
   testcase_begin(tcid, iter);
   //Queue initial set of requests
-  for(uint32_t i = 0; i < kInitReqs; i++) {
-    if(i == kInitReqs - 1) ctx[i].xts_ctx1.ring_db = true;
+  for(i = 0; i < kInitReqs; i++) {
     rv = ctx[i].xts_ctx1.test_seq_xts();
     if(0 != rv) goto done;
   }
+  if(i) ctx[i-1].xts_ctx1.acc_ring->post_push();
 
   while(1) {
     //Wait for batch size encr to complete
@@ -933,14 +927,14 @@ int xts_multi_blk() {
 
     //Queue next batch size of encr
     if(pending_encr_reqs >= kBatchSize) {
-      for(uint32_t i = kTotalReqs - pending_encr_reqs;
+      uint32_t i;
+      for(i = kTotalReqs - pending_encr_reqs;
           i < kTotalReqs - pending_encr_reqs + kBatchSize;
           i++) {
-        if(i == kTotalReqs - pending_encr_reqs + kBatchSize - 1) 
-          ctx[i].xts_ctx1.ring_db = true;
         rv = ctx[i].xts_ctx1.test_seq_xts();
         if(0 != rv) goto done;
       }
+      if(i) ctx[i-1].xts_ctx1.acc_ring->post_push();
       pending_encr_reqs -= kBatchSize;
     }
 
@@ -957,15 +951,15 @@ int xts_multi_blk() {
 
     //Queue next batch size of decr
     if(pending_decr_reqs >= kBatchSize) {
+      uint32_t i;
       testcase_begin(tcid, iter);
-      for(uint32_t i = kTotalReqs - pending_decr_reqs;
+      for(i = kTotalReqs - pending_decr_reqs;
           i < kTotalReqs - pending_decr_reqs + kBatchSize;
           i++) {
-        if(i == kTotalReqs - pending_decr_reqs + kBatchSize - 1) 
-          ctx[i].xts_ctx2.ring_db = true;
         rv = ctx[i].xts_ctx2.test_seq_xts();
         if(0 != rv) goto done;
       }
+      if(i) ctx[i-1].xts_ctx2.acc_ring->post_push();
       pending_decr_reqs -= kBatchSize;
       exp_decr_opaque_tag += kBatchSize;
     }
@@ -1663,31 +1657,27 @@ int fill_ctx(XtsCtx* ctx1, XtsCtx* ctx2, XtsCtx* ctx3, XtsCtx* ctx4,
   unsigned char scratch[kDefaultBufSize];
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     ctx1[i].op = xts::AES_ENCR_ONLY;
-    ctx1[i].use_seq = false;
+    ctx1[i].push_type = ACC_RING_PUSH_HW_DIRECT_BATCH;
     ctx1[i].verify_db = false;
-    ctx1[i].ring_db = false;
     ctx1[i].num_sectors = kDefaultBufSize/kSectorSize;
     ctx1[i].opaque_tag = i+1;
 
     ctx2[i].op = xts::AES_DECR_ONLY;
-    ctx2[i].use_seq = false;
+    ctx2[i].push_type = ACC_RING_PUSH_HW_DIRECT_BATCH;
     ctx2[i].verify_db = false;
-    ctx2[i].ring_db = false;
     ctx2[i].num_sectors = kDefaultBufSize/kSectorSize;
     ctx2[i].opaque_tag = i+1;
 
     ctx3[i].op = xts::AES_ENCR_ONLY;
-    ctx3[i].use_seq = false;
+    ctx3[i].push_type = ACC_RING_PUSH_HW_DIRECT_BATCH;
     ctx3[i].verify_db = false;
-    ctx3[i].ring_db = false;
     ctx3[i].num_sectors = kDefaultBufSize/kSectorSize;
     ctx3[i].is_gcm = true;
     ctx3[i].opaque_tag = i+1;
 
     ctx4[i].op = xts::AES_DECR_ONLY;
-    ctx4[i].use_seq = false;
+    ctx4[i].push_type = ACC_RING_PUSH_HW_DIRECT_BATCH;
     ctx4[i].verify_db = false;
-    ctx4[i].ring_db = false;
     ctx4[i].num_sectors = kDefaultBufSize/kSectorSize;
     ctx4[i].is_gcm = true;
     ctx4[i].opaque_tag = i+1;
@@ -1744,14 +1734,6 @@ int e2e_verify_hbm_buf(XtsCtx& xts_ctx1, XtsCtx& xts_ctx2) {
   return rv;
 }
 
-int ring_doorbell(uint64_t ring_pi_addr, uint32_t pi_inc) {
-  uint32_t pindex = 0;
-  read_reg(ring_pi_addr, pindex);
-  pindex = (pindex + pi_inc) % (kXtsQueueSize-1);
-  write_reg(ring_pi_addr, pindex);
-  return 0;
-}
-
 uint64_t xts_encr_tag_addr = 0, xts_decr_tag_addr = 0, gcm_encr_tag_addr = 0, gcm_decr_tag_addr = 0;
 int get_opaque_tag(uint32_t& opaque_tag, bool decr_en, bool is_gcm=false) {
   uint64_t opaque_tag_addr = 0;
@@ -1806,6 +1788,13 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     ctx1[i].opa_tag_en = false;
     ctx2[i].opa_tag_en = false;
     ctx3[i].opa_tag_en = false;
+
+    /*
+     * Inform acc_ring's of special hw_daisy_chain mode
+     */
+    ctx2[i].push_type = ACC_RING_PUSH_HW_INDIRECT_BATCH;
+    ctx3[i].push_type = ACC_RING_PUSH_HW_INDIRECT_BATCH;
+    ctx4[i].push_type = ACC_RING_PUSH_HW_INDIRECT_BATCH;
   }
 
   uint32_t xts_encr_tag_addr = 0, xts_decr_tag_addr = 0, gcm_encr_tag_addr = 0;
@@ -1820,7 +1809,6 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
   write_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX);
   write_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W1_ADDR, 0);
   int iter = 1;
-  pi_inited = false;
   //Queue initial set of requests
   uint32_t pindex = 0;
   read_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX, pindex);
@@ -1831,7 +1819,6 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     }
     if(0 == rv) rv = ctx1[i].test_seq_xts();
   }
-  pi_inited = false;
   read_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX, pindex);
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
@@ -1840,7 +1827,6 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     }
     if(0 == rv) rv = ctx2[i].test_seq_xts();
   }
-  pi_inited = false;
   read_reg(CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX, pindex);
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
@@ -1849,17 +1835,14 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     }
     if(0 == rv) rv = ctx3[i].test_seq_xts();
   }
-  pi_inited = false;
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     ctx4[i].auth_tag_addr = ctx3[i].auth_tag_addr;
     if(0 == rv) rv = ctx4[i].test_seq_xts();
   }
-  pi_inited = false;
   if(0 != rv) goto done;
 
   testcase_begin(tcid, iter);
-  rv = ring_doorbell(ctx1[0].xts_ring_pi_addr, kTotalReqs);
-  if(0 != rv) goto done;
+  ctx1[0].acc_ring->post_push();
 
   rv = verify_opaque_tag(kTotalReqs, true, FLAGS_long_poll_interval, true);
   if(0 != rv) {
@@ -1919,19 +1902,15 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
   uint32_t queued_decr_reqs = 0, queued_gcm_encr_reqs = 0, queued_gcm_decr_reqs = 0;
 
   int iter = 1;
-  pi_inited = false;
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(0 == rv) rv = ctx1[i].test_seq_xts();
   }
-  pi_inited = false;
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(0 == rv) rv = ctx2[i].test_seq_xts();
   }
-  pi_inited = false;
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(0 == rv) rv = ctx3[i].test_seq_xts();
   }
-  pi_inited = false;
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     ctx4[i].auth_tag_addr = ctx3[i].auth_tag_addr;
     if(0 == rv) rv = ctx4[i].test_seq_xts();
@@ -1939,8 +1918,7 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
   if(0 != rv) goto done;
 
   testcase_begin(tcid, iter);
-  rv = ring_doorbell(ctx1[0].xts_ring_pi_addr, kTotalReqs);
-  if(0 != rv) goto done;
+  ctx1[0].acc_ring->post_push();
 
   while(1) {
     //xts encryption
@@ -1950,8 +1928,7 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
     //Trigger next batch size of decr
     if((encr_reqs_comp - decr_reqs_comp) >= kBatchSize &&
        (encr_reqs_comp - queued_decr_reqs) >= kBatchSize) {
-      rv = ring_doorbell(ctx2[0].xts_ring_pi_addr, kBatchSize);
-      if(0 != rv) goto done;
+      ctx2[0].acc_ring->post_push(kBatchSize);
       queued_decr_reqs += kBatchSize;
     }
 
@@ -1962,8 +1939,7 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
     //Trigger next batch size of gcm encr
     if((decr_reqs_comp - gcm_encr_reqs_comp) >= kBatchSize &&
        (decr_reqs_comp - queued_gcm_encr_reqs) >= kBatchSize) {
-      rv = ring_doorbell(ctx3[0].xts_ring_pi_addr, kBatchSize);
-      if(0 != rv) goto done;
+      ctx3[0].acc_ring->post_push(kBatchSize);
       queued_gcm_encr_reqs += kBatchSize;
     }
 
@@ -1978,8 +1954,7 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
     //Trigger next batch size of gcm decr
     if((gcm_encr_reqs_comp - gcm_decr_reqs_comp) >= kBatchSize &&
        (gcm_encr_reqs_comp - queued_gcm_decr_reqs) >= kBatchSize) {
-      rv = ring_doorbell(ctx4[0].xts_ring_pi_addr, kBatchSize);
-      if(0 != rv) goto done;
+      ctx4[0].acc_ring->post_push(kBatchSize);
       queued_gcm_decr_reqs += kBatchSize;
     }
 

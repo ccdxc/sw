@@ -33,9 +33,9 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     caller_hash_status_vec(nullptr),
     caller_hash_opaque_vec(nullptr),
     caller_hash_opaque_data(0),
-    comp_queue(nullptr),
-    hash_queue(nullptr),
-    push_type(COMP_QUEUE_PUSH_INVALID),
+    comp_ring(nullptr),
+    hash_ring(nullptr),
+    push_type(ACC_RING_PUSH_INVALID),
     seq_comp_qid(0),
     last_cp_output_data_len(0),
     destructor_free_buffers(params.destructor_free_buffers_),
@@ -229,8 +229,8 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      */
     comp_buf2->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
-    comp_queue = params.comp_queue_;
-    hash_queue = params.hash_queue_;
+    comp_ring = params.comp_ring_;
+    hash_ring = params.hash_ring_;
     success = false;
 
     /*
@@ -274,15 +274,18 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     chain_params.seq_status_q = params.seq_comp_status_qid_;
     chain_params.chain_ent.next_doorbell_en = 1;
     chain_params.chain_ent.next_db_action_barco_push = 1;
-    chain_params.chain_ent.push_entry.barco_ring_addr = hash_queue->q_base_mem_pa_get();
-    chain_params.chain_ent.push_entry.barco_pndx_addr = hash_queue->cfg_q_pd_idx_get();
-    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = hash_queue->shadow_pd_idx_pa_get();
+    chain_params.chain_ent.push_entry.barco_ring_addr =
+                           hash_ring->ring_base_mem_pa_get();
+    chain_params.chain_ent.push_entry.barco_pndx_addr =
+                           hash_ring->cfg_ring_pd_idx_get();
+    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr =
+                           hash_ring->shadow_pd_idx_pa_get();
     chain_params.chain_ent.push_entry.barco_desc_size =
                            (uint8_t)log2(hash_desc_vec->line_size_get());
     chain_params.chain_ent.push_entry.barco_pndx_size =
                            (uint8_t)log2(sizeof(uint32_t));
     chain_params.chain_ent.push_entry.barco_ring_size = 
-                           (uint8_t)log2(hash_queue->q_size_get());
+                           (uint8_t)log2(hash_ring->ring_size_get());
     chain_params.chain_ent.push_entry.barco_desc_addr = hash_desc_vec->pa();
     chain_params.chain_ent.sgl_vec_addr = hash_sgl_vec->pa();
 
@@ -361,7 +364,7 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
 
     push_type = params.push_type_;
     seq_comp_qid = params.seq_comp_qid_;
-    comp_queue->push(cp_desc, params.push_type_, seq_comp_qid);
+    comp_ring->push((const void *)&cp_desc, params.push_type_, seq_comp_qid);
     return 0;
 }
 
@@ -372,8 +375,8 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
 void
 comp_hash_chain_t::post_push(void)
 {
-    comp_queue->reentrant_tuple_set(push_type, seq_comp_qid);
-    comp_queue->post_push();
+    comp_ring->reentrant_tuple_set(push_type, seq_comp_qid);
+    comp_ring->post_push();
 }
 
 

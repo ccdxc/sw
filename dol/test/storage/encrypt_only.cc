@@ -146,8 +146,8 @@ encrypt_only_t::post_push(void)
 void 
 encrypt_only_t::encrypt_setup(uint32_t seq_xts_qid)
 {
-    xts::xts_cmd_t cmd;
-    xts::xts_desc_t *xts_desc_addr;
+    xts::xts_cmd_t  cmd;
+    xts::xts_desc_t *xts_desc;
 
     // Use caller's XTS opaque info and status, if any
     if (caller_xts_opaque_buf) {
@@ -165,10 +165,8 @@ encrypt_only_t::encrypt_setup(uint32_t seq_xts_qid)
     // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
     xts_ctx.op = xts::AES_ENCR_ONLY;
-    xts_ctx.use_seq = true;
     xts_ctx.seq_xts_q = seq_xts_qid;
-    xts_ctx.copy_desc = false;
-    xts_ctx.ring_db = false;
+    xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
 
     xts_in_aol->clear();
     xts::xts_aol_t *xts_in = (xts::xts_aol_t *)xts_in_aol->read();
@@ -185,12 +183,13 @@ encrypt_only_t::encrypt_setup(uint32_t seq_xts_qid)
 
     // Set up XTS encrypt descriptor
     xts_ctx.cmd_eval_seq_xts(cmd);
-    xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
-    xts_desc_addr->in_aol = xts_in_aol->pa();
-    xts_desc_addr->out_aol = xts_out_aol->pa();
-    xts_desc_addr->cmd = cmd;
+    xts_desc = (xts::xts_desc_t *)xts_desc_buf->read();
+    xts_ctx.desc_prefill_seq_xts(xts_desc);
+    xts_desc->in_aol = xts_in_aol->pa();
+    xts_desc->out_aol = xts_out_aol->pa();
+    xts_desc->cmd = cmd;
     xts_desc_buf->write_thru();
-    xts_ctx.desc_write_seq_xts(xts_desc_buf);
+    xts_ctx.desc_write_seq_xts(xts_desc);
 }
 
 

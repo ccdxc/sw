@@ -151,8 +151,8 @@ public:
     comp_encrypt_chain_push_params_t() :
         enc_dec_blk_type_(XTS_ENC_DEC_ENTIRE_APP_BLK),
         app_blk_size_(0),
-        comp_queue_(nullptr),
-        push_type_(COMP_QUEUE_PUSH_SEQUENCER),
+        comp_ring_(nullptr),
+        push_type_(ACC_RING_PUSH_SEQUENCER),
         seq_comp_qid_(0),
         seq_comp_status_qid_(0),
         seq_xts_status_qid_(0)
@@ -161,8 +161,8 @@ public:
 
     xts_enc_dec_blk_type_t enc_dec_blk_type_;
     uint32_t            app_blk_size_;
-    comp_queue_t        *comp_queue_;
-    comp_queue_push_t   push_type_;
+    acc_ring_t          *comp_ring_;
+    acc_ring_push_t     push_type_;
     uint32_t            seq_comp_qid_;
     uint32_t            seq_comp_status_qid_;
     uint32_t            seq_xts_status_qid_;
@@ -180,13 +180,13 @@ public:
         return *this;
     }
     comp_encrypt_chain_push_params_t&
-    comp_queue(comp_queue_t *comp_queue)
+    comp_ring(acc_ring_t *comp_ring)
     {
-        comp_queue_ = comp_queue;
+        comp_ring_ = comp_ring;
         return *this;
     }
     comp_encrypt_chain_push_params_t&
-    push_type(comp_queue_push_t push_type)
+    push_type(acc_ring_push_t push_type)
     {
         push_type_ = push_type;
         return *this;
@@ -300,8 +300,8 @@ private:
     // other context info
     cp_desc_t       cp_desc;
     XtsCtx          xts_ctx;
-    comp_queue_t    *comp_queue;
-    comp_queue_push_t push_type;
+    acc_ring_t      *comp_ring;
+    acc_ring_push_t push_type;
     uint32_t        seq_comp_qid;
 
     int             actual_enc_blks;

@@ -36,10 +36,9 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
     caller_decomp_status_buf(nullptr),
     caller_decomp_opaque_buf(nullptr),
     caller_opaque_data(0),
-    chksum_queue(nullptr),
-    decomp_queue(nullptr),
-    chksum_push_type(COMP_QUEUE_PUSH_INVALID),
-    decomp_push_type(COMP_QUEUE_PUSH_INVALID),
+    chksum_ring(nullptr),
+    decomp_ring(nullptr),
+    push_type(ACC_RING_PUSH_INVALID),
     seq_chksum_qid(0),
     seq_decomp_qid(0),
     destructor_free_buffers(params.destructor_free_buffers_),
@@ -179,8 +178,8 @@ chksum_decomp_chain_t::push(chksum_decomp_chain_push_params_t params)
      */
     uncomp_buf->fragment_find(0, 64)->fill_thru(0xff);
 
-    chksum_queue = params.chksum_queue_;
-    decomp_queue = params.decomp_queue_;
+    chksum_ring = params.chksum_ring_;
+    decomp_ring = params.decomp_ring_;
     caller_comp_buf = comp_hash_chain->comp_buf2_get();
 
     chksum_desc_vec.clear();
@@ -202,20 +201,16 @@ chksum_decomp_chain_t::push(chksum_decomp_chain_push_params_t params)
      *      result of checksum verification. Both can and should occur, and
      *      it is up to SW driver/app to work with the results however it wants. 
      */
-    /*
-     * With multi checksum blocks, use deferred push if possible.
-     */
-    chksum_push_type = params.push_type_ == COMP_QUEUE_PUSH_SEQUENCER ?
-                       COMP_QUEUE_PUSH_SEQUENCER_DEFER : params.push_type_;
+    push_type = params.push_type_;
     seq_chksum_qid = params.seq_chksum_qid_;
     for (block_no = 0; block_no < num_hash_blks; block_no++) {
-        chksum_queue->push(chksum_setup(block_no), chksum_push_type,
-                           seq_chksum_qid);
+        chksum_ring->push((const void *)&chksum_setup(block_no),
+                          push_type, seq_chksum_qid);
     }
 
-    decomp_push_type = params.push_type_;
     seq_decomp_qid = params.seq_decomp_qid_;
-    decomp_queue->push(decomp_setup(), decomp_push_type,  seq_decomp_qid);
+    decomp_ring->push((const void *)&decomp_setup(),
+                      push_type,  seq_decomp_qid);
     return 0;
 }
 
@@ -226,11 +221,11 @@ chksum_decomp_chain_t::push(chksum_decomp_chain_push_params_t params)
 void
 chksum_decomp_chain_t::post_push(void)
 {
-    chksum_queue->reentrant_tuple_set(chksum_push_type, seq_chksum_qid);
-    chksum_queue->post_push();
+    chksum_ring->reentrant_tuple_set(push_type, seq_chksum_qid);
+    chksum_ring->post_push();
     if (seq_chksum_qid != seq_decomp_qid) {
-        decomp_queue->reentrant_tuple_set(decomp_push_type, seq_decomp_qid);
-        decomp_queue->post_push();
+        decomp_ring->reentrant_tuple_set(push_type, seq_decomp_qid);
+        decomp_ring->post_push();
     }
 }
 

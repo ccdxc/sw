@@ -10,6 +10,8 @@
 #include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/nvme_dp.hpp"
 #include "dol/test/storage/queues.hpp"
+#include "dol/test/storage/xts.hpp"
+#include "dol/test/storage/compression.hpp"
 #include "dol/test/storage/ssd.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
@@ -127,10 +129,41 @@ uint64_t pvm_last_cq;
 
 uint64_t storage_hbm_ssd_bm_addr;
 
+/*
+ * Sequencer queue batching support: see seq_sq_batch_consume_entry()
+ */
+class queue_batch_t
+{
+public:
+    queue_batch_t() :
+        batch_desc(nullptr),
+        user_ctx(nullptr),
+        end_notify_fn(nullptr),
+        batch_id(0),
+        batch_size(0),
+        batch_pd_idx(0)
+    {
+    }
+
+    dp_mem_t                    *batch_desc;
+    void                        *user_ctx;
+    seq_sq_batch_end_notify_t   end_notify_fn;
+    uint64_t                    batch_id;
+    uint16_t                    batch_size;
+    uint16_t                    batch_pd_idx;
+};
+
 typedef struct queues_ {
   dp_mem_t *mem;
   uint16_t entry_size;
   uint16_t num_entries;
+  uint16_t batch_limit;
+
+  /*
+   * Not all sequencer queues are used by DOL with batching so
+   * we allocate batch structure only on demand.
+   */
+  queue_batch_t *batch;
 } queues_t;
 
 // NVME Submission, Completion queues
@@ -182,10 +215,12 @@ uint64_t cndx_data_pa;
 
 // Forward declaration with default mem_type
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
-               dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
+               dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
+               uint16_t batch_limit = 0);
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
                     uint16_t total_rings, uint16_t host_rings,
-                    dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
+                    dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
+                    uint16_t batch_limit = 0);
 int storage_tx_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
                            uint16_t total_rings, uint16_t host_rings,
                            dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
@@ -232,20 +267,24 @@ void nvme_e2e_ssd_db_init(uint64_t db_addr, uint64_t db_data) {
 }
 
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
-               dp_mem_type_t mem_type) {
+               dp_mem_type_t mem_type, uint16_t batch_limit) {
+  memset(queue, 0, sizeof(*queue));
   queue->mem = new dp_mem_t(num_entries, entry_size, DP_MEM_ALIGN_SPEC,
                             mem_type, entry_size);
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
+  queue->batch_limit = batch_limit;
   return 0;
 }
 
 int queue_pre_init(queues_t *queue, dp_mem_t *mem, uint16_t num_entries,
-                   uint16_t entry_size) {
+                   uint16_t entry_size, uint16_t batch_limit) {
+  memset(queue, 0, sizeof(*queue));
   queue->mem = mem;
   queue->mem->line_set(0);
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
+  queue->batch_limit = batch_limit;
   return 0;
 }
 
@@ -262,7 +301,6 @@ dp_mem_t *queue_consumed_entry_get(queues_t *queue, uint16_t *index) {
   *index = queue->mem->next_line_get();
   return queue->mem;
 }
-
 
 void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
 
@@ -306,11 +344,11 @@ void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
 
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
                     uint16_t total_rings, uint16_t host_rings,
-                    dp_mem_type_t mem_type) {
+                    dp_mem_type_t mem_type, uint16_t batch_limit) {
 
   // Initialize the queue in the DOL enviroment
   if (queue_init(q_ptr, NUM_TO_VAL(kSeqNumEntries),
-                 NUM_TO_VAL(kDefaultEntrySize), mem_type) < 0) {
+                 NUM_TO_VAL(kDefaultEntrySize), mem_type, batch_limit) < 0) {
     printf("Unable to allocate host memory for PVM Seq SQ %d\n", qid);
     return -1;
   }
@@ -1000,7 +1038,8 @@ seq_queues_setup() {
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumXtsSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
-                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
+                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM,
+                   QUEUE_BATCH_LIMIT(kXtsDescSize)) < 0) {
       printf("Unable to allocate host memory for Seq XTS SQ %d\n", i);
       return -1;
     }
@@ -1044,7 +1083,8 @@ seq_queues_setup() {
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumCompSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
-                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
+                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM,
+                   QUEUE_BATCH_LIMIT(sizeof(tests::cp_desc_t))) < 0) {
       printf("Unable to allocate host memory for Seq Comp SQ %d\n", i);
       return -1;
     }
@@ -1161,7 +1201,7 @@ pvm_roce_sq_init(uint16_t rsq_lif, uint16_t rsq_qtype, uint32_t rsq_qid,
     uint32_t i = pvm_last_sq;
     // Initialize the queue in the DOL enviroment
     if (queue_pre_init(&pvm_sqs[i], mem, NUM_TO_VAL(num_entries),
-                       NUM_TO_VAL(entry_size)) < 0) {
+                       NUM_TO_VAL(entry_size), 0) < 0) {
       printf("Unable to pre init PVM ROCE SQ %d\n", i);
       return -1;
     }
@@ -1189,7 +1229,7 @@ pvm_roce_cq_init(uint16_t rcq_lif, uint16_t rcq_qtype, uint32_t rcq_qid,
     uint32_t i = pvm_last_cq;
     // Initialize the queue in the DOL enviroment
     if (queue_pre_init(&pvm_cqs[i], mem, NUM_TO_VAL(num_entries),
-                       NUM_TO_VAL(entry_size)) < 0) {
+                       NUM_TO_VAL(entry_size), 0) < 0) {
       printf("Unable to pre init PVM ROCE CQ %d\n", i);
       return -1;
     }
@@ -1219,12 +1259,107 @@ dp_mem_t *pvm_sq_consume_entry(uint16_t qid, uint16_t *index) {
 
 dp_mem_t *seq_sq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(SeqNumSQs)) return nullptr;
+  seq_sq_batch_consume_end(qid);
   return queue_consume_entry(&seq_sqs[qid], index);
 }
 
 dp_mem_t * seq_sq_consumed_entry_get(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(SeqNumSQs)) return nullptr;
   return queue_consumed_entry_get(&seq_sqs[qid], index);
+}
+
+/*
+ * Batching support consumes a single sequencer queue descriptor for multiple
+ * requests where, presumably, the user would store in that descriptor
+ * the start address of a vector of subordinate descriptors (e.g. Barco
+ * descriptors) and a count.
+ *
+ * With just a single sequencer descriptor and a single doorbell ring,
+ * sequencer P4+ code would transfer the multiple subordinate descriptors,
+ * e.g., to Barco, and wake up Barco in one shot.
+ */
+dp_mem_t *
+seq_sq_batch_consume_entry(uint16_t qid,
+                           uint64_t batch_id,
+                           uint16_t *index,
+                           bool *new_batch,
+                           seq_sq_batch_end_notify_t end_notify_fn,
+                           void *user_ctx)
+{
+    queues_t        *queue;
+    queue_batch_t   *batch;
+    dp_mem_t        *queue_mem;
+
+    assert(batch_id && (qid < NUM_TO_VAL(SeqNumSQs)));
+    *new_batch = false;
+
+    /*
+     * See if starting a new batch
+     */
+    queue = &seq_sqs[qid];
+    queue_mem = queue->mem;
+    batch = queue->batch;
+    if (!batch) {
+        batch = queue->batch = new queue_batch_t();
+    }
+    if (batch->batch_id == 0) {
+        batch->batch_desc = queue_consume_entry(queue, &batch->batch_pd_idx)->
+                                                fragment_find(0, queue->entry_size);
+        batch->batch_id = batch_id;
+        batch->end_notify_fn = end_notify_fn;
+        batch->user_ctx = user_ctx;
+        batch->batch_size = 0;
+        *new_batch = true;
+    }
+
+    /*
+     * Continue adding to existing batch
+     */
+    if (batch_id == batch->batch_id) {
+        *index = batch->batch_pd_idx;
+
+        /*
+         * Enforce batch limit if any
+         */
+        batch->batch_size++;
+        if (queue->batch_limit && (batch->batch_size >= queue->batch_limit)) {
+            seq_sq_batch_consume_end(qid);
+        }
+
+    } else {
+
+        /*
+         * End current batch and switch to new one
+         */
+        seq_sq_batch_consume_end(qid);
+
+        /*
+         * Caution: recursion!!!
+         */
+        seq_sq_batch_consume_entry(qid, batch_id, index,
+                                   new_batch, end_notify_fn, user_ctx);
+    }
+
+    return queue_mem;
+}
+
+/*
+ * Complete the current batch, if any, and invoke the user callback.
+ */
+void
+seq_sq_batch_consume_end(uint16_t qid)
+{
+    queues_t        *queue;
+    queue_batch_t   *batch;
+
+    assert(qid < NUM_TO_VAL(SeqNumSQs));
+    queue = &seq_sqs[qid];
+    batch = queue->batch;
+    if (batch && batch->batch_id) {
+        assert(batch->batch_size);
+        (*batch->end_notify_fn)(batch->user_ctx, batch->batch_desc, batch->batch_size);
+        batch->batch_id = 0;
+    }
 }
 
 dp_mem_t *nvme_cq_consume_entry(uint16_t qid, uint16_t *index) {

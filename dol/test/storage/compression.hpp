@@ -2,6 +2,7 @@
 #define	COMPRESSION_HPP_
 
 #include <stdint.h>
+#include "dol/test/storage/acc_ring.hpp"
 #include "dol/test/storage/dp_mem.hpp"
 
 using namespace dp_mem;
@@ -130,66 +131,6 @@ typedef struct cp_status_sha256 {
   uint8_t  sha256[32];
 } cp_status_sha256_t;
 
-// comp_queue_t provides usage flexibility as follows:
-// - HW queue configuration performed by this DOL module or elsewhere (such as HAL)
-// - queue entry submission via sequencer or directly to HW producer register
-typedef enum {
-  COMP_QUEUE_PUSH_INVALID,
-  COMP_QUEUE_PUSH_SEQUENCER,
-  COMP_QUEUE_PUSH_SEQUENCER_DEFER,
-  COMP_QUEUE_PUSH_SEQUENCER_BATCH,
-  COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
-  COMP_QUEUE_PUSH_HW_DIRECT,
-  COMP_QUEUE_PUSH_HW_DIRECT_BATCH,
-} comp_queue_push_t;
-
-class comp_queue_t
-{
-public:
-    comp_queue_t(uint64_t cfg_q_base,
-                 uint64_t cfg_q_pd_idx,
-                 uint32_t size);
-    void push(const cp_desc_t& src_desc,
-              comp_queue_push_t push_type,
-              uint32_t seq_comp_qid);
-    void reentrant_tuple_set(comp_queue_push_t push_type,
-                             uint32_t seq_comp_qid);
-    void post_push(void);
-
-    uint32_t q_size_get(void)
-    {
-        return q_size;
-    }
-
-    uint64_t q_base_mem_pa_get(void)
-    {
-        return q_base_mem_pa;
-    }
-
-    uint64_t cfg_q_pd_idx_get(void)
-    {
-        return cfg_q_pd_idx;
-    }
-
-    uint64_t shadow_pd_idx_pa_get(void)
-    {
-        return shadow_pd_idx_mem->pa();
-    }
-
-private:
-    uint64_t    cfg_q_base;
-    uint64_t    cfg_q_pd_idx;
-    dp_mem_t    *shadow_pd_idx_mem;
-    cp_desc_t   *q_base_mem;
-    uint64_t    q_base_mem_pa;
-
-    uint32_t    q_size;
-    uint32_t    curr_seq_comp_qid;
-    uint16_t    curr_seq_comp_pd_idx;
-    uint16_t    curr_pd_idx;
-    comp_queue_push_t curr_push_type;
-};
-
 
 // Max block size supported by hardware engine
 constexpr uint32_t kCompEngineMaxSize = 65536;
@@ -205,11 +146,11 @@ constexpr uint32_t kCompAppHashBlkSize = 4096;
 constexpr uint32_t kCompSeqIntrData = 0x11223344;
 constexpr uint32_t kCompHashIntrData = 0xaabbccdd;
 
-extern comp_queue_t *cp_queue;
-extern comp_queue_t *dc_queue;
+extern acc_ring_t *cp_ring;
+extern acc_ring_t *dc_ring;
 
-extern comp_queue_t *cp_hotq;
-extern comp_queue_t *dc_hotq;
+extern acc_ring_t *cp_hot_ring;
+extern acc_ring_t *dc_hot_ring;
 
 extern dp_mem_t *comp_pad_buf;
 

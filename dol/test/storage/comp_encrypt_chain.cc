@@ -33,8 +33,8 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     caller_xts_status_vec(nullptr),
     caller_xts_opaque_vec(nullptr),
     caller_xts_opaque_data(0),
-    comp_queue(nullptr),
-    push_type(COMP_QUEUE_PUSH_INVALID),
+    comp_ring(nullptr),
+    push_type(ACC_RING_PUSH_INVALID),
     seq_comp_qid(0),
     actual_enc_blks(-1),
     num_enc_blks(0),
@@ -185,7 +185,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
         return -1;
     }
 
-    comp_queue = params.comp_queue_;
+    comp_ring = params.comp_ring_;
     success = false;
     compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf,
                      comp_status_buf1, comp_buf, app_blk_size);
@@ -249,15 +249,19 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     xts_desc_vec->line_set(0);
     chain_params.chain_ent.next_doorbell_en = 1;
     chain_params.chain_ent.next_db_action_barco_push = 1;
-    chain_params.chain_ent.push_entry.barco_ring_addr = xts_ctx.xts_ring_base_addr;
-    chain_params.chain_ent.push_entry.barco_pndx_addr = xts_ctx.xts_ring_pi_addr;
-    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = xts_ctx.xts_ring_pi_shadow_addr->pa();
+    chain_params.chain_ent.push_entry.barco_ring_addr = 
+                           xts_ctx.acc_ring->ring_base_mem_pa_get();
+    chain_params.chain_ent.push_entry.barco_pndx_addr = 
+                           xts_ctx.acc_ring->cfg_ring_pd_idx_get();
+    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = 
+                           xts_ctx.acc_ring->shadow_pd_idx_pa_get();
     chain_params.chain_ent.push_entry.barco_desc_addr = xts_desc_vec->pa();
     chain_params.chain_ent.push_entry.barco_desc_size =
-                           (uint8_t)log2(xts_desc_vec->line_size_get());
+                           (uint8_t)log2(xts_ctx.acc_ring->ring_desc_size_get());
     chain_params.chain_ent.push_entry.barco_pndx_size =
-                           (uint8_t)log2(xts::kXtsPISize);
-    chain_params.chain_ent.push_entry.barco_ring_size = (uint8_t)log2(kXtsQueueSize);
+                           (uint8_t)log2(xts_ctx.acc_ring->ring_pi_size_get());
+    chain_params.chain_ent.push_entry.barco_ring_size = 
+                           (uint8_t)log2(xts_ctx.acc_ring->ring_size_get());
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
     if (comp_status_buf1 != comp_status_buf2) {
         comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
@@ -293,7 +297,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 
     push_type = params.push_type_;
     seq_comp_qid = params.seq_comp_qid_;
-    comp_queue->push(cp_desc, params.push_type_, seq_comp_qid);
+    comp_ring->push((const void *)&cp_desc, params.push_type_, seq_comp_qid);
     return 0;
 }
 
@@ -304,8 +308,8 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 void
 comp_encrypt_chain_t::post_push(void)
 {
-    comp_queue->reentrant_tuple_set(push_type, seq_comp_qid);
-    comp_queue->post_push();
+    comp_ring->reentrant_tuple_set(push_type, seq_comp_qid);
+    comp_ring->post_push();
 }
 
 
@@ -316,8 +320,8 @@ void
 comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
                                     acc_chain_params_t& chain_params)
 {
-    xts::xts_cmd_t cmd;
-    xts::xts_desc_t *xts_desc_addr;
+    xts::xts_cmd_t  cmd;
+    xts::xts_desc_t *xts_desc;
 
     // Use caller's XTS opaque info and status, if any
     if (caller_xts_opaque_vec) {
@@ -334,20 +338,15 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
             caller_xts_status_vec->fragment_find(0, caller_xts_status_vec->line_size_get());
         xts_ctx.caller_status_en = true;
     }
-    xts_ctx.copy_desc = false;
-    xts_ctx.ring_db = false;
 
     // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
     xts_ctx.op = xts::AES_ENCR_ONLY;
-    xts_ctx.use_seq = false;
+    xts_ctx.push_type = ACC_RING_PUSH_INVALID;
     if (chain_params.seq_next_q) {
-        xts_ctx.use_seq = true;
+        xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
         xts_ctx.seq_xts_q = chain_params.seq_next_q;
     }
-    xts_ctx.copy_desc = false;
-    xts_ctx.ring_db = false;
-
 
     // Set up XTS encrypt descriptor
     xts_src_aol_vec->line_set(block_no);
@@ -355,12 +354,13 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
     xts_desc_vec->line_set(block_no);
 
     xts_ctx.cmd_eval_seq_xts(cmd);
-    xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_vec);
-    xts_desc_addr->in_aol = xts_src_aol_vec->pa();
-    xts_desc_addr->out_aol = xts_dst_aol_vec->pa();
-    xts_desc_addr->cmd = cmd;
+    xts_desc = (xts::xts_desc_t *)xts_desc_vec->read();
+    xts_ctx.desc_prefill_seq_xts(xts_desc);
+    xts_desc->in_aol = xts_src_aol_vec->pa();
+    xts_desc->out_aol = xts_dst_aol_vec->pa();
+    xts_desc->cmd = cmd;
     xts_desc_vec->write_thru();
-    xts_ctx.desc_write_seq_xts(xts_desc_vec);
+    xts_ctx.desc_write_seq_xts(xts_desc);
 }
 
 

@@ -137,7 +137,7 @@ public:
 
     decrypt_decomp_chain_push_params_t() :
         comp_encrypt_chain_(nullptr),
-        decomp_queue_(nullptr),
+        decomp_ring_(nullptr),
         seq_xts_qid_(0),
         seq_xts_status_qid_(0),
         seq_comp_status_qid_(0)
@@ -145,7 +145,7 @@ public:
     }
 
     comp_encrypt_chain_t    *comp_encrypt_chain_;
-    comp_queue_t            *decomp_queue_;
+    acc_ring_t              *decomp_ring_;
     uint32_t                seq_xts_qid_;
     uint32_t                seq_xts_status_qid_;
     uint32_t                seq_comp_status_qid_;
@@ -157,9 +157,9 @@ public:
         return *this;
     }
     decrypt_decomp_chain_push_params_t&
-    decomp_queue(comp_queue_t *decomp_queue)
+    decomp_ring(acc_ring_t *decomp_ring)
     {
-        decomp_queue_ = decomp_queue;
+        decomp_ring_ = decomp_ring;
         return *this;
     }
     decrypt_decomp_chain_push_params_t&
@@ -245,7 +245,7 @@ private:
     // other context info
     cp_desc_t               cp_desc;
     XtsCtx                  xts_ctx;
-    comp_queue_t            *decomp_queue;
+    acc_ring_t              *decomp_ring;
 
     int                     actual_enc_blks;
     uint32_t                max_enc_blks;
