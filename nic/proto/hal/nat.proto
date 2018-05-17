@@ -44,7 +44,7 @@ enum NatAction {
 // expected to advertise the routes for the same and respond to ARP requests
 message NatPoolSpec {
   types.ObjectMeta         meta          = 1;    // object meta
-  kh.NatPoolKeyHandle      key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // identifier of NAT pool
+  kh.NatPoolKeyHandle      key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];    // identifier of NAT pool
   repeated types.Address   address       = 3 [(gogoproto.moretags) = "venice:mandatory"];  // NAT address range(s)
   types.L4PortRange        port_range    = 4;    // optional port range (for NAPT)
 }
@@ -73,7 +73,7 @@ message NatPoolResponseMsg {
 // NatPoolDeleteRequest is used to delete a NAT pool
 message NatPoolDeleteRequest {
   types.ObjectMeta       meta          = 1;    // object meta
-  kh.NatPoolKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // identifier of NAT pool
+  kh.NatPoolKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];    // identifier of NAT pool
 }
 
 // NatPoolDeleteRequestMsg is used to delete batch of NAT pools
@@ -94,7 +94,7 @@ message NatPoolDeleteResponseMsg {
 // NatPoolGetRequest is used to get all the information about a pool
 message NatPoolGetRequest {
   types.ObjectMeta       meta               = 1;    // object meta
-  kh.NatPoolKeyHandle    key_or_handle      = 2  [(gogoproto.moretags) = "venice:\"key\""];    // key or handle (optional)
+  kh.NatPoolKeyHandle    key_or_handle      = 2  [(gogoproto.moretags) = "venice:key"];    // key or handle (optional)
 }
 
 // NatPoolGetRequestMsg is batched GET requests for NAT pools
@@ -120,10 +120,10 @@ message NatPoolGetResponseMsg {
 }
 
 message NatRuleAction {
-  NatAction              src_nat_action  = 1;    // action related to the rule
-  NatAction              dst_nat_action  = 2;    // action related to the rule
-  kh.NatPoolKeyHandle    src_nat_pool    = 3;    // src NAT pool
-  kh.NatPoolKeyHandle    dst_nat_pool    = 4;    // dst NAT pool
+  NatAction              src_nat_action  = 1 [(gogoproto.moretags) = "venice:immutable"];    // src NAT action related to the rule
+  NatAction              dst_nat_action  = 2 [(gogoproto.moretags) = "venice:immutable"];    // dst NAT action related to the rule
+  kh.NatPoolKeyHandle    src_nat_pool    = 3 [(gogoproto.moretags) = "venice:ref,venice:constraints={nat.NatRuleAction.src_nat_action!=nat_pb2.NAT_TYPE_NONE}"];  // src NAT pool
+  kh.NatPoolKeyHandle    dst_nat_pool    = 4 [(gogoproto.moretags) = "venice:ref,venice:constraints={nat.NatRuleAction.dst_nat_action!=nat_pb2.NAT_TYPE_NONE}"];    // dst NAT pool
 }
 
 // NatRuleSpec is the user intent for the NAT rule
@@ -136,8 +136,8 @@ message NatRuleSpec {
 // NatPolicySpec captures the NAT policy which is a group of NAT rules
 message NatPolicySpec {
   types.ObjectMeta         meta          = 1; // object meta
-  kh.NatPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];  // unique key
-  repeated NatRuleSpec     rules         = 3; // list of NAT rules
+  kh.NatPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];  // unique key
+  repeated NatRuleSpec     rules         = 3 [(gogoproto.moretags) = "venice:ref"]; // list of NAT rules
 }
 
 // NatPolicyRequestMsg is the batched NAT policy
@@ -164,7 +164,7 @@ message NatPolicyResponseMsg {
 // NatPolicyDeleteRequest is used to delete a NAT policy
 message NatPolicyDeleteRequest {
   types.ObjectMeta         meta          = 1;    // object meta
-  kh.NatPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NatPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // NatPolicyDeleteRequestMsg is batched NatPolicyDeleteRequest
@@ -185,7 +185,7 @@ message NatPolicyDeleteResponseMsg {
 // NatPolicyGetRequest is used to get information about a NAT policy
 message NatPolicyGetRequest {
   types.ObjectMeta         meta          = 1; // object meta
-  kh.NatPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];  // unique key
+  kh.NatPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];  // unique key
 }
 
 // NatPolicyGetRequestMsg is batched GET request
@@ -221,7 +221,7 @@ message NatPolicyGetResponseMsg {
 // NatMappingSpec is the user intent for the NAT mapping
 message NatMappingSpec {
   types.ObjectMeta          meta            = 1;    // common object meta
-  kh.NatMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  kh.NatMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:key"];    // key or handle of this object
   kh.NatPoolKeyHandle       nat_pool        = 3 [(gogoproto.moretags) = "venice:mandatory, venice:ref"];  // NAT pool to allocate mapping from
   bool                      bidir           = 4;    // true if reverse mapping should be added as well
 }
@@ -251,7 +251,7 @@ message NatMappingResponseMsg {
 // NatMappingDeleteRequest is used to delete a NAT mapping
 message NatMappingDeleteRequest {
   types.ObjectMeta          meta          = 1;    // object meta
-  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];  // identifier of NAT pool
+  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];  // identifier of NAT pool
 }
 
 // NatMappingDeleteRequestMsg is used to delete batch of NAT mappings
@@ -272,7 +272,7 @@ message NatMappingDeleteResponseMsg {
 // NatMappingGetRequest is used to get information about a NAT mapping
 message NatMappingGetRequest {
   types.ObjectMeta          meta          = 1;    // object meta
-  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // NatMappingGetRequestMsg is batched GET request for NAT mappings

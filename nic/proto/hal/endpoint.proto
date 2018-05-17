@@ -46,7 +46,7 @@ message EndpointAttributes {
 // EndpointSpec is used to add or update an endpoint
 message EndpointSpec {
     types.ObjectMeta        meta              = 1;    // common object meta
-    kh.EndpointKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
+    kh.EndpointKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"];
     kh.VrfKeyHandle         vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
     EndpointAttributes      endpoint_attrs    = 4;    // endpoint's attributes
 }
@@ -102,7 +102,7 @@ message EndpointResponseMsg {
 message EndpointUpdateRequest {
   types.ObjectMeta     meta           = 1;    // object meta
   // key_or_handle is used to identify an endpoint uniquely
-  kh.EndpointKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.EndpointKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
   kh.VrfKeyHandle      vrf_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
   EndpointAttributes   endpoint_attrs = 4;    // endpoint's attributes
 }
@@ -132,7 +132,7 @@ message EndpointDeleteRequest {
   types.ObjectMeta       meta          = 1;    // object meta
   oneof delete_by {
   // key_or_handle is used to identify the endpoint being deleted
-    kh.EndpointKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+    kh.EndpointKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
     EndpointFilter       filter        = 3;    // delete by interface and/or L2 segment etc.
   }
   kh.VrfKeyHandle vrf_key_handle       = 4 [(gogoproto.moretags) = "venice:ref"];
@@ -156,7 +156,7 @@ message EndpointDeleteResponseMsg {
 message EndpointGetRequest {
   types.ObjectMeta     meta           = 1;    // object meta
   // key_or_handle is the endpoint's identifier for retrieval
-  kh.EndpointKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.EndpointKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
   kh.VrfKeyHandle      vrf_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 

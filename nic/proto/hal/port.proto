@@ -59,7 +59,7 @@ message PortSpec {
   types.ObjectMeta  meta             = 1;    // common object meta
 
   // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
 
   PortType          port_type        = 3 [(gogoproto.moretags) = "venice:immutable"];    // port type
   PortAdminState    admin_state      = 4;    // admin status of the port
@@ -101,7 +101,7 @@ message PortDeleteRequest {
   types.ObjectMeta  meta          = 1;    // object meta
 
   // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 //------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ message PortGetRequest {
   types.ObjectMeta  meta          = 1;    // object meta
 
   // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 //------------------------------------------------------------------------------

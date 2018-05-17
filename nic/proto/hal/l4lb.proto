@@ -100,7 +100,7 @@ message L4LbServiceKeyHandle {
 message L4LbServiceSpec {
   types.ObjectMeta     meta               = 1;    // object meta
   // key_or_handle is L4 LB service's unique identifier
-  L4LbServiceKeyHandle key_or_handle      = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  L4LbServiceKeyHandle key_or_handle      = 2 [(gogoproto.moretags) = "venice:key"];
   bool                 proxy_arp_enable   = 3;    // proxy ARP for VIP or not
   fixed64              service_mac        = 4;    // service MAC to use in case proxy ARP is enabled
   SessionAffinity      session_affinity   = 5;    // session affinity, if any
@@ -137,7 +137,7 @@ message L4LbServiceResponseMsg {
 message L4LbServiceDeleteRequest {
   types.ObjectMeta        meta             = 1;    // object meta
   // key_or_handle is L4 LB service's unique identifier
-  L4LbServiceKeyHandle    key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  L4LbServiceKeyHandle    key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // L4LbServiceDeleteRequestMsg is used to delete a batch of services
@@ -181,7 +181,7 @@ message L4LbBackendKeyHandle {
 message L4LbBackendSpec {
   types.ObjectMeta        meta                   = 1;    // object meta
   // backend_key_or_handle is the backend being created/updated
-  L4LbBackendKeyHandle    backend_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  L4LbBackendKeyHandle    backend_key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
   L4LbServiceKeyHandle    service_key_or_handle  = 3;    // service this backend is part of
 }
 
@@ -211,7 +211,7 @@ message L4LbBackendResponseMsg {
 message L4LbBackendDeleteRequest {
   types.ObjectMeta        meta             = 1;    // object meta
   // key_or_handle is the backend's key or handle
-  L4LbBackendKeyHandle    key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  L4LbBackendKeyHandle    key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // L4LbBackendDeleteRequestMsg is used to delete a batch of backends
@@ -236,7 +236,7 @@ message L4LbBackendStats {
 message L4LbBackendGetRequest {
   types.ObjectMeta        meta          = 1;    // object meta
   // key_or_handle is the backend's key or handle
-  L4LbBackendKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  L4LbBackendKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // L4LbBackendGetRequestMsg is batched GET request for backends
@@ -260,7 +260,7 @@ message L4LbBackendGetResponseMsg {
 message L4LbServiceGetRequest {
   types.ObjectMeta        meta          = 1;    // object meta
   // key_or_handle is L4 LB service's unique identifier
-  L4LbServiceKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  L4LbServiceKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // L4LbServiceGetRequestMsg is batched GET request for services

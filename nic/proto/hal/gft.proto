@@ -79,7 +79,7 @@ message GftHeaderGroupExactMatchProfile {
 
 message GftExactMatchProfileSpec {
   types.ObjectMeta                            meta                 = 1;    // common object meta
-  kh.GftExactMatchProfileKeyHandle            key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.GftExactMatchProfileKeyHandle            key_or_handle        = 2 [(gogoproto.moretags) = "venice:key"];
   bool                                        rdma_flow            = 3;
   GftTableType                                table_type           = 4;
   repeated GftHeaderGroupExactMatchProfile    exact_match_profiles = 5;
@@ -144,7 +144,7 @@ message GftHeaderGroupTranspositionProfile {
 
 message GftHeaderTranspositionProfileSpec {
   types.ObjectMeta                               meta                                          = 1;    // common object meta
-  kh.GftHeaderTranspositionProfileKeyHandle      key_or_handle                                 = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.GftHeaderTranspositionProfileKeyHandle      key_or_handle                                 = 2 [(gogoproto.moretags) = "venice:key"];
   bool                                           redirect_to_vport_ingress_queue               = 3;
   bool                                           redirect_to_vport_egress_queue                = 4;
   bool                                           redirect_to_vport_ingress_queue_if_ttl_is_one = 5;
@@ -246,7 +246,7 @@ message GftHeaderGroupTransposition {
 message GftExactMatchFlowEntrySpec {
   types.ObjectMeta                             meta                                           = 1;    // common object meta
   GftTableType                                 table_type                                     = 2;
-  kh.GftExactMatchFlowEntryKeyHandle           key_or_handle                                  = 3 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.GftExactMatchFlowEntryKeyHandle           key_or_handle                                  = 3 [(gogoproto.moretags) = "venice:key"];
   kh.GftExactMatchProfileKeyHandle             exact_match_profile                            = 4 [(gogoproto.moretags) = "venice:ref"];
   kh.GftHeaderTranspositionProfileKeyHandle    transposition_profile                          = 5 [(gogoproto.moretags) = "venice:ref"];
   bool                                         add_in_activated_state                         = 6;

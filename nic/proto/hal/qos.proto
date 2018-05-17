@@ -94,7 +94,7 @@ message QosMarking {
 message QosClassSpec {
   types.ObjectMeta     meta             = 1;    // object meta
   // key_or_handle is QosClass's key or handle
-  kh.QosClassKeyHandle key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.QosClassKeyHandle key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
   uint32               mtu              = 3 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9216}"];    // MTU
   QosPFC               pfc              = 4;    // PFC configuration
   QosSched             sched            = 5 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
@@ -163,7 +163,7 @@ message QosClassResponseMsg {
 message QosClassDeleteRequest {
   types.ObjectMeta     meta          = 1;    // object meta
   // key_or_handle is to identify QosClass being deleted
-  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // QosClassDeleteRequestMsg is used to delete a batch of QosClasss
@@ -208,7 +208,7 @@ message QosClassStats {
 message QosClassGetRequest {
   types.ObjectMeta     meta          = 1;    // object meta
   // key_or_handle is to identify QosClass being deleted
-  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // Batched request message to get the stats about a batch of QosClasss
@@ -233,7 +233,7 @@ message QosClassGetResponseMsg {
 message CoppSpec {
   types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is Copp's unique identifier
-  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
   PolicerSpec      policer       = 3 [(gogoproto.moretags) = "venice:mandatory"];    // Policer specification
 }
 
@@ -266,7 +266,7 @@ message CoppStats {
 message CoppGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
                                          // key_or_handle is Copp's unique identifier
-  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 message CoppGetRequestMsg {

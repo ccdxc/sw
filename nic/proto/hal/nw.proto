@@ -37,7 +37,7 @@ service Network {
 message NetworkSpec {
   types.ObjectMeta                   meta              = 1;    // common object meta
   // key_or_handle is the network being create or updated
-  kh.NetworkKeyHandle                key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NetworkKeyHandle                key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"];
   uint64                             rmac              = 4;    // router mac for this network
   types.IPAddress                    gateway_ip        = 5;
   repeated kh.SecurityGroupKeyHandle sg_key_handle     = 6 [(gogoproto.moretags) = "venice:ref"];    // list of security group handles
@@ -69,7 +69,7 @@ message NetworkResponseMsg {
 message NetworkDeleteRequest {
   types.ObjectMeta       meta           = 1;    // object meta
   // key_or_handle is the network being deleted
-  kh.NetworkKeyHandle    key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NetworkKeyHandle    key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
   kh.VrfKeyHandle        vrf_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
@@ -96,7 +96,7 @@ message NetworkStats {
 message NetworkGetRequest {
   types.ObjectMeta       meta           = 1;    // object meta
   // key_or_handle is the key or handle of the network object being retrieved
-  kh.NetworkKeyHandle    key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NetworkKeyHandle    key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
   kh.VrfKeyHandle        vrf_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
@@ -121,7 +121,7 @@ message NetworkGetResponseMsg {
 // RouteSpec is used to add or modify a route object
 message RouteSpec {
   types.ObjectMeta       meta             = 1; // common object meta
-  kh.RouteKeyHandle      key_or_handle    = 2  [(gogoproto.moretags) = "venice:\"key\""];
+  kh.RouteKeyHandle      key_or_handle    = 2  [(gogoproto.moretags) = "venice:key"];
   kh.NexthopKeyHandle    nh_key_or_handle = 3  [(gogoproto.moretags) = "venice:ref"];
 }
 
@@ -150,7 +150,7 @@ message RouteResponseMsg {
 // RouteDeleteRequest is used to delete a route object
 message RouteDeleteRequest {
   types.ObjectMeta     meta          = 1;    // object meta
-  kh.RouteKeyHandle    key_or_handle = 2  [(gogoproto.moretags) = "venice:\"key\""];
+  kh.RouteKeyHandle    key_or_handle = 2  [(gogoproto.moretags) = "venice:key"];
 }
 
 // RouteDeleteRequestMsg is used to delete a batch of route objects
@@ -175,7 +175,7 @@ message RouteStats {
 // RouteGetRequest is used to get information about a route
 message RouteGetRequest {
   types.ObjectMeta     meta          = 1;    // object meta
-  kh.RouteKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.RouteKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // RouteGetRequestMsg is batched GET request for routes
@@ -199,7 +199,7 @@ message RouteGetResponseMsg {
 // NexthopSpec is used to add or modify a nexthop object
 message NexthopSpec {
   types.ObjectMeta             meta             = 1; // common object meta
-  kh.NexthopKeyHandle          key_or_handle    = 2  [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NexthopKeyHandle          key_or_handle    = 2  [(gogoproto.moretags) = "venice:key"];
   oneof if_or_ep {
       kh.InterfaceKeyHandle    if_key_or_handle = 3  [(gogoproto.moretags) = "venice:ref"];
       kh.EndpointKeyHandle     ep_key_or_handle = 4  [(gogoproto.moretags) = "venice:ref"];
@@ -231,7 +231,7 @@ message NexthopResponseMsg {
 // NexthopDeleteRequest is used to delete a nexthop object
 message NexthopDeleteRequest {
   types.ObjectMeta       meta          = 1;    // object meta
-  kh.NexthopKeyHandle    key_or_handle = 2  [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NexthopKeyHandle    key_or_handle = 2  [(gogoproto.moretags) = "venice:key"];
 }
 
 // NexthopDeleteRequestMsg is used to delete a batch of nexthop objects
@@ -256,7 +256,7 @@ message NexthopStats {
 // NexthopGetRequest is used to get information about a nexthop
 message NexthopGetRequest {
   types.ObjectMeta       meta          = 1;    // object meta
-  kh.NexthopKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NexthopKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // NexthopGetRequestMsg is batched GET request for nexthops

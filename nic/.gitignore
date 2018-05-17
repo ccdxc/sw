@@ -56,3 +56,5 @@ debug_cli/swig/pyfiles/p4pd.py
 nic.tar
 nic.tgz
 naples.tgz
+debug_cli/cli/cli.py
+nic/debug_cli/cli/cli_wrap.cc

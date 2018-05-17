@@ -103,7 +103,7 @@ enum NormalizationAction {
 //------------------------------------------------------------------------------
 message SecurityProfileSpec {
   types.ObjectMeta             meta                               = 1;    // common object meta
-  kh.SecurityProfileKeyHandle  key_or_handle                      = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityProfileKeyHandle  key_or_handle                      = 2 [(gogoproto.moretags) = "venice:key"];
 
   uint32                       session_idle_timeout               = 3 [(gogoproto.moretags) = "range:30-172800, venice:default=90"];
   uint32                       tcp_cnxn_setup_timeout             = 4 [(gogoproto.moretags) = "range:1-60, venice:default=30"];
@@ -263,7 +263,7 @@ message SecurityProfileResponseMsg {
 message SecurityProfileDeleteRequest {
   types.ObjectMeta            meta          = 1;    // object meta
   // key_or_handle is to identify SecurityProfile being deleted
-  kh.SecurityProfileKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityProfileKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityProfileDeleteRequestMsg is used to delete a batch of SecurityProfile profiles
@@ -286,7 +286,7 @@ message SecurityProfileDeleteResponseMsg {
 message SecurityProfileGetRequest {
   types.ObjectMeta             meta          = 1;    // object meta
   // key_or_handle is the security profile's identifier for retrieval
-  kh.SecurityProfileKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityProfileKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityProfileGetRequestMsg is batched GET request for SecurityProfile profiles
@@ -361,7 +361,7 @@ message SGPolicy {
 message SecurityGroupPolicySpec {
   types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
   SGPolicy                        policy_rules   = 3;    // ingress policy
 }
 
@@ -390,7 +390,7 @@ message SecurityGroupPolicyResponseMsg {
 message SecurityGroupPolicyDeleteRequest {
   types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupDeleteRequestMsg is used to delete a batch of security group policies.
@@ -411,7 +411,7 @@ message SecurityGroupPolicyDeleteResponseMsg {
 message SecurityGroupPolicyGetRequest {
   types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupGetRequestMsg is batched GET request for security group policies
@@ -441,7 +441,7 @@ message SecurityGroupPolicyGetResponseMsg {
 message SecurityGroupSpec {
   types.ObjectMeta          meta          = 1; // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupRequestMsg is batched add or modify security group policy request
@@ -469,7 +469,7 @@ message SecurityGroupResponseMsg {
 message SecurityGroupDeleteRequest {
   types.ObjectMeta          meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupDeleteRequestMsg is used to delete a batch of security groups
@@ -487,7 +487,7 @@ message SecurityGroupDeleteResponseMsg {
 message SecurityGroupGetRequest {
   types.ObjectMeta          meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupGetRequestMsg is batched GET request for security groups
@@ -593,7 +593,7 @@ message SecurityRule {
 // SecurityPolicySpec that contains set of SecurityRules
 message SecurityPolicySpec {
   types.ObjectMeta              meta                   = 1;
-  kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2[(gogoproto.moretags) = "venice:\"key\""];      // Policy Name that identifies the security Policy
+  kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2[(gogoproto.moretags) = "venice:key"];      // Policy Name that identifies the security Policy
   repeated SecurityRule         rule                   = 3;      // List of security rules
 }
 
@@ -619,7 +619,7 @@ message SecurityPolicyResponseMsg {
 // SecurityPolicyDeleteRequest is used to delete a security rule
 message SecurityPolicyDeleteRequest {
   types.ObjectMeta                meta                  = 1; // object meta
-  kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle
+  kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"]; // policy_handle
 }
 
 // SecurityPolicyDeleteRequestMsg is used to delete a batch of security policy
@@ -640,7 +640,7 @@ message SecurityPolicyDeleteResponseMsg {
 message SecurityPolicyGetRequest {
   types.ObjectMeta              meta          = 1; // object meta
   // key_or_handle is the security policy's unique identifier
-  kh.SecurityPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityPolicyGetRequestMsg is batched GET request for security policy

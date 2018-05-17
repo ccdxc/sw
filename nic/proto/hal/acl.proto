@@ -189,7 +189,7 @@ message AclActionInfo {
 message AclSpec {
   types.ObjectMeta meta          = 1;    // common object meta
   // key_or_handle is ACL's key or handle
-  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
   uint32           priority      = 3 [(gogoproto.moretags) = "venice:immutable"];    // priority of the rule (0 being highest)
                                          // TBD: is this per-vrf priority ? or global ?
   AclSelector      match         = 4;    // match conditions
@@ -220,7 +220,7 @@ message AclResponseMsg {
 message AclDeleteRequest {
   types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is unique identifier of ACL being deleted
-  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // Batched requests to delete acls
@@ -242,7 +242,7 @@ message AclDeleteResponseMsg {
 message AclGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is ACL's identifier for retrieval
-  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 message AclGetRequestMsg {

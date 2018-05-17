@@ -73,7 +73,7 @@ message Key {
 // IPSec security association object
 message IpsecSAEncrypt {
   types.ObjectMeta               meta                      = 1;    // common object meta
-  kh.IpsecSAEncryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  kh.IpsecSAEncryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:key"];    // key or handle of this object
   IpsecProtocol                  protocol                  = 3;    // ESP or AH
   AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
   Key                            authentication_key        = 5;   // authenticaion key
@@ -90,7 +90,7 @@ message IpsecSAEncrypt {
 // IPSec security association object
 message IpsecSADecrypt {
   types.ObjectMeta               meta                      = 1;    // common object meta
-  kh.IpsecSADecryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  kh.IpsecSADecryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:key"];    // key or handle of this object
   IpsecProtocol                  protocol                  = 3;    // ESP or AH
   AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
   Key                            authentication_key        = 5;   // authenticaion key
@@ -108,7 +108,7 @@ message IpsecSADecrypt {
 
 message IPSecSAEncryptGetSpec {
   types.ObjectMeta               meta                      = 1;    // common object meta
-  kh.IpsecSAEncryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  kh.IpsecSAEncryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:key"];    // key or handle of this object
   IpsecProtocol                  protocol                  = 3;    // ESP or AH
   AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
   Key                            authentication_key        = 5;   // authenticaion key
@@ -131,7 +131,7 @@ message IPSecSAEncryptGetSpec {
 
 message IPSecSADecryptGetSpec {
   types.ObjectMeta               meta                      = 1;    // common object meta
-  kh.IpsecSADecryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  kh.IpsecSADecryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:key"];    // key or handle of this object
   IpsecProtocol                  protocol                  = 3;    // ESP or AH
   AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
   Key                            authentication_key        = 5;   // authenticaion key
@@ -180,7 +180,7 @@ message IpsecRuleMatchSpec {
 // IpsecRuleSpec is the user intent for the IPSec rule
 message IpsecRuleSpec {
   types.ObjectMeta               meta                      = 1;    // common object meta
-  kh.IpsecRuleKeyHandle          key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  kh.IpsecRuleKeyHandle          key_or_handle             = 2 [(gogoproto.moretags) = "venice:key"];    // key or handle of this object
   kh.VrfKeyHandle                vrf_key_handle            = 3 [(gogoproto.moretags) = "venice:ref"];
   repeated IpsecRuleMatchSpec    rules                     = 4;
 }
