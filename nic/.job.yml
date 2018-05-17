@@ -74,3 +74,18 @@ image:
 rebase: true
 logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
+
+warmd:
+  target: [ "sh", "-c", "cd /sw/test/suites/e2etcptls && go run e2etcptls.go" ]
+  create:
+    image: build-9
+    count: 1
+    resources:
+      cpus: 4
+      memory: 8
+
+  provision:
+    username: vm
+    password: vm
+    # additional vars to pass to ansible.
+    vars:

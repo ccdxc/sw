@@ -22,6 +22,11 @@ e2e-sanity-build: build-runtime-image
 
 e2e-sanity-hal-bringup:
 	@bash -c '(./tools/start-model.sh &) && ./tools/start-hal.sh'
+
+e2e-sanity-tls-build: build-runtime-image
+	mkdir -p ${SW_DIR}/bazel-cache;
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make pull-assets && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol ; ret=$? ; make sanity_logs ; exit $(ret)'
+
 # run `make gtest` with the dependencies image.
 test: build-runtime-image
 	docker run -it --rm  --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make gtest'

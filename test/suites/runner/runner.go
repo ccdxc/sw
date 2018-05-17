@@ -50,6 +50,12 @@ func runSSH(ip net.IP, command string) error {
 
 // RunSingle runs a make target on a single instance
 func RunSingle(makeTarget string) error {
+	cmd := scriptPath + makeTarget
+	return RunCmd(cmd)
+}
+
+// RunCmd runs a target cmd on a single instance
+func RunCmd(cmd string) error {
 	warmd, err := os.Open(jsonPath)
 	if err != nil {
 		panic(err)
@@ -69,7 +75,6 @@ func RunSingle(makeTarget string) error {
 	}
 
 	server := net.ParseIP(instanceMap[instances[0]].(string))
-	cmd := scriptPath + makeTarget
 	err = runSSH(server, cmd)
 
 	os.Stdout.Sync()
