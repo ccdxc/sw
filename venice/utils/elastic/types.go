@@ -2,6 +2,17 @@
 
 package elastic
 
+const (
+	// Index represents the index request; used in bulk requests
+	Index string = "index"
+
+	// Update represents the update request; used in bulk requests
+	Update string = "update"
+
+	// Delete represents the delete request; used in bulk requests
+	Delete string = "delete"
+)
+
 // BulkRequest represents each request in the bulk operation
 type BulkRequest struct {
 	RequestType string      // type of the request. e.g. index, update, delete, etc.

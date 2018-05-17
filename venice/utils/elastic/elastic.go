@@ -397,12 +397,16 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 			// index the documents in the same order as insertion
 			for _, obj := range objs {
 				switch obj.RequestType {
-				case "index":
+				case Index:
 					req := es.NewBulkIndexRequest().Index(obj.Index).Type(obj.IndexType).Id(obj.ID).Doc(obj.Obj)
 					bulkReq.Add(req)
+				case Update: // update the doc identified by obj.ID
+					req := es.NewBulkUpdateRequest().Index(obj.Index).Type(obj.IndexType).Id(obj.ID).Doc(obj.Obj)
+					bulkReq.Add(req)
+				case Delete: // delete the doc identified by obj.ID
+					req := es.NewBulkDeleteRequest().Index(obj.Index).Type(obj.IndexType).Id(obj.ID)
+					bulkReq.Add(req)
 				}
-				// TODO: handle other request types;
-				// bulk operation can carry heterogenous requests (index, update, delete, etc.)
 			}
 
 			// at this point, total actions on the bulk request should be len(objs)
@@ -574,11 +578,6 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 				request = request.Size(int(size))
 			} else {
 				request = request.Size(int(defaultMaxResults))
-			}
-
-			// Add doc type if valid
-			if len(iType) != 0 {
-				request = request.Type(iType)
 			}
 
 			// Add sort option if valid

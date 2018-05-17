@@ -350,12 +350,11 @@ func (idr *Indexer) startWriter(id int) {
 			var reqType string
 			switch req.evType {
 			case kvstore.Created:
-				reqType = "index"
+				reqType = elastic.Index
 			case kvstore.Updated:
-				// TODO: Change this to update once BULK api supports it
-				reqType = "index"
+				reqType = elastic.Update
 			case kvstore.Deleted:
-				reqType = "delete"
+				reqType = elastic.Delete
 			}
 
 			log.Debugf("Writer: %d processing object: <%s %s> count: %d",

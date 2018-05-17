@@ -134,8 +134,8 @@ func (e *elasticsearchTestSuite) TestElasticsearchRestart(c *C) {
 
 				// bulk index documents
 				if _, err := esClient.Bulk(ctx, []*elastic.BulkRequest{
-					&elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy1"},
-					&elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy2"},
+					&elastic.BulkRequest{RequestType: elastic.Index, Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy1"},
+					&elastic.BulkRequest{RequestType: elastic.Index, Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy2"},
 				}); err != nil && !elastic.IsConnRefused(err) {
 					errs <- fmt.Errorf("failed to perform bulk operation, err: %v", err.Error())
 					return

@@ -255,7 +255,7 @@ func (idr *Indexer) Bulk(index, docType string, IDs []string, objects []interfac
 
 		requests = append(requests,
 			&elastic.BulkRequest{
-				RequestType: "index",
+				RequestType: elastic.Index,
 				Index:       index,
 				IndexType:   docType,
 				ID:          IDs[i],

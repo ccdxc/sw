@@ -135,12 +135,148 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 	// search events
 	searchEvents(ctx, esClient, c)
 
-	// TODO: update events
+	// perform bulk request with update and delete operations
+	updateEventsThroughBulk(ctx, esClient, c)
 
 	// delete index template
 	if err := esClient.DeleteIndexTemplate(ctx, eventsTemplateName); err != nil {
 		log.Fatalf("failed to delete events template: %v", err)
 	}
+}
+
+// updateEventsThroughBulk tests the bulk update/delete operation
+func updateEventsThroughBulk(ctx context.Context, client elastic.ESClient, c *C) {
+	log.Infof("updating docs on the index: %v", indexName)
+
+	totalEvents := 10
+	requests := make([]*elastic.BulkRequest, totalEvents)
+
+	// add requests for the bulk operation
+	for i := 0; i < totalEvents; i++ {
+		event.ObjectMeta.UUID = uuid.NewV4().String()
+		event.ObjectMeta.Name = event.ObjectMeta.UUID
+
+		// change the namespace from `default` to infraNamespace
+		event.ObjectMeta.Namespace = infraNamespace
+
+		event.ObjectMeta.CreationTime.Timestamp = *creationTime
+		ts, _ := types.TimestampProto(time.Now())
+		event.ObjectMeta.ModTime.Timestamp = *ts
+
+		event.EventAttributes.Message = "test - index operation"
+
+		requests[i] = &elastic.BulkRequest{
+			RequestType: elastic.Index,
+			Index:       indexName,
+			IndexType:   indexType,
+			ID:          event.ObjectMeta.UUID,
+			Obj:         event,
+		}
+	}
+
+	// perform bulk index
+	bulkResp, err := client.Bulk(ctx, requests)
+	if err != nil {
+		log.Fatalf("failed to perform bulk indexing, err: %v", err)
+	}
+
+	// check the number of succeeded operation
+	AssertEquals(c, totalEvents, len(bulkResp.Succeeded()),
+		fmt.Sprintf("requests succeeded - expected: %v, got: %v", totalEvents, len(bulkResp.Succeeded())))
+
+	// make sure there are 0 failed operation
+	AssertEquals(c, 0, len(bulkResp.Failed()),
+		fmt.Sprintf("requests failed - expected: %v, got: %v", 0, len(bulkResp.Failed())))
+
+	// search the indexed documents
+	AssertEventually(c,
+		func() (bool, interface{}) {
+			var result *es.SearchResult
+			query := es.NewMatchQuery("message", "test - index operation").Operator("and")
+			result, err = client.Search(ctx, indexName, indexType, query, nil, from, maxResults, sortBy)
+			if err != nil {
+				log.Fatalf("failed to search events for query: %v, err:%v", query, err)
+				return false, nil
+			}
+
+			if int(result.TotalHits()) == totalEvents {
+				return true, nil
+			}
+
+			return false, nil
+		}, "failed to get search result", "20ms", "2s")
+
+	// update events half events
+	for i := 0; i < len(requests); i += 2 {
+		obj := requests[i].Obj.(monitoring.Event)
+		obj.EventAttributes.Message = "test - update operation"
+		requests[i].Obj = obj
+		requests[i].RequestType = elastic.Update
+	}
+
+	// delete the remaining events
+	for i := 1; i < len(requests); i += 2 {
+		requests[i].RequestType = elastic.Delete
+	}
+
+	// perform bulk update and delete
+	bulkResp, err = client.Bulk(ctx, requests)
+	if err != nil {
+		log.Fatalf("failed to perform bulk update, err: %v", err)
+	}
+
+	// check the number of succeeded operation
+	AssertEquals(c, totalEvents, len(bulkResp.Succeeded()),
+		fmt.Sprintf("requests succeeded - expected: %v, got: %v", totalEvents, len(bulkResp.Succeeded())))
+
+	// make sure there are 0 failed operation
+	AssertEquals(c, 0, len(bulkResp.Failed()),
+		fmt.Sprintf("requests failed - expected: %v, got: %v", 0, len(bulkResp.Failed())))
+
+	// make sure there are 5 updated operation
+	AssertEquals(c, totalEvents/2, len(bulkResp.Updated()),
+		fmt.Sprintf("requests failed - expected: %v, got: %v", totalEvents/2, len(bulkResp.Updated())))
+
+	// make sure there are 5 deleted operation
+	AssertEquals(c, totalEvents/2, len(bulkResp.Deleted()),
+		fmt.Sprintf("requests failed - expected: %v, got: %v", totalEvents/2, len(bulkResp.Deleted())))
+
+	// ensure the updates have taken effect
+	// there should be no event with "test - index operation" message
+	AssertEventually(c,
+		func() (bool, interface{}) {
+			var result *es.SearchResult
+			query := es.NewMatchQuery("message", "test - index operation").Operator("and")
+			result, err = client.Search(ctx, indexName, indexType, query, nil, from, maxResults, sortBy)
+			if err != nil {
+				log.Fatalf("failed to search events for query: %v, err:%v", query, err)
+				return false, nil
+			}
+
+			if int(result.TotalHits()) == 0 {
+				return true, nil
+			}
+
+			return false, fmt.Sprintf("expected: 0, got: %v", result.TotalHits())
+		}, "failed to get search result", "20ms", "2s")
+
+	// query for the updated message
+	AssertEventually(c,
+		func() (bool, interface{}) {
+			var result *es.SearchResult
+			query := es.NewMatchQuery("message", "test - update operation").Operator("and")
+			result, err = client.Search(ctx, indexName, indexType, query, nil, from, maxResults, sortBy)
+			if err != nil {
+				log.Fatalf("failed to search events for query: %v, err:%v", query, err)
+				return false, nil
+			}
+
+			if int(result.TotalHits()) == totalEvents/2 {
+				return true, nil
+			}
+
+			return false, fmt.Sprintf("expected: %v, got: %v", totalEvents/2, result.TotalHits())
+		}, "failed to get search result", "20ms", "2s")
 }
 
 // searchEvents runs a couple of queries on the elastic cluster
@@ -273,7 +409,7 @@ func indexEventsBulk(ctx context.Context, client elastic.ESClient, c *C) {
 		event.ObjectMeta.ModTime.Timestamp = *ts
 
 		requests[i] = &elastic.BulkRequest{
-			RequestType: "index",
+			RequestType: elastic.Index,
 			Index:       indexName,
 			IndexType:   indexType,
 			ID:          event.ObjectMeta.UUID,

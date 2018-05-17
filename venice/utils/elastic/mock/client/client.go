@@ -103,18 +103,36 @@ func (e *mockClient) Bulk(ctx context.Context, objs []*elastic.BulkRequest) (*es
 
 	for _, obj := range objs {
 		switch obj.RequestType {
-		case "index":
+		case elastic.Index:
 			mc, objOk := obj.Obj.(mockObj)
 			if _, indexFound := e.indexes[obj.Index]; indexFound && objOk {
 				e.docs[obj.Index][obj.ID] = mc
 				response.Items = append(response.Items,
-					map[string]*es.BulkResponseItem{"index": &es.BulkResponseItem{
+					map[string]*es.BulkResponseItem{elastic.Index: &es.BulkResponseItem{
 						Index: obj.Index, Type: obj.IndexType, Id: obj.ID},
 					})
 			} else {
 				error = true
 			}
-			// TODO: handle other request types
+		case elastic.Update:
+			mc, objOk := obj.Obj.(mockObj)
+			if _, indexFound := e.indexes[obj.Index]; indexFound && objOk {
+				e.docs[obj.Index][obj.ID] = mc
+				response.Items = append(response.Items,
+					map[string]*es.BulkResponseItem{elastic.Update: &es.BulkResponseItem{
+						Index: obj.Index, Type: obj.IndexType, Id: obj.ID},
+					})
+			} else {
+				error = true
+			}
+		case elastic.Delete:
+			if _, indexFound := e.indexes[obj.Index]; indexFound {
+				delete(e.docs[obj.Index], obj.ID)
+				response.Items = append(response.Items,
+					map[string]*es.BulkResponseItem{elastic.Delete: &es.BulkResponseItem{
+						Index: obj.Index, Type: obj.IndexType, Id: obj.ID},
+					})
+			}
 		}
 	}
 
