@@ -145,9 +145,6 @@ func (s *sworkloadEndpointBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&workload.Endpoint{},
-	)
 	apisrv.RegisterMessages("workload", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

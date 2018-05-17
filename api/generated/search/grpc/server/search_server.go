@@ -51,7 +51,6 @@ func (s *ssearchSearchBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes()
 	apisrv.RegisterMessages("search", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

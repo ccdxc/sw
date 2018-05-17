@@ -420,7 +420,7 @@ func Setup(m *testing.M) {
 	// Create api server
 	apiServerAddress := ":0"
 	tInfo.l = pl
-	scheme := runtime.NewScheme()
+	scheme := runtime.GetDefaultScheme()
 	srvConfig := apiserver.Config{
 		GrpcServerPort: apiServerAddress,
 		DebugMode:      false,

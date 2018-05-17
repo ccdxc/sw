@@ -12,6 +12,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -410,6 +411,12 @@ func (m *StatsStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
+	scheme := runtime.GetDefaultScheme()
+	scheme.AddKnownTypes(
+		&FlowExportPolicy{},
+		&FwlogPolicy{},
+		&StatsPolicy{},
+	)
 
 	validatorMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
 

@@ -187,6 +187,10 @@ func (st *storage{{$msgname}}Transformer) TransformToStorage(ctx context.Context
 {{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
 
 func init() {
+	scheme := runtime.GetDefaultScheme()
+	scheme.AddKnownTypes({{range  .Messages}}{{if (len (getDbKey .)) ne 0}}
+		&{{.Name}}{},{{end}}{{end}}
+	)
 {{if $validators.Fmap}}
 	validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
 	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}{{if getBool 1}}

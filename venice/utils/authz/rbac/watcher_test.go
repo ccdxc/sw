@@ -29,7 +29,7 @@ func createAPIServer(url string) (apiserver.Server, string) {
 	logger := log.WithContext("Pkg", "authz_watcher_test")
 
 	// api server config
-	sch := runtime.NewScheme()
+	sch := runtime.GetDefaultScheme()
 	apisrvConfig := apiserver.Config{
 		GrpcServerPort: url,
 		Logger:         logger,

@@ -449,12 +449,6 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&auth.AuthenticationPolicy{},
-		&auth.Role{},
-		&auth.RoleBinding{},
-		&auth.User{},
-	)
 	apisrv.RegisterMessages("auth", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

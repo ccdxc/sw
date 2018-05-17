@@ -147,9 +147,6 @@ func (s *ssecurityNetworkencryptionBackend) regMsgsFunc(l log.Logger, scheme *ru
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&security.TrafficEncryptionPolicy{},
-	)
 	apisrv.RegisterMessages("security", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

@@ -1583,7 +1583,7 @@ func startAPIserverAPIgw(t *testing.T) {
 
 	// Create api server
 	apiServerAddress := ":0"
-	scheme := runtime.NewScheme()
+	scheme := runtime.GetDefaultScheme()
 	srvConfig := apiserver.Config{
 		GrpcServerPort: apiServerAddress,
 		DebugMode:      false,

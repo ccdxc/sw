@@ -810,7 +810,7 @@ func testSetup() {
 	apiServerAddress := ":0"
 	l := log.WithContext("module", "CrudOpsTest")
 	tInfo.l = l
-	scheme := runtime.NewScheme()
+	scheme := runtime.GetDefaultScheme()
 	srvConfig := apiserver.Config{
 		GrpcServerPort: apiServerAddress,
 		DebugMode:      false,

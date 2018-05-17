@@ -12,6 +12,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -474,6 +475,10 @@ func (m *SmartNICMirrorSessionStatus) Validate(ver string, ignoreStatus bool) bo
 }
 
 func init() {
+	scheme := runtime.GetDefaultScheme()
+	scheme.AddKnownTypes(
+		&MirrorSession{},
+	)
 
 	validatorMapMirror = make(map[string]map[string][]func(interface{}) bool)
 

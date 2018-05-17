@@ -1660,6 +1660,141 @@ func getAutoRestOper(meth *descriptor.Method) (string, error) {
 	return "", errors.New("not an autogen method")
 }
 
+func getJSONTag(fld *descriptor.Field) string {
+	if r, err := reg.GetExtension("gogoproto.jsontag", fld); err == nil {
+		t := strings.Split(r.(string), ",")
+		if len(t) > 0 {
+			return t[0]
+		}
+	}
+	return ""
+}
+
+// Field represents the schema details of a field
+type Field struct {
+	Name    string
+	JSONTag string
+	Pointer bool
+	Slice   bool
+	Map     bool
+	// KeyType is valid only when Map is true
+	KeyType string
+	Type    string
+}
+
+// Struct represents the schema details of a field
+type Struct struct {
+	Fields map[string]Field
+	// keys is used to keep a stable order of Fields when generating the schema. This is
+	//  a ordered set of keys in the Fielda map and follows the order in the corresponding
+	//  slice in DescriptorProto.
+	keys []string
+}
+
+func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, error) {
+	ret := Field{}
+	repeated := false
+	if fld.Label != nil && *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+		repeated = true
+	}
+	pointer := false
+	if fld.Label != nil && *fld.Label == gogoproto.FieldDescriptorProto_LABEL_OPTIONAL {
+		pointer = true
+	}
+	isMap := false
+	typeName := ""
+	keyType := ""
+	if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+		typeName = fld.GetTypeName()
+		fmsg, err := file.Reg.LookupMsg("", typeName)
+		if err != nil {
+			glog.Infof("failed to get field %s", *fld.Name)
+			return ret, fmt.Errorf("failed to get field %s", *fld.Name)
+		}
+		if isMapEntry(fmsg) {
+			isMap = true
+			repeated = false
+			for _, v := range fmsg.Fields {
+				if *v.Name == "value" {
+					if v.GetType() == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+						typeName = v.GetTypeName()
+						typeName = strings.TrimPrefix(typeName, ".")
+					} else {
+						typeName = gogoproto.FieldDescriptorProto_Type_name[int32(v.GetType())]
+					}
+				}
+				if *v.Name == "key" {
+					if v.GetType() == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+						keyType = v.GetTypeName()
+						keyType = strings.TrimPrefix(keyType, ".")
+					} else {
+						keyType = gogoproto.FieldDescriptorProto_Type_name[int32(v.GetType())]
+					}
+				}
+			}
+		} else {
+			typeName = strings.TrimPrefix(typeName, ".")
+		}
+	} else {
+		typeName = gogoproto.FieldDescriptorProto_Type_name[int32(fld.GetType())]
+	}
+	ret = Field{
+		Name:    *fld.Name,
+		JSONTag: getJSONTag(fld),
+		Pointer: pointer,
+		Slice:   repeated,
+		Map:     isMap,
+		KeyType: keyType,
+		Type:    typeName,
+	}
+	return ret, nil
+}
+
+func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
+	pkg := file.GoPkg.Name
+	ret := make(map[string]Struct)
+	var keys []string
+	for _, msg := range file.Messages {
+		fqname := pkg + "." + *msg.Name
+		if len(msg.Outers) > 0 {
+			fqname = msg.Outers[0] + "." + *msg.Name
+			fqname = strings.TrimPrefix(fqname, ".")
+			fqname = pkg + "." + fqname
+		}
+		node := Struct{Fields: make(map[string]Field)}
+		for _, fld := range msg.Fields {
+			f, err := genField(fqname, fld, file)
+			if err != nil {
+				return ret, keys, err
+			}
+			node.keys = append(node.keys, f.Name)
+			node.Fields[f.Name] = f
+		}
+		ret[fqname] = node
+		keys = append(keys, fqname)
+	}
+	return ret, keys, nil
+}
+
+func getMsgMap(file *descriptor.File) (string, error) {
+	msgs, keys, err := genMsgMap(file)
+	if err != nil {
+		return "", err
+	}
+	ret := ""
+	for _, k := range keys {
+		s := msgs[k]
+		ret = fmt.Sprintf("%s\n\"%s\": &runtime.Struct{\n Fields: map[string]runtime.Field {", ret, k)
+		for _, k1 := range s.keys {
+			f := s.Fields[k1]
+			ret = ret + fmt.Sprintf("\n\"%s\":runtime.Field{Name: \"%s\", JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, KeyType: \"%v\", Type: \"%s\"},\n",
+				f.Name, f.Name, f.JSONTag, f.Pointer, f.Slice, f.Map, f.KeyType, f.Type)
+		}
+		ret = ret + "},\n },"
+	}
+	return ret, nil
+}
+
 func isAPIServerServed(file *descriptor.File) (bool, error) {
 	if v, err := reg.GetExtension("venice.fileApiServerBacked", file); err == nil {
 		return v.(bool), nil
@@ -1707,6 +1842,7 @@ func init() {
 	reg.RegisterOptionParser("venice.check", parseStringSliceOptions)
 	reg.RegisterOptionParser("venice.storageTransformer", parseStringSliceOptions)
 	reg.RegisterOptionParser("gogoproto.nullable", parseBoolOptions)
+	reg.RegisterOptionParser("gogoproto.jsontag", parseStringOptions)
 	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
 	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
 	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
@@ -1763,6 +1899,7 @@ func init() {
 	reg.RegisterFunc("getSvcActionEndpoints", getSvcActionEndpoints)
 	reg.RegisterFunc("getDefaulterManifest", getDefaulterManifest)
 	reg.RegisterFunc("getRelPath", getRelPath)
+	reg.RegisterFunc("getMsgMap", getMsgMap)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

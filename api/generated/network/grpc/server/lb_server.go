@@ -146,9 +146,6 @@ func (s *snetworkLbBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&network.LbPolicy{},
-	)
 	apisrv.RegisterMessages("network", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

@@ -576,7 +576,7 @@ func main() {
 		tinfo.bucket = rl.NewBucketWithRate(float64(*rlimit), int64(workersCount))
 	}
 	tinfo.l = l
-	tinfo.scheme = runtime.NewScheme()
+	tinfo.scheme = runtime.GetDefaultScheme()
 	tinfo.workQ = make(chan func(context.Context, int) error, workersCount)
 	tinfo.doneQ = make(chan result, workersCount)
 	tinfo.hist = make(map[string]*testResult)

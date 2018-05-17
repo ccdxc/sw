@@ -35,7 +35,7 @@ func createAPIServer(t *testing.T, url string) (apiserver.Server, string) {
 	logger := log.WithContext("Pkg", "writer_test")
 
 	// api server config
-	sch := runtime.NewScheme()
+	sch := runtime.GetDefaultScheme()
 	apisrvConfig := apiserver.Config{
 		GrpcServerPort: url,
 		Logger:         logger,

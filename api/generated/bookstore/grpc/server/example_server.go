@@ -292,6 +292,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return into, nil
 		}),
+		"bookstore.BookReview": apisrvpkg.NewMessage("bookstore.BookReview"),
 		"bookstore.BookSpec":   apisrvpkg.NewMessage("bookstore.BookSpec"),
 		"bookstore.BookStatus": apisrvpkg.NewMessage("bookstore.BookStatus"),
 		"bookstore.Coupon": apisrvpkg.NewMessage("bookstore.Coupon").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -1082,18 +1083,6 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&bookstore.ApplyDiscountReq{},
-		&bookstore.Book{},
-		&bookstore.Coupon{},
-		&bookstore.Customer{},
-		&bookstore.Order{},
-		&bookstore.OutageRequest{},
-		&bookstore.Publisher{},
-		&bookstore.RestockRequest{},
-		&bookstore.RestockResponse{},
-		&bookstore.Store{},
-	)
 	apisrv.RegisterMessages("bookstore", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

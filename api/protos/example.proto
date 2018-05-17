@@ -50,8 +50,8 @@ message Book {
 
   option (venice.objectPrefix) = {Collection: "books"};
 
-  BookSpec Spec = 3 [(gogoproto.nullable) = false];
-  BookStatus Status = 4 [(gogoproto.nullable) = false];
+  BookSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec"];
+  BookStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status"];
 }
 
 message BookSpec {
@@ -69,12 +69,18 @@ message BookSpec {
   // Used for performance monitoring tests
   api.Timestamp UpdateTimestamp = 6;
   bool Terminate = 7;
-  map<string, BookEdition> Editions = 8 [(gogoproto.nullable) = true];
+  map<string, BookEdition> Editions = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "editions"];
 }
 
 message BookEdition {
-  string Errata = 1[(venice.default) = "None"];
-  string Year = 2;
+  string Errata = 1[(venice.default) = "None", (gogoproto.jsontag) = "errata"];
+  string Year = 2 [(gogoproto.jsontag) = "year"];
+  map<string, BookReview> Reviews = 3[(gogoproto.jsontag) = "reviews"];
+}
+
+message BookReview {
+    api.Timestamp Date = 1 [(gogoproto.jsontag) = "date"];
+    string Review = 2 [(gogoproto.jsontag) = "review"];
 }
 
 message BookStatus {

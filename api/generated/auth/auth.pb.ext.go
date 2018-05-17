@@ -12,6 +12,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -615,6 +616,13 @@ func (m *UserStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
+	scheme := runtime.GetDefaultScheme()
+	scheme.AddKnownTypes(
+		&AuthenticationPolicy{},
+		&Role{},
+		&RoleBinding{},
+		&User{},
+	)
 
 	validatorMapAuth = make(map[string]map[string][]func(interface{}) bool)
 

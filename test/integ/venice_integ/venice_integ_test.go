@@ -181,7 +181,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	m.AddServiceInstance(&tsmSi)
 
 	// api server config
-	sch := runtime.NewScheme()
+	sch := runtime.GetDefaultScheme()
 	apisrvConfig := apiserver.Config{
 		GrpcServerPort: integTestApisrvURL,
 		Logger:         logger,

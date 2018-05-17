@@ -145,9 +145,6 @@ func (s *ssecuritySecuritygroupBackend) regMsgsFunc(l log.Logger, scheme *runtim
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&security.SecurityGroup{},
-	)
 	apisrv.RegisterMessages("security", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

@@ -43,3 +43,5 @@ templates:
   - template: "apiclient.tmpl"
     outputpath: "../apiclient/client.go"
     once: true
+  - template: "schema.tmpl"
+    outputpath: "{FILE}_schema.go"

@@ -68,7 +68,7 @@ func main() {
 		config.DevMode = *devmode
 		config.Logger = pl
 		config.Version = *version
-		config.Scheme = runtime.NewScheme()
+		config.Scheme = runtime.GetDefaultScheme()
 		config.Kvstore = store.Config{
 			Type:    store.KVStoreTypeEtcd,
 			Servers: strings.Split(*kvstore, ","),

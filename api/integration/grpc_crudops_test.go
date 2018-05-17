@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -1097,6 +1098,88 @@ func TestBatchedWatch(t *testing.T) {
 		}
 		if !validateObjectSpec(pExpectWatchEvents[k].Object, pRcvWatchEvents[k].Object) {
 			t.Fatalf("watch event object [%s] does not match \n\t[%+v]\n\t[%+v]", pExpectWatchEvents[k].Type, pExpectWatchEvents[k].Object, pRcvWatchEvents[k].Object)
+		}
+	}
+}
+
+func TestSchemaValidation(t *testing.T) {
+	schema := runtime.GetDefaultScheme()
+
+	getField := func(kind, path string) (runtime.Field, bool) {
+		var ret runtime.Field
+		skip, json, ok := false, true, false
+		node := schema.GetSchema(kind)
+		if node == nil {
+			t.Logf("could not find type Schema %s", kind)
+			return runtime.Field{}, false
+		}
+		// rudimentary tokenize logic.
+		tokens := strings.FieldsFunc(path, func(in rune) bool {
+			if in == '.' || in == '[' || in == ']' {
+				return true
+			}
+			return false
+		})
+		if tokens[0] == strings.Title(tokens[0]) {
+			json = false
+		}
+
+		// Walk the path
+		for _, tkn := range tokens {
+			if skip == true {
+				skip = false
+				continue
+			}
+			if json {
+				ret, ok = node.FindFieldByJSONTag(tkn)
+			} else {
+				ret, ok = node.FindField(tkn)
+			}
+			if !ok {
+				t.Logf("Failed to find [%s]", tkn)
+				return ret, ok
+			}
+			skip = ret.Map || ret.Slice
+			if ret.Slice {
+				// in case of slice we are already at the destination type.
+				//  for all other cases we move to the next type in the path.
+				continue
+			}
+			node = schema.GetSchema(ret.Type)
+		}
+		return ret, ok
+	}
+
+	cases := []struct {
+		kind string
+		str  string
+		exp  bool
+	}{
+		{kind: "network.Network", str: "Spec", exp: true},
+		{kind: "network.Network", str: "Spec.IPv6Subnet", exp: true},
+		{kind: "network.Network", str: "Spec.InvalidField", exp: false},
+		{kind: "workload.Endpoint", str: "Status.WorkloadAttributes[SOMEKEY]", exp: true},
+		// use [*] just to satisfy rudimentary tokenize logic, actual usage skip anyway.
+		{kind: "cluster.Cluster", str: "Spec.QuorumNodes[*]", exp: true},
+		{kind: "bookstore.Book", str: "Spec.Editions[0].Year", exp: true},
+		{kind: "bookstore.Book", str: "Spec.Editions[0].Reviews[*].Date", exp: true},
+		{kind: "unknown.Invalid", str: "a.b.c.de", exp: false},
+
+		// JSON Tags
+		{kind: "network.Network", str: "spec", exp: true},
+		{kind: "network.Network", str: "spec.ipv6-gateway", exp: true},
+		{kind: "network.Network", str: "spec.invalid-field", exp: false},
+		{kind: "workload.Endpoint", str: "status.workload-attributes[SOMEKEY]", exp: true},
+		{kind: "cluster.Cluster", str: "spec.quorum-nodes[*]", exp: true},
+		{kind: "bookstore.Book", str: "spec.editions[0].year", exp: true},
+		{kind: "bookstore.Book", str: "spec.editions[0].reviews[*].date", exp: true},
+		{kind: "unknown.Invalid", str: "a.b[c].d", exp: false},
+	}
+	for _, c := range cases {
+		// We could check the returned field to make sure it is a scalar here.
+		_, res := getField(c.kind, c.str)
+		if res != c.exp {
+			t.Fatalf("expecting [%v] got [%v] %s", c.exp, res, c.str)
 		}
 	}
 }

@@ -348,11 +348,6 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&cluster.Cluster{},
-		&cluster.Node{},
-		&cluster.SmartNIC{},
-	)
 	apisrv.RegisterMessages("cluster", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

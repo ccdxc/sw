@@ -130,7 +130,6 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes()
 	apisrv.RegisterMessages("cluster", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
@@ -523,6 +524,27 @@ func (m *BookList) Defaults(ver string) bool {
 		}
 	}
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BookReview) Clone(into interface{}) (interface{}, error) {
+	var out *BookReview
+	var ok bool
+	if into == nil {
+		out = &BookReview{}
+	} else {
+		out, ok = into.(*BookReview)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BookReview) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -1200,6 +1222,10 @@ func (m *BookList) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *BookReview) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *BookSpec) Validate(ver string, ignoreStatus bool) bool {
 	if vs, ok := validatorMapExample["BookSpec"][ver]; ok {
 		for _, v := range vs {
@@ -1486,6 +1512,19 @@ func (m *CustomerSpec) ApplyStorageTransformer(ctx context.Context, toStorage bo
 }
 
 func init() {
+	scheme := runtime.GetDefaultScheme()
+	scheme.AddKnownTypes(
+		&ApplyDiscountReq{},
+		&Book{},
+		&Coupon{},
+		&Customer{},
+		&Order{},
+		&OutageRequest{},
+		&Publisher{},
+		&RestockRequest{},
+		&RestockResponse{},
+		&Store{},
+	)
 
 	validatorMapExample = make(map[string]map[string][]func(interface{}) bool)
 

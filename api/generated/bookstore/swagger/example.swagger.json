@@ -1315,6 +1315,12 @@
         },
         "Year": {
           "type": "string"
+        },
+        "Reviews": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/bookstoreBookReview"
+          }
         }
       }
     },
@@ -1331,8 +1337,18 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreBook"
-          },
-          "description": "Spec is not allowed to be Null hence disabling nullable."
+          }
+        }
+      }
+    },
+    "bookstoreBookReview": {
+      "type": "object",
+      "properties": {
+        "Date": {
+          "$ref": "#/definitions/apiTimestamp"
+        },
+        "Review": {
+          "type": "string"
         }
       }
     },

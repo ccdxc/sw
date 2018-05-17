@@ -12,6 +12,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -657,5 +658,7 @@ func (m *TrafficEncryptionPolicyList) Validate(ver string, ignoreStatus bool) bo
 }
 
 func init() {
+	scheme := runtime.GetDefaultScheme()
+	scheme.AddKnownTypes()
 
 }

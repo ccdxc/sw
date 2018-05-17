@@ -90,7 +90,7 @@ func TestMain(m *testing.M) {
 	apiserverAddress := ":0"
 	l := log.WithContext("module", "AuthTest")
 	tinfo.l = l
-	scheme := runtime.NewScheme()
+	scheme := runtime.GetDefaultScheme()
 	srvconfig := apiserver.Config{
 		GrpcServerPort: apiserverAddress,
 		DebugMode:      false,

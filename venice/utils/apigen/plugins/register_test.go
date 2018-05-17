@@ -2810,3 +2810,214 @@ func TestGetRelPath(t *testing.T) {
 		t.Fatalf("relpath does not match [%s]", ret)
 	}
 }
+
+func (s *Struct) FindField(in string) (Field, bool) {
+	f, ok := s.Fields[in]
+	return f, ok
+}
+
+func TestGetMsgMap(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		enum_type:<
+			name:"Enum1"
+			value:<name:"Value1" number:0 >
+			value:<name:"Value2" number:1 >
+		>
+		message_type <
+			name: 'Struct1'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[gogoproto.jsontag]:"jsonfield1,omitempty" >
+			>
+			field <
+				name: 'repeated_scalar'
+				label: LABEL_REPEATED
+				type: TYPE_STRING
+				number: 2
+			>
+			field <
+				name : 'repeated_struct'
+				label: LABEL_REPEATED
+				type: TYPE_MESSAGE
+				type_name: '.example.Struct2'
+				number: 3
+				>
+				field <
+					name: 'enum_field'
+					type: TYPE_ENUM
+					type_name: '.example.Enum1'
+					number: 4
+				>
+				field <
+					name: 'repeated_enum'
+					label: LABEL_REPEATED
+					type: TYPE_ENUM
+					type_name: '.example.Enum1'
+					number: 5
+				>
+				field <
+					name: 'map_string_string'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.MapMessageStringString'
+					number: 6
+					options:<[gogoproto.jsontag]:"map-string-string,inline" >
+				>
+				field <
+					name: 'map_string_struct'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.MapMessageStringStruct'
+					number: 7
+				>
+				field <
+					name: 'map_string_enum'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.MapMessageStringEnum'
+					number: 8
+				>
+		>
+		message_type <
+			name: 'Struct2'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+		>
+		message_type <
+			name: 'MapMessageStringString'
+			field <
+				name: 'key'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'value'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
+			>
+			options:<map_entry:true>
+		>
+		message_type <
+			name: 'MapMessageStringStruct'
+			field <
+				name: 'key'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'value'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Struct2'
+				number: 2
+			>
+			options:<map_entry:true>
+		>
+		message_type <
+			name: 'MapMessageStringEnum'
+			field <
+				name: 'key'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'value'
+				label: LABEL_OPTIONAL
+				type: TYPE_ENUM
+				type_name: '.example.Enum1'
+				number: 2
+			>
+			options:<map_entry:true>
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	msgs, keys, err := genMsgMap(file)
+	if err != nil {
+		t.Fatalf("Failed (%v)", err)
+	}
+
+	exp := map[string]Struct{
+		"example.Struct1": Struct{
+			Fields: map[string]Field{
+				"field1":            {Name: "field1", JSONTag: "jsonfield1", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"repeated_scalar":   {Name: "repeated_scalar", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"repeated_struct":   {Name: "repeated_struct", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "example.Struct2"},
+				"enum_field":        {Name: "enum_field", JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"repeated_enum":     {Name: "repeated_enum", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"map_string_string": {Name: "map_string_string", JSONTag: "map-string-string", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+				"map_string_struct": {Name: "map_string_struct", JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "example.Struct2"},
+				"map_string_enum":   {Name: "map_string_enum", JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_ENUM"},
+			},
+		},
+		"example.Struct2": Struct{
+			Fields: map[string]Field{
+				"field1": {Name: "field1", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			},
+		},
+		"example.MapMessageStringString": Struct{
+			Fields: map[string]Field{
+				"key":   {Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			},
+		},
+		"example.MapMessageStringStruct": Struct{
+			Fields: map[string]Field{
+				"key":   {Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2"},
+			},
+		},
+		"example.MapMessageStringEnum": Struct{
+			Fields: map[string]Field{
+				"key":   {Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+			},
+		},
+	}
+	if len(msgs) != len(exp) {
+		t.Fatalf("expecting %v messages got %v", len(exp), len(msgs))
+	}
+	if len(keys) != len(exp) {
+		t.Fatalf("expecting %v keys got %v", len(exp), len(keys))
+	}
+
+	for k, v := range exp {
+		strct, ok := msgs[k]
+		if !ok {
+			t.Fatalf("did not find [%v] in msgs", k)
+		}
+		if !reflect.DeepEqual(strct.Fields, v.Fields) {
+			t.Fatalf("Fields in %v did not match", k)
+		}
+	}
+}

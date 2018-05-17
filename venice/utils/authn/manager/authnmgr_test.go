@@ -89,7 +89,7 @@ func createAPIServer(url string) apiserver.Server {
 	logger := log.WithContext("Pkg", "authnmgr_test")
 
 	// api server config
-	sch := runtime.NewScheme()
+	sch := runtime.GetDefaultScheme()
 	apisrvConfig := apiserver.Config{
 		GrpcServerPort: url,
 		Logger:         logger,

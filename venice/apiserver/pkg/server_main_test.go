@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 		Scheme:         s,
 		Kvstore: store.Config{
 			Type:  store.KVStoreTypeMemkv,
-			Codec: runtime.NewJSONCodec(runtime.NewScheme()),
+			Codec: runtime.NewJSONCodec(s),
 		},
 		KVPoolSize: 1,
 	}

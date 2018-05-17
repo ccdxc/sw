@@ -145,9 +145,6 @@ func (s *ssecurityX509Backend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&security.Certificate{},
-	)
 	apisrv.RegisterMessages("security", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

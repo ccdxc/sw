@@ -345,11 +345,6 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&monitoring.FlowExportPolicy{},
-		&monitoring.FwlogPolicy{},
-		&monitoring.StatsPolicy{},
-	)
 	apisrv.RegisterMessages("monitoring", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

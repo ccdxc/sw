@@ -351,11 +351,6 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes(
-		&monitoring.Alert{},
-		&monitoring.AlertDestination{},
-		&monitoring.AlertPolicy{},
-	)
 	apisrv.RegisterMessages("monitoring", s.Messages)
 	// add messages to package.
 	if pkgMessages == nil {

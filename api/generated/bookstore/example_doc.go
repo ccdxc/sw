@@ -23,6 +23,7 @@ The following Messages are defined.
   Book
   BookEdition
   BookList
+  BookReview
   BookSpec
   BookStatus
   Coupon

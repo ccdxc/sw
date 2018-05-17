@@ -1081,6 +1081,40 @@ func DecodeGrpcRespBookList(ctx context.Context, response interface{}) (interfac
 	return response, nil
 }
 
+func encodeHTTPBookReview(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBookReview(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BookReview
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBookReview encodes GRPC request
+func EncodeGrpcReqBookReview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BookReview)
+	return req, nil
+}
+
+// DecodeGrpcReqBookReview decodes GRPC request
+func DecodeGrpcReqBookReview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BookReview)
+	return req, nil
+}
+
+// EncodeGrpcRespBookReview encodes GRC response
+func EncodeGrpcRespBookReview(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBookReview decodes GRPC response
+func DecodeGrpcRespBookReview(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPBookSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

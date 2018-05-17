@@ -37,7 +37,7 @@ func createAPIServer(url string) (apiserver.Server, apiserver.Config) {
 	logger := log.GetNewLogger(log.GetDefaultConfig("api_watcher_test"))
 
 	// api server config
-	sch := runtime.NewScheme()
+	sch := runtime.GetDefaultScheme()
 	apisrvConfig := apiserver.Config{
 		GrpcServerPort: url,
 		Logger:         logger,

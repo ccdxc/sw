@@ -171,9 +171,6 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 		"api.ListWatchOptions":                      apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
-	scheme.AddKnownTypes({{range  .Messages}}{{if (len (getDbKey .)) ne 0}}
-		&{{$pkgname}}.{{.Name}}{},{{end}}{{end}}
-	)
 	apisrv.RegisterMessages("{{$pkgname}}", s.Messages)
 	// add messages to package.
 	if 	pkgMessages == nil {
