@@ -134,7 +134,7 @@ class SecurityGroupObjectHelper:
         leps = tenant.GetLocalEps()
         reps = tenant.GetRemoteEps()
         split = 2
-        
+
         self.__create(tenant, False, reps, 'DOS_SRC_DST')
         if len(leps) == 0:
             return

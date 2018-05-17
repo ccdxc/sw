@@ -11,14 +11,15 @@ import config.hal.defs             as haldefs
 from    config.store               import Store
 from    infra.common.logging       import logger
 from    config.objects.security_group import SecurityGroupObject
+from    config.objects.tenant         import TenantObject
 
 class SGPairObject(base.ConfigObjectBase):
-    def __init__(self, sg_id, peer_sg_id, obj):
+    def __init__(self, sg_id, peer_sg_id, ten_id, obj):
         super().__init__()
         self.Clone(Store.templates.Get('SECURITY_GROUP_PAIR'))
         self.sg_id = sg_id
         self.peer_sg_id = peer_sg_id
-        self.GID("SGPAIRSG%04dSG%04d" % (sg_id,peer_sg_id))
+        self.GID("TEN%04dSGPAIRSG%04dSG%04d" % (ten_id, sg_id,peer_sg_id))
         self.obj = obj
         return
 
@@ -44,7 +45,6 @@ class SGPairObject(base.ConfigObjectBase):
         pl_id = haldefs.kh.SecurityGroupPolicyId()
         pl_id.security_group_id = self.sg_id
         pl_id.peer_security_group_id = self.peer_sg_id
-
         get_req_spec.key_or_handle.security_group_policy_id = pl_id
         return
 
@@ -59,27 +59,30 @@ class SGPairObjectHelper:
         self.sgpair_objlist = []
 
     def __get_sg_pair(self):
-        sglist = Store.objects.GetAllByClass(SecurityGroupObject)
-        for sg1,sg2 in itertools.combinations_with_replacement(sglist, 2):
-                yield (sg1, sg2)
+        tenant_list = Store.objects.GetAllByClass(TenantObject)
+        for tenant in tenant_list:
+            print("Tenant id: {}", tenant.id)
+            #sglist = Store.objects.GetAllByClass(SecurityGroupObject)
+            sglist = tenant.GetSecurityGroups()
+            for sg1,sg2 in itertools.combinations_with_replacement(sglist, 2):
+                    yield ([sg1, sg2], tenant.id)
 
     def Generate(self, sp_obj):
         sp_len = len(sp_obj.sps)
         index = 0
-        for sgpair in self.__get_sg_pair():
+        for sgpair,tenant_id in self.__get_sg_pair():
             if (sgpair[0].id != sgpair[1].id):
-                sgpair_obj = SGPairObject(sgpair[0].id, sgpair[1].id,
-                                          sp_obj.sps[index])
-                sgpair_obj_rev = SGPairObject(sgpair[1].id, sgpair[0].id,
-                                              sp_obj.sps[index])
+                sgpair_obj = SGPairObject(sgpair[0].id, sgpair[1].id,tenant_id,
+                                        sp_obj.sps[index])
+                sgpair_obj_rev = SGPairObject(sgpair[1].id, sgpair[0].id,tenant_id,
+                                        sp_obj.sps[index])
 
                 self.sgpair_objlist.extend([sgpair_obj, sgpair_obj_rev])
-                index = index + 1
             else:
-                sgpair_obj = SGPairObject(sgpair[0].id, sgpair[1].id,
-                                          sp_obj.default_sps[0])
+                sgpair_obj = SGPairObject(sgpair[0].id, sgpair[1].id,tenant_id,
+                                        sp_obj.sps[index])
                 self.sgpair_objlist.extend([sgpair_obj])
-
+            index = index + 1
             if (index == sp_len): index = 0
         Store.objects.SetAll(self.sgpair_objlist)
 
@@ -144,10 +147,12 @@ class SecurityGroupPolicyObjectHelper:
         dst_sg_list  = getattr(dep, 'sgs', None)
         if src_sg_list is None or dst_sg_list is None:
             return None
+        if (sep.tenant.id != dep.tenant.id):
+            print("What does this mean??")
         for src_sg, dst_sg in itertools.product(src_sg_list, dst_sg_list):
             if src_sg == dst_sg: continue
             try:
-                sgpair_obj = Store.objects.Get("SGPAIR" + str(src_sg) + str(dst_sg))
+                sgpair_obj = Store.objects.Get("TEN" + str(sep.tenant.id) + "SGPAIR" + str(src_sg) + str(dst_sg))
             except KeyError:
                 continue
 
@@ -166,12 +171,12 @@ class SecurityGroupPolicyObjectHelper:
         for p in spec.policies:
             policy = SecurityGroupPolicyObject()
             policy.Init(p.policy)
-            if p.policy.default == True:
-                self.default_sps.append(policy)
-            else:
-                self.sps.append(policy)
+            #if p.policy.default == True:
+            #    self.default_sps.append(policy)
+            #else:
+            self.sps.append(policy)
         Store.objects.SetAll(self.sps)
-        Store.objects.SetAll(self.default_sps)
+        #Store.objects.SetAll(self.default_sps)
         #Update the SGPair Object
         SGPairHelper.Generate(self)
 
