@@ -173,6 +173,7 @@ def deleteCluster():
     runCommand("""docker network remove pen-dind-net 2>/dev/null""", ignore_error=True)
     runCommand("""docker network remove pen-dind-hnet 2>/dev/null""", ignore_error=True)
     runCommand("""docker network remove pen-dind-nnet 2>/dev/null""", ignore_error=True)
+    runCommand("""docker volume  prune -f 2>/dev/null""", ignore_error=True)
 
 def stopCluster(nodeList, nodes, quorum, clustervip):
     pool = ThreadPool(len(nodeList))

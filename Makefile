@@ -130,8 +130,8 @@ c-stop:
 
 install:
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
-	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
-	@tools/scripts/create-container.sh createBinContainerTarBall
+	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --rm --no-cache -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
+	@tools/scripts/createImage.py
 
 deploy:
 	$(MAKE) container-compile
