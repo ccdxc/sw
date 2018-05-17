@@ -13,6 +13,13 @@ using namespace std;
 delphi::error UpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
     LogInfo("UpgAppResp got created for {}/{}", resp, resp->meta().ShortDebugString());
 
+    if (this->upgMgr_->CanMoveStateMachine()) {
+        return (this->upgMgr_->MoveStateMachine(this->upgMgr_->GetNextState()));
+    } else {
+        LogInfo("Cannot move state machine yet");
+        return delphi::error::OK();
+    }
+
     return delphi::error::OK();
 }
 

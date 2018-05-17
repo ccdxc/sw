@@ -10,20 +10,26 @@ namespace upgrade {
 
 using namespace std;
 
+typedef enum {
+    SUCCESS,
+    FAIL,
+    INPROGRESS
+} HdlrRespCode;
+
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual delphi::error UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error UpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStateUpgReqRcvd(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStatePreUpgState(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStatePostBinRestart(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStateProcessesQuiesced(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStateDataplaneDowntimeStart(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStateCleanup(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStateUpgSuccess(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStateUpgFailed(delphi::objects::UpgReqStatusPtr req);
-    virtual delphi::error HandleStateInvalidUpgState(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode UpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStateUpgReqRcvd(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStatePreUpgState(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStatePostBinRestart(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStateProcessesQuiesced(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStateDataplaneDowntimeStart(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStateCleanup(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStateUpgSuccess(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStateUpgFailed(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode HandleStateInvalidUpgState(delphi::objects::UpgReqStatusPtr req);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 
@@ -31,7 +37,6 @@ typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 class UpgAppRespHdlr {
     string appName_;
     delphi::SdkPtr sdk_;
-    delphi::objects::UpgReqStatusPtr upgReqStatus_;
 public:
     UpgAppRespHdlr(delphi::SdkPtr sk, string name) {
         this->appName_ = name;
@@ -51,14 +56,14 @@ public:
     //findUpgAppResp returns the UpgAppResp object for this application
     delphi::objects::UpgAppRespPtr findUpgAppResp(string name);
 
-    //SetUpgReqStatusPtr will save the pointer for UpgReqStatus object
-    void SetUpgReqStatusPtr(delphi::objects::UpgReqStatusPtr ptr) {
-        upgReqStatus_ = ptr;
-    }
-
     //GetUpgReqStatusPtr will return the pointer for UpgReqStatus object
     delphi::objects::UpgReqStatusPtr GetUpgReqStatusPtr(void) {
-        return upgReqStatus_;
+        delphi::objects::UpgReqStatusPtr ret;
+        vector<delphi::objects::UpgReqStatusPtr> upgReqStatuslist = delphi::objects::UpgReqStatus::List(sdk_);
+        for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
+            ret = *reqStatus;
+         }
+        return ret;
     }
 };
 typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;
