@@ -38,7 +38,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./nic/delphi/compiler/... \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub pen-npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm
 
 ifneq ($(NOGOLANG),1)
 # Install gopkgs
@@ -130,6 +130,8 @@ c-stop:
 
 install:
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
+	@# npm is special - The executable is called pen-npm since it conflicts with node.js' npm. Hence copy it explicitly here
+	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --rm --no-cache -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
 	@tools/scripts/createImage.py
 
