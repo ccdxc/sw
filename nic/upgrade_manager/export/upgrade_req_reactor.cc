@@ -1,0 +1,98 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+#include <stdio.h>
+#include <iostream>
+
+#include "upgrade_req_reactor.hpp"
+
+namespace upgrade {
+
+using namespace std;
+
+// OnUpgReqStatusCreate gets called when UpgReqStatus object is created
+delphi::error UpgReqReactor::OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
+    LogInfo("UpgReqReactor UpgReqStatus got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
+    //create the object
+    upgAppRespPtr_->CreateUpgAppResp(req);
+    if (this->upgHdlrPtr_) {
+        HdlrRespCode hdlrRespCode;
+        hdlrRespCode = this->upgHdlrPtr_->UpgReqStatusCreate(req);
+        if (hdlrRespCode != INPROGRESS) {
+            //this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+        }
+    }
+    return delphi::error::OK();
+}
+
+// OnUpgReqStatusDelete gets called when UpgReqStatus object is deleted
+delphi::error UpgReqReactor::OnUpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req) {
+    LogInfo("UpgReqReactor UpgReqStatus got deleted");
+    //delete the object
+    HdlrRespCode hdlrRespCode;
+    if (this->upgHdlrPtr_) {
+        hdlrRespCode = this->upgHdlrPtr_->UpgReqStatusDelete(req);
+        (void)hdlrRespCode;
+        //if (hdlrRespCode != INPROGRESS) {
+          //  this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+        //}
+    }
+    return delphi::error::OK();
+}
+
+// OnUpgReqState gets called when UpgReqState attribute changes
+delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgReqStatusPtr req) {
+    LogInfo("UpgReqReactor OnUpgReqState called");
+
+    HdlrRespCode hdlrRespCode;
+    if (!this->upgHdlrPtr_) {
+        LogInfo("No handlers available");
+        return delphi::error("Error processing OnUpgReqState");
+    }
+    switch (req->upgreqstate()) {
+        case UpgReqRcvd:
+            LogInfo("Upgrade: Request Received");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
+            break;
+        case PreUpgState:
+            LogInfo("Upgrade: Pre-upgrade check");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStatePreUpgState(req);
+            break;
+        case PostBinRestart:
+            LogInfo("Upgrade: Post-binary restart");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStatePostBinRestart(req);
+            break;
+        case ProcessesQuiesced:
+            LogInfo("Upgrade: Processes Quiesced");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStateProcessesQuiesced(req);
+            break;
+        case DataplaneDowntimeStart:
+            LogInfo("Upgrade: Dataplane Downtime Start");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStateDataplaneDowntimeStart(req);
+            break;
+        case Cleanup:
+            LogInfo("Upgrade: Cleanup Request Received");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStateCleanup(req);
+            break;
+        case UpgSuccess:
+            LogInfo("Upgrade: Succeeded");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgSuccess(req);
+            break;
+        case UpgFailed:
+            LogInfo("Upgrade: Failed");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgFailed(req);
+            break;
+        case InvalidUpgState:
+            LogInfo("Upgrade: Invalid Upgrade State");
+            hdlrRespCode = this->upgHdlrPtr_->HandleStateInvalidUpgState(req);
+            break; 
+        default:
+            LogInfo("Upgrade: Default state");
+            break; 
+    }
+    if (hdlrRespCode != INPROGRESS) {
+        this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+    }
+    return delphi::error::OK();
+}
+
+} // namespace upgrade

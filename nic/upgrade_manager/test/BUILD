@@ -3,9 +3,7 @@ package(default_visibility = ["//visibility:public"])
 # run the tests
 cc_test(
     name = "upgrade_manager_test",
-    srcs = [
-        "upgrade_manager_test.cc",
-    ],
+    srcs = glob(["*.cc"]),
     linkopts = [
         "-lpthread",
     ],

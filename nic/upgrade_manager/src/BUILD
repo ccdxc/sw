@@ -3,9 +3,7 @@ package(default_visibility = ["//visibility:public"])
 # Compile the upgrade binary
 cc_binary(
     name = "upgrade",
-    srcs = [
-        "upgrade_main.cc"
-    ],
+    srcs = glob(["*.cc"]),
     deps = [
         "//nic/upgrade_manager/lib:upgrade_lib",
         "//nic/delphi/sdk",

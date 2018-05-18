@@ -9,13 +9,8 @@ cc_library(
 # compile the reactor for apps
 cc_library(
     name = "upgrade_app_lib",
-    srcs = [
-        "upgrade.cc",
-        "upgrade.hpp",
-    ],
-    hdrs = [
-        "upgrade.hpp",
-    ],
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/delphi/sdk",
         "//nic/upgrade_manager/proto:upgrade_gen",
