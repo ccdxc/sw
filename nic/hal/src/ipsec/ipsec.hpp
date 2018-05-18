@@ -212,7 +212,7 @@ ipsec_sa_alloc (void)
 {
     ipsec_sa_t    *ipsec_sa;
 
-    ipsec_sa = (ipsec_sa_t *)g_hal_state->ipseccb_slab()->alloc();
+    ipsec_sa = (ipsec_sa_t *)g_hal_state->ipsec_sa_slab()->alloc();
     if (ipsec_sa == NULL) {
         return NULL;
     }
@@ -253,7 +253,7 @@ ipsec_sa_free (ipsec_sa_t *ipsec_sa)
     return HAL_RET_OK;
 }
 
-static inline ipsec_sa_t *
+static inline ipsec_sa_t*
 find_ipsec_sa_by_id (ipsec_sa_id_t ipsec_sa_id)
 {
     return (ipsec_sa_t *)g_hal_state->ipsec_sa_id_ht()->lookup(&ipsec_sa_id);

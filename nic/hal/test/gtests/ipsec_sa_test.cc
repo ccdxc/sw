@@ -450,6 +450,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     //ep_hdl = ep_rsp.mutable_endpoint_status()->endpoint_handle();
 
+    //Encrypt
     encrypt_spec.mutable_key_or_handle()->set_cb_id(1);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
@@ -468,6 +469,46 @@ TEST_F(ipsec_encrypt_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 encrypt_hdl = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+
+    encrypt_spec.mutable_key_or_handle()->set_cb_id(3);
+    encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
+    encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
+    encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
+    encrypt_spec.mutable_authentication_key()->set_key("3333333333333333333333333333333333333333333333333333333333333333");
+    encrypt_spec.mutable_encryption_key()->set_key("3333333333333333333333333333333333333333333333333333333333333333");
+    encrypt_spec.mutable_remote_gateway_ip()->set_ip_af(types::IP_AF_INET);
+    encrypt_spec.mutable_remote_gateway_ip()->set_v4_addr(ip2);
+    encrypt_spec.mutable_local_gateway_ip()->set_ip_af(types::IP_AF_INET);
+    encrypt_spec.mutable_local_gateway_ip()->set_v4_addr(ip1);
+    encrypt_spec.set_salt(0x22222222);
+    encrypt_spec.set_iv(0x2222222222222222);
+    encrypt_spec.set_spi(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_create(encrypt_spec, &encrypt_resp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 encrypt_hdl3 = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+
+    encrypt_spec.mutable_key_or_handle()->set_cb_id(4);
+    encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
+    encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
+    encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
+    encrypt_spec.mutable_authentication_key()->set_key("5555555555555555555555555555555555555555555555555555555555555555");
+    encrypt_spec.mutable_encryption_key()->set_key("5555555555555555555555555555555555555555555555555555555555555555");
+    encrypt_spec.mutable_remote_gateway_ip()->set_ip_af(types::IP_AF_INET);
+    encrypt_spec.mutable_remote_gateway_ip()->set_v4_addr(ip1);
+    encrypt_spec.mutable_local_gateway_ip()->set_ip_af(types::IP_AF_INET);
+    encrypt_spec.mutable_local_gateway_ip()->set_v4_addr(ip1);
+    encrypt_spec.set_salt(0x11111111);
+    encrypt_spec.set_iv(0x1111111111111111);
+    encrypt_spec.set_spi(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_create(encrypt_spec, &encrypt_resp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 encrypt_hdl4 = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+
+
 
     encrypt_spec.mutable_key_or_handle()->set_cb_id(1);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
@@ -495,6 +536,18 @@ TEST_F(ipsec_encrypt_test, test1)
     ipsec_sa_encrypt_test_spec_dump(enc_get_rsp_msg);
 
     del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl3);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl4);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
     hal::hal_cfg_db_close();
