@@ -1129,6 +1129,14 @@ func TestUpdate(t *testing.T) {
 		t.Fatalf("unable to write IPOpts into pointer slice")
 	}
 
+	if len(newUser.Spec.Policies) != 2 {
+		fmt.Printf("unable to write Policies: %+v \n", newUser)
+		t.Fatalf("unable to write Policies pointer to struct with tags")
+	} else if newUser.Spec.Policies["key1"].ToGroup != "new-to-key1" || newUser.Spec.Policies["key3"].ToGroup != "to-key3" {
+		fmt.Printf("unable to write Policies: %+v \n", newUser)
+		t.Fatalf("unable to write Policies pointer to struct with tags")
+	}
+
 	if len(newUser.Spec.OutRulesR) != 2 {
 		fmt.Printf("unable to fetch outRuleR: %+v \n", newUser)
 		t.Fatalf("unable to write OuterRulesR pointer to struct with tags")
@@ -1205,6 +1213,8 @@ func TestNewWrite(t *testing.T) {
 	kvs["out_port"] = NewFInfo([]string{"tcp/8181"})
 	kvs["in_Action"] = NewFInfo([]string{"permit,log", "permit,log"})
 	kvs["in_peer_group"] = NewFInfo([]string{"web-sg", "db-sg"})
+	kvs["ToGroup"] = NewFInfo([]string{"key1:to-key1", "key2:to-key2"})
+	kvs["FromGroup"] = NewFInfo([]string{"key1:from-key1", "key2:from-key2"})
 	kvs["junk"] = NewFInfo([]string{"web-sg", "db-sg"})
 	kvs["ToObj"] = NewFInfo([]string{"sgpolicy"})
 	kvs["RWX"] = NewFInfo([]string{"rw"})
@@ -1324,6 +1334,14 @@ func TestNewWrite(t *testing.T) {
 		fmt.Printf("IPOpts obtained: --%s--, --%s--\n\n", retIPOpt1, retIPOpt2)
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write IPOpts into pointer slice")
+	}
+
+	if len(newUser.Spec.Policies) != 2 {
+		fmt.Printf("unable to write Policies: %+v \n", newUser)
+		t.Fatalf("unable to write Policies pointer to struct with tags")
+	} else if newUser.Spec.Policies["key1"].ToGroup != "to-key1" || newUser.Spec.Policies["key2"].ToGroup != "to-key2" {
+		fmt.Printf("unable to write Policies: %+v \n", newUser)
+		t.Fatalf("unable to write Policies pointer to struct with tags")
 	}
 
 	outr2 := *newUser.Spec.OutRulesR[0]
