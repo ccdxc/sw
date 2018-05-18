@@ -75,7 +75,7 @@ func (wr *APISrvWriter) WriteMirrorSession(ms *monitoring.MirrorSession) error {
 
 	// write it
 	log.Debugf("Updating MirrorSession %v Status %v", ms.Name, ms.Status)
-	_, err = apicl.MirrorSessionV1().MirrorSession().Update(context.Background(), ms)
+	_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), ms)
 	return err
 }
 

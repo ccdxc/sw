@@ -14,6 +14,7 @@ mock_telemetry.go:../generated/monitoring/svc_monitoring_crudinterface.go Makefi
 	sed -i.bak_ -e 's/\*EventPolicy/\*monitoring.EventPolicy/g' $@
 	sed -i.bak_ -e 's/\*Alert/\*monitoring.Alert/g' $@
 	sed -i.bak_ -e 's/\*AlertPolicy/\*monitoring.AlertPolicy/g' $@
+	sed -i.bak_ -e 's/\*MirrorSession/\*monitoring.MirrorSession/g' $@
 	sed -i.bak_ -e 's/[[:space:](]MonitoringV1StatsPolicyInterface[[:space:])]/ (monitoring.MonitoringV1StatsPolicyInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]MonitoringV1FwlogPolicyInterface[[:space:])]/ (monitoring.MonitoringV1FwlogPolicyInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]MonitoringV1FlowExportPolicyInterface[[:space:])]/ (monitoring.MonitoringV1FlowExportPolicyInterface)/g' $@
@@ -22,6 +23,7 @@ mock_telemetry.go:../generated/monitoring/svc_monitoring_crudinterface.go Makefi
 	sed -i.bak_ -e 's/[[:space:](]MonitoringV1AlertInterface[[:space:])]/ (monitoring.MonitoringV1AlertInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]MonitoringV1AlertPolicyInterface[[:space:])]/ (monitoring.MonitoringV1AlertPolicyInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]MonitoringV1AlertDestinationInterface[[:space:])]/ (monitoring.MonitoringV1AlertDestinationInterface)/g' $@
+	sed -i.bak_ -e 's/[[:space:](]MonitoringV1MirrorSessionInterface[[:space:])]/ (monitoring.MonitoringV1MirrorSessionInterface)/g' $@
 	goimports -local "github.com/pensando/sw" -w $@
 	# goimports will bring in github.com/pensando/sw/api/generated/telemetry which can then be reimported as telemetry package
 	sed -i.bak_ -e "s/.*\"github.com\/pensando\/sw\/api\/generated\/telemetry\".*/telemetry \"github.com\/pensando\/sw\/api\/generated\/monitoring\"/g" $@

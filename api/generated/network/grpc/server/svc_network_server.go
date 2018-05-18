@@ -82,6 +82,12 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(network.LbPolicyList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"network.NetworkList": apisrvpkg.NewMessage("network.NetworkList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -94,6 +100,12 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(network.NetworkList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"network.ServiceList": apisrvpkg.NewMessage("network.ServiceList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -106,6 +118,12 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(network.ServiceList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),

@@ -35,9 +35,19 @@ func (m *ApplyDiscountReq) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
 }
 
+func (m *ApplyDiscountReq) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/orders/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *Book) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "books/", m.Name)
+}
+
+func (m *Book) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/books/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -45,9 +55,19 @@ func (m *Coupon) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Coupon/", m.Name)
 }
 
+func (m *Coupon) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/Coupon/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *Customer) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "customers/", m.Name)
+}
+
+func (m *Customer) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/customers/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -55,9 +75,19 @@ func (m *Order) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
 }
 
+func (m *Order) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/orders/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *OutageRequest) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Store/", m.Name)
+}
+
+func (m *OutageRequest) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/Store/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -65,9 +95,19 @@ func (m *Publisher) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "publishers/", m.Name)
 }
 
+func (m *Publisher) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/publishers/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *RestockRequest) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
+}
+
+func (m *RestockRequest) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/Book/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -75,9 +115,18 @@ func (m *RestockResponse) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
 }
 
+func (m *RestockResponse) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/Book/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *Store) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store", "/Singleton")
+}
+
+func (m *Store) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix, "/store")
 }
 
 // MakeKey generates a KV store key for the object
@@ -86,10 +135,18 @@ func (m *BookList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *BookList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *CouponList) MakeKey(prefix string) string {
 	obj := Coupon{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *CouponList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -98,10 +155,18 @@ func (m *CustomerList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *CustomerList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *OrderList) MakeKey(prefix string) string {
 	obj := Order{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *OrderList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -110,10 +175,18 @@ func (m *PublisherList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *PublisherList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *StoreList) MakeKey(prefix string) string {
 	obj := Store{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *StoreList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -194,7 +267,7 @@ func (m *AutoMsgBookWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = ret || m.Events[k].Defaults(ver)
+			ret = m.Events[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -284,7 +357,7 @@ func (m *AutoMsgCustomerWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = ret || m.Events[k].Defaults(ver)
+			ret = m.Events[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -332,7 +405,7 @@ func (m *AutoMsgOrderWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = ret || m.Events[k].Defaults(ver)
+			ret = m.Events[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -380,7 +453,7 @@ func (m *AutoMsgPublisherWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = ret || m.Events[k].Defaults(ver)
+			ret = m.Events[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -468,7 +541,7 @@ func (m *Book) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Book) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -520,7 +593,7 @@ func (m *BookList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
+			ret = m.Items[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -568,7 +641,7 @@ func (m *BookSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Editions {
 		if m.Editions[k] != nil {
-			ret = ret || m.Editions[k].Defaults(ver)
+			ret = m.Editions[k].Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -665,7 +738,7 @@ func (m *Customer) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Customer) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -690,7 +763,7 @@ func (m *CustomerList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
+			ret = m.Items[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -779,8 +852,8 @@ func (m *Order) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Order) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
-	ret = ret || m.Status.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -827,7 +900,7 @@ func (m *OrderList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
+			ret = m.Items[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -854,7 +927,7 @@ func (m *OrderSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Order {
 		if m.Order[k] != nil {
-			ret = ret || m.Order[k].Defaults(ver)
+			ret = m.Order[k].Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -886,7 +959,7 @@ func (m *OrderStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Filled {
 		if m.Filled[k] != nil {
-			ret = ret || m.Filled[k].Defaults(ver)
+			ret = m.Filled[k].Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -937,7 +1010,7 @@ func (m *Publisher) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Publisher) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -962,7 +1035,7 @@ func (m *PublisherList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
+			ret = m.Items[k].Defaults(ver) || ret
 		}
 	}
 	return ret

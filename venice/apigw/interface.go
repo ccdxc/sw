@@ -91,6 +91,11 @@ type PostCallHook func(ctx context.Context, out interface{}) (retCtx context.Con
 
 // ServiceProfile is an interface for a service endpoint profile
 type ServiceProfile interface {
+	// SetDefaults  sets any system wide defaults to the service profile. This
+	//  is usually called during init and overriden if needed while registering
+	//  hooks.
+	SetDefaults() error
+
 	// Rate Limiters- TBD
 
 	// Registered hooks
@@ -114,10 +119,21 @@ type ServiceProfile interface {
 	// AddPreAuthNHook registers a pre authn hook. Hook can mutate the input object, or/and return a
 	//  boolean to skip Auth for the call.
 	AddPreAuthNHook(hook PreAuthNHook) error
+	// ClearPreAuthNHooks clears any hooks registered
+	ClearPreAuthNHooks()
+
 	// AddPreAuthZHook registers a pre authZ hook.
 	AddPreAuthZHook(hook PreAuthZHook) error
+	// ClearPreAuthZHooks clears any hooks registered
+	ClearPreAuthZHooks()
+
 	// AddPreCallHook registers a pre backend call hook. The hook can modify the input object and modify context
 	AddPreCallHook(hook PreCallHook) error
+	// ClearPreCallHooks clears any hooks registered
+	ClearPreCallHooks()
+
 	// AddPostCallHook registers a post backend call hook.
 	AddPostCallHook(hook PostCallHook) error
+	// ClearPostCallHooks clears any hooks registered
+	ClearPostCallHooks()
 }

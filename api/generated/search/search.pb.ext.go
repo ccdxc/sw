@@ -193,7 +193,7 @@ func (m *SearchQuery) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Texts {
 		if m.Texts[k] != nil {
-			ret = ret || m.Texts[k].Defaults(ver)
+			ret = m.Texts[k].Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -229,7 +229,7 @@ func (m *SearchRequest) Clone(into interface{}) (interface{}, error) {
 func (m *SearchRequest) Defaults(ver string) bool {
 	var ret bool
 	if m.Query != nil {
-		ret = ret || m.Query.Defaults(ver)
+		ret = m.Query.Defaults(ver) || ret
 	}
 	ret = true
 	switch ver {

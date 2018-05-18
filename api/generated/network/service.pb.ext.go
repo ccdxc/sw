@@ -32,6 +32,11 @@ func (m *Service) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "services/", m.Tenant, "/", m.Name)
 }
 
+func (m *Service) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/services/", in.Name)
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Service) Clone(into interface{}) (interface{}, error) {
 	var out *Service
@@ -51,7 +56,7 @@ func (m *Service) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Service) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -75,7 +80,7 @@ func (m *ServiceSpec) Clone(into interface{}) (interface{}, error) {
 func (m *ServiceSpec) Defaults(ver string) bool {
 	var ret bool
 	if m.TLSServerPolicy != nil {
-		ret = ret || m.TLSServerPolicy.Defaults(ver)
+		ret = m.TLSServerPolicy.Defaults(ver) || ret
 	}
 	return ret
 }

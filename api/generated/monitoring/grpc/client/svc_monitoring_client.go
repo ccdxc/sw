@@ -126,6 +126,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoAddFwlogPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddFwlogPolicy")(lAutoAddFwlogPolicyEndpoint)
 	}
+	var lAutoAddMirrorSessionEndpoint endpoint.Endpoint
+	{
+		lAutoAddMirrorSessionEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoAddMirrorSession",
+			monitoring.EncodeGrpcReqMirrorSession,
+			monitoring.DecodeGrpcRespMirrorSession,
+			&monitoring.MirrorSession{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddMirrorSession")(lAutoAddMirrorSessionEndpoint)
+	}
 	var lAutoAddStatsPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoAddStatsPolicyEndpoint = grpctransport.NewClient(
@@ -237,6 +251,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteFwlogPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteFwlogPolicy")(lAutoDeleteFwlogPolicyEndpoint)
+	}
+	var lAutoDeleteMirrorSessionEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteMirrorSessionEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoDeleteMirrorSession",
+			monitoring.EncodeGrpcReqMirrorSession,
+			monitoring.DecodeGrpcRespMirrorSession,
+			&monitoring.MirrorSession{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteMirrorSession")(lAutoDeleteMirrorSessionEndpoint)
 	}
 	var lAutoDeleteStatsPolicyEndpoint endpoint.Endpoint
 	{
@@ -350,6 +378,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoGetFwlogPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetFwlogPolicy")(lAutoGetFwlogPolicyEndpoint)
 	}
+	var lAutoGetMirrorSessionEndpoint endpoint.Endpoint
+	{
+		lAutoGetMirrorSessionEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoGetMirrorSession",
+			monitoring.EncodeGrpcReqMirrorSession,
+			monitoring.DecodeGrpcRespMirrorSession,
+			&monitoring.MirrorSession{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetMirrorSession")(lAutoGetMirrorSessionEndpoint)
+	}
 	var lAutoGetStatsPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoGetStatsPolicyEndpoint = grpctransport.NewClient(
@@ -461,6 +503,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListFwlogPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListFwlogPolicy")(lAutoListFwlogPolicyEndpoint)
+	}
+	var lAutoListMirrorSessionEndpoint endpoint.Endpoint
+	{
+		lAutoListMirrorSessionEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoListMirrorSession",
+			monitoring.EncodeGrpcReqListWatchOptions,
+			monitoring.DecodeGrpcRespMirrorSessionList,
+			&monitoring.MirrorSessionList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListMirrorSession")(lAutoListMirrorSessionEndpoint)
 	}
 	var lAutoListStatsPolicyEndpoint endpoint.Endpoint
 	{
@@ -574,6 +630,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoUpdateFwlogPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateFwlogPolicy")(lAutoUpdateFwlogPolicyEndpoint)
 	}
+	var lAutoUpdateMirrorSessionEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateMirrorSessionEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoUpdateMirrorSession",
+			monitoring.EncodeGrpcReqMirrorSession,
+			monitoring.DecodeGrpcRespMirrorSession,
+			&monitoring.MirrorSession{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateMirrorSession")(lAutoUpdateMirrorSessionEndpoint)
+	}
 	var lAutoUpdateStatsPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateStatsPolicyEndpoint = grpctransport.NewClient(
@@ -598,6 +668,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoAddEventPolicyEndpoint:         lAutoAddEventPolicyEndpoint,
 		AutoAddFlowExportPolicyEndpoint:    lAutoAddFlowExportPolicyEndpoint,
 		AutoAddFwlogPolicyEndpoint:         lAutoAddFwlogPolicyEndpoint,
+		AutoAddMirrorSessionEndpoint:       lAutoAddMirrorSessionEndpoint,
 		AutoAddStatsPolicyEndpoint:         lAutoAddStatsPolicyEndpoint,
 		AutoDeleteAlertEndpoint:            lAutoDeleteAlertEndpoint,
 		AutoDeleteAlertDestinationEndpoint: lAutoDeleteAlertDestinationEndpoint,
@@ -606,6 +677,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoDeleteEventPolicyEndpoint:      lAutoDeleteEventPolicyEndpoint,
 		AutoDeleteFlowExportPolicyEndpoint: lAutoDeleteFlowExportPolicyEndpoint,
 		AutoDeleteFwlogPolicyEndpoint:      lAutoDeleteFwlogPolicyEndpoint,
+		AutoDeleteMirrorSessionEndpoint:    lAutoDeleteMirrorSessionEndpoint,
 		AutoDeleteStatsPolicyEndpoint:      lAutoDeleteStatsPolicyEndpoint,
 		AutoGetAlertEndpoint:               lAutoGetAlertEndpoint,
 		AutoGetAlertDestinationEndpoint:    lAutoGetAlertDestinationEndpoint,
@@ -614,6 +686,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoGetEventPolicyEndpoint:         lAutoGetEventPolicyEndpoint,
 		AutoGetFlowExportPolicyEndpoint:    lAutoGetFlowExportPolicyEndpoint,
 		AutoGetFwlogPolicyEndpoint:         lAutoGetFwlogPolicyEndpoint,
+		AutoGetMirrorSessionEndpoint:       lAutoGetMirrorSessionEndpoint,
 		AutoGetStatsPolicyEndpoint:         lAutoGetStatsPolicyEndpoint,
 		AutoListAlertEndpoint:              lAutoListAlertEndpoint,
 		AutoListAlertDestinationEndpoint:   lAutoListAlertDestinationEndpoint,
@@ -622,6 +695,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoListEventPolicyEndpoint:        lAutoListEventPolicyEndpoint,
 		AutoListFlowExportPolicyEndpoint:   lAutoListFlowExportPolicyEndpoint,
 		AutoListFwlogPolicyEndpoint:        lAutoListFwlogPolicyEndpoint,
+		AutoListMirrorSessionEndpoint:      lAutoListMirrorSessionEndpoint,
 		AutoListStatsPolicyEndpoint:        lAutoListStatsPolicyEndpoint,
 		AutoUpdateAlertEndpoint:            lAutoUpdateAlertEndpoint,
 		AutoUpdateAlertDestinationEndpoint: lAutoUpdateAlertDestinationEndpoint,
@@ -630,6 +704,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoUpdateEventPolicyEndpoint:      lAutoUpdateEventPolicyEndpoint,
 		AutoUpdateFlowExportPolicyEndpoint: lAutoUpdateFlowExportPolicyEndpoint,
 		AutoUpdateFwlogPolicyEndpoint:      lAutoUpdateFwlogPolicyEndpoint,
+		AutoUpdateMirrorSessionEndpoint:    lAutoUpdateMirrorSessionEndpoint,
 		AutoUpdateStatsPolicyEndpoint:      lAutoUpdateStatsPolicyEndpoint,
 	}
 }
@@ -2009,6 +2084,177 @@ func (a *restObjMonitoringV1AlertDestination) Allowed(oper apiserver.APIOperType
 	}
 }
 
+type grpcObjMonitoringV1MirrorSession struct {
+	logger log.Logger
+	client monitoring.ServiceMonitoringV1Client
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) Create(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddMirrorSession(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) Update(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateMirrorSession(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.MirrorSession{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetMirrorSession(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.MirrorSession{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteMirrorSession(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.MirrorSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListMirrorSession(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchMirrorSession(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(monitoring.MonitoringV1_AutoWatchMirrorSessionClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjMonitoringV1MirrorSession struct {
+	endpoints monitoring.EndpointsMonitoringV1RestClient
+	instance  string
+}
+
+func (a *restObjMonitoringV1MirrorSession) Create(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddMirrorSession(ctx, in)
+}
+
+func (a *restObjMonitoringV1MirrorSession) Update(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateMirrorSession(ctx, in)
+}
+
+func (a *restObjMonitoringV1MirrorSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.MirrorSession{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetMirrorSession(ctx, &in)
+}
+
+func (a *restObjMonitoringV1MirrorSession) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.MirrorSession{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteMirrorSession(ctx, &in)
+}
+
+func (a *restObjMonitoringV1MirrorSession) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.MirrorSession, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListMirrorSession(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjMonitoringV1MirrorSession) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientMonitoringV1 struct {
 	grpcEvent            monitoring.MonitoringV1EventInterface
 	grpcEventPolicy      monitoring.MonitoringV1EventPolicyInterface
@@ -2018,6 +2264,7 @@ type crudClientMonitoringV1 struct {
 	grpcAlert            monitoring.MonitoringV1AlertInterface
 	grpcAlertPolicy      monitoring.MonitoringV1AlertPolicyInterface
 	grpcAlertDestination monitoring.MonitoringV1AlertDestinationInterface
+	grpcMirrorSession    monitoring.MonitoringV1MirrorSessionInterface
 }
 
 // NewGrpcCrudClientMonitoringV1 creates a GRPC client for the service
@@ -2033,6 +2280,7 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 		grpcAlert:            &grpcObjMonitoringV1Alert{client: client, logger: logger},
 		grpcAlertPolicy:      &grpcObjMonitoringV1AlertPolicy{client: client, logger: logger},
 		grpcAlertDestination: &grpcObjMonitoringV1AlertDestination{client: client, logger: logger},
+		grpcMirrorSession:    &grpcObjMonitoringV1MirrorSession{client: client, logger: logger},
 	}
 }
 
@@ -2068,6 +2316,10 @@ func (a *crudClientMonitoringV1) AlertDestination() monitoring.MonitoringV1Alert
 	return a.grpcAlertDestination
 }
 
+func (a *crudClientMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSessionInterface {
+	return a.grpcMirrorSession
+}
+
 type crudRestClientMonitoringV1 struct {
 	restEvent            monitoring.MonitoringV1EventInterface
 	restEventPolicy      monitoring.MonitoringV1EventPolicyInterface
@@ -2077,6 +2329,7 @@ type crudRestClientMonitoringV1 struct {
 	restAlert            monitoring.MonitoringV1AlertInterface
 	restAlertPolicy      monitoring.MonitoringV1AlertPolicyInterface
 	restAlertDestination monitoring.MonitoringV1AlertDestinationInterface
+	restMirrorSession    monitoring.MonitoringV1MirrorSessionInterface
 }
 
 // NewRestCrudClientMonitoringV1 creates a REST client for the service.
@@ -2095,6 +2348,7 @@ func NewRestCrudClientMonitoringV1(url string) monitoring.MonitoringV1Interface 
 		restAlert:            &restObjMonitoringV1Alert{endpoints: endpoints, instance: url},
 		restAlertPolicy:      &restObjMonitoringV1AlertPolicy{endpoints: endpoints, instance: url},
 		restAlertDestination: &restObjMonitoringV1AlertDestination{endpoints: endpoints, instance: url},
+		restMirrorSession:    &restObjMonitoringV1MirrorSession{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2128,4 +2382,8 @@ func (a *crudRestClientMonitoringV1) AlertPolicy() monitoring.MonitoringV1AlertP
 
 func (a *crudRestClientMonitoringV1) AlertDestination() monitoring.MonitoringV1AlertDestinationInterface {
 	return a.restAlertDestination
+}
+
+func (a *crudRestClientMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSessionInterface {
+	return a.restMirrorSession
 }

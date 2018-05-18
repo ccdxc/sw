@@ -116,7 +116,7 @@ func (s *sclusterTenantBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.Tenant)
 			r.SelfLink = path
 			return r, nil

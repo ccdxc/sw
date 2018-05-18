@@ -32,6 +32,7 @@ type grpcServerMonitoringV1 struct {
 	AutoAddEventPolicyHdlr         grpctransport.Handler
 	AutoAddFlowExportPolicyHdlr    grpctransport.Handler
 	AutoAddFwlogPolicyHdlr         grpctransport.Handler
+	AutoAddMirrorSessionHdlr       grpctransport.Handler
 	AutoAddStatsPolicyHdlr         grpctransport.Handler
 	AutoDeleteAlertHdlr            grpctransport.Handler
 	AutoDeleteAlertDestinationHdlr grpctransport.Handler
@@ -40,6 +41,7 @@ type grpcServerMonitoringV1 struct {
 	AutoDeleteEventPolicyHdlr      grpctransport.Handler
 	AutoDeleteFlowExportPolicyHdlr grpctransport.Handler
 	AutoDeleteFwlogPolicyHdlr      grpctransport.Handler
+	AutoDeleteMirrorSessionHdlr    grpctransport.Handler
 	AutoDeleteStatsPolicyHdlr      grpctransport.Handler
 	AutoGetAlertHdlr               grpctransport.Handler
 	AutoGetAlertDestinationHdlr    grpctransport.Handler
@@ -48,6 +50,7 @@ type grpcServerMonitoringV1 struct {
 	AutoGetEventPolicyHdlr         grpctransport.Handler
 	AutoGetFlowExportPolicyHdlr    grpctransport.Handler
 	AutoGetFwlogPolicyHdlr         grpctransport.Handler
+	AutoGetMirrorSessionHdlr       grpctransport.Handler
 	AutoGetStatsPolicyHdlr         grpctransport.Handler
 	AutoListAlertHdlr              grpctransport.Handler
 	AutoListAlertDestinationHdlr   grpctransport.Handler
@@ -56,6 +59,7 @@ type grpcServerMonitoringV1 struct {
 	AutoListEventPolicyHdlr        grpctransport.Handler
 	AutoListFlowExportPolicyHdlr   grpctransport.Handler
 	AutoListFwlogPolicyHdlr        grpctransport.Handler
+	AutoListMirrorSessionHdlr      grpctransport.Handler
 	AutoListStatsPolicyHdlr        grpctransport.Handler
 	AutoUpdateAlertHdlr            grpctransport.Handler
 	AutoUpdateAlertDestinationHdlr grpctransport.Handler
@@ -64,6 +68,7 @@ type grpcServerMonitoringV1 struct {
 	AutoUpdateEventPolicyHdlr      grpctransport.Handler
 	AutoUpdateFlowExportPolicyHdlr grpctransport.Handler
 	AutoUpdateFwlogPolicyHdlr      grpctransport.Handler
+	AutoUpdateMirrorSessionHdlr    grpctransport.Handler
 	AutoUpdateStatsPolicyHdlr      grpctransport.Handler
 }
 
@@ -124,6 +129,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFwlogPolicy", logger)))...,
 		),
 
+		AutoAddMirrorSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoAddMirrorSessionEndpoint,
+			DecodeGrpcReqMirrorSession,
+			EncodeGrpcRespMirrorSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddMirrorSession", logger)))...,
+		),
+
 		AutoAddStatsPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddStatsPolicyEndpoint,
 			DecodeGrpcReqStatsPolicy,
@@ -178,6 +190,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqFwlogPolicy,
 			EncodeGrpcRespFwlogPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFwlogPolicy", logger)))...,
+		),
+
+		AutoDeleteMirrorSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteMirrorSessionEndpoint,
+			DecodeGrpcReqMirrorSession,
+			EncodeGrpcRespMirrorSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteMirrorSession", logger)))...,
 		),
 
 		AutoDeleteStatsPolicyHdlr: grpctransport.NewServer(
@@ -236,6 +255,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFwlogPolicy", logger)))...,
 		),
 
+		AutoGetMirrorSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoGetMirrorSessionEndpoint,
+			DecodeGrpcReqMirrorSession,
+			EncodeGrpcRespMirrorSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetMirrorSession", logger)))...,
+		),
+
 		AutoGetStatsPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetStatsPolicyEndpoint,
 			DecodeGrpcReqStatsPolicy,
@@ -292,6 +318,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFwlogPolicy", logger)))...,
 		),
 
+		AutoListMirrorSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoListMirrorSessionEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespMirrorSessionList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListMirrorSession", logger)))...,
+		),
+
 		AutoListStatsPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListStatsPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -346,6 +379,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqFwlogPolicy,
 			EncodeGrpcRespFwlogPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFwlogPolicy", logger)))...,
+		),
+
+		AutoUpdateMirrorSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateMirrorSessionEndpoint,
+			DecodeGrpcReqMirrorSession,
+			EncodeGrpcRespMirrorSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateMirrorSession", logger)))...,
 		),
 
 		AutoUpdateStatsPolicyHdlr: grpctransport.NewServer(
@@ -479,6 +519,24 @@ func decodeHTTPrespMonitoringV1AutoAddFwlogPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp FwlogPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoAddMirrorSession(ctx oldcontext.Context, req *MirrorSession) (*MirrorSession, error) {
+	_, resp, err := s.AutoAddMirrorSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoAddMirrorSession).V
+	return &r, resp.(respMonitoringV1AutoAddMirrorSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoAddMirrorSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp MirrorSession
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -627,6 +685,24 @@ func decodeHTTPrespMonitoringV1AutoDeleteFwlogPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoDeleteMirrorSession(ctx oldcontext.Context, req *MirrorSession) (*MirrorSession, error) {
+	_, resp, err := s.AutoDeleteMirrorSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoDeleteMirrorSession).V
+	return &r, resp.(respMonitoringV1AutoDeleteMirrorSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoDeleteMirrorSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp MirrorSession
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoDeleteStatsPolicy(ctx oldcontext.Context, req *StatsPolicy) (*StatsPolicy, error) {
 	_, resp, err := s.AutoDeleteStatsPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -767,6 +843,24 @@ func decodeHTTPrespMonitoringV1AutoGetFwlogPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp FwlogPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoGetMirrorSession(ctx oldcontext.Context, req *MirrorSession) (*MirrorSession, error) {
+	_, resp, err := s.AutoGetMirrorSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoGetMirrorSession).V
+	return &r, resp.(respMonitoringV1AutoGetMirrorSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoGetMirrorSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp MirrorSession
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -915,6 +1009,24 @@ func decodeHTTPrespMonitoringV1AutoListFwlogPolicy(_ context.Context, r *http.Re
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoListMirrorSession(ctx oldcontext.Context, req *api.ListWatchOptions) (*MirrorSessionList, error) {
+	_, resp, err := s.AutoListMirrorSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoListMirrorSession).V
+	return &r, resp.(respMonitoringV1AutoListMirrorSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoListMirrorSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp MirrorSessionList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoListStatsPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*StatsPolicyList, error) {
 	_, resp, err := s.AutoListStatsPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1059,6 +1171,24 @@ func decodeHTTPrespMonitoringV1AutoUpdateFwlogPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoUpdateMirrorSession(ctx oldcontext.Context, req *MirrorSession) (*MirrorSession, error) {
+	_, resp, err := s.AutoUpdateMirrorSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoUpdateMirrorSession).V
+	return &r, resp.(respMonitoringV1AutoUpdateMirrorSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoUpdateMirrorSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp MirrorSession
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoUpdateStatsPolicy(ctx oldcontext.Context, req *StatsPolicy) (*StatsPolicy, error) {
 	_, resp, err := s.AutoUpdateStatsPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1107,6 +1237,10 @@ func (s *grpcServerMonitoringV1) AutoWatchAlertPolicy(in *api.ListWatchOptions, 
 
 func (s *grpcServerMonitoringV1) AutoWatchAlertDestination(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchAlertDestinationServer) error {
 	return s.Endpoints.AutoWatchAlertDestination(in, stream)
+}
+
+func (s *grpcServerMonitoringV1) AutoWatchMirrorSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchMirrorSessionServer) error {
+	return s.Endpoints.AutoWatchMirrorSession(in, stream)
 }
 
 func encodeHTTPAlertDestinationList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -1344,6 +1478,40 @@ func EncodeGrpcRespFwlogPolicyList(ctx context.Context, response interface{}) (i
 
 // DecodeGrpcRespFwlogPolicyList decodes the GRPC response
 func DecodeGrpcRespFwlogPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPMirrorSessionList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPMirrorSessionList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req MirrorSessionList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqMirrorSessionList encodes GRPC request
+func EncodeGrpcReqMirrorSessionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*MirrorSessionList)
+	return req, nil
+}
+
+// DecodeGrpcReqMirrorSessionList decodes GRPC request
+func DecodeGrpcReqMirrorSessionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*MirrorSessionList)
+	return req, nil
+}
+
+// EncodeGrpcRespMirrorSessionList endodes the GRPC response
+func EncodeGrpcRespMirrorSessionList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespMirrorSessionList decodes the GRPC response
+func DecodeGrpcRespMirrorSessionList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

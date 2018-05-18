@@ -6,7 +6,6 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -14,19 +13,3 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
-
-// MirrorSessionV1MirrorSessionInterface exposes the CRUD methods for MirrorSession
-type MirrorSessionV1MirrorSessionInterface interface {
-	Create(ctx context.Context, in *MirrorSession) (*MirrorSession, error)
-	Update(ctx context.Context, in *MirrorSession) (*MirrorSession, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*MirrorSession, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*MirrorSession, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*MirrorSession, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
-// MirrorSessionV1Interface exposes objects with CRUD operations allowed by the service
-type MirrorSessionV1Interface interface {
-	MirrorSession() MirrorSessionV1MirrorSessionInterface
-}

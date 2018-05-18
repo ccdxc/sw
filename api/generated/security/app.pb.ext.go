@@ -27,14 +27,29 @@ func (m *App) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "apps/", m.Name)
 }
 
+func (m *App) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/apps/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AppUser) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users/", m.Tenant, "/", m.Name)
 }
 
+func (m *AppUser) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/app-users/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AppUserGrp) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users-groups/", m.Tenant, "/", m.Name)
+}
+
+func (m *AppUserGrp) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil

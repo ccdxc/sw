@@ -103,6 +103,17 @@ type MonitoringV1AlertDestinationInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// MonitoringV1MirrorSessionInterface exposes the CRUD methods for MirrorSession
+type MonitoringV1MirrorSessionInterface interface {
+	Create(ctx context.Context, in *MirrorSession) (*MirrorSession, error)
+	Update(ctx context.Context, in *MirrorSession) (*MirrorSession, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*MirrorSession, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*MirrorSession, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*MirrorSession, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringV1Interface interface {
 	Event() MonitoringV1EventInterface
@@ -113,4 +124,5 @@ type MonitoringV1Interface interface {
 	Alert() MonitoringV1AlertInterface
 	AlertPolicy() MonitoringV1AlertPolicyInterface
 	AlertDestination() MonitoringV1AlertDestinationInterface
+	MirrorSession() MonitoringV1MirrorSessionInterface
 }

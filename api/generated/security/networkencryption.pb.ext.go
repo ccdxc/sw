@@ -27,6 +27,11 @@ func (m *TrafficEncryptionPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "trafficEncryptionPolicy/", m.Tenant, "/", m.Name)
 }
 
+func (m *TrafficEncryptionPolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *IPsecProtocolSpec) Clone(into interface{}) (interface{}, error) {
 	var out *IPsecProtocolSpec

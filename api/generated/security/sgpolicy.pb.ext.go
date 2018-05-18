@@ -27,6 +27,11 @@ func (m *Sgpolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "sgpolicy/", m.Tenant, "/", m.Name)
 }
 
+func (m *Sgpolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/sgpolicy/", in.Name)
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SGRule) Clone(into interface{}) (interface{}, error) {
 	var out *SGRule

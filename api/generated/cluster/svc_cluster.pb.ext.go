@@ -26,10 +26,18 @@ func (m *ClusterList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *ClusterList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *NodeList) MakeKey(prefix string) string {
 	obj := Node{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *NodeList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -38,10 +46,18 @@ func (m *SmartNICList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *SmartNICList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *TenantList) MakeKey(prefix string) string {
 	obj := Tenant{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *TenantList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object

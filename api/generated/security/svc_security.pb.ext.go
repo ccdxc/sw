@@ -26,10 +26,18 @@ func (m *AppList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AppList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AppUserGrpList) MakeKey(prefix string) string {
 	obj := AppUserGrp{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AppUserGrpList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -38,10 +46,18 @@ func (m *AppUserList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AppUserList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *CertificateList) MakeKey(prefix string) string {
 	obj := Certificate{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *CertificateList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -50,16 +66,28 @@ func (m *SecurityGroupList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *SecurityGroupList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *SgpolicyList) MakeKey(prefix string) string {
 	obj := Sgpolicy{}
 	return obj.MakeKey(prefix)
 }
 
+func (m *SgpolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *TrafficEncryptionPolicyList) MakeKey(prefix string) string {
 	obj := TrafficEncryptionPolicy{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *TrafficEncryptionPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object

@@ -32,14 +32,29 @@ func (m *Alert) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alerts/", m.Tenant, "/", m.Name)
 }
 
+func (m *Alert) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/alerts/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AlertDestination) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alertDestinations/", m.Tenant, "/", m.Name)
 }
 
+func (m *AlertDestination) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/alertDestinations/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AlertPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alertPolicies/", m.Tenant, "/", m.Name)
+}
+
+func (m *AlertPolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/alertPolicies/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -61,8 +76,8 @@ func (m *Alert) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Alert) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
-	ret = ret || m.Status.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -85,7 +100,7 @@ func (m *AlertDestination) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertDestination) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -110,7 +125,7 @@ func (m *AlertDestinationSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.SNMPTrapServers {
 		if m.SNMPTrapServers[k] != nil {
-			ret = ret || m.SNMPTrapServers[k].Defaults(ver)
+			ret = m.SNMPTrapServers[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -156,7 +171,7 @@ func (m *AlertPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertPolicy) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -180,7 +195,7 @@ func (m *AlertPolicySpec) Clone(into interface{}) (interface{}, error) {
 func (m *AlertPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Requirements {
-		ret = ret || m.Requirements[k].Defaults(ver)
+		ret = m.Requirements[k].Defaults(ver) || ret
 	}
 	ret = true
 	switch ver {
@@ -232,7 +247,7 @@ func (m *AlertReason) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.MatchedRequirements {
 		if m.MatchedRequirements[k] != nil {
-			ret = ret || m.MatchedRequirements[k].Defaults(ver)
+			ret = m.MatchedRequirements[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -305,7 +320,7 @@ func (m *AlertStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertStatus) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Reason.Defaults(ver)
+	ret = m.Reason.Defaults(ver) || ret
 	ret = true
 	switch ver {
 	default:
@@ -381,7 +396,7 @@ func (m *MatchedRequirement) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *MatchedRequirement) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Requirement.Defaults(ver)
+	ret = m.Requirement.Defaults(ver) || ret
 	return ret
 }
 
@@ -459,10 +474,10 @@ func (m *SNMPTrapServer) Clone(into interface{}) (interface{}, error) {
 func (m *SNMPTrapServer) Defaults(ver string) bool {
 	var ret bool
 	if m.AuthConfig != nil {
-		ret = ret || m.AuthConfig.Defaults(ver)
+		ret = m.AuthConfig.Defaults(ver) || ret
 	}
 	if m.PrivacyConfig != nil {
-		ret = ret || m.PrivacyConfig.Defaults(ver)
+		ret = m.PrivacyConfig.Defaults(ver) || ret
 	}
 	ret = true
 	switch ver {

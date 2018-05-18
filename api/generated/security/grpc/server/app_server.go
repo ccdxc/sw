@@ -116,7 +116,7 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.App)
 			r.SelfLink = path
 			return r, nil
@@ -215,7 +215,7 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.AppUser)
 			r.SelfLink = path
 			return r, nil
@@ -312,7 +312,7 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.AppUserGrp)
 			r.SelfLink = path
 			return r, nil

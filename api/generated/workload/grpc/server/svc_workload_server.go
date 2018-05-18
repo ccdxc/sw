@@ -68,6 +68,12 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(workload.EndpointList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),

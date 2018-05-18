@@ -18,7 +18,7 @@ import "github.com/pensando/sw/api/export.proto";
 //-----------------------
 message MirrorSessionSpec {
     // PacketSize: Max size of a mirrored packet.
-    // PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. 
+    // PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
     // For packets mirrored to Venice, max mirror packet size allowed is 256 B
     uint32                  PacketSize      = 1 [(gogoproto.jsontag) = "packet-size,omitempty"];
 
@@ -134,20 +134,4 @@ message MirrorSession {
     api.ObjectMeta          O       = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
     MirrorSessionSpec       Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "mirror-session-spec,inline"];
     MirrorSessionStatus     Status  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-
-// MirrorSession REST API
-service MirrorSessionV1 {
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "MirrorSession";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    option (venice.apiGrpcCrudService) = "MirrorSession";
-
-    option (venice.apiRestService) = {
-        Object: "MirrorSession"
-        Method: [ "get", "put", "delete", "post", "list" ]
-    };
 }

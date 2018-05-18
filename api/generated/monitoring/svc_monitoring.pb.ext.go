@@ -26,10 +26,18 @@ func (m *AlertDestinationList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AlertDestinationList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AlertList) MakeKey(prefix string) string {
 	obj := Alert{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AlertList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -38,10 +46,18 @@ func (m *AlertPolicyList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AlertPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *EventList) MakeKey(prefix string) string {
 	obj := Event{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *EventList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -50,10 +66,18 @@ func (m *EventPolicyList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *EventPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *FlowExportPolicyList) MakeKey(prefix string) string {
 	obj := FlowExportPolicy{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *FlowExportPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -62,10 +86,28 @@ func (m *FwlogPolicyList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *FwlogPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *MirrorSessionList) MakeKey(prefix string) string {
+	obj := MirrorSession{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *MirrorSessionList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *StatsPolicyList) MakeKey(prefix string) string {
 	obj := StatsPolicy{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *StatsPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -107,6 +149,12 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgFwlogPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := FwlogPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgMirrorSessionWatchHelper) MakeKey(prefix string) string {
+	obj := MirrorSession{}
 	return obj.MakeKey(prefix)
 }
 
@@ -474,6 +522,48 @@ func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgMirrorSessionWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgMirrorSessionWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgMirrorSessionWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgMirrorSessionWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgMirrorSessionWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgMirrorSessionWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgMirrorSessionWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgMirrorSessionWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgStatsPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgStatsPolicyWatchHelper
 	var ok bool
@@ -596,6 +686,27 @@ func (m *FwlogPolicyList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *FwlogPolicyList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *MirrorSessionList) Clone(into interface{}) (interface{}, error) {
+	var out *MirrorSessionList
+	var ok bool
+	if into == nil {
+		out = &MirrorSessionList{}
+	} else {
+		out, ok = into.(*MirrorSessionList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MirrorSessionList) Defaults(ver string) bool {
 	return false
 }
 
@@ -761,6 +872,22 @@ func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) Validate(ver string, ignoreSt
 	return true
 }
 
+func (m *AutoMsgMirrorSessionWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
 func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
@@ -797,6 +924,15 @@ func (m *FlowExportPolicyList) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *FwlogPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *MirrorSessionList) Validate(ver string, ignoreStatus bool) bool {
 	for _, v := range m.Items {
 		if !v.Validate(ver, ignoreStatus) {
 			return false

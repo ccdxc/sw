@@ -32,9 +32,19 @@ func (m *AuthenticationPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "authn-policy/", m.Name)
 }
 
+func (m *AuthenticationPolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/authn-policy/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *Role) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "roles/", m.Tenant, "/", m.Name)
+}
+
+func (m *Role) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/roles/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -42,9 +52,19 @@ func (m *RoleBinding) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "role-bindings/", m.Tenant, "/", m.Name)
 }
 
+func (m *RoleBinding) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/role-bindings/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *User) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
+}
+
+func (m *User) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/users/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -66,7 +86,7 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AuthenticationPolicy) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -89,7 +109,7 @@ func (m *AuthenticationPolicySpec) Clone(into interface{}) (interface{}, error) 
 // Default sets up the defaults for the object
 func (m *AuthenticationPolicySpec) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Authenticators.Defaults(ver)
+	ret = m.Authenticators.Defaults(ver) || ret
 	return ret
 }
 
@@ -276,7 +296,7 @@ func (m *Role) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Role) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -363,7 +383,7 @@ func (m *RoleSpec) Clone(into interface{}) (interface{}, error) {
 func (m *RoleSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Permissions {
-		ret = ret || m.Permissions[k].Defaults(ver)
+		ret = m.Permissions[k].Defaults(ver) || ret
 	}
 	return ret
 }
@@ -429,7 +449,7 @@ func (m *User) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *User) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 

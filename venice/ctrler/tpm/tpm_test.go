@@ -161,6 +161,9 @@ func (m *mockMonitoringV1) AlertPolicy() telemetry.MonitoringV1AlertPolicyInterf
 func (m *mockMonitoringV1) AlertDestination() telemetry.MonitoringV1AlertDestinationInterface {
 	return nil
 }
+func (m *mockMonitoringV1) MirrorSession() telemetry.MonitoringV1MirrorSessionInterface {
+	return nil
+}
 
 type mockClusterV1 struct {
 	mTnt cluster.ClusterV1TenantInterface

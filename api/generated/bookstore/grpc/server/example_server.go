@@ -153,7 +153,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.ApplyDiscountReq)
 			r.SelfLink = path
 			return r, nil
@@ -256,7 +256,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.Book)
 			r.SelfLink = path
 			return r, nil
@@ -291,6 +291,12 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(bookstore.BookList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"bookstore.BookReview": apisrvpkg.NewMessage("bookstore.BookReview"),
 		"bookstore.BookSpec":   apisrvpkg.NewMessage("bookstore.BookSpec"),
@@ -356,7 +362,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.Coupon)
 			r.SelfLink = path
 			return r, nil
@@ -390,6 +396,12 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(bookstore.CouponList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"bookstore.Customer": apisrvpkg.NewMessage("bookstore.Customer").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
@@ -465,7 +477,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.Customer)
 			r.SelfLink = path
 			return r, nil
@@ -503,6 +515,12 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(bookstore.CustomerList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"bookstore.CustomerPersonalInfo": apisrvpkg.NewMessage("bookstore.CustomerPersonalInfo"),
 		"bookstore.CustomerSpec":         apisrvpkg.NewMessage("bookstore.CustomerSpec"),
@@ -581,7 +599,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.Order)
 			r.SelfLink = path
 			return r, nil
@@ -616,6 +634,12 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(bookstore.OrderList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"bookstore.OrderSpec":   apisrvpkg.NewMessage("bookstore.OrderSpec"),
 		"bookstore.OrderStatus": apisrvpkg.NewMessage("bookstore.OrderStatus"),
@@ -680,7 +704,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.OutageRequest)
 			r.SelfLink = path
 			return r, nil
@@ -764,7 +788,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.Publisher)
 			r.SelfLink = path
 			return r, nil
@@ -798,6 +822,12 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(bookstore.PublisherList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"bookstore.PublisherSpec": apisrvpkg.NewMessage("bookstore.PublisherSpec"),
 		"bookstore.RestockRequest": apisrvpkg.NewMessage("bookstore.RestockRequest").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -861,7 +891,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.RestockRequest)
 			r.SelfLink = path
 			return r, nil
@@ -945,7 +975,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.RestockResponse)
 			r.SelfLink = path
 			return r, nil
@@ -1042,7 +1072,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.Store)
 			r.SelfLink = path
 			return r, nil
@@ -1076,6 +1106,12 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(bookstore.StoreList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"bookstore.StoreSpec":   apisrvpkg.NewMessage("bookstore.StoreSpec"),
 		"bookstore.StoreStatus": apisrvpkg.NewMessage("bookstore.StoreStatus"),

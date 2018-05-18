@@ -89,6 +89,12 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.ClusterList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"cluster.NodeList": apisrvpkg.NewMessage("cluster.NodeList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -101,6 +107,12 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.NodeList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"cluster.SmartNICList": apisrvpkg.NewMessage("cluster.SmartNICList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -113,6 +125,12 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.SmartNICList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		"cluster.TenantList": apisrvpkg.NewMessage("cluster.TenantList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -125,6 +143,12 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				return nil, err
 			}
 			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.TenantList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),

@@ -110,7 +110,7 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecting 1 call to CreateUUID found %d", f.Uuidwrite)
 	}
 
-	m.UpdateSelfLink("", nil)
+	m.UpdateSelfLink("", "", "", nil)
 	if f.SelfLinkWrites != 1 {
 		t.Errorf("Expecgting 1 call to UpdateSelfLink found %d", f.SelfLinkWrites)
 	}

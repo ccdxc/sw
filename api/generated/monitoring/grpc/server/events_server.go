@@ -103,7 +103,7 @@ func (s *smonitoringEventsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.Event)
 			r.SelfLink = path
 			return r, nil
@@ -202,7 +202,7 @@ func (s *smonitoringEventsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
-		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.EventPolicy)
 			r.SelfLink = path
 			return r, nil

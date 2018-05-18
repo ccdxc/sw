@@ -26,10 +26,18 @@ func (m *AuthenticationPolicyList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AuthenticationPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *RoleBindingList) MakeKey(prefix string) string {
 	obj := RoleBinding{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *RoleBindingList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -38,10 +46,18 @@ func (m *RoleList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *RoleList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *UserList) MakeKey(prefix string) string {
 	obj := User{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *UserList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object

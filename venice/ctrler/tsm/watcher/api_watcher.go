@@ -25,7 +25,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	// Watch on changes to Spec only.. status updates are triggered by TS controller so no need
 	// to see them (unless multiple TSCs are running)
 	opts.FieldChangeSelector = []string{"Spec"}
-	mirrorSessionWatcher, err := apicl.MirrorSessionV1().MirrorSession().Watch(ctx1, &opts)
+	mirrorSessionWatcher, err := apicl.MonitoringV1().MirrorSession().Watch(ctx1, &opts)
 	if err != nil {
 		log.Errorf("Failed to start mirror session watch (%s)\n", err)
 		return

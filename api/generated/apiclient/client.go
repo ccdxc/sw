@@ -31,9 +31,7 @@ type Services interface {
 	BookstoreV1() bookstore.BookstoreV1Interface
 	// Package is cluster and len of messages is 4
 	ClusterV1() cluster.ClusterV1Interface
-	// Package is monitoring and len of messages is 1
-	MirrorSessionV1() monitoring.MirrorSessionV1Interface
-	// Package is monitoring and len of messages is 8
+	// Package is monitoring and len of messages is 9
 	MonitoringV1() monitoring.MonitoringV1Interface
 	// Package is network and len of messages is 3
 	NetworkV1() network.NetworkV1Interface
@@ -48,14 +46,13 @@ type apiGrpcServerClient struct {
 	logger log.Logger
 	client *rpckit.RPCClient
 
-	aAuthV1          auth.AuthV1Interface
-	aBookstoreV1     bookstore.BookstoreV1Interface
-	aClusterV1       cluster.ClusterV1Interface
-	aMirrorSessionV1 monitoring.MirrorSessionV1Interface
-	aMonitoringV1    monitoring.MonitoringV1Interface
-	aNetworkV1       network.NetworkV1Interface
-	aSecurityV1      security.SecurityV1Interface
-	aWorkloadV1      workload.WorkloadV1Interface
+	aAuthV1       auth.AuthV1Interface
+	aBookstoreV1  bookstore.BookstoreV1Interface
+	aClusterV1    cluster.ClusterV1Interface
+	aMonitoringV1 monitoring.MonitoringV1Interface
+	aNetworkV1    network.NetworkV1Interface
+	aSecurityV1   security.SecurityV1Interface
+	aWorkloadV1   workload.WorkloadV1Interface
 }
 
 // Close closes the client
@@ -73,10 +70,6 @@ func (a *apiGrpcServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
 
 func (a *apiGrpcServerClient) ClusterV1() cluster.ClusterV1Interface {
 	return a.aClusterV1
-}
-
-func (a *apiGrpcServerClient) MirrorSessionV1() monitoring.MirrorSessionV1Interface {
-	return a.aMirrorSessionV1
 }
 
 func (a *apiGrpcServerClient) MonitoringV1() monitoring.MonitoringV1Interface {
@@ -107,28 +100,26 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 		client: client,
 		logger: logger,
 
-		aAuthV1:          authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
-		aBookstoreV1:     bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
-		aClusterV1:       clusterClient.NewGrpcCrudClientClusterV1(client.ClientConn, logger),
-		aMirrorSessionV1: monitoringClient.NewGrpcCrudClientMirrorSessionV1(client.ClientConn, logger),
-		aMonitoringV1:    monitoringClient.NewGrpcCrudClientMonitoringV1(client.ClientConn, logger),
-		aNetworkV1:       networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
-		aSecurityV1:      securityClient.NewGrpcCrudClientSecurityV1(client.ClientConn, logger),
-		aWorkloadV1:      workloadClient.NewGrpcCrudClientWorkloadV1(client.ClientConn, logger),
+		aAuthV1:       authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
+		aBookstoreV1:  bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
+		aClusterV1:    clusterClient.NewGrpcCrudClientClusterV1(client.ClientConn, logger),
+		aMonitoringV1: monitoringClient.NewGrpcCrudClientMonitoringV1(client.ClientConn, logger),
+		aNetworkV1:    networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
+		aSecurityV1:   securityClient.NewGrpcCrudClientSecurityV1(client.ClientConn, logger),
+		aWorkloadV1:   workloadClient.NewGrpcCrudClientWorkloadV1(client.ClientConn, logger),
 	}, nil
 }
 
 type apiRestServerClient struct {
 	url string
 
-	aAuthV1          auth.AuthV1Interface
-	aBookstoreV1     bookstore.BookstoreV1Interface
-	aClusterV1       cluster.ClusterV1Interface
-	aMirrorSessionV1 monitoring.MirrorSessionV1Interface
-	aMonitoringV1    monitoring.MonitoringV1Interface
-	aNetworkV1       network.NetworkV1Interface
-	aSecurityV1      security.SecurityV1Interface
-	aWorkloadV1      workload.WorkloadV1Interface
+	aAuthV1       auth.AuthV1Interface
+	aBookstoreV1  bookstore.BookstoreV1Interface
+	aClusterV1    cluster.ClusterV1Interface
+	aMonitoringV1 monitoring.MonitoringV1Interface
+	aNetworkV1    network.NetworkV1Interface
+	aSecurityV1   security.SecurityV1Interface
+	aWorkloadV1   workload.WorkloadV1Interface
 }
 
 // Close closes the client
@@ -146,10 +137,6 @@ func (a *apiRestServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
 
 func (a *apiRestServerClient) ClusterV1() cluster.ClusterV1Interface {
 	return a.aClusterV1
-}
-
-func (a *apiRestServerClient) MirrorSessionV1() monitoring.MirrorSessionV1Interface {
-	return a.aMirrorSessionV1
 }
 
 func (a *apiRestServerClient) MonitoringV1() monitoring.MonitoringV1Interface {
@@ -173,13 +160,12 @@ func NewRestAPIClient(url string) (Services, error) {
 	return &apiRestServerClient{
 		url: url,
 
-		aAuthV1:          authClient.NewRestCrudClientAuthV1(url),
-		aBookstoreV1:     bookstoreClient.NewRestCrudClientBookstoreV1(url),
-		aClusterV1:       clusterClient.NewRestCrudClientClusterV1(url),
-		aMirrorSessionV1: monitoringClient.NewRestCrudClientMirrorSessionV1(url),
-		aMonitoringV1:    monitoringClient.NewRestCrudClientMonitoringV1(url),
-		aNetworkV1:       networkClient.NewRestCrudClientNetworkV1(url),
-		aSecurityV1:      securityClient.NewRestCrudClientSecurityV1(url),
-		aWorkloadV1:      workloadClient.NewRestCrudClientWorkloadV1(url),
+		aAuthV1:       authClient.NewRestCrudClientAuthV1(url),
+		aBookstoreV1:  bookstoreClient.NewRestCrudClientBookstoreV1(url),
+		aClusterV1:    clusterClient.NewRestCrudClientClusterV1(url),
+		aMonitoringV1: monitoringClient.NewRestCrudClientMonitoringV1(url),
+		aNetworkV1:    networkClient.NewRestCrudClientNetworkV1(url),
+		aSecurityV1:   securityClient.NewRestCrudClientSecurityV1(url),
+		aWorkloadV1:   workloadClient.NewRestCrudClientWorkloadV1(url),
 	}, nil
 }

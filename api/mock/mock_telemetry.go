@@ -919,6 +919,119 @@ func (_mr *MockMonitoringV1AlertDestinationInterfaceMockRecorder) Allowed(arg0 i
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1AlertDestinationInterface)(nil).Allowed), arg0)
 }
 
+// MockMonitoringV1MirrorSessionInterface is a mock of (monitoring.MonitoringV1MirrorSessionInterface)interface
+type MockMonitoringV1MirrorSessionInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockMonitoringV1MirrorSessionInterfaceMockRecorder
+}
+
+// MockMonitoringV1MirrorSessionInterfaceMockRecorder is the mock recorder for MockMonitoringV1MirrorSessionInterface
+type MockMonitoringV1MirrorSessionInterfaceMockRecorder struct {
+	mock *MockMonitoringV1MirrorSessionInterface
+}
+
+// NewMockMonitoringV1MirrorSessionInterface creates a new mock instance
+func NewMockMonitoringV1MirrorSessionInterface(ctrl *gomock.Controller) *MockMonitoringV1MirrorSessionInterface {
+	mock := &MockMonitoringV1MirrorSessionInterface{ctrl: ctrl}
+	mock.recorder = &MockMonitoringV1MirrorSessionInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockMonitoringV1MirrorSessionInterface) EXPECT() *MockMonitoringV1MirrorSessionInterfaceMockRecorder {
+	return _m.recorder
+}
+
+// Create mocks base method
+func (_m *MockMonitoringV1MirrorSessionInterface) Create(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	ret := _m.ctrl.Call(_m, "Create", ctx, in)
+	ret0, _ := ret[0].(*monitoring.MirrorSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Create", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Create), arg0, arg1)
+}
+
+// Update mocks base method
+func (_m *MockMonitoringV1MirrorSessionInterface) Update(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	ret := _m.ctrl.Call(_m, "Update", ctx, in)
+	ret0, _ := ret[0].(*monitoring.MirrorSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Update), arg0, arg1)
+}
+
+// Get mocks base method
+func (_m *MockMonitoringV1MirrorSessionInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
+	ret := _m.ctrl.Call(_m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.MirrorSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Get", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Get), arg0, arg1)
+}
+
+// Delete mocks base method
+func (_m *MockMonitoringV1MirrorSessionInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
+	ret := _m.ctrl.Call(_m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.MirrorSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Delete", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Delete), arg0, arg1)
+}
+
+// List mocks base method
+func (_m *MockMonitoringV1MirrorSessionInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.MirrorSession, error) {
+	ret := _m.ctrl.Call(_m, "List", ctx, options)
+	ret0, _ := ret[0].([]*monitoring.MirrorSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "List", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).List), arg0, arg1)
+}
+
+// Watch mocks base method
+func (_m *MockMonitoringV1MirrorSessionInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := _m.ctrl.Call(_m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Watch(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Watch", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Watch), arg0, arg1)
+}
+
+// Allowed mocks base method
+func (_m *MockMonitoringV1MirrorSessionInterface) Allowed(oper apiserver.APIOperType) bool {
+	ret := _m.ctrl.Call(_m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Allowed(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Allowed), arg0)
+}
+
 // MockMonitoringV1Interface is a mock of MonitoringV1Interface interface
 type MockMonitoringV1Interface struct {
 	ctrl     *gomock.Controller
@@ -1036,4 +1149,16 @@ func (_m *MockMonitoringV1Interface) AlertDestination() monitoring.MonitoringV1A
 // AlertDestination indicates an expected call of AlertDestination
 func (_mr *MockMonitoringV1InterfaceMockRecorder) AlertDestination() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AlertDestination", reflect.TypeOf((*MockMonitoringV1Interface)(nil).AlertDestination))
+}
+
+// MirrorSession mocks base method
+func (_m *MockMonitoringV1Interface) MirrorSession() monitoring.MonitoringV1MirrorSessionInterface {
+	ret := _m.ctrl.Call(_m, "MirrorSession")
+	ret0, _ := ret[0].(monitoring.MonitoringV1MirrorSessionInterface)
+	return ret0
+}
+
+// MirrorSession indicates an expected call of MirrorSession
+func (_mr *MockMonitoringV1InterfaceMockRecorder) MirrorSession() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MirrorSession", reflect.TypeOf((*MockMonitoringV1Interface)(nil).MirrorSession))
 }

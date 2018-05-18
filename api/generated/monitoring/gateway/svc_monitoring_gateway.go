@@ -173,6 +173,24 @@ func (a adapterMonitoringV1) AutoAddFwlogPolicy(oldctx oldcontext.Context, t *mo
 	return ret.(*monitoring.FwlogPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoAddMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddMirrorSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.MirrorSession)
+		return a.service.AutoAddMirrorSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.MirrorSession), err
+}
+
 func (a adapterMonitoringV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -315,6 +333,24 @@ func (a adapterMonitoringV1) AutoDeleteFwlogPolicy(oldctx oldcontext.Context, t 
 		return nil, err
 	}
 	return ret.(*monitoring.FwlogPolicy), err
+}
+
+func (a adapterMonitoringV1) AutoDeleteMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteMirrorSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.MirrorSession)
+		return a.service.AutoDeleteMirrorSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.MirrorSession), err
 }
 
 func (a adapterMonitoringV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
@@ -461,6 +497,24 @@ func (a adapterMonitoringV1) AutoGetFwlogPolicy(oldctx oldcontext.Context, t *mo
 	return ret.(*monitoring.FwlogPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoGetMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetMirrorSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.MirrorSession)
+		return a.service.AutoGetMirrorSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.MirrorSession), err
+}
+
 func (a adapterMonitoringV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -603,6 +657,24 @@ func (a adapterMonitoringV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *a
 		return nil, err
 	}
 	return ret.(*monitoring.FwlogPolicyList), err
+}
+
+func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.MirrorSessionList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListMirrorSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListMirrorSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.MirrorSessionList), err
 }
 
 func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.StatsPolicyList, error) {
@@ -749,6 +821,24 @@ func (a adapterMonitoringV1) AutoUpdateFwlogPolicy(oldctx oldcontext.Context, t 
 	return ret.(*monitoring.FwlogPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoUpdateMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateMirrorSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.MirrorSession)
+		return a.service.AutoUpdateMirrorSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.MirrorSession), err
+}
+
 func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -807,18 +897,26 @@ func (a adapterMonitoringV1) AutoWatchAlertDestination(oldctx oldcontext.Context
 	return a.service.AutoWatchAlertDestination(ctx, in)
 }
 
+func (a adapterMonitoringV1) AutoWatchMirrorSession(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchMirrorSessionClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchMirrorSession(ctx, in)
+}
+
 func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
 	e.svcProf["AutoAddAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -826,6 +924,7 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -833,6 +932,7 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoListEvent"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -840,9 +940,19 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
+// GetDefaultServiceProfile returns the default fallback service profile for this service
+func (e *sMonitoringV1GwService) GetDefaultServiceProfile() (apigw.ServiceProfile, error) {
+	if e.defSvcProf == nil {
+		return nil, errors.New("not found")
+	}
+	return e.defSvcProf, nil
+}
+
+// GetServiceProfile returns the service profile for a given method in this service
 func (e *sMonitoringV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
 	if ret, ok := e.svcProf[method]; ok {
 		return ret, nil
@@ -850,6 +960,7 @@ func (e *sMonitoringV1GwService) GetServiceProfile(method string) (apigw.Service
 	return nil, errors.New("not found")
 }
 
+// GetCrudServiceProfile returns the service profile for a auto generated crud operation
 func (e *sMonitoringV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
@@ -879,13 +990,9 @@ func (e *sMonitoringV1GwService) CompleteRegistration(ctx context.Context,
 	muxMutex.Unlock()
 	e.setupSvcProfile()
 
-	fileCount++
-
-	if fileCount == 3 {
-		err := registerSwaggerDef(m, logger)
-		if err != nil {
-			logger.ErrorLog("msg", "failed to register swagger spec", "service", "monitoring.MonitoringV1", "error", err)
-		}
+	err := registerSwaggerDef(m, logger)
+	if err != nil {
+		logger.ErrorLog("msg", "failed to register swagger spec", "service", "monitoring.MonitoringV1", "error", err)
 	}
 	wg.Add(1)
 	go func() {

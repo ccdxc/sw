@@ -32,6 +32,11 @@ var storageTransformersMap{{getFileName .Name}} = make(map[string][]func(ctx con
 // MakeKey generates a KV store key for the object
 func (m *{{.Name}}) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", {{range $index, $value := (getDbKey .)}}{{if ($index) ne 0}}{{$sep}}{{end}}{{if strEq $value.Type "prefix"}}"{{$value.Val}}"{{else}}m.{{$value.Val}}{{end}}{{$sep := ", "}}{{end}})
+}
+
+func (m *{{.Name}})  MakeURI(ver, prefix string) string { {{$uri := getMsgURIKey . ""}}{{if $uri.Ref}}
+  in := m{{end}}
+	return fmt.Sprint("/", ver, "/", prefix, {{$uri.Str}})
 }{{end}}{{end}}
 
 {{range .Messages}}{{if isListHelper .}}{{$type := getListType . false}}
@@ -39,7 +44,12 @@ func (m *{{.Name}}) MakeKey(prefix string) string {
 func (m *{{.Name}})  MakeKey(prefix string) string {
 	obj := {{$type}}{}
 	return obj.MakeKey(prefix)
-} {{end}} {{end}}
+}
+
+func (m *{{.Name}})  MakeURI(ver, prefix string) string { {{$uri := getMsgURIKey . ""}}{{if $uri.Ref}}
+  in := m{{end}}
+	return fmt.Sprint("/", ver, "/", prefix, {{$uri.Str}})
+}{{end}} {{end}}
 {{range .Messages}}{{if isWatchHelper .}}{{$type := getWatchType . false}}
 // MakeKey generates a KV store key for the object
 func (m *{{.Name}})  MakeKey(prefix string) string {
@@ -69,14 +79,14 @@ func (m *{{getStr 0}}) Defaults(ver string) bool { {{with index $defaults.Map (g
 	var ret bool {{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
 	for k := range m.{{$fldk}} { {{if $defval.Pointer}}
 		if m.{{$fldk}}[k] != nil {
-			ret = ret || m.{{$fldk}}[k].Defaults(ver)
+			ret = m.{{$fldk}}[k].Defaults(ver) || ret
 		}{{else}}
-		ret = ret || m.{{$fldk}}[k].Defaults(ver) {{end}}
+		ret = m.{{$fldk}}[k].Defaults(ver) || ret {{end}}
 	}{{else}}{{if $defval.Pointer}}
 	if m.{{$fldk}} != nil {
-		ret = ret || m.{{$fldk}}.Defaults(ver)
+		ret = m.{{$fldk}}.Defaults(ver) || ret
 	}{{else}}
-	ret = ret || m.{{$fldk}}.Defaults(ver){{end}}{{end}}{{end}}{{end}}{{if eq (len .Versions) 0}}{{else}}
+	ret = m.{{$fldk}}.Defaults(ver) || ret{{end}}{{end}}{{end}}{{end}}{{if eq (len .Versions) 0}}{{else}}
 	ret = true
 	switch ver { {{range $ver, $verdef := .Versions}}{{if eq $ver "all"}}
 	default: {{else}}
@@ -195,12 +205,18 @@ func init() {
 	validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
 	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}{{if getBool 1}}
 	validatorMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool){{$_ := saveBool false 1}}{{end}}{{end}}{{end}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
-	{{range $fldv.Validators}}{{if eq 0 (len .Args)}}
+	{{range $fldv.Validators}}{{if eq 0 (len .Args)}}{{$fnname := .Fn}}
 	validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
-		m := i.(*{{$msgName}})
+		m := i.(*{{$msgName}}){{if $fldv.Repeated}}
+		for _, v := range m.{{$fldk}} {
+			if !validators.{{$fnname}}(v) {
+				return false
+			}
+		}
+		{{else}}
 		if !validators.{{.Fn}}(m.{{$fldk}}) {
 			return false
-		}
+		}{{end}}
 		return true
 	})
 		{{else}} validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {

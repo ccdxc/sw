@@ -27,6 +27,11 @@ func (m *Tenant) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "tenants/", m.Name)
 }
 
+func (m *Tenant) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/tenants/", in.Name)
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Tenant) Clone(into interface{}) (interface{}, error) {
 	var out *Tenant

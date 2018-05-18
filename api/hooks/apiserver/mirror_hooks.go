@@ -159,5 +159,5 @@ func registerMirrorSessionHooks(svc apiserver.Service, logger log.Logger) {
 
 func init() {
 	apisrv := apisrvpkg.MustGetAPIServer()
-	apisrv.RegisterHooksCb("monitoring.MirrorSessionV1", registerMirrorSessionHooks)
+	apisrv.RegisterHooksCb("monitoring.MonitoringV1", registerMirrorSessionHooks)
 }

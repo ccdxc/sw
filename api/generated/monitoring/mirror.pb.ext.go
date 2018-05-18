@@ -32,16 +32,9 @@ func (m *MirrorSession) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "MirrorSession/", m.Tenant, "/", m.Name)
 }
 
-// MakeKey generates a KV store key for the object
-func (m *MirrorSessionList) MakeKey(prefix string) string {
-	obj := MirrorSession{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgMirrorSessionWatchHelper) MakeKey(prefix string) string {
-	obj := MirrorSession{}
-	return obj.MakeKey(prefix)
+func (m *MirrorSession) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/MirrorSession/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -62,54 +55,6 @@ func (m *AppProtoSelector) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AppProtoSelector) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgMirrorSessionWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgMirrorSessionWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgMirrorSessionWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgMirrorSessionWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgMirrorSessionWatchHelper) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Events {
-		if m.Events[k] != nil {
-			ret = ret || m.Events[k].Defaults(ver)
-		}
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgMirrorSessionWatchHelper_WatchEvent
-	var ok bool
-	if into == nil {
-		out = &AutoMsgMirrorSessionWatchHelper_WatchEvent{}
-	} else {
-		out, ok = into.(*AutoMsgMirrorSessionWatchHelper_WatchEvent)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -201,35 +146,8 @@ func (m *MirrorSession) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *MirrorSession) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
-	ret = ret || m.Status.Defaults(ver)
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *MirrorSessionList) Clone(into interface{}) (interface{}, error) {
-	var out *MirrorSessionList
-	var ok bool
-	if into == nil {
-		out = &MirrorSessionList{}
-	} else {
-		out, ok = into.(*MirrorSessionList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *MirrorSessionList) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Items {
-		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
-		}
-	}
+	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -253,7 +171,7 @@ func (m *MirrorSessionSpec) Clone(into interface{}) (interface{}, error) {
 func (m *MirrorSessionSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Collectors {
-		ret = ret || m.Collectors[k].Defaults(ver)
+		ret = m.Collectors[k].Defaults(ver) || ret
 	}
 	ret = true
 	switch ver {
@@ -361,22 +279,6 @@ func (m *AppProtoSelector) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *AutoMsgMirrorSessionWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Events {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
-		}
-	}
-	return true
-}
-
-func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
 func (m *MatchRule) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
@@ -408,15 +310,6 @@ func (m *MirrorSession) Validate(ver string, ignoreStatus bool) bool {
 	}
 	if !ignoreStatus {
 		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
-		}
-	}
-	return true
-}
-
-func (m *MirrorSessionList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
 			return false
 		}
 	}

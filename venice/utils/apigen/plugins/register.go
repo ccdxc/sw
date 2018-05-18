@@ -289,6 +289,29 @@ type URIKey struct {
 	Ref bool
 }
 
+func getMsgURIKey(m *descriptor.Message, prefix string) (URIKey, error) {
+	var out URIKey
+	var output []KeyComponent
+	var err error
+
+	if output, err = getMsgURI(m, prefix); err != nil {
+		return out, nil
+	}
+	out.Str = ""
+	out.Ref = false
+	sep := ""
+	for _, v := range output {
+		if v.Type == "prefix" {
+			out.Str = fmt.Sprintf("%s%s\"%s\"", out.Str, sep, v.Val)
+		} else if v.Type == "field" {
+			out.Ref = true
+			out.Str = fmt.Sprintf("%s%sin.%s", out.Str, sep, v.Val)
+		}
+		sep = ", "
+	}
+	return out, nil
+}
+
 // getURIKey gets the URI key given the method. The req parameter specifies
 //  if this is in the req direction or resp. In the response direction the URI
 //  is always the URI that can be used to access the object.
@@ -1851,6 +1874,7 @@ func init() {
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
 	reg.RegisterFunc("getURIKey", getURIKey)
+	reg.RegisterFunc("getMsgURIKey", getMsgURIKey)
 	reg.RegisterFunc("getSvcParams", getSvcParams)
 	reg.RegisterFunc("getRestSvcOptions", getRestSvcOptions)
 	reg.RegisterFunc("getMethodParams", getMethodParams)

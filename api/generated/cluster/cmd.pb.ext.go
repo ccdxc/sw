@@ -32,14 +32,29 @@ func (m *Cluster) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "cluster/", m.Name)
 }
 
+func (m *Cluster) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/cluster/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *Node) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "nodes/", m.Name)
 }
 
+func (m *Node) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/nodes/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *SmartNIC) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "smartnics/", m.Name)
+}
+
+func (m *SmartNIC) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/smartnics/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -124,8 +139,8 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Node) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
-	ret = ret || m.Status.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -207,7 +222,7 @@ func (m *NodeStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Conditions {
 		if m.Conditions[k] != nil {
-			ret = ret || m.Conditions[k].Defaults(ver)
+			ret = m.Conditions[k].Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -288,7 +303,7 @@ func (m *PortStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Conditions {
 		if m.Conditions[k] != nil {
-			ret = ret || m.Conditions[k].Defaults(ver)
+			ret = m.Conditions[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -313,8 +328,8 @@ func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *SmartNIC) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
-	ret = ret || m.Status.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -394,12 +409,12 @@ func (m *SmartNICStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Conditions {
 		if m.Conditions[k] != nil {
-			ret = ret || m.Conditions[k].Defaults(ver)
+			ret = m.Conditions[k].Defaults(ver) || ret
 		}
 	}
 	for k := range m.Ports {
 		if m.Ports[k] != nil {
-			ret = ret || m.Ports[k].Defaults(ver)
+			ret = m.Ports[k].Defaults(ver) || ret
 		}
 	}
 	return ret

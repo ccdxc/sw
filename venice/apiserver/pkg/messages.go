@@ -308,9 +308,9 @@ func (m *MessageHdlr) WriteModTime(i interface{}) (interface{}, error) {
 }
 
 //UpdateSelfLink update the object with the self link provided
-func (m *MessageHdlr) UpdateSelfLink(path string, i interface{}) (interface{}, error) {
+func (m *MessageHdlr) UpdateSelfLink(path, ver, prefix string, i interface{}) (interface{}, error) {
 	if m.selfLinkFunc != nil {
-		return m.selfLinkFunc(path, i)
+		return m.selfLinkFunc(path, ver, prefix, i)
 	}
 	return i, nil
 }

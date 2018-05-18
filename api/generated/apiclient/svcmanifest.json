@@ -52,12 +52,6 @@
   },
   "monitoring": {
     "Svcs": {
-      "MirrorSessionV1": {
-        "Version": "v1",
-        "Messages": [
-          "MirrorSession"
-        ]
-      },
       "MonitoringV1": {
         "Version": "v1",
         "Messages": [
@@ -68,12 +62,12 @@
           "FlowExportPolicy",
           "Alert",
           "AlertPolicy",
-          "AlertDestination"
+          "AlertDestination",
+          "MirrorSession"
         ]
       }
     },
     "Files": [
-      "mirror.proto",
       "svc_monitoring.proto",
       "telemetry.proto"
     ]

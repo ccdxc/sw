@@ -965,20 +965,18 @@ func TestGetParams(t *testing.T) {
 			if err != nil {
 				t.Errorf("error getting method URI key for [%s](%s)", *meth.Name, err)
 			}
+			msgKeys, err := getMsgURIKey(meth.RequestType, "example")
+			if err != nil {
+				t.Errorf("error getting message URI key for [%s.%s](%s)", *meth.Name, *meth.RequestType.Name, err)
+			}
 			switch *meth.Name {
-			case "noncrudsvc_get", "noncrudsvc_delete", "noncrudsvc_list":
+			case "noncrudsvc_get", "noncrudsvc_delete", "noncrudsvc_list", "noncrudsvc_create", "noncrudsvc_update":
 				if !reflect.DeepEqual(result1, keys) {
 					t.Errorf("key components do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
 				}
-			case "noncrudsvc_create":
-				if !reflect.DeepEqual(result1, keys) {
-					t.Errorf("key components do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
+				if !reflect.DeepEqual(result1, msgKeys) {
+					t.Errorf("key components (msg) do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
 				}
-			case "noncrudsvc_update":
-				if !reflect.DeepEqual(result1, keys) {
-					t.Errorf("key components do not match for [%s] got [%+v]", *meth.Name, keys)
-				}
-
 			}
 			if !isRestExposed(meth) {
 				t.Errorf("RestExposed returned false expecting true for [%s]", *meth.Name)

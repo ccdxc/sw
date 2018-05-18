@@ -15,6 +15,344 @@
     "application/json"
   ],
   "paths": {
+    "/{O.Tenant}/MirrorSession": {
+      "get": {
+        "operationId": "AutoListMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSessionList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/MirrorSession/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.PacketSize",
+            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.StartConditions.ScheduleTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Spec.StopConditions.MaxPacketCount",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.StopConditions.ExpiryDuration",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.PacketFilters",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.State",
+            "description": "Either Src or Dst or both must be specified, both cannot be *\nSrc = * when not specified\nWhen Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.SrcPacketCaptureFileURL",
+            "description": "App = * when not specified.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.DstPacketCaptureFileURL",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
     "/{O.Tenant}/alertDestinations": {
       "get": {
         "operationId": "AutoListAlertDestination",
@@ -2733,6 +3071,26 @@
       },
       "title": "AlertPolicy - tenant scoped"
     },
+    "monitoringAppProtoSelector": {
+      "type": "object",
+      "properties": {
+        "Ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "PacketSize: Max size of a mirrored packet.\nPacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.\nFor packets mirrored to Venice, max mirror packet size allowed is 256 B"
+        },
+        "Apps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "StartConditions"
+        }
+      },
+      "title": "========================================================================================\nPacket Mirroring\n========================================================================================\n-----------------------\n---- MirrorSessionSpec\n-----------------------"
+    },
     "monitoringAuditInfo": {
       "type": "object",
       "properties": {
@@ -2910,6 +3268,28 @@
         },
         "Object": {
           "$ref": "#/definitions/monitoringFwlogPolicy"
+        }
+      }
+    },
+    "monitoringAutoMsgMirrorSessionWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgMirrorSessionWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "monitoringAutoMsgMirrorSessionWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringMirrorSession"
         }
       }
     },
@@ -3253,6 +3633,47 @@
       "type": "object",
       "title": "========================================================================================\n flow export policy\n========================================================================================"
     },
+    "monitoringMatchRule": {
+      "type": "object",
+      "properties": {
+        "Src": {
+          "$ref": "#/definitions/monitoringMatchSelector"
+        },
+        "Dst": {
+          "$ref": "#/definitions/monitoringMatchSelector"
+        },
+        "AppProtoSel": {
+          "$ref": "#/definitions/monitoringAppProtoSelector"
+        }
+      },
+      "title": "MirrorStartConditions - Conditions to start mirroring"
+    },
+    "monitoringMatchSelector": {
+      "type": "object",
+      "properties": {
+        "Endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Stop after capturing specified number of packets"
+        },
+        "IPAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\""
+        },
+        "MACAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met"
+    },
     "monitoringMatchedRequirement": {
       "type": "object",
       "properties": {
@@ -3266,6 +3687,137 @@
         }
       },
       "description": "SNMPTrapServer contains the configuration for sending SNMP traps to a receiver."
+    },
+    "monitoringMirrorCollector": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "ExportCfg": {
+          "$ref": "#/definitions/apiExportConfig",
+          "title": "When collector type is Venice, collector export information is not required"
+        }
+      },
+      "title": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)"
+    },
+    "monitoringMirrorSession": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Any one of the following match selector can be specified to select a packet from mirroring"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringMirrorSessionSpec",
+          "title": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\""
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringMirrorSessionStatus"
+        }
+      },
+      "title": "Traffic Selection Rules\nTraffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses"
+    },
+    "monitoringMirrorSessionList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMirrorSession"
+          }
+        }
+      }
+    },
+    "monitoringMirrorSessionSpec": {
+      "type": "object",
+      "properties": {
+        "PacketSize": {
+          "type": "integer",
+          "format": "int64",
+          "title": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]"
+        },
+        "StartConditions": {
+          "$ref": "#/definitions/monitoringMirrorStartConditions",
+          "title": "Apps - E.g. [\"Redis\"]"
+        },
+        "StopConditions": {
+          "$ref": "#/definitions/monitoringMirrorStopConditions"
+        },
+        "Collectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMirrorCollector"
+          }
+        },
+        "MatchRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMatchRule"
+          }
+        },
+        "PacketFilters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Application/protocol selector"
+    },
+    "monitoringMirrorSessionStatus": {
+      "type": "object",
+      "properties": {
+        "State": {
+          "type": "string",
+          "title": "Either Src or Dst or both must be specified, both cannot be *\nSrc = * when not specified\nWhen Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored"
+        },
+        "NICStatus": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringSmartNICMirrorSessionStatus"
+          },
+          "title": "Dst = * when not specified\nWhen Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored"
+        },
+        "SrcPacketCaptureFileURL": {
+          "type": "string",
+          "title": "App = * when not specified"
+        },
+        "DstPacketCaptureFileURL": {
+          "type": "string"
+        }
+      },
+      "title": "MatchRule : This is used to select packets that need to be monitored (mirrored)"
+    },
+    "monitoringMirrorStartConditions": {
+      "type": "object",
+      "properties": {
+        "ScheduleTime": {
+          "$ref": "#/definitions/apiTimestamp"
+        }
+      }
+    },
+    "monitoringMirrorStopConditions": {
+      "type": "object",
+      "properties": {
+        "MaxPacketCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ExpiryDuration": {
+          "type": "string"
+        }
+      }
     },
     "monitoringPrivacyConfig": {
       "type": "object",
@@ -3321,6 +3873,27 @@
         }
       },
       "title": "AlertDestination - tenant scoped"
+    },
+    "monitoringSmartNICMirrorSessionStatus": {
+      "type": "object",
+      "properties": {
+        "SmartNIC": {
+          "type": "string"
+        },
+        "NumSrcPackets": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "NumDstPackets": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "SessionId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "------------------\n---- MirrorSession\n------------------"
     },
     "monitoringStatsPolicy": {
       "type": "object",

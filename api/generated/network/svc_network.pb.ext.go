@@ -26,16 +26,28 @@ func (m *LbPolicyList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *LbPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *NetworkList) MakeKey(prefix string) string {
 	obj := Network{}
 	return obj.MakeKey(prefix)
 }
 
+func (m *NetworkList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *ServiceList) MakeKey(prefix string) string {
 	obj := Service{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *ServiceList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
 }
 
 // MakeKey generates a KV store key for the object

@@ -26,6 +26,10 @@ func (m *EndpointList) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *EndpointList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgEndpointWatchHelper) MakeKey(prefix string) string {
 	obj := Endpoint{}

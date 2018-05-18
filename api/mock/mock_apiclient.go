@@ -88,18 +88,6 @@ func (_mr *MockServicesMockRecorder) ClusterV1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ClusterV1", reflect.TypeOf((*MockServices)(nil).ClusterV1))
 }
 
-// MirrorSessionV1 mocks base method
-func (_m *MockServices) MirrorSessionV1() monitoring.MirrorSessionV1Interface {
-	ret := _m.ctrl.Call(_m, "MirrorSessionV1")
-	ret0, _ := ret[0].(monitoring.MirrorSessionV1Interface)
-	return ret0
-}
-
-// MirrorSessionV1 indicates an expected call of MirrorSessionV1
-func (_mr *MockServicesMockRecorder) MirrorSessionV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MirrorSessionV1", reflect.TypeOf((*MockServices)(nil).MirrorSessionV1))
-}
-
 // MonitoringV1 mocks base method
 func (_m *MockServices) MonitoringV1() monitoring.MonitoringV1Interface {
 	ret := _m.ctrl.Call(_m, "MonitoringV1")

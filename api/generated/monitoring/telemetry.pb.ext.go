@@ -32,14 +32,29 @@ func (m *FlowExportPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "flowExportPolicy/", m.Tenant, "/", m.Name)
 }
 
+func (m *FlowExportPolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/flowExportPolicy/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *FwlogPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "fwlogPolicy/", m.Tenant, "/", m.Name)
 }
 
+func (m *FwlogPolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/fwlogPolicy/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *StatsPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "statsPolicy/", m.Tenant, "/", m.Name)
+}
+
+func (m *StatsPolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/statsPolicy/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -61,7 +76,7 @@ func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FlowExportPolicy) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -85,7 +100,7 @@ func (m *FlowExportSpec) Clone(into interface{}) (interface{}, error) {
 func (m *FlowExportSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Targets {
-		ret = ret || m.Targets[k].Defaults(ver)
+		ret = m.Targets[k].Defaults(ver) || ret
 	}
 	return ret
 }
@@ -187,7 +202,7 @@ func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FwlogPolicy) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -212,7 +227,7 @@ func (m *FwlogSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Exports {
 		if m.Exports[k] != nil {
-			ret = ret || m.Exports[k].Defaults(ver)
+			ret = m.Exports[k].Defaults(ver) || ret
 		}
 	}
 	ret = true

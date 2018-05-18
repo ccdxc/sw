@@ -32,9 +32,19 @@ func (m *Event) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "events/", m.Tenant, "/", m.Name)
 }
 
+func (m *Event) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/events/", in.Name)
+}
+
 // MakeKey generates a KV store key for the object
 func (m *EventPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "eventPolicy/", m.Tenant, "/", m.Name)
+}
+
+func (m *EventPolicy) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/eventPolicy/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -56,7 +66,7 @@ func (m *Event) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Event) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.EventAttributes.Defaults(ver)
+	ret = m.EventAttributes.Defaults(ver) || ret
 	return ret
 }
 
@@ -133,7 +143,7 @@ func (m *EventPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *EventPolicy) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -158,7 +168,7 @@ func (m *EventPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Exports {
 		if m.Exports[k] != nil {
-			ret = ret || m.Exports[k].Defaults(ver)
+			ret = m.Exports[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -227,7 +237,7 @@ func (m *EventsList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = ret || m.Events[k].Defaults(ver)
+			ret = m.Events[k].Defaults(ver) || ret
 		}
 	}
 	return ret

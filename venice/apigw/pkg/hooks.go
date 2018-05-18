@@ -50,10 +50,20 @@ func (s *svcProfile) AddPreAuthNHook(hook apigw.PreAuthNHook) error {
 	return nil
 }
 
+// ClearPreAuthNHooks clears any hooks registered
+func (s *svcProfile) ClearPreAuthNHooks() {
+	s.preauthn = nil
+}
+
 // AddPreAuthZHook registers a pre authn hook
 func (s *svcProfile) AddPreAuthZHook(hook apigw.PreAuthZHook) error {
 	s.preauthz = append(s.preauthz, hook)
 	return nil
+}
+
+// ClearPreAuthZHooks clears any hooks registered
+func (s *svcProfile) ClearPreAuthZHooks() {
+	s.preauthz = nil
 }
 
 // AddPreCallHook registers a pre call hook
@@ -62,9 +72,27 @@ func (s *svcProfile) AddPreCallHook(hook apigw.PreCallHook) error {
 	return nil
 }
 
+// ClearPreCallHooks clears any hooks registered
+func (s *svcProfile) ClearPreCallHooks() {
+	s.precall = nil
+}
+
 // AddPostCallHook registers a post call hook
 func (s *svcProfile) AddPostCallHook(hook apigw.PostCallHook) error {
 	s.postcall = append(s.postcall, hook)
+	return nil
+}
+
+// ClearPostCallHooks clears any hooks registered
+func (s *svcProfile) ClearPostCallHooks() {
+	s.postcall = nil
+}
+
+// SetDefaults sets any system wide defaults to the service profile. This
+//  is usually called during init and overriden if needed while registering
+//  hooks.
+func (s *svcProfile) SetDefaults() error {
+	// All defaults for the service profile go here.
 	return nil
 }
 

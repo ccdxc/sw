@@ -333,7 +333,7 @@ func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) err
 }
 
 //UpdateSelfLink update the object with the self link provided
-func (m *FakeMessage) UpdateSelfLink(path string, i interface{}) (interface{}, error) {
+func (m *FakeMessage) UpdateSelfLink(path, ver, prefix string, i interface{}) (interface{}, error) {
 	return i, nil
 }
 
@@ -414,7 +414,7 @@ func (m *FakeMessage) KvListFunc(ctx context.Context, kvs kvstore.Interface, opt
 }
 
 // SelfLinkWriterFunc is mock method for testing
-func (m *FakeMessage) SelfLinkWriterFunc(path string, i interface{}) (interface{}, error) {
+func (m *FakeMessage) SelfLinkWriterFunc(path, ver, prefix string, i interface{}) (interface{}, error) {
 	m.SelfLinkWrites++
 	return i, nil
 }

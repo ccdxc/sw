@@ -11,6 +11,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "telemetry.proto";
 import "alerts.proto";
 import "events.proto";
+import "mirror.proto";
 
 service MonitoringV1 {
 
@@ -27,6 +28,7 @@ service MonitoringV1 {
     option (venice.apiGrpcCrudService) = "Alert";
     option (venice.apiGrpcCrudService) = "AlertPolicy";
     option (venice.apiGrpcCrudService) = "AlertDestination";
+    option (venice.apiGrpcCrudService) = "MirrorSession";
 
 
     // GET and LIST calls are handled by API gateway -> Query processor -> elastic DB(or events manager)
@@ -65,6 +67,11 @@ service MonitoringV1 {
     };
     option (venice.apiRestService) = {
         Object: "AlertDestination"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "MirrorSession"
         Method: [ "get", "put", "delete", "post", "list" ]
     };
 }

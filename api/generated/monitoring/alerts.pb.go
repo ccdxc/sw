@@ -40,12 +40,10 @@
 		EventSource
 		EventsList
 		AppProtoSelector
-		AutoMsgMirrorSessionWatchHelper
 		MatchRule
 		MatchSelector
 		MirrorCollector
 		MirrorSession
-		MirrorSessionList
 		MirrorSessionSpec
 		MirrorSessionStatus
 		MirrorStartConditions
@@ -61,11 +59,13 @@
 		AutoMsgEventWatchHelper
 		AutoMsgFlowExportPolicyWatchHelper
 		AutoMsgFwlogPolicyWatchHelper
+		AutoMsgMirrorSessionWatchHelper
 		AutoMsgStatsPolicyWatchHelper
 		EventList
 		EventPolicyList
 		FlowExportPolicyList
 		FwlogPolicyList
+		MirrorSessionList
 		StatsPolicyList
 		FlowExportPolicy
 		FlowExportSpec

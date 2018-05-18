@@ -24,6 +24,7 @@ type ServiceMonitoringV1Client interface {
 	AutoAddEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoAddFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoAddFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
+	AutoAddMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoAddStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
 	AutoDeleteAlert(ctx context.Context, t *Alert) (*Alert, error)
 	AutoDeleteAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
@@ -32,6 +33,7 @@ type ServiceMonitoringV1Client interface {
 	AutoDeleteEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoDeleteFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoDeleteFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
+	AutoDeleteMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoDeleteStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
 	AutoGetAlert(ctx context.Context, t *Alert) (*Alert, error)
 	AutoGetAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
@@ -40,6 +42,7 @@ type ServiceMonitoringV1Client interface {
 	AutoGetEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoGetFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoGetFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
+	AutoGetMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoGetStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
 	AutoListAlert(ctx context.Context, t *api.ListWatchOptions) (*AlertList, error)
 	AutoListAlertDestination(ctx context.Context, t *api.ListWatchOptions) (*AlertDestinationList, error)
@@ -48,6 +51,7 @@ type ServiceMonitoringV1Client interface {
 	AutoListEventPolicy(ctx context.Context, t *api.ListWatchOptions) (*EventPolicyList, error)
 	AutoListFlowExportPolicy(ctx context.Context, t *api.ListWatchOptions) (*FlowExportPolicyList, error)
 	AutoListFwlogPolicy(ctx context.Context, t *api.ListWatchOptions) (*FwlogPolicyList, error)
+	AutoListMirrorSession(ctx context.Context, t *api.ListWatchOptions) (*MirrorSessionList, error)
 	AutoListStatsPolicy(ctx context.Context, t *api.ListWatchOptions) (*StatsPolicyList, error)
 	AutoUpdateAlert(ctx context.Context, t *Alert) (*Alert, error)
 	AutoUpdateAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
@@ -56,6 +60,7 @@ type ServiceMonitoringV1Client interface {
 	AutoUpdateEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoUpdateFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoUpdateFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
+	AutoUpdateMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoUpdateStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
 
 	AutoWatchEvent(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchEventClient, error)
@@ -66,6 +71,7 @@ type ServiceMonitoringV1Client interface {
 	AutoWatchAlert(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchAlertClient, error)
 	AutoWatchAlertPolicy(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchAlertPolicyClient, error)
 	AutoWatchAlertDestination(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchAlertDestinationClient, error)
+	AutoWatchMirrorSession(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchMirrorSessionClient, error)
 }
 
 // ServiceMonitoringV1Server is the server interface for the service.
@@ -77,6 +83,7 @@ type ServiceMonitoringV1Server interface {
 	AutoAddEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoAddFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoAddFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+	AutoAddMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoAddStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
 	AutoDeleteAlert(ctx context.Context, t Alert) (Alert, error)
 	AutoDeleteAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
@@ -85,6 +92,7 @@ type ServiceMonitoringV1Server interface {
 	AutoDeleteEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoDeleteFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoDeleteFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+	AutoDeleteMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoDeleteStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
 	AutoGetAlert(ctx context.Context, t Alert) (Alert, error)
 	AutoGetAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
@@ -93,6 +101,7 @@ type ServiceMonitoringV1Server interface {
 	AutoGetEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoGetFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoGetFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+	AutoGetMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoGetStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
 	AutoListAlert(ctx context.Context, t api.ListWatchOptions) (AlertList, error)
 	AutoListAlertDestination(ctx context.Context, t api.ListWatchOptions) (AlertDestinationList, error)
@@ -101,6 +110,7 @@ type ServiceMonitoringV1Server interface {
 	AutoListEventPolicy(ctx context.Context, t api.ListWatchOptions) (EventPolicyList, error)
 	AutoListFlowExportPolicy(ctx context.Context, t api.ListWatchOptions) (FlowExportPolicyList, error)
 	AutoListFwlogPolicy(ctx context.Context, t api.ListWatchOptions) (FwlogPolicyList, error)
+	AutoListMirrorSession(ctx context.Context, t api.ListWatchOptions) (MirrorSessionList, error)
 	AutoListStatsPolicy(ctx context.Context, t api.ListWatchOptions) (StatsPolicyList, error)
 	AutoUpdateAlert(ctx context.Context, t Alert) (Alert, error)
 	AutoUpdateAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
@@ -109,6 +119,7 @@ type ServiceMonitoringV1Server interface {
 	AutoUpdateEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoUpdateFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoUpdateFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+	AutoUpdateMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoUpdateStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
 
 	AutoWatchEvent(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventServer) error
@@ -119,4 +130,5 @@ type ServiceMonitoringV1Server interface {
 	AutoWatchAlert(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchAlertServer) error
 	AutoWatchAlertPolicy(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchAlertPolicyServer) error
 	AutoWatchAlertDestination(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchAlertDestinationServer) error
+	AutoWatchMirrorSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchMirrorSessionServer) error
 }

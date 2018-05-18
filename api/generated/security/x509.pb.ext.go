@@ -32,6 +32,11 @@ func (m *Certificate) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "certificates/", m.Tenant, "/", m.Name)
 }
 
+func (m *Certificate) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/certificates/", in.Name)
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Certificate) Clone(into interface{}) (interface{}, error) {
 	var out *Certificate
@@ -51,8 +56,8 @@ func (m *Certificate) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Certificate) Defaults(ver string) bool {
 	var ret bool
-	ret = ret || m.Spec.Defaults(ver)
-	ret = ret || m.Status.Defaults(ver)
+	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 

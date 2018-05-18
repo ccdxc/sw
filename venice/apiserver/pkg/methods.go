@@ -181,7 +181,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	)
 	switch oper {
 	case apiserver.CreateOper:
-		i, err = m.requestType.UpdateSelfLink(key, i)
+		i, err = m.requestType.UpdateSelfLink(key, "", "", i)
 		if err != nil {
 			errors.Wrap(err, "Unable to update self link")
 			err = errKVStoreOperation.makeError(err.Error())
@@ -200,7 +200,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 		}
 		kvOp = kvstore.OperUpdate
 	case apiserver.UpdateOper:
-		i, err = m.requestType.UpdateSelfLink(key, i)
+		i, err = m.requestType.UpdateSelfLink(key, "", "", i)
 		if err != nil {
 			errors.Wrap(err, "Unable to update self link")
 			err = errKVStoreOperation.makeError(err.Error())
@@ -469,9 +469,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	// Update the selflink
 	path, err := m.MakeURI(resp)
 	if err == nil {
-		resp, _ = m.responseType.UpdateSelfLink(path, resp)
+		resp, _ = m.responseType.UpdateSelfLink(path, ver, m.svcPrefix, resp)
 	} else {
-		resp, _ = m.responseType.UpdateSelfLink("", resp)
+		resp, _ = m.responseType.UpdateSelfLink("", ver, m.svcPrefix, resp)
 	}
 	return resp, nil
 }

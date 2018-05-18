@@ -714,6 +714,7 @@ func (a adapterSecurityV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Co
 
 func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
 	e.svcProf["AutoAddAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -749,6 +750,15 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
+// GetDefaultServiceProfile returns the default fallback service profile for this service
+func (e *sSecurityV1GwService) GetDefaultServiceProfile() (apigw.ServiceProfile, error) {
+	if e.defSvcProf == nil {
+		return nil, errors.New("not found")
+	}
+	return e.defSvcProf, nil
+}
+
+// GetServiceProfile returns the service profile for a given method in this service
 func (e *sSecurityV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
 	if ret, ok := e.svcProf[method]; ok {
 		return ret, nil
@@ -756,6 +766,7 @@ func (e *sSecurityV1GwService) GetServiceProfile(method string) (apigw.ServicePr
 	return nil, errors.New("not found")
 }
 
+// GetCrudServiceProfile returns the service profile for a auto generated crud operation
 func (e *sSecurityV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
@@ -785,13 +796,9 @@ func (e *sSecurityV1GwService) CompleteRegistration(ctx context.Context,
 	muxMutex.Unlock()
 	e.setupSvcProfile()
 
-	fileCount++
-
-	if fileCount == 2 {
-		err := registerSwaggerDef(m, logger)
-		if err != nil {
-			logger.ErrorLog("msg", "failed to register swagger spec", "service", "security.SecurityV1", "error", err)
-		}
+	err := registerSwaggerDef(m, logger)
+	if err != nil {
+		logger.ErrorLog("msg", "failed to register swagger spec", "service", "security.SecurityV1", "error", err)
 	}
 	wg.Add(1)
 	go func() {
