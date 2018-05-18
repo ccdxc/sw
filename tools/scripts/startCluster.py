@@ -92,7 +92,7 @@ class Node:
         self.runCmd("""sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches" """)
         self.runCmd("""bash -c 'for i in """ + self.tarpath + """/* ; do  docker load -i $i; sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches";  done;' """)
         self.runCmd("docker system prune -f")
-        self.runCmd("docker run --rm --name pen-cmd -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-cmd -c /initscript")
+        self.runCmd("docker run --rm --name pen-cmd -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript")
         self.runCmd("sudo systemctl daemon-reload")
         self.runCmd("sudo systemctl enable pensando.target")
         self.runCmd("sudo systemctl start pensando.target")

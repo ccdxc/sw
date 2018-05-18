@@ -92,7 +92,7 @@ class Node:
         self.runCmd("bash -c 'ip addr flush label *pens' ")
         self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop -t 2 $(docker ps -qa); docker rm -f $(docker ps -qa); fi' """)
     def startCluster(self):
-        self.runCmd("""docker run --rm --name pen-cmd -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-cmd -c /initscript""")
+        self.runCmd("""docker run --rm --name pen-cmd -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript""")
         self.runCmd("""systemctl daemon-reload""")
         self.runCmd("""systemctl enable pensando.target""")
         self.runCmd("""systemctl start pensando.target""")

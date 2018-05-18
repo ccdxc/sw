@@ -134,6 +134,11 @@ install:
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --rm --no-cache -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
 	@tools/scripts/createImage.py
+	@# the above script populates venice.json which needs to be 'installed' on the venice. Hence creation of installer is done at the end
+	@# For now the installer is a docker container.
+	@# In the future, this can be a shell script, rpm, curl script or whatever..
+	docker build --rm --no-cache -t pen-install:latest -f tools/docker-files/install/Dockerfile tools/docker-files/install
+	docker save -o bin/tars/pen-install.tar pen-install:latest
 
 deploy:
 	$(MAKE) container-compile

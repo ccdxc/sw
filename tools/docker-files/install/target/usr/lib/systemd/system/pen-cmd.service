@@ -9,7 +9,7 @@ ExecStartPre=-/usr/bin/docker kill pen-cmd
 ExecStartPre=-/usr/bin/docker rm -f pen-cmd
 ExecStart=/usr/pensando/bin/systemd-docker \
 	 --cgroups name=systemd --cgroups=cpu  run --rm  --net=host --name pen-cmd \
-    --privileged -v /usr/pensando/bin:/host/usr/pensando/bin \
+    --privileged \
     -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus \
     -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system \
     -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes \

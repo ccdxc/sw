@@ -58,5 +58,5 @@ for i in dynamic_images:
     if old_images != "" :
         ExecuteCommand('''docker rmi -f ''' + old_images)
 
-with open("bin/venice.json", 'w') as f:
+with open("tools/docker-files/install/target/etc/pensando/venice.json", 'w') as f:
     json.dump(imageMap, f, indent=True, sort_keys=True)
