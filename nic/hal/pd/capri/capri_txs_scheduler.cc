@@ -54,7 +54,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     cap_wa_csr_cfg_wa_sched_hint_t   &wa_sched_hint_csr = cap0.db.wa.cfg_wa_sched_hint;
     wa_sched_hint_csr.read();
     /* 5 bit value: bit 0=host, 1=local, 2=32b, 3=timer, 4=arm4kremap" */
-    wa_sched_hint_csr.enable_src_mask(0x1);
+    wa_sched_hint_csr.enable_src_mask(0x0);
     wa_sched_hint_csr.write();
 
     hal::hal_cfg_t *hal_cfg =

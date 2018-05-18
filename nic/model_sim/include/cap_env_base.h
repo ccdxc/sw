@@ -55,6 +55,7 @@ protected:
     // by the caller.
     virtual bool read_mem(uint64_t addr, uint8_t * data, uint32_t size);
     virtual bool write_mem(uint64_t addr, uint8_t * data, uint32_t size);
+    virtual bool write_mem_pcie(uint64_t addr, uint8_t * data, uint32_t size) { return write_mem(addr, data, size); }
     // Doorbell
     virtual void step_doorbell(uint64_t addr, uint64_t data, bool model=true, bool rtl=true);
     // Timer update
