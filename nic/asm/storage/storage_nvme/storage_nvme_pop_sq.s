@@ -116,7 +116,7 @@ iob_free:
 
    // Set table 0 and program address for the next stage to read the ARM queue
    // state entry to send a posted free of the IOB
-   LOAD_TABLE_FOR_ADDR34_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(r2, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_nvme_send_cmd_free_iob_start)
 
 

@@ -313,9 +313,9 @@ def run_storage_dol(port, args):
     os.chdir(bin_dir)
     if args.rtl:
         if args.storage_test:
-            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test, '--poll_interval', '1800', '--long_poll_interval', '3600']
+            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test, '--poll_interval', '3600', '--long_poll_interval', '3600']
         else:
-            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--poll_interval', '1800', '--long_poll_interval', '3600']
+            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--poll_interval', '3600', '--long_poll_interval', '3600']
     else:
         if args.storage_test:
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test]

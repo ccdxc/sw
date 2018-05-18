@@ -71,6 +71,7 @@ DEFINE_bool(combined, false,
             "Combined run of storage and network tests");
 
 bool run_nvme_dp_tests = false;
+bool run_nvme_dp_scale_tests = false;
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
 bool run_nvme_be_tests = false;
@@ -95,6 +96,9 @@ std::vector<tests::TestEntry> nvme_dp_tests = {
   {&tests::test_run_nvme_dp_write_cmd, "NVME Datapath write command", false},
   {&tests::test_run_nvme_dp_read_cmd, "NVME Datapath read command", false},
   {&tests::test_run_nvme_dp_e2e_test, "NVME Datapath E2E test", false},
+};
+
+std::vector<tests::TestEntry> nvme_dp_scale_tests = {
   {&tests::test_run_nvme_dp_write_scale, "NVME Datapath write scale", false},
   {&tests::test_run_nvme_dp_read_scale, "NVME Datapath read scale", false},
   {&tests::test_run_nvme_dp_e2e_scale, "NVME Datapath E2E scale", false},
@@ -414,6 +418,8 @@ int main(int argc, char**argv) {
       run_nvme_tests = true;
   } else if (FLAGS_test_group == "nvme_dp") {
       run_nvme_dp_tests = true;
+  } else if (FLAGS_test_group == "nvme_dp_scale") {
+      run_nvme_dp_scale_tests = true;
   } else if (FLAGS_test_group == "nvme_be") {
       run_nvme_be_tests = true;
       run_nvme_wrr_tests = true;
@@ -453,12 +459,12 @@ int main(int argc, char**argv) {
       run_rdma_perf_tests = true;
   } else {
     printf("Usage: ./storage_test [--hal_port <xxx>] "
-           "[--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|acc_scale|rtl_sanity|perf] "
+           "[--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|acc_scale|rtl_sanity|perf|nvme_dp|nvme_dp_scale] "
            " [--poll_interval <yyy>] \n");
     return -1;
   }
 
-  if(run_nvme_dp_tests && FLAGS_combined) {
+  if((run_nvme_dp_tests || run_nvme_dp_scale_tests) && FLAGS_combined) {
     printf("ERROR: Cannot run NVMe DP Tests in combined sanity mode\n");
     return -1;
   }
@@ -471,7 +477,7 @@ int main(int argc, char**argv) {
   }
   printf("Commmon configuration completed \n");
 
-  if (run_nvme_dp_tests) {
+  if (run_nvme_dp_tests || run_nvme_dp_scale_tests) {
     if (nvme_dp::test_setup() < 0) {
       printf("Storage NVME DP test setup failed\n");
       return 1;
@@ -499,19 +505,21 @@ int main(int argc, char**argv) {
   printf("XTS configuration completed \n");
 
   if (FLAGS_combined) {
-    printf("RDMA configuration skipped - running in combined sanity mode\n");
-  } else if (rdma_init(run_nvme_dp_tests) < 0) {
-    printf("RDMA Setup failed\n");
-    return 1;
-  }
-  printf("RDMA configuration completed \n");
-
-  if (run_nvme_dp_tests) {
-    if (nvme_dp::config() < 0) {
-      printf("Storage NVME DP config failed\n");
+    printf("RDMA configuration, NVME datapath initialization skipped - running in combined sanity mode\n");
+  } else { 
+    if (rdma_init((run_nvme_dp_tests || run_nvme_dp_scale_tests)) < 0) {
+      printf("RDMA Setup failed\n");
       return 1;
     }
-    printf("Storage NVME DP config succeded \n");
+    printf("RDMA configuration completed \n");
+
+    if (run_nvme_dp_tests || run_nvme_dp_scale_tests) {
+      if (nvme_dp::config() < 0) {
+        printf("Storage NVME DP config failed\n");
+        return 1;
+      }
+      printf("Storage NVME DP config succeded \n");
+    }
   }
   // Indicate to model that config is done
   config_done();
@@ -539,6 +547,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(nvme_dp_tests[i]);
     }
     printf("Added nvme_dp tests \n");
+  }
+
+  // Add nvme_dp scale tests
+  if (run_nvme_dp_scale_tests) {
+    for (size_t i = 0; i < nvme_dp_scale_tests.size(); i++) {
+      test_suite.push_back(nvme_dp_scale_tests[i]);
+    }
+    printf("Added nvme_dp scale tests \n");
   }
 
   // Add nvme_be tests
