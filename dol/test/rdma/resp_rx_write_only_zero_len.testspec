@@ -1,0 +1,145 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1 
+#   maxrdmasessions     : 1 
+
+packets:
+   - packet:
+        id          : IN_PKT_BASE    # Base for Input packet 
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        icrc        : True
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 10
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+                a       : 1
+            reth: 
+                va      : 0xABCDEF  # random virtual address
+                dma_len : 0
+                r_key   : 12345678 # random r_key
+            payload:
+                data    : None
+
+   - packet:
+        id          : IN_PKT    # Input packet 
+        encaps      : callback://rdma/rdma/GetPacketEncaps
+        clone       : ref://testcase/packets/id=IN_PKT_BASE
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rmacaddr
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rtep
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/rdmasession/rqp/pd/ep/segment/vxlan_id
+            qtag:
+                vlan    : callback://rdma/rdma/GetPacketQtag
+                prio    : 0
+
+   - packet:
+        id          : EXP_PKT_BASE    # Expected Ack packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # ACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+            payload:
+                data    : None
+
+   - packet:
+        id          : EXP_PKT    # Expected Ack packet
+        encaps      : callback://rdma/rdma/GetPacketEncaps
+        clone       : ref://testcase/packets/id=EXP_PKT_BASE
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/macaddr
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/ltep
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rtep
+                tos     : 0
+                id      : 0
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/rdmasession/rqp/pd/ep/segment/vxlan_id
+            qtag:
+                vlan    : callback://rdma/rdma/GetPacketQtag
+
+buffers:
+
+descriptors:
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports

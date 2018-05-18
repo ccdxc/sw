@@ -262,7 +262,8 @@ header_type resp_tx_rsqwqe_to_rkey_info_t {
         last_or_only                     :    1;
         transfer_bytes                   :   12;
         header_template_size             :    8;
-        pad                              :   12;
+        skip_rkey                        :    1;
+        pad                              :   11;
     }
 }
 
@@ -663,6 +664,7 @@ action resp_tx_rsqrkey_process () {
     modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.last_or_only, t0_s2s_rsqwqe_to_rkey_info.last_or_only);
     modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.transfer_bytes, t0_s2s_rsqwqe_to_rkey_info.transfer_bytes);
     modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.header_template_size, t0_s2s_rsqwqe_to_rkey_info.header_template_size);
+    modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.skip_rkey, t0_s2s_rsqwqe_to_rkey_info.skip_rkey);
     modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.pad, t0_s2s_rsqwqe_to_rkey_info.pad);
 
 }

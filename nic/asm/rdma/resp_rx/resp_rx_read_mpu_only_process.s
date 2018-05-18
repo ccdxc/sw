@@ -7,8 +7,10 @@ struct resp_rx_phv_t p;
 // there is no 'd' vector for mpu-only program
 struct resp_rx_s1_t1_k k;
 
-#define IN_P    t1_s2s_rqcb_to_read_atomic_rkey_info
-#define OUT_P   t1_s2s_key_info
+#define IN_P            t1_s2s_rqcb_to_read_atomic_rkey_info
+#define OUT_P           t1_s2s_key_info
+#define INFO_WBCB1_P    t2_s2s_rqcb1_write_back_info
+
 #define R_KEY r2
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
@@ -16,16 +18,23 @@ struct resp_rx_s1_t1_k k;
 #define DMA_CMD_BASE r1
 #define DB_ADDR r4
 #define DB_DATA r5
+
+#define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit23, len_sbit24_ebit31)
+
 %%
     .param  resp_rx_rqlkey_process
+    .param  resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
 resp_rx_read_mpu_only_process:
+    
+    seq         c1, K_LEN, r0
+    bcf         [c1], rd_zero_len
 
-    CAPRI_RESET_TABLE_1_ARG();
+    CAPRI_RESET_TABLE_1_ARG();  //BD Slot
 
     phvwrpair   CAPRI_PHV_FIELD(OUT_P, va), CAPRI_KEY_FIELD(IN_P, va), \
-                CAPRI_PHV_FIELD(OUT_P, len), CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit23, len_sbit24_ebit31)
+                CAPRI_PHV_FIELD(OUT_P, len), K_LEN
 
     add     R_KEY, r0, CAPRI_KEY_FIELD(IN_P, r_key)
 
@@ -48,6 +57,7 @@ resp_rx_read_mpu_only_process:
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
 
+ring_rsq_dbell:
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
     CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15), DB_DATA)
     // store db_data in LE format
@@ -62,3 +72,13 @@ resp_rx_read_mpu_only_process:
 exit:
     nop.e
     nop
+
+rd_zero_len:
+    CAPRI_RESET_TABLE_2_ARG()
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_nxt_to_go_token_id, 1)
+
+    // no need to check rkey
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+    b   ring_rsq_dbell
+    CAPRI_SET_TABLE_1_VALID(0)  //BD Slot

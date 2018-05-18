@@ -81,6 +81,9 @@ process_atomic:
 
 
 process_read:
+    // is it zero length read request ?
+    seq         c3, d.read.len, 0
+    
     cmov        CURR_PSN, c2, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23), d.psn
 
     /*
@@ -178,15 +181,14 @@ next:
 
     CAPRI_SET_FIELD2(RKEY_INFO_P, header_template_size, CAPRI_KEY_FIELD(IN_P, header_template_size))
 
-    KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
+    // for zero length read request, skip rkey and directly invoke dcqcn
+    bcf         [c3], skip_rkey
+
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1) //BD Slot
     
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
     add         r2, r0, d.read.r_key
-
-    //andi        r2, r2, KEY_INDEX_MASK
-    //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
-    //add         KEY_ADDR, r2, KT_BASE_ADDR
 
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, r2)
 
@@ -195,3 +197,9 @@ next:
 exit:
     nop.e
     nop
+
+skip_rkey:
+
+    CAPRI_SET_FIELD2(RKEY_INFO_P, skip_rkey, 1)
+    // invoke rkey program as mpu only
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_rsqrkey_process, r0)

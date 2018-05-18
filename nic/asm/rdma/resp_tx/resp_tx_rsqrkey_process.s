@@ -35,10 +35,11 @@ struct key_entry_aligned_t d;
 
 resp_tx_rsqrkey_process:
 
+    bbeq        CAPRI_KEY_FIELD(IN_P, skip_rkey), 1, add_headers
     
     // lkey_p = lkey_p + lkey_info_p->key_id;
     //big-endian
-    sub         KEY_P, (HBM_NUM_KEY_ENTRIES_PER_CACHE_LINE - 1), CAPRI_KEY_FIELD(IN_P, key_id)
+    sub         KEY_P, (HBM_NUM_KEY_ENTRIES_PER_CACHE_LINE - 1), CAPRI_KEY_FIELD(IN_P, key_id) //BD Slot
     add         KEY_P, r0, KEY_P, LOG_SIZEOF_KEY_ENTRY_T_BITS
 
     // if (!(lkey_p->acc_ctrl & ACC_CTRL_LOCAL_WRITE)) {

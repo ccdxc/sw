@@ -763,3 +763,37 @@ modules:
         module  : resp_rx_nak_prune_rnr
         spec    : resp_rx_nak_prune_rnr.testspec
         ignore  : False
+    # responder zero length rdma read/write testcases
+    
+    - module:
+        name    : RDMA_RESP_RX_WRITE_ONLY_ZERO_LEN
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_zero_len
+        spec    : resp_rx_write_only_zero_len.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RESP_RX_READ_ONLY_ZERO_LEN
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_only_zero_len
+        spec    : resp_rx_read_only_zero_len.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RESP_RX_WRITE_ONLY_IMM_ZERO_LEN
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_imm_zero_len
+        spec    : resp_rx_write_only_imm_zero_len.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RESP_RX_WRITE_ONLY_ZERO_LEN_NAK
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_zero_len_nak
+        spec    : resp_rx_write_only_zero_len_nak.testspec
+        ignore  : False
+

@@ -18,6 +18,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
+#define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
 
 #define REM_PYLD_BYTES  r6
 #define RSQWQE_P r2
@@ -42,6 +43,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_read_mpu_only_process
     .param    resp_rx_atomic_resource_process
     .param    resp_rx_recirc_mpu_only_process
+    .param    resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
 resp_rx_rqcb_process:
@@ -400,12 +402,16 @@ send_only_skip_immdt_as_dbell:
 /******  Logic for WRITE_ONLY packets ******/
 process_write_only:
     crestore    [c6], r7, (RESP_RX_FLAG_IMMDT)
-    
+
     // check if rnr case for Write Only with Immdt
     seq        c5, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     seq         c7, d.immdt_as_dbell, 1
     bcf.c5      [c6 & !c7], process_rnr
 
+    // is it zero length write request ?
+    seq         c5, CAPRI_RXDMA_RETH_DMA_LEN, 0 // BD Slot
+    bcf         [c5], wr_only_zero_len
+    
     // load rqcb3
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3) // BD Slot
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
@@ -443,6 +449,35 @@ wr_only_skip_immdt_as_dbell:
     b           rc_checkout
     phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
 
+wr_only_zero_len:
+    // zero length write requets are identified by reth.dma_len == 0.
+    // if reth.dma_len is 0, but payload length is not 0, standard is not clear on
+    // the behavior. currently we generate nak with invalid request.
+    // for zero length write requests, r_key validations should not be done and hence
+    // we could directly invoke write back stage.
+    seq         c7, REM_PYLD_BYTES, 0
+    bcf         [!c7], wr_only_zero_len_inv_req_nak
+
+    CAPRI_RESET_TABLE_2_ARG()   // BD Slot
+
+    // if there is no immediate data, we can right away generate ack
+    bcf         [!c6], generate_ack
+    tblsub.!c6  d.token_id, 1   // BD Slot
+
+wr_only_zero_len_with_imm_data:
+    // no need to check rkey
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
+    phvwrpair   CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_nxt_to_go_token_id), 1, \
+                CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_c_index), 1
+
+    CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(IMM_DATA, c0)
+    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    b           rc_checkout
+    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
+
+
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
@@ -468,24 +503,27 @@ process_read_atomic:
     phvwr       p.rsqwqe.psn, d.e_psn   //BD Slot
 
 process_read:
-    // for atomic, we have to execute the atomic request and hence
-    // end of commands is set in atomic_resource_process function.
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe, rsqwqe, RSQWQE_P)
+
     phvwr       p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
-    // do a MPU-only lookup
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
     
     //increment e_psn by 'n'
     // e_psn += read_len >> log_pmtu
     srl            r3, CAPRI_RXDMA_RETH_DMA_LEN, d.log_pmtu
     tblmincr       d.e_psn, 24, r3
 
+    // if read_len is < pmtu, then increment e_psn by 1
+    sne            c6, r3, r0
+
     // e_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
-    add            r3, CAPRI_RXDMA_RETH_DMA_LEN, r0
-    mincr          r3, d.log_pmtu, r0
-    sle.e          c6, r3, r0
-    tblmincri.!c6  d.e_psn, 24, 1       //Exit Slot
+    add.c6         r3, CAPRI_RXDMA_RETH_DMA_LEN, r0
+    mincr.c6       r3, d.log_pmtu, r0
+    sle.c6         c6, r3, r0
+    tblmincri.!c6  d.e_psn, 24, 1
+    
+    // do a MPU-only lookup
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
 
 process_atomic:
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
@@ -545,11 +583,13 @@ duplicate_wr_send:
         populating the AETH header in rqcb2_t here.
     */
     sub         r2, d.e_psn, 1 // since d.e_psn is a 24-bit value, sub can be used to decrement
+
     phvwrpair   p.ack_info.psn, r2, p.ack_info.aeth.msn, d.msn
     RQ_CREDITS_GET(r1, r2, c7)
     AETH_ACK_SYNDROME_GET(r2, r1)
     phvwr       p.ack_info.aeth.syndrome, r2
 
+generate_ack:
     add         RQCB2_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
@@ -563,6 +603,7 @@ duplicate_wr_send:
     DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
 
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
+
 duplicate_rd_atomic:
     // drop further duplicate processing if threre is already another duplicate req in progress
     // it is most likely that further duplicates are with later psn values than the current 
@@ -609,6 +650,12 @@ drop_duplicate_rd_atomic:
 
 
 /****** Logic for NAKs ******/
+wr_only_zero_len_inv_req_nak:
+    sub         r1, 0, 1
+    //revert the msn and e_psn
+    tblmincr    d.msn, 24, r1
+    tblmincr    d.e_psn, 24, r1
+    //fall thru to inv_req_nak
 
 inv_req_nak:
     bbne        d.nak_prune, 1, nak

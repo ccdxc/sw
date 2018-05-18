@@ -1,0 +1,159 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1 
+#   maxrdmasessions     : 1 
+
+packets:
+   - packet:
+        id          : IN_PKT    # Input packet 
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH_IMMDT,v6=ETH_IPV6_UDP_BTH_RETH_IMMDT
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 11
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+                a       : 1
+            reth: 
+                va      : 0xAABBCCDD # random virtual address
+                dma_len : 0
+                r_key   : 12345678 # random r_key
+            immdt:
+                imm_data: ref://testcase/pvtdata/imm_data
+            payload:
+                data    : None
+
+   - packet:
+        id          : EXP_PKT    # Expected Ack packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # ACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+
+buffers:
+    - buffer:
+        id      : RQ_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           offset  : 0
+           segments:
+               - size    : 64 #not really used for data transfer
+                 data    : None
+
+descriptors:
+    - descriptor:
+        id      : RQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            wrid: 0x12345678
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF/address
+                  len : ref://testcase/buffers/id=RQ_BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 16 #OP_TYPE_RDMA_OPER_WITH_IMM
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetCQExpColor
+            imm_data: ref://testcase/pvtdata/imm_data
+            imm_data_vld: 1
+            smac: callback://rdma/rdma/GetZeroMAC
+            
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+
+    doorbell:
+        object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
+        fields:
+            upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+expect:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
