@@ -21,7 +21,7 @@ public:
     }
 
     //CreateUpgAppResp creates the object UpgAppResp
-    delphi::error CreateUpgAppResp(delphi::objects::UpgReqStatusPtr ptr);
+    delphi::error CreateUpgAppResp(delphi::objects::UpgStateReqPtr ptr);
 
     UpgRespStateType GetUpgAppRespNextPass(UpgReqStateType reqType);
     UpgRespStateType GetUpgAppRespNextFail(UpgReqStateType reqType);
@@ -33,11 +33,11 @@ public:
     //findUpgAppResp returns the UpgAppResp object for this application
     delphi::objects::UpgAppRespPtr findUpgAppResp(string name);
 
-    //GetUpgReqStatusPtr will return the pointer for UpgReqStatus object
-    delphi::objects::UpgReqStatusPtr GetUpgReqStatusPtr(void) {
-        delphi::objects::UpgReqStatusPtr ret;
-        vector<delphi::objects::UpgReqStatusPtr> upgReqStatuslist = delphi::objects::UpgReqStatus::List(sdk_);
-        for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
+    //GetUpgStateReqPtr will return the pointer for UpgStateReq object
+    delphi::objects::UpgStateReqPtr GetUpgStateReqPtr(void) {
+        delphi::objects::UpgStateReqPtr ret;
+        vector<delphi::objects::UpgStateReqPtr> upgReqStatuslist = delphi::objects::UpgStateReq::List(sdk_);
+        for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
             ret = *reqStatus;
          }
         return ret;

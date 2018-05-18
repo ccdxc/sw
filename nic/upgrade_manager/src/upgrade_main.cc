@@ -23,10 +23,6 @@ int main(int argc, char **argv) {
     assert(upgsvc != NULL);
     sdk->RegisterService(upgsvc);
 
-    // start a timer to create an object
-    upgsvc->createTimer.set<UpgradeService, &UpgradeService::createTimerHandler>(upgsvc.get());
-    upgsvc->createTimer.start(0.5, 0.0);
-
     // run the main loop
     return sdk->MainLoop();
 }

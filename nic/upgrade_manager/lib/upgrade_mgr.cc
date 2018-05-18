@@ -13,8 +13,8 @@ using namespace std;
 
 UpgReqStateType UpgradeMgr::GetNextState(void) {
     UpgReqStateType  reqType, nextReqType;
-    vector<delphi::objects::UpgReqStatusPtr> upgReqStatusList = delphi::objects::UpgReqStatus::List(sdk_);
-    for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
+    vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
+    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
         reqType = (*reqStatus)->upgreqstate();
         break;
     }
@@ -133,9 +133,9 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
     UpgReqStateType  reqType;
     bool ret = true;
     LogInfo("UpgradeMgr::CanMoveStateMachine called");
-    //Find UpgReqStatus object
-    vector<delphi::objects::UpgReqStatusPtr> upgReqStatusList = delphi::objects::UpgReqStatus::List(sdk_);
-    for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
+    //Find UpgStateReq object
+    vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
+    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
         reqType = (*reqStatus)->upgreqstate();
         passType = GetPassRespType(reqType);
         failType = GetFailRespType(reqType);
@@ -156,10 +156,10 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
 }
 
 delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
-    //Find UpgReqStatus object
+    //Find UpgStateReq object
     LogInfo("UpgradeMgr::MoveStateMachine");
-    vector<delphi::objects::UpgReqStatusPtr> upgReqStatusList = delphi::objects::UpgReqStatus::List(sdk_);
-    for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
+    vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
+    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
         LogInfo("Setting next UpgReqStateType to {}", type);
         (*reqStatus)->set_upgreqstate(type);
         sdk_->SetObject(*reqStatus);
@@ -172,10 +172,10 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
     // find the status object
-    auto upgReqStatus = this->findUpgReqStatus(req->key());
+    auto upgReqStatus = this->findUpgStateReq(req->key());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        RETURN_IF_FAILED(this->createUpgReqStatus(req->key(), upgrade::InvalidUpgState));
+        RETURN_IF_FAILED(this->createUpgStateReq(req->key(), upgrade::InvalidUpgState));
     }
 
     return delphi::error::OK();
@@ -184,7 +184,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
 // OnUpgReqDelete gets called when UpgReq object is deleted
 delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got deleted");
-    auto upgReqStatus = this->findUpgReqStatus(req->key());
+    auto upgReqStatus = this->findUpgStateReq(req->key());
     if (upgReqStatus != NULL) {
         LogInfo("Deleting Upgrade Request Status");
         sdk_->DeleteObject(upgReqStatus);
@@ -202,7 +202,7 @@ delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     }
 
     // set the oper state on status object
-    delphi::objects::UpgReqStatusPtr upgReqStatus = this->findUpgReqStatus(req->key());
+    delphi::objects::UpgStateReqPtr upgReqStatus = this->findUpgStateReq(req->key());
     if (upgReqStatus != NULL) {
         upgReqStatus->set_upgreqstate(upgrade::UpgReqRcvd);
         sdk_->SetObject(upgReqStatus);
@@ -212,10 +212,10 @@ delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     return delphi::error::OK();
 }
 
-// createUpgReqStatus creates a upgrade request status object
-delphi::error UpgradeMgr::createUpgReqStatus(uint32_t id, upgrade::UpgReqStateType status) {
+// createUpgStateReq creates a upgrade request status object
+delphi::error UpgradeMgr::createUpgStateReq(uint32_t id, upgrade::UpgReqStateType status) {
     // create an object
-    delphi::objects::UpgReqStatusPtr req = make_shared<delphi::objects::UpgReqStatus>();
+    delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_key(id);
     req->set_upgreqstate(status);
 
@@ -228,14 +228,14 @@ delphi::error UpgradeMgr::createUpgReqStatus(uint32_t id, upgrade::UpgReqStateTy
 }
 
 //  ffindUpgReqStat::objects::usinds the upgrade request status object
-delphi::objects::UpgReqStatusPtr UpgradeMgr::findUpgReqStatus(uint32_t id) {
-    delphi::objects::UpgReqStatusPtr req = make_shared<delphi::objects::UpgReqStatus>();
+delphi::objects::UpgStateReqPtr UpgradeMgr::findUpgStateReq(uint32_t id) {
+    delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_key(id);
 
     // find the object
     delphi::BaseObjectPtr obj = sdk_->FindObject(req);
 
-    return static_pointer_cast<delphi::objects::UpgReqStatus>(obj);
+    return static_pointer_cast<delphi::objects::UpgStateReq>(obj);
 }
 
 } // namespace upgrade

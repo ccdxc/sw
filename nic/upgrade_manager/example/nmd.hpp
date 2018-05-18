@@ -10,11 +10,32 @@ namespace nmd {
 
 using namespace std;
 
+class NMDUpgAppRespHdlr : public delphi::objects::UpgAppRespReactor {
+    delphi::SdkPtr     sdk_;
+public:
+    NMDUpgAppRespHdlr() {}
+
+    NMDUpgAppRespHdlr(delphi::SdkPtr sk) {
+        this->sdk_ = sk;
+    }
+    NMDUpgAppRespHdlr(delphi::SdkPtr sk, string name) {
+        this->sdk_ = sk;
+    }
+
+    // OnUpgAppRespCreate gets called when UpgAppResp object is created
+    virtual delphi::error OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp);
+    
+    // OnUpgAppRespVal gets called when UpgAppRespVal attribute changes
+    virtual delphi::error OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp);
+};
+typedef std::shared_ptr<NMDUpgAppRespHdlr> NMDUpgAppRespHdlrPtr;
+
 // NMDService is the service object for NMD manager 
 class NMDService : public delphi::Service, public enable_shared_from_this<NMDService> {
 private:
-    delphi::SdkPtr     sdk_;
-    string             svcName_;
+    delphi::SdkPtr        sdk_;
+    string                svcName_;
+    NMDUpgAppRespHdlrPtr  nmdUpgAppRespHdlr_;
 public:
     // NMDService constructor
     NMDService(delphi::SdkPtr sk);

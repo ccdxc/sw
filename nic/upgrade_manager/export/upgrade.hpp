@@ -22,8 +22,8 @@ public:
         sdk_ = sk;
         upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
         upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, name, upgAppRespPtr_);
-        delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadMode);
-        delphi::objects::UpgReqStatus::Watch(sdk_, upgReqReactPtr_);
+        delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
+        delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
         delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadWriteMode);
     }
 
@@ -31,8 +31,8 @@ public:
         sdk_ = sk;
         upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
         upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, uh, name, upgAppRespPtr_);
-        delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadMode);
-        delphi::objects::UpgReqStatus::Watch(sdk_, upgReqReactPtr_);
+        delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
+        delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
         delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadWriteMode);
     }
 

@@ -9,14 +9,14 @@ namespace upgrade {
 
 using namespace std;
 
-// OnUpgReqStatusCreate gets called when UpgReqStatus object is created
-delphi::error UpgReqReactor::OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req) {
-    LogInfo("UpgReqReactor UpgReqStatus got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
+// OnUpgStateReqCreate gets called when UpgStateReq object is created
+delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+    LogInfo("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
     upgAppRespPtr_->CreateUpgAppResp(req);
     if (this->upgHdlrPtr_) {
         HdlrRespCode hdlrRespCode;
-        hdlrRespCode = this->upgHdlrPtr_->UpgReqStatusCreate(req);
+        hdlrRespCode = this->upgHdlrPtr_->UpgStateReqCreate(req);
         if (hdlrRespCode != INPROGRESS) {
             //this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
         }
@@ -24,13 +24,13 @@ delphi::error UpgReqReactor::OnUpgReqStatusCreate(delphi::objects::UpgReqStatusP
     return delphi::error::OK();
 }
 
-// OnUpgReqStatusDelete gets called when UpgReqStatus object is deleted
-delphi::error UpgReqReactor::OnUpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req) {
-    LogInfo("UpgReqReactor UpgReqStatus got deleted");
+// OnUpgStateReqDelete gets called when UpgStateReq object is deleted
+delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+    LogInfo("UpgReqReactor UpgStateReq got deleted");
     //delete the object
     HdlrRespCode hdlrRespCode;
     if (this->upgHdlrPtr_) {
-        hdlrRespCode = this->upgHdlrPtr_->UpgReqStatusDelete(req);
+        hdlrRespCode = this->upgHdlrPtr_->UpgStateReqDelete(req);
         (void)hdlrRespCode;
         //if (hdlrRespCode != INPROGRESS) {
           //  this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
@@ -40,7 +40,7 @@ delphi::error UpgReqReactor::OnUpgReqStatusDelete(delphi::objects::UpgReqStatusP
 }
 
 // OnUpgReqState gets called when UpgReqState attribute changes
-delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgReqStatusPtr req) {
+delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     LogInfo("UpgReqReactor OnUpgReqState called");
 
     HdlrRespCode hdlrRespCode;

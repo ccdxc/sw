@@ -12,12 +12,12 @@ namespace upgrade {
 
 using namespace std;
 
-// UpgReqReactor is the reactor for the UpgReqStatus object
-class UpgReqReactor : public delphi::objects::UpgReqStatusReactor {
+// UpgReqReactor is the reactor for the UpgStateReq object
+class UpgReqReactor : public delphi::objects::UpgStateReqReactor {
     delphi::SdkPtr sdk_;
     UpgHandlerPtr upgHdlrPtr_;
     UpgAppRespHdlrPtr upgAppRespPtr_;
-    delphi::objects::UpgReqStatusPtr upgReqStatus_;
+    delphi::objects::UpgStateReqPtr upgReqStatus_;
 public:
     UpgReqReactor(delphi::SdkPtr sk, string name, UpgAppRespHdlrPtr ptr) {
         this->sdk_ = sk;
@@ -31,14 +31,14 @@ public:
         this->upgAppRespPtr_ = ptr;
     }
 
-    // OnUpgReqStatusCreate gets called when UpgReqStatus object is created
-    virtual delphi::error OnUpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
+    // OnUpgStateReqCreate gets called when UpgStateReq object is created
+    virtual delphi::error OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req);
 
-    // OnUpgReqStatusDelete gets called when UpgReqStatus object is deleted
-    virtual delphi::error OnUpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req);
+    // OnUpgStateReqDelete gets called when UpgStateReq object is deleted
+    virtual delphi::error OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req);
 
     // OnUpgReqState gets called when UpgReqState attribute changes
-    virtual delphi::error OnUpgReqState(delphi::objects::UpgReqStatusPtr req);
+    virtual delphi::error OnUpgReqState(delphi::objects::UpgStateReqPtr req);
 };
 typedef std::shared_ptr<UpgReqReactor> UpgReqReactorPtr;
 

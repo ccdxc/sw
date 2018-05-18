@@ -10,11 +10,11 @@ namespace upgrade {
 using namespace std;
 
 void UpgSdk::OnMountComplete(void) {
-    LogInfo("UpgReqStatusMgr OnMountComplete called");
+    LogInfo("UpgStateReqMgr OnMountComplete called");
 
-    vector<delphi::objects::UpgReqStatusPtr> upgReqStatuslist = delphi::objects::UpgReqStatus::List(sdk_);
-    for (vector<delphi::objects::UpgReqStatusPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
-        this->upgReqReactPtr_->OnUpgReqStatusCreate(*reqStatus);
+    vector<delphi::objects::UpgStateReqPtr> upgReqStatuslist = delphi::objects::UpgStateReq::List(sdk_);
+    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
+        this->upgReqReactPtr_->OnUpgStateReqCreate(*reqStatus);
     }
 }
 
@@ -22,14 +22,14 @@ void UpgSdk::SendAppRespSuccess(void) {
     LogInfo("UpgSdk::SendAppRespSuccess");
     this->upgAppRespPtr_->UpdateUpgAppResp(
           this->upgAppRespPtr_->GetUpgAppRespNextPass(
-                this->upgAppRespPtr_->GetUpgReqStatusPtr()->upgreqstate()));
+                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()));
 }
 
 void UpgSdk::SendAppRespFail(void) {
     LogInfo("UpgSdk::SendAppRespFail");
     this->upgAppRespPtr_->UpdateUpgAppResp(
           this->upgAppRespPtr_->GetUpgAppRespNextFail(
-                this->upgAppRespPtr_->GetUpgReqStatusPtr()->upgreqstate()));
+                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()));
 }
 
 } // namespace upgrade

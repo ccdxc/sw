@@ -19,7 +19,7 @@ delphi::objects::UpgAppRespPtr UpgAppRespHdlr::findUpgAppResp(string name) {
     return static_pointer_cast<delphi::objects::UpgAppResp>(obj);
 }
 
-delphi::error UpgAppRespHdlr::CreateUpgAppResp(delphi::objects::UpgReqStatusPtr ptr) {
+delphi::error UpgAppRespHdlr::CreateUpgAppResp(delphi::objects::UpgStateReqPtr ptr) {
     LogInfo("UpgAppRespHdlr::CreateUpgAppResp called");
     auto upgAppResp = this->findUpgAppResp(this->appName_);
     if (upgAppResp == NULL) {

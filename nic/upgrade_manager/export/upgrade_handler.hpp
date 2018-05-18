@@ -19,17 +19,17 @@ typedef enum {
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual HdlrRespCode UpgReqStatusCreate(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode UpgReqStatusDelete(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStateUpgReqRcvd(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStatePreUpgState(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStatePostBinRestart(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStateProcessesQuiesced(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStateDataplaneDowntimeStart(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStateCleanup(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStateUpgSuccess(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStateUpgFailed(delphi::objects::UpgReqStatusPtr req);
-    virtual HdlrRespCode HandleStateInvalidUpgState(delphi::objects::UpgReqStatusPtr req);
+    virtual HdlrRespCode UpgStateReqCreate(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode UpgStateReqDelete(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStatePreUpgState(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStatePostBinRestart(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStateCleanup(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrRespCode HandleStateInvalidUpgState(delphi::objects::UpgStateReqPtr req);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

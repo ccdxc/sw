@@ -27,11 +27,11 @@ public:
     // OnUpgReqCmd gets called when UpgReqCmd attribute changes
     virtual delphi::error OnUpgReqCmd(delphi::objects::UpgReqPtr upgreq);
 
-    // createUpgReqStatus creates an upgrade request status object
-    delphi::error createUpgReqStatus(uint32_t id, upgrade::UpgReqStateType status);
+    // createUpgStateReq creates an upgrade request status object
+    delphi::error createUpgStateReq(uint32_t id, upgrade::UpgReqStateType status);
 
-    // findUpgReqStatus finds the upgrade request status object
-    delphi::objects::UpgReqStatusPtr findUpgReqStatus(uint32_t id);
+    // findUpgStateReq finds the upgrade request status object
+    delphi::objects::UpgStateReqPtr findUpgStateReq(uint32_t id);
 
     UpgReqStateType GetNextState(void);
 

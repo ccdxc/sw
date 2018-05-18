@@ -28,6 +28,37 @@ int main(int argc, char **argv) {
 }
 
 namespace nmd {
+
+delphi::error NMDUpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
+    LogInfo("NMDUpgAppRespHdlr::OnUpgAppRespCreate called");
+    return delphi::error::OK();
+}
+
+string GetAppRespStr(delphi::objects::UpgAppRespPtr resp) {
+    switch (resp->upgapprespval()) {
+        case upgrade::PreUpgStatePass:
+            return ("Pre upgrade checks passed");
+        case upgrade::ProcessesQuiescedPass:
+            return ("Processes Quiesce end");
+        case upgrade::PostBinRestartPass:
+            return ("Binaries Restarted");
+        case upgrade::DataplaneDowntimeStartPass:
+            return ("Dataplane downtime end");
+        case upgrade::CleanupPass:
+            return ("Cleanup finished");
+        default:
+            return ("");
+    }
+}
+
+delphi::error NMDUpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {
+    if (GetAppRespStr(resp) != "")
+        LogInfo("NMDUpgAppRespHdlr::OnUpgAppRespVal called: {}", GetAppRespStr(resp));
+    return delphi::error::OK();
+}
+
+
+
 int count = 0;
 // NMDService constructor
 NMDService::NMDService(delphi::SdkPtr sk) : NMDService(sk, "NMDService") {
@@ -37,6 +68,11 @@ NMDService::NMDService(delphi::SdkPtr sk, string name) {
     this->sdk_ = sk;
     this->svcName_ = name;
     delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
+    delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadMode);
+
+    nmdUpgAppRespHdlr_ = make_shared<NMDUpgAppRespHdlr>(sdk_);
+
+    delphi::objects::UpgAppResp::Watch(sdk_, nmdUpgAppRespHdlr_);
     LogInfo("NMD service constructor got called");
 }
 

@@ -3,10 +3,15 @@ package upgrade;
 
 import "nic/delphi/proto/delphi/delphi.proto";
 
-enum UpgReqCmdType {
+enum UpgReqType {
     InvalidCmd = 0;
     UpgStart   = 1;
     UpgAbort   = 2;
+}
+
+enum UpgRespType {
+    UpgPass   = 0;
+    UpgFail   = 1;
 }
 
 // Upgrade Request Status
@@ -49,11 +54,18 @@ message UpgReq {
     option (delphi.update_event) = true;
     delphi.ObjectMeta          Meta            = 1;
     uint32                     Key             = 2;
-    UpgReqCmdType              UpgReqCmd       = 3 [(delphi.event) = true];
+    UpgReqType                 UpgReqCmd       = 3 [(delphi.event) = true];
+}
+
+message UpgResp {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta          Meta            = 1;
+    uint32                     Key             = 2;
+    UpgRespType                UpgRespVal      = 3 [(delphi.event) = true];
 }
 
 // status part of the object
-message UpgReqStatus {
+message UpgStateReq {
     option (delphi.update_event) = true; 
     delphi.ObjectMeta      Meta              = 1;
     uint32                 Key               = 2;
