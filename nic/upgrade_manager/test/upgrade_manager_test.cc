@@ -17,7 +17,7 @@ UPGREQ_REACTOR_TEST(UpgradeReactorTest, UpgradeMgr);
 TEST_F(UpgradeReactorTest, BasicTest) {
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->mutable_key()->set_id(1);
+    req->set_key(1);
     req->set_upgreqcmd(upgrade::UpgAbort);
     sdk_->QueueUpdate(req);
 
@@ -52,7 +52,7 @@ TEST_F(UpgradeTest, BasicTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->mutable_key()->set_id(1);
+    req->set_key(1);
     req->set_upgreqcmd(upgrade::UpgAbort);
     sdk_->QueueUpdate(req);
 

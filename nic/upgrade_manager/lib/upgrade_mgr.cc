@@ -172,10 +172,10 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
     // find the status object
-    auto upgReqStatus = this->findUpgReqStatus(req->key().id());
+    auto upgReqStatus = this->findUpgReqStatus(req->key());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        RETURN_IF_FAILED(this->createUpgReqStatus(req->key().id(), upgrade::InvalidUpgState));
+        RETURN_IF_FAILED(this->createUpgReqStatus(req->key(), upgrade::InvalidUpgState));
     }
 
     return delphi::error::OK();
@@ -184,7 +184,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
 // OnUpgReqDelete gets called when UpgReq object is deleted
 delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got deleted");
-    auto upgReqStatus = this->findUpgReqStatus(req->key().id());
+    auto upgReqStatus = this->findUpgReqStatus(req->key());
     if (upgReqStatus != NULL) {
         LogInfo("Deleting Upgrade Request Status");
         sdk_->DeleteObject(upgReqStatus);
@@ -202,7 +202,7 @@ delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     }
 
     // set the oper state on status object
-    delphi::objects::UpgReqStatusPtr upgReqStatus = this->findUpgReqStatus(req->key().id());
+    delphi::objects::UpgReqStatusPtr upgReqStatus = this->findUpgReqStatus(req->key());
     if (upgReqStatus != NULL) {
         upgReqStatus->set_upgreqstate(upgrade::UpgReqRcvd);
         sdk_->SetObject(upgReqStatus);

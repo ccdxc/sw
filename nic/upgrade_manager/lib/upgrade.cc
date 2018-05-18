@@ -22,7 +22,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     this->svcName_ = name;
 
     // mount objects
-    delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
+    delphi::objects::UpgReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgReqStatus::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadMode);
 
@@ -56,7 +56,7 @@ void UpgradeService::createUpgReqSpec() {
     // create an object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     srand(time(NULL));
-    req->mutable_key()->set_id(rand());
+    req->set_key(rand());
     req->set_upgreqcmd(upgrade::InvalidCmd);
 
     // add it to database
@@ -71,6 +71,6 @@ void UpgradeService::createTimerHandler(ev::timer &watcher, int revents) {
     LogInfo("Creating a dummy upgrade request");
 
     // create a dummy upgrade request
-    this->createUpgReqSpec();
+    //this->createUpgReqSpec();
 }
 } // namespace upgrade

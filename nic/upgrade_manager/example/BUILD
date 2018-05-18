@@ -35,3 +35,28 @@ cc_binary(
         "-lpthread",
     ],
 )
+
+cc_library(
+    name = "nmd_includes",
+    srcs = [],
+    hdrs = ["nmd.hpp"],
+)
+
+#nmd
+cc_binary(
+    name = "nmd",
+    srcs = [
+        "nmd.cc"
+    ],
+    deps = [
+        "//nic/upgrade_manager/export:upgrade_app_lib",
+        "//nic/upgrade_manager/export:upgrade_app_lib_includes",
+        ":nmd_includes",
+        "//nic/delphi/sdk",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
+    ],
+    linkopts = [
+        "-lpthread",
+    ],
+)

@@ -3,11 +3,6 @@ package upgrade;
 
 import "nic/delphi/proto/delphi/delphi.proto";
 
-// Code Upgrade Request Id
-message UpgReqId {
-    uint32    id = 1;
-}
-
 enum UpgReqCmdType {
     InvalidCmd = 0;
     UpgStart   = 1;
@@ -53,7 +48,7 @@ enum UpgRespStateType {
 message UpgReq {
     option (delphi.update_event) = true;
     delphi.ObjectMeta          Meta            = 1;
-    UpgReqId                   Key             = 2;
+    uint32                     Key             = 2;
     UpgReqCmdType              UpgReqCmd       = 3 [(delphi.event) = true];
 }
 
