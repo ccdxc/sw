@@ -78,6 +78,7 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_CPDC_DATA_TOO_LONG		20005
 #define PNSO_ERR_CPDC_CHECKSUM_FAILED		20006
 #define PNSO_ERR_CPDC_SGL_DESC_ERROR		20007
+#define PNSO_ERR_CPDC_CHKSUM_SERVICE_MISSING	20008
 
 /* Error codes for encryption/decryption */
 #define PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG	30001
@@ -86,7 +87,7 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_XTS_AXI_STATUS_ERROR		30004
 #define PNSO_ERR_XTS_AOL_DESC_ERROR		30005
 
-/* Error codes for hash/cksum */
+/* Error codes for hash/chksum */
 #define PNSO_ERR_SHA_FAILED			40001
 
 /**
@@ -182,12 +183,14 @@ struct pnso_crypto_desc {
 };
 
 /*  descriptor flags */
-#define PNSO_DFLAG_ZERO_PAD		(1 << 0)
-#define PNSO_DFLAG_INSERT_HEADER	(1 << 1)
-#define PNSO_DFLAG_BYPASS_ONFAIL	(1 << 2)
-#define PNSO_DFLAG_HEADER_PRESENT	(1 << 3)
-#define PNSO_DFLAG_HASH_PER_BLOCK	(1 << 4)
-#define PNSO_DFLAG_CHKSUM_PER_BLOCK	(1 << 5)
+#define PNSO_DFLAG_ZERO_PAD			(1 << 0)
+#define PNSO_DFLAG_INSERT_HEADER_WITH_CHKSUM	(1 << 1)
+#define PNSO_DFLAG_INSERT_HEADER_WITHOUT_CHKSUM	(1 << 2)
+#define PNSO_DFLAG_BYPASS_ONFAIL		(1 << 3)
+#define PNSO_DFLAG_HEADER_PRESENT		(1 << 4)
+#define PNSO_DFLAG_CHKSUM_WITH_HEADER		(1 << 5)
+#define PNSO_DFLAG_HASH_PER_BLOCK		(1 << 6)
+#define PNSO_DFLAG_CHKSUM_PER_BLOCK		(1 << 7)
 
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
@@ -203,8 +206,12 @@ struct pnso_crypto_desc {
  *	PNSO_DFLAG_ZERO_PAD - indicates whether or not to zero fill the
  *	compressed output buffer aligning to block size.
  *
- *	PNSO_DFLAG_INSERT_HEADER - indicates whether or not to insert
- *	compression header compressed output buffer.
+ *	PNSO_DFLAG_INSERT_HEADER_WITH_CHKSUM - indicates whether or not to
+ *	insert compression header with checksum computed on precompressed
+ *	data. Checksum is derived from previous service.
+ *
+ *	PNSO_DFLAG_INSERT_HEADER_WITHOUT_CHKSUM - indicates whether or not to
+ *	insert compression header.
  *
  *	PNSO_DFLAG_BYPASS_ONFAIL - indicates whether or not to use the source
  *	buffer as input buffer to hash and/or checksum, services, when
@@ -261,6 +268,9 @@ struct pnso_hash_desc {
  * descriptor.
  *	PNSO_DFLAG_CHKSUM_PER_BLOCK - indicates whether to produce one checksum
  *	per block or one for the entire buffer.
+ *
+ *	PNSO_DFLAG_CHKSUM_WITH_HEADER - indicates whether to provide the output
+ *	of checksum operation, as input to following service.
  *
  */
 struct pnso_checksum_desc {
