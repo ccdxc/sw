@@ -30,11 +30,14 @@ if nic_dir is None:
 pid = os.getpid()
 hal_process = None
 model_process = None
+stg_dol_process = None
+nw_dol_process = None
 
 build_log = nic_dir + "/build.log"
 model_log = nic_dir + "/model.log"
 hal_log = nic_dir + "/hal.log"
 dol_log = nic_dir + "/dol.log"
+stg_dol_log = nic_dir + "/stg_dol.log"
 mbt_log = nic_dir + "/mbt.log"
 storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
@@ -318,16 +321,21 @@ def run_storage_dol(port, args):
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test]
         else:
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip)]
-
+    if args.combined:
+        cmd.append('--combined')
     #pass additional arguments to storage_test
     if args.storage_runargs:
         cmd.extend(shlex.split(args.storage_runargs))
         print 'Executing command [%s]' % ', '.join(map(str, cmd))
 
-    p = Popen(cmd)
-    #p.communicate()
-    #return p.returncode
-    return check_for_completion(p, model_process, hal_process, args)
+    global stg_dol_process
+    if args.combined:
+        stg_log = open(stg_dol_log, "w")
+        stg_dol_process = Popen(cmd, stdout=stg_log, stderr=stg_log)
+        return 0
+    else:
+        stg_dol_process = Popen(cmd)
+        return check_for_completion(None, stg_dol_process, model_process, hal_process, args)
 
 # Run GFT tests
 def run_gft_test(args):
@@ -337,14 +345,24 @@ def run_gft_test(args):
     cmd = ['../bazel-bin/nic/hal/test/gtests/gft_test']
     p = Popen(cmd)
     #p.communicate()
-    return check_for_completion(p, model_process, hal_process, args)
+    return check_for_completion(p, None, model_process, hal_process, args)
 
 
 # DOL
 
-def check_for_completion(p, model_process, hal_process, args):
+def check_for_completion(nw_dol_process, stg_dol_process,  model_process, hal_process, args):
+    nw_dol_done = False
+    stg_dol_done = False
+    if nw_dol_process is None:
+        nw_dol_done = True
+    if stg_dol_process is None:
+        stg_dol_done = True
     while 1:
-        if p and p.poll() is not None:
+        if nw_dol_process and nw_dol_process.poll() is not None:
+            nw_dol_done = True            
+        if stg_dol_process and stg_dol_process.poll() is not None:
+            stg_dol_done = True
+        if nw_dol_done and stg_dol_done:
             break
         if model_process and model_process.poll() is not None:
             break
@@ -352,7 +370,12 @@ def check_for_completion(p, model_process, hal_process, args):
             break
         time.sleep(5)
 
-    if args.rtl and p.returncode == 0:
+    status = 0
+    if nw_dol_process:
+        status = nw_dol_process.returncode
+    if status == 0 and stg_dol_process:
+        status = stg_dol_process.returncode
+    if args.rtl and status == 0:
         # Wait for runtest to finish only in case of DOL finishing
         # successfully.
         count = 0
@@ -388,10 +411,15 @@ def check_for_completion(p, model_process, hal_process, args):
             core_file = hal_core_path + "/core." + str(hal_process.pid)
             process_hal_core(core_file)
 
-    if p:
-        print "* DOL exit code " + str(p.returncode)
-        if p.returncode:
-            exitcode = p.returncode
+    if nw_dol_process:
+        print "* NW DOL exit code " + str(nw_dol_process.returncode)
+        if nw_dol_process.returncode:
+            exitcode = nw_dol_process.returncode
+
+    if stg_dol_process:
+        print "* Storage DOL exit code " + str(stg_dol_process.returncode)
+        if stg_dol_process.returncode:
+            exitcode = stg_dol_process.returncode
 
     return exitcode
 
@@ -471,23 +499,27 @@ def run_dol(args):
     if args.niccontainer:
         cmd.append("--niccontainer")
 
+    global nw_dol_process
     if args.coveragerun:
         #Increasing timeout for coverage runs only.
         dol_env = os.environ.copy()
         dol_env["MODEL_TIMEOUT"] = "300"
-        p = Popen(cmd, env=dol_env)
+        nw_dol_process = Popen(cmd, env=dol_env)
     else:
-        p = Popen(cmd)
-    print "* Starting DOL pid (" + str(p.pid) + ")"
+        nw_dol_process = Popen(cmd)
+    print "* Starting DOL pid (" + str(nw_dol_process.pid) + ")"
     print "- Log file: " + dol_log + "\n"
 
     lock = open(lock_file, "a+")
-    lock.write(str(p.pid) + "\n")
+    lock.write(str(nw_dol_process.pid) + "\n")
     lock.close()
     #p.communicate()
     #log.close()
 
-    return check_for_completion(p, model_process, hal_process, args)
+    if args.combined:
+        return 0
+    else:
+        return check_for_completion(nw_dol_process, None, model_process, hal_process, args)
 
 def run_mbt(args, standalone=True):
     mbt_dir = nic_dir + "/../mbt"
@@ -819,6 +851,8 @@ def main():
                         help='Dump RTL toggle coverage')
     parser.add_argument('--agent', dest='agent', default=None, action='store_true',
                         help='Run with agent.')
+    parser.add_argument('--combined', dest='combined', default=False, action='store_true',
+                        help='Run storage and network tests combined')
 
     args = parser.parse_args()
 
@@ -878,7 +912,11 @@ def main():
             if args.gft_gtest is False:
                 run_hal(args)
 
-    if args.storage:
+    if args.storage and args.feature is not None and args.combined is False:
+        print "ERROR: Use --combined to run storage and networking tests together\n"
+        sys.exit(1)
+
+    if args.storage and args.combined is False:
         status = run_storage_dol(port, args)
         if status != 0:
             print "- Storage dol failed, status=", status
@@ -901,6 +939,15 @@ def main():
             os.environ["MBT_GRPC_PORT"] = str(mbt_port)
             run_mbt(args, standalone=False)
         status = run_dol_test(args)
+
+    if args.combined:
+        if args.storage:
+            status = run_storage_dol(port, args)
+            if status != 0:
+                print "- Storage dol failed, status=", status
+        status = check_for_completion(nw_dol_process, stg_dol_process, model_process, hal_process, args)
+        if status != 0:
+            print "- Dol failed, status=", status
 
     if args.coveragerun:
         dump_coverage_data()

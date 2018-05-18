@@ -9,6 +9,7 @@
 
 using namespace utils;
 
+static const size_t kShmAvlSize = kShmSize / 2;
 class HostMemTest : public ::testing::Test {
  protected:
     virtual void SetUp() {
@@ -37,12 +38,12 @@ TEST_F(HostMemTest, TestCreate) {
 TEST_F(HostMemTest, TestAllocFree) {
   std::unique_ptr<HostMem> mem(HostMem::New());
   ASSERT_NE(nullptr, mem.get());
-  void *ptr = mem->Alloc(kShmSize - kAllocUnit);
+  void *ptr = mem->Alloc(kShmAvlSize - kAllocUnit);
   ASSERT_TRUE(ptr != nullptr);
-  void *ptr2 = mem->Alloc(kShmSize - kAllocUnit);
+  void *ptr2 = mem->Alloc(kShmAvlSize - kAllocUnit);
   ASSERT_TRUE(ptr2 == nullptr);
   mem->Free(ptr);
-  ptr2 = mem->Alloc(kShmSize - kAllocUnit);
+  ptr2 = mem->Alloc(kShmAvlSize - kAllocUnit);
   ASSERT_TRUE(ptr2 != nullptr);
 }
 
@@ -78,7 +79,7 @@ TEST_F(HostMemTest, TestAlign) {
   ASSERT_TRUE(check_align(mem->Alloc(1, 4096), 4096));
   ASSERT_TRUE(check_align(mem->Alloc(1, 64), 64));
   ASSERT_TRUE(check_align(mem->Alloc(1, 1024), 1024));
-  ASSERT_TRUE(check_align(mem->Alloc(kShmSize - 8192, 4096), 4096));
+  ASSERT_TRUE(check_align(mem->Alloc(kShmAvlSize - 8192, 4096), 4096));
   ASSERT_TRUE(check_align(mem->Alloc(1, 64), 64));
   ASSERT_EQ(mem->Alloc(1, 4096), nullptr);
 }

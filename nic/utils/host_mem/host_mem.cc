@@ -7,8 +7,11 @@ static uint32_t NumUnits(size_t size) {
   return (size + kAllocUnit - 1) >> kAllocUnitShift;
 }
 
-HostMem *HostMem::New() {
+HostMem *HostMem::New(bool bhalf){
   std::unique_ptr<HostMem> mem(new HostMem());
+  if(bhalf) {
+    mem->offset_ = kShmSize/2;
+  }
   mem->shmid_ = shmget(HostMemHandle(), kShmSize, 0666);
   if (mem->shmid_ < 0)
     return nullptr;
@@ -16,7 +19,7 @@ HostMem *HostMem::New() {
   if (mem->shmaddr_ == (void*)-1)
     return nullptr;
 
-  uint32_t num_units = kShmSize/kAllocUnit;
+  uint32_t num_units = (kShmSize/2)/kAllocUnit;
   uint64_t mask = kAllocUnit - 1;
   if ((uint64_t)mem->shmaddr_ & mask) {
     mem->base_addr_ = (void *)
@@ -39,10 +42,11 @@ void *HostMem::Alloc(size_t size, uint32_t align) {
     return nullptr;
   allocations_[offset] = num_units;
   return (void *)(((uint8_t *)base_addr_) +
-      (((uint64_t)offset) << kAllocUnitShift));
+      (((uint64_t)offset) << kAllocUnitShift) + offset_);
 }
 
 void HostMem::Free(void *addr) {
+  addr = (void *)((uint8_t*)addr - offset_);
   uint64_t offset = VirtToPhys(addr);
   assert ((offset & (kAllocUnit - 1)) == 0);
   offset >>= kAllocUnitShift;

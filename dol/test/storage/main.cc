@@ -67,6 +67,9 @@ DEFINE_bool(with_rtl_skipverify, false,
 DEFINE_uint64(nvme_scale_iters, 62,
               "Number of iterations for NVME scale testing (0 = infinite)");
 
+DEFINE_bool(combined, false,
+            "Combined run of storage and network tests");
+
 bool run_nvme_dp_tests = false;
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
@@ -254,7 +257,13 @@ int common_setup() {
   printf("HAL client initialized\n");
 
   // Initialize host memory
-  if (init_host_mem() < 0) {
+  int ret;
+  if(FLAGS_combined) {
+    ret = init_host_mem_bhalf();
+  } else {
+    ret = init_host_mem();
+  }
+  if (ret < 0) {
     printf("Host mem init failed (is model running?)\n");
     return -1;
   }
@@ -363,6 +372,7 @@ int main(int argc, char**argv) {
             << "\nVerification method for accelerator scale testing: " << FLAGS_acc_scale_verify_method 
             << "\nAccelerator scale tests: " << FLAGS_acc_scale_test
             << "\nWith RTL --skipverify in effect: " << FLAGS_with_rtl_skipverify
+            << "\nWith combined --combined in effect: " << FLAGS_combined
             << std::endl;
 
   // Set the test group based on flags. Default is to allow all.
@@ -443,8 +453,13 @@ int main(int argc, char**argv) {
       run_rdma_perf_tests = true;
   } else {
     printf("Usage: ./storage_test [--hal_port <xxx>] "
-           "[--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|acc_scale|rtl_sanity] "
+           "[--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|acc_scale|rtl_sanity|perf] "
            " [--poll_interval <yyy>] \n");
+    return -1;
+  }
+
+  if(run_nvme_dp_tests && FLAGS_combined) {
+    printf("ERROR: Cannot run NVMe DP Tests in combined sanity mode\n");
     return -1;
   }
 
@@ -483,7 +498,9 @@ int main(int argc, char**argv) {
   tests::xts_init();
   printf("XTS configuration completed \n");
 
-  if (rdma_init(run_nvme_dp_tests) < 0) {
+  if (FLAGS_combined) {
+    printf("RDMA configuration skipped - running in combined sanity mode\n");
+  } else if (rdma_init(run_nvme_dp_tests) < 0) {
     printf("RDMA Setup failed\n");
     return 1;
   }
