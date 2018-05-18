@@ -905,8 +905,6 @@ static int ionic_prep_common(struct ionic_qp *qp,
 {
 	int64_t signed_len;
 
-	ionic_prep_base(qp, wr, meta, wqe);
-
 	if (wr->send_flags & IBV_SEND_INLINE) {
 		wqe->base.num_sges = 0;
 		wqe->base.inline_data_vld = 1;
@@ -925,6 +923,8 @@ static int ionic_prep_common(struct ionic_qp *qp,
 
 	meta->len = (uint32_t)signed_len;
 	*wqe_length_field = htobe32((uint32_t)signed_len);
+
+	ionic_prep_base(qp, wr, meta, wqe);
 
 	return 0;
 }
@@ -974,7 +974,19 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 	struct ionic_sq_meta *meta;
 	struct sqwqe_t *wqe;
 	struct ionic_ah *ah;
-	int rc;
+
+	if (unlikely(!wr->wr.ud.ah))
+		return EINVAL;
+
+	ah = to_ionic_ah(wr->wr.ud.ah);
+
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	/* XXX endian? */
+	wqe->u.non_atomic.wqe.ud_send.q_key = wr->wr.ud.remote_qkey;
+	wqe->u.non_atomic.wqe.ud_send.ah_size = ah->len;
+	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->wr.ud.remote_qpn;
+	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->ahid;
 
 	/* XXX duplicated code.
 	 *
@@ -982,6 +994,7 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 	 * the same descriptor format, and replacing following dup'd code with
 	 * call to ionic_prep_send().
 	 */
+	// return ionic_prep_send(qp, wr);
 
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
@@ -1002,28 +1015,8 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 		return EINVAL;
 	}
 
-	rc = ionic_prep_common(qp, wr, meta, wqe,
-			       &wqe->u.non_atomic.wqe.ud_send.length);
-
-	/* XXX replace duplicated code with ionic_prep_send: */
-	// rc = ionic_prep_send(qp, wr);
-	if (rc)
-		return rc;
-
-	if (unlikely(!wr->wr.ud.ah))
-		return EINVAL;
-
-	ah = to_ionic_ah(wr->wr.ud.ah);
-
-	wqe = ionic_queue_at_prod(&qp->sq);
-
-	/* XXX endian? */
-	wqe->u.non_atomic.wqe.ud_send.q_key = wr->wr.ud.remote_qkey;
-	wqe->u.non_atomic.wqe.ud_send.ah_size = ah->len;
-	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->wr.ud.remote_qpn;
-	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->ahid;
-
-	return 0;
+	return ionic_prep_common(qp, wr, meta, wqe,
+				 &wqe->u.non_atomic.wqe.ud_send.length);
 }
 
 static int ionic_prep_rdma(struct ionic_qp *qp,
