@@ -4,6 +4,7 @@
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/qstate_if.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 namespace nvme_dp {
 
@@ -195,6 +196,7 @@ int setup_io_map() {
 int setup_one_io_buffer(int index) {
   // Start with the line set to the index
   io_buf_base_addr->line_set(index);
+
   // Set the IO buffer address in the IO buffer
   io_buf_base_addr->write_bit_fields(0, 34, io_buf_base_addr->pa());
 

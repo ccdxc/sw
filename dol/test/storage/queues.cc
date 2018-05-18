@@ -636,7 +636,7 @@ nvme_dp_queues_setup() {
   for (i = 0; i < (int) NUM_TO_VAL(NvmeNumCQs); i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&nvme_cqs[i], NUM_TO_VAL(kNvmeNumEntries),
-                   NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
+                   NUM_TO_VAL(kNvmeCQEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Unable to allocate host memory for NVME CQ %d\n", i);
       return -1;
     }
@@ -660,7 +660,7 @@ nvme_dp_queues_setup() {
   for (i = 0; i < (int) NUM_TO_VAL(NvmeNumSQs); i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&nvme_sqs[i], NUM_TO_VAL(kNvmeNumEntries),
-                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Unable to allocate host memory for NVME SQ %d\n", i);
       return -1;
     }
@@ -682,6 +682,7 @@ nvme_dp_queues_setup() {
 
   return 0;
 }
+
 int
 pvm_queues_setup() {
   int i, j;
