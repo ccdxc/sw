@@ -11,6 +11,7 @@
 #include "nic/gen/proto/hal/types.pb.h"
 #include "addr_list.hpp"
 #include "port_list.hpp"
+#include "sg_list.hpp"
 
 using types::IPProtocol;
 using acl::acl_rule_data_t;

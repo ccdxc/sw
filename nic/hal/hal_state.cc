@@ -321,6 +321,12 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PORT_LIST_ELEM] != NULL), false);
 
+    slabs_[HAL_SLAB_SG_LIST_ELEM] =
+        slab::factory("sg-list-elem", HAL_SLAB_SG_LIST_ELEM,
+                      sizeof(hal::sg_list_elem_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PORT_LIST_ELEM] != NULL), false);
+
     slabs_[HAL_SLAB_MACADDR_LIST_ELEM] =
         slab::factory("mac-addr-list-elem", HAL_SLAB_MACADDR_LIST_ELEM,
                       sizeof(hal::mac_addr_list_elem_t), 64,
@@ -494,6 +500,12 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                       sizeof(hal::nwsec_policy_cfg_t), 64,
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_CFG] != NULL), false);
+
+    slabs_[HAL_SLAB_NWSEC_POLICY] =
+        slab::factory("nwsec_policy", HAL_SLAB_NWSEC_POLICY,
+                      sizeof(hal::nwsec_policy_t), 64,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY] != NULL), false);
 
     slabs_[HAL_SLAB_NWSEC_POLICY_SVC] =
         slab::factory("nwsec_policy_svc", HAL_SLAB_NWSEC_POLICY_SVC,
@@ -1732,6 +1744,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->nwsec_policy_cfg_slab()->free(elem);
         break;
 
+    case HAL_SLAB_NWSEC_POLICY:
+        g_hal_state->nwsec_policy_slab()->free(elem);
+        break;
+
     case HAL_SLAB_NWSEC_POLICY_RULES:
         g_hal_state->nwsec_policy_rules_slab()->free(elem);
         break;
@@ -1846,6 +1862,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_PORT_LIST_ELEM:
         g_hal_state->port_list_elem_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_SG_LIST_ELEM:
+        g_hal_state->sg_list_elem_slab()->free(elem);
         break;
 
     case HAL_SLAB_MACADDR_LIST_ELEM:

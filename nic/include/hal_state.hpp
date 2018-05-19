@@ -114,6 +114,7 @@ public:
     slab *rule_data_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RULE_DATA]); }
     slab *nwsec_policy_rules_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_RULES]); }
     slab *nwsec_policy_cfg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_CFG]); }
+    slab *nwsec_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY]); }
     slab *nwsec_policy_svc_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_SVC]); }
     slab *nwsec_policy_appid_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_APPID]); }
     slab *dos_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY]); }
@@ -148,15 +149,11 @@ public:
     slab *proxy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY]); }
     slab *proxy_flow_info_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY_FLOW_INFO]); }
 
-    slab *v4addr_list_elem_slab(void) const {
-        return TO_SLAB_PTR(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM]); }
-    slab *v6addr_list_elem_slab(void) const {
-        return TO_SLAB_PTR(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM]); }
-    slab *port_list_elem_slab(void) const {
-        return TO_SLAB_PTR(slabs_[HAL_SLAB_PORT_LIST_ELEM]); }
-    slab *mac_addr_list_elem_slab(void) const {
-        return TO_SLAB_PTR(slabs_[HAL_SLAB_MACADDR_LIST_ELEM]); }
-
+    slab *v4addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM]); }
+    slab *v6addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM]); }
+    slab *port_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PORT_LIST_ELEM]); }
+    slab *mac_addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_MACADDR_LIST_ELEM]); }
+    slab *sg_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SG_LIST_ELEM]); }
     slab *nat_pool_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_POOL]); }
     slab *nat_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_RULE]); }
     slab *nat_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_POL]); }
@@ -392,6 +389,7 @@ public:
     slab *rule_data_slab(void) const { return cfg_db_->rule_data_slab(); }
     slab *nwsec_policy_rules_slab(void) const { return cfg_db_->nwsec_policy_rules_slab(); }
     slab *nwsec_policy_cfg_slab(void) const { return cfg_db_->nwsec_policy_cfg_slab(); }
+    slab *nwsec_policy_slab(void) const { return cfg_db_->nwsec_policy_slab(); }
     slab *nwsec_policy_svc_slab(void) const { return cfg_db_->nwsec_policy_svc_slab(); }
     slab *nwsec_policy_appid_slab(void) const { return cfg_db_->nwsec_policy_appid_slab(); }
     ht   *nwsec_policy_cfg_ht(void) const { return oper_db_->nwsec_policy_cfg_ht(); }
@@ -524,15 +522,11 @@ public:
     ht *nat_pool_ht(void) const { return oper_db_->nat_pool_ht(); }
     ht *nat_mapping_ht(void) const { return oper_db_->nat_mapping_ht(); }
 
-    slab *v4addr_list_elem_slab(void) const {
-        return cfg_db_->v4addr_list_elem_slab(); }
-    slab *v6addr_list_elem_slab(void) const {
-        return cfg_db_->v6addr_list_elem_slab(); }
-    slab *port_list_elem_slab(void) const {
-        return cfg_db_->port_list_elem_slab(); }
-    slab *mac_addr_list_elem_slab(void) const {
-        return cfg_db_->mac_addr_list_elem_slab(); }
-
+    slab *v4addr_list_elem_slab(void) const { return cfg_db_->v4addr_list_elem_slab(); }
+    slab *v6addr_list_elem_slab(void) const { return cfg_db_->v6addr_list_elem_slab(); }
+    slab *port_list_elem_slab(void) const { return cfg_db_->port_list_elem_slab(); }
+    slab *mac_addr_list_elem_slab(void) const { return cfg_db_->mac_addr_list_elem_slab(); }
+    slab *sg_list_elem_slab(void) const { return cfg_db_->sg_list_elem_slab(); }
     // get APIs for nexthop related state
     slab *nexthop_slab(void) const { return cfg_db_->nexthop_slab(); }
     ht *nexthop_id_ht(void) const { return oper_db_->nexthop_id_ht(); }

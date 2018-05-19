@@ -198,9 +198,10 @@ message IPAddressObj {
 
 // PortRange object has low and high end of the port ranges
 message L4PortRange {
-  uint32    port_low  = 1 [(gogoproto.moretags) = "venice:range:0-65535"];   // source port
-  uint32    port_high = 2 [(gogoproto.moretags) = "venice:range:0-65535"];   // destination port
+  uint32    port_low  = 1 [(gogoproto.moretags) = "venice:range:0-65535"];   // port range start
+  uint32    port_high = 2 [(gogoproto.moretags) = "venice:range:0-65535"];   // port range end
 }
+
 
 message Empty {}
 

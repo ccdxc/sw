@@ -587,7 +587,7 @@ nwsec_policy_alloc(void)
     nwsec_policy_t     *policy = NULL;
 
     policy = (nwsec_policy_t *)
-                        g_hal_state->nwsec_policy_cfg_slab()->alloc();
+                        g_hal_state->nwsec_policy_slab()->alloc();
     if (policy == NULL) {
         return NULL;
     }

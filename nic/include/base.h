@@ -85,6 +85,7 @@ typedef uint64_t        hbm_addr_t;
 typedef uint32_t        hal_stats_t;
 typedef uint32_t        nat_pool_id_t;
 typedef uint32_t        nh_id_t;
+typedef uint32_t        sg_id_t;
 
 //------------------------------------------------------------------------------
 // HAL config version type

@@ -198,8 +198,9 @@ rule_match_dst_sg_spec_extract (const types::RuleMatch& spec,
     hal_ret_t ret = HAL_RET_OK;
 
     for (int i = 0; i < spec.dst_sg_size(); i++) {
-        //TBD: lseshan: Handle sg
-        return ret;
+        ret = sg_list_elem_sg_spec_handle(spec.dst_sg(i), &match->dst_sg_list);
+        if (ret != HAL_RET_OK)
+            return ret;
     }
 
     return ret;
@@ -212,8 +213,9 @@ rule_match_src_sg_spec_extract (const types::RuleMatch& spec,
     hal_ret_t ret = HAL_RET_OK;
 
     for (int i = 0; i < spec.src_sg_size(); i++) {
-        //TBD: lseshan: Handle sg
-        return ret;
+        ret = sg_list_elem_sg_spec_handle(spec.src_sg(i), &match->src_sg_list);
+        if (ret != HAL_RET_OK)
+            return ret;
     }
 
     return ret;
