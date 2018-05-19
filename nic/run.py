@@ -912,8 +912,9 @@ def main():
             if args.gft_gtest is False:
                 run_hal(args)
 
-    if args.storage and args.feature is not None and args.combined is False:
+    if args.storage and args.feature not in [None, 'storage'] and args.combined is False:
         print "ERROR: Use --combined to run storage and networking tests together\n"
+        print "Feature is " + str(args.feature)
         sys.exit(1)
 
     if args.storage and args.combined is False:
