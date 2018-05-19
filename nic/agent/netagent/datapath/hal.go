@@ -331,7 +331,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
 	if err != nil {
-		log.Errorf("CIDR Parsing failed: %v. Error: %v", ep.Status.IPv4Address, err)
+		return nil, fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
 	}
 	// convert v4 address
 	v4Addr := halproto.IPAddress{

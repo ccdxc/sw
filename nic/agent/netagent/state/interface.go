@@ -253,7 +253,7 @@ func (na *Nagent) findIntfByName(intfName string) (intf *netproto.Interface, ok 
 	na.Lock()
 	intf, ok = na.HwIfDB[key]
 	na.Unlock()
-	return
+	return intf, ok
 }
 
 func (na *Nagent) countIntfs(intfName string) (intfCount uint64, err error) {

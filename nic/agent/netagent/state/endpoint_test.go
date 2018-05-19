@@ -1,0 +1,602 @@
+package state
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+//--------------------- Happy Path Tests ---------------------//
+func TestCtrlerEndpointCreateDelete(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+		},
+	}
+
+	// create the endpoint
+	ep, _, err := ag.EndpointCreateReq(epinfo)
+	AssertOk(t, err, "Error creating endpoint")
+	var foundEp *netproto.Endpoint
+	eps := ag.ListEndpoint()
+	for _, e := range eps {
+		if ep.Name == "testEndpoint" {
+			foundEp = e
+			break
+		}
+	}
+	AssertEquals(t, epinfo, foundEp, "Agent should return the exact ep that we created.")
+
+	//verify duplicate endpoint creations succeed
+	_, _, err = ag.EndpointCreateReq(epinfo)
+	AssertOk(t, err, "Endpoint creation is not idempotent")
+	//
+	// verify endpoint create on non-existing network fails
+	ep2 := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint2",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "invalid",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+		},
+	}
+	_, _, err = ag.EndpointCreateReq(ep2)
+	Assert(t, err != nil, "Endpoint create on non-existing network succeeded", ag)
+
+	// verify list api works
+	epList := ag.ListEndpoint()
+	Assert(t, len(epList) == 1, "Incorrect number of endpoints")
+	//
+	// endpoint message
+	depinfo := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID2",
+			WorkloadUUID: "testWorkloadUUID2",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+		},
+	}
+	_, _, err = ag.EndpointCreateReq(&depinfo)
+	Assert(t, err != nil, "Conflicting endpoint creating succeeded", ag)
+
+	// delete the endpoint
+	err = ag.EndpointDeleteReq(epinfo)
+	AssertOk(t, err, "Endpoint delete failed")
+
+	// ensure that ep list returns 0 after delete
+	// verify list api works
+	epList = ag.ListEndpoint()
+	AssertEquals(t, 0, len(epList), "Incorrect number of endpoints")
+
+	// verify non-existing endpoint can not be deleted
+	err = ag.EndpointDeleteReq(epinfo)
+	Assert(t, err != nil, "Deleting non-existing endpoint succeeded", ag)
+}
+
+func TestLocalEndpointUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    ag.NodeUUID,
+		},
+	}
+
+	// update the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "Endpoint create failed.")
+
+	epinfo.Spec.WorkloadName = "updatedWorkloadName"
+	err = ag.UpdateEndpoint(epinfo)
+	AssertOk(t, err, "Local endpoint update failed")
+}
+
+func TestEndpointUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/24",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(&epinfo)
+	AssertOk(t, err, "Error creating endpoint")
+
+	// security group
+	sg := netproto.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "test-sg",
+			Namespace: "default",
+		},
+		Spec: netproto.SecurityGroupSpec{
+			SecurityProfile: "unknown",
+			Rules: []netproto.SecurityRule{
+				{
+					Direction: "Incoming",
+					PeerGroup: "",
+					Services: []netproto.SecurityRule_Service{
+						{
+							Protocol: "tcp",
+							Port:     80,
+						},
+					},
+					Action: "Allow",
+				},
+			},
+		},
+	}
+
+	// create a security group
+	err = ag.CreateSecurityGroup(&sg)
+	AssertOk(t, err, "Error creating security group")
+
+	// update the remote endpoint
+	epupd := epinfo
+	epupd.Spec.SecurityGroups = []string{"test-sg"}
+	err = ag.UpdateEndpoint(&epupd)
+	AssertOk(t, err, "Error updating endpoint")
+
+	// update the remote endpoint
+	epupd.Spec.SecurityGroups = []string{"test-sg"}
+	epupd.Status.NodeUUID = ag.NodeUUID
+	err = ag.UpdateEndpoint(&epupd)
+	AssertOk(t, err, "Error updating endpoint")
+
+	// try changing the network of endpoint
+	epupd2 := epupd
+	epupd2.Spec.NetworkName = "unknown"
+	err = ag.UpdateEndpoint(&epupd2)
+	Assert(t, (err != nil), "Changing network name succeeded")
+
+	// try updating security group to an unknown
+	epupd2 = epupd
+	epupd2.Spec.SecurityGroups = []string{"unknown"}
+	err = ag.UpdateEndpoint(&epupd2)
+	Assert(t, (err != nil), "Changing to non-existing security group succeeded")
+}
+
+func TestEndpointConcurrency(t *testing.T) {
+	var concurrency = 100
+
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	waitCh := make(chan error, concurrency*2)
+
+	// create endpoint
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			// endpoint message
+			epinfo := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      fmt.Sprintf("testEndpoint-%d", idx),
+				},
+				Spec: netproto.EndpointSpec{
+					EndpointUUID: "testEndpointUUID",
+					WorkloadUUID: "testWorkloadUUID",
+					NetworkName:  "default",
+				},
+				Status: netproto.EndpointStatus{
+					IPv4Address: "10.0.0.1/24",
+				},
+			}
+
+			// create the endpoint
+			_, eperr := ag.CreateEndpoint(&epinfo)
+			waitCh <- eperr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error creating endpoint")
+	}
+
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			epinfo := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      fmt.Sprintf("testEndpoint-%d", idx),
+				},
+			}
+			eperr := ag.DeleteEndpoint(&epinfo)
+			waitCh <- eperr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error deleting endpoint")
+	}
+}
+
+//--------------------- Corner Case Tests ---------------------//
+
+func TestEndpointCreateOnNonExistentNamespace(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "nonExistentNamespace",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+		},
+	}
+
+	// create the endpoint
+	_, _, err = ag.EndpointCreateReq(epinfo)
+	Assert(t, err != nil, "Creating an endpoint on non-existent Namespace should fail.")
+}
+
+func TestLocalEndpointDatapathCreateFailure(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "BadIPAddress",
+		},
+	}
+
+	// create the endpoint
+	_, _, err = ag.EndpointCreateReq(epinfo)
+	Assert(t, err != nil, "Creating an endpoint with invalid IPAddress CIDR format should fail.")
+}
+
+func TestRemoteEndpointDatapathCreateFailure(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "BadIPAddress",
+			NodeUUID:    "remote",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	Assert(t, err != nil, "Creating an endpoint with invalid IPAddress CIDR format should fail.")
+}
+
+func TestRemoteEndpointOnNonExistentInterface(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			Interface:    "bad-interface",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    "remote",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	Assert(t, err != nil, "Creating an endpoint with non existent interfaces should fail.")
+}
+
+func TestNonExistentEndpointUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "NonExistentEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			Interface:    "bad-interface",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    ag.NodeUUID,
+		},
+	}
+
+	// update the endpoint
+	err = ag.UpdateEndpoint(epinfo)
+	Assert(t, err != nil, "Creating an endpoint with non existent interfaces should fail.")
+}
