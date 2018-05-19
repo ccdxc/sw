@@ -468,7 +468,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::ipsec_saencrypt_create(encrypt_spec, &encrypt_resp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 encrypt_hdl = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+    //::google::protobuf::uint64 encrypt_hdl = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
 
     encrypt_spec.mutable_key_or_handle()->set_cb_id(3);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
@@ -487,7 +487,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::ipsec_saencrypt_create(encrypt_spec, &encrypt_resp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 encrypt_hdl3 = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+    //::google::protobuf::uint64 encrypt_hdl3 = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
 
     encrypt_spec.mutable_key_or_handle()->set_cb_id(4);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
@@ -506,7 +506,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::ipsec_saencrypt_create(encrypt_spec, &encrypt_resp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 encrypt_hdl4 = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+    //::google::protobuf::uint64 encrypt_hdl4 = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
 
 
 
@@ -535,19 +535,19 @@ TEST_F(ipsec_encrypt_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ipsec_sa_encrypt_test_spec_dump(enc_get_rsp_msg);
 
-    del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl);
+    del_enc_req.mutable_key_or_handle()->set_cb_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl3);
+    del_enc_req.mutable_key_or_handle()->set_cb_id(3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    del_enc_req.mutable_key_or_handle()->set_cb_handle(encrypt_hdl4);
+    del_enc_req.mutable_key_or_handle()->set_cb_id(4);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_saencrypt_delete(del_enc_req, &del_enc_rsp);
     hal::hal_cfg_db_close();
@@ -568,7 +568,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::ipsec_sadecrypt_create(decrypt_spec, &decrypt_resp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 decrypt_hdl = decrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
+    //::google::protobuf::uint64 decrypt_hdl = decrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
 
     // Uncomment these to have gtest work for CLI
     decrypt_spec.mutable_key_or_handle()->set_cb_id(2);
@@ -594,7 +594,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ipsec_sa_decrypt_test_spec_dump(dec_get_rsp_msg);
 
 
-    del_dec_req.mutable_key_or_handle()->set_cb_handle(decrypt_hdl);
+    del_dec_req.mutable_key_or_handle()->set_cb_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_sadecrypt_delete(del_dec_req, &del_dec_rsp);
     hal::hal_cfg_db_close();
