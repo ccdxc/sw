@@ -16,6 +16,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"time"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
@@ -27,6 +29,7 @@ import (
 const (
 	halGRPCDefaultBaseURL = "localhost"
 	halGRPCDefaultPort    = "50054"
+	halGRPCWaitTimeout    = time.Duration(time.Minute * 10)
 )
 
 // ErrHALNotOK is returned by HAL gRPC Server on failed requests
@@ -37,6 +40,9 @@ var ErrIPParse = errors.New("hal datapath could not parse the IP")
 
 // ErrInvalidMatchType is returned on an invalid match type
 var ErrInvalidMatchType = errors.New("invalid match selector type")
+
+// ErrHALUnavailable is returned when agent can't talk to to HAL.
+var ErrHALUnavailable = errors.New("agent could not connect to HAL")
 
 // ErrInvalidNatActionType is returned on an invalid NAT Action
 var ErrInvalidNatActionType = errors.New("invalid NAT Action Type")
@@ -262,13 +268,30 @@ func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
 	srvURL := halGRPCDefaultBaseURL + ":" + halPort
 	// create a grpc client
 	// ToDo Use AgentID for mysvcName
-	rpcClient, err := rpckit.NewRPCClient("hal", srvURL, rpckit.WithTLSProvider(nil))
-	if err != nil {
-		log.Errorf("Creating gRPC Client failed on HAL Datapath. Server URL: %s", srvURL)
-		return nil, err
-	}
+	return hd.waitForHAL(srvURL)
+}
 
-	return rpcClient, err
+func (hd *Hal) waitForHAL(halURL string) (rpcClient *rpckit.RPCClient, err error) {
+	halUP := make(chan bool, 1)
+	ticker := time.NewTicker(time.Second * 10)
+	timeout := time.After(halGRPCWaitTimeout)
+
+	for {
+		select {
+		case <-ticker.C:
+			log.Debugf("Trying to connect to HAL at %s", halURL)
+			rpcClient, err = rpckit.NewRPCClient("hal", halURL, rpckit.WithTLSProvider(nil))
+			if err == nil {
+				halUP <- true
+			}
+		case <-halUP:
+			log.Info("Agent is connected to HAL")
+			return
+		case <-timeout:
+			log.Errorf("Agent could not connect to HAL on %s. Err: %v", halURL, err)
+			return nil, ErrHALUnavailable
+		}
+	}
 }
 
 // objectKey returns object key from meta
