@@ -40,6 +40,14 @@ enum pnso_service_type {
 	PNSO_SVC_TYPE_MAX
 };
 
+/* Algorithms for encrption/decryption */
+enum pnso_crypto_type {
+	PNSO_CRYPTO_TYPE_NONE = 0,
+	PNSO_CRYPTO_TYPE_XTS = 1,
+	PNSO_CRYPTO_TYPE_GCM = 2,
+	PNSO_CRYPTO_TYPE_MAX
+};
+
 /* Algorithms for compression/decompression */
 enum pnso_compressor_type {
 	PNSO_COMPRESSOR_TYPE_NONE = 0,
@@ -171,14 +179,18 @@ pnso_error_t pnso_init(struct pnso_init_params *init_params);
 /**
  * struct pnso_crypto_desc - represents the descriptor for encryption or
  * decryption operation.
+ * @algo_type: specifies one of the enumerated values of the crypto type
+ * (i.e. pnso_crypto_type).
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @key_desc_idx: specifies the key index in the descriptor table.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @iv_addr: specifies the physical address of the initialization vector.
  *
  */
 struct pnso_crypto_desc {
+	uint16_t algo_type;
+	uint16_t rsvd;
 	uint32_t key_desc_idx;
-	uint32_t rsvd;
 	uint64_t iv_addr;
 };
 
@@ -217,6 +229,13 @@ struct pnso_crypto_desc {
  *	buffer as input buffer to hash and/or checksum, services, when
  *	compression operation fails.  This flag is effective only when
  *	compression, hash and/or checksum operation is requested.
+ *
+ *	PNSO_DFLAG_CHKSUM_WITH_HEADER - indicates whether or not the checksum
+ *	service to use the caller-supplied compression header.
+ *
+ *	PNSO_DFLAG_CHKSUM_WITH_NOHEADER - indicates whether or not the checksum
+ *	service to use the caller-supplied compression header.
+ *
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
