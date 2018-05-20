@@ -86,7 +86,6 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_CPDC_DATA_TOO_LONG		20005
 #define PNSO_ERR_CPDC_CHECKSUM_FAILED		20006
 #define PNSO_ERR_CPDC_SGL_DESC_ERROR		20007
-#define PNSO_ERR_CPDC_CHKSUM_SERVICE_MISSING	20008
 
 /* Error codes for encryption/decryption */
 #define PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG	30001
@@ -124,26 +123,56 @@ struct pnso_buffer_list {
 	struct pnso_flat_buffer buffers[0];
 };
 
+#define PNSO_MAX_HEADER_FIELDS	8
+
 /**
- * struct pnso_compression_header - represents the result of compression and
- * decompression operation.
- * @chksum: specifies the data integrity field, i.e. the checksum calculation on
- * input data before compression.
- * @data_len: specifies the compressed length.
- * @version: specifies the version of the compression algorithm.
+ * enum pnso_header_field_type - defines the source for the compression header
+ * fields.
+ *	PNSO_HDR_FIELD_TYPE_STATIC - the field is used as input to set a fixed
+ *	value in the compression header (ex: version).
  *
- * Compression operation will insert a 8-byte header (populating the compressed
- * length, the checksum and the version number) at the beginning of the
- * compressed buffer.
+ *	PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM - the field is used as input to set
+ *	checksum value in the compression header derived from previous service. 
  *
- * Decompression operation will extract the 'checksum' and remove the header.
- * The 'data_len' does not include the length of the header.
+ *	PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH - the field is used as input to set
+ *	length of the compressed buffer as the value in the compression header.
  *
  */
-struct pnso_compression_header {
-	uint32_t chksum;
-	uint16_t data_len;
-	uint16_t version;
+enum pnso_header_field_type {
+	PNSO_HDR_FIELD_TYPE_NONE = 0,
+	PNSO_HDR_FIELD_TYPE_STATIC = 1,
+	PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM = 2,
+	PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH = 3,
+	PNSO_HDR_FIELD_TYPE_MAX
+};
+
+/**
+ * struct pnso_header_field - defines the value for each field in the
+ * compression header.
+ * @type: specifies the source for the header fields. Refer to 'enum
+ * pnso_header_field_type' section for more details on the type.
+ * @offset: specifies the offset of the value from the beginning of the header.
+ * @length: specifies the length of the value.
+ * @value: specifies the value.
+ *
+ */
+struct pnso_header_field {
+	enum pnso_header_field_type type;
+	uint32_t offset;
+	uint32_t length;
+	uint32_t value;
+};
+
+/**
+ * struct pnso_compression_header_format - represents the format of the
+ * compression header.
+ * @num_fields: specifies the number of fields in the bounded array.
+ * @fields: specifies an array of fields.
+ *
+ */
+struct pnso_compression_header_format {
+	uint32_t num_fields;
+	struct pnso_header_field fields[PNSO_MAX_HEADER_FIELDS];
 };
 
 /**
@@ -153,12 +182,14 @@ struct pnso_compression_header {
  * be populated in compression header.
  * @per_core_qdepth: specifies the maximum number of parallel requests per core.
  * @block_size: specifies the size of a block in bytes.
+ * @cp_hdr_fmt: specifies the set of fields for compression header.
  *
  */
 struct pnso_init_params {
 	uint16_t cp_hdr_version;
 	uint16_t per_core_qdepth;
 	uint32_t block_size;
+	struct pnso_compression_header_format *cp_hdr_fmt;
 };
 
 /**
@@ -195,15 +226,13 @@ struct pnso_crypto_desc {
 	uint64_t iv_addr;
 };
 
-/*  descriptor flags */
+/* descriptor flags */
 #define PNSO_DFLAG_ZERO_PAD			(1 << 0)
-#define PNSO_DFLAG_INSERT_HEADER_WITH_CHKSUM	(1 << 1)
-#define PNSO_DFLAG_INSERT_HEADER_WITHOUT_CHKSUM	(1 << 2)
-#define PNSO_DFLAG_BYPASS_ONFAIL		(1 << 3)
-#define PNSO_DFLAG_HEADER_PRESENT		(1 << 4)
-#define PNSO_DFLAG_CHKSUM_WITH_HEADER		(1 << 5)
-#define PNSO_DFLAG_HASH_PER_BLOCK		(1 << 6)
-#define PNSO_DFLAG_CHKSUM_PER_BLOCK		(1 << 7)
+#define PNSO_DFLAG_INSERT_HEADER		(1 << 1)
+#define PNSO_DFLAG_BYPASS_ONFAIL		(1 << 2)
+#define PNSO_DFLAG_HEADER_PRESENT		(1 << 3)
+#define PNSO_DFLAG_HASH_PER_BLOCK		(1 << 4)
+#define PNSO_DFLAG_CHKSUM_PER_BLOCK		(1 << 5)
 
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
@@ -219,23 +248,14 @@ struct pnso_crypto_desc {
  *	PNSO_DFLAG_ZERO_PAD - indicates whether or not to zero fill the
  *	compressed output buffer aligning to block size.
  *
- *	PNSO_DFLAG_INSERT_HEADER_WITH_CHKSUM - indicates whether or not to
- *	insert compression header with checksum computed on precompressed
- *	data. Checksum is derived from previous service.
- *
- *	PNSO_DFLAG_INSERT_HEADER_WITHOUT_CHKSUM - indicates whether or not to
- *	insert compression header.
+ *	PNSO_DFLAG_INSERT_HEADER - indicates whether or not to
+ *	insert compression header defined by the format supplied in 'struct
+ *	pnso_init_params'.
  *
  *	PNSO_DFLAG_BYPASS_ONFAIL - indicates whether or not to use the source
  *	buffer as input buffer to hash and/or checksum, services, when
  *	compression operation fails.  This flag is effective only when
  *	compression, hash and/or checksum operation is requested.
- *
- *	PNSO_DFLAG_CHKSUM_WITH_HEADER - indicates whether or not the checksum
- *	service to use the caller-supplied compression header.
- *
- *	PNSO_DFLAG_CHKSUM_WITH_NOHEADER - indicates whether or not the checksum
- *	service to use the caller-supplied compression header.
  *
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
@@ -288,9 +308,6 @@ struct pnso_hash_desc {
  * descriptor.
  *	PNSO_DFLAG_CHKSUM_PER_BLOCK - indicates whether to produce one checksum
  *	per block or one for the entire buffer.
- *
- *	PNSO_DFLAG_CHKSUM_WITH_HEADER - indicates whether to provide the output
- *	of checksum operation, as input to following service.
  *
  */
 struct pnso_checksum_desc {
