@@ -94,6 +94,7 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_XTS_AXI_ERROR			30003
 #define PNSO_ERR_XTS_AXI_STATUS_ERROR		30004
 #define PNSO_ERR_XTS_AOL_DESC_ERROR		30005
+#define PNSO_ERR_XTS_KEY_NOT_REGISTERED		30006
 
 /* Error codes for hash/chksum */
 #define PNSO_ERR_SHA_FAILED			40001
