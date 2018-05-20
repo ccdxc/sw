@@ -239,31 +239,31 @@ struct pnso_crypto_desc {
  * service.
  * @algo_type: specifies one of the enumerated values of the compressor
  * algorithm (i.e. pnso_compressor_type).
- * @threshold_len: specifies the expected compressed buffer length in bytes.
- * This is to instruct the compression operation, upon its completion, to
- * compress the buffer to a length that must be less than or equal to
- * 'threshold_len'.
  * @flags: specifies the following applicable descriptor flags to compression
  * descriptor.
- *	PNSO_DFLAG_ZERO_PAD - indicates whether or not to zero fill the
- *	compressed output buffer aligning to block size.
+ *	PNSO_DFLAG_ZERO_PAD - indicates to zero fill the compressed output
+ *	buffer aligning to block size.
  *
  *	PNSO_DFLAG_INSERT_HEADER - indicates whether or not to
  *	insert compression header defined by the format supplied in 'struct
  *	pnso_init_params'.
  *
- *	PNSO_DFLAG_BYPASS_ONFAIL - indicates whether or not to use the source
- *	buffer as input buffer to hash and/or checksum, services, when
- *	compression operation fails.  This flag is effective only when
- *	compression, hash and/or checksum operation is requested.
+ *	PNSO_DFLAG_BYPASS_ONFAIL - indicates to use the source buffer as input
+ *	buffer to hash and/or checksum, services, when compression operation
+ *	fails.  This flag is effective only when compression, hash and/or
+ *	checksum operation is requested.
  *
+ * @threshold_len: specifies the expected compressed buffer length in bytes.
+ * This is to instruct the compression operation, upon its completion, to
+ * compress the buffer to a length that must be less than or equal to
+ * 'threshold_len'.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_compression_desc {
 	uint16_t algo_type;
-	uint16_t threshold_len;
 	uint16_t flags;
+	uint16_t threshold_len;
 	uint16_t rsvd;
 };
 
@@ -274,8 +274,7 @@ struct pnso_compression_desc {
  * algorithm (i.e. pnso_compressor_type) for decompression.
  * @flags: specifies the following applicable descriptor flags to decompression
  * descriptor.
- *	PNSO_DFLAG_HEADER_PRESENT - indicates whether or not the compression
- *	header is present.
+ *	PNSO_DFLAG_HEADER_PRESENT - indicates the compression header is present.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
