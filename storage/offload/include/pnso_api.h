@@ -451,7 +451,7 @@ struct pnso_service_request {
 };
 
 /**
- * typedef completion_t: caller-supplied completion callback.
+ * typedef completion_cb_t: caller-supplied completion callback.
  * @cb_ctx: specifies the callback args for the caller-supplied callback
  * routine.
  * @svc_res: specifies a set of service results structures to report the status
@@ -460,14 +460,15 @@ struct pnso_service_request {
  * TODO: discuss further on SPDK-model/pnso_poll_fn integration with Netapp.
  *
  */
-typedef void (*completion_t) (void *cb_ctx,
+typedef void (*completion_cb_t) (void *cb_ctx,
 			      struct pnso_service_result *svc_res);
 
 /**
  * typedef pnso_poll_fn_t: the caller to use this polling function to detect
  * completion of a request.
  * @pnso_poll_ctx:	[in]	specifies the context passed as arg to the
- *				polling function.
+ *				polling function. This context becomes invalid
+ *				after exiting from completion callback.
  *
  * Return:
  *	PNSO_OK - on success
@@ -508,7 +509,7 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  */
 pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 				 struct pnso_service_result *svc_res,
-				 completion_t cb,
+				 completion_cb_t cb,
 				 void *cb_ctx,
 				 pnso_poll_fn_t *pnso_poll_fn,
 				 void **pnso_poll_ctx);
@@ -564,7 +565,7 @@ pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
  *	-EINVAL - on invalid input parameters
  *
  */
-pnso_error_t pnso_flush_batch(completion_t cb,
+pnso_error_t pnso_flush_batch(completion_cb_t cb,
 		void *cb_ctx,
 		pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx);
