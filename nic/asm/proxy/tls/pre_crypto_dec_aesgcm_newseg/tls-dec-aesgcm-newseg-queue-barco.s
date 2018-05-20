@@ -136,8 +136,8 @@ tls_dec_aesgcm_equeue_barco:
     /* Setup explicit IV already setup ('salt' is in TLSCB 2nd-block, which is read separately */
 
     /* Bump up sequence number in CB used in AAD */
-    phvwr           p.aad_aad_seq_num, D(explicit_iv)
-    tbladd          D(explicit_iv), 1
+    phvwr           p.aad_aad_seq_num, D(sequence_no)
+    tbladd          D(sequence_no), 1
 
     add             r1, r0, K(to_s7_opage)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_aad_iv_authtag_dma_cmd, r1, aad_aad_seq_num, auth_tag_auth_tag_hi)
@@ -172,7 +172,7 @@ tls_dec_aesgcm_equeue_barco:
     phvwr           p.barco_desc_input_list_address, r1.dx
     add             r1, K(to_s7_odesc), PKT_DESC_AOL_OFFSET
     phvwr           p.barco_desc_output_list_address, r1.dx
-    phvwr           p.barco_desc_command, D(barco_command)
+
     phvwr           p.barco_desc_key_desc_index, D(barco_key_desc_index)
 
     addi            r1, r0, BARCO_INPUT_OPAGE_IV
@@ -257,7 +257,7 @@ tls_dec_aesgcm_no_barco_enqueue_EOP_done:
 tls_dec_aesgcm_queue_barco_done:
     /* Clear barrier */
     /* TODO - Only on the completion of the segment */
-    tblwr           D(active_segment), 0
+    //tblwr           D(active_segment), 0
 
     nop.e
     nop

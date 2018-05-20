@@ -74,7 +74,7 @@ tls_dec_read_header_process:
     phvwr       p.s4_s6_t0_phv_aad_length, r1
 
     /*
-     * Launch a locked table-read to the Barco GCM0 PI address in HBM.
+     * Launch a locked table-read to the Barco GCM1 PI address in HBM.
      */
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
@@ -109,6 +109,7 @@ tls_dec_read_header_ccm_process:
     phvwr.c2    p.tls_global_phv_next_tls_hdr_offset, r2
     phvwr.!c1   p.to_s6_cur_tls_data_len, d.u.tls_read_tls_header_d.tls_hdr_len
 
+    /* FIXME: This should be a MPP specific PI/CI pair */
     /*
      * Launch a locked table-read to the Barco GCM0 PI address in HBM.
      */

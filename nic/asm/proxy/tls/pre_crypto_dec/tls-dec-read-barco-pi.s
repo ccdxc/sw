@@ -38,7 +38,7 @@ table_read_BARCO_PI:
     tblmincri.c4.f  d.{barco_pi}.hx, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_bld_barco_req_process,
-                                 k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET,
+                                 k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG,
                                  TABLE_SIZE_512_BITS)
 	
     nop.e

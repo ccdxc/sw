@@ -19,16 +19,16 @@ CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
     $(SRC_DIR)/tls-enc-bsq.s \
-    $(SRC_DIR)/tls-enc-queue-sesq.s \
-    $(SRC_DIR)/tls-enc-read-desc.s \
-    $(SRC_DIR)/tls-enc-rx-bsq-enc.s \
     $(SRC_DIR)/tls-enc-rx-bsq-enc-dummy.s \
-    $(SRC_DIR)/tls-enc-bsq-consume.s \
-    $(SRC_DIR)/tls-enc-post-crypto-stats.s \
-    $(SRC_DIR)/tls-enc-read-odesc.s \
-    $(SRC_DIR)/tls-enc-read-aad.s \
+    $(SRC_DIR)/tls-enc-rx-bsq-enc.s \
 	$(SRC_DIR)/tls-enc-read-recq.s \
-	$(SRC_DIR)/tls-enc-gc-setup.s
+    $(SRC_DIR)/tls-enc-read-desc.s \
+    $(SRC_DIR)/tls-enc-bsq-consume.s \
+    $(SRC_DIR)/tls-enc-read-odesc.s \
+    $(SRC_DIR)/tls-enc-queue-sesq.s \
+    $(SRC_DIR)/tls-enc-read-aad.s \
+	$(SRC_DIR)/tls-enc-gc-setup.s \
+    $(SRC_DIR)/tls-enc-post-crypto-stats.s \
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

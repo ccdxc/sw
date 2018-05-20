@@ -56,7 +56,7 @@ tls_mac_bsq_consume_process:
     nop
 table_read_QUEUE_ENC_BRQ:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_mac_bld_barco_enc_req_process,
-                                 k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+                                 k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG, TABLE_SIZE_512_BITS)
 tls_mac_bsq_consume_process_done:
 	nop.e
 	nop

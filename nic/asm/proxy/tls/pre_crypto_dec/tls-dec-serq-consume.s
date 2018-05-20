@@ -27,25 +27,7 @@ struct tx_table_s2_t3_d d;
 tls_dec_serq_consume_process:
     CAPRI_CLEAR_TABLE3_VALID
 
-    seq     c4, k.tls_global_phv_pending_rx_serq, 1
-    b.!c4   tls_dec_serq_consume_done
-    nop
-
-    /* address will be in r4 */
-    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
-    add	    r1, k.tls_global_phv_fid, r0
-
-    /*
-     * data will be in r3
-     *
-     * We'd have incremented CI in stage 0, we'll ring the doorbell with that value and let
-     * the scheduler re-evaluate if ci != pi. We can optimize to not ring the doorbell if
-     * we can do the ci != pi check ourselves (in stage-0)
-     */
-    add     r5, d.{u.tls_serq_consume_d.ci_0}.hx, r0
-    CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r5)
-
-    memwr.dx  	 r4, r3
+    /* FIXME: Nothing to be done here, dbell moved to Stage 0 */
 
 tls_dec_serq_consume_done:	
     nop.e

@@ -25,7 +25,7 @@ typedef enum tlscb_hwid_order_ {
     P4PD_HWID_TLS_TX_POST_CRYPTO_STATS_U16 = 5,
     P4PD_HWID_TLS_TX_POST_CRYPTO_STATS1_U64 = 6,
     P4PD_HWID_TLS_TX_POST_CRYPTO_STATS2_U64 = 7,
-    P4PD_HWID_TLS_TX_OPER_DATA_0_U64        = 8,
+    P4PD_HWID_TLS_TX_CONFIG                 = 8,
     P4PD_HWID_TLS_TX_OPER_DATA_1_U64        = 9,
     P4PD_HWID_TLS_TX_OPER_DATA_2_U64        = 10,
     P4PD_HWID_TLS_TX_OPER_DATA_3_U64        = 11,
@@ -165,6 +165,8 @@ extern void *tlscb_pd_get_hw_key_func(void *entry);
 extern uint32_t tlscb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool tlscb_pd_compare_hw_key_func(void *key1, void *key2);
 extern hal_ret_t p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd);
+
+uint32_t pd_tlscb_serq_ci_offset_get(void);
 
 }   // namespace pd
 }   // namespace hal

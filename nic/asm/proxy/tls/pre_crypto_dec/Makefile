@@ -18,22 +18,19 @@ SRC_DIR = .
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
+    $(SRC_DIR)/tls-dec-serq.s \
+    $(SRC_DIR)/tls-dec-read-serq-entry.s \
+    $(SRC_DIR)/tls-dec-rx-serq.s \
     $(SRC_DIR)/tls-dec-read-tnmdr-alloc-idx.s \
     $(SRC_DIR)/tls-dec-read-tnmpr-alloc-idx.s \
+    $(SRC_DIR)/tls-dec-read-header.s \
     $(SRC_DIR)/tls-dec-tdesc-alloc.s \
     $(SRC_DIR)/tls-dec-tpage-alloc.s \
-    $(SRC_DIR)/tls-dec-queue-brq.s \
-    $(SRC_DIR)/tls-dec-read-header.s \
-    $(SRC_DIR)/tls-dec-rx-serq.s \
-    $(SRC_DIR)/tls-dec-serq-consume.s \
-    $(SRC_DIR)/tls-dec-read-serq-entry.s \
+    $(SRC_DIR)/tls-dec-read-barco-pi.s \
     $(SRC_DIR)/tls-dec-bld-barco-req.s \
-    $(SRC_DIR)/tls-dec-serq.s \
-    $(SRC_DIR)/tls-dec-alloc-rnmdr-split.s \
-    $(SRC_DIR)/tls-dec-update-page-ctl.s \
+    $(SRC_DIR)/tls-dec-queue-brq.s \
     $(SRC_DIR)/tls-dec-write-arq.s \
-    $(SRC_DIR)/tls-dec-queue-brq-mpp.s \
-    $(SRC_DIR)/tls-dec-read-barco-pi.s
+    $(SRC_DIR)/tls-dec-queue-brq-mpp.s
 #    $(SRC_DIR)/tls-dec-pre-crypto-stats.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

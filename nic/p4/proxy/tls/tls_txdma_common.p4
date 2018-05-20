@@ -11,34 +11,40 @@ header_type tlscb_0_t {
         CAPRI_QSTATE_HEADER_RING(1)
         // 4 Bytes BSQ-2PASS ring
         CAPRI_QSTATE_HEADER_RING(2)
+        /* 20 Bytes/160 bits Fixed header */
 
-        active_segment                  : 1;
-        pad                             : 15;
+        debug_dol                       : 32;
+        barco_command                   : 32;
+
+        /* SERQ Ring Management */
         serq_base                       : HBM_ADDRESS_WIDTH;
         sw_serq_ci                      : 16;
         serq_prod_ci_addr               : HBM_ADDRESS_WIDTH;
 
+        /* SESQ Ring Management */
         sesq_base                       : HBM_ADDRESS_WIDTH;
         sw_sesq_pi                      : 16;
-        sw_sesq_ci                       : 16;
+        sw_sesq_ci                      : 16;
 
-        sw_bsq_pi                       : 16;
+        /* TLS Record Ring Management */
+        recq_base                       : HBM_ADDRESS_WIDTH;
+        recq_pi                         : 16;
+        recq_ci                         : 16;
+
+        l7_proxy_type                   : 8; /* Config, to be moved out from STG0 */ 
+
+        /* Flags */
         dec_flow                        : 8;
-        debug_dol                       : 32;
-
-        barco_command                   : 32;
-        barco_key_desc_index            : 32;
-
-        explicit_iv                     : 64;
-        l7_proxy_type                   : 8;
-        // TBD: Total used   : 512 bits, pending: 0
+        active_segment                  : 1;
+        pad                             : 63;
+        // TBD: Total used   : 449 bits, pending: 63
     }
 }
 
 #define TLSCB_0_PARAMS                                                                                              \
-rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, pi_2, ci_2, active_segment, pad,    \
-serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_pi, dec_flow,                   \
-debug_dol, barco_command, barco_key_desc_index, explicit_iv, l7_proxy_type
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, pi_2, ci_2,                         \
+debug_dol, barco_command, serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci,              \
+recq_base, recq_pi, recq_ci, l7_proxy_type, active_segment, dec_flow, pad
 
 #define GENERATE_TLSCB_0_D                                                                               \
     modify_field(tlscb_0_d.rsvd, rsvd);                                                                  \
@@ -55,28 +61,25 @@ debug_dol, barco_command, barco_key_desc_index, explicit_iv, l7_proxy_type
     modify_field(tlscb_0_d.ci_1, ci_1);                                                                  \
     modify_field(tlscb_0_d.pi_2, pi_2);                                                                  \
     modify_field(tlscb_0_d.ci_2, ci_2);                                                                  \
-    modify_field(tlscb_0_d.active_segment, active_segment);                                              \
-    modify_field(tlscb_0_d.pad, pad);                                                                    \
+    modify_field(tlscb_0_d.debug_dol, debug_dol);                                                        \
+    modify_field(tlscb_0_d.barco_command, barco_command);                                                \
     modify_field(tlscb_0_d.serq_base, serq_base);                                                        \
     modify_field(tlscb_0_d.sw_serq_ci, sw_serq_ci);                                                      \
     modify_field(tlscb_0_d.serq_prod_ci_addr, serq_prod_ci_addr);                                        \
     modify_field(tlscb_0_d.sesq_base, sesq_base);                                                        \
     modify_field(tlscb_0_d.sw_sesq_pi, sw_sesq_pi);                                                      \
-    modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                        \
-    modify_field(tlscb_0_d.sw_bsq_pi, sw_bsq_pi);                                                        \
+    modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                      \
+    modify_field(tlscb_0_d.recq_base, recq_base);                                                        \
+    modify_field(tlscb_0_d.recq_pi, recq_pi);                                                            \
+    modify_field(tlscb_0_d.recq_ci, recq_ci);                                                            \
+    modify_field(tlscb_0_d.l7_proxy_type, l7_proxy_type);                                                \
+    modify_field(tlscb_0_d.active_segment, active_segment);                                              \
     modify_field(tlscb_0_d.dec_flow, dec_flow);                                                          \
-    modify_field(tlscb_0_d.debug_dol, debug_dol);                                                        \
-    modify_field(tlscb_0_d.barco_command, barco_command);                                                \
-    modify_field(tlscb_0_d.barco_key_desc_index, barco_key_desc_index);                                  \
-    modify_field(tlscb_0_d.explicit_iv, explicit_iv);                                                    \
-    modify_field(tlscb_0_d.l7_proxy_type, l7_proxy_type);
+    modify_field(tlscb_0_d.pad, pad);                                                                    \
 
 /* The defintion for access in stages other than 0 */
 #define TLSCB_0_PARAMS_NON_STG0                                                                         \
     pc, TLSCB_0_PARAMS
-
-#define TLSCB_0_7_PARAMS_NON_STG0 \
-    barco_hmac_key_desc_index, pc, TLSCB_0_PARAMS
 
 #define GENERATE_TLSCB_0_D_NON_STG0                                                                     \
     modify_field(tlscb_0_d.pc, pc);                                                                     \
@@ -92,46 +95,32 @@ header_type tlscb_1_t {
     fields {
         qhead                           : ADDRESS_WIDTH;
         qtail                           : ADDRESS_WIDTH;
-        una_desc                        : HBM_ADDRESS_WIDTH;
-        recq_base                       : HBM_ADDRESS_WIDTH;
-        nxt_desc                        : ADDRESS_WIDTH;
         nxt_desc_idx                    : 8;
-        nxt_data_offset                 : 16;
-        recq_pi                         : 16;
-        recq_ci                         : 16;
         next_tls_hdr_offset             : 16;
         cur_tls_data_len                : 16;
         other_fid                       : 16;
         l7q_base                        : 64;
         sw_l7q_pi                       : 16;
         barco_hmac_key_desc_index       : 32;
-        salt                            : 32;
-        // Total used   : 504 bits, pending: 8
-        pad                             : 8;
+        // Total used   : 296 bits, pending: 216
+        pad                             : 216;
     }
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-qhead, qtail, una_desc, recq_base, nxt_desc, nxt_desc_idx, nxt_data_offset, recq_pi, recq_ci, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi, barco_hmac_key_desc_index, salt
-#
+qhead, qtail, nxt_desc_idx, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi, barco_hmac_key_desc_index
+
 
 #define GENERATE_TLSCB_1_D                                                                              \
     modify_field(tlscb_1_d.qhead, qhead);                                                               \
     modify_field(tlscb_1_d.qtail, qtail);                                                               \
-    modify_field(tlscb_1_d.una_desc, una_desc);                                                         \
-    modify_field(tlscb_1_d.recq_base, recq_base);                                                         \
-    modify_field(tlscb_1_d.nxt_desc, nxt_desc);                                                         \
     modify_field(tlscb_1_d.nxt_desc_idx, nxt_desc_idx);                                                 \
-    modify_field(tlscb_1_d.nxt_data_offset, nxt_data_offset);                                           \
-    modify_field(tlscb_1_d.recq_pi, recq_pi);                                                 \
-    modify_field(tlscb_1_d.recq_ci, recq_ci);                                                 \
     modify_field(tlscb_1_d.next_tls_hdr_offset, next_tls_hdr_offset);                                   \
     modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);                                         \
     modify_field(tlscb_1_d.other_fid, other_fid);                                                       \
     modify_field(tlscb_1_d.l7q_base, l7q_base);                                                         \
     modify_field(tlscb_1_d.sw_l7q_pi, sw_l7q_pi);                                                       \
     modify_field(tlscb_1_d.barco_hmac_key_desc_index, barco_hmac_key_desc_index);                       \
-    modify_field(tlscb_1_d.salt, salt);                                                                 \
 
 /* TODO:
     - ipage reference counting support 
@@ -182,9 +171,31 @@ cur_tls_record_pend_len, auth_tag_lo, auth_tag_hi, auth_tag_len
     modify_field(TLSCB_RECORDS_STATE_SCRATCH.curr_segment_aol_l, curr_segment_aol_l);                       \
     modify_field(TLSCB_RECORDS_STATE_SCRATCH.tls_rec_tail, tls_rec_tail);                                   \
     modify_field(TLSCB_RECORDS_STATE_SCRATCH.cur_tls_record_pend_len, cur_tls_record_pend_len);             \
-    modify_field(TLSCB_RECORDS_STATE_SCRATCH.auth_tag_lo, auth_tag_lo);                                           \
-    modify_field(TLSCB_RECORDS_STATE_SCRATCH.auth_tag_hi, auth_tag_hi);                                           \
+    modify_field(TLSCB_RECORDS_STATE_SCRATCH.auth_tag_lo, auth_tag_lo);                                     \
+    modify_field(TLSCB_RECORDS_STATE_SCRATCH.auth_tag_hi, auth_tag_hi);                                     \
     modify_field(TLSCB_RECORDS_STATE_SCRATCH.auth_tag_len, auth_tag_len);
+
+
+header_type tlscb_config_aead_t {
+    fields {
+        sequence_no                     : 64;
+        barco_key_desc_index            : 32;
+        salt                            : 32;
+
+        /*  Operational data - using config region to 
+            allocate Sequence number and BSQ PI in a 
+            single table read
+        */
+        sw_bsq_pi                       : 16;
+    }
+}
+#define TLSCB_CONFIG_AEAD_PARAMS    sequence_no, barco_key_desc_index, salt, sw_bsq_pi
+#define TLSCB_CONFIG_AEAD_SCRATCH   tlscb_config_aead_d
+#define GENERATE_TLSCB_CONFIG_AEAD                                                                      \
+    modify_field(TLSCB_CONFIG_AEAD_SCRATCH.sequence_no, sequence_no);                                   \
+    modify_field(TLSCB_CONFIG_AEAD_SCRATCH.barco_key_desc_index, barco_key_desc_index);                 \
+    modify_field(TLSCB_CONFIG_AEAD_SCRATCH.salt, salt);                                                 \
+    modify_field(TLSCB_CONFIG_AEAD_SCRATCH.sw_bsq_pi, sw_bsq_pi);                                       \
 
 /* BARCO Descriptor definition */
 header_type barco_desc_t {

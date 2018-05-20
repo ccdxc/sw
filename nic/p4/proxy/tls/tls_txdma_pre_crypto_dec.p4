@@ -436,6 +436,8 @@ metadata tpage_alloc_d_t tpage_alloc_d;
 metadata arq_pi_d_t arq_tx_pi_d;
 
 
+@pragma scratch_metadata
+metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
 
 /* Stage 1 Table 0 action */
 action read_serq_entry(SERQ_ENTRY_NEW_ACTION_PARAMS) {
@@ -456,7 +458,7 @@ action tls_read_pkt_descr_aol(PKT_DESCR_AOL_ACTION_PARAMS) {
 */
 
 /* Stage 2 table 0 action */
-action tls_serq_process(TLSCB_1_PARAMS) {
+action tls_serq_process(TLSCB_CONFIG_AEAD_PARAMS) {
 
 
     GENERATE_GLOBAL_K
@@ -470,7 +472,7 @@ action tls_serq_process(TLSCB_1_PARAMS) {
     /*modify_field(barco_db_scratch.pi, barco_dbell.pi); */
 
     /* D vector */
-    GENERATE_TLSCB_1_D
+    GENERATE_TLSCB_CONFIG_AEAD
 
 }
 
@@ -567,7 +569,7 @@ action tls_read_barco_pi(TLS_HDR_ACTION_PARAMS) {
 }
 
 /* Stage 5 action */
-action tls_bld_brq5(TLSCB_0_PARAMS_NON_STG0) {
+action tls_bld_brq5(TLSCB_CONFIG_AEAD_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -575,7 +577,7 @@ action tls_bld_brq5(TLSCB_0_PARAMS_NON_STG0) {
     modify_field(to_s5_scratch.idesc, to_s5.idesc);
     modify_field(to_s5_scratch.odesc, to_s5.odesc);
 
-    GENERATE_TLSCB_0_D_NON_STG0
+    GENERATE_TLSCB_CONFIG_AEAD
 }
 
 

@@ -22,6 +22,7 @@ struct tx_table_s0_t0_d d;
 	
 tls_stage0:
      CAPRI_OPERAND_DEBUG(r7)
+    add     r1, r0, r7
 	.brbegin
 	    brpri		r7[2:0], [1,0,2]
 	    nop

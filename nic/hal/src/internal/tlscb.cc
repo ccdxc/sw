@@ -179,10 +179,14 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->serq_pi = spec.serq_pi();
     tlscb->serq_ci = spec.serq_ci();
     is_decrypt_flow = (uint8_t) spec.is_decrypt_flow();
+    HAL_TRACE_DEBUG("{}: TLSCBID: 0x{:x}: is_decrypt_flow: 0x{:x}",
+            __FUNCTION__, tlscb->cb_id, is_decrypt_flow);
     if (is_decrypt_flow == true)
         tlscb->is_decrypt_flow = 1;
     else
         tlscb->is_decrypt_flow = 0;
+    HAL_TRACE_DEBUG("{}: TLSCBID: 0x{:x}: is_decrypt_flow: 0x{:x}",
+            __FUNCTION__, tlscb->cb_id, tlscb->is_decrypt_flow);
 
     tlscb->other_fid = spec.other_fid();
     tlscb->l7_proxy_type = spec.l7_proxy_type();

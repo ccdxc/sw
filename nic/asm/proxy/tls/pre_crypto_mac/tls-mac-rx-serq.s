@@ -53,7 +53,6 @@ dma_cmd_mac_desc_entry_last:
 
 no_dma_cmd_enc:        
     /* etlsp->enc_nxt.desc = TAIL_DESC(*etlsp, enc); */
-    tblwr	d.nxt_desc, k.to_s2_idesc
     phvwr       p.to_s5_cur_tls_data_len, d.cur_tls_data_len
     phvwr       p.to_s4_barco_hmac_key_desc_index, d.barco_hmac_key_desc_index
 

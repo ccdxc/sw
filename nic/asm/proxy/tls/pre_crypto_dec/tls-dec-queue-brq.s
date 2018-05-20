@@ -81,7 +81,7 @@ dma_cmd_dec_brq_slot:
                                 barco_desc_second_key_desc_index)
 
 dma_cmd_idesc:
-    /* Skip setting up of odesc when bypassing Barco offload */
+    /* Skip setting up of idesc when bypassing Barco offload */
     bcf         [c5], dma_cmd_output_list_addr
     phvwri.c5    p.dma_cmd_idesc_dma_cmd_type, 0
 

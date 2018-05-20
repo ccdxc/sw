@@ -24,10 +24,12 @@ struct tx_table_s1_t0_tls_rx_bsq_dummy_d d	;
 	
 tls_dec_rx_bsq_dec_dummy_process:	
     CAPRI_SET_DEBUG_STAGE0_3(p.stats_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
+
+    phvwr   p.to_s7_other_fid, d.other_fid
 	
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_rx_bsq_process,
                                  k.tls_global_phv_qstate_addr,
-                                 TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
+                                 TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 
 	nop.e
 	nop

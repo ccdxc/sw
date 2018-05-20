@@ -42,7 +42,7 @@ dma_cmd_odesc:
     phvwri.c5   p.dma_cmd_odesc_dma_cmd_type, 0
 
 dma_cmd_sesq_slot:
-	add		    r5, r0, d.u.tls_queue_sesq_d.sw_sesq_pi
+	add		    r5, r0, k.tls_global_phv_sesq_pi
 	sll		    r5, r5, NIC_SESQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for SESQ slot */
 	add		    r4, r5, d.u.tls_queue_sesq_d.sesq_base
@@ -52,7 +52,6 @@ dma_cmd_sesq_slot:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_sesq_slot_dma_cmd, r4, ring_entry_descr_addr, ring_entry_descr_addr)    
 
-    addi        r1, r0, TLS_DDOL_SESQ_STOP
     smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
     nop
@@ -63,9 +62,10 @@ tls_sesq_produce:
     add.c1      r7, k.tls_global_phv_fid, r0
     add.!c1     r7, k.to_s7_other_fid, r0
 
-    tblmincri   d.u.tls_queue_sesq_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    add         r1, r0, k.tls_global_phv_sesq_pi
+    mincr       r1, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
     CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd_sesq_dbell_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
-                                d.u.tls_queue_sesq_d.sw_sesq_pi,db_data_data)
+                                r1, db_data_data)
 
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd_sesq_dbell_dma_cmd)
     b           tls_queue_sesq_process_done

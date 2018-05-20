@@ -167,6 +167,7 @@ header_type to_stage_4_phv_t {
         odesc                           : HBM_ADDRESS_WIDTH;
         debug_dol                       : 8;
         do_pre_ccm_enc                  : 1;
+        do_pre_mpp_enc                  : 1;
     }
 }
 
@@ -351,6 +352,9 @@ metadata tpage_alloc_d_t tpage_alloc_d;
 @pragma scratch_metadata
 metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 
+@pragma scratch_metadata
+metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
+
 
 action read_tls_stg1_7(TLSCB_1_PARAMS) {
 
@@ -364,7 +368,7 @@ action read_tls_stg1_7(TLSCB_1_PARAMS) {
 
 
 /* Stage 2 table 0 action */
-action tls_rx_serq(TLSCB_1_PARAMS) {
+action tls_rx_serq(TLSCB_CONFIG_AEAD_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -373,7 +377,7 @@ action tls_rx_serq(TLSCB_1_PARAMS) {
     modify_field(to_s2_scratch.idesc, to_s2.idesc);
     modify_field(to_s2_scratch.do_pre_ccm_enc, to_s2.do_pre_ccm_enc);
 
-    GENERATE_TLSCB_1_D
+    GENERATE_TLSCB_CONFIG_AEAD
 }
 
 /*
@@ -470,7 +474,7 @@ action tls_stage3(TLSCB_1_PARAMS) {
 }
 
 /* Stage 4 table 0 action */
-action tls_bld_brq4(TLSCB_0_PARAMS_NON_STG0) {
+action tls_bld_brq4(TLSCB_CONFIG_AEAD_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -479,9 +483,10 @@ action tls_bld_brq4(TLSCB_0_PARAMS_NON_STG0) {
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
     modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
     modify_field(to_s4_scratch.do_pre_ccm_enc, to_s4.do_pre_ccm_enc);
+    modify_field(to_s4_scratch.do_pre_mpp_enc, to_s4.do_pre_mpp_enc);
 
     /* D vector */
-    GENERATE_TLSCB_0_D_NON_STG0
+    GENERATE_TLSCB_CONFIG_AEAD
 }
 
 /* Stage 4 table 1 action */

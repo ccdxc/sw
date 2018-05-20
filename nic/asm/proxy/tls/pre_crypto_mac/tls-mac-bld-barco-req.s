@@ -40,12 +40,12 @@ table_read_QUEUE_BRQ:
 
     /* Setup AAD */
     /* AAD length already setup in Stage 2, Table 3 */
-    phvwr       p.s2_s5_t0_phv_aad_seq_num, d.u.tls_bld_brq4_d.explicit_iv
+    phvwr       p.s2_s5_t0_phv_aad_seq_num, d.u.tls_bld_brq4_d.sequence_no
     phvwri      p.s2_s5_t0_phv_aad_type, NTLS_RECORD_DATA
     phvwri      p.s2_s5_t0_phv_aad_version_major, NTLS_TLS_1_2_MAJOR
     phvwri      p.s2_s5_t0_phv_aad_version_minor, NTLS_TLS_1_2_MINOR
 
-    tbladd      d.u.tls_bld_brq4_d.explicit_iv, 1
+    tbladd      d.u.tls_bld_brq4_d.sequence_no, 1
 
     /*
      * The "barco-command" in the TLSCB will have value for "AES-CBC-HMAC-SHA2", but we perform

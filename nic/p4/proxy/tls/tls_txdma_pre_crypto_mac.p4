@@ -233,6 +233,9 @@ metadata s2_s5_t0_phv_t    s2_s5_t0_scratch;
 @pragma scratch_metadata
 metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 
+@pragma scratch_metadata
+metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
+
 action read_tls_stg1_7(TLSCB_1_PARAMS) {
 
     GENERATE_GLOBAL_K
@@ -289,7 +292,7 @@ action tls_stage3(TLSCB_1_PARAMS) {
 }
 
 /* Stage 4 table 0 action */
-action tls_bld_brq4(TLSCB_0_7_PARAMS_NON_STG0) {
+action tls_bld_brq4(TLSCB_CONFIG_AEAD_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -299,7 +302,7 @@ action tls_bld_brq4(TLSCB_0_7_PARAMS_NON_STG0) {
     modify_field(to_s4_scratch.barco_hmac_key_desc_index, to_s4.barco_hmac_key_desc_index);
 
     /* D vector */
-    GENERATE_TLSCB_0_D_NON_STG0
+    GENERATE_TLSCB_CONFIG_AEAD
 }
 
 /* Stage 4 table 1 action */

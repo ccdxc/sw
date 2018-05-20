@@ -19,7 +19,7 @@ struct tx_table_s2_t0_tls_rx_bsq_d d	;
 %%
 	.param		tls_dec_read_recq
 
-tls_dec_rx_bsq_process:	
+tls_dec_rx_bsq_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.stats_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
 	/* Release the descriptor from the tls cb decrypt queue */
     /*
@@ -28,7 +28,6 @@ tls_dec_rx_bsq_process:
 	   dtlsp->dec_una.desc = HEAD_DESC(*dtlsp, dec);
 	*/
     phvwri  p.stats_dec_completions, 1
-    phvwr   p.to_s7_other_fid, d.other_fid
 
     /* Queue empty */
     seq     c1, d.recq_pi, d.recq_ci

@@ -34,9 +34,6 @@ table_read_QUEUE_BRQ:
     phvwrpair   p.barco_desc_input_list_address, r1.dx, \
                 p.barco_desc_output_list_address, r3.dx
 
-    phvwrpair   p.barco_desc_command, d.u.tls_bld_brq4_d.barco_command, \
-                p.barco_desc_key_desc_index, d.u.tls_bld_brq4_d.barco_key_desc_index
-
     phvwri      p.to_s6_enc_requests, 1
 
     /*
@@ -52,16 +49,16 @@ table_read_QUEUE_BRQ:
     bbeq        k.to_s4_do_pre_ccm_enc, 1, tls_enc_bld_ccm_hdr_phv
     nop
         
-    phvwr.!c1   p.crypto_iv_explicit_iv, d.u.tls_bld_brq4_d.explicit_iv
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.explicit_iv)
+    phvwr.!c1   p.crypto_iv_explicit_iv, d.u.tls_bld_brq4_d.sequence_no
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.sequence_no)
 
     /* Setup AAD */
     /* AAD length already setup in Stage 2, Table 3 */
-    phvwr.!c1   p.s2_s5_t0_phv_aad_seq_num, d.u.tls_bld_brq4_d.explicit_iv
+    phvwr.!c1   p.s2_s5_t0_phv_aad_seq_num, d.u.tls_bld_brq4_d.sequence_no
     addi        r1, r0, ((NTLS_RECORD_DATA << 16) | (NTLS_TLS_1_2_MAJOR << 8) | (NTLS_TLS_1_2_MINOR))
     phvwr       p.{s2_s5_t0_phv_aad_type...s2_s5_t0_phv_aad_version_minor}, r1
 
-    tbladd.!c1  d.u.tls_bld_brq4_d.explicit_iv, 1
+    tbladd.!c1  d.u.tls_bld_brq4_d.sequence_no, 1
 
     b           tls_enc_bld_barco_desc
     addi        r1, r0, NTLS_AAD_SIZE
@@ -73,8 +70,10 @@ tls_enc_bld_ccm_hdr_phv:
      */
     phvwri      p.ccm_header_with_aad_B_0_flags, TLS_AES_CCM_HDR_B0_FLAGS
     phvwri      p.ccm_header_with_aad_B_1_aad_size, 13
-    phvwrpair   p.ccm_header_with_aad_B_0_nonce_explicit_iv, d.u.tls_bld_brq4_d.explicit_iv, \
-                p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq4_d.explicit_iv
+    phvwrpair   p.ccm_header_with_aad_B_0_nonce_explicit_iv, d.u.tls_bld_brq4_d.sequence_no, \
+                p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq4_d.sequence_no
+    tbladd      d.u.tls_bld_brq4_d.sequence_no, 1
+
     addi        r1, r0, ((NTLS_RECORD_DATA << 16) | (NTLS_TLS_1_2_MAJOR << 8) | (NTLS_TLS_1_2_MINOR))
     phvwr       p.{ccm_header_with_aad_B_1_aad_type...ccm_header_with_aad_B_1_aad_version_minor}, r1
     //p.ccm_header_with_aad_aad_length is already updated in tls-enc-read-pkt-descr.s
@@ -96,6 +95,7 @@ tls_enc_bld_barco_desc:
      * and use as 'PIDX_SET' instead of using the 'PIDX_INC' auto-increment feature
      * of the doorbell, for better performance.
      */
+    /* sw_bsq_pi - does not need to be a masked increment */
     tbladd.f    d.{u.tls_bld_brq4_d.sw_bsq_pi}.hx, 1
     add         r6, r0, d.{u.tls_bld_brq4_d.sw_bsq_pi}.hx
     CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6)
@@ -103,8 +103,7 @@ tls_enc_bld_barco_desc:
                 p.barco_desc_doorbell_data, r3.dx
 
     /* The barco-command[31:24] is checked for GCM/CCM/CBC. endian-swapped */
-    smeqb       c4, d.u.tls_bld_brq4_d.barco_command[7:0], 0xf0, 0x30
-    bcf         [!c4], tls_enc_queue_to_brq_mpp_ring
+    bbeq        k.to_s4_do_pre_mpp_enc, 1, tls_enc_queue_to_brq_mpp_ring
     nop
 
     addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX

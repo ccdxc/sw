@@ -30,14 +30,15 @@ struct tx_table_s1_t0_k k	    ;
 tls_enc_read_serq_entry_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
     add     r2, r0, d.{idesc}
-    phvwr   p.to_s2_idesc, r2
+    phvwr   p.bsq_slot_desc, r2
+
     phvwrpair   p.to_s4_idesc, r2, p.to_s5_idesc, r2
 
     addi    r2, r2, PKT_DESC_AOL_OFFSET
 
 table_read_rx_serq_enc: 
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_rx_serq_process,
-	                    k.tls_global_phv_qstate_addr, TLS_TCB_CRYPT_OFFSET,
+	                    k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG,
                         TABLE_SIZE_512_BITS)
 
 table_read_idesc:

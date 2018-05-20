@@ -61,12 +61,11 @@ header_type l7_desc_alloc_d_t {
 }
 
 #define GENERATE_GLOBAL_K                                                                               \
+        modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
+        modify_field(tls_global_phv_scratch.sesq_pi, tls_global_phv.sesq_pi);                           \
         modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
         modify_field(tls_global_phv_scratch.barco_op_failed, tls_global_phv.barco_op_failed);           \
-        modify_field(tls_global_phv_scratch.pending_rx_bsq, tls_global_phv.pending_rx_bsq);             \
-        modify_field(tls_global_phv_scratch.pad, tls_global_phv.pad);                                   \
-        modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
         modify_field(tls_global_phv_scratch.l7_proxy_en, tls_global_phv.l7_proxy_en);                   \
         modify_field(tls_global_phv_scratch.l7_proxy_type_span, tls_global_phv.l7_proxy_type_span);
 
@@ -74,12 +73,11 @@ header_type l7_desc_alloc_d_t {
 /* Global PHV definition */
 header_type tls_global_phv_t {
     fields {
-        fid                             : 16;
-        dec_flow                        : 8;
-        barco_op_failed                 : 1;
-        pending_rx_bsq                  : 1;
-        pad                             : 6;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
+        fid                             : 16;
+        sesq_pi                         : 16;
+        dec_flow                        : 1;
+        barco_op_failed                 : 1;
         l7_proxy_en                     : 1;
         l7_proxy_type_span              : 1;
     }
@@ -280,11 +278,11 @@ action tls_rx_bsq_dummy(TLSCB_1_PARAMS) {
 
 
 /* Stage 2 table 0 action */
-action tls_rx_bsq(TLSCB_1_PARAMS) {
+action tls_rx_bsq(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_GLOBAL_K
 
-    GENERATE_TLSCB_1_D
+    GENERATE_TLSCB_0_D_NON_STG0
 }
 
 /* Stage 3 table 0 action */

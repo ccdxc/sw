@@ -64,6 +64,7 @@ tls_dec_pre_crypto_aesgcm_newseg_process:
 
     memwr.dx    r4, r3
 
+    phvwr           p.barco_desc_command, D(barco_command)
 
 table_read_DESC:
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_aesgcm_read_serq_entry_process, r2, TABLE_SIZE_256_BITS)

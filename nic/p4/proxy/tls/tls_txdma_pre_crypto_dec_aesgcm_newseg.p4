@@ -447,12 +447,15 @@ action read_tls_hdr_or_auth_tag(BYTES_16_PARAMS) {
     GENERATE_BYTES_16_D
 }
 
+@pragma scratch_metadata
+metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
+
 /* Stage 3 Table 1 Action */
-action read_tlscb_blk2(TLSCB_1_PARAMS) {
+action read_tlscb_blk2(TLSCB_CONFIG_AEAD_PARAMS) {
 
     GENERATE_GLOBAL_K
 
-    GENERATE_TLSCB_1_D
+    GENERATE_TLSCB_CONFIG_AEAD
 }
 
 @pragma scratch_metadata
@@ -567,9 +570,8 @@ action idesc_alloc(TNMDR_ENTRY_PARAMS) {
     GENERATE_TNMDR_ENTRY_D
 }
 
-
 /* Stage 7 Table 0 Action */
-action queue_barco(TLSCB_0_PARAMS_NON_STG0) {
+action queue_barco(TLSCB_CONFIG_AEAD_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -577,5 +579,5 @@ action queue_barco(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_S6_T0_TO_S7_T0_K
 
-    GENERATE_TLSCB_0_D_NON_STG0
+    GENERATE_TLSCB_CONFIG_AEAD
 }

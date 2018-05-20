@@ -40,10 +40,6 @@ table_read_QUEUE_BRQ:
     add         r1, r0, k.{to_s5_odesc}
     phvwr       p.odesc_dma_src_odesc, r1.dx
 
-    phvwrpair   p.barco_desc_command, d.u.tls_bld_brq5_d.barco_command, \
-                p.barco_desc_key_desc_index, d.u.tls_bld_brq5_d.barco_key_desc_index
-
-
     /* address will be in r4 */
     addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_TLS)
 
@@ -68,9 +64,8 @@ table_read_QUEUE_BRQ:
     bbeq        k.tls_global_phv_do_pre_ccm_dec, 1, tls_dec_bld_barco_req_ccm_process
     nop
         
-    /* FIXME: Misnomer, this is actually the sequence number */
-    phvwr       p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
-    tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
+    phvwr       p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.sequence_no
+    tbladd      d.u.tls_bld_brq5_d.sequence_no, 1
 
     add         r2, r0, k.{to_s5_idesc}
     addi        r1, r0, NTLS_AAD_SIZE
@@ -128,8 +123,8 @@ tls_dec_bld_barco_req_ccm_process:
     add         r1, r0, NTLS_AAD_SIZE
     /* FIXME: Misnomer, this is actually the sequence number */
     phvwrpair   p.ccm_header_with_aad_B_1_aad_size, r1, \
-                p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
-    tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
+                p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq5_d.sequence_no
+    tbladd      d.u.tls_bld_brq5_d.sequence_no, 1
 
 
     // PHV is already zeroed out

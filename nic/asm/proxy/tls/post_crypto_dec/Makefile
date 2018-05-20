@@ -19,18 +19,18 @@ CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
     $(SRC_DIR)/tls-dec-bsq.s \
-    $(SRC_DIR)/tls-dec-queue-sesq.s \
-    $(SRC_DIR)/tls-dec-read-desc.s \
-    $(SRC_DIR)/tls-dec-rx-bsq.s \
-    $(SRC_DIR)/tls-dec-bsq-consume.s \
-	$(SRC_DIR)/tls-dec-post-crypto-stats.s	\
-	$(SRC_DIR)/tls-dec-read-odesc.s \
-	$(SRC_DIR)/tls-dec-read-l7-rnmdr-pidx.s \
-	$(SRC_DIR)/tls-dec-l7-desc-alloc.s \
-	$(SRC_DIR)/tls-dec-queue-l7q.s \
-	$(SRC_DIR)/tls-dec-read-recq.s \
 	$(SRC_DIR)/tls-dec-rx-bsq-dec-dummy.s \
+    $(SRC_DIR)/tls-dec-rx-bsq.s \
+	$(SRC_DIR)/tls-dec-read-recq.s \
+    $(SRC_DIR)/tls-dec-read-desc.s \
+	$(SRC_DIR)/tls-dec-read-l7-rnmdr-pidx.s \
+    $(SRC_DIR)/tls-dec-bsq-consume.s \
+	$(SRC_DIR)/tls-dec-l7-desc-alloc.s \
+	$(SRC_DIR)/tls-dec-read-odesc.s \
+    $(SRC_DIR)/tls-dec-queue-sesq.s \
+	$(SRC_DIR)/tls-dec-queue-l7q.s \
 	$(SRC_DIR)/tls-dec-gc-setup.s \
+	$(SRC_DIR)/tls-dec-post-crypto-stats.s	\
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

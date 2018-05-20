@@ -27,11 +27,9 @@ tls_dec_read_serq_entry_process:
     phvwrpair   p.to_s5_idesc, d.u.read_serq_entry_d.idesc[31:0], \
                 p.to_s6_idesc, d.u.read_serq_entry_d.idesc[31:0]
 
-tls_dec_serq_consume:
-    CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_dec_serq_consume_process,
-   	                         k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET,
-                                 TABLE_SIZE_512_BITS)
+    phvwr       p.bsq_slot_desc, d.u.read_serq_entry_d.idesc[31:0]
 
+tls_dec_serq_consume:
     /* Skip allocating the descriptor and the page when we are bypassing Barco offload */
     smeqb   c1, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
     bcf     [c1], tls_dec_pkt_descriptor_process
@@ -83,7 +81,7 @@ tls_dec_pkt_descriptor_process:
     phvwr       p.barco_desc_auth_tag_addr, r1.dx
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_rx_serq_process,
-                                 k.tls_global_phv_qstate_addr, TLS_TCB_CRYPT_OFFSET,
+                                 k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG,
                                  TABLE_SIZE_512_BITS)
 
 tls_pkt_descriptor_process_done:
@@ -118,7 +116,7 @@ tls_dec_pkt_descriptor_ccm_process:
     phvwr       p.barco_desc_auth_tag_addr, r1.dx
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_rx_serq_process,
-                                 k.tls_global_phv_qstate_addr, TLS_TCB_CRYPT_OFFSET,
+                                 k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG,
                                  TABLE_SIZE_512_BITS)
     nop.e
     nop

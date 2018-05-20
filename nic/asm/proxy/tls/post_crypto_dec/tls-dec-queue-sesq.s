@@ -33,7 +33,7 @@ tls_dec_odesc_write:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_odesc_dma_cmd, r3, odesc_A0, odesc_next_pkt)
 
 dma_cmd_sesq_slot:
-	add		    r5, r0, d.u.tls_queue_sesq_d.sw_sesq_pi
+	add		    r5, r0, k.tls_global_phv_sesq_pi
 	sll		    r5, r5, NIC_SESQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for SESQ slot */
 	add		    r1, r5, d.u.tls_queue_sesq_d.sesq_base
@@ -60,9 +60,10 @@ tls_sesq_produce:
     add.c1      r7, k.tls_global_phv_fid, r0
     add.!c1     r7, k.to_s7_other_fid, r0
 
-    tblmincri   d.u.tls_queue_sesq_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    add         r1, r0, k.tls_global_phv_sesq_pi
+    mincr       r1, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
     CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd_sesq_dbell_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
-                                d.u.tls_queue_sesq_d.sw_sesq_pi, db_data_data)
+                                r1, db_data_data)
                               
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     bcf         [c1], tls_queue_sesq_process_done

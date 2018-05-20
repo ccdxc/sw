@@ -18,22 +18,22 @@ SRC_DIR = .
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
+    $(SRC_DIR)/tls-enc-serq.s \
+    $(SRC_DIR)/tls-enc-read-serq-entry.s \
+    $(SRC_DIR)/tls-enc-rx-serq.s \
     $(SRC_DIR)/tls-enc-read-tnmdr-alloc-idx.s \
     $(SRC_DIR)/tls-enc-read-tnmpr-alloc-idx.s \
+    $(SRC_DIR)/tls-enc-read-pkt-descr.s \
+    $(SRC_DIR)/tls-enc-serq-consume.s \
     $(SRC_DIR)/tls-enc-tdesc-alloc.s \
     $(SRC_DIR)/tls-enc-tpage-alloc.s \
-    $(SRC_DIR)/tls-enc-queue-brq.s \
-    $(SRC_DIR)/tls-enc-rx-serq.s \
-    $(SRC_DIR)/tls-enc-serq-consume.s \
-    $(SRC_DIR)/tls-enc-read-serq-entry.s \
     $(SRC_DIR)/tls-enc-bld-barco-req.s \
-    $(SRC_DIR)/tls-enc-bubble.s \
-    $(SRC_DIR)/tls-enc-serq.s \
+    $(SRC_DIR)/tls-enc-read-barco-pi.s \
+    $(SRC_DIR)/tls-enc-queue-brq.s \
     $(SRC_DIR)/tls-enc-pre-crypto-stats.s \
-    $(SRC_DIR)/tls-enc-read-pkt-descr.s \
+    $(SRC_DIR)/tls-enc-bubble.s \
     $(SRC_DIR)/tls-enc-queue-brq-mpp.s \
     $(SRC_DIR)/tls-enc-read-random-iv.s \
-    $(SRC_DIR)/tls-enc-read-barco-pi.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

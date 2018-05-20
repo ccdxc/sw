@@ -403,6 +403,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_AES256_CBC_HMAC_SHA256_ENCRYPT
+        enable  : False
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec

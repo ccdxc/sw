@@ -18,6 +18,7 @@
 #include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
+#include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -114,8 +115,8 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
         tls_stage0_addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
                     tcpcb_pd->tcpcb->cb_id);
-        // skip intrinsic 8 bytes
         data.u.read_tx2rx_d.tls_stage0_ring0_addr = htonl(tls_stage0_addr + 8);
+        //data.u.read_tx2rx_d.tls_stage0_ring0_addr = htonl(pd_tlscb_serq_ci_offset_get());
         HAL_TRACE_DEBUG("TCPCB tls base = 0x{0:x}, 0x{1:x}",
                     tls_stage0_addr, data.u.read_tx2rx_d.tls_stage0_ring0_addr);
     }

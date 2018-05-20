@@ -27,15 +27,7 @@ tls_enc_rx_bsq_enc_process:
 	   RING_FREE(idesc, RNMDR);
 	   dtlsp->dec_una.desc = HEAD_DESC(*dtlsp, dec);
 	*/
-    phvwri  p.to_s7_enc_completions, 1
-    phvwr   p.to_s7_other_fid, d.other_fid
-    
     bbeq        k.tls_global_phv_post_cbc_enc, 1, tls_enc_rx_bsq_enc_process_do_cbc
-    nop
-
-    /* Queue empty */
-    seq     c1, d.recq_pi, d.recq_ci
-    bcf		[c1], tls_rx_bsq_enc_process_done
     nop
 
     /*
@@ -47,23 +39,23 @@ tls_enc_rx_bsq_enc_process:
      * after we read the 'next-desc' field in the descriptor memory with a table
      * read below.
      */
+
+    /* TODO: This could be moved to Stage 0 where we allocate the CI and
+        setup the read of the recq slot
+    */
     add             r3, r0, d.recq_ci
     sll             r3, r3, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
     add             r3, r3, d.{recq_base}.wx
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_recq, r3, TABLE_SIZE_512_BITS)
     tblmincri       d.recq_ci, CAPRI_BSQ_RING_SLOTS_SHIFT, 1
-
-tls_enc_rx_bsq_enc_process_do_cbc:
-    seq     c1, d.qhead, r0
-    bcf     [c1], tls_rx_bsq_enc_process_done
-    nop
-
-    add		r3, r0, d.qhead
-    phvwr   p.to_s3_idesc, r3
-    add             r3, r0, d.{recq_base}.wx
-    /* Dummy read */
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_recq, r3, TABLE_SIZE_512_BITS)
-
-tls_rx_bsq_enc_process_done:
 	nop.e
 	nop
+
+tls_enc_rx_bsq_enc_process_do_cbc:
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tls_enc_read_recq)
+
+	nop.e
+	nop
+
+
+

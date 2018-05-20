@@ -183,6 +183,9 @@ metadata additional_data_t tls_post_mac_aad_d;
 @pragma scratch_metadata
 metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 
+@pragma scratch_metadata
+metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
+
 @pragma pa_header_union ingress to_stage_3
 metadata to_stage_3_phv_t to_s3;
 
@@ -275,7 +278,7 @@ action tls_read_idesc(PKT_DESCR_AOL_ACTION_PARAMS) {
 }
 
 /* Stage 3 table 0 action */
-action tls_bld_brq3(TLSCB_0_PARAMS_NON_STG0) {
+action tls_bld_brq3(TLSCB_CONFIG_AEAD_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -286,7 +289,7 @@ action tls_bld_brq3(TLSCB_0_PARAMS_NON_STG0) {
     modify_field(to_s3_scratch.debug_dol, to_s3.debug_dol);
 
     /* D vector */
-    GENERATE_TLSCB_0_D_NON_STG0
+    GENERATE_TLSCB_CONFIG_AEAD
 }
 
 /*
