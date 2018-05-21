@@ -1,0 +1,452 @@
+//------------------------------------------------------------------------------
+// protobuf specification for Interface HAL APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "nic/delphi/example/hal/proto/types.proto";
+import "nic/delphi/example/hal/proto/kh.proto";
+import "nic/delphi/proto/delphi/delphi.proto";
+
+package halproto;
+
+// IfStatus status reflects the current status of Interface
+enum IfStatus {
+  IF_STATUS_NONE    = 0;
+  IF_STATUS_UP      = 1;
+  IF_STATUS_DOWN    = 2;
+}
+
+//------------------------------------------------------------------------------
+// LIF represents a connection point to ASIC, every connection to ASIC is
+// exposed as a LIF (both uplinks and southbound links towards either workloads
+// or host or VSS/DVS etc. Before creating any other kind of interface. LIFs are
+// associated with a number of queues of different types and how to carve them
+// is upto software. First LIFs need to be created and other interface types are
+// tied to corresponding LIF. There is a many-to-1 relation between other types
+// of interfaces and a LIF.
+//------------------------------------------------------------------------------
+
+// Types of LIF ports
+enum LifPortType {
+  LIF_PORT_TYPE_NONE       = 0;
+  LIF_PORT_TYPE_DMA        = 1;    // LIF towards workloads
+  LIF_PORT_TYPE_P4_INGRESS = 2;    // LIF for P4 ingress
+  LIF_PORT_TYPE_P4_EGRESS  = 3;    // LIF for P4 egress
+  LIF_PORT_TYPE_NCSI       = 4;    // LIF for mgmt port
+}
+
+// Different purposes of LIF queues. This is not the same as
+// Queue type (type_num field in LifQStateMapEntry). This is
+// application (e.g. TCP, RDMA, Storage) specific and is specified
+// on a per LIF per Queue Type bases. In other words, for one LIF
+// type 0 can be TX Queue and for another LIF type 0 can be RX Queue.
+enum LifQPurpose {
+  LIF_QUEUE_PURPOSE_NONE      = 0;    // Queue disabled.
+  LIF_QUEUE_PURPOSE_ADMIN     = 1;    // Admin Queue
+  LIF_QUEUE_PURPOSE_TX        = 2;    // Tx Queue
+  LIF_QUEUE_PURPOSE_RX        = 3;    // Rx Queue
+  LIF_QUEUE_PURPOSE_RDMA_SEND = 4;    // RDMA send Queue
+  LIF_QUEUE_PURPOSE_RDMA_RECV = 5;    // RDMA receive Queue
+  LIF_QUEUE_PURPOSE_CQ        = 6;    // Completion Queue
+  LIF_QUEUE_PURPOSE_EQ        = 7;    // Event Queue
+  LIF_QUEUE_PURPOSE_NVME      = 8;    // Both SQ/CQ use this.
+  LIF_QUEUE_PURPOSE_STORAGE   = 9;    // All the PVM queues.
+  LIF_QUEUE_PURPOSE_VIRTIO_TX = 10;
+  LIF_QUEUE_PURPOSE_VIRTIO_RX = 11;
+
+  // Add more purposes as needed.
+}
+
+// A single entry in the LIF to Qstate map.
+// This entry represents a single type.
+// Everything except type puspose is used by the hardware.
+message LifQStateMapEntry {
+  // type_num is the type as defined by Capri hardware in the
+  // LIF -> Qstate array entry. There are 8 types numbered 0-7.
+  // There can be at most one entry per type_num.
+  // TODO: How does a user know what number to use here unless
+  // it is enumerated or purpose is clear ???
+  uint32                type_num = 1;
+
+  // This entry represents the size of the Q state
+  // used by this type. This number represents the size
+  // as 2^(5+size). e.g. for a size of 64, the size field
+  // would be 1 i.e. 2^(5+1) = 64.
+  // Max value for size today is 7 i.e. 4096 bytes.
+  uint32                size     = 2;
+
+  // entries field represent number of queues as a
+  // power of 2. So a value of 3 means 8 queues.
+  // Max value for entries today is 24 i.e. 16M queues.
+  uint32                entries  = 3;
+
+  // Queue purpose is not needed by the hardware. It is used
+  // internally by the HAL/FTE.
+  LifQPurpose           purpose  = 4;
+}
+
+// Packet filters to receive traffic
+message PktFilter {
+    bool    receive_broadcast     = 1;    // Receive Broadcast
+    bool    receive_all_multicast = 2;    // Receive all Multicast
+    bool    receive_promiscuous   = 3;    // Receive Unknown Unicast
+}
+
+// Specifications of a policer
+message PolicerSpec {
+  uint64 bps_rate   = 1;    // rate for this policer in bytes-per-second
+  uint64 burst_size = 2;    // Burst size allowed for the policer in bytes
+}
+
+message QStateSpec {
+  uint64 lif_handle = 1;
+  uint32 type_num   = 2;  // Queue type
+  uint32 qid        = 3;  // Queue ID within type
+
+  // If present, PC Offset is filled by the implementation
+  // based on the label.
+  P4ProgLabel label = 4;
+
+  // Actual queue state to be written. Can be less than the
+  // actual qstate size. But has to be greater than 0.
+  bytes queue_state = 5;
+}
+
+// LIF object
+message LifSpec {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta              = 1;
+  LifKey                     Key               = 2;
+  InterfaceKey               pinned_uplink_if_key = 3;
+  IfStatus                   admin_status                = 4;    // admin status of the interface
+  repeated LifQStateMapEntry lif_qstate_map              = 5;    // LIF -> Qstate map.
+  bool                       vlan_strip_en               = 6;    // LIF vlan strip enable
+  bool                       vlan_insert_en              = 7;    // Ingress vlan tag in p4plus_to_p4 hdr
+  bool                       enable_rdma                 = 8;    // RDMA: enable RDMA on LIF
+  PktFilter                  packet_filter               = 9;    // Packet filters
+  uint32                     rdma_max_keys               = 10;   // RDMA: max key entries
+  uint32                     rdma_max_pt_entries         = 11;   // RDMA: max pt entries
+  repeated QStateSpec        lif_qstate                  = 12;   // Initialize Qstate
+  LifRssSpec                 rss                         = 13;   // ETH: LIF RSS configuration
+  PolicerSpec                tx_policer                  = 14;   // QOS Policer for tx traffic
+  PolicerSpec                rx_policer                  = 15;   // QOS Policer for rx traffic
+  QosClassKeyHandle          rx_qos_class                = 16;   // QOS class-of-service for Rx traffic.
+  QosClassKeyHandle          tx_qos_class                = 17;   // QOS class-of-service for Tx traffic.
+  uint32                     type_num                    = 18;  // Queue type
+  uint32                     qid                         = 19;  // Queue ID within type
+  // If present, PC Offset is filled by the implementation
+  // based on the label.
+  P4ProgLabel label = 20;
+
+  // Actual queue state to be written. Can be less than the
+  // actual qstate size. But has to be greater than 0.
+  bytes queue_state = 21;
+}
+
+// LifStatus represents the operational status of LIF
+message LifStatus {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta            = 1;
+  LifKey                     Key             = 2;
+  IfStatus                   lif_status      = 3;    // currrent status of the interface
+  fixed64                    lif_handle      = 4;    // id of the interface returned by HAL
+  uint64                     hw_lif_id       = 5;    // Hardware Lif Id
+  repeated LifQState         qstate          = 6;    // Qstate Address info
+  bool                       rdma_data_valid = 7; // RDMA data valid only this bit is set
+  LifRdmaData                rdma_data       = 8;    // RDMA data - valid only when rdma is enabled
+  bytes                      queue_state     = 9;  // Actual Queue state data.
+}
+
+
+// LifQstate entries
+message LifQState {
+  uint32 type_num   = 1;  // Queue type
+  uint64 addr       = 2;  // Address of QState in HBM.
+}
+
+// LifRdmaData entries
+message LifRdmaData {
+  uint64 pt_base_addr = 1;  // Page Table Base Addr
+  uint64 kt_base_addr = 2;  // Key Table Base Addr
+}
+
+
+// A P4ProgLabel is used to get the PC offset for
+// Queue state.
+message P4ProgLabel {
+  string handle = 1;
+  string prog_name = 2;
+  string label = 3;
+}
+
+
+// check which stats will be done by p4 and which will be done by p4+
+message LifTxStats {
+  uint64           frames_ok           = 1;
+  uint64           unicast_frames_ok   = 2;
+  uint64           multicast_brames_ok = 3;
+  uint64           broadcast_brames_ok = 4;
+  uint64           bytes_ok            = 5;
+  uint64           unicast_bytes_ok    = 6;
+  uint64           multicast_bytes_ok  = 7;
+  uint64           broadcast_bytes_ok  = 8;
+  uint64           tso                 = 9;
+}
+
+// PolicerStats captures all the statistics of a policer
+message PolicerStats {
+  uint64 permitted_packets = 1;    // Count of permitted packets by the policer
+  uint64 permitted_bytes   = 2;    // Count of permitted bytes by the policer
+  uint64 dropped_packets   = 3;    // Count of dropped packets by the policer
+  uint64 dropped_bytes     = 4;    // Count of dropped bytes by the policer
+}
+
+message LifRxStats {
+  uint64           frames_total        = 1;
+  uint64           frames_ok           = 2;
+  uint64           unicast_frames_ok   = 3;
+  uint64           multicast_frames_ok = 4;
+  uint64           broadcast_frames_ok = 5;
+  uint64           bytes_ok            = 6;
+  uint64           unicast_bytes_ok    = 7;
+  uint64           multicast_bytes_ok  = 8;
+  uint64           broadcast_bytes_ok  = 9;
+  uint64           drops               = 10;
+  uint64           no_bufs             = 11;
+  uint64           errors              = 12;
+  uint64           rss                 = 13;
+  uint64           crc_errors          = 14;
+  uint64           frames_64           = 15;
+  uint64           frames_127          = 16;
+  uint64           frames_255          = 17;
+  uint64           frames_511          = 18;
+  uint64           frames_1024         = 19;
+  uint64           frames_1518         = 20;
+  uint64           frames_to_max       = 21;
+  PolicerStats     policer_stats       = 22;    // Policer stats
+}
+
+// LifStats captures all the statistics of given LIF
+message LifStats {
+  LifTxStats    tx_stats = 1;
+  LifRxStats    rx_stats = 2;
+}
+
+
+// LifRssConfig is used to set Lif's RSS configuration
+message LifRssSpec {
+  bool          enable    = 1;    // RSS enable
+  uint32        type      = 2;    // RSS type
+  bytes         key       = 3;    // RSS key/seed
+}
+
+// types of interfaces
+enum IfType {
+  IF_TYPE_NONE         = 0;
+  IF_TYPE_ENIC         = 1;    // interface connected to workload/endpoint(s)
+  IF_TYPE_UPLINK       = 2;    // interface representing NIC uplink(s)
+  IF_TYPE_UPLINK_PC    = 3;    // interface representing NIC uplink port channel
+  IF_TYPE_TUNNEL       = 4;    // interface representing tunnel
+  IF_TYPE_CPU          = 5;    // interface representing CPU
+  IF_TYPE_APP_REDIR    = 6;    // interface representing App Redirect
+}
+
+// RSS Type
+enum LifRssType {
+  RSS_TYPE_NONE         = 0;
+  RSS_TYPE_IPV4         = 1;
+  RSS_TYPE_IPV4_TCP     = 2;
+  RSS_TYPE_IPV4_UDP     = 4;
+  RSS_TYPE_IPV6         = 8;
+  RSS_TYPE_IPV6_TCP     = 16;
+  RSS_TYPE_IPV6_UDP     = 32;
+  RSS_TYPE_IPV6_EX      = 64;
+  RSS_TYPE_IPV6_TCP_EX  = 128;
+  RSS_TYPE_IPV6_UDP_EX  = 256;
+}
+
+//------------------------------------------------------------------------------
+// if interface type is IF_TYPE_ENIC, one of the following vnic types must be
+// set. IF_ENIC_TYPE_XXX identifies how a workload is attached to asic
+//------------------------------------------------------------------------------
+enum IfEnicType {
+  IF_ENIC_TYPE_NONE     = 0;
+  IF_ENIC_TYPE_USEG     = 1;    // workload interface used in inline useg mode
+  IF_ENIC_TYPE_PVLAN    = 2;    // workload attachment used in PVLAN mode
+  IF_ENIC_TYPE_DIRECT   = 3;    // workload attachment used for SR-IOV,
+                                // VSS/DVS connectivity etc.
+  IF_ENIC_TYPE_CLASSIC  = 4;    // enics in classic mode
+  IF_ENIC_TYPE_GFT      = 5;    // enics in gft mode
+}
+
+message EnicInfo {
+    L2SegmentKeyHandle l2segment_key_handle = 1; // user (external) l2segment
+    fixed64               mac_address          = 2; // MAC address of the endpoint
+    uint32                encap_vlan_id        = 3; // Encap Vlan
+}
+
+message EnicClassicInfo {
+    repeated L2SegmentKeyHandle l2segment_key_handle = 1; // classic: l2segs allowed on the enic
+    uint64                native_l2segment_handle       = 2; // classic: native l2seg on the enic
+}
+
+// mandatory attributes expected if interface type is IF_TYPE_ENIC
+message IfEnicInfo {
+  IfEnicType            enic_type               = 1; // type of enic interface
+  LifKey                lif_key       = 2; // LIF identifier for this interface
+  uint64                pinned_uplink_if_handle = 3; // uplink this enic is pinned to
+  oneof enic_type_info {
+      EnicInfo          enic_info               = 4; // enic info for non-classic types
+      EnicClassicInfo   classic_enic_info       = 5;
+  }
+}
+
+// mandatory attributes expected if interface type is IF_TYPE_UPLINK
+message IfUplinkInfo {
+  uint32           port_num              = 1;    // uplink port number
+  uint64           native_l2segment_id   = 2;    // L2 segment to map the packets to, if they are untagged
+}
+
+message IfUplinkPCInfo {
+  // mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
+  uint64                         native_l2segment_id   = 1;    // L2 segment to map the packets to, if they are untagged
+  repeated InterfaceKey          member_if_key  = 2;
+}
+
+//------------------------------------------------------------------------------
+// if interface type is IF_TYPE_TUNNEL, one of the following encap types must be
+// set.
+//------------------------------------------------------------------------------
+enum IfTunnelEncapType {
+  IF_TUNNEL_ENCAP_TYPE_NONE     = 0;
+  IF_TUNNEL_ENCAP_TYPE_VXLAN    = 1;
+  IF_TUNNEL_ENCAP_TYPE_GRE      = 2;
+}
+
+message IfTunnelVxlanInfo {
+  IPAddress   local_tep           = 1;
+  IPAddress   remote_tep          = 2;
+}
+
+message IfTunnelGREInfo {
+  IPAddress   source          = 1;
+  IPAddress   destination     = 2;
+  uint32            mtu             = 3;
+  uint32            ttl             = 4;
+}
+
+message IfTunnelInfo {
+  IfTunnelEncapType     encap_type      = 1;
+  oneof encap_info {
+    IfTunnelVxlanInfo   vxlan_info      = 2;
+    IfTunnelGREInfo     gre_info        = 3;
+  }
+  VrfKeyHandle       vrf_key_handle  = 4;
+}
+
+// attributes for CPU If
+message IfCPUInfo {
+  LifKey lif_key   = 2;    // LIF identifier for this interface
+}
+
+// attributes for App Redirect If
+message IfAppRedirInfo {
+  LifKey lif_key   = 2;    // LIF identifier for this interface
+}
+
+// InterfaceL2SegmentSpec carries the user vlan that is being added or deleted
+// on an uplink interface or uplink PC
+message InterfaceL2SegmentSpec {
+  L2SegmentKeyHandle    l2segment_key_or_handle = 2;    // L2 segment Id corresponding to the vlan
+  InterfaceKey              if_key = 3;    // Uplink/Uplink PC key or handle
+}
+
+// InterfaceSpec is used to add or update of an interface
+message InterfaceSpec {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta              = 1;
+  InterfaceKey               Key               = 2;
+  IfType             type              = 4;     // type of interface
+  IfStatus           admin_status      = 5;     // admin status of the interface
+  oneof if_info {
+    IfEnicInfo       if_enic_info      = 6;     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 7;     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 8;     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 9;     // tunnel interface information
+    IfCPUInfo        if_cpu_info       = 10;     // cpu interface informaton
+    IfAppRedirInfo   if_app_redir_info = 11;     // app redirect interface informaton
+  }
+  repeated InterfaceL2SegmentSpec    request = 12;    // list of l2 segments
+}
+
+
+// Uplink/Uplink PC's response
+message UplinkResponseInfo {
+    uint32      uplink_lport_id = 1;    // Uplink/Uplink PC's lport id
+    uint32      hw_lif_id       = 2;    // hw lif id for Uplink/UplinkPC
+    uint32      uplink_idx      = 3;    // Unique id for every Uplink/Uplink PC. Used to maintain l2seg membership
+    uint32      num_l2segs      = 4;    // number of l2segs configured on this uplink
+}
+
+// Enic <-> L2seg membership info
+message EnicL2SegInfo {
+  L2SegmentKeyHandle     l2segment_key_or_handle = 1;
+  uint32                    inp_prop_idx            = 2;
+}
+
+// Enic's response
+message EnicResponseInfo {
+    uint32      enic_lport_id               = 1;    // Enic's lport id
+    uint32      inp_prop_mac_vlan_idx_host  = 2;    // Input prop. Mac Vlan table idx from host packets
+    uint32      inp_prop_mac_vlan_idx_net   = 3;    // Input prop. Mac Vlan table idx from network packets
+    uint32      inp_prop_nat_l2seg_classic  = 4;    // Input prop. table idx for native l2seg. Classic mode
+    repeated EnicL2SegInfo membership_info  = 5;    // L2seg membership info for Enic. Classic mode
+}
+
+// CPU If's response
+message CpuIfResponseInfo {
+    uint32  cpu_lport_id = 1;   // CPU Lport id
+}
+
+// Tunnel If's response
+message TunnelIfResponseInfo {
+  repeated uint32   inp_map_nat_idx = 1;    // GIPo termination entries in Input Mappnig Native table
+                                            //  1. Inner IPv4
+                                            //  2. Inner IPv6
+                                            //  3. Inner MAC
+  repeated uint32   inp_map_tnl_idx = 2;    // GIPo termination entries in Input Mappnig Tunnel table
+                                            //  1. Inner IPv4
+                                            //  2. Inner IPv6
+                                            //  3. Inner MAC
+  uint32            tunnel_rw_idx   = 3;    // Tunnel Rewrite table idx
+}
+
+// App redir if's response
+message AppRedirIfInfo {
+    uint32 lport_id = 1;
+}
+
+// InterfaceStatus represents the current status of the interface
+message InterfaceStatus {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta              = 1;
+  InterfaceKey               Key               = 2;
+  IfStatus                  if_status         = 3;    // currrent status of the interface
+  fixed64                   if_handle         = 4;    // id of the interface returned by HAL
+  oneof if_response_info {
+    UplinkResponseInfo      uplink_info       = 5;    // Uplink/Uplink PC info
+    EnicResponseInfo        enic_info         = 6;    // Enic's info
+    CpuIfResponseInfo       cpu_info          = 7;    // CPU If's info
+    TunnelIfResponseInfo    tunnel_info       = 8;    // Tunnel If's info
+    AppRedirIfInfo          app_redir_info    = 9;    // App Redir info
+  }
+}
+
+// InterfaceStats captures all the statistics of given interface
+message InterfaceStats {
+  fixed32    num_tx_packets            = 1;    // Tx Packets from this interface
+  fixed32    num_tx_bytes              = 2;    // Tx Bytes from this interface
+  fixed32    num_rx_packets            = 3;    // Rx Packets to this interface
+  fixed32    num_rx_bytes              = 4;    // Rx Bytes to this interface
+}

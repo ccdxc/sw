@@ -1,0 +1,69 @@
+//------------------------------------------------------------------------------
+// protobuf specification for endpoints
+//
+// Endpoint is equivalent to a VM's vnic or container's veth interface. A
+// VM/container can hanve multiple endpoints, however that higher level grouping
+// is not known to HAL. HAL treats each of them independently. Each endpoint
+// has one MAC and optionally one or more IP addresses.
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "nic/delphi/example/hal/proto/types.proto";
+import "nic/delphi/example/hal/proto/kh.proto";
+import "nic/delphi/example/hal/proto/eplearn.proto";
+import "nic/delphi/proto/delphi/delphi.proto";
+
+package halproto;
+
+enum EndpointVMotionState {
+    VMOTION_STATE_NONE     = 0; // No VMotion State
+    VMOTION_STATE_START    = 1; // VMotion Start
+    VMOTION_STATE_SETUP    = 2; // VMotion Setup
+    VMOTION_STATE_ACTIVATE = 3; // VMotion Activate
+    VMOTION_END            = 4; // VMotion End
+}
+
+message EndpointAttributes {
+    InterfaceKey                interface_key = 1;
+    uint32                      useg_vlan            = 2;    // microseg vlan assigned to this EP
+    repeated IPAddress          ip_address           = 3;    // IP address(es) of endpoint
+    repeated SecurityGroupKeyHandle sg_key_handle = 4;
+    EndpointVMotionState        vmotion_state        = 5;    // Vmotion state
+}
+
+// EndpointSpec is used to add or update an endpoint
+message EndpointSpec {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta       Meta              = 1;
+    EndpointKey             Key               = 2;
+    VrfKeyHandle            vrf_key_handle    = 3;
+    EndpointAttributes      endpoint_attrs    = 4;    // endpoint's attributes
+}
+
+//Endpoint IP address information.
+message EndpointIpAddress {
+	IPAddress        ip_address          = 1;    // IP addresses learnt.
+	bool                   learn_source_dhcp   = 2;    // TRUE if learnt via DHCP
+  	bool                   learn_source_arp    = 3;    // TRUE if learnt via ARP/GARP
+  	bool                   learn_source_rarp   = 4;    // TRUE if learnt via RARP
+  	bool                   learn_source_config = 5;    // TRUE if learnt via configuration
+  	EplearnStatus  learn_status        = 6;   // ep learning status
+};
+
+// EndpointStatus has the current status of an endpoint
+// TODO: capturing aging information, if any
+message EndpointStatus {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta               Meta                = 1;
+  EndpointKey                     Key                 = 2;
+  fixed64                         endpoint_handle     = 3;    // id of endpoint returned by HAL
+  repeated EndpointIpAddress      ip_address          = 4;    // IP addresses learnt, if any
+  bool                            is_endpoint_local   = 5;    // TRUE if endpoint is local
+  bool							  learn_source_config = 6;    // TRUE if ep entry was created by config.
+}
+
+// EndpointStats is the statistics object for each Endpoint
+message EndpointStats {
+	EplearnStats ep_learn_stats = 1; // Eplearning stats.
+}

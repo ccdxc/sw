@@ -1,0 +1,90 @@
+//------------------------------------------------------------------------------
+// protobuf specification for VLAN HAL APIs
+//
+// L2 segment is user provisioned vlan that will be configured on NIC uplink(s)
+// Endpoints or vNICs are put in useg vlan which will be mapped to user vlan
+// when packet is put on the wire towards uplink(s)
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "nic/delphi/example/hal/proto/types.proto";
+import "nic/delphi/example/hal/proto/kh.proto";
+import "nic/delphi/example/hal/proto/eplearn.proto";
+import "nic/delphi/proto/delphi/delphi.proto";
+
+package halproto;
+
+
+// BroadcastFwdPolicy defines various forwarding options to deal with
+// broadcast traffic
+enum BroadcastFwdPolicy {
+  BROADCAST_FWD_POLICY_NONE     = 0;
+  BROADCAST_FWD_POLICY_DROP     = 1;    // drop action
+  BROADCAST_FWD_POLICY_FLOOD    = 2;    // flood in L2 segment
+}
+
+// MulticastFwdPolicy defines various forwarding options to deal with
+// multicast traffic
+enum MulticastFwdPolicy {
+  MULTICAST_FWD_POLICY_NONE         = 0;
+  MULTICAST_FWD_POLICY_FLOOD        = 1;    // flood mcast traffic in the L2 segment
+  MULTICAST_FWD_POLICY_REPLICATE    = 2;    // replicate based on mcast group subscription (or static config)
+  MULTICAST_FWD_POLICY_DROP         = 3;    // drop action
+}
+
+// L2SegmentSpec message is used to do add/mod of vlan
+message L2SegmentSpec {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta              = 1;
+  L2SegmentKeyHandle         Key               = 2;
+  repeated NetworkKeyHandle network_key_handle = 3;
+  VrfKeyHandle        vrf_key_handle           = 4;
+  L2SegmentType    segment_type                = 5;    // L2 segment type
+  MulticastFwdPolicy     mcast_fwd_policy      = 6;    // multicast forwarding policy
+  BroadcastFwdPolicy     bcast_fwd_policy      = 7;    // broadcast forwarding policy
+  EncapInfo        wire_encap                  = 8;    // wire encap
+  EncapInfo        tunnel_encap                = 9;    // tunnel encap
+  IPAddress        gipo                        = 10;    // gipo for mcast vxlan traffic
+  EplearnCfg     eplearn_cfg                   = 11;    // ep learning config
+  fixed64                pinned_uplink_if_handle    = 12;   // The pinned uplink
+}
+
+// L2segment oper state for Iris pipeline
+message L2segmentStatusIris {
+  uint32                hw_l2seg_id         = 3;    // Used to compute l2seg_lookup_id along with hw_vrf_id
+  uint32                l2seg_lookup_id     = 4;    // l2seg id for flow lookup
+  uint32                l2seg_vlan_id_cpu   = 5;    // Vlan carried by CPU Tx packets to map to this l2seg
+  uint32                inp_prop_cpu_idx    = 6;    // Inpurt properties table idx. Installed for
+                                                    //  for CPU TX packets with CPU injecting into a VRF.
+  repeated uint32       inp_prop_idx        = 7;    // Input Prop. Table Idx For every Uplink/UplinkPC
+                                                    //  for .1q tagged packets
+  repeated uint32       inp_prop_idx_pr_tag = 8;    // Input Prop. Table Idx for every Uplink/UplinkPC
+                                                    //  for priority tagged packets.
+}
+
+// L2segment oper state for GFT pipeline
+message L2segmentStatusGFT {
+}
+
+
+// L2SegmentStatus represents the current status of the L2 segment
+message L2SegmentStatus {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta              = 1;
+  L2SegmentKeyHandle         Key               = 2;
+  fixed64                   l2segment_handle    = 3;    // id of the L2 segment returned by HAL
+  uint32                    vrf_id              = 4;    // TODO REMOVE DOL ONLY - hw vrf id
+  // TODO - add vNICs/uplinks this vlan is up on
+  oneof l2seg_info {
+      L2segmentStatusIris   iris_info           = 5;    // L2seg oper state for Iris pipeline
+      L2segmentStatusGFT    gft_info            = 6;    // L2seg oper state for GFT pipeline
+  }
+}
+
+
+// L2SegmentStats is the statistics object for each L2 segment
+message L2SegmentStats {
+  uint32                          num_endpoints = 1;    // number of endpoints in this L2 segment
+  L2EplearnStats          eplearn_stats = 2;    // Eplearn stats
+}

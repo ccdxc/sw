@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+import "nic/delphi/example/hal/proto/types.proto";
+import "nic/delphi/example/hal/proto/kh.proto";
+
+package halproto;
+
+enum EpLearnType {
+    LEARN_TYPE_NONE       = 0; // Learn EPs only on Host
+    LEARN_TYPE_LOCAL      = 1; // Learn EPs only on Host
+    LEARN_TYPE_GLOBAL     = 2; // Learn EPs only on from uplink.
+    LEARN_TYPE_ANY        = 3; // Learn EPs in any direction.
+}
+
+// DhcpSpec Cfg
+message EplearnDhcpCfg {
+    repeated IPAddress trusted_servers = 1;  // Trusted DHCP Servers.
+}
+
+// Arp/Ndp Cfg
+message EplearnArpCfg {
+    uint32  entry_timeout  = 1;  // how long arp entry is valid.
+}
+
+message EplearnCfg {
+  EpLearnType                  learn_type              = 1; // Eplearn type
+  bool                         drop_on_static_misatch  = 2; // Drop if static IP mismatch.
+  EplearnArpCfg                arp                     = 3;
+  EplearnDhcpCfg               dhcp                    = 4;
+}
+
+message ArpStats {
+    uint32   num_ip_learnt  = 1; // Current IP address learnt
+    uint32   num_spoofs     = 2;
+    uint32   num_dai_fails  = 3;
+};
+
+message DhcpStats {
+    uint32   num_ip_learnt  = 1; // Current IP address learnt
+    uint32   num_nw_fails   = 2; // Failed becuase if network mismatch
+}
+
+message L2EplearnStats {
+    L2SegmentKeyHandle l2Segment_key_handle = 1;
+    ArpStats              arp_stats            = 2;
+    DhcpStats             dhcp_stats           = 3;
+}
+
+enum DhcpTransactionState {
+    STATE_NONE            = 0; // Dhcp Transaction not initiated.
+    STATE_SELECTING       = 1; // Dhcp Transaction initiated.
+    STATE_REQUESTING      = 2; // Dhcp Transaction in requesting state.
+    STATE_BOUND           = 3; // Dhcp Transaction bound.
+    STATE_RENEWING        = 4; // Dhcp Transaction being renewed.
+    STATE_REBINDING       = 5; // Dhcp Transaction is in rebinding state.
+}
+
+message DhcpStatus {
+	DhcpTransactionState   state          = 1; // Dhcp bound
+	uint32                 xid            = 2; // Transaction ID
+	uint32                 renewal_time   = 3; // Seconds remaining for renewal
+	uint32                 rebinding_time = 4; // Rebinding time
+	IPAddress        ip_addr        = 5; // Assigned ipaddress
+	IPAddress        subnet_mask    = 6; // Allocated subnet mask
+	IPAddress        gateway_ip     = 7; // Allocated Gateway address.
+}
+
+message ArpStatus {
+    bool    entry_active  = 1; // Arp entry active.
+    uint32  entry_timeout = 2; // Seconds before entry timeout.
+}
+
+message EplearnStats {
+	uint32 num_dhcp_trans  = 1;  // Number of dhcp transactions initiated for the EP.
+	uint32 num_arp_trans   = 2;  // Number of arp transactions initiated for the EP.
+	uint32 num_dhcp_errors = 3;  // Number of DHCP errors;
+	uint32 num_arp_errors  = 4;  // Number of ARP errors.
+}
+
+message EplearnStatus {
+	DhcpStatus      dhcp_status = 1;
+	ArpStatus       arp_status  = 2;
+}

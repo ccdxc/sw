@@ -1,0 +1,290 @@
+//------------------------------------------------------------------------------
+// common messages, headers and enums that are useful across all services
+// and also shared between agent(s) and HAL
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+package halproto;
+
+// IP protocol numbers
+enum IPProtocol {
+  IPPROTO_NONE          = 0;
+  IPPROTO_ICMP          = 1;
+  IPPROTO_IPV4          = 4;
+  IPPROTO_TCP           = 6;
+  IPPROTO_UDP           = 17;
+  IPPROTO_GRE           = 47;
+  IPPROTO_ESP           = 50;
+  IPPROTO_AH            = 51;
+  IPPROTO_ICMPV6        = 58;
+}
+
+// ICMP message types
+// TBD - add more here !!
+enum ICMPMsgType {
+  ICMP_MSG_TYPE_NONE = 0;
+  ICMP_MSG_TYPE_ECHO = 1;
+}
+
+// API return codes (more descriptive than protobuf enums)
+enum ApiStatus {
+  API_STATUS_OK                           = 0;     // success
+  API_STATUS_ERR                          = 1;     // catch-all error
+  API_STATUS_INVALID_ARG                  = 2;     // invalid argument
+  API_STATUS_EXISTS_ALREADY               = 3;     // object already exists
+  API_STATUS_OUT_OF_MEM                   = 4;     // out of memory
+  API_STATUS_NOT_FOUND                    = 5;     // object not found
+  API_STATUS_OUT_OF_RESOURCE              = 6;     // out of resource
+  API_STATUS_ENCAP_INVALID                = 7;     // encap invalid
+  API_STATUS_VRF_ID_INVALID               = 8;     // invalid tenant id
+  API_STATUS_L2_SEGMENT_ID_INVALID        = 9;    // invalid L2 segment id
+  API_STATUS_INTERFACE_ID_INVALID         = 10;    // invalid interface id
+  API_STATUS_IF_TYPE_INVALID              = 11;    // invalid inteface type
+  API_STATUS_IF_INFO_INVALID              = 12;    // invalid interface info
+  API_STATUS_IF_L2SEGMENT_INVALID         = 13;    // invalid L2 segment in interface spec
+  API_STATUS_IF_ENIC_INFO_INVALID         = 14;    // invalid enic info in interface spec
+  API_STATUS_IF_ENIC_TYPE_INVALID         = 15;    // invalid enic type in interface spec
+  API_STATUS_IF_LIF_INFO_NOT_INVALID      = 16;    // lif info not valid
+  API_STATUS_IF_LIFQ_INFO_NOT_INVALID     = 17;    // lif queue info not valid
+  API_STATUS_FLOW_KEY_INVALID             = 18;    // flow key invalid
+  API_STATUS_FLOW_INFO_INVALID            = 19;    // flow information invalid
+  API_STATUS_HANDLE_INVALID               = 20;    // HAL handle passed is invalid
+  API_STATUS_HW_PROG_ERR                  = 21;    // hardware programming error
+  API_STATUS_LIF_ID_INVALID               = 22;    // invalid LIF id
+  API_STATUS_NWSEC_PROFILE_ID_INVALID     = 23;    // security profile id invalid
+  API_STATUS_TLS_CB_ID_INVALID            = 24;    // invalid TLS CB id
+  API_STATUS_TCP_CB_ID_INVALID            = 25;    // invalid TCP CB id
+  API_STATUS_ACL_ID_INVALID               = 26;    // invalid ACL id
+  API_STATUS_WRING_ID_INVALID             = 27;    // invalid WRING id
+  API_STATUS_WRING_TYPE_INVALID           = 28;    // invalid WRING type
+  API_STATUS_PROXY_TYPE_INVALID           = 29;    // invalid Proxy Service type
+  API_STATUS_IPSEC_CB_ID_INVALID          = 30;    // invalid IPSEC CB id
+  API_STATUS_L4LB_KEY_INVALID             = 31;    // invalid L4LB key
+  API_STATUS_CPU_CB_ID_INVALID            = 32;    // invalid CPU CB id
+  API_STATUS_PROXY_NOT_ENABLED            = 33;    // proxy service not enabled
+  API_STATUS_CFG_DB_ERR                   = 34;    // config database inconsistency
+  API_STATUS_SECURITY_GROUP_ID_INVALID    = 35;    // Security group id invalid
+  API_STATUS_SECURITY_POLICY_ID_INVALID   = 36;    // Security Group id invalid
+  API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID = 37;    // ep update with no key and hdl
+  API_STATUS_DOS_POLICY_ID_INVALID        = 38;    // dos policy id invalid
+  API_STATUS_RAWR_CB_ID_INVALID           = 39;    // invalid Raw Redirect CB id
+  API_STATUS_OBJECT_IN_USE                = 40;    // object is in use
+  API_STATUS_RAWC_CB_ID_INVALID           = 41;    // invalid Raw Chain CB id
+  API_STATUS_PORT_ID_INVALID              = 42;    // invalid port number
+  API_STATUS_PORT_TYPE_INVALID            = 43;    // invalid port type
+  API_STATUS_PORT_SPEED_INVALID           = 44;    // invalid port speed
+  API_STATUS_PORT_NUM_LANES_INVALID       = 45;    // invalid num lanes for port
+  API_STATUS_MC_ENTRY_ID_INVALID          = 46;    // invalid mc_entry id
+  API_STATUS_PROXYR_CB_ID_INVALID         = 47;    // invalid Proxy Redirect CB id
+  API_STATUS_PROXYC_CB_ID_INVALID         = 48;    // invalid Proxy Chain CB id
+  API_STATUS_HW_READ_ERROR                = 49;    // hardware read error
+  API_STATUS_HW_WRITE_ERROR               = 50;    // hardware write error
+  API_STATUS_L2_SEGMENT_TYPE_INVALID      = 51;    // L2 Segment set to invalide type
+}
+
+// common meta object that is part of all other top level objects
+// TODO: should we add last updated timestamp, revision etc. here ?
+message ObjectMeta {
+  fixed64        vrf_id = 1;     // vrf identifier
+}
+
+// Types of Vrfs
+enum VrfType {
+  VRF_TYPE_NONE          = 0;
+  VRF_TYPE_INFRA         = 1;    // infra Vrf
+  VRF_TYPE_CUSTOMER      = 2;    // customer Vrf
+}
+
+// Types of L2 segments
+enum L2SegmentType {
+  L2_SEGMENT_TYPE_NONE   = 0;
+  L2_SEGMENT_PRIMARY     = 1;    // primary VLAN of PVLAN
+  L2_SEGMENT_ISOLATED    = 2;    // isolated VLAN of PVLAN
+}
+
+// Supported wire encaps for the L2 segments
+enum encapType {
+  ENCAP_TYPE_NONE               = 0;
+  ENCAP_TYPE_DOT1Q              = 1;    // .1q encapsulation
+  ENCAP_TYPE_VXLAN              = 2;    // VXLAN encapsulation
+  ENCAP_TYPE_IP_IN_IP           = 3;    // IP-in-IP encapsulation
+  ENCAP_TYPE_GRE                = 4;    // GRE encapsulation
+  ENCAP_TYPE_IPSEC              = 5;    // IPSec tunnel encapsulation
+}
+
+// EncapInfo captures wire encap information
+message EncapInfo {
+  encapType        encap_type  = 1;    // wire encap type
+  uint32           encap_value = 2;    // encap value (vlan/vnid etc.)
+}
+
+// IP address families
+enum IPAddressFamily {
+  IP_AF_NONE     = 0;
+  IP_AF_INET     = 1;    // IPv4
+  IP_AF_INET6    = 2;    // IPv6
+}
+
+// IP address object
+message IPAddress {
+  IPAddressFamily    ip_af   = 1;      // IP address family
+  oneof v4_or_v6 {
+    fixed32          v4_addr = 2;      // IPv4 address
+    bytes            v6_addr = 3;      // IPv6 address  (TODO: need better representation here)
+  }
+}
+
+// IP Range
+message IPRange {
+    IPAddress      low_ipaddr  = 1;    // start ip address
+    IPAddress      high_ipaddr = 2;    // end ip address
+}
+
+// IP Prefix object
+message IPPrefix {
+  IPAddress    address       = 1;      // IP address
+  uint32       prefix_len    = 2;      // prefix length
+}
+
+enum IPAddressType {
+  IP_ADDRESS_NONE           = 0;
+  IP_ADDRESS_IPV4_ANY       = 1;  // any IPv4 address
+  IP_ADDRESS_IPV6_ANY       = 2;  // any IPv6 address
+  IP_ADDRESS_ANY            = 3;  // any IP address
+  IP_ADDRESS_IPV4_MULTICAST = 4;  // any IPv4 multicast address
+  IP_ADDRESS_IPV6_MULTICAST = 5;  // any IPv6 multicast address
+  IP_ADDRESS_MULTICAST      = 6;  // any IP multicast address
+  IP_ADDRESS_V6_LINK_LOCAL  = 7;  // IPv6 link local address
+}
+
+// IPSubnet represents an IPv4 or IPv6 subnet
+message IPSubnet {
+    oneof subnet {
+        IPPrefix ipv4_subnet      = 1;     // V4 Subnet
+        IPPrefix ipv6_subnet      = 2;     // V6 Subnet
+    }
+}
+
+// AddressRange represents an IPv4 or IPv6 address range
+message AddressRange {
+    oneof range {
+        IPRange ipv4_range       = 1;  // V4 address range
+        IPRange ipv6_range       = 2;  // V6 address range
+    }
+}
+
+// Address object is the prefix or range
+message Address {
+    oneof   Address {
+        IPSubnet      prefix     = 1;    // v4 or v6 address prefix
+        AddressRange  range      = 2;    // v4 or v6 address range
+    }
+}
+
+message IPAddressObj {
+    oneof Formats {
+        IPAddressType   type        = 1;
+        Address         address     = 2;
+    }
+    bool negate                     = 3;
+}
+
+// PortRange object has low and high end of the port ranges
+message L4PortRange {
+  uint32    port_low  = 1;   // source port
+  uint32    port_high = 2;   // destination port
+}
+
+message Empty {}
+
+// Types of Work Ring
+enum WRingType {
+  WRING_TYPE_NONE             = 0;
+  WRING_TYPE_SERQ             = 1;
+  WRING_TYPE_NMDR_TX          = 2;
+  WRING_TYPE_NMDR_RX          = 3;
+  WRING_TYPE_NMPR_SMALL_TX    = 4;
+  WRING_TYPE_NMPR_SMALL_RX    = 5;
+  WRING_TYPE_NMPR_BIG_TX      = 6;
+  WRING_TYPE_NMPR_BIG_RX      = 7;
+  WRING_TYPE_BSQ              = 8;
+  WRING_TYPE_BRQ              = 9;
+  WRING_TYPE_SESQ             = 10;
+  WRING_TYPE_IPSECCBQ         = 11;
+  WRING_TYPE_ARQRX            = 12;
+  WRING_TYPE_ASQ              = 13;
+  WRING_TYPE_ASESQ            = 14;
+  WRING_TYPE_RAWRCB           = 15;
+  WRING_TYPE_IPSECCBQ_BARCO   = 16;
+  WRING_TYPE_APP_REDIR_RAWC   = 17;
+  WRING_TYPE_APP_REDIR_PROXYR = 18;
+  WRING_TYPE_APP_REDIR_PROXYC = 19;
+  WRING_TYPE_NMDR_RX_GC       = 20;
+  WRING_TYPE_NMDR_TX_GC       = 21;
+  WRING_TYPE_ARQTX            = 22;
+}
+
+// Types of Proxy Service
+enum ProxyType {
+  PROXY_TYPE_NONE                     = 0;
+  PROXY_TYPE_TCP                      = 1;
+  PROXY_TYPE_TLS                      = 2;
+  PROXY_TYPE_IPSEC                    = 3;
+  PROXY_TYPE_GC                       = 4;
+  PROXY_TYPE_CPU                      = 5;
+  PROXY_TYPE_IPFIX                    = 6;
+  PROXY_TYPE_APP_REDIR                = 7;
+  PROXY_TYPE_P4PT                     = 8;
+  PROXY_TYPE_APP_REDIR_PROXY_TCP      = 9;
+  PROXY_TYPE_APP_REDIR_SPAN           = 10;
+  PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN = 11;
+}
+
+// Types of Cryptographic keys
+enum CryptoKeyType {
+    CRYPTO_KEY_TYPE_AES128      = 0;
+    CRYPTO_KEY_TYPE_AES192      = 1;
+    CRYPTO_KEY_TYPE_AES256      = 2;
+    CRYPTO_KEY_TYPE_DES         = 3;
+    CRYPTO_KEY_TYPE_CHACHA20    = 4;
+    CRYPTO_KEY_TYPE_POLY1305    = 5;
+    CRYPTO_KEY_TYPE_HMAC        = 6;
+}
+
+// Types of Barco Rings
+enum BarcoRings {
+    BARCO_RING_ASYM             = 0;
+    BARCO_RING_GCM0             = 1;
+    BARCO_RING_GCM1             = 2;
+    BARCO_RING_XTS0             = 3;
+    BARCO_RING_XTS1             = 4;
+    BARCO_RING_MPP0             = 5;
+    BARCO_RING_MPP1             = 6;
+    BARCO_RING_MPP2             = 7;
+    BARCO_RING_MPP3             = 8;
+    BARCO_RING_MPP4             = 9;
+    BARCO_RING_MPP5             = 10;
+    BARCO_RING_MPP6             = 11;
+    BARCO_RING_MPP7             = 12;
+    BARCO_RING_CP               = 13;
+    BARCO_RING_CP_HOT           = 14;
+    BARCO_RING_DC               = 15;
+    BARCO_RING_DC_HOT           = 16;
+}
+
+enum AppRedirType {
+    APP_REDIR_TYPE_NONE         = 0;
+    APP_REDIR_TYPE_REDIRECT     = 1;
+    APP_REDIR_TYPE_SPAN         = 2;
+}
+
+// Types of CPU CB/QIDs
+enum CpucbId {
+    CPUCB_ID_FLOWMISS      = 0;
+    CPUCB_ID_TCP_CLOSE     = 1;
+    CPUCB_ID_RELIABLE_COPY = 2;
+    CPUCB_ID_NACL_REDIRECT = 3;
+    CPUCB_ID_QUIESCE       = 4;
+    CPUCB_ID_NACL_LOG      = 5;
+}

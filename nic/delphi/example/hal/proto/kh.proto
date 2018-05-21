@@ -1,0 +1,298 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// protobuf specification for keys and handles of all HAL objects
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package halproto;
+
+import "nic/delphi/example/hal/proto/types.proto";
+
+// SecurityProfileKeyHandle is used to operate on a security profile
+// either by its id or HAL allocated handle
+message SecurityProfileKeyHandle {
+  ObjectMeta             meta = 1;
+  oneof key_or_handle {
+    uint32     profile_id     = 2;     // App allocated unique security profile id
+    fixed64    profile_handle = 3;     // id of the SecurityProfile returned by HAL
+  }
+}
+
+// VrfKeyHandle is used to operate on a vrf either by its key or handle
+message VrfKeyHandle {
+  oneof key_or_handle {
+    uint64     vrf_id     = 1;   // unique vrf id allocated by app
+    fixed64    vrf_handle = 2;    // vrf handle returned by HAL
+  }
+}
+
+// NetworkKeyHandle uniquely identifies a Network
+message NetworkKeyHandle {
+  oneof key_or_handle {
+    IPPrefix           ip_prefix    = 1;    // IP prefix
+    fixed64            nw_handle    = 2;    // network's handle returned by HAL
+  }
+}
+
+// NexthopKeyHandle uniquely identifies a Nexthop
+message NexthopKeyHandle {
+  oneof key_or_handle {
+    uint32     nexthop_id     = 1;    // nexthop id
+    fixed64    nexthop_handle = 2;    // nexthop's handle returned bu HAL
+  }
+}
+
+// RouteKey uniquely identifies a route by its key
+message RouteKey {
+  VrfKeyHandle      vrf_key_handle = 1;    // VRF key or handle
+  IPPrefix    ip_prefix      = 2;    // IP prefix
+}
+
+// RouteKeyHandle uniquely identifies a Route
+message RouteKeyHandle {
+  oneof key_or_handle {
+    RouteKey    route_key    = 1;    // route's key
+    fixed64     route_handle = 2;    // route's handle returned by HAL
+  }
+}
+
+// L2SegmentKeyHandle is used to operate on a L2 segment either by its
+// segment id or HAL allocated handle
+message L2SegmentKeyHandle {
+  ObjectMeta       meta                       = 1;
+  oneof key_or_handle {
+    uint64     segment_id        = 2;     // App allocated unique L2 segment id
+                                          // NOTE:
+                                          // 1. this is unique across all types of L2 segments
+                                          // 2. this is allocated by the HAL app
+    fixed64    l2segment_handle  = 3;     // id of the L2 segment returned by HAL
+  }
+}
+
+// SecurityRuleKeyHandle uniquely identifies a security rule and is used
+// to create/update/delete/get secutiry rules
+message SecurityRuleKeyHandle {
+    oneof rule_key_or_handle {
+        uint64              security_rule_id     = 1;  // rule id idenfied by a number
+        fixed64             security_rule_handle = 2;  // handle for security rule returned by
+    }
+}
+
+message SecurityPolicyKey {
+    uint64       security_policy_id  = 1;
+    VrfKeyHandle vrf_id_or_handle    = 2;
+}
+// SecurityPolicyKeyHandle uniquely identifies a security rule and is used
+// to create/update/delete/get secutiry rules
+message SecurityPolicyKeyHandle {
+    ObjectMeta              meta                   = 1;
+    oneof policy_key_or_handle {
+        SecurityPolicyKey   security_policy_key    = 2;  // rule id idenfied by a number
+        fixed64             security_policy_handle = 3;  // handle for security policy returned by hal
+    }
+}
+
+message SecurityGroupPolicyId {
+    uint64     security_group_id         = 1;    // security group id or label
+    uint64     peer_security_group_id    = 2;    // peer security group id
+}
+
+// SecurityGroupKeyPolicyHandle uniquely identifies a security group and is used
+// to create/update/delete/get security group Policy
+message SecurityGroupPolicyKeyHandle {
+  ObjectMeta                meta    = 1;
+  oneof policy_key_or_handle {
+    SecurityGroupPolicyId   security_group_policy_id      = 2;
+    fixed64                 security_group_policy_handle  = 3;// handle for security group policy
+  }
+}
+
+// security_group obj definition
+// SecurityGroupKeyHandle uniquely identifies a security group and is used
+// to create/update/delete/get security groups
+message SecurityGroupKeyHandle {
+  ObjectMeta                meta    = 1;
+  oneof key_or_handle {
+    uint64     security_group_id      = 2;    // security group id or label
+    fixed64    security_group_handle  = 3;    // id of security group returned by HAL
+  }
+}
+
+// PortKeyHandle uniquely identifies a Port
+message PortKeyHandle {
+  oneof key_or_handle {
+    fixed32   port_id       = 1;     // app allocated unique (across all ports) port id
+    fixed64   port_handle   = 2;     // id of port returned by HAL
+  }
+}
+
+// LifKey uniquely identifies a LIF
+message LifKey {
+    ObjectMeta           meta       = 1;
+    fixed64              lif_id     = 2;     // app allocated unique LIF id
+}
+
+// InterfaceKey uniquely identifies a Interface
+message InterfaceKey {
+  ObjectMeta           meta         = 1;
+  fixed64              interface_id = 2;     // app allocated unique (across all interface types) interface id
+}
+
+// EndpointL2Key is L2 key of the endpoint
+// NOTE: An endpoint can have only one L2 key
+message EndpointL2Key {
+  L2SegmentKeyHandle l2segment_key_handle = 1;
+  uint64     mac_address          = 2;
+}
+
+// EndpointL3Key is the L3 key of the endpoint
+// NOTE: An endpoint can have many L3 keys
+message EndpointL3Key {
+  IPAddress    ip_address = 1;    // IP address of the endpoint
+                                        // NOTE: vrf information is taken from meta
+}
+
+// Endpoint can be uniquely identified by its L2 or one of its L3 keys
+message EndpointKey {
+  ObjectMeta   meta  = 1;
+  oneof endpoint_l2_l3_key {
+    EndpointL2Key    l2_key = 2;    // L2 key
+    EndpointL3Key    l3_key = 3;    // L3 key
+  }
+}
+
+// Endpoint is accessible via its key or handle
+message EndpointKeyHandle {
+  oneof key_or_handle {
+    EndpointKey        endpoint_key        = 1;    // endpoint's key
+    fixed64            endpoint_handle     = 2;    // endpoint's handle
+  }
+}
+
+message MulticastEntryKeyIP {
+  IPAddress          source = 1;              // Source IP
+  IPAddress          group  = 2;              // Destination IP
+}
+
+message MulticastEntryKeyMac {
+  fixed64 group = 1;                                // Multicast MAC
+}
+
+message MulticastEntryKey {
+  oneof ip_or_mac {
+    MulticastEntryKeyIP  ip  = 1;
+    MulticastEntryKeyMac mac = 2;
+  }
+  L2SegmentKeyHandle l2segment_key_handle  = 3;    // L2 segment handle
+}
+
+// MulticastEntryKeyHandle
+message MulticastEntryKeyHandle {
+  oneof key_or_handle {
+    MulticastEntryKey key    = 1;
+    fixed64 multicast_handle = 2;
+  }
+}
+
+// AclKeyHandle uniquely identifies a Acl
+message AclKeyHandle {
+  oneof key_or_handle {
+    fixed32   acl_id     = 1;    // app allocated unique Acl id
+    fixed64   acl_handle = 2;    // id of acl returned by HAL
+  }
+}
+
+// GftExactMatchProfileKeyHandle is used to operate on a GFT exact match profile
+// either by its profile id or HAL allocated handle
+message GftExactMatchProfileKeyHandle {
+  oneof key_or_handle {
+    uint64     profile_id      = 1;   // App allocated unique profile id
+    fixed64    profile_handle  = 2;   // handle of the profile returned by HAL
+  }
+}
+
+// GftHeaderTranspositionProfileKeyHandle is used to operate on a GFT header
+// transposition profile either by its profile id or HAL allocated handle
+message GftHeaderTranspositionProfileKeyHandle {
+  oneof key_or_handle {
+    uint64     profile_id      = 1;   // App allocated unique profile id
+    fixed64    profile_handle  = 2;   // handle of the profile returned by HAL
+  }
+}
+
+// GftExactMatchFlowEntryKeyHandle is used to operate on a GFT exact match
+// flow entry either by its entry id or or HAL allocated handle
+message GftExactMatchFlowEntryKeyHandle {
+  oneof key_or_handle {
+    uint64     flow_entry_id     = 1;   // App allocated unique profile id
+    fixed64    flow_entry_handle = 2;   // handle of the profile returned by HAL
+  }
+}
+
+// NatRuleKeyHandle uniquely identifies a NAT rule and is used
+// to create/update/delete/get NAT rules
+message NatRuleKeyHandle {
+    oneof key_or_handle {
+        uint64     rule_id     = 1;  // rule id idenfied by a number
+        fixed64    rule_handle = 2;  // handle for NAT rule returned by HAL
+    }
+}
+
+// NatVpnMappingKeyHandle uniquely identifies a NAT VPN mapping and is used
+// to create/update/delete/get NAT VPN mappings
+message NatVpnMappingKeyHandle {
+    oneof key_or_handle {
+        uint64     mapping_id     = 1;  // mapping id idenfied by a number
+        fixed64    mapping_handle = 2;  // handle for NAT VPN mapping returned by HAL
+    }
+}
+
+// IpsecRuleKeyHandle uniquely identifies a IPSec rule and is used
+// to create/update/delete/get IPSec rules
+message IpsecRuleKeyHandle {
+    oneof key_or_handle {
+        uint64     rule_id     = 1;  // rule id idenfied by a number
+        fixed64    rule_handle = 2;  // handle for IPSec rule returned by HAL
+    }
+}
+
+// QosGroup identifier
+enum QosGroup {
+  DEFAULT                   = 0;     // Default qos group
+  USER_DEFINED_1            = 1;     // User defined qos group 1
+  USER_DEFINED_2            = 2;     // User defined qos group 2
+  USER_DEFINED_3            = 3;     // User defined qos group 3
+  USER_DEFINED_4            = 4;     // User defined qos group 4
+  USER_DEFINED_5            = 5;     // User defined qos group 5
+  USER_DEFINED_6            = 6;     // User defined qos group 6
+  CONTROL                   = 7;     // Control traffic
+  SPAN                      = 8;     // Span traffic
+  INTERNAL_RX_PROXY_NO_DROP = 9;     // TODO: REMOVE DOL only - Internal group for Rx Proxy no drop traffic
+  INTERNAL_RX_PROXY_DROP    = 10;    // TODO: REMOVE DOL only - Internal group for Rx Proxy drop traffic
+  INTERNAL_TX_PROXY_NO_DROP = 11;    // TODO: REMOVE DOL only - Internal group for Tx Proxy no drop traffic
+  INTERNAL_TX_PROXY_DROP    = 12;    // TODO: REMOVE DOL only - Internal group for Tx Proxy drop traffic
+  INTERNAL_CPU_COPY         = 13;    // TODO: REMOVE DOL only - Internal group for CPU Copy traffic
+}
+
+// QosClassKeyHandle uniquely identifies a QosClass
+message QosClassKeyHandle {
+  oneof key_or_handle {
+    QosGroup qos_group        = 1;    // Qos Group
+    fixed64  qos_class_handle = 2;    // id of QosClass returned by HAL
+  }
+}
+
+// CoppType identifies the type of traffic for the copp policy
+enum CoppType {
+  COPP_TYPE_FLOW_MISS = 0;    // Flow miss pkts
+  COPP_TYPE_ARP       = 1;    // ARP
+  COPP_TYPE_DHCP      = 2;    // DHCP
+}
+
+// CoppKeyHandle uniquely identifies a Copp
+message CoppKeyHandle {
+  oneof key_or_handle {
+    CoppType copp_type   = 1;    // Copp type
+    fixed64  copp_handle = 2;    // id of Copp returned by HAL
+  }
+}

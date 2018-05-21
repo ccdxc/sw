@@ -11,7 +11,7 @@ import subprocess
 
 # increment this version whenever delphi protoc plugin is changed
 # This will force all the proto files to be recompiled
-version = "1.2"
+version = "1.3"
 
 # Wrapper to execute a command
 def runProcess(exe):
@@ -29,14 +29,8 @@ parser.add_argument("-workspace", default='', help="Root of the workspace")
 parser.add_argument("-outdir", required=True, help="Directory to place the generated files")
 parser.add_argument("-input", nargs='+', required=True, help="input files")
 
-print "workspace:" + os.getenv("workspace", "")
-print "GOPATH: " + os.getenv("GOPATH", "")
-print "PWD: " + os.getenv("PWD", "")
-
 # Parse the args
 args = parser.parse_args()
-
-print "Outdir: " + args.outdir
 
 # default value for some args
 if args.workspace == '':
@@ -63,7 +57,7 @@ import_dir = set(import_dir);
 # command to run
 runCmd = protoc_exe  + " -I ./ -I /usr/local/include/ -I nic/hal/third-party/google/include/ -I " + args.workspace + " -I " + delphi_path + " " + " ".join(import_dir) + " --cpp_out=" + args.outdir + " --go_out=" + args.outdir + " --delphi_out=logtostderr=1,v=1:" + args.outdir + " " + " ".join(str(x) for x in args.input)
 
-print "running command: " + runCmd
+# print "running command: " + runCmd
 
 # run the protoc with delphi plugin
 os.environ['LD_LIBRARY_PATH'] = 'nic/hal/third-party/google/x86_64/lib/'
