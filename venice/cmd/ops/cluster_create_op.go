@@ -166,6 +166,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		return nil, errors.NewInternalError(err)
 	}
 	log.Infof("Wrote cluster %#v to kvstore", o.cluster)
+	// TODO: write the containerInfo to kv store here
 
 	// Cluster is formed, we can start Resolver and other authenticated services
 	if env.AuthRPCServer == nil {

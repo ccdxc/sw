@@ -20,21 +20,35 @@ def ExecuteCommand(cmd):
     print cmd
     return os.system(cmd)
 
+# images which are not compiled every day
 static_images = {
     'pen-kube-controller-manager': 'registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.7.14',
     'pen-kube-scheduler' : 'registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.7.14',
     'pen-kube-apiserver' : 'registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.7.14',
-    'etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.2',
+    'pen-etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.2',
     'pen-filebeat' : 'registry.test.pensando.io:5000/beats/filebeat:6.2.2',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.2',
     'pen-influx' : 'registry.test.pensando.io:5000/influxdb:1.4.2',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.2'
 }
 
+# images which are compiled every time
 dynamic_images = [
     "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm"
 ]
+
+# dictionary of module name(specified in venice/globals/modules.go )  to containerImage
 imageMap = {}
+
+# dictionary of the names used in systemd service files to the moduleNames
+# systemd variables have some idiosyncracies. they should not contain '-'.
+systemdNameMap = {
+    'PEN_CMD' : 'pen-cmd',
+    'PEN_KUBE_SCHEDULER' : 'pen-kube-scheduler',
+    'PEN_KUBE_APISERVER' : 'pen-kube-apiserver',
+    'PEN_KUBE_CONTROLLERMGR' : 'pen-kube-controller-manager',
+    'PEN_ETCD': 'pen-etcd'
+}
 
 try:
     os.makedirs("bin/tars")
@@ -43,7 +57,7 @@ except EnvironmentError, e:
         raise
 
 for k, v in static_images.items():
-    if ExecuteCommand("docker images -q  "+ v):
+    if subprocess.check_output(["/bin/sh", "-c", "docker images -q " + v]) == "":
         ExecuteCommand("docker pull " + v)
     ExecuteCommand("docker save -o bin/tars/{}.tar {}".format(k, v))
     imageMap[k] = v
@@ -60,3 +74,6 @@ for i in dynamic_images:
 
 with open("tools/docker-files/install/target/etc/pensando/venice.json", 'w') as f:
     json.dump(imageMap, f, indent=True, sort_keys=True)
+with open("tools/docker-files/install/target/etc/pensando/venice.conf", 'w') as f:
+    for  k,v in systemdNameMap.items():
+        f.write("{}='{}'\n".format(k,imageMap[v]))

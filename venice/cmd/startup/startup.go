@@ -192,6 +192,10 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	}
 
 	env.KVStore = kv
+
+	// TODO: Read from kv store instead of file here
+	services.ContainerInfoMap = utils.GetContainerInfo()
+
 	// Create leader service before its users
 	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 	env.SystemdService = services.NewSystemdService()

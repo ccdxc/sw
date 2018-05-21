@@ -77,3 +77,36 @@ func DeleteCluster() error {
 	log.Infof("Removing cluster config file")
 	return os.Remove(path.Join(env.Options.ConfigDir, env.Options.ClusterConfigFile))
 }
+
+// ContainerInfo has info about containers to run on venice
+//	to start with it has only image name.
+type ContainerInfo struct {
+	ImageName string
+}
+
+// GetContainerInfo reads config file and returns a map of ContainerInfo indexed by name
+func GetContainerInfo() map[string]ContainerInfo {
+	info := map[string]ContainerInfo{}
+	defer log.Debugf("returning ContainerInfo : %#v \n", info)
+
+	confFile := path.Join(env.Options.ConfigDir, env.Options.ContainerConfigFile)
+	if _, err := os.Stat(confFile); err != nil {
+		// Stat error is treated as not part of cluster.
+		log.Fatalf("unable to find confFile %s error: %v", confFile, err)
+		return info
+	}
+	in, err := ioutil.ReadFile(confFile)
+	if err != nil {
+		log.Fatalf("unable to read confFile %s error: %v", confFile, err)
+		return info
+	}
+	var fileData map[string]string
+	if err := json.Unmarshal(in, &fileData); err != nil {
+		log.Fatalf("unable to understand confFile %s error: %v", confFile, err)
+		return info
+	}
+	for k, v := range fileData {
+		info[k] = ContainerInfo{ImageName: v}
+	}
+	return info
+}

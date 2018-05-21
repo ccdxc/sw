@@ -5,6 +5,7 @@ After=network.target docker.service
 Requires=docker.service
 
 [Service]
+EnvironmentFile=-/etc/pensando/venice.conf
 ExecStartPre=-/usr/bin/docker kill pen-cmd
 ExecStartPre=-/usr/bin/docker rm -f pen-cmd
 ExecStart=/usr/pensando/bin/systemd-docker \
@@ -14,7 +15,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
     -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system \
     -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes \
     -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/log/pensando:/var/log/pensando  \
-    pen-cmd
+    ${PEN_CMD}
 
 ExecStop=/usr/bin/docker stop -t 2 pen-cmd
 ExecStopPost=/usr/bin/docker rm -f pen-cmd

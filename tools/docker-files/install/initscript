@@ -10,3 +10,4 @@ mv -f /target/usr/bin/kubelet /host/usr/pensando/bin/kubelet
 mv -f /target/usr/lib/systemd/system/* /host/usr/lib/systemd/system/
 mv -f /target/etc/pensando/influxdb.conf /host/etc/pensando/influxdb.conf
 mv -f /target/etc/pensando/venice.json /host/etc/pensando/venice.json
+mv -f /target/etc/pensando/venice.conf /host/etc/pensando/venice.conf

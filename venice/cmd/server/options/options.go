@@ -45,6 +45,9 @@ type ServerRunOptions struct {
 
 	// ClusterConfigFile identifies the file name for persisting cluster configuration.
 	ClusterConfigFile string
+
+	// ContainerConfigFile identifies the file name for container info
+	ContainerConfigFile string
 }
 
 // NewServerRunOptions creates the default options for cmd.
@@ -58,11 +61,12 @@ func NewServerRunOptions() *ServerRunOptions {
 	}
 
 	return &ServerRunOptions{
-		KVStore:           kvStoreOptions,
-		RESTPort:          globals.CMDRESTPort,
-		GRPCAuthPort:      globals.CMDGRPCAuthPort,
-		GRPCUnauthPort:    globals.CMDGRPCUnauthPort,
-		ConfigDir:         globals.ConfigDir,
-		ClusterConfigFile: "cluster.conf",
+		KVStore:             kvStoreOptions,
+		RESTPort:            globals.CMDRESTPort,
+		GRPCAuthPort:        globals.CMDGRPCAuthPort,
+		GRPCUnauthPort:      globals.CMDGRPCUnauthPort,
+		ConfigDir:           globals.ConfigDir,
+		ClusterConfigFile:   "cluster.conf",
+		ContainerConfigFile: "venice.json",
 	}
 }

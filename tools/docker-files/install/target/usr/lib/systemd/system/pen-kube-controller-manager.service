@@ -2,13 +2,14 @@
 Description=Kubernetes Controller Manager
 
 [Service]
+EnvironmentFile=-/etc/pensando/venice.conf
 EnvironmentFile=-/etc/pensando/registry.conf
 EnvironmentFile=-/etc/pensando/kube.conf
 ExecStartPre=-/usr/bin/docker kill pen-kube-controller-manager
 ExecStartPre=-/usr/bin/docker rm pen-kube-controller-manager
 ExecStart=/usr/pensando/bin/systemd-docker \
 	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host --name pen-kube-controller-manager \
-	${REGISTRY_URL}/google_containers/kube-controller-manager-amd64:v1.7.14 \
+	${PEN_KUBE_CONTROLLERMGR} \
 	kube-controller-manager \
 	--pod-eviction-timeout 10s \
     --node-monitor-grace-period 10s \

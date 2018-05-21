@@ -106,6 +106,8 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		return nil, err
 	}
 
+	services.ContainerInfoMap = utils.GetContainerInfo()
+
 	var shouldStartAuthServer = false
 	if req.CertMgrBundle != nil && !env.CertMgr.IsReady() {
 		defer func() { c.peerTransportKey = nil }()
