@@ -35,9 +35,9 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
 
     if (spec.has_src_nat_pool()) {
         pool = find_nat_pool_by_key_or_handle(spec.src_nat_pool());
-        if (pool != NULL) {
+        if (pool != NULL)
             action->src_nat_pool = pool->hal_handle;
-        } else {
+        else {
             HAL_TRACE_ERR("src NAT pool not present in rule");
             ret = HAL_RET_NAT_POOL_NOT_FOUND;
             return ret;
@@ -46,9 +46,9 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
 
     if (spec.has_dst_nat_pool()) {
         pool = find_nat_pool_by_key_or_handle(spec.dst_nat_pool());
-        if (pool != NULL) {
+        if (pool != NULL)
             action->dst_nat_pool = pool->hal_handle;
-        } else {
+        else {
             HAL_TRACE_ERR("dst NAT pool not present in rule");
             ret = HAL_RET_NAT_POOL_NOT_FOUND;
             return ret;
@@ -56,6 +56,17 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
     }
 
     return ret;
+}
+
+static inline hal_ret_t
+nat_cfg_rule_action_spec_build (nat_cfg_rule_action_t *action,
+                                nat::NatRuleAction *spec)
+{
+    spec->set_src_nat_action(action->src_nat_action);
+    spec->set_dst_nat_action(action->dst_nat_action);
+    spec->mutable_src_nat_pool()->set_pool_handle(action->src_nat_pool);
+    spec->mutable_dst_nat_pool()->set_pool_handle(action->dst_nat_pool);
+    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -177,22 +188,39 @@ nat_cfg_rule_spec_handle (const nat::NatRuleSpec& spec, dllist_ctxt_t *head)
     return ret;
 }
 
+static inline hal_ret_t 
+nat_cfg_rule_data_spec_build (nat_cfg_rule_t *rule, nat::NatRuleSpec *spec)
+{
+    hal_ret_t ret;
+
+    if ((ret = rule_match_spec_build(
+            &rule->match, spec->mutable_match())) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = nat_cfg_rule_action_spec_build(
+            &rule->action, spec->mutable_action())) != HAL_RET_OK)
+        return ret;
+
+    return ret;
+}
+
+static inline hal_ret_t
+nat_cfg_rule_key_spec_build(nat_cfg_rule_key_t *key, nat::NatRuleSpec *spec)
+{
+    spec->set_rule_id(key->rule_id);
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 nat_cfg_rule_spec_build (nat_cfg_rule_t *rule, nat::NatRuleSpec *spec)
 {
-    hal_ret_t   ret;
+    hal_ret_t ret;
 
-    spec->set_rule_id(rule->key.rule_id);
-
-    auto action = spec->mutable_action();
-    action->set_src_nat_action(rule->action.src_nat_action);
-    action->set_dst_nat_action(rule->action.dst_nat_action);
-    // TODO Set src and dest NAT Pool
-
-    if ((ret = rule_match_spec_build(
-           &rule->match, spec->mutable_match())) != HAL_RET_OK) {
+    if ((ret = nat_cfg_rule_key_spec_build(&rule->key, spec)) != HAL_RET_OK)
         return ret;
-    }
+
+    if ((ret = nat_cfg_rule_data_spec_build(rule, spec)) != HAL_RET_OK)
+        return ret;
 
     return ret;
 }
@@ -222,14 +250,12 @@ nat_cfg_pol_create_app_ctxt_init (nat_cfg_pol_t *pol)
 hal_ret_t
 nat_cfg_rule_create_oper_handle (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
 {
-    rule_data_t     *rule_data;
+    rule_data_t *rule_data;
+
     rule_data = rule_data_alloc_init();
     rule_data->userdata = rule;
     rule_data->data_free = nat_cfg_rule_free;
-    return rule_match_rule_add(acl_ctx,
-                               &rule->match,
-                               rule->prio,
-                               rule_data);
+    return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, rule_data);
 }
 
 

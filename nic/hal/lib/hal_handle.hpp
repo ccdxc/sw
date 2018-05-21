@@ -152,6 +152,17 @@ typedef struct hal_handle_id_ht_entry_s {
     ht_ctxt_t        ht_ctxt;
 } __PACK__ hal_handle_id_ht_entry_t;
 
+//------------------------------------------------------------------------------
+// HAL handle id entry hash table prototypes
+//------------------------------------------------------------------------------
+hal_handle_id_ht_entry_t * hal_handle_id_ht_entry_alloc_init(
+    slab *slab, hal_handle_t hal_hdl);
+void hal_handle_id_ht_entry_uninit_free(hal_handle_id_ht_entry_t *entry);
+hal_ret_t hal_handle_id_ht_entry_db_add(
+    ht *root, void *key, hal_handle_id_ht_entry_t *entry);
+hal_handle_id_ht_entry_t * hal_handle_id_ht_entry_db_del(ht *root, void *key);
+hal_handle_id_ht_entry_t * hal_handle_id_ht_entry_db_lookup(ht *root, void *key);
+
 // TODO: deprecate these APIs eventually !!!
 //------------------------------------------------------------------------------
 // HAL internal api to allocate handle for an object

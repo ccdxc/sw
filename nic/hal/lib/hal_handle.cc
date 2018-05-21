@@ -426,4 +426,76 @@ hal_free_handle (uint64_t handle)
     return;
 }
 
+//------------------------------------------------------------------------------
+// HalHdl<->Object management routines
+//------------------------------------------------------------------------------
+
+static inline hal_handle_id_ht_entry_t *
+hal_handle_id_ht_entry_alloc (slab *slab)
+{
+    return ((hal_handle_id_ht_entry_t *)slab->alloc());
+}
+
+static inline void
+hal_handle_id_ht_entry_free (hal_handle_id_ht_entry_t *entry)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+}
+
+static inline void
+hal_handle_id_ht_entry_init (hal_handle_id_ht_entry_t *entry,
+                             hal_handle_t hal_hdl)
+{
+    entry->handle_id = hal_hdl;
+    entry->ht_ctxt.reset();
+}
+
+static inline void
+hal_handle_id_ht_entry_uninit (hal_handle_id_ht_entry_t *entry)
+{
+}
+
+hal_handle_id_ht_entry_t *
+hal_handle_id_ht_entry_alloc_init (slab *slab, hal_handle_t hal_hdl)
+{
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_alloc(slab)) == NULL)
+        return NULL;
+
+    hal_handle_id_ht_entry_init(entry, hal_hdl);
+    return entry;
+}
+
+void
+hal_handle_id_ht_entry_uninit_free (hal_handle_id_ht_entry_t *entry)
+{
+    if (entry) {
+        hal_handle_id_ht_entry_uninit(entry);
+        hal_handle_id_ht_entry_free(entry);
+    }
+}
+
+hal_ret_t
+hal_handle_id_ht_entry_db_add (ht *root, void *key,
+                               hal_handle_id_ht_entry_t *entry)
+{
+    sdk_ret_t sdk_ret;
+
+    sdk_ret = root->insert_with_key(key, entry, &entry->ht_ctxt);
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
+}
+
+hal_handle_id_ht_entry_t *
+hal_handle_id_ht_entry_db_del (ht *root, void *key)
+{
+    return (hal_handle_id_ht_entry_t *)root->remove(key);
+}
+
+hal_handle_id_ht_entry_t *
+hal_handle_id_ht_entry_db_lookup (ht *root, void *key)
+{
+    return (hal_handle_id_ht_entry_t *)root->lookup(key);
+}
+
 }    // namespace hal

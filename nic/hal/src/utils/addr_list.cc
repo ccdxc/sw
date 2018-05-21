@@ -76,6 +76,62 @@ addr_list_elem_db_del (addr_list_elem_t *addr)
     dllist_del(&addr->list_ctxt);
 }
 
+void
+addr_list_cleanup (dllist_ctxt_t *head)
+{
+    dllist_ctxt_t       *curr, *next;
+    addr_list_elem_t    *addr;
+
+    dllist_for_each_safe(curr, next, head) {
+        addr = dllist_entry(curr, addr_list_elem_t, list_ctxt);
+        addr_list_elem_db_del(addr);
+        addr_list_elem_free(addr);
+    }
+}
+
+bool
+addr_in_addr_list_elem (ip_addr_t *addr, addr_list_elem_t *addr_list_elem)
+{
+    if (addr->af != addr_list_elem->ip_range.af)
+        return false;
+
+    switch (addr->af) {
+    case IP_AF_IPV4:
+        if ((addr->addr.v4_addr >=
+                 addr_list_elem->ip_range.vx_range[0].v4_range.ip_lo) &&
+            (addr->addr.v4_addr <=
+                 addr_list_elem->ip_range.vx_range[0].v4_range.ip_hi))
+            return true;
+
+        return false;
+
+    case IP_AF_IPV6:
+    default:
+        return false;
+        break;
+    }
+}
+
+hal_ret_t
+addr_offset (ip_addr_t *addr, addr_list_elem_t *addr_list_elem,
+             uint32_t *offset)
+{
+    switch (addr->af) {
+    case IP_AF_IPV4:
+        *offset = addr->addr.v4_addr -
+            addr_list_elem->ip_range.vx_range[0].v4_range.ip_lo;
+        return HAL_RET_OK;
+    case IP_AF_IPV6:
+    default:
+        break;
+    }
+    return HAL_RET_NOT_SUPPORTED;
+}
+
+//-----------------------------------------------------------------------------
+// types::Address handlers
+//-----------------------------------------------------------------------------
+
 static inline hal_ret_t
 addr_list_elem_prefix_spec_extract (const types::Address& addr,
                                     addr_list_elem_t *addr_lelem)
@@ -194,6 +250,18 @@ addr_list_elem_address_spec_handle (const types::Address& addr,
     return addr_lelem;
 }
 
+hal_ret_t
+addr_list_elem_address_spec_build (addr_list_elem_t *addr_elem,
+                                   types::Address *addr)
+{
+    ip_range_to_spec(addr->mutable_range(), &addr_elem->ip_range);
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// types::IPAddressObj handlers
+//-----------------------------------------------------------------------------
+
 static inline hal_ret_t
 addr_list_elem_ipaddressobj_spec_extract (const types::IPAddressObj& addr,
                                           addr_list_elem_t *addr_lelem)
@@ -244,92 +312,13 @@ addr_list_elem_ipaddressobj_spec_handle (const types::IPAddressObj& addr,
 }
 
 hal_ret_t
-addr_list_elem_spec_src_addr_build (dllist_ctxt_t *head,
-                           types::RuleMatch *spec)
+addr_list_elem_ipaddressobj_spec_build (addr_list_elem_t *addr_elem,
+                                        types::IPAddressObj *addr)
 {
-    dllist_ctxt_t       *entry;
-    addr_list_elem_t    *addr_elem;
-
-    dllist_for_each(entry, head) {
-        auto addr = spec->add_src_address();
-        addr_elem = dllist_entry(entry, addr_list_elem_t, list_ctxt);
-        ip_range_to_spec(addr->mutable_address()->mutable_range(), &addr_elem->ip_range);
-        addr->set_negate(addr_elem->negate);
-    }
-
+    ip_range_to_spec(addr->mutable_address()->mutable_range(),
+                     &addr_elem->ip_range);
+    addr->set_negate(addr_elem->negate);
     return HAL_RET_OK;
-}
-
-hal_ret_t
-addr_list_elem_spec_dst_addr_build (dllist_ctxt_t *head,
-                           types::RuleMatch *spec)
-{
-    dllist_ctxt_t       *entry;
-    addr_list_elem_t    *addr_elem;
-
-    dllist_for_each(entry, head) {
-        auto addr = spec->add_dst_address();
-        addr_elem = dllist_entry(entry, addr_list_elem_t, list_ctxt);
-        ip_range_to_spec(addr->mutable_address()->mutable_range(), &addr_elem->ip_range);
-        addr->set_negate(addr_elem->negate);
-    }
-
-    return HAL_RET_OK;
-}
-
-void
-addr_list_cleanup (dllist_ctxt_t *head)
-{
-    dllist_ctxt_t       *curr, *next;
-    addr_list_elem_t    *addr;
-
-    dllist_for_each_safe(curr, next, head) {
-        addr = dllist_entry(curr, addr_list_elem_t, list_ctxt);
-        addr_list_elem_db_del(addr);
-        addr_list_elem_free(addr);
-    }
-}
-
-bool
-addr_in_addr_list_elem (ip_addr_t *addr, addr_list_elem_t *addr_list_elem)
-{
-    if (addr->af != addr_list_elem->ip_range.af) {
-        return false;
-    }
-    switch (addr->af) {
-    case IP_AF_IPV4:
-        if ((addr->addr.v4_addr >=
-                 addr_list_elem->ip_range.vx_range[0].v4_range.ip_lo) &&
-            (addr->addr.v4_addr <=
-                 addr_list_elem->ip_range.vx_range[0].v4_range.ip_hi)) {
-            return true;
-        }
-        return false;
-
-    case IP_AF_IPV6:
-    default:
-        return false;
-        break;
-    }
-}
-
-hal_ret_t
-addr_offset (ip_addr_t *addr, addr_list_elem_t *addr_list_elem,
-             uint32_t *offset)
-{
-    switch (addr->af) {
-    case IP_AF_IPV4:
-        *offset =
-            addr->addr.v4_addr -
-                addr_list_elem->ip_range.vx_range[0].v4_range.ip_lo;
-        return HAL_RET_OK;
-        break;
-
-    case IP_AF_IPV6:
-    default:
-        break;
-    }
-    return HAL_RET_NOT_SUPPORTED;
 }
 
 // Mac address list methods

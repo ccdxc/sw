@@ -69,10 +69,10 @@ hal_ret_t nat_pool_get(NatPoolGetRequest& req,
 
 hal_ret_t nat_policy_create(NatPolicySpec& spec, NatPolicyResponse *rsp);
 hal_ret_t nat_policy_update(NatPolicySpec& spec, NatPolicyResponse *rsp);
-hal_ret_t nat_policy_delete(NatPolicyDeleteRequest& req,
-                            NatPolicyDeleteResponse *rsp);
-hal_ret_t nat_policy_get(NatPolicyGetRequest& req,
-                         NatPolicyGetResponseMsg *res);
+hal_ret_t nat_policy_delete(
+    NatPolicyDeleteRequest& req, NatPolicyDeleteResponse *rsp);
+hal_ret_t nat_policy_get(
+    NatPolicyGetRequest& req, NatPolicyGetResponseMsg *rsp);
 
 hal_ret_t nat_mapping_create(NatMappingSpec& spec, NatMappingResponse *rsp);
 hal_ret_t nat_mapping_delete(NatMappingDeleteRequest& req,

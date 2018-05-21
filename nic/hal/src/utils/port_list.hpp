@@ -25,10 +25,9 @@ typedef struct port_list_elem_s {
 hal_ret_t port_list_elem_l4portrange_spec_handle(
     const types::L4PortRange& port, dllist_ctxt_t *head);
 void port_list_cleanup(dllist_ctxt_t *head);
-hal_ret_t port_list_elem_dst_port_spec_build(dllist_ctxt_t *head,
-                                             types::RuleMatch_L4PortAppInfo *port_info);
-hal_ret_t port_list_elem_src_port_spec_build(dllist_ctxt_t *head,
-                                             types::RuleMatch_L4PortAppInfo *port_info);
+hal_ret_t port_list_elem_l4portrange_spec_build(
+    port_list_elem_t *port_lelem, types::L4PortRange *port_range);
+
 } // namespace hal
 
 #endif  // __PORT_LIST_HPP__

@@ -57,6 +57,7 @@ cfg_op_ctxt_hal_hdl_db_add (cfg_op_ctxt_t *cfg_ctxt, hal_handle_t hal_hdl,
                               abort_cb, cleanup_cb);
 }
 
+#if 0
 static hal_ret_t
 cfg_op_ctxt_hal_hdl_add_handle (cfg_op_ctxt_t *cfg_ctxt, hal_obj_id_t obj_id,
                                 hal_cfg_op_cb_t add_cb,
@@ -79,21 +80,33 @@ cfg_op_ctxt_hal_hdl_add_handle (cfg_op_ctxt_t *cfg_ctxt, hal_obj_id_t obj_id,
     *out_hal_hdl = hal_hdl;
     return HAL_RET_OK;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // DHL Entry routines
 //-----------------------------------------------------------------------------
+
+static inline void
+cfg_op_ctxt_dhl_entry_init (dhl_entry_t *dhl_entry, hal_handle_t hal_hdl,
+                            void *obj)
+{
+    dllist_reset(&dhl_entry->dllist_ctxt);
+    dhl_entry->handle = hal_hdl;
+    dhl_entry->obj = obj;
+}
+
+static inline void
+cfg_op_ctxt_dhl_entry_db_add (cfg_op_ctxt_t *cfg_ctxt, dhl_entry_t *dhl_entry)
+{
+    dllist_add(&cfg_ctxt->dhl, &dhl_entry->dllist_ctxt);
+}
+
 static inline hal_ret_t
 cfg_op_ctxt_dhl_entry_handle (cfg_op_ctxt_t *cfg_ctxt, dhl_entry_t *dhl_entry,
                               hal_handle_t hal_hdl, void *obj)
 {
-    // Init dhl_entry
-    dllist_reset(&dhl_entry->dllist_ctxt);
-    dhl_entry->handle = hal_hdl;
-    dhl_entry->obj = obj;
-
-    // Add dhl_entry to db
-    dllist_add(&cfg_ctxt->dhl, &dhl_entry->dllist_ctxt);
+    cfg_op_ctxt_dhl_entry_init(dhl_entry, hal_hdl, obj);
+    cfg_op_ctxt_dhl_entry_db_add(cfg_ctxt, dhl_entry);
     return HAL_RET_OK;
 }
 
@@ -102,16 +115,15 @@ cfg_op_ctxt_dhl_entry_handle (cfg_op_ctxt_t *cfg_ctxt, dhl_entry_t *dhl_entry,
 //
 // The flow of operations : 
 //     - Add/Delete a hal handle for the given object (along with callbacks)
-//     - Allocate a DHL entry with the above  HAL handle and the object
+//     - Allocate a DHL entry with the above HAL handle and the object
 //     - Add the DHL entry to a list maintained in cfg_op_ctxt
-//     - The cfg_op_ctxt state will be passed around in the callbacks for
-//       actual processing on the object of interest
+//     - Add the hal handle to the database and call the callbacks
 //-----------------------------------------------------------------------------
 
 static inline void
-cfg_op_ctxt_init (cfg_op_ctxt_t *cfg_ctxt)
+cfg_op_ctxt_init (cfg_op_ctxt_t *cfg_ctxt, void *app_ctxt)
 {
-    cfg_ctxt->app_ctxt = NULL;
+    cfg_ctxt->app_ctxt = app_ctxt;
     dllist_reset(&cfg_ctxt->dhl);
 }
 
@@ -129,17 +141,21 @@ cfg_ctxt_op_create_handle (hal_obj_id_t obj_id, void *obj, void *app_ctxt,
                            hal_handle_t *hal_hdl)
 {
     hal_ret_t ret;
+    dhl_entry_t dhl_entry = { 0 };
     cfg_op_ctxt_t cfg_ctxt = { 0 };
-    dhl_entry_t   dhl_entry = { 0 };
 
-    cfg_op_ctxt_init(&cfg_ctxt);
+    cfg_op_ctxt_init(&cfg_ctxt, app_ctxt);
+
+    if ((*hal_hdl = cfg_op_ctxt_hal_hdl_alloc_init(obj_id)) ==
+            HAL_HANDLE_INVALID)
+        return HAL_RET_HANDLE_INVALID;
 
     if ((ret = cfg_op_ctxt_dhl_entry_handle(&cfg_ctxt, &dhl_entry, *hal_hdl,
             obj)) != HAL_RET_OK)
         return ret;
 
-    if ((ret = cfg_op_ctxt_hal_hdl_add_handle(&cfg_ctxt, obj_id, add_cb,
-            commit_cb, abort_cb, cleanup_cb, hal_hdl)) != HAL_RET_OK)
+    if ((ret = cfg_op_ctxt_hal_hdl_db_add(&cfg_ctxt, *hal_hdl,
+            add_cb, commit_cb, abort_cb, cleanup_cb)) != HAL_RET_OK)
         return ret;
 
     return ret;

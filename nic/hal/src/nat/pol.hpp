@@ -90,8 +90,6 @@ typedef struct nat_cfg_pol_create_app_ctxt_s {
 typedef struct nat_cfg_pol_s {
     nat_cfg_pol_key_t    key;
     dllist_ctxt_t        rule_list;
-//    dllist_ctxt_t        list_ctxt;
-    ht_ctxt_t            ht_ctxt;
 
     // operational
     hal_spinlock_t       slock;
@@ -144,16 +142,16 @@ hal_ret_t nat_cfg_pol_create_cfg_handle(
 void nat_cfg_pol_rsp_build(
     nat::NatPolicyResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle);
 hal_ret_t nat_cfg_pol_create_oper_handle(nat_cfg_pol_t *pol);
-hal_ret_t nat_cfg_pol_get_cfg_handle(nat_cfg_pol_t *pol,
-                                     nat::NatPolicyGetResponse *response);
+hal_ret_t nat_cfg_pol_get_cfg_handle(
+    nat::NatPolicyGetRequest& req, nat::NatPolicyGetResponseMsg *rsp);
 
 // rule.cc
 hal_ret_t nat_cfg_rule_spec_handle(
     const nat::NatRuleSpec& spec, dllist_ctxt_t *head);
 hal_ret_t nat_cfg_rule_create_oper_handle(
     nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctxt);
-const acl::acl_ctx_t * nat_cfg_pol_create_app_ctxt_init(nat_cfg_pol_t *pol);
 hal_ret_t nat_cfg_rule_spec_build(nat_cfg_rule_t *rule, nat::NatRuleSpec *spec);
+const acl::acl_ctx_t* nat_cfg_pol_create_app_ctxt_init(nat_cfg_pol_t *pol);
 
 }  // namespace hal
 
