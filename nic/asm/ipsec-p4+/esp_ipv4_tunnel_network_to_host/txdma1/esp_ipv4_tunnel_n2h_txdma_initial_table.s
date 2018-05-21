@@ -11,7 +11,7 @@ struct phv_ p;
         .param esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
         .param esp_v4_tunnel_n2h_load_part2
         .param IPSEC_CB_BASE
-        .param  TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
+        .param  TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE
         .align
 esp_ipv4_tunnel_n2h_txdma_initial_table:
     sub r1, d.{barco_ring_cindex}.hx, 1
@@ -37,8 +37,8 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
     phvwr p.common_te0_phv_table_addr, r2
 
-    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_barco_req_pindex, r5, TABLE_SIZE_16_BITS)
 
     phvwri p.common_te2_phv_table_pc, esp_v4_tunnel_n2h_load_part2[33:6] 

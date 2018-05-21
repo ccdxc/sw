@@ -108,6 +108,7 @@
 #define N2H_TXDMA2_DMA_COMMANDS_OFFSET (CAPRI_PHV_START_OFFSET(intrinsic_app_hdr_dma_cmd_type) / 16) 
 
 #define TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE tls_barco_gcm0_pi_table_base
+#define TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE tls_barco_gcm1_pi_table_base
 
 
 #define BRQ_REQ_SEMAPHORE_ADDR 0x40004040 

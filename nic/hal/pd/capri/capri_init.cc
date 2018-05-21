@@ -295,9 +295,9 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].num_params = 2;
     symbols[i].params[0].name = IPSEC_CB_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
-    symbols[i].params[1].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+    symbols[i].params[1].name = TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE;
     symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
-                                 CAPRI_MAX_TLS_PAD_SIZE; 
+                                BARCO_GCM1_PI_HBM_TABLE_OFFSET; 
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_update_input_desc_aol.bin";
@@ -357,13 +357,13 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].name = "esp_ipv4_tunnel_n2h_txdma2_initial_table.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_GCM1);
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_barco_req_pindex.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_GCM1);
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table.bin";
