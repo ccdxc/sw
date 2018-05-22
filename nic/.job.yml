@@ -8,7 +8,7 @@ targets:
   storage_perf:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --storage --storage_test perf; ret=$? ; make sanity_logs ; exit $ret" ]
   storage_nvme:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --storage --storage_test nvme_dp; ret=$? ; make sanity_logs ; exit $ret" ]
   storage_nvme_perf:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --storage --storage_test nvme_dp_scale; ret=$? ; make sanity_logs ; exit $ret" ]
-  storage_combined:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --storage --storage_test acc_scale --feature rdma --topo rdma --combined; ret=$? ; make sanity_logs ; exit $ret" ]
+  storage_combined:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --storage --storage_test unit --feature rdma --topo rdma --combined --test RDMA_TX_SEND_ONLY --testcase 1; ret=$? ; make sanity_logs ; exit $ret" ]
   # config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --configtest ; ret=$? ; make sanity_logs ; exit $ret" ]
   rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo rdma --feature rdma ; ret=$? ; make sanity_logs ; exit $ret" ]
   rdma_ext:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo rdma --feature rdma_ext,rdma_perf ; ret=$? ; make sanity_logs ; exit $ret" ]

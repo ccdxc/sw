@@ -236,8 +236,8 @@ std::vector<tests::TestEntry> pdma_tests = {
 std::vector<tests::TestEntry> noc_perf_tests = {
   {&tests::xts_multi_blk_noc_stress_from_hbm_hw_chain, "NOC Perf with buffers on hbm HW chain", false},
   {&tests::xts_multi_blk_noc_stress_from_host_hw_chain, "NOC Perf with buffers on host HW chain", false},
-  {&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
-  {&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
+  //{&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
+  //{&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
 };
 
 std::vector<tests::TestEntry> rdma_perf_tests = {
