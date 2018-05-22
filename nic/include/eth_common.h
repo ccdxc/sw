@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #ifndef __ETH_COMMON_H__
 #define __ETH_COMMON_H__
@@ -82,4 +83,4 @@ struct eth_qstate {
     uint64_t    cq_ring_base;
 } __attribute__((packed));
 
-#endif		/* __ETH_COMMON_H__ */
+#endif    // __ETH_COMMON_H__

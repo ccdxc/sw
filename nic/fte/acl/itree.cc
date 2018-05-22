@@ -13,7 +13,7 @@ namespace acl {
 #define R 1
 #define BB 2 // double black, used during delete
 
-#define E (&itree_t::empty_) // empty 
+#define E (&itree_t::empty_) // empty
 #define EE (&itree_t::eempty_) // double black empty
 
 
@@ -39,7 +39,7 @@ itree_t::node_alloc()
 
             node->left->deref();
             node->right->deref();
-            
+
             if (node->has_list) {
                 node->list->deref();
             } else {
@@ -47,7 +47,7 @@ itree_t::node_alloc()
             }
 
             itree_node_slab_->free(node);
-            
+
         });
 
     return node;
@@ -60,14 +60,14 @@ itree_t::node_t *
 itree_t::node_create(uint32_t low, uint32_t high, const ref_t *entry)
 {
     itree_t::node_t *node = node_alloc();
-    
+
     node->color = R;
     node->has_list = 0;
     node->low = low;
     node->high = node->max = high;
     node->left = node->right = E;
     node->entry = entry;
-    
+
     return node;
 }
 
@@ -80,7 +80,7 @@ itree_t::node_copy(const itree_t::node_t *node)
     if (!ref_is_shared(&node->ref_count)) {
         return  (itree_t::node_t *)node;
     }
-    
+
     itree_t::node_t *copy = node_alloc();
 
     copy->color = node->color;
@@ -88,17 +88,17 @@ itree_t::node_copy(const itree_t::node_t *node)
     if (node->has_list) {
         copy->list = node->list->clone();
     } else {
-        copy->entry = ref_clone(node->entry); 
+        copy->entry = ref_clone(node->entry);
     }
     copy->low = node->low;
     copy->high = node->high;
     copy->max = node->max;
-    
+
     copy->left = node->left->clone();
     copy->right = node->right->clone();
-    
+
     node->deref();
-    
+
     return copy;
 }
 
@@ -147,11 +147,11 @@ itree_t::balance(uint8_t color, const itree_t::node_t *left,
          *
          * Resulting tree after rebalance.
          *
-         *                    y 
+         *                    y
          *                  /  \
          *                 X    Z
          *                / \  / \
-         *               a  b  c  d 
+         *               a  b  c  d
          *
          */
         if ((ET(left, R, x, y, c) && ET(x, R, a, x, b)) ||  // case LL
@@ -164,7 +164,7 @@ itree_t::balance(uint8_t color, const itree_t::node_t *left,
             (ET(right, R, y, z, d) && ET(y, R, b, y, c))) { // case RL
             x = node; a = left;
             return T(R, T(B, a, x, b), y, T(B, c, z, d));
-        } 
+        }
     } else if (color == BB) {
         /*
          *  Balance when the root is double black.
@@ -182,7 +182,7 @@ itree_t::balance(uint8_t color, const itree_t::node_t *left,
          *        / \               /  \
          *       b   c             b    c
          *
-         *     case LR            case RL      
+         *     case LR            case RL
          *
          *
          * Resulting tree after rebalance.
@@ -191,9 +191,9 @@ itree_t::balance(uint8_t color, const itree_t::node_t *left,
          *                  /  \
          *                 X    Z
          *                / \  / \
-         *               a  b  c  d 
+         *               a  b  c  d
          */
-            
+
         if (ET(left, R, a, x, y) && ET(y, R, b, y ,c)) { // case LR
             z = node; d = right;
             return T(B, T(B, a, x, b), y, T(B, c, z, d));
@@ -242,7 +242,7 @@ itree_t::rotate(uint8_t color, const itree_t::node_t *left,
     if (color == R && ET(left, B, a, x, b) && right == EE) {
         return balance(B, a, x, T(R, b, node, E));
     }
-       
+
     // rotate B (T BB a x b) y (T B c z d) = balance BB (T R (T B a x b) y c) z d
     if (color == B && ET(left, BB, a, x, b) && ET(right, B, c, z, d)) {
         return balance(BB, T(R, T(B, a, x, b), node, c), z, d);
@@ -304,7 +304,7 @@ itree_t::rotate(uint8_t color, const itree_t::node_t *left,
 //------------------------------------------------------------------------
 const itree_t::node_t *
 itree_t::insert(const itree_t::node_t *node, uint32_t low, uint32_t high,
-                const ref_t *entry, const void *arg, itree_t::cb_t match) 
+                const ref_t *entry, const void *arg, itree_t::cb_t match)
 {
     if (EMPTY(node)) {
         return node_create(low, high, entry);
@@ -334,7 +334,7 @@ itree_t::insert(const itree_t::node_t *node, uint32_t low, uint32_t high,
         copy->list = list;
         copy->has_list = 1;
     }
-        
+
     list_t::insert(&copy->list, entry, arg, match);
     return copy;
 }
@@ -401,7 +401,7 @@ itree_t::del_entry(const itree_t::node_t *node, const void *arg, cb_t match)
             copy->has_list = 0;
             list->deref();
         }
-            
+
         return copy;
     }
 
@@ -443,7 +443,7 @@ itree_t::del(const itree_t::node_t *node, uint32_t low, uint32_t high,
         }
     }
 
-        
+
     // del (T B E y E) | x == y = EE
     //                 | x /= y = T B E y E
     if (ET(node, B, a, y, b) && a == E && b == E) {
@@ -498,12 +498,12 @@ itree_t::del(const itree_t::node_t *node, uint32_t low, uint32_t high,
 // note: entries are orderd by user defined match function (usually rule
 //       priority) only when inserted into the node's linked list. While looking
 //       for highest priority match, aborting the walk based on the priority
-//       makes sense only when walking the list entries. 
+//       makes sense only when walking the list entries.
 //       So this function will not abort the tree walk when
 //       the callback returns false, it only aborts the current list walk
 //       at the matching node and continues the tree walk.
 //
-// returns no.of intervals mathched 
+// returns no.of intervals mathched
 uint32_t
 itree_t::walk(const itree_t::node_t *node, uint32_t low,
               uint32_t high, const void *arg, cb_t cb)
@@ -592,7 +592,7 @@ itree_t::copy() const
 // note: entries are orderd by user defined match function (usually rule
 //       priority) only when inserted into the node's linked list. While looking
 //       for highest priority match, aborting the walk based on the priority
-//       makes sense only when walking the list entries. 
+//       makes sense only when walking the list entries.
 //       So this function will not abort the tree walk when
 //       the callback returns false, it only aborts the current list walk
 //       at the matching node and continues the tree walk.
@@ -632,7 +632,7 @@ itree_t::insert(const itree_t **treep, uint32_t low, uint32_t high,
 
 //------------------------------------------------------------------------
 // deletes the first matching interval
-// 
+//
 // Returns new tree if the tree is shared, otherwise original tree
 // is updated.
 //------------------------------------------------------------------------
@@ -655,7 +655,7 @@ itree_t::remove(const itree_t **treep, uint32_t low, uint32_t high,
     copy->root_ = TC(copy->root_, B);
 
     return HAL_RET_OK;
-    
+
 }
 
 //------------------------------------------------------------------------
@@ -670,7 +670,7 @@ itree_t::cost(uint32_t low, uint32_t high) const
         if (EMPTY(node)) {
             return 0;
         }
-        
+
         // will be insereted into left subtree when
         //  - interval's low is less than node's low
         //  - interval's high is less than node's high and low is
@@ -681,7 +681,7 @@ itree_t::cost(uint32_t low, uint32_t high) const
         } else if (low > node->low || high > node->high) {
             return 1 + cost_(node->right, low, high);
         }
-        
+
         // interval mathces the cur node, then it will be appended to
         // the per node list (so the cost of insertion will be 1 +
         // all the existing entriees in the subtree whose interval
@@ -717,7 +717,7 @@ int itree_t::check() const
         if ((node->left->low > node->low) ||
             (!EMPTY(node->right) && node->right->low < node->low))
             return -120;
-    
+
         // check max
         if (node->max != MAX(node->high, MAX(node->left->max, node->right->max)))
             return -130;
@@ -727,7 +727,7 @@ int itree_t::check() const
         if (lheight < 0)
             return lheight;
 
-        // check right 
+        // check right
         int rheight = check(node->right);
         if (rheight < 0)
             return rheight;
@@ -736,7 +736,7 @@ int itree_t::check() const
         if (lheight != rheight)
             return -140;
 
-        return (node->color == B) ? lheight + 1 : lheight;     
+        return (node->color == B) ? lheight + 1 : lheight;
     };
 
     if (this->root_->color != B)

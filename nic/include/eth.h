@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __ETH_H__
 #define __ETH_H__
 
@@ -27,7 +29,7 @@
      ((uint64_t)((mac_addr)[1] & 0xFF) << 32ul)  |                      \
      ((uint64_t)((mac_addr)[0] & 0xFF) << 40ul))
 
-// Mac: 0xaabbccddeeff 
+// Mac: 0xaabbccddeeff
 //    mac_uint64: 0xaabbccddeeff
 //    mac_addr_t: [0]:aa, [1]:bb, [2]:cc, [3]:dd, [4]:ee, [5]:ff
 #define MAC_UINT64_TO_ADDR(mac_addr, mac_uint64)                          \
@@ -56,6 +58,9 @@ mac_str_to_addr (char *str, mac_addr_t *mac)
 inline std::ostream& operator<<(std::ostream& os, mac_addr_t mac) {
     return os << macaddr2str(mac);
 }
+
+// NOTE: this is temporary until we have reserved block
+#define PENSANDO_NIC_MAC        0x022222111111ull
 
 #endif    // __ETH_H__
 

@@ -318,10 +318,10 @@ network_prepare_rsp (NetworkResponse *rsp, hal_ret_t ret,
 hal_ret_t
 network_read_security_groups (network_t *nw, const NetworkSpec& spec)
 {
-    hal_ret_t               ret        = HAL_RET_OK;
-    uint32_t                num_sgs    = 0, i        = 0;
-    nwsec_group_t           *sg        = NULL;
-    hal_handle_t             sg_handle = 0;
+    hal_ret_t        ret = HAL_RET_OK;
+    uint32_t         num_sgs, i;
+    nwsec_group_t    *sg;
+    hal_handle_t     sg_handle;
 
     num_sgs = spec.sg_key_handle_size();
     HAL_TRACE_DEBUG("Adding {} no. of sgs", num_sgs);
@@ -344,9 +344,10 @@ network_read_security_groups (network_t *nw, const NetworkSpec& spec)
 hal_ret_t
 nw_init_from_spec (network_t *nw, const NetworkSpec& spec)
 {
-    vrf_id_t                        tid;
-    hal_handle_t                    gw_ep_handle = HAL_HANDLE_INVALID;
-    hal_ret_t                       ret = HAL_RET_OK;
+    vrf_id_t        tid;
+    hal_handle_t    gw_ep_handle = HAL_HANDLE_INVALID;
+    hal_ret_t       ret = HAL_RET_OK;
+    uint64_t        rmac;
 
     auto kh = spec.key_or_handle();
     auto nw_pfx = kh.nw_key().ip_prefix();
@@ -371,7 +372,13 @@ nw_init_from_spec (network_t *nw, const NetworkSpec& spec)
 
     nw->nw_key.vrf_id = tid;
     nw->gw_ep_handle = gw_ep_handle;
-    MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
+    if (spec.rmac()) {
+        MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
+    } else {
+        // pick a MAC from reserved block
+        rmac = PENSANDO_NIC_MAC;
+        MAC_UINT64_TO_ADDR(nw->rmac_addr, rmac);
+    }
     ret = ip_pfx_spec_to_pfx(&nw->nw_key.ip_pfx, nw_pfx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
