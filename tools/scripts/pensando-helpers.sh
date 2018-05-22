@@ -341,6 +341,10 @@ start_qemu() {
         src/sim/qemu/qemu-run $QEMU_IMAGE
 }
 
+start_bsd() {
+    QEMU_EXTRA= QEMU_IMAGE="$QEMU_IMAGE_BSD" start_qemu
+}
+
 monitor_qemu() {
     telnet 127.0.0.1 $QEMU_MONITOR_PORT
 }
@@ -351,6 +355,10 @@ telnet_qemu() {
 
 ssh_qemu() {
     ssh -p $QEMU_SSH_PORT $QEMU_USER@127.0.0.1 "$@"
+}
+
+ssh_bsd() {
+    QEMU_USER=root ssh_qemu "$@"
 }
 
 start_qemu_rxe() {

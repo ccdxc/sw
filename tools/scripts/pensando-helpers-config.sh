@@ -40,6 +40,9 @@ QEMU_SERIAL_PORT=9991
 QEMU_MONITOR_PORT=9992
 QEMU_SSH_PORT=9993
 
+# Alternative image for BSD
+QEMU_BSD_IMAGE='/local/you/bsd.img'
+
 # Second qemu configuration, for soft-roce host.
 QEMU_IMAGE_RXE='/local/you/sim-rxe.img'
 QEMU_SSH_PORT_RXE=9994
