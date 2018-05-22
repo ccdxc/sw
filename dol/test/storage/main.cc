@@ -170,6 +170,7 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::decompress_host_sgl_to_host_sgl, "Decompress Host->Host using SGLs", false},
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
   {&tests::decompress_to_flat_64K_buf_in_hbm, "Decompress HBM->HBM to flat 64K buf", false},
+  {&tests::compress_same_src_and_dst, "Compress with same src and dst", false},
   {&tests::compress_output_through_sequencer, "Compress and pull data from HBM through sequencer", false},
   {&tests::compress_dualq_flat_4K_buf, "Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::compress_dualq_flat_4K_buf_in_hbm, "Compress HBM-HBM flat 4K buf on hot and cold queues", false},
@@ -191,6 +192,7 @@ std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_decompress_to_flat_64K_buf_in_hbm, "Sequencer Decompress HBM->HBM to flat 64K buf", false},
   {&tests::seq_compress_dualq_flat_4K_buf, "Sequencer Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_dualq_flat_4K_buf_in_hbm, "Sequencer Compress HBM-HBM flat 4K buf on hot and cold queues", false},
+  {&tests::seq_compress_same_src_and_dst, "Sequencer Compress with same src and dst", false},
   {&tests::seq_compress_output_encrypt_app_min_size, "Sequencer Compress->XTS encrypt chaining: app min block size", false},
   {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app min block size", false},
   {&tests::seq_compress_output_encrypt_app_nominal_size, "Sequencer Compress->XTS encrypt chaining: app nominal block size", false},
@@ -198,17 +200,18 @@ std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_compress_output_encrypt_app_max_size, "Sequencer Compress->XTS encrypt chaining: app max block size", false},
   {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app max block size", false},
   {&tests::seq_compress_output_hash_app_max_size, "Sequencer Compress->hash chaining: app max block size", false},
+  {&tests::seq_chksum_decompress_last_app_blk, "Sequencer Checksum-decompress chaining: app max block size", false},
   {&tests::seq_compress_output_hash_app_test_size, "Sequencer Compress->hash chaining: app test block size", false},
+  {&tests::seq_chksum_decompress_last_app_blk, "Sequencer Checksum-decompress chaining: app test block size", false},
   {&tests::seq_compress_output_hash_app_nominal_size, "Sequencer Compress->hash chaining: app nominal block size", false},
+  {&tests::seq_chksum_decompress_last_app_blk, "Sequencer Checksum-decompress chaining: app nominal block size", false},
 };
 
 std::vector<tests::TestEntry> comp_perf_tests = {
   {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
-  {&tests::compress_same_src_and_dst, "Compress with same src and dst", false},
   {&tests::max_data_rate, "Test max data rate", false},
   {&tests::seq_max_data_rate, "Sequencer Test max data rate", false},
-  {&tests::seq_compress_same_src_and_dst, "Sequencer Compress with same src and dst", false},
   {&tests::seq_compress_output_through_sequencer, "Sequencer Compress and pull data from HBM through sequencer", false},
 };
 

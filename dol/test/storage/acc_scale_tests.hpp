@@ -501,6 +501,16 @@ private:
     uint32_t                        poll_factor;
 };
 
+/*
+ * Sequencer queue indices used for scale test creation
+ */
+typedef struct {
+    uint32_t    seq_sq_idx;
+    uint32_t    seq_status_sq_idx;
+    uint32_t    num_seq_sq_consumed;
+    uint32_t    num_seq_status_sq_consumed;
+} acc_scale_seq_sq_info_t;
+
 
 int acc_scale_tests_push(void);
 
