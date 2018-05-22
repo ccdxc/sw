@@ -94,6 +94,11 @@ using ipsec::IpsecSADecryptGetResponse;
 using ipsec::IPSecSAEncryptGetSpec;
 using ipsec::IPSecSADecryptGetSpec;
 
+using ipsec::IpsecRuleSpec;
+using ipsec::IpsecRuleMatchSpec;
+using ipsec::IpsecSAAction;
+
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -292,6 +297,10 @@ TEST_F(ipsec_encrypt_test, test1)
     IpsecSADecryptDeleteRequest del_dec_req;
     IpsecSAEncryptDeleteResponseMsg del_enc_rsp;
     IpsecSADecryptDeleteResponseMsg del_dec_rsp;
+
+    IpsecRuleSpec rule_req;
+    IpsecRuleResponse rule_rsp;
+
  
     ::google::protobuf::uint32  ip1 = 0x0a010001;
     ::google::protobuf::uint32  ip2 = 0x0a010002;
@@ -534,6 +543,26 @@ TEST_F(ipsec_encrypt_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     ipsec_sa_encrypt_test_spec_dump(enc_get_rsp_msg);
+
+    rule_req.mutable_key_or_handle()->set_rule_handle(1);
+    rule_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    rule_req.add_rules();
+    rule_req.mutable_rules(0)->set_rule_id(1);
+    types::RuleMatch *match_spec = rule_req.mutable_rules(0)->mutable_match();
+    //match_spec->mutable_src_address(0)->mutable_address()->set_type(types::IPAddressType::IP_ADDRESS_IPV4_ANY);
+    match_spec->add_src_address();
+    match_spec->mutable_src_address(0)->set_negate(false);
+    auto v4_range = match_spec->mutable_src_address(0)->mutable_address()->mutable_range()->mutable_ipv4_range();
+    v4_range->mutable_low_ipaddr()->set_v4_addr(0x40010000);
+    v4_range->mutable_high_ipaddr()->set_v4_addr(0x400100ff);
+
+#if 0
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::ipsec_rule_create(rule_req, &rule_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
+
 
     del_enc_req.mutable_key_or_handle()->set_cb_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

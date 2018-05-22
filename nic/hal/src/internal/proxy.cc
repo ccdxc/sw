@@ -42,7 +42,7 @@ proxy_meta_init() {
         (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 5, 15}}, types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_IPSEC] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}},
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 10}, {1, 2, 10}}},
                         types::PROXY_TYPE_NONE, false};
 
     // num qtype = 2 (RNMDR, TNMDR)

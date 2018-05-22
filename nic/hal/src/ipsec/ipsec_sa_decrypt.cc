@@ -300,9 +300,6 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
     rsp->mutable_spec()->set_spi(ripsec.spi);
     rsp->mutable_spec()->set_rekey_spi(ripsec.new_spi);
 
-    //rsp->mutable_spec()->set_tunnel_sip4(ripsec.tunnel_sip4);
-    //rsp->mutable_spec()->set_tunnel_dip4(ripsec.tunnel_dip4);
-
 
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipsec_sa_handle(ipsec->hal_handle);

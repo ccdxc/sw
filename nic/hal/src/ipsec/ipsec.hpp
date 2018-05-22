@@ -226,6 +226,8 @@ ipsec_sa_init (ipsec_sa_t *ipsec_sa)
     if (!ipsec_sa) {
         return NULL;
     }
+    memset(ipsec_sa, 0, sizeof(ipsec_sa_t));
+ 
     HAL_SPINLOCK_INIT(&ipsec_sa->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
