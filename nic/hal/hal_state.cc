@@ -19,6 +19,7 @@
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/dos/dos.hpp"
+#include "nic/hal/src/telemetry/telemetry.hpp"
 #include "nic/hal/src/internal/event.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
@@ -368,6 +369,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::route_acl_rule_t), 64,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE_ACL_RULE] != NULL), false);
+
+    slabs_[HAL_SLAB_FLOWMON_RULE] =
+        slab::factory("flowmon_rule", HAL_SLAB_FLOWMON_RULE,
+                      sizeof(hal::flow_monitor_rule_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FLOWMON_RULE] != NULL), false);
+    HAL_ASSERT_RETURN((flow_monitor_acl_ctx_create() == HAL_RET_OK), false);
 
     slabs_[HAL_SLAB_ROUTE_ACL_USERDATA] =
         slab::factory("route_acl_userdata",
@@ -1894,6 +1902,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ROUTE_ACL_RULE:
         g_hal_state->route_acl_rule_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_FLOWMON_RULE:
+        g_hal_state->flowmon_rule_slab()->free(elem);
         break;
 
     case HAL_SLAB_ROUTE_ACL_USERDATA:

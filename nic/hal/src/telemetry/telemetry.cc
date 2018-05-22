@@ -27,6 +27,11 @@ using hal::drop_monitor_rule_t;
 
 namespace hal {
 
+// Global structs
+const acl_ctx_t *flowmon_acl_ctx;
+acl::acl_config_t flowmon_rule_config_glbl = { };
+flow_monitor_rule_t *flow_mon_rules[MAX_FLOW_MONITOR_RULES];
+
 hal_ret_t
 mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 {
@@ -324,48 +329,85 @@ collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
     return HAL_RET_OK;
 }
 
+void
+flow_monitor_rule_free (void *rule)
+{
+    return;
+}
+
+
+hal_ret_t
+flow_monitor_acl_ctx_create()
+{
+    // Create lib acl ctx
+    HAL_TRACE_DEBUG("Creating flow_mon acl ctx");
+    flowmon_acl_ctx = hal::rule_lib_init("flowmon_rule", &flowmon_rule_config_glbl);
+    if (!flowmon_acl_ctx) {
+        return HAL_RET_ERR;
+    }
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                             flow_monitor_rule_t *rule)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t   ret = HAL_RET_OK;
+    rule_data_t *rule_data;
     
-    //TODO: Handle the match rules using the library
+    // Populate the rule_match structure
+    ret = rule_match_spec_extract(spec.match(), &rule->rule_match);
+    if (ret != HAL_RET_OK) {
+        rule_match_cleanup(&rule->rule_match);
+        HAL_TRACE_ERR("Failed to retrieve rule_match");
+        return ret;
+    }
     if (spec.has_action()) {
         int n = spec.action().ms_key_handle_size();
         for (int i = 0; i < n; i++) {
-            rule->mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
+            rule->action.mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
+        }
+        n = spec.action().action_size();
+        if (n != 0) {
+            // Only one action for mirroring
+            rule->action.mirror_to_cpu = (spec.action().action(0) ==
+                                       telemetry::MIRROR_TO_CPU) ? true : false;
         }
     }
-
+    rule_data = rule_data_alloc_init();
+    rule_data->userdata = (void *) rule;
+    rule_data->data_free = flow_monitor_rule_free;
+    ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, 0, rule_data);
     return ret;
 }
 
 hal_ret_t
 flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp)
 {
-    pd_flow_monitor_rule_create_args_t args = {0};
-    flow_monitor_rule_t rule = {0};
+    flow_monitor_rule_t *rule;
+    uint32_t rule_id;
     hal_ret_t ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
+    rule_id = spec.key_or_handle().flowmonitorrule_id();
     if (spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("vrf {}", spec.meta().vrf_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    rule.vrf_id = spec.meta().vrf_id();
-    ret = populate_flow_monitor_rule(spec, &rule);
-    if (ret != HAL_RET_OK) {
+    if (rule_id >= MAX_FLOW_MONITOR_RULES) {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        HAL_TRACE_ERR("ruleid {}", spec.key_or_handle().flowmonitorrule_id());
+        ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    args.rule = &rule;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, (void *)&args);
+    rule = flow_monitor_rule_alloc_init();
+    rule->vrf_id = spec.meta().vrf_id();
+    flow_mon_rules[rule_id] = rule;
+    ret = populate_flow_monitor_rule(spec, rule);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-FlowMonitor create failed {}", ret);
-    } else {
-        HAL_TRACE_DEBUG("PI-MirrorSession create succeeded");
+        goto end;
     }
 
 end:

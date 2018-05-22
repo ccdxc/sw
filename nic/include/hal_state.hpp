@@ -160,6 +160,7 @@ public:
     slab *nexthop_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NEXTHOP]); }
     slab *route_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE]); }
     slab *route_acl_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE_ACL_RULE]); }
+    slab *flowmon_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_FLOWMON_RULE]); }
     slab *route_acl_userdata_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE_ACL_USERDATA]); }
     slab *ipsec_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_CFG_RULE]); }
     slab *ipsec_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_CFG_POL]); }
@@ -219,6 +220,7 @@ public:
     bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
     ht *crypto_cert_store_id_ht(void) const { return crypto_cert_store_id_ht_; }
     ht *tlscb_id_ht(void) const { return tlscb_id_ht_; }
+
     ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
     ht *copp_ht(void) const { return copp_ht_; }
     ht *acl_ht(void) const { return acl_ht_; }
@@ -534,6 +536,7 @@ public:
     // get APIs for route related state
     slab *route_slab(void) const { return cfg_db_->route_slab(); }
     slab *route_acl_rule_slab(void) const { return cfg_db_->route_acl_rule_slab(); }
+    slab *flowmon_rule_slab(void) const { return cfg_db_->flowmon_rule_slab(); }
     ht *route_ht(void) const { return oper_db_->route_ht(); }
     slab *route_acl_userdata_slab(void) const { return cfg_db_->route_acl_userdata_slab(); }
   

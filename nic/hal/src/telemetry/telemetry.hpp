@@ -9,6 +9,7 @@
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/gen/proto/hal/telemetry.grpc.pb.h"
+#include "nic/hal/src/utils/rule_match.hpp"
 
 using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
@@ -81,7 +82,10 @@ using telemetry::ExportControlGetRequestMsg;
 using telemetry::ExportControlGetResponse;
 using telemetry::ExportControlGetResponseMsg;
 
+
 namespace hal {
+
+#define MAX_FLOW_MONITOR_RULES      1024
 
 using hal::if_t;
 using hal::lif_t;
@@ -145,44 +149,21 @@ typedef struct drop_monitor_rule_s {
     bool mirror_destinations[MAX_MIRROR_SESSION_DEST];
 } __PACK__ drop_monitor_rule_t;
 
+typedef struct flow_monitor_rule_action_s {
+    uint8_t     mirror_destinations[MAX_MIRROR_SESSION_DEST];
+    bool        collect_flow_action; // Is it a collect action ?
+    bool        mirror_to_cpu;       // Mirror to cpu - additional mirror dest
+} __PACK__ flow_monitor_rule_action_t;
+
 typedef struct flow_monitor_rule_s {
-    hal_spinlock_t slock;
-    uint64_t vrf_id;
-    uint32_t rule_id;
-    // Flow key fields
-    union {
-        struct {
-            mac_addr_t src_mac;
-            mac_addr_t dst_mac;
-            uint16_t ethertype;
-            bool src_mac_valid;
-            bool dst_mac_valid;
-            bool ethertype_valid;;
-        };
-        struct {
-            ip_prefix_t sip;
-            ip_prefix_t dip;
-            uint8_t proto;
-            uint32_t sport;
-            uint32_t dport;
-            bool sip_valid;
-            bool dip_valid;
-            bool proto_valid;
-            bool sport_valid;
-            bool dport_valid;
-        };
-    };
-    // Source and Dest workload group ids
-    uint64_t src_groupid;
-    uint64_t dst_groupid;
-    uint8_t mirror_destinations[MAX_MIRROR_SESSION_DEST];
-    bool src_groupid_valid;
-    bool dst_groupid_valid;
-    // Is it a collect action ?
-    bool collect_flow_action;
-    // Mirror to cpu - additional mirror destination
-    bool mirror_to_cpu;
-} __PACK__ flow_monitor_rule_t;
+    hal_spinlock_t  slock;
+    uint64_t        vrf_id;
+    uint32_t        rule_id;
+    rule_match_t    rule_match;
+    // Actions
+    flow_monitor_rule_action_t action;
+    acl::ref_t  ref_count;
+} flow_monitor_rule_t;
 
 typedef struct mirror_session_s {
     hal_spinlock_t slock;
@@ -200,7 +181,6 @@ typedef struct mirror_session_s {
     } mirror_destination_u;
 } __PACK__ mirror_session_t;
 
-
 typedef struct collector_config_s {
     uint64_t            exporter_id;
     uint16_t            vlan;
@@ -214,6 +194,44 @@ typedef struct collector_config_s {
     uint32_t            template_id;
     export_formats_en   format;
 } collector_config_t;
+
+static inline flow_monitor_rule_t *
+flow_monitor_rule_alloc(void)
+{
+    flow_monitor_rule_t *rule = NULL;
+
+    rule = (flow_monitor_rule_t *)
+                g_hal_state->flowmon_rule_slab()->alloc();
+    if (rule == NULL) {
+        return NULL;
+    }
+    return rule;
+}
+
+// Initialize a flow_monitor_rule instance
+static inline flow_monitor_rule_t *
+flow_monitor_rule_init (flow_monitor_rule_t *rule)
+{
+    if (!rule) {
+        return NULL;
+    }
+
+    ref_init(&rule->ref_count, [] (const ref_t * ref) {
+        flow_monitor_rule_t * rule = container_of(ref, flow_monitor_rule_t, ref_count);
+        g_hal_state->flowmon_rule_slab()->free(rule);
+    });
+    ref_inc(&rule->ref_count);
+
+    rule_match_init(&rule->rule_match);
+    return rule;
+}
+
+// allocate and initialize a match_template
+static inline flow_monitor_rule_t *
+flow_monitor_rule_alloc_init()
+{
+    return flow_monitor_rule_init(flow_monitor_rule_alloc());
+}
 
 hal_ret_t hal_telemetry_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_telemetry_cleanup_cb(void);
@@ -243,6 +261,7 @@ hal_ret_t export_control_update(ExportControlSpec &spec, ExportControlResponse *
 hal_ret_t export_control_delete(ExportControlDeleteRequest &req, ExportControlDeleteResponse *rsp);
 hal_ret_t export_control_get(ExportControlGetRequest &req, ExportControlGetResponseMsg *rsp);
 
+hal_ret_t flow_monitor_acl_ctx_create();
 }    // namespace
 
 #endif    // __TELEMETRY_HPP__

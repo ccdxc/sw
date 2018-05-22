@@ -532,9 +532,8 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                 HAL_TRACE_ERR("Unable to create the acl rules");
                 return ret;
             }
-        }//  << push it to the vector of ipv4_rule_t >>>
+        }//  << push it to the vector of ipv4_rule_t >>
     } } } } }
-    
     /* Delete dummy node at the head of the list */
     if (!dllist_empty(&mac_src_addr_new.list_ctxt)) {
         dllist_del(&mac_src_addr_new.list_ctxt);
@@ -554,16 +553,15 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     if (!dllist_empty(&src_port_new.list_ctxt)) {
         dllist_del(&src_port_new.list_ctxt);
     }
-
     //Added rule - lets increment the ref
     ref_inc(&data->ref_count);
+
     return ret;
 }
 
 //-----------------------------------------------------------------------------
 // Build routines
 //-----------------------------------------------------------------------------
-
 static inline hal_ret_t
 rule_match_dst_port_spec_build (
     rule_match_app_t *app, types::RuleMatch_L4PortAppInfo *port_info)
