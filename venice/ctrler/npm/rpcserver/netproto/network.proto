@@ -41,6 +41,7 @@ message NetworkSpec {
     string IPv6Gateway = 4[(gogoproto.jsontag)="ipv6-gateway,omitempty"];   // IPv6 gateway
     uint32 VlanID      = 5[(gogoproto.jsontag)="vlan-id,omitempty"];        // VLAN ID
     uint32 VxlanVNI    = 6[(gogoproto.jsontag)="vxlan-vni,omitempty"];   // Vxlan VNI
+    string RouterMAC   = 7[(gogoproto.jsontag)="router-mac,omitempty"];   // Optional router MAC parameter
 }
 
 // network status

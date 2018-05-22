@@ -53,6 +53,8 @@ var ErrInvalidIPSecSAType = errors.New("invalid IPSec SA Action")
 // ErrIPMissing is returned when the IP field is not specified in an Encrypt SA Action
 var ErrIPMissing = errors.New("ipsec encrypt SA needs local and remote gateway IP")
 
+var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
+
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
 type Kind string
 
@@ -349,7 +351,6 @@ func (hd *Datapath) SetAgent(ag types.DatapathIntf) error {
 // CreateLocalEndpoint creates an endpoint
 func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*types.IntfInfo, error) {
 	// convert mac address
-	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
@@ -846,11 +847,12 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	}
 
 	if len(nw.Spec.IPv4Subnet) != 0 {
-		ip, net, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
+		var macAddr uint64
+		ip, network, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
 		if err != nil {
 			return fmt.Errorf("error parsing the subnet mask from {%v}. Err: %v", nw.Spec.IPv4Subnet, err)
 		}
-		prefixLen, _ := net.Mask.Size()
+		prefixLen, _ := network.Mask.Size()
 
 		nwKey = halproto.NetworkKeyHandle{
 			KeyOrHandle: &halproto.NetworkKeyHandle_NwKey{
@@ -868,10 +870,25 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 				},
 			},
 		}
+		if len(nw.Spec.RouterMAC) != 0 {
+			mac, err := net.ParseMAC(nw.Spec.RouterMAC)
+			if err != nil {
+				return fmt.Errorf("could not parse router mac from %v", nw.Spec.RouterMAC)
+			}
+			b := make([]byte, 8)
+			// oui-48 format
+			if len(mac) == 6 {
+				// fill 0 lsb
+				copy(b[2:], mac)
+			}
+			macAddr = binary.BigEndian.Uint64(b)
+
+		}
 
 		halNw := halproto.NetworkSpec{
 			KeyOrHandle: &nwKey,
 			GatewayIp:   halGwIP,
+			Rmac:        macAddr,
 		}
 
 		halNwReq := halproto.NetworkRequestMsg{

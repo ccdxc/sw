@@ -659,6 +659,7 @@ func createNetwork(baseURL string) error {
 			IPv4Subnet:  "10.0.0.0/16",
 			IPv4Gateway: "10.0.2.1",
 			VlanID:      100,
+			RouterMAC:   "00:22:0A:00:02:01",
 		},
 	}
 
