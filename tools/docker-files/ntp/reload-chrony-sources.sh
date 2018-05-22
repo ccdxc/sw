@@ -5,7 +5,7 @@ do
     chronyc delete $i
 done
 
-for i in $(grep server /etc/pensando/chrony.conf  | grep iburst | awk '{print $2}')
+for i in $(grep server /etc/pensando/ntp/chrony.conf  | grep iburst | awk '{print $2}')
 do
     chronyc add server $i iburst
 done

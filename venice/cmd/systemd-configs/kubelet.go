@@ -81,7 +81,7 @@ func generateSystemdKubeletConfig(nodeID string) error {
 	if ip != nil {
 		cfgMap[nodeIPVar] = fmt.Sprintf("%s %s", nodeIPParam, nodeID)
 	}
-	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, kubeletSystemdCfgFile))
+	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.KubernetesConfigDir, kubeletSystemdCfgFile))
 }
 
 // RemoveKubeletConfig removes the config files associated with kubelet.

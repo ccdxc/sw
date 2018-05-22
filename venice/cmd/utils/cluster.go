@@ -89,7 +89,7 @@ func GetContainerInfo() map[string]ContainerInfo {
 	info := map[string]ContainerInfo{}
 	defer log.Debugf("returning ContainerInfo : %#v \n", info)
 
-	confFile := path.Join(env.Options.ConfigDir, env.Options.ContainerConfigFile)
+	confFile := path.Join(env.Options.CommonConfigDir, env.Options.ContainerConfigFile)
 	if _, err := os.Stat(confFile); err != nil {
 		// Stat error is treated as not part of cluster.
 		log.Fatalf("unable to find confFile %s error: %v", confFile, err)

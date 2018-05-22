@@ -2,9 +2,9 @@
 Description=Kubernetes Controller Manager
 
 [Service]
-EnvironmentFile=-/etc/pensando/venice.conf
-EnvironmentFile=-/etc/pensando/registry.conf
-EnvironmentFile=-/etc/pensando/kube.conf
+EnvironmentFile=-/etc/pensando/shared/common/venice.conf
+EnvironmentFile=-/etc/pensando/shared/common/registry.conf
+EnvironmentFile=-/etc/pensando/kubernetes/kube.conf
 ExecStartPre=-/usr/bin/docker kill pen-kube-controller-manager
 ExecStartPre=-/usr/bin/docker rm pen-kube-controller-manager
 ExecStart=/usr/pensando/bin/systemd-docker \

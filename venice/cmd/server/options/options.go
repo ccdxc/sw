@@ -43,6 +43,9 @@ type ServerRunOptions struct {
 	// ConfigDir is where cmd can persist its configuration.
 	ConfigDir string
 
+	// CommonConfigDir is the directory where common configuration files are located.
+	CommonConfigDir string
+
 	// ClusterConfigFile identifies the file name for persisting cluster configuration.
 	ClusterConfigFile string
 
@@ -65,7 +68,8 @@ func NewServerRunOptions() *ServerRunOptions {
 		RESTPort:            globals.CMDRESTPort,
 		GRPCAuthPort:        globals.CMDGRPCAuthPort,
 		GRPCUnauthPort:      globals.CMDGRPCUnauthPort,
-		ConfigDir:           globals.ConfigDir,
+		ConfigDir:           globals.CmdConfigDir,
+		CommonConfigDir:     globals.CommonConfigDir,
 		ClusterConfigFile:   "cluster.conf",
 		ContainerConfigFile: "venice.json",
 	}

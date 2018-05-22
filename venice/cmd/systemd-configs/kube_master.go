@@ -49,7 +49,7 @@ func GenerateKubeMasterConfig(apiServerAddr string) error {
 
 	cfgMap := make(map[string]string)
 	cfgMap[kubeMasterVar] = fmt.Sprintf("%s %s:%s", kubeMasterParam, apiServerAddr, globals.KubeAPIServerPort)
-	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, kubeCfgFile))
+	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.KubernetesConfigDir, kubeCfgFile))
 }
 
 // generateKubeAPIServerConfig generates the systemd configuration files
@@ -64,7 +64,7 @@ func generateKubeAPIServerConfig() error {
 	cfgMap[serviceClusterVar] = fmt.Sprintf("%s %s", serviceClusterParam, serviceClusterIPRange)
 	cfgMap[runtimeConfigVar] = fmt.Sprintf("%s %s", runtimeConfigParam, enableDaemonSet)
 	cfgMap[kubeAllowPrivilegedVar] = kubeAllowPrivilegedParam
-	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, kubeAPIServerCfgFile))
+	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.KubernetesConfigDir, kubeAPIServerCfgFile))
 }
 
 // RemoveKubeMasterConfig removes the config files associated with Kubernetes

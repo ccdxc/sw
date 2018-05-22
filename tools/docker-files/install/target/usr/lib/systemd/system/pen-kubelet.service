@@ -3,7 +3,7 @@ Description=Kubelet
 
 [Service]
 User=root
-EnvironmentFile=-/etc/pensando/kubelet.conf
+EnvironmentFile=-/etc/pensando/kubernetes/kubelet.conf
 
 # this sets systemd environment variable CGR with the cgroup of the init process. For baremetal/VM this should be /
 # for docker in docker environment this is set to the docker of this node.

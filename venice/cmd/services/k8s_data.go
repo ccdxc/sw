@@ -1,12 +1,21 @@
 package services
 
 import (
+	"path"
+
 	"github.com/pensando/sw/api"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
+
+func getComponentConfigVolume(compName string) *protos.ModuleSpec_Volume {
+	ret := configVolume
+	ret.HostPath = path.Join(ret.HostPath, compName)
+	ret.MountPath = path.Join(ret.MountPath, compName)
+	return &ret
+}
 
 // configVolume is a reusable volume definition for Pensando configs.
 var configVolume = protos.ModuleSpec_Volume{
@@ -61,7 +70,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 			},
 		},
@@ -107,7 +115,7 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
+				getComponentConfigVolume("ntp"),
 			},
 		},
 	},
@@ -136,7 +144,7 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
+				getComponentConfigVolume("apiserver"),
 				&logVolume,
 			},
 		},
@@ -168,7 +176,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 			},
 		},
@@ -198,7 +205,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 			},
 		},
@@ -223,12 +229,12 @@ var k8sModules = map[string]protos.Module{
 						},
 					},
 					Args: []string{
-						"-config", "/etc/pensando/influxdb.conf",
+						"-config", "/etc/pensando/influxdb/influxdb.conf",
 					},
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
+				getComponentConfigVolume("influxdb"),
 				&logVolume,
 			},
 		},
@@ -258,7 +264,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 			},
 		},
@@ -299,7 +304,7 @@ var k8sModules = map[string]protos.Module{
 				// Volume definition for Elastic Discovery.
 				{
 					Name:      "discovery",
-					HostPath:  "/etc/pensando/elastic-discovery",
+					HostPath:  "/etc/pensando/elastic/elastic-discovery",
 					MountPath: "/usr/share/elasticsearch/config/discovery-file",
 				},
 				// Volume definition for sourcing env variables
@@ -342,7 +347,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 				&runVolume,
 			},
@@ -370,7 +374,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 			},
 		},
@@ -399,7 +402,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 			},
 		},
@@ -429,7 +431,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 			},
 		},
@@ -456,7 +457,6 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&configVolume,
 				&logVolume,
 				&eventsVolume,
 			},

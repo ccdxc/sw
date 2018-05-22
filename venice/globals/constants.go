@@ -11,8 +11,14 @@ const (
 	// Default Namespace
 	DefaultNamespace = "default"
 
-	// Config directory
-	ConfigDir       = "/etc/pensando"
+	// Config directories
+	ConfigDir           = "/etc/pensando"
+	CmdConfigDir        = ConfigDir + "/cmd"
+	CommonConfigDir     = ConfigDir + "/shared/common"
+	EtcdConfigDir       = ConfigDir + "/etcd"
+	KubernetesConfigDir = ConfigDir + "/kubernetes"
+	NtpConfigDir        = ConfigDir + "/ntp"
+
 	EtcdServiceFile = "pen-etcd.service"
 
 	// Data directory

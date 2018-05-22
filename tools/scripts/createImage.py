@@ -27,7 +27,7 @@ static_images = {
     'pen-kube-apiserver' : 'registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.7.14',
     'pen-etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.2',
     'pen-filebeat' : 'registry.test.pensando.io:5000/beats/filebeat:6.2.2',
-    'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.2',
+    'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.3',
     'pen-influx' : 'registry.test.pensando.io:5000/influxdb:1.4.2',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.2'
 }
@@ -72,8 +72,14 @@ for i in dynamic_images:
     if old_images != "" :
         ExecuteCommand('''docker rmi -f ''' + old_images)
 
-with open("tools/docker-files/install/target/etc/pensando/venice.json", 'w') as f:
+try:
+    os.makedirs("tools/docker-files/install/target/etc/pensando/shared/common")
+except EnvironmentError, e:
+    if e.errno != errno.EEXIST:
+        raise
+
+with open("tools/docker-files/install/target/etc/pensando/shared/common/venice.json", 'w') as f:
     json.dump(imageMap, f, indent=True, sort_keys=True)
-with open("tools/docker-files/install/target/etc/pensando/venice.conf", 'w') as f:
+with open("tools/docker-files/install/target/etc/pensando/shared/common/venice.conf", 'w') as f:
     for  k,v in systemdNameMap.items():
         f.write("{}='{}'\n".format(k,imageMap[v]))
