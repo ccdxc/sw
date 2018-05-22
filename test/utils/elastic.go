@@ -51,14 +51,14 @@ func StartElasticsearch(name string) (string, error) {
 
 		// stop and retry if a container with the same name exists already
 		if strings.Contains(string(out), "Conflict") {
-			log.Debugf("conflicting names, retrying")
+			log.Errorf("conflicting names, retrying")
 			StopElasticsearch(name)
 			continue
 		}
 
 		// retry with a different port
 		if strings.Contains(string(out), "port is already allocated") {
-			log.Debugf("port already allocated, retrying")
+			log.Errorf("port already allocated, retrying")
 			continue
 		}
 
@@ -66,7 +66,10 @@ func StartElasticsearch(name string) (string, error) {
 			return "", fmt.Errorf("%s, err: %v", out, err)
 		}
 
-		return fmt.Sprintf("%s:%d", elasticHost, port), nil
+		elasticAddr := fmt.Sprintf("%s:%d", elasticHost, port)
+		log.Infof("started elasticsearch: %s", elasticAddr)
+
+		return elasticAddr, nil
 	}
 
 	return "", fmt.Errorf("exhausted all the ports from 6000-6999, failed to start elasticsearch")
@@ -74,6 +77,10 @@ func StartElasticsearch(name string) (string, error) {
 
 // StopElasticsearch stops elasticsearch service
 func StopElasticsearch(name string) error {
+	if len(strings.TrimSpace(name)) == 0 {
+		return nil
+	}
+
 	log.Info("stopping elasticsearch ..")
 
 	cmd := []string{"rm", "-f", name}

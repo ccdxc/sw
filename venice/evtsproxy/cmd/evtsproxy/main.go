@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
@@ -18,29 +19,13 @@ import (
 func main() {
 
 	var (
-		debugflag = flag.Bool(
-			"debug",
-			false,
-			"Enable debug mode",
-		)
-
-		logToFile = flag.String(
-			"logtofile",
-			"/var/log/pensando/evtsproxy.log",
-			"Path of the log file",
-		)
-
-		logToStdoutFlag = flag.Bool(
-			"logtostdout",
-			false,
-			"enable logging to stdout",
-		)
-
-		listenURL = flag.String(
-			"listen-url",
-			fmt.Sprintf(":%s", globals.EvtsMgrRPCPort),
-			"RPC listen URL",
-		)
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToFile       = flag.String("logtofile", "/var/log/pensando/evtsproxy.log", "Path of the log file")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
+		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")
+		dedupInterval   = flag.Duration("dedup-interval", 100*time.Second, "Events deduplication interval")
+		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching inteval")
 	)
 
 	flag.Parse()
@@ -65,7 +50,7 @@ func main() {
 	logger := log.SetConfig(config)
 
 	// create events proxy
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, logger)
+	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, *evtsMgrURL, *dedupInterval, *batchInterval, logger)
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}

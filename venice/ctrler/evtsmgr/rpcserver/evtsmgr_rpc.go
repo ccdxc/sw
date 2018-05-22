@@ -15,12 +15,11 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-const indexType = "events"
-const maxWatchersAllowed = 100
-
 var (
 	once sync.Once
 	last string
+
+	indexType = elastic.GetDocType(globals.Events)
 )
 
 // EvtsMgrRPCHandler handles all event RPC calls
@@ -71,7 +70,7 @@ func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *monitorin
 
 		if bulkResp, err := e.esClient.Bulk(ctx, requests); err != nil {
 			log.Errorf("error sending bulk events to elastic, err: %v", err)
-			return nil, errors.Wrap(err, "error sending event to elastic")
+			return nil, errors.Wrap(err, "error sending events to elastic")
 		} else if len(bulkResp.Failed()) > 0 {
 			log.Errorf("bulk operation failed on elastic")
 			return nil, errors.New("bulk operation failed on elastic")

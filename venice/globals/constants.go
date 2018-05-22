@@ -18,6 +18,9 @@ const (
 	// Data directory
 	EtcdDataDir = "/var/lib/etcd"
 
+	// Events directoty
+	EventsDir = "/var/lib/pensando/events"
+
 	// API gw Port
 	APIGwRESTPort = "9000"
 

@@ -111,7 +111,7 @@ func TestMockElasticServer(t *testing.T) {
 	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":""}`), nil, from, maxResults, sortBy)
 	tu.AssertOk(t, err, "failed to perform search")
 	totalHits = resp.TotalHits()
-	tu.Assert(t, totalHits == 3, fmt.Sprintf("expected %v hits, got %v", 3, totalHits))
+	tu.Assert(t, totalHits == 5, fmt.Sprintf("expected %v hits, got %v", 5, totalHits))
 
 	// set default HTTP status on the server and make sure the calls get back the same
 	// simulate internal server error

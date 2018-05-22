@@ -107,7 +107,7 @@ class Node:
         # stop all services
         self.runCmd("sudo systemctl stop pensando.target")
         self.runCmd("sudo systemctl disable pensando.target")
-        penSrvs = ["pen-cmd", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elastic", "pen-vchub", "pen-npm", "pen-tpm", "pen-evtsmgr", "pen-tsm"]
+        penSrvs = ["pen-cmd", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elastic", "pen-vchub", "pen-npm", "pen-tpm", "pen-evtsmgr", "pen-tsm", "pen-evtsproxy"]
         for srv in penSrvs:
             self.runCmd("sudo systemctl stop " + srv)
             self.runCmd("sudo systemctl disable " + srv)

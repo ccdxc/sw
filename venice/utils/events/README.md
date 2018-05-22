@@ -42,7 +42,7 @@ Writers (venice, syslog, etc.) will get the events from dispatcher. And it is re
 	err = recorder.Event(TestNICDisconnected, "INFO", "test message", nil)
 	```
 	* Given event type will be validated against the list provided while creating the recorder.
-	* Event source will be inherited from the recoder.
+	* Event source will be inherited from the recorder.
 
 ### How dispatcher cache works internally?
 

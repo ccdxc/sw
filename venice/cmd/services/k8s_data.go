@@ -29,6 +29,13 @@ var runVolume = protos.ModuleSpec_Volume{
 	MountPath: "/var/run/pensando/",
 }
 
+// eventsVolume is a reusable volume definition for Pensando events.
+var eventsVolume = protos.ModuleSpec_Volume{
+	Name:      "events",
+	HostPath:  "/var/lib/pensando/events/offset",
+	MountPath: "/var/lib/pensando/events/offset",
+}
+
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]protos.Module{
@@ -424,6 +431,34 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
+			},
+		},
+	},
+	globals.EvtsProxy: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.EvtsProxy,
+		},
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
+				{
+					Name:  globals.EvtsProxy,
+					Image: globals.EvtsProxy,
+					Services: []*protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.EvtsProxy,
+							Port: runtime.MustUint32(globals.EvtsProxyRPCPort),
+						},
+					},
+				},
+			},
+			Volumes: []*protos.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+				&eventsVolume,
 			},
 		},
 	},

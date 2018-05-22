@@ -3,79 +3,73 @@
 package writers
 
 import (
-	"fmt"
 	"sync"
+	"time"
 
-	evtsapi "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// number of workers to process the incoming events from dispatcher.
-const numWorkers = 8
-
 // MockWriter implements the `Writer` interface. this has the logic on how the event
 // from dispatcher should be processed.
 type MockWriter struct {
-	sync.Mutex                                             // to protect this object
-	wg                           sync.WaitGroup            // to wait for the watch channel to close
-	stop                         sync.Once                 // for stopping the writer
-	eventsChan                   events.EventReceiverChan  // to watch/stop events from dispatcher
-	stat                         map[string]*eventsStat    // event stats
-	totalEventsBySourceAndEvents map[string]map[string]int // total events received by source and event
+	sync.Mutex // to protect this object
 
-	name  string // name of the writer
-	chLen int    // buffer or channel len
-
+	// writer details
+	name   string // name of the writer
+	chLen  int    // buffer or channel len
 	logger log.Logger
-}
 
-// eventsStat represents the number of unique events and repeated events
-// unique events are the ones with count = 1 (first occurrence of the event from cache)
-// repeated events are the ones with count >1
-type eventsStat struct {
-	uniqueEvents   int
-	repeatedEvents int
+	// to receive events from the proxy (dispatcher)
+	eventsChan          events.Chan          // to watch/stop events from dispatcher
+	eventsOffsetTracker events.OffsetTracker // to track events file offset - bookmark indicating events till this point are processed successfully by this writer
+
+	// for mock operations
+	eventsByUUID          map[string]*monitoring.Event   // all the events received
+	eventsBySourceAndType map[string]map[string][]string // events received by source and type
+
+	// to stop the writer
+	wg       sync.WaitGroup // to wait for the watch channel to close
+	stop     sync.Once      // for stopping the writer
+	shutdown chan struct{}  // to send shutdown signal to the writer
 }
 
 // NewMockWriter creates and returns  the mock writer interface.
 func NewMockWriter(name string, chLen int, logger log.Logger) *MockWriter {
 	mockWriter := &MockWriter{
-		stat: map[string]*eventsStat{},
-		totalEventsBySourceAndEvents: map[string]map[string]int{},
-		name:   name,
-		chLen:  chLen,
-		logger: logger.WithContext("submodule", "mock-writer"),
+		name:                  name,
+		chLen:                 chLen,
+		logger:                logger.WithContext("submodule", "mock_writer"),
+		eventsByUUID:          map[string]*monitoring.Event{},
+		eventsBySourceAndType: map[string]map[string][]string{},
+		shutdown:              make(chan struct{}, 1),
 	}
 
 	return mockWriter
 }
 
 // Start starts the writer
-func (m *MockWriter) Start(eventsChan events.EventReceiverChan) {
-	m.eventsChan = eventsChan
+func (m *MockWriter) Start(eventsCh events.Chan, offsetTracker events.OffsetTracker) {
+	m.eventsChan = eventsCh
+	m.eventsOffsetTracker = offsetTracker
 
-	// to wait for all the workers to be done
-	m.wg.Add(numWorkers)
-
-	// divide the work among multiple workers
-	for i := 0; i < numWorkers; i++ {
-		// start watching events using the given event channel
-		go m.startWorker(i)
-	}
+	// start events receiver
+	m.wg.Add(1)
+	go m.receiveEvents()
 
 	m.logger.Info("started mock events writer")
 }
 
 // Stop stops the watch by calling `Stop` on the event channel.
 func (m *MockWriter) Stop() {
+	m.logger.Info("stopping the mock writer")
 	m.stop.Do(func() {
-		m.logger.Info("stopping the mock writer")
-		m.eventsChan.Stop()
-
-		// wait for the writer to finish
-		m.wg.Wait()
+		close(m.shutdown)
 	})
+
+	// wait for the writer to finish
+	m.wg.Wait()
 }
 
 // Name returns the name of the mock writer
@@ -89,111 +83,120 @@ func (m *MockWriter) ChLen() int {
 }
 
 // WriteEvents writes list of events
-func (m *MockWriter) WriteEvents(events []*evtsapi.Event) error {
-	if events == nil {
+func (m *MockWriter) WriteEvents(evts []*monitoring.Event) error {
+	if evts == nil {
 		return nil
 	}
 
-	for _, evt := range events {
-		m.writeCount(evt)
+	m.Lock()
+	defer m.Unlock()
+
+	for _, evt := range evts {
+		temp := evt
+
+		// update event by UUID
+		evtUUID := evt.GetUUID()
+		m.eventsByUUID[evtUUID] = temp
+
+		// to update events by source and event type
+		sourceKey := events.GetSourceKey(temp.GetSource())
+		if m.eventsBySourceAndType[sourceKey] == nil {
+			m.eventsBySourceAndType[sourceKey] = map[string][]string{}
+		}
+		m.eventsBySourceAndType[sourceKey][evt.GetType()] = append(m.eventsBySourceAndType[sourceKey][evt.GetType()], evtUUID)
 	}
 
 	return nil
 }
 
-// GetUniqueEvents returns the number of unique events received of the given type.
-func (m *MockWriter) GetUniqueEvents(eType string) int {
+// GetLastProcessedOffset returns the last bookmarked offset by this writer
+func (m *MockWriter) GetLastProcessedOffset() (int64, error) {
+	return m.eventsOffsetTracker.GetOffset()
+}
+
+// GetTotalEvents returns the number of events received.
+func (m *MockWriter) GetTotalEvents() int {
 	m.Lock()
 	defer m.Unlock()
 
-	res, ok := m.stat[eType]
-	if ok {
-		return res.uniqueEvents
+	res := 0
+	for _, evt := range m.eventsByUUID {
+		res += int(evt.GetCount())
 	}
 
-	return 0
+	return res
 }
 
-// GetRepeatedEvents returns the number of repeated events received of the given type.
-func (m *MockWriter) GetRepeatedEvents(eType string) int {
+// GetEventByUUID returns the event matching the given UUID from the list of received events.
+func (m *MockWriter) GetEventByUUID(uuid string) *monitoring.Event {
 	m.Lock()
 	defer m.Unlock()
 
-	res, ok := m.stat[eType]
-	if ok {
-		return res.repeatedEvents
+	for _, evt := range m.eventsByUUID {
+		if evt.GetUUID() == uuid {
+			return evt
+		}
 	}
 
-	return 0
+	return nil
 }
 
-// GetTotalEventsBySourceAndEvent returns the total number of events received from the given source
+// GetEventsByType returns the number of events received of the given event type.
+func (m *MockWriter) GetEventsByType(eType string) int {
+	m.Lock()
+	defer m.Unlock()
+
+	res := 0
+	for _, evt := range m.eventsByUUID {
+		if evt.GetType() == eType {
+			res += int(evt.GetCount())
+		}
+	}
+
+	return res
+}
+
+// GetEventsBySourceAndType returns the total number of events received from the given source
 // of the given event type.
-func (m *MockWriter) GetTotalEventsBySourceAndEvent(source *evtsapi.EventSource, eventType string) int {
+func (m *MockWriter) GetEventsBySourceAndType(source *monitoring.EventSource, eventType string) int {
 	m.Lock()
 	defer m.Unlock()
 
-	sourceKey := fmt.Sprintf("%v-%v", source.GetNodeName(), source.GetComponent())
-	if m.totalEventsBySourceAndEvents[sourceKey] != nil {
-		return m.totalEventsBySourceAndEvents[sourceKey][eventType]
+	res := 0
+	sourceKey := events.GetSourceKey(source)
+	if m.eventsBySourceAndType[sourceKey] != nil {
+		for _, uuid := range m.eventsBySourceAndType[sourceKey][eventType] {
+			res += int(m.eventsByUUID[uuid].GetCount())
+		}
 	}
 
-	return 0
+	return res
 }
 
-// writeCount helper function to update the stats and counter based on the received event.
-func (m *MockWriter) writeCount(event *evtsapi.Event) {
-	m.Lock()
-	defer m.Unlock()
-
-	eventType := event.GetType()
-	count := int(event.GetCount())
-
-	// to update events by event type
-	if _, ok := m.stat[eventType]; !ok {
-		m.stat[eventType] = &eventsStat{}
-	}
-
-	// to update total events by source and event type
-	source := event.GetSource()
-	sourceKey := fmt.Sprintf("%v-%v", source.GetNodeName(), source.GetComponent())
-	if m.totalEventsBySourceAndEvents[sourceKey] == nil {
-		m.totalEventsBySourceAndEvents[sourceKey] = map[string]int{}
-	}
-	src := m.totalEventsBySourceAndEvents[sourceKey]
-
-	if count == 1 {
-		// update unique event
-		m.stat[eventType].uniqueEvents++
-
-		// update events by source
-		src[eventType] += count
-	} else {
-		// update repeated event
-		// let us say 10 duplicate events are sent
-		// 1st event will be sent to the writers right way (with event.Count = 1), other 9 events are
-		// deduped and sent to the writer (with Count = 10);
-		// note the count is decremented here to avoid re-counting the 1st event that is already received
-		m.stat[eventType].repeatedEvents += (count - 1)
-
-		// update events by source
-		src[eventType] += (count - 1)
-	}
-}
-
-// startWorker watches the events using the event channel from dispatcher.
-func (m *MockWriter) startWorker(id int) {
+// receiveEvents watches the events using the event channel from dispatcher.
+func (m *MockWriter) receiveEvents() {
 	defer m.wg.Done()
 	for {
 		select {
-		// this channel will be closed once the eventsChan receives the stop signal from
+		// this channel will be closed once the Chan receives the stop signal from
 		// this writer or when dispatcher shuts down.
-		case events, ok := <-m.eventsChan.ResultChan():
+		case evts, ok := <-m.eventsChan.ResultChan():
 			if !ok { // channel closed
 				return
 			}
 
-			m.WriteEvents(events)
+			// all the incoming batch of events needs to be processed in order to avoid losing track of events
+			for {
+				if err := m.WriteEvents(evts.GetEvents()); err != nil {
+					m.logger.Debugf("failed to send events to the events manager. err: %v", err)
+					time.Sleep(1 * time.Second)
+				} else { // successfully sent the event to events manager
+					m.eventsOffsetTracker.UpdateOffset(evts.GetOffset())
+					break
+				}
+			}
+		case <-m.shutdown:
+			return
 		}
 	}
 }

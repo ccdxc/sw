@@ -7,6 +7,7 @@ import (
 
 	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -25,6 +26,7 @@ func (rs *RPCServer) Done() <-chan error {
 
 // Stop stops the RPC server
 func (rs *RPCServer) Stop() error {
+	rs.handler.Stop()
 	return rs.server.Stop()
 }
 
@@ -34,8 +36,8 @@ func (rs *RPCServer) GetListenURL() string {
 }
 
 // NewRPCServer creates a new instance of events proxy RPC server
-func NewRPCServer(serverName, listenURL string, logger log.Logger) (*RPCServer, error) {
-	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) {
+func NewRPCServer(serverName, listenURL string, evtsDispatcher events.Dispatcher, logger log.Logger) (*RPCServer, error) {
+	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || evtsDispatcher == nil {
 		return nil, errors.New("all parameters are required")
 	}
 
@@ -47,9 +49,9 @@ func NewRPCServer(serverName, listenURL string, logger log.Logger) (*RPCServer, 
 
 	// instantiate a events proxy handler which carries the implementation of the
 	// events proxy service
-	eph, err := NewEvtsProxyRPCHandler()
+	eph, err := NewEvtsProxyRPCHandler(evtsDispatcher)
 	if err != nil {
-		return nil, errors.Wrap(err, "error certificates rpc server")
+		return nil, errors.Wrap(err, "error creating rpc server")
 	}
 
 	// register the server

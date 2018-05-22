@@ -7,7 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	es "gopkg.in/olivere/elastic.v5"
 
@@ -19,6 +21,9 @@ type ElasticServer struct {
 	ms  *tu.MockServer
 	URL string
 
+	// to protect the below indexes map; so, that bulk and index operation can share the map
+	sync.RWMutex
+
 	//map of indexes available with the docs indexed
 	indexes map[string]map[string][]byte
 }
@@ -29,6 +34,14 @@ type MQuery struct {
 	Query struct {
 		// match all the documents containing this string
 		MatchAll string `json:"match_all"`
+	}
+}
+
+// MBulkIndex (mock bulk index) indicates the index received by bulk operation
+type MBulkIndex struct {
+	Index struct {
+		Index string `json:"_index"`
+		Type  string `json:"_type"`
 	}
 }
 
@@ -147,7 +160,9 @@ func (e *ElasticServer) addHandlers() {
 	e.ms.AddHandler("/{index_name}", "PUT", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		indexName := vars["index_name"]
+		e.Lock()
 		e.indexes[indexName] = make(map[string][]byte)
+		e.Unlock()
 
 		resp := `{
 			"acknowledged": true,
@@ -162,11 +177,13 @@ func (e *ElasticServer) addHandlers() {
 		vars := mux.Vars(r)
 		indexName := vars["index_name"]
 
+		e.RLock()
 		if _, ok := e.indexes[indexName]; ok {
 			w.WriteHeader(http.StatusOK)
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
+		e.RUnlock()
 	})
 
 	// index operation - this dummy handler captures the indexed document as a []byte
@@ -187,7 +204,9 @@ func (e *ElasticServer) addHandlers() {
 			e.indexes[indexName] = make(map[string][]byte)
 		}
 
+		e.Lock()
 		e.indexes[indexName][docID] = body
+		e.Unlock()
 
 		w.Write([]byte("{}"))
 	})
@@ -195,6 +214,35 @@ func (e *ElasticServer) addHandlers() {
 	// bulk operation - it is too much of work to look at each request in the bulk operation.
 	// so, it is left out for now
 	e.ms.AddHandler("/_bulk", "POST", func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("failed to read body from search request"))
+			return
+		}
+
+		requests := strings.Split(string(body), "\n")
+
+		// bulk requests are received libe below:
+		// {"index":{"_index":"venice.external.not-known.events.2018-04-18","_type":"events"}}
+		// {"kind":"","meta":{"name":"","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"type":"TEST-3","count":1}
+		// {"index":{"_index":"venice.external.not-known.events.2018-04-18","_type":"events"}}
+		// {"kind":"","meta":{"name":"","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"type":"TEST-3","count":1}
+		for i := 0; i < len(requests)-1; i += 2 {
+			bi := &MBulkIndex{}
+			if err := json.Unmarshal([]byte(requests[i]), bi); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("failed to read query from search request"))
+			}
+
+			e.Lock()
+			if _, ok := e.indexes[bi.Index.Index]; !ok {
+				e.indexes[bi.Index.Index] = make(map[string][]byte)
+			}
+			e.indexes[bi.Index.Index][uuid.New().String()] = []byte(requests[i+1])
+			e.Unlock()
+		}
+
 		w.Write([]byte("{}"))
 	})
 
@@ -221,6 +269,7 @@ func (e *ElasticServer) addHandlers() {
 		queryString := q.Query.MatchAll
 		resp := &es.SearchHits{}
 		// search for all the docs containing the given string
+		e.RLock()
 		for _, doc := range e.indexes[indexName] {
 			temp := doc
 			if strings.Contains(string(temp), queryString) {
@@ -228,6 +277,7 @@ func (e *ElasticServer) addHandlers() {
 				resp.Hits = append(resp.Hits, &es.SearchHit{Source: (*json.RawMessage)(&temp)})
 			}
 		}
+		e.RUnlock()
 
 		respData, _ := json.Marshal(es.SearchResult{Hits: resp})
 		w.Write(respData)

@@ -5,6 +5,7 @@ package recorder
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	evtsapi "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/monitoring"
 	evtsproxygrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -24,31 +25,32 @@ import (
 // TODO:
 // 1. store failed requests in a file and replay.
 // 2. add first timestamp to the event and update last timestamp in the dispatcher.
-// 3. ObjectRef is missing tenant.
 
 // recorderImpl implements `Recorder` interface. Events sources at venice will
 // use this recorder to generate events with the given severity, type,
 // messsage, etc. Events are sent to the proxy for further processing (dedup, cache, etc.)
 type recorderImpl struct {
-	sync.Mutex                       // to protect access to the recorder
-	id          string               // id (unique key) of the recorder
-	eventSource *evtsapi.EventSource // all the events generated using this recorder will carry this source
-	eventTypes  map[string]struct{}  // eventTypes provide a function to validate the given event type
-	eventsProxy *eventsProxy         // event proxy
+	sync.Mutex                          // to protect access to the recorder
+	id          string                  // id (unique key) of the recorder
+	eventSource *monitoring.EventSource // all the events generated using this recorder will carry this source
+	eventTypes  map[string]struct{}     // eventTypes provide a function to validate the given event type
+	eventsProxy *eventsProxy            // event proxy
 }
 
 // eventsProxy encapsulates all the proxy details including connection string
 // and context to be used while making calls.
 type eventsProxy struct {
-	ctx       context.Context                    // ctx for making calls to events proxy
-	url       string                             // events proxy URL
-	rpcClient *rpckit.RPCClient                  // RPC client for events proxy
-	client    evtsproxygrpc.EventsProxyAPIClient // events proxy client connection
+	sync.Mutex
+	ctx             context.Context                    // ctx for making calls to events proxy
+	url             string                             // events proxy URL
+	rpcClient       *rpckit.RPCClient                  // RPC client for events proxy
+	client          evtsproxygrpc.EventsProxyAPIClient // events proxy client connection
+	connectionAlive bool                               // represents the connection status; alive or dead
 }
 
 // NewRecorder creates and returns a recorder instance.
 // if `evtsproxyURL` is empty, it will it use local events proxy RPC port.
-func NewRecorder(source *evtsapi.EventSource, eventTypes []string, evtsproxyURL string) (events.Recorder, error) {
+func NewRecorder(source *monitoring.EventSource, eventTypes []string, evtsproxyURL string) (events.Recorder, error) {
 	if source == nil {
 		return nil, fmt.Errorf("missing event source")
 	}
@@ -93,6 +95,7 @@ func (r *recorderImpl) Event(eventType, severity, message string, objRef *api.Ob
 
 	// create UUID/name for the event
 	uuid := uuid.NewV4().String()
+
 	creationTime, _ := types.TimestampProto(time.Now())
 
 	// create object meta for the event object
@@ -102,19 +105,24 @@ func (r *recorderImpl) Event(eventType, severity, message string, objRef *api.Ob
 		CreationTime: api.Timestamp{
 			Timestamp: *creationTime,
 		},
+		ModTime: api.Timestamp{
+			Timestamp: *creationTime,
+		},
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		SelfLink:  fmt.Sprintf("/v1/monitoring/events/%s", uuid),
 	}
 
 	if objRef != nil {
 		meta.Namespace = objRef.GetNamespace()
+		meta.Tenant = objRef.GetTenant()
 	}
 
-	// FIXME: add default tenant and namespace
-
 	// create event object
-	event := &evtsapi.Event{
+	event := &monitoring.Event{
 		TypeMeta:   api.TypeMeta{Kind: "Event"},
 		ObjectMeta: meta,
-		EventAttributes: evtsapi.EventAttributes{
+		EventAttributes: monitoring.EventAttributes{
 			Type:      eventType,
 			Severity:  severity,
 			Message:   message,
@@ -126,7 +134,7 @@ func (r *recorderImpl) Event(eventType, severity, message string, objRef *api.Ob
 
 	// send the event to proxy
 	if err := r.sendEvent(event); err != nil {
-		log.Errorf("failed to send event %+v to the proxy, err: %v", event, err)
+		log.Errorf("failed to send event %v to the proxy, err: %v", event.GetUUID(), err)
 		return err
 	}
 
@@ -142,7 +150,7 @@ func (r *recorderImpl) validate(eType, severity string) error {
 	}
 
 	// validate severity
-	if _, ok := evtsapi.SeverityLevel_value[severity]; !ok {
+	if _, ok := monitoring.SeverityLevel_value[severity]; !ok {
 		return events.NewError(events.ErrInvalidSeverity, "")
 	}
 
@@ -150,12 +158,30 @@ func (r *recorderImpl) validate(eType, severity string) error {
 }
 
 // sendEvent helper function to send the event to proxy.
-func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
-	r.Lock()
-	defer r.Unlock()
+func (r *recorderImpl) sendEvent(event *monitoring.Event) error {
+	r.eventsProxy.Lock()
+	if !r.eventsProxy.connectionAlive {
+		// FIXME: write to a file
+
+		r.eventsProxy.Unlock()
+		return fmt.Errorf("failed to send event; connection unavailable")
+	}
+	r.eventsProxy.Unlock()
 
 	// forward the event to events proxy
 	_, err := r.eventsProxy.client.ForwardEvent(r.eventsProxy.ctx, event)
+	if err == nil {
+		return nil
+	}
+
+	// check if the connection needs to be reset
+	if strings.Contains(err.Error(), "Unavailable") {
+		r.eventsProxy.Lock()
+		r.eventsProxy.connectionAlive = false
+		r.eventsProxy.Unlock()
+		go r.reconnect()
+	}
+
 	return err
 }
 
@@ -169,6 +195,7 @@ func (r *recorderImpl) createEvtsProxyRPCClient() error {
 
 	r.eventsProxy.rpcClient = evtsProxyClient
 	r.eventsProxy.client = evtsproxygrpc.NewEventsProxyAPIClient(r.eventsProxy.rpcClient.ClientConn)
+	r.eventsProxy.connectionAlive = true
 	return nil
 }
 
@@ -180,4 +207,22 @@ func (r *recorderImpl) getEvtsProxyRPCClient() *rpckit.RPCClient {
 // getID the unique ID of this recorder.
 func (r *recorderImpl) getID() string {
 	return r.id
+}
+
+// reconnect helper function to re-establish the connection with events proxy
+func (r *recorderImpl) reconnect() {
+	for {
+		if err := r.eventsProxy.rpcClient.Reconnect(); err != nil {
+			log.Debugf("failed to reconnect to events proxy, retrying.. err: %v", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		r.eventsProxy.Lock()
+		defer r.eventsProxy.Unlock()
+		r.eventsProxy.client = evtsproxygrpc.NewEventsProxyAPIClient(r.eventsProxy.rpcClient.ClientConn)
+		r.eventsProxy.connectionAlive = true
+		log.Info("reconnected with events proxy")
+		return
+	}
 }

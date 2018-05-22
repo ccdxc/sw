@@ -3,12 +3,16 @@
 package dispatcher
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
+	"path"
 	"sync"
 	"time"
 
-	evtsapi "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils"
 	memcache "github.com/pensando/sw/venice/utils/cache"
 	"github.com/pensando/sw/venice/utils/events"
@@ -17,175 +21,227 @@ import (
 
 const (
 	// defaultSendInterval to be used if the user given value is invalid <=0
-	defaultSendInterval = 30 * time.Second
-)
+	defaultSendInterval = 10 * time.Second
 
-// secondaryCache is a buffer cache which is swapped with the primary cache
-// every active interval. Secondary cache deals with processing deduped/cached
-// events without blocking the primary cache. And, it is set to never expire.
-// secondaryCache is cleared once the events are sent to all the writers.
-var secondaryCache = &cache{m: map[string]memcache.Cache{}, ttl: -1}
+	// defaultDedupInterval to be used if the user given value is invalid <=0
+	defaultDedupInterval = 24 * (60 * time.Minute) // 24 hrs
+)
 
 // dispatcherImpl implements the `Dispatcher` interface. It is responsible for
 // dispatching events to all the registered writers.
 type dispatcherImpl struct {
-	sync.Mutex                 // for protecting the dispatcher object
-	cache        *cache        // in-memory cache to hold events
-	sendInterval time.Duration // events are sent to the writers in this interval
+	sync.Mutex                  // for protecting the dispatcher object
+	sendInterval  time.Duration // i.e, batch interval; events are sent to the writers in this interval
+	dedupInterval time.Duration // events are deduped for the given interval
+	logger        log.Logger    // logger
 
-	// used to wait for the graceful shutdown of notifier and incoming events processor
-	wg sync.WaitGroup
+	// store, cache and batch needs to be in sync always; so, they should be handled through a common lock
+	eventsStore   events.PersistentStore // persistent store for events
+	dedupCache    *cache                 // in-memory cache to dedup events
+	eventsBatcher *eventsBatcher         // batcher batches the list of events to be sent out in the next send (batch) interval
 
-	// writers
-	writers *eventWriters
+	// any operation on writers (events distribution, registration, unregistraion) should not stall the events pipeline
+	writers *eventWriters // event writers
 
-	// used for shutting down the dispatcher
-	stop     sync.Once
-	shutdown chan struct{}
-
-	// to stop receving any more events/register requests once the dispatcher is shutdown
-	stopped bool
-
-	logger log.Logger
+	stop     sync.Once      // used for shutting down the dispatcher
+	shutdown chan struct{}  // to send shutdown signal to the daemon go routines (i.e. event distribution)
+	wg       sync.WaitGroup // used to wait for the graceful shutdown of daemon go routines
+	stopped  bool           // to stop receiving any more events/register requests once the dispatcher is shutdown
 }
 
 // upon registering the writer, each writers get a events channel to watch for
 // events. `eventWriters` maintains the list of registered writers.
 type eventWriters struct {
-	sync.Mutex                                   // to protect the writers map
-	list       map[string]*eventReceiverChanImpl // list of registered writers
+	sync.Mutex                    // to protect the writers map without having to stall the events pipeline
+	list       map[string]*writer // map of writers with their name; writers are given a name during creation NewWriter(...).
+}
+
+// writer ties the writer with it's associated channal receiving events and the offset tracker.
+type writer struct {
+	eventsCh      events.Chan
+	offsetTracker events.OffsetTracker
+	wr            events.Writer
 }
 
 // NewDispatcher creates a new dispatcher instance with the given send interval.
-func NewDispatcher(sendInterval time.Duration, logger log.Logger) events.Dispatcher {
+func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath string, logger log.Logger) (events.Dispatcher, error) {
+	if dedupInterval <= 0 {
+		dedupInterval = defaultDedupInterval
+	}
+
 	if sendInterval <= 0 {
 		sendInterval = defaultSendInterval
 	}
 
-	// expire events after 2x the given send interval. Dispatcher should process the
-	// deduped events every send interval but if it cannot process due to CPU wait time, the events
-	// are retained for this extra buffer time to avoid losing them.
-
-	dispatcher := &dispatcherImpl{
-		sendInterval: sendInterval,
-		cache:        &cache{m: map[string]memcache.Cache{}, ttl: 2 * sendInterval},
-		writers:      &eventWriters{list: map[string]*eventReceiverChanImpl{}},
-		shutdown:     make(chan struct{}),
-		logger:       logger.WithContext("submodule", "dispatcher"),
+	if utils.IsEmpty(eventsStorePath) {
+		return nil, fmt.Errorf("empty events store path")
 	}
 
-	// to wait for the notifier to complete
-	dispatcher.wg.Add(1)
+	// create persistent event store
+	eventsStore, err := newPersistentStore(eventsStorePath)
+	if err != nil {
+		logger.Errorf("failed to create dispatcher; could not create events store, err: %v", err)
+		return nil, fmt.Errorf("failed to create dispatcher, err: %v", err)
+	}
+
+	dispatcher := &dispatcherImpl{
+		dedupInterval: dedupInterval,
+		sendInterval:  sendInterval,
+		logger:        logger.WithContext("submodule", "events_dispatcher"),
+		dedupCache:    newDedupCache(dedupInterval),
+		eventsBatcher: newEventsBatcher(),
+		eventsStore:   eventsStore,
+		writers:       &eventWriters{list: map[string]*writer{}},
+		shutdown:      make(chan struct{}),
+	}
 
 	// start notifying writers of the events every send interval
+	dispatcher.wg.Add(1)
 	go dispatcher.notifyWriters()
 
 	dispatcher.logger.Info("started events dispatcher")
 
-	return dispatcher
+	return dispatcher, nil
 }
 
 // Action implements the action to be taken when the event reaches the dispatcher.
-// It adds the event to respective cache and sends it to the writers if this is
-// 1st occurrence of an event in send interval.
-func (d *dispatcherImpl) Action(event evtsapi.Event) error {
+// 1. Writes the events to persistent store.
+// 2. Add event to the dedup cache.
+// 3. Add the deduped event to the batch which will be sent to the writers.
+func (d *dispatcherImpl) Action(event monitoring.Event) error {
+	return d.addEvent(&event)
+}
+
+// helper function to write event to the persistent store and add events to the dedup cache & batch.
+func (d *dispatcherImpl) addEvent(event *monitoring.Event) error {
+	d.Lock()
+	defer d.Unlock()
+
 	if d.stopped {
 		d.logger.Errorf("dispatcher stopped, cannot process event: {%s}", event.GetSelfLink())
 		return fmt.Errorf("dispatcher stopped, cannot process events")
 	}
 
-	hashKey, err := d.getEventKey(&event)
-	if err != nil {
-		d.logger.Errorf("failed to create key for the event: {%s}, err: %v", event.GetSelfLink(), err)
+	if err := events.ValidateEvent(event); err != nil {
+		d.logger.Errorf("event {%s} validation failed, err: %v", event.GetUUID(), err)
 		return err
 	}
 
-	d.cache.Lock()
-	srcCache := d.getCacheByEventSource(event.GetSource())
-
-	existingEvt, ok := srcCache.Get(hashKey)
-	if ok { // found, update the count of the existing event and timestamp
-		d.logger.Debugf("event {%s} found in cache, updating the counter and timestamp", event.GetSelfLink())
-		event = existingEvt.(evtsapi.Event)
-		event.EventAttributes.Count++
+	// write event to the persistent store (i.e. file)
+	if err := d.writeToEventsStore(event); err != nil {
+		d.logger.Errorf("failed to write event {%s} to persistent store (file), err: %v", event.GetUUID(), err)
+		return err
 	}
 
-	srcCache.Add(hashKey, event)
-	d.cache.Unlock()
-
-	// first event; send it to the writers
-	// It is an optimistic attempt to send the first event in an interval to the writers. So, that
-	// when process/node restarts, we'll lose only the duplicates (atleast one occurrence is already recordered).
-	if !ok {
-		d.logger.Debugf("{first event in the interval} send it to the writers: {%s}", event.GetSelfLink())
-		d.distributeEvents([]*evtsapi.Event{&event})
+	// dedup and add the event to batch
+	if err := d.dedupAndBatch(events.GetEventKey(event), event); err != nil {
+		d.logger.Errorf("failed to dedup and batch event {%s}, err: %v", event.GetUUID(), err)
+		return err
 	}
 
 	return nil
 }
 
-// distributeEvents helper function to distribute given event list to all writers.
-func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event) {
-	if len(evts) == 0 {
-		return
-	}
+// ProcessFailedEvents processes failed events; used to replay events during restarts based on the
+// bookmarked offset of each writer.
+func (d *dispatcherImpl) ProcessFailedEvents() {
+	d.Lock()
+	defer d.Unlock()
 
 	d.writers.Lock()
 	defer d.writers.Unlock()
 
-	// notify all the watchers
+	d.logger.Info("processing failed/pending events")
+
+	// get the current offset of the persistent store which will be bookmarked by the writers once the failed events are processed
+	currentEvtsOffset, err := d.eventsStore.GetCurrentOffset()
+	if err != nil {
+		d.logger.Errorf("couldn't get the current events file offset, err: %v", err)
+		return
+	}
+
+	// nothing in the events file to be sent to the writers
+	if currentEvtsOffset == 0 {
+		d.logger.Debugf("current events file offset is 0; nothing to be sent to the writers")
+		return
+	}
+
 	for _, w := range d.writers.list {
+		writerName := w.wr.Name()
+		writerOffset, err := w.wr.GetLastProcessedOffset()
+		if err != nil {
+			d.logger.Errorf("cannot process failed/pending events; failed to get the bookmarked offset for writer {%s}, err: %v", writerName, err)
+			continue
+		}
+
+		// get the list of events pending events from persistent store
+		evts, err := d.eventsStore.GetEventsFromOffset(writerOffset)
+		if err != nil {
+			d.logger.Errorf("cannot process failed/pending events; failed to get the events using offset {%v}", writerOffset)
+			continue
+		}
+
 		select {
-		case <-w.stopped:
-			d.logger.Debugf("event reciever channel for writer {%s} stopped; cannot deliver events", w.writer.Name())
-		case w.resultCh <- evts:
-			// slow writers will block this. So, it is highly recommended to set a large enough
-			// channel length for them.
-		default:
-			// for non-blocking send; writer failing to receive the event for a any reason (e.g. channel full)
-			// will lose the event.
+		case <-w.eventsCh.Stopped():
+			d.logger.Debugf("event receiver channel for writer {%s} stopped; cannot deliver events", writerName)
+		case w.eventsCh.Chan() <- newBatch(evts, currentEvtsOffset):
+			d.logger.Infof("sent failed/pending events to the writer {%s}", writerName)
+		default: // to avoid blocking
+			d.logger.Debugf("could not send failed/pending events to the writer {%s}", writerName)
 		}
 	}
 }
 
-// RegisterWriter creates a watch channel for the caller and returns it.
+// RegisterWriter creates a watch channel and offset tracker for the caller and returns it.
 // the caller can watch the channel for events and once done, can stop the channel.
-// each channel maintains a name which is useful for stopping the watch.
-func (d *dispatcherImpl) RegisterWriter(writer events.Writer) (events.EventReceiverChan, error) {
+// each channel maintains a name which is useful for stopping the watch. Offset tracker is used to
+// bookmark the offset.
+func (d *dispatcherImpl) RegisterWriter(w events.Writer) (events.Chan, events.OffsetTracker, error) {
+	d.Lock()
 	if d.stopped {
-		d.logger.Errorf("dispatcher stopped, cannot register writer: {%s}", writer.Name())
-		return nil, fmt.Errorf("dispatcher stopped, cannot register writers")
+		d.logger.Errorf("dispatcher stopped, cannot register writer: {%s}", w.Name())
+		d.Unlock()
+		return nil, nil, fmt.Errorf("dispatcher stopped, cannot register writers")
 	}
+	d.Unlock()
 
 	d.writers.Lock()
 	defer d.writers.Unlock()
 
-	writerName := writer.Name()
+	writerName := w.Name()
 	if _, ok := d.writers.list[writerName]; ok {
 		d.logger.Errorf("writer {%s} exists already", writerName)
-		return nil, fmt.Errorf("writer with the given name exists already")
+		return nil, nil, fmt.Errorf("writer with the given name exists already")
 	}
 
-	e := newEventReceiverChan(writer, d)
-	d.writers.list[writerName] = e
+	// to record and manage file offset
+	offsetTracker, err := newOffsetTracker(path.Join(d.eventsStore.GetStorePath(), "offset"), writerName)
+
+	// to make sure not to send any event (during restarts) that was generated way before the writer registered itself.
+	// something to think about.// FIXME: is this needed?
+	// offsetTracker.UpdateOffset(currentEventsStoreOffset)
+
+	if err != nil {
+		d.logger.Errorf("could not create offset tracker, err: %v", err)
+		return nil, nil, errors.Wrap(err, "failed to create offset tracker")
+	}
+
+	e := newEventsChan(w.ChLen())
+	d.writers.list[writerName] = &writer{eventsCh: e, offsetTracker: offsetTracker, wr: w}
 	d.logger.Debugf("writer {%s} registered with the dispatcher successfully", writerName)
 
-	return e, nil
+	return e, offsetTracker, nil
 }
 
 // UnregisterWriter removes the writer identified by given name from the list of writers. As a result
 // the channel associated with the given name will no more receive the events
-// from the dispatcher. It does nothing if the writer identified by given name is not found in the
-// disptacher's writer list.
+// from the dispatcher. And, offset tracker will be stopped as well.
+// call does nothing if the writer identified by given name is not found in the disptacher's writer list.
 func (d *dispatcherImpl) UnregisterWriter(name string) {
 	d.writers.Lock()
 	if w, ok := d.writers.list[name]; ok {
-		w.stop.Do(func() {
-			close(w.stopped)
-			close(w.resultCh)
-		})
-
 		delete(d.writers.list, name)
+		w.eventsCh.Stop()
 		d.logger.Debugf("writer {%s} unregistered from the dispatcher successfully", name)
 	}
 	d.writers.Unlock()
@@ -194,35 +250,32 @@ func (d *dispatcherImpl) UnregisterWriter(name string) {
 // Shutdown sends shutdown signal to the notifier, flushes all the deudped events to all
 // registered writers and closes all the writers.
 func (d *dispatcherImpl) Shutdown() {
-	d.Lock()
-	defer d.Unlock()
-
 	d.stop.Do(func() {
+		d.Lock()
 		d.stopped = true // helps to stop accepting any more events
 		close(d.shutdown)
+		d.Unlock()
+
+		// wait for the notifier to complete
+		d.wg.Wait()
 
 		// process the pending events and send to writers
-		evts := d.processCachedEvents()
-
-		if len(evts) > 0 {
-			d.logger.Debug("flush the cached events to registered writers")
-			d.writers.Lock()
-			// notify all the watchers
-			for _, w := range d.writers.list {
-				err := w.writer.WriteEvents(evts)
-				if err != nil {
-					d.logger.Debugf("failed to flush events to writer {%s}", w.writer.Name())
-				}
-			}
-			d.writers.Unlock()
+		d.logger.Debug("flush the batched events to registered writers")
+		d.Lock()
+		evts := d.eventsBatcher.getEvents()
+		offset, err := d.eventsStore.GetCurrentOffset()
+		if err != nil {
+			d.logger.Errorf("failed to get the offset from events store to flush, err: %v", err)
+		} else {
+			d.distributeEvents(evts, offset)
 		}
+		d.Unlock()
+
+		// close all the writers
+		d.closeAllWriters()
+
+		d.logger.Debugf("dispatcher shutdown")
 	})
-	// wait for the notifier to complete
-	d.wg.Wait()
-
-	d.closeAllWriters()
-
-	d.logger.Debugf("dispatcher shutdown")
 }
 
 // notifyWriters is a deamon which processes the deduped/cached events every send interval
@@ -230,66 +283,90 @@ func (d *dispatcherImpl) Shutdown() {
 // signal.
 func (d *dispatcherImpl) notifyWriters() {
 	ticker := time.NewTicker(d.sendInterval)
+	defer d.wg.Done()
 
-breakforloop:
 	for {
 		select {
-		case <-ticker.C:
-			evts := d.processCachedEvents()
-			d.distributeEvents(evts)
+		case <-ticker.C: // distribute current batch with offset
+			d.Lock()
+			evts := d.eventsBatcher.getEvents()
+			d.eventsBatcher.clear()
+
+			offset, err := d.eventsStore.GetCurrentOffset()
+			if err != nil {
+				d.logger.Errorf("failed to get the offset from events store to distribute events; skipping distribute, err: %v", err)
+				continue
+			}
+			d.Unlock()
+
+			d.distributeEvents(evts, offset)
 		case <-d.shutdown:
-			break breakforloop
+			return
 		}
 	}
-
-	d.wg.Done()
 }
 
-// processCachedEvents helper function to process the cached events. It will be called
-// when its time to distribute events. This ensures the cache keys are retained across
-// the intervals to avoid re-creating them for the repeating source in every interval.
-// To avoid blocking the primary cache while processing cached events, the secondary cache is used.
-// so, that primary cache can still receive incoming events while the secondary
-// cache is processing cached events and dispatches it to all writers.
-func (d *dispatcherImpl) processCachedEvents() []*evtsapi.Event {
-	secondaryCache.Lock()
-
-	d.cache.Lock()
-	// swap the cache
-	tempCache := d.cache.getCache()
-	// secondaryCache.m is an empty cache at this point
-	d.cache.m = secondaryCache.m
-	// now, secondary contains all the items that needs to be sent to the watchers/writers
-	secondaryCache.m = tempCache
-
-	// populate cache keys to make sure they're not re-created over each interval.
-	// this ensures the source keys are just created once.
-	for key := range secondaryCache.m {
-		d.cache.m[key] = d.cache.newMemCache()
+// distributeEvents helper function to distribute given event list and offset to all writers.
+func (d *dispatcherImpl) distributeEvents(evts []*monitoring.Event, offset int64) {
+	if len(evts) == 0 {
+		return
 	}
 
-	d.cache.Unlock()
+	d.writers.Lock()
+	defer d.writers.Unlock()
 
-	// process the events from all the sources
-	evts := []*evtsapi.Event{}
-	for _, cache := range secondaryCache.m {
-		cachedEvents := cache.Items()
-
-		// run items from each source
-		for _, event := range cachedEvents {
-			tmp := event.(evtsapi.Event)
-			if tmp.GetCount() > 1 {
-				evts = append(evts, &tmp)
-			}
+	resp := newBatch(evts, offset)
+	// notify all the watchers
+	for _, w := range d.writers.list {
+		select {
+		case <-w.eventsCh.Stopped():
+			d.logger.Debugf("writer event channel {%s} stopped; cannot deliver events", w.wr.Name())
+		case w.eventsCh.Chan() <- resp:
+			// slow writers will block this. So, it is highly recommended to set a large enough
+			// channel length for them.
+		default:
+			// for non-blocking send; writer failing to receive the event for a any reason (channel full)
+			// will lose the event.
 		}
 	}
+}
 
-	// reset the secondary cache
-	secondaryCache.clear()
+// helper function to write the given to persistent event store.
+func (d *dispatcherImpl) writeToEventsStore(event *monitoring.Event) error {
+	evt, err := json.Marshal(event)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal the given event")
+	}
 
-	secondaryCache.Unlock()
+	if err = d.eventsStore.Write(append(evt, '\n')); err != nil {
+		return errors.Wrap(err, "failed to write event to file")
+	}
 
-	return evts
+	return nil
+}
+
+// dedupAndBatch dedups the given event and adds it to the batch to be sent to the writers.
+func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *monitoring.Event) error {
+	evt := *event
+
+	// look for potentail deduplication
+	srcCache := d.getCacheByEventSource(event.GetSource())
+	if existingEvt, ok := srcCache.Get(hashKey); ok { // found, update the count of the existing event and timestamp
+		d.logger.Debugf("event {%s} found in cache, updating the counter and timestamp", event.GetSelfLink())
+		evt = existingEvt.(monitoring.Event)
+
+		// update count and timestamp
+		timestamp, _ := types.TimestampProto(time.Now())
+		evt.EventAttributes.Count++
+		evt.ObjectMeta.ModTime.Timestamp = *timestamp
+	}
+
+	// add to dedup cache
+	srcCache.Add(hashKey, evt)
+
+	// add event to the batch
+	d.eventsBatcher.add(hashKey, &evt)
+	return nil
 }
 
 // closeAllWriters helper function to close all the writers
@@ -297,54 +374,17 @@ func (d *dispatcherImpl) closeAllWriters() {
 	d.logger.Debug("closing all the registered writers")
 	d.writers.Lock()
 	defer d.writers.Unlock()
+
 	for _, w := range d.writers.list {
-		// this ensures that any further call to `Stop()` watcher will do nothing.
-		// otherwise, we'll be writing to some memory which we don't use anymore.
-		w.stop.Do(func() {
-			close(w.stopped)
-			close(w.resultCh)
-		})
+		delete(d.writers.list, w.wr.Name())
+		w.eventsCh.Stop()
 	}
 
 	// efficient than deleting the elements one by one
-	d.writers.list = map[string]*eventReceiverChanImpl{}
+	d.writers.list = map[string]*writer{}
 }
 
 // getCacheByEventSource helper function that fetches the underlying cache of the given source.
-func (d *dispatcherImpl) getCacheByEventSource(source *evtsapi.EventSource) memcache.Cache {
-	return d.cache.getSourceCache(d.getSourceKey(source))
-}
-
-// getSourceKey helper function to construct the source key given the event
-// source. This key is used for maintaining a separate cache for each source.
-func (d *dispatcherImpl) getSourceKey(source *evtsapi.EventSource) string {
-	if source == nil {
-		return ""
-	}
-
-	return fmt.Sprintf("%s-%s", source.GetNodeName(), source.GetComponent())
-}
-
-// getEventKey helper function to create a hashkey for the event. This is
-// used for storing events in the cache.
-func (d *dispatcherImpl) getEventKey(event *evtsapi.Event) (string, error) {
-	if event.Source == nil || utils.IsEmpty(event.Type) || utils.IsEmpty(event.Severity) {
-		return "", events.NewError(events.ErrMissingEventAttributes, "source/type/severity is required")
-	}
-
-	keyComponents := []string{
-		event.Source.NodeName,
-		event.Source.Component,
-		event.Type,
-		event.Severity,
-		event.Message}
-
-	if event.ObjectRef != nil {
-		keyComponents = append(keyComponents,
-			[]string{event.ObjectRef.Kind,
-				event.ObjectRef.Namespace,
-				event.ObjectRef.Name}...)
-	}
-
-	return strings.Join(keyComponents, ""), nil
+func (d *dispatcherImpl) getCacheByEventSource(source *monitoring.EventSource) memcache.Cache {
+	return d.dedupCache.getSourceCache(events.GetSourceKey(source))
 }
