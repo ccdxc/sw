@@ -38,8 +38,7 @@ if_id_get_key_func (void *entry)
         return NULL;
     }
     hal_if = (if_t *)hal_handle_get_obj(ht_entry->handle_id);
-    HAL_ASSERT(hal_if != NULL);
-    return (void *)&(hal_if->if_id);
+    return hal_if ? (void *)&(hal_if->if_id) : NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -57,10 +56,14 @@ if_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 if_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (key1 == NULL || key2 == NULL) {
+        goto end;
+    }
     if (*(if_id_t *)key1 == *(if_id_t *)key2) {
         return true;
     }
+
+end:
     return false;
 }
 
@@ -448,7 +451,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode     = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if    = NULL;
-    if_create_app_ctxt_t        *app_ctxt  = NULL;
+    // if_create_app_ctxt_t        *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -458,7 +461,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (if_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    // app_ctxt = (if_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     hal_if = (if_t *)dhl_entry->obj;
 
@@ -467,14 +470,13 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_if_create_args_init(&pd_if_args);
     pd_if_args.intf = hal_if;
-    pd_if_args.lif = app_ctxt->lif;
+    pd_if_args.lif = find_lif_by_handle(hal_if->lif_handle);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_CREATE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create if pd, err : {}", ret);
     }
 
 end:
-
     return ret;
 }
 
@@ -581,35 +583,14 @@ end:
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// 1. Update PI DBs as if_create_add_cb() was a success
-//------------------------------------------------------------------------------
 hal_ret_t
-if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+if_add_to_db_and_refs (if_t *hal_if)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    if_t                        *hal_if = NULL, *uplink = NULL;
-    hal_handle_t                hal_handle = 0;
-    if_create_app_ctxt_t        *app_ctxt = NULL;
-    l2seg_t                     *l2seg = NULL, *nat_l2seg = NULL;
-
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
-    // assumption is there is only one element in the list
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (if_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
-
-    hal_if = (if_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
-
-    HAL_TRACE_DEBUG("if_id : {}:create commit cb", hal_if->if_id);
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    hal_handle = hal_if->hal_handle;
+    l2seg_t         *l2seg = NULL, *nat_l2seg = NULL;
+    lif_t           *lif = NULL;
+    if_t            *uplink = NULL;
 
     // Add to if id hash table
     ret = if_add_to_db(hal_if, hal_handle);
@@ -621,10 +602,11 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // If its enic, add to l2seg and lif
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        lif = find_lif_by_handle(hal_if->lif_handle);
 
         if (hal_if->enic_type == intf::IF_ENIC_TYPE_GFT) {
             // add to lif
-            ret = lif_add_if(app_ctxt->lif, hal_if);
+            ret = lif_add_if(lif, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
         } else if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
             l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
@@ -633,11 +615,11 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             HAL_ABORT(ret == HAL_RET_OK);
 
             // add to lif
-            ret = lif_add_if(app_ctxt->lif, hal_if);
+            ret = lif_add_if(lif, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
         } else {
             // add to lif
-            ret = lif_add_if(app_ctxt->lif, hal_if);
+            ret = lif_add_if(lif, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
 
             // Add to uplink's back refs
@@ -704,28 +686,22 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
-
     return ret;
 }
 
+
 //------------------------------------------------------------------------------
-// if_create_add_cb was a failure
-// 1. call delete to PD
-//      a. Deprogram HW
-//      b. Clean up resources
-//      c. Free PD object
-// 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI vrf
+// 1. Update PI DBs as if_create_add_cb() was a success
 //------------------------------------------------------------------------------
 hal_ret_t
-if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret        = HAL_RET_OK;
-    pd::pd_if_delete_args_t     pd_if_args = { 0 };
+    hal_ret_t                   ret = HAL_RET_OK;
+    dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    if_t                        *hal_if    = NULL;
-    hal_handle_t                hal_handle = 0;
-    dllist_ctxt_t               *lnode     = NULL;
+    if_t                        *hal_if = NULL;
+    // hal_handle_t                hal_handle = 0;
+    // if_create_app_ctxt_t        *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -733,14 +709,32 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    // app_ctxt = (if_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     hal_if = (if_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
+    // hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("if_id : {}:create abort cb",
-                    hal_if->if_id);
+    HAL_TRACE_DEBUG("if_id : {}:create commit cb", hal_if->if_id);
+
+    ret = if_add_to_db_and_refs(hal_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to add to DB or refs: if:{}, err:{}",
+                      hal_if->if_id, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
+if_create_abort_cleanup (if_t *hal_if, hal_handle_t hal_handle)
+{
+    hal_ret_t                   ret        = HAL_RET_OK;
+    pd::pd_if_delete_args_t     pd_if_args = { 0 };
 
     // delete call to PD
     if (hal_if->pd_if) {
@@ -766,8 +760,43 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // remove the object
     hal_handle_free(hal_handle);
 
-    // free PI if
-    // if_free(hal_if);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// if_create_add_cb was a failure
+// 1. call delete to PD
+//      a. Deprogram HW
+//      b. Clean up resources
+//      c. Free PD object
+// 2. Remove object from hal_handle id based hash table in infra
+// 3. Free PI vrf
+//------------------------------------------------------------------------------
+hal_ret_t
+if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                   ret        = HAL_RET_OK;
+    dhl_entry_t                 *dhl_entry = NULL;
+    if_t                        *hal_if    = NULL;
+    hal_handle_t                hal_handle = 0;
+    dllist_ctxt_t               *lnode     = NULL;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("invalid cfg_ctxt");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    hal_if = (if_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("if_id : {}:create abort cb",
+                    hal_if->if_id);
+
+    if_create_abort_cleanup(hal_if, hal_handle);
 
 end:
 
@@ -807,6 +836,75 @@ if_set_rsp_status (if_t *hal_if, InterfaceResponse *rsp)
     // Rest of the status need to be filled in from PD
 }
 
+hal_ret_t
+if_init_from_spec(if_t *hal_if, const InterfaceSpec& spec)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    // consume the config
+    hal_if->if_id = spec.key_or_handle().interface_id();
+    hal_if->if_type = spec.type();
+    hal_if->if_admin_status = spec.admin_status();
+    hal_if->if_op_status = intf::IF_STATUS_NONE;      // TODO: set this later !!
+
+    switch (hal_if->if_type) {
+    case intf::IF_TYPE_ENIC:
+        ret = enic_if_create(spec, hal_if);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+        // lif = find_lif_by_handle(hal_if->lif_handle);
+        // HAL_ASSERT(lif != NULL);
+        break;
+
+    case intf::IF_TYPE_UPLINK:
+        ret = uplink_if_create(spec, hal_if);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+        // will be added to broadcast list through add_l2seg_on_uplink() call
+        break;
+
+    case intf::IF_TYPE_UPLINK_PC:
+        ret = uplink_pc_create(spec, hal_if);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+
+        // Will be added to broadcast list through add_l2seg_on_uplink() call
+        break;
+
+    case intf::IF_TYPE_TUNNEL:
+        ret = tunnel_if_create(spec, hal_if);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+
+        // Will be added to broadcast list through add_l2seg_on_uplink() call
+        break;
+
+    case intf::IF_TYPE_CPU:
+        ret = cpu_if_create(spec, hal_if);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+        break;
+
+    case intf::IF_TYPE_APP_REDIR:
+        ret = app_redir_if_create(spec, hal_if);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+        break;
+    default:
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // process a interface create request
 // TODO: if interface already exists, treat it as modify
@@ -816,9 +914,9 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     // l2seg_t                     *l2seg = NULL;
-    lif_t                       *lif = NULL;
+    // lif_t                       *lif = NULL;
     if_t                        *hal_if = NULL;
-    if_create_app_ctxt_t        app_ctxt = { 0 };
+    if_create_app_ctxt_t        app_ctxt;
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
@@ -859,69 +957,13 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         return HAL_RET_OOM;
     }
 
-    // consume the config
-    hal_if->if_id = spec.key_or_handle().interface_id();
-    hal_if->if_type = spec.type();
-    hal_if->if_admin_status = spec.admin_status();
-    hal_if->if_op_status = intf::IF_STATUS_NONE;      // TODO: set this later !!
-
-    switch (hal_if->if_type) {
-    case intf::IF_TYPE_ENIC:
-        ret = enic_if_create(spec, rsp, hal_if);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-        lif = find_lif_by_handle(hal_if->lif_handle);
-        HAL_ASSERT(lif != NULL);
-        break;
-
-    case intf::IF_TYPE_UPLINK:
-        ret = uplink_if_create(spec, rsp, hal_if);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-        // will be added to broadcast list through add_l2seg_on_uplink() call
-        break;
-
-    case intf::IF_TYPE_UPLINK_PC:
-        ret = uplink_pc_create(spec, rsp, hal_if);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-
-        // Will be added to broadcast list through add_l2seg_on_uplink() call
-        break;
-
-    case intf::IF_TYPE_TUNNEL:
-        ret = tunnel_if_create(spec, rsp, hal_if);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-
-        // Will be added to broadcast list through add_l2seg_on_uplink() call
-        break;
-
-    case intf::IF_TYPE_CPU:
-        ret = cpu_if_create(spec, rsp, hal_if);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-        break;
-
-    case intf::IF_TYPE_APP_REDIR:
-        ret = app_redir_if_create(spec, rsp, hal_if);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-        break;
-    default:
-        ret = HAL_RET_INVALID_ARG;
-        rsp->set_api_status(types::API_STATUS_OK);
-        rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
-        rsp->set_api_status(types::API_STATUS_IF_TYPE_INVALID);
+    // initialize if attributes from its spec
+    ret = if_init_from_spec(hal_if, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("If Create Failed: Unable to init from spec. err:{}",
+                      ret);
         goto end;
     }
-
 
     // allocate hal handle id
     hal_if->hal_handle = hal_handle_alloc(HAL_OBJ_ID_INTERFACE);
@@ -962,7 +1004,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
     // form ctxt and call infra add
     // app_ctxt.l2seg = l2seg;
-    app_ctxt.lif = lif;
+    // app_ctxt.lif = lif;
     dhl_entry.handle = hal_if->hal_handle;
     dhl_entry.obj = hal_if;
     cfg_ctxt.app_ctxt = &app_ctxt;
@@ -2310,8 +2352,7 @@ end:
 // CPU If Create
 //------------------------------------------------------------------------------
 hal_ret_t
-cpu_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
-               if_t *hal_if)
+cpu_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
     lif_t               *lif;
@@ -2319,7 +2360,7 @@ cpu_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     HAL_TRACE_DEBUG("CPUif Create for id {}",
                     spec.key_or_handle().interface_id());
 
-    ret = get_lif_handle_for_cpu_if(spec, rsp, hal_if);
+    ret = get_lif_handle_for_cpu_if(spec, hal_if);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to find the lif handle, err : {}", ret);
         return ret;
@@ -2336,8 +2377,7 @@ cpu_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 // App Redir If Create
 //------------------------------------------------------------------------------
 hal_ret_t
-app_redir_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
-                     if_t *hal_if)
+app_redir_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
     lif_t               *lif;
@@ -2345,7 +2385,7 @@ app_redir_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     HAL_TRACE_DEBUG("Create for id {}",
                     spec.key_or_handle().interface_id());
 
-    ret = get_lif_handle_for_app_redir_if(spec, rsp, hal_if);
+    ret = get_lif_handle_for_app_redir_if(spec, hal_if);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to find the lif handle Err : {}",
                       ret);
@@ -2620,7 +2660,7 @@ enicif_cleanup_l2seg_entry_list(block_list **bl_list)
 // Enic If Create
 //------------------------------------------------------------------------------
 hal_ret_t
-enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
+enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
     l2seg_t             *l2seg;
@@ -2633,7 +2673,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
                     spec.if_enic_info().enic_type());
 
     // lif for enic_if ... rsp is updated within the call
-    ret = get_lif_handle_for_enic_if(spec, rsp, hal_if);
+    ret = get_lif_handle_for_enic_if(spec, hal_if);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to find the lif handle Err : {}",
                       ret);
@@ -2739,7 +2779,7 @@ end:
 // Uplink If Create
 //------------------------------------------------------------------------------
 hal_ret_t
-uplink_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
+uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -2798,8 +2838,7 @@ end:
 // Uplink PC If Create
 //------------------------------------------------------------------------------
 hal_ret_t
-uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
-                  if_t *hal_if)
+uplink_pc_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t    ret = HAL_RET_OK;
     InterfaceKeyHandle mbr_if_key_handle;
@@ -2874,8 +2913,7 @@ tunnel_if_get_remote_tep_ep(if_t *pi_if)
 // Tunnel If Create
 //------------------------------------------------------------------------------
 hal_ret_t
-tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
-                  if_t *hal_if)
+tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t  ret      = HAL_RET_OK;
     ep_t       *rtep_ep = NULL;
@@ -3343,8 +3381,7 @@ end:
 // Get lif handle
 //------------------------------------------------------------------------------
 hal_ret_t
-get_lif_handle_for_enic_if (InterfaceSpec& spec, InterfaceResponse *rsp,
-                            if_t *hal_if)
+get_lif_handle_for_enic_if (const InterfaceSpec& spec, if_t *hal_if)
 {
     lif_id_t            lif_id = 0;
     hal_handle_t        lif_handle = 0;
@@ -3364,7 +3401,7 @@ get_lif_handle_for_enic_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     if (lif == NULL) {
         HAL_TRACE_ERR("lif handle not found for id : {} hdl : {}",
                       lif_id, lif_handle);
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        // rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         ret = HAL_RET_LIF_NOT_FOUND;
         goto end;
     } else {
@@ -3380,8 +3417,7 @@ end:
 // Get lif handle for CPU If
 //------------------------------------------------------------------------------
 hal_ret_t
-get_lif_handle_for_cpu_if (InterfaceSpec& spec, InterfaceResponse *rsp,
-                          if_t *hal_if)
+get_lif_handle_for_cpu_if (const InterfaceSpec& spec, if_t *hal_if)
 {
     lif_id_t        lif_id = 0;
     hal_handle_t    lif_handle = 0;
@@ -3401,9 +3437,9 @@ get_lif_handle_for_cpu_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     if (lif == NULL) {
         HAL_TRACE_ERR("PI-CPUif:LIF handle not found for ID : {} HDL : {}",
                       lif_id, lif_handle);
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-         ret = HAL_RET_LIF_NOT_FOUND;
-         goto end;
+        // rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        ret = HAL_RET_LIF_NOT_FOUND;
+        goto end;
     } else {
         hal_if->lif_handle = lif->hal_handle;
     }
@@ -3417,8 +3453,7 @@ end:
 // Get lif handle for App Redirect If
 //------------------------------------------------------------------------------
 hal_ret_t
-get_lif_handle_for_app_redir_if (InterfaceSpec& spec, InterfaceResponse *rsp,
-                                 if_t *hal_if)
+get_lif_handle_for_app_redir_if (const InterfaceSpec& spec, if_t *hal_if)
 {
     lif_id_t        lif_id = 0;
     hal_handle_t    lif_handle = 0;
@@ -3438,9 +3473,9 @@ get_lif_handle_for_app_redir_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     if (lif == NULL) {
         HAL_TRACE_ERR("LIF handle not found for ID : {} HDL : {}",
                       lif_id, lif_handle);
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-         ret = HAL_RET_LIF_NOT_FOUND;
-         goto end;
+        // rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        ret = HAL_RET_LIF_NOT_FOUND;
+        goto end;
     } else {
         hal_if->lif_handle = lif->hal_handle;
     }
@@ -4180,7 +4215,7 @@ end:
 // mlen is to be filled by this function with marshalled state length
 //-----------------------------------------------------------------------------
 hal_ret_t
-if_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+if_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 {
     InterfaceGetResponse    rsp;
     uint32_t                serialized_state_sz;
@@ -4208,6 +4243,127 @@ if_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     HAL_TRACE_DEBUG("Marshalled interface {}, len {}",
                     hal_if->if_id, serialized_state_sz);
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a IF's oper status from its status object
+//------------------------------------------------------------------------------
+static hal_ret_t
+if_init_from_status (if_t *hal_if, const InterfaceStatus& status)
+{
+    hal_if->hal_handle = status.if_handle();
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a IF's oper stats from its stats object
+//------------------------------------------------------------------------------
+static hal_ret_t
+if_init_from_stats (if_t *hal_if, const InterfaceStats& stats)
+{
+    // TODO: Not sure if we have to store interface stats
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// interface restore add callback
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_restore_add (if_t *hal_if, const InterfaceGetResponse& if_info)
+{
+    hal_ret_t                   ret;
+    pd::pd_if_restore_args_t    pd_if_args = { 0 };
+
+    // restore pd state
+    pd_if_args.hal_if = hal_if;
+    pd_if_args.if_status = &if_info.status();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_RESTORE, &pd_if_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore IF {} pd, err : {}",
+                      hal_if->if_id, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+if_restore_commit (if_t *hal_if)
+{
+    hal_ret_t          ret;
+
+    HAL_TRACE_DEBUG("Committing IF {} restore", hal_if->if_id);
+
+    ret = if_add_to_db_and_refs(hal_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to add to DB or refs: if:{}, err:{}",
+                      hal_if->if_id, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+static hal_ret_t
+if_restore_abort (if_t *hal_if, const InterfaceGetResponse& if_info)
+{
+    HAL_TRACE_ERR("Aborting IF {} restore", hal_if->if_id);
+    if_create_abort_cleanup(hal_if, hal_if->hal_handle);
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// interface restore callback
+//-----------------------------------------------------------------------------
+uint32_t
+if_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t               ret;
+    InterfaceGetResponse    if_info;
+    if_t                    *hal_if;
+    uint32_t                rc = 0;
+
+    // de-serialize the object
+    if (if_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized interface obj");
+        goto end;
+    }
+
+    // allocate VRF obj from slab
+    hal_if = if_alloc_init();
+    if (hal_if == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init if, err : {}", ret);
+        return 0;
+    }
+
+    // initialize vrf attrs from its spec
+    ret = if_init_from_spec(hal_if, if_info.spec());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to init IF from spec. err:{}", ret);
+        HAL_ASSERT(0);
+    }
+    ret = if_init_from_status(hal_if, if_info.status());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to init IF from status. err:{}", ret);
+        HAL_ASSERT(0);
+    }
+    ret = if_init_from_stats(hal_if, if_info.stats());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to init IF from stats. err:{}", ret);
+        HAL_ASSERT(0);
+    }
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_INTERFACE, hal_if->hal_handle,
+                      (void *)hal_if);
+
+    ret = if_restore_add(hal_if, if_info);
+    if (ret != HAL_RET_OK) {
+        if_restore_abort(hal_if, if_info);
+    }
+    if_restore_commit(hal_if);
+
+end:
+    return rc;
 }
 
 //-----------------------------------------------------------------------------

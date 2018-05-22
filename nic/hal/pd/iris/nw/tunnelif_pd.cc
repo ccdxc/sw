@@ -117,6 +117,75 @@ pd_tunnelif_get (pd_if_get_args_t *args)
 }
 
 // ----------------------------------------------------------------------------
+// Restoring data post-upgrade
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_restore_data (pd_if_restore_args_t *args)
+{
+    hal_ret_t       ret      = HAL_RET_OK;
+    if_t            *hal_if  = args->hal_if;
+    pd_tunnelif_t   *pd_tif  = (pd_tunnelif_t *)hal_if->pd_if;
+    auto tnnl_info           = args->if_status->tunnel_info();
+
+
+    pd_tif->tunnel_rw_idx = tnnl_info.tunnel_rw_idx();
+    HAL_ASSERT(tnnl_info.inp_map_nat_idx_size() == 0 ||
+               tnnl_info.inp_map_nat_idx_size() == 3);
+    for (int i = 0; i < tnnl_info.inp_map_nat_idx_size(); i++) {
+        pd_tif->imn_idx[i] = tnnl_info.inp_map_nat_idx(i);
+    }
+    HAL_ASSERT(tnnl_info.inp_map_tnl_idx_size() == 0 ||
+               tnnl_info.inp_map_tnl_idx_size() == 3);
+    for (int i = 0; i < tnnl_info.inp_map_tnl_idx_size(); i++) {
+        pd_tif->imt_idx[i] = tnnl_info.inp_map_tnl_idx(i);
+    }
+
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Uplink If Restore
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_restore (pd_if_restore_args_t *args)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    pd_tunnelif_t        *pd_tif;
+
+    HAL_TRACE_DEBUG("Restoring pd state for if_id: {}",
+                    if_get_if_id(args->hal_if));
+
+    // Create Uplink if
+    pd_tif = pd_tunnelif_alloc_init();
+    if (pd_tif == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // Link PI & PD
+    pd_tunnelif_link_pi_pd(pd_tif, args->hal_if);
+
+    // Restore PD info
+    ret = pd_tunnelif_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore PD data for IF: {}, err:{}",
+                      if_get_if_id(args->hal_if), ret);
+        goto end;
+    }
+
+    // Program HW
+    ret = pd_tunnelif_program_hw(pd_tif, true);
+
+end:
+    if (ret != HAL_RET_OK) {
+        pd_tunnelif_cleanup(pd_tif);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Allocate resources for PD Tunnel IF
 // ----------------------------------------------------------------------------
 hal_ret_t
@@ -183,7 +252,7 @@ end:
 // Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
+pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
 {
     hal_ret_t            ret;
     if_t                 *hal_if;
@@ -191,7 +260,7 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
     hal_if = (if_t *) pd_tunnelif->pi_if;
     HAL_ASSERT(hal_if != NULL);
 
-    ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif);
+    ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif, is_upgrade);
     if (ret != HAL_RET_OK)
         goto fail_flag;
 
@@ -199,11 +268,13 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
     if (hal_if->encap_type ==
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
         // Program Input mapping native table
-        ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif);
+        ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif,
+                                                     is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
             goto fail_flag;
         // Program Input mapping tunneled table
-        ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif);
+        ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif,
+                                                       is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
             goto fail_flag;
     }
@@ -241,7 +312,7 @@ pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
     tcam        *tcam;
     hal_ret_t   ret;
     sdk_ret_t   sdk_ret;
-    int         *arr;
+    uint32_t    *arr;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);
@@ -253,14 +324,14 @@ pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
     }
 
     for (int i = 0; i < 3; i++) {
-        if (arr[i] != -1) {
+        if (arr[i] != INVALID_INDEXER_INDEX) {
             sdk_ret = tcam->remove(arr[i]);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Input mapping native tcam remove failure, "
                               "idx : {}, err : {}", arr[i], ret);
             }
-            arr[i] = -1;
+            arr[i] = INVALID_INDEXER_INDEX;
         }
     }
     return ret;
@@ -271,7 +342,8 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
                          int tunnel_type, bool inner_v4_vld,
                          bool inner_v6_vld, bool v4_tep,
                          int actionid,
-                         p4pd_table_id tbl_id, int *idx)
+                         p4pd_table_id tbl_id, uint32_t *idx,
+                         bool is_upgrade)
 {
     hal_ret_t                           ret = HAL_RET_OK;
     sdk_ret_t                           sdk_ret;
@@ -279,7 +351,6 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
     input_mapping_native_swkey_mask_t   mask;
     input_mapping_native_actiondata     data;
     tcam                                *tcam;
-    uint32_t                            ret_idx = 0;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);
@@ -308,7 +379,11 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
         memset(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, 0xFF, IP6_ADDR8_LEN);
     }
     data.actionid = actionid;
-    sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    if (is_upgrade) {
+        sdk_ret = tcam->insert_withid(&key, &mask, &data, *idx);
+    } else {
+        sdk_ret = tcam->insert(&key, &mask, &data, (uint32_t *)idx);
+    }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
@@ -316,20 +391,19 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
     } else {
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Input mapping table tcam write failure, "
-                          "idx : {}, err : {}", ret_idx, ret);
+                          "idx : {}, err : {}", *idx, ret);
             return ret;
         }
     }
     HAL_TRACE_DEBUG("Input mapping table tcam write, "
-                    "idx : {}, ret: {}", ret_idx, ret);
-    *idx = (int) ret_idx;
+                    "idx : {}, ret: {}", *idx, ret);
     return ret;
 }
 
 hal_ret_t
-pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif)
+pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif,
+                                       bool is_upgrade)
 {
-    int                                  idx;
     hal_ret_t                            ret;
     if_t                                 *pi_if;
     bool                                 v4_tep = false;
@@ -346,24 +420,24 @@ pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif)
     /* Entry 1 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                true, false, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
-                               P4TBL_ID_INPUT_MAPPING_NATIVE, &idx);
+                               P4TBL_ID_INPUT_MAPPING_NATIVE,
+                               &pd_tunnelif->imn_idx[0], is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    pd_tunnelif->imn_idx[0] = idx;
     /* Entry 2 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                false, true, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
-                               P4TBL_ID_INPUT_MAPPING_NATIVE, &idx);
+                               P4TBL_ID_INPUT_MAPPING_NATIVE,
+                               &pd_tunnelif->imn_idx[1], is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    pd_tunnelif->imn_idx[1] = idx;
     /* Entry 3 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                false, false, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
-                               P4TBL_ID_INPUT_MAPPING_NATIVE, &idx);
+                               P4TBL_ID_INPUT_MAPPING_NATIVE,
+                               &pd_tunnelif->imn_idx[2], is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    pd_tunnelif->imn_idx[2] = idx;
 
     return HAL_RET_OK;
 
@@ -374,9 +448,9 @@ fail_flag:
 }
 
 hal_ret_t
-pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif)
+pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
+                                         bool is_upgrade)
 {
-    int                                  idx;
     hal_ret_t                            ret;
     if_t                                 *pi_if;
     bool                                 v4_tep = false;
@@ -394,26 +468,29 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif)
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                true, false, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID,
-                               P4TBL_ID_INPUT_MAPPING_TUNNELED, &idx);
+                               P4TBL_ID_INPUT_MAPPING_TUNNELED,
+                               &pd_tunnelif->imt_idx[0],
+                               is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    pd_tunnelif->imt_idx[0] = idx;
     /* Entry 2 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                false, true, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID,
-                               P4TBL_ID_INPUT_MAPPING_TUNNELED, &idx);
+                               P4TBL_ID_INPUT_MAPPING_TUNNELED,
+                               &pd_tunnelif->imt_idx[1],
+                               is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    pd_tunnelif->imt_idx[1] = idx;
     /* Entry 3 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                false, false, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID,
-                               P4TBL_ID_INPUT_MAPPING_TUNNELED, &idx);
+                               P4TBL_ID_INPUT_MAPPING_TUNNELED,
+                               &pd_tunnelif->imt_idx[2],
+                               is_upgrade);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    pd_tunnelif->imt_idx[2] = idx;
 
     return HAL_RET_OK;
 
@@ -484,14 +561,14 @@ pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
     HAL_ASSERT(pd_tif != NULL);
 
     // remove the entry
-    if (pd_tif->tunnel_rw_idx != -1) {
+    if (pd_tif->tunnel_rw_idx != INVALID_INDEXER_INDEX) {
         sdk_ret = dm->remove(pd_tif->tunnel_rw_idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("tunnel rewrite table write failure, err : {}", ret);
             return ret;
         }
-        pd_tif->tunnel_rw_idx = -1;
+        pd_tif->tunnel_rw_idx = INVALID_INDEXER_INDEX;
     }
     return ret;
 }
@@ -582,20 +659,33 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
 // Forms the data and call lib which shares the entries
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
+pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     pd_tnnl_rw_entry_key_t      key = { 0 };
+    pd_tnnl_rw_entry_info_t     rw_info{};
 
     ret = pd_tunnelif_form_data(&key, pd_tif);
     HAL_ASSERT(ret == HAL_RET_OK);
 
-    ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to program tnnl rw table: ret:{}", ret);
+    if (!is_upgrade) {
+        ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program tnnl rw table: ret:{}", ret);
+        } else {
+            HAL_TRACE_DEBUG("programmed tnnl rw table. index:{}",
+                            pd_tif->tunnel_rw_idx);
+        }
     } else {
-        HAL_TRACE_DEBUG("programmed tnnl rw table. index:{}",
-                        pd_tif->tunnel_rw_idx);
+        rw_info.with_id = true;
+        ret = tnnl_rw_entry_alloc(&key, &rw_info,
+                                  (uint32_t *)&pd_tif->tunnel_rw_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
+                          pd_tif->tunnel_rw_idx, ret);
+            return ret;
+        }
+
     }
 
     return ret;

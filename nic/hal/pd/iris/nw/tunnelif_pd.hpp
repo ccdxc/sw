@@ -12,12 +12,12 @@ namespace pd {
 struct pd_tunnelif_s {
 
     // Hw Indices
-    int imn_idx[3];                 // Input mapping native table idx
-    int imt_idx[3];                 // Input mapping tunneled table idx
-    int tunnel_rw_idx;              // Tunnel rewrite table idx
-    vrf_id_t tid;
+    uint32_t imn_idx[3];                 // Input mapping native table idx
+    uint32_t imt_idx[3];                 // Input mapping tunneled table idx
+    uint32_t tunnel_rw_idx;              // Tunnel rewrite table idx
+    // vrf_id_t tid;
 
-    void        *pi_if;             // PI ptr
+    void        *pi_if;                  // PI ptr
 } __PACK__;
 
 typedef enum pd_tunnelif_inp_map_tbl_type_e_ {
@@ -80,7 +80,7 @@ pd_tunnelif_free (pd_tunnelif_t *tunnelif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 pd_tunnelif_link_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
 {
     pd_tunnelif->pi_if = pi_if;
@@ -90,21 +90,25 @@ pd_tunnelif_link_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 pd_tunnelif_delink_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
 {
     pd_tunnelif->pi_if = NULL;
     if_set_pd_if(pi_if, NULL);
 }
 
-hal_ret_t pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
+hal_ret_t pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
                                  pd_tunnelif_t *pd_tif);
 hal_ret_t pd_tunnelif_alloc_res(pd_tunnelif_t *pd_tunnelif);
-hal_ret_t pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif);
-hal_ret_t pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif);
+hal_ret_t pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif,
+                                 bool is_upgrade = false);
+hal_ret_t pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif,
+                                             bool is_upgrade = false);
 hal_ret_t pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif);
-hal_ret_t pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif);
-hal_ret_t pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif);
+hal_ret_t pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif,
+                                                 bool is_upgrade = false);
+hal_ret_t pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
+                                                   bool is_upgrade = false);
 hal_ret_t pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
                                            p4pd_table_id tbl_id);
@@ -118,6 +122,7 @@ hal_ret_t pd_tunnelif_get (pd_if_get_args_t *args);
 hal_ret_t pd_tunnelif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_tunnelif_mem_free(pd_if_mem_free_args_t *args);
 
+hal_ret_t pd_tunnelif_restore (pd_if_restore_args_t *args);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_TUNNELIF_HPP__

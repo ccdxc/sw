@@ -606,6 +606,11 @@ typedef struct pd_if_make_clone_args_s {
     if_t *clone;
 } __PACK__ pd_if_make_clone_args_t;
 
+typedef struct pd_if_restore_args_s {
+    if_t                    *hal_if;
+    const InterfaceStatus   *if_status;
+} __PACK__ pd_if_restore_args_t;
+
 typedef struct pd_if_lif_update_args_s {
     if_t            *intf;
     lif_t           *lif;
@@ -2789,19 +2794,20 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_L2SEG_GET,                230, "PD_FUNC_ID_L2SEG_GET")\
     ENTRY(PD_FUNC_ID_EP_GET,                   231, "PD_FUNC_ID_EP_GET")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 232, "PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE") \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE,      233, "PD_FUNC_ID_IPSEC_ENCRYPT_CREATE")          \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE,      234, "PD_FUNC_ID_IPSEC_ENCRYPT_DELETE")          \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE,      235, "PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE")          \
-    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_GET,         236, "PD_FUNC_ID_IPSEC_ENCRYPT_GET")        \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_CREATE,      237, "PD_FUNC_ID_IPSEC_DECRYPT_CREATE") \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_DELETE,      238, "PD_FUNC_ID_IPSEC_DECRYPT_DELETE") \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE,      239, "PD_FUNC_ID_IPSEC_DECRYPT_UPDATE") \
-    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_GET,         240, "PD_FUNC_ID_IPSEC_DECRYPT_GET")    \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE,     233, "PD_FUNC_ID_IPSEC_ENCRYPT_CREATE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE,     234, "PD_FUNC_ID_IPSEC_ENCRYPT_DELETE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE,     235, "PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE")          \
+    ENTRY(PD_FUNC_ID_IPSEC_ENCRYPT_GET,        236, "PD_FUNC_ID_IPSEC_ENCRYPT_GET")        \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_CREATE,     237, "PD_FUNC_ID_IPSEC_DECRYPT_CREATE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_DELETE,     238, "PD_FUNC_ID_IPSEC_DECRYPT_DELETE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE,     239, "PD_FUNC_ID_IPSEC_DECRYPT_UPDATE") \
+    ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_GET,        240, "PD_FUNC_ID_IPSEC_DECRYPT_GET")    \
     ENTRY(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, 241, "PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY")\
-    ENTRY(PD_FUNC_ID_L2SEG_RESTORE,             242, "PD_FUNC_ID_L2SEG_RESTORE")    \
-    ENTRY(PD_FUNC_ID_NWSEC_PROF_RESTORE,         243, "PD_FUNC_ID_NWSEC_PROF_RESTORE") \
-    ENTRY(PD_FUNC_ID_NWSEC_PROF_GET,             244, "PD_FUNC_ID_NWSEC_PROF_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      245, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_L2SEG_RESTORE,            242, "PD_FUNC_ID_L2SEG_RESTORE")    \
+    ENTRY(PD_FUNC_ID_NWSEC_PROF_RESTORE,       243, "PD_FUNC_ID_NWSEC_PROF_RESTORE") \
+    ENTRY(PD_FUNC_ID_NWSEC_PROF_GET,           244, "PD_FUNC_ID_NWSEC_PROF_GET")\
+    ENTRY(PD_FUNC_ID_IF_RESTORE,               245, "PD_FUNC_ID_IF_RESTORE") \
+    ENTRY(PD_FUNC_ID_MAX,                      246, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2882,6 +2888,7 @@ PD_FUNCP_TYPEDEF(pd_if_make_clone);
 PD_FUNCP_TYPEDEF(pd_if_nwsec_update);
 PD_FUNCP_TYPEDEF(pd_if_lif_update);
 PD_FUNCP_TYPEDEF(pd_if_get);
+PD_FUNCP_TYPEDEF(pd_if_restore);
 
 // ep calls
 PD_FUNCP_TYPEDEF(pd_ep_create);
@@ -3252,6 +3259,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_if_nwsec_update);
         PD_UNION_FIELD(pd_if_lif_update);
         PD_UNION_FIELD(pd_if_get);
+        PD_UNION_FIELD(pd_if_restore);
 
         // ep calls
         PD_UNION_FIELD(pd_ep_create);

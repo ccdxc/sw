@@ -107,6 +107,60 @@ pd_app_redir_if_get (pd_if_get_args_t *args)
 }
 
 // ----------------------------------------------------------------------------
+// Restoring data post-upgrade
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_app_redir_if_restore_data (pd_if_restore_args_t *args)
+{
+    hal_ret_t           ret      = HAL_RET_OK;
+    if_t                *hal_if  = args->hal_if;
+    pd_app_redir_if_t   *pd_appif = (pd_app_redir_if_t *)hal_if->pd_if;
+    auto app_info                 = args->if_status->app_redir_info();
+
+    pd_appif->lport_id =  app_info.lport_id();
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// APP Redir If Restore
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_app_redir_if_restore (pd_if_restore_args_t *args)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    pd_app_redir_if_t    *pd_app_redir_if;
+
+    HAL_TRACE_DEBUG("Restoring pd state for if_id: {}",
+                    if_get_if_id(args->hal_if));
+
+    // Create Uplink if
+    pd_app_redir_if = pd_app_redir_if_alloc_init();
+    if (pd_app_redir_if == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // Link PI & PD
+    app_redir_if_link_pi_pd(pd_app_redir_if, args->hal_if);
+
+    // Restore PD info
+    ret = pd_app_redir_if_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore PD data for IF: {}, err:{}",
+                      if_get_if_id(args->hal_if), ret);
+        goto end;
+    }
+
+end:
+    if (ret != HAL_RET_OK) {
+        pd_app_redir_if_cleanup(pd_app_redir_if);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Allocate resources for PD APPREDIR if
 // ----------------------------------------------------------------------------
 static hal_ret_t

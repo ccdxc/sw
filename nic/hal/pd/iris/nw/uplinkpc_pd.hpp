@@ -100,7 +100,7 @@ uplinkpc_delink_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if)
 }
 
 hal_ret_t uplinkpc_pd_alloc_res(pd_uplinkpc_t *up_if);
-hal_ret_t uplinkpc_pd_program_hw(pd_uplinkpc_t *up_if);
+hal_ret_t uplinkpc_pd_program_hw(pd_uplinkpc_t *up_if, bool is_upgrade = false);
 hal_ret_t uplinkpc_pd_pgm_tm_register(pd_uplinkpc_t *up_if, bool add);
 hal_ret_t uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppcif,
                                                  pd_uplinkif_t *pd_upif,
@@ -120,6 +120,8 @@ hal_ret_t pd_uplinkpc_delete(pd_if_delete_args_t *args);
 hal_ret_t pd_uplinkpc_get (pd_if_get_args_t *args);
 hal_ret_t pd_uplinkpc_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_uplinkpc_mem_free(pd_if_mem_free_args_t *args);
+
+hal_ret_t pd_uplinkpc_restore (pd_if_restore_args_t *args);
 
 }   // namespace pd
 }   // namespace hal

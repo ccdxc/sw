@@ -113,6 +113,63 @@ pd_cpuif_get (pd_if_get_args_t *args)
 }
 
 // ----------------------------------------------------------------------------
+// Restoring data post-upgrade
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_cpuif_restore_data (pd_if_restore_args_t *args)
+{
+    hal_ret_t       ret       = HAL_RET_OK;
+    if_t            *hal_if   = args->hal_if;
+    pd_cpuif_t      *pd_cpuif = (pd_cpuif_t *)hal_if->pd_if;
+    auto cpu_info             = args->if_status->cpu_info();
+
+    pd_cpuif->cpu_lport_id = cpu_info.cpu_lport_id();
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// CPU If Restore
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_cpuif_restore (pd_if_restore_args_t *args)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    pd_cpuif_t  *pd_cpuif;
+
+    HAL_TRACE_DEBUG("Restoring pd state for if_id: {}",
+                    if_get_if_id(args->hal_if));
+
+    // Create Uplink if
+    pd_cpuif = pd_cpuif_alloc_init();
+    if (pd_cpuif == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // Link PI & PD
+    cpuif_link_pi_pd(pd_cpuif, args->hal_if);
+
+    // Restore PD info
+    ret = pd_cpuif_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore PD data for IF: {}, err:{}",
+                      if_get_if_id(args->hal_if), ret);
+        goto end;
+    }
+
+    // Program HW
+    ret = pd_cpuif_program_hw(pd_cpuif);
+
+end:
+    if (ret != HAL_RET_OK) {
+        pd_cpuif_cleanup(pd_cpuif);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Allocate resources for PD CPU if
 // ----------------------------------------------------------------------------
 hal_ret_t

@@ -24,9 +24,6 @@ pd_if_create (pd_if_create_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("if create ");
-
-
     if_type = hal::intf_get_if_type(args->intf);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
@@ -62,8 +59,6 @@ pd_if_update (pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
-
-    HAL_TRACE_DEBUG("if update");
 
     if_type = hal::intf_get_if_type(args->intf);
     switch(if_type) {
@@ -101,8 +96,6 @@ pd_if_delete (pd_if_delete_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("if delete");
-
     if_type = hal::intf_get_if_type(args->intf);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
@@ -139,8 +132,6 @@ pd_if_get (pd_if_get_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
 
-    HAL_TRACE_DEBUG("if get");
-
     if_type = hal::intf_get_if_type(args->hal_if);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
@@ -168,17 +159,49 @@ pd_if_get (pd_if_get_args_t *args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// PD IF Restore
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_if_restore (pd_if_restore_args_t *args)
+{
+    hal_ret_t       ret;
+    intf::IfType    if_type;
+    if_type = hal::intf_get_if_type(args->hal_if);
+    switch(if_type) {
+        case intf::IF_TYPE_ENIC:
+            // ret = pd_enicif_restore(args);
+            break;
+        case intf::IF_TYPE_UPLINK:
+            ret = pd_uplinkif_restore(args);
+            break;
+        case intf::IF_TYPE_UPLINK_PC:
+            ret = pd_uplinkpc_restore(args);
+            break;
+        case intf::IF_TYPE_TUNNEL:
+            ret = pd_tunnelif_restore(args);
+            break;
+        case intf::IF_TYPE_CPU:
+            ret = pd_cpuif_restore(args);
+            break;
+        case intf::IF_TYPE_APP_REDIR:
+            ret = pd_app_redir_if_restore(args);
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Lif params update. For enics
 // ----------------------------------------------------------------------------
 hal_ret_t
 pd_if_lif_update(pd_if_lif_update_args_t *args)
 {
-    HAL_TRACE_DEBUG("if lif update");
     return pd_enicif_lif_update(args);
 }
-
-
 
 // ----------------------------------------------------------------------------
 // PD If mem free

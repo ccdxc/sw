@@ -142,6 +142,65 @@ pd_uplinkpc_get (pd_if_get_args_t *args)
 }
 
 // ----------------------------------------------------------------------------
+// Restoring data post-upgrade
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_uplinkpc_restore_data (pd_if_restore_args_t *args)
+{
+    hal_ret_t       ret      = HAL_RET_OK;
+    if_t            *hal_if  = args->hal_if;
+    pd_uplinkpc_t   *pd_uppc = (pd_uplinkpc_t *)hal_if->pd_if;
+    auto up_info             = args->if_status->uplink_info();
+
+    pd_uppc->hw_lif_id      = up_info.hw_lif_id();
+    pd_uppc->up_ifpc_id     = up_info.uplink_idx();
+    pd_uppc->uppc_lport_id  = up_info.uplink_lport_id();
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Uplink PC Restore
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_uplinkpc_restore (pd_if_restore_args_t *args)
+{
+    hal_ret_t            ret = HAL_RET_OK;;
+    pd_uplinkpc_t        *pd_uppc;
+
+    HAL_TRACE_DEBUG("Restoring pd state for if_id: {}",
+                    if_get_if_id(args->hal_if));
+
+    // Create Uplink PC
+    pd_uppc = uplinkpc_pd_alloc_init();
+    if (pd_uppc == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // Link PI & PD
+    uplinkpc_link_pi_pd(pd_uppc, args->hal_if);
+
+    // Restore PD info
+    ret = pd_uplinkpc_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore PD data for IF: {}, err:{}",
+                      if_get_if_id(args->hal_if), ret);
+        goto end;
+    }
+
+    // Program HW
+    ret = uplinkpc_pd_program_hw(pd_uppc, true);
+
+end:
+    if (ret != HAL_RET_OK) {
+        uplinkpc_pd_cleanup(pd_uppc);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Allocate resources for PD Uplink if
 // ----------------------------------------------------------------------------
 hal_ret_t
@@ -368,18 +427,25 @@ uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif)
 // Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-uplinkpc_pd_program_hw(pd_uplinkpc_t *pd_upif)
+uplinkpc_pd_program_hw(pd_uplinkpc_t *pd_upif, bool is_upgrade)
 {
     hal_ret_t            ret;
     if_t                 *pi_if = NULL;
 
     pi_if = (if_t *)(pd_upif->pi_if);
 
-    // TODO: Program TM table port_num -> lif_hw_id
-    ret = uplinkpc_pd_pgm_tm_register(pd_upif, true);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    // Upgrade: There is no table lib for this. Does only HW programming.
+    if (!is_upgrade) {
+        ret = uplinkpc_pd_pgm_tm_register(pd_upif, true);
+        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    }
 
-    // Program Output Mapping Table
+    /*
+     * Program Output Mapping Table.
+     * Upgrade: No need to send the flag. Already doing insert_withid, so lib
+     *          will be populated and since we are in upgrade HW writes will
+     *          not happen.
+     */
     ret = uplinkpc_pd_pgm_output_mapping_tbl(pd_upif,
                                              pi_if->mbr_if_list,
                                              TABLE_OPER_INSERT);

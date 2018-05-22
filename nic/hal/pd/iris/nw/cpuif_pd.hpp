@@ -76,7 +76,7 @@ pd_cpuif_pd_mem_free (pd_cpuif_t *cpuif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 cpuif_link_pi_pd(pd_cpuif_t *pd_cpuif, if_t *pi_if)
 {
     pd_cpuif->pi_if = pi_if;
@@ -86,7 +86,7 @@ cpuif_link_pi_pd(pd_cpuif_t *pd_cpuif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 cpuif_delink_pi_pd(pd_cpuif_t *pd_cpuif, if_t *pi_if)
 {
     pd_cpuif->pi_if = NULL;
@@ -110,6 +110,7 @@ hal_ret_t pd_cpuif_get (pd_if_get_args_t *args);
 hal_ret_t pd_cpuif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_cpuif_mem_free(pd_if_mem_free_args_t *args);
 
+hal_ret_t pd_cpuif_restore (pd_if_restore_args_t *args);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_CPUIF_HPP__

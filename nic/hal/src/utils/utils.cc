@@ -313,6 +313,7 @@ hal_prepare_rsp (hal_ret_t ret)
         return types:: API_STATUS_NOT_FOUND;
         break;
     case HAL_RET_SECURITY_POLICY_NOT_FOUND:
+    case HAL_RET_LIF_NOT_FOUND:
         return types:: API_STATUS_NOT_FOUND;
         break;
     default:

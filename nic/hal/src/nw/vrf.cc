@@ -52,10 +52,13 @@ vrf_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 vrf_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (key1 == NULL || key2 == NULL) {
+        goto end;
+    }
     if (*(vrf_id_t *)key1 == *(vrf_id_t *)key2) {
         return true;
     }
+end:
     return false;
 }
 

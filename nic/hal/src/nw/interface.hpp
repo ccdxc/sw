@@ -61,6 +61,7 @@ using intf::IfStatus;
 using intf::IfEnicType;
 using intf::IfEnicInfo;
 using intf::IfTunnelEncapType;
+using intf::InterfaceStats;
 
 namespace hal {
 
@@ -184,7 +185,7 @@ typedef struct if_s {
 
 typedef struct if_create_app_ctxt_s {
     // l2seg_t    *l2seg;                                 // valid for enic if
-    lif_t      *lif;                                   // valid for enic if
+    // lif_t      *lif;                                   // valid for enic if
 } __PACK__ if_create_app_ctxt_t;
 
 typedef struct if_update_app_ctxt_s {
@@ -284,20 +285,15 @@ hal_ret_t enicif_cleanup_l2seg_entry_list(dllist_ctxt_t **list);
 bool l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle,
                              if_l2seg_entry_t **l2seg_entry);
 
-hal_ret_t enic_if_create(InterfaceSpec& spec,
-                         InterfaceResponse *rsp,
+hal_ret_t enic_if_create(const InterfaceSpec& spec,
                          if_t *hal_if);
-hal_ret_t uplink_if_create(InterfaceSpec& spec,
-                           InterfaceResponse *rsp,
+hal_ret_t uplink_if_create(const InterfaceSpec& spec,
                            if_t *hal_if);
-hal_ret_t uplink_pc_create(InterfaceSpec& spec,
-                           InterfaceResponse *rsp,
+hal_ret_t uplink_pc_create(const InterfaceSpec& spec,
                            if_t *hal_if);
-hal_ret_t cpu_if_create(InterfaceSpec& spec,
-                        InterfaceResponse *rsp,
+hal_ret_t cpu_if_create(const InterfaceSpec& spec,
                         if_t *hal_if);
-hal_ret_t app_redir_if_create(InterfaceSpec& spec,
-                              InterfaceResponse *rsp,
+hal_ret_t app_redir_if_create(const InterfaceSpec& spec,
                               if_t *hal_if);
 hal_ret_t uplink_if_update(InterfaceSpec& spec,
                            InterfaceResponse *rsp,
@@ -306,17 +302,13 @@ hal_ret_t uplink_pc_update(InterfaceSpec& spec,
                            InterfaceResponse *rsp,
                            if_t *hal_if,
                            void *if_args);
-hal_ret_t tunnel_if_create(InterfaceSpec& spec,
-                           InterfaceResponse *rsp,
+hal_ret_t tunnel_if_create(const InterfaceSpec& spec,
                            if_t *hal_if);
-hal_ret_t get_lif_handle_for_enic_if(InterfaceSpec& spec,
-                                     InterfaceResponse *rsp,
+hal_ret_t get_lif_handle_for_enic_if(const InterfaceSpec& spec,
                                      if_t *hal_if);
-hal_ret_t get_lif_handle_for_cpu_if(InterfaceSpec& spec,
-                                    InterfaceResponse *rsp,
+hal_ret_t get_lif_handle_for_cpu_if(const InterfaceSpec& spec,
                                     if_t *hal_if);
-hal_ret_t get_lif_handle_for_app_redir_if(InterfaceSpec& spec,
-                                          InterfaceResponse *rsp,
+hal_ret_t get_lif_handle_for_app_redir_if(const InterfaceSpec& spec,
                                           if_t *hal_if);
 if_t *if_lookup_key_or_handle(const InterfaceKeyHandle& key_handle);
 const char *if_spec_keyhandle_to_str(const InterfaceKeyHandle& key_handle);
@@ -341,7 +333,8 @@ hal_ret_t add_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
 hal_ret_t del_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
                               InterfaceL2SegmentResponse *rsp);
 
-hal_ret_t if_marshall_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
+hal_ret_t if_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
+uint32_t if_restore_cb(void *obj, uint32_t len);
 
 }    // namespace hal
 

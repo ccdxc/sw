@@ -38,8 +38,8 @@ hal_obj_meta_init (void)
                          hal_default_unmarshall_cb);
     g_obj_meta[HAL_OBJ_ID_INTERFACE] =
         new hal_obj_meta(HAL_SLAB_IF,
-                         if_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         if_store_cb,
+                         if_restore_cb);
     g_obj_meta[HAL_OBJ_ID_VRF] =
         new hal_obj_meta(HAL_SLAB_VRF,
                          vrf_store_cb,

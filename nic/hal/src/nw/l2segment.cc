@@ -499,6 +499,41 @@ end:
     return ret;
 }
 
+hal_ret_t
+l2seg_add_to_db_and_refs (l2seg_t *l2seg, hal_handle_t hal_handle,
+                          vrf_t *vrf)
+{
+    hal_ret_t ret        = HAL_RET_OK;
+
+    // Add to l2seg id hash table
+    ret = l2seg_add_to_db(l2seg, hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add l2seg {} to db, err : {}",
+                      l2seg->seg_id, ret);
+        goto end;
+    }
+
+    // Add l2seg to vrf's l2seg list
+    ret = vrf_add_l2seg(vrf, l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add rel. from vrf");
+        goto end;
+    }
+
+    // Add l2seg to network's l2seg list
+    ret = l2seg_update_network_relation (l2seg->nw_list, l2seg, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add network -> l2seg "
+                      "relation ret : {}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+
+}
+
+
 //------------------------------------------------------------------------------
 // 1. Update PI DBs as l2seg_create_add_cb() was a success
 //      a. Create the flood list
@@ -511,7 +546,6 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t           *lnode     = NULL;
     dhl_entry_t             *dhl_entry = NULL;
     l2seg_t                 *l2seg     = NULL;
-    vrf_t                   *vrf       = NULL;
     hal_handle_t            hal_handle = HAL_HANDLE_INVALID;
     l2seg_create_app_ctxt_t *app_ctxt  = NULL;
 
@@ -531,32 +565,9 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("create commit cb for l2seg_id : {}",
                     l2seg->seg_id);
 
-    // Add to l2seg id hash table
-    ret = l2seg_add_to_db(l2seg, hal_handle);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add l2seg {} to db, err : {}",
-                      l2seg->seg_id, ret);
-        goto end;
-    }
-
-    // Add l2seg to vrf's l2seg list
-    vrf = app_ctxt->vrf;
-    ret = vrf_add_l2seg(vrf, l2seg);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add rel. from vrf");
-        goto end;
-    }
-
-    // Add l2seg to network's l2seg list
-    ret = l2seg_update_network_relation (l2seg->nw_list, l2seg, true);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add network -> l2seg "
-                      "relation ret : {}", ret);
-        goto end;
-    }
+    ret = l2seg_add_to_db_and_refs(l2seg, hal_handle, app_ctxt->vrf);
 
 end:
-
     return ret;
 }
 
@@ -2214,14 +2225,6 @@ l2seg_restore_commit (l2seg_t *l2seg, const L2SegmentGetResponse& l2seg_info)
     hal_ret_t   ret;
     vrf_t       *vrf;
 
-    // Add to l2seg id hash table
-    ret = l2seg_add_to_db(l2seg, l2seg->hal_handle);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add l2seg {} to db, err : {}",
-                      l2seg->seg_id, ret);
-        goto end;
-    }
-
     // Add l2seg to vrf's l2seg list
     vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
     if (!vrf) {
@@ -2229,22 +2232,15 @@ l2seg_restore_commit (l2seg_t *l2seg, const L2SegmentGetResponse& l2seg_info)
         goto end;
     }
 
-    ret = vrf_add_l2seg(vrf, l2seg);
+    // Add to DB and set back refs
+    ret = l2seg_add_to_db_and_refs(l2seg, l2seg->hal_handle, vrf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add rel. from vrf");
-        goto end;
-    }
-
-    // Add l2seg to network's l2seg list
-    ret = l2seg_update_network_relation (l2seg->nw_list, l2seg, true);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add network -> l2seg "
-                      "relation ret : {}", ret);
+        HAL_TRACE_ERR("Unable to add to DB or refs: l2seg:{}, err:{}",
+                      l2seg->seg_id, ret);
         goto end;
     }
 
 end:
-
     return ret;
 }
 
@@ -2262,7 +2258,7 @@ l2seg_restore_cb (void *obj, uint32_t len)
     hal_ret_t               ret;
     L2SegmentGetResponse    l2seg_info;
     l2seg_t                 *l2seg;
- 
+
     // de-serialize the object
     if (l2seg_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized l2seg obj");
@@ -2292,7 +2288,7 @@ l2seg_restore_cb (void *obj, uint32_t len)
     }
     l2seg_restore_commit(l2seg, l2seg_info);
 
-    return 0; 
+    return 0;
 }
 
 //------------------------------------------------------------------------------

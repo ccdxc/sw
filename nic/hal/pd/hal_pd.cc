@@ -127,6 +127,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_NWSEC_UPDATE, pd_if_nwsec_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_LIF_UPDATE, pd_if_lif_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_GET, pd_if_get);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IF_RESTORE, pd_if_restore);
 
     // ep pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_EP_CREATE, pd_ep_create);
@@ -508,6 +509,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_NWSEC_UPDATE, pd_if_nwsec_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_LIF_UPDATE, pd_if_lif_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_GET, pd_if_get);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IF_RESTORE, pd_if_restore);
 
     // ep pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_EP_CREATE, pd_ep_create);
@@ -1030,7 +1032,7 @@ pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
     return 1;
 }
 
-extern "C" int 
+extern "C" int
 pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *dp,
                               uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m)
 {

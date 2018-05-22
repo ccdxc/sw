@@ -79,7 +79,7 @@ uplinkif_pd_mem_free (pd_uplinkif_t *upif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 uplinkif_link_pi_pd(pd_uplinkif_t *pd_upif, if_t *pi_if)
 {
     pd_upif->pi_if = pi_if;
@@ -89,7 +89,7 @@ uplinkif_link_pi_pd(pd_uplinkif_t *pd_upif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 uplinkif_delink_pi_pd(pd_uplinkif_t *pd_upif, if_t *pi_if)
 {
     pd_upif->pi_if = NULL;
@@ -99,13 +99,12 @@ uplinkif_delink_pi_pd(pd_uplinkif_t *pd_upif, if_t *pi_if)
 
 hal_ret_t uplinkif_pd_alloc_res(pd_uplinkif_t *up_if);
 hal_ret_t uplinkif_pd_dealloc_res(pd_uplinkif_t *up_if);
-hal_ret_t uplinkif_pd_program_hw(pd_uplinkif_t *up_if);
+hal_ret_t uplinkif_pd_program_hw(pd_uplinkif_t *up_if, bool is_upgrade = false);
 hal_ret_t uplinkif_pd_pgm_tm_register(pd_uplinkif_t *up_if);
 hal_ret_t uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *up_if);
 hal_ret_t uplinkif_pd_cleanup(pd_uplinkif_t *upif_pd);
 hal_ret_t uplinkif_pd_depgm_output_mapping_tbl (pd_uplinkif_t *pd_upif);
 hal_ret_t uplinkif_pd_depgm_tm_register(pd_uplinkif_t *pd_upif);
-hal_ret_t uplinkif_pd_deprogram_hw (pd_uplinkif_t *pd_upif);
 hal_ret_t uplinkif_pd_deprogram_hw (pd_uplinkif_t *pd_upif);
 
 hal_ret_t pd_uplinkif_create(pd_if_create_args_t *args);
@@ -114,6 +113,7 @@ hal_ret_t pd_uplinkif_delete(pd_if_delete_args_t *args);
 hal_ret_t pd_uplinkif_get (pd_if_get_args_t *args);
 hal_ret_t pd_uplinkif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_uplinkif_mem_free(pd_if_mem_free_args_t *args);
+hal_ret_t pd_uplinkif_restore (pd_if_restore_args_t *args);
 
 }   // namespace pd
 }   // namespace hal
