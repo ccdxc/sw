@@ -1503,7 +1503,7 @@ class capri_table:
                 k0_bytes = min(bytes_avail0, len(kf.km_profile.k_byte_sel))
 
                 k1_bytes = len(kf.km_profile.k_byte_sel) - k0_bytes
-                assert k1_bytes < max_kmB, pdb.set_trace()
+                assert k1_bytes <= bytes_avail1, pdb.set_trace()
 
                 # for wide-key, we can have i1 and i2 bytes only on the last flit as -
                 # action_pc/collision_idx - i1bytes - key - i2bytes

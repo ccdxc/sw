@@ -23,7 +23,7 @@ action execute_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
 /*****************************************************************************/
 @pragma stage 5
 @pragma policer_table two_color
-table ingress_parent_policer {
+table rx_parent_policer {
     reads {
         flow_action_metadata.parent_policer_index : exact;
     }
@@ -35,7 +35,7 @@ table ingress_parent_policer {
 
 @pragma stage 5
 @pragma policer_table two_color
-table ingress_child_policer {
+table rx_child_policer {
     reads {
         flow_action_metadata.child_policer_index : exact;
     }
@@ -45,9 +45,9 @@ table ingress_child_policer {
     size : PARENT_POLICER_TABLE_SIZE;
 }
 
-control ingress_policers {
-    apply(ingress_parent_policer);
-    apply(ingress_child_policer);
+control rx_policers {
+    apply(rx_parent_policer);
+    apply(rx_child_policer);
 }
 
 /*****************************************************************************/
@@ -55,7 +55,7 @@ control ingress_policers {
 /*****************************************************************************/
 @pragma stage 5
 @pragma policer_table two_color
-table egress_parent_policer {
+table tx_parent_policer {
     reads {
         flow_action_metadata.parent_policer_index : exact;
     }
@@ -67,7 +67,7 @@ table egress_parent_policer {
 
 @pragma stage 5
 @pragma policer_table two_color
-table egress_child_policer {
+table tx_child_policer {
     reads {
         flow_action_metadata.child_policer_index : exact;
     }
@@ -77,7 +77,7 @@ table egress_child_policer {
     size : PARENT_POLICER_TABLE_SIZE;
 }
 
-control egress_policers {
-    apply(egress_parent_policer);
-    apply(egress_child_policer);
+control tx_policers {
+    apply(tx_parent_policer);
+    apply(tx_child_policer);
 }

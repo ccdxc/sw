@@ -91,13 +91,6 @@ header_type gre_t {
     }
 }
 
-header_type nvgre_t {
-    fields {
-        tni : 24;
-        flow_id : 8;
-    }
-}
-
 header_type erspan_header_t3_t {
     fields {
         version : 4;
@@ -119,3 +112,11 @@ header_type vxlan_t {
     }
 }
 
+header_type mpls_t {
+    fields {
+        label : 20;
+        exp : 3;
+        bos : 1;
+        ttl : 8;
+    }
+}

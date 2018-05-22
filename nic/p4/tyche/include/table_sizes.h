@@ -4,4 +4,4 @@
 #define FLOW_TCAM_TABLE_SIZE            512
 #define PARENT_POLICER_TABLE_SIZE       8192
 #define CHILD_POLICER_TABLE_SIZE        8192
-#define REWRITE_TABLE_SIZE              1048576
+#define REWRITE_TABLE_SIZE              65536

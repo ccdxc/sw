@@ -4,7 +4,6 @@ header_type flow_lkp_metadata_t {
         ethernet_src_1           : 48;
         ethernet_type_1          : 16;
         ctag_1                   : 12;
-        stag_1                   : 12;
         ip_dscp_1                : 8;
         ip_proto_1               : 8;
         ip_ttl_1                 : 8;
@@ -14,13 +13,25 @@ header_type flow_lkp_metadata_t {
         l4_dport_1               : 16;
         tcp_flags_1              : 8;
         tenant_id_1              : 24;
-        gre_proto_1              : 16;
+        tunnel_type_1            : 8;
+
+        mpls0_label              : 20;
+        mpls0_exp                : 3;
+        mpls0_bos                : 1;
+        mpls0_ttl                : 8;
+        mpls1_label              : 20;
+        mpls1_exp                : 3;
+        mpls1_bos                : 1;
+        mpls1_ttl                : 8;
+        mpls2_label              : 20;
+        mpls2_exp                : 3;
+        mpls2_bos                : 1;
+        mpls2_ttl                : 8;
 
         ethernet_dst_2           : 48;
         ethernet_src_2           : 48;
         ethernet_type_2          : 16;
         ctag_2                   : 12;
-        stag_2                   : 12;
         ip_dscp_2                : 8;
         ip_proto_2               : 8;
         ip_ttl_2                 : 8;
@@ -29,8 +40,6 @@ header_type flow_lkp_metadata_t {
         l4_sport_2               : 16;
         l4_dport_2               : 16;
         tcp_flags_2              : 8;
-        tenant_id_2              : 24;
-        gre_proto_2              : 16;
 
         custom_field_1           : 32;
         custom_field_2           : 32;
@@ -44,8 +53,6 @@ header_type tunnel_metadata_t {
     fields {
         tunnel_type_1 : 8;
         tunnel_vni_1  : 24;
-        tunnel_type_2 : 8;
-        tunnel_vni_2  : 24;
     }
 }
 
@@ -61,7 +68,7 @@ header_type l4_metadata_t {
 header_type flow_act_metadata_t {
     fields {
         prio                      : 8;
-        flow_index                : 20;
+        flow_index                : 16;
         parent_policer_index      : 13;
         child_policer_index       : 13;
         tcam_prio                 : 8;

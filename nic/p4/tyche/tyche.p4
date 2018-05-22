@@ -23,18 +23,18 @@ action drop_packet() {
 /* Ingress pipeline                                                          */
 /*****************************************************************************/
 control ingress {
-    ingress_key();
-    ingress_flow_lookup();
-    ingress_rewrites();
-    ingress_policers();
+    rx_key();
+    rx_flow_lookup();
+    rx_rewrites();
+    rx_policers();
 }
 
 /*****************************************************************************/
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
-    egress_key();
-    egress_flow_lookup();
-    egress_rewrites();
-    egress_policers();
+    tx_key();
+    tx_flow_lookup();
+    tx_rewrites();
+    tx_policers();
 }
