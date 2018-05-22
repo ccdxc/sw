@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "dol/test/storage/dp_mem.hpp"
+#include "dol/test/storage/chain_params.hpp"
 
 using namespace dp_mem;
 
@@ -16,10 +17,8 @@ namespace queues {
 // P4+ TxDMA max MEM2MEM transfer size is limited to 14 bits
 // which influences how many (Barco) descriptors can be batch
 // enqueued to a Sequencer queue.
-const static uint32_t  kMaxMem2MemSize      = (1 << 14);
-
 #define QUEUE_BATCH_LIMIT(desc_size)        \
-    ((kMaxMem2MemSize / (desc_size)) - 1)
+    ((tests::kMaxMem2MemSize) / (desc_size))
 
 typedef void (*seq_sq_batch_end_notify_t)(void *user_ctx,
                                           dp_mem_t *seq_desc,

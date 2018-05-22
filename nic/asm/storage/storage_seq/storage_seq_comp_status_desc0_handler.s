@@ -48,10 +48,9 @@ storage_seq_comp_status_desc0_handler_start:
    // Note that d.next_db_addr in this case is really d.barco_ring_addr.
    // phvwrpair limits destination p[] to 64 bits per.
    phvwrpair	p.seq_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
-                p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_desc_set_total}, \
-                d.{barco_pndx_shadow_addr...barco_desc_set_total}
-   phvwrpair    p.seq_kivec4_barco_desc_addr, d.next_db_data, \
-                p.seq_kivec4_barco_num_descs, 1
+                p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_num_descs}, \
+                d.{barco_pndx_shadow_addr...barco_num_descs}
+   phvwr        p.seq_kivec4_barco_desc_addr, d.next_db_data
 
 status_dma_setup:
 
@@ -60,7 +59,8 @@ status_dma_setup:
    add          r3, r0, d.status_len    // delay slot
    
    // Set up the status DMA:
-   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_addr0, 
+   add          r4, d.status_addr0, d.status_offset0
+   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4,
                             r3, dma_m2m_0)
    DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_addr1, 
                             r3, dma_m2m_1)

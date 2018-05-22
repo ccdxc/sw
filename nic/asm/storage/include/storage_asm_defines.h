@@ -203,14 +203,22 @@
 #define SEQ_KIVEC2_SGL_VEC_ADDR                 \
     k.seq_kivec2_sgl_vec_addr
 
-#define SEQ_KIVEC3_FLAT_BUF_ADDR                \
-    k.seq_kivec3_flat_buf_addr
+#define SEQ_KIVEC2XTS_SGL_PDMA_DST_ADDR         \
+    k.seq_kivec2xts_sgl_pdma_dst_addr
+#define SEQ_KIVEC2XTS_DECR_BUF_ADDR             \
+    k.seq_kivec2xts_decr_buf_addr
+    
+#define SEQ_KIVEC3_COMP_BUF_ADDR                \
+    k.seq_kivec3_comp_buf_addr
 #define SEQ_KIVEC3_PAD_BUF_ADDR                 \
     k.{seq_kivec3_pad_buf_addr_sbit0_ebit31...seq_kivec3_pad_buf_addr_sbit32_ebit33}
 #define SEQ_KIVEC3_PAD_LEN                      \
     k.{seq_kivec3_pad_len_sbit0_ebit5...seq_kivec3_pad_len_sbit14_ebit15}
 #define SEQ_KIVEC3_NUM_BLKS                     \
     k.seq_kivec3_num_blks
+
+#define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
+    k.seq_kivec3xts_decr_buf_addr
 
 #define SEQ_KIVEC4_BARCO_DESC_ADDR              \
     k.{seq_kivec4_barco_desc_addr_sbit0_ebit15...seq_kivec4_barco_desc_addr_sbit56_ebit63}
@@ -224,10 +232,8 @@
     k.seq_kivec4_barco_pndx_size
 #define SEQ_KIVEC4_BARCO_RING_SIZE              \
     k.seq_kivec4_barco_ring_size
-#define SEQ_KIVEC4_BARCO_DESC_SET_TOTAL         \
-    k.seq_kivec4_barco_desc_set_total
 #define SEQ_KIVEC4_BARCO_NUM_DESCS              \
-    k.{seq_kivec4_barco_num_descs_sbit0_ebit1...seq_kivec4_barco_num_descs_sbit2_ebit9}
+    k.seq_kivec4_barco_num_descs
 
 #define SEQ_KIVEC5_INTR_ADDR                    \
     k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
@@ -260,11 +266,45 @@
 #define SEQ_KIVEC5_DESC_VEC_PUSH_EN             \
     k.seq_kivec5_desc_vec_push_en
 
+#define SEQ_KIVEC5XTS_INTR_ADDR                 \
+    k.{seq_kivec5xts_intr_addr_sbit0_ebit7...seq_kivec5xts_intr_addr_sbit40_ebit63}
+#define SEQ_KIVEC5XTS_DATA_LEN                  \
+    k.{seq_kivec5xts_data_len_sbit0_ebit7...seq_kivec5xts_data_len_sbit8_ebit15}
+#define SEQ_KIVEC5XTS_BLK_LEN_SHIFT             \
+    k.seq_kivec5xts_blk_len_shift
+#define SEQ_KIVEC5XTS_STATUS_DMA_EN             \
+    k.seq_kivec5xts_status_dma_en
+#define SEQ_KIVEC5XTS_STOP_CHAIN_ON_ERROR       \
+    k.seq_kivec5xts_stop_chain_on_error
+#define SEQ_KIVEC5XTS_NEXT_DB_EN                \
+    k.seq_kivec5xts_next_db_en
+#define SEQ_KIVEC5XTS_COMP_LEN_UPDATE_EN        \
+    k.seq_kivec5xts_comp_len_update_en
+#define SEQ_KIVEC5XTS_COMP_SGL_SRC_EN           \
+    k.seq_kivec5xts_comp_sgl_src_en
+#define SEQ_KIVEC5XTS_COMP_SGL_SRC_VEC_EN       \
+    k.seq_kivec5xts_comp_sgl_src_vec_en
+#define SEQ_KIVEC5XTS_INTR_EN                   \
+    k.seq_kivec5xts_intr_en
+#define SEQ_KIVEC5XTS_NEXT_DB_ACTION_BARCO_PUSH \
+    k.seq_kivec5xts_next_db_action_barco_push
+#define SEQ_KIVEC5XTS_SGL_PDMA_EN               \
+    k.seq_kivec5xts_sgl_pdma_en
+#define SEQ_KIVEC5XTS_SGL_PDMA_LEN_FROM_DESC    \
+    k.seq_kivec5xts_sgl_pdma_len_from_desc
+#define SEQ_KIVEC5XTS_DESC_VEC_PUSH_EN          \
+    k.seq_kivec5xts_desc_vec_push_en
+    
 #define SEQ_KIVEC6_AOL_SRC_VEC_ADDR             \
     k.seq_kivec6_aol_src_vec_addr
 #define SEQ_KIVEC6_AOL_DST_VEC_ADDR             \
     k.seq_kivec6_aol_dst_vec_addr
     
+#define SEQ_KIVEC7XTS_COMP_DESC_ADDR            \
+    k.seq_kivec7xts_comp_desc_addr
+#define SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR         \
+    k.seq_kivec7xts_comp_sgl_src_addr
+
 /*
  * Debug flags
  */
@@ -273,16 +313,74 @@
 #define DMA_CMD_MEM2MEM_SIZE_DEBUG              1
 
 /*
- * Barco SGL descriptor size
+ * Barco SGL rearranged to little-endian layout
  */
+struct barco_sgl_le_t {
+    rsvd        : 64;
+    link        : 64;
+    rsvd2       : 32;
+    len2        : 32;
+    addr2       : 64;
+    rsvd1       : 32;
+    len1        : 32;
+    addr1       : 64;
+    rsvd0       : 32;
+    len0        : 32;
+    addr0       : 64;
+};
+
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
 
 /*
- * Barco AOL descriptor size
+ * Barco AOL rearranged to little-endian layout
  */
+struct barco_aol_le_t {
+    rsvd        : 64;
+    next_addr   : 64;
+    L2          : 32;
+    O2          : 32;
+    A2          : 64;
+    L1          : 32;
+    O1          : 32;
+    A1          : 64;
+    L0          : 32;
+    O0          : 32;
+    A0          : 64;
+};
+
 #define BARCO_AOL_DESC_SIZE         64
 #define BARCO_AOL_DESC_SIZE_SHIFT   6
+
+/*
+ * Compression descriptor rearranged to little-endian layout
+ */
+struct comp_desc_le_t {
+    status_data     : 32;
+    opaque_tag_data : 32;
+    opaque_tag_addr : 64;
+    doorbell_data   : 64;
+    doorbell_addr   : 64;
+    status_addr     : 64;
+    threshold_len   : 16;
+    extended_len    : 16;
+    datain_len      : 16;
+    cmd             : 16;
+    dst             : 64;
+    src             : 64;
+};
+
+#define COMP_DESC_SIZE              64
+#define COMP_DESC_SIZE_SHIFT        6
+
+/*
+ * Compression header
+ */
+struct seq_comp_hdr_t {
+    cksum           : 32;
+    data_len        : 16;
+    version         : 16;
+};
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_NOP               0

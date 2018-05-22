@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include "dol/test/storage/dp_mem.hpp"
+#include "dol/test/storage/chain_params.hpp"
 #include "dol/test/storage/acc_ring.hpp"
 #include "gflags/gflags.h"
 
@@ -205,7 +206,7 @@ public:
   int cmd_eval_seq_xts(xts::xts_cmd_t& cmd);
   void desc_prefill_seq_xts(xts::xts_desc_t *xts_desc);
   int desc_write_seq_xts(xts::xts_desc_t *xts_desc);
-  int desc_write_seq_xts_status(dp_mem_t *xts_status_desc);
+  int desc_write_seq_xts_status(chain_params_xts_t& chain_params);
   int test_seq_xts();
   void status_invalidate(void);
   int ring_doorbell();
@@ -222,7 +223,6 @@ public:
   void* dst_buf_phy = NULL;
 
   uint16_t seq_xts_q;
-  uint16_t seq_xts_status_q;
   uint32_t num_sectors = 1;
   xts::Op op;
   uint32_t key_size = AES128_KEY_SIZE;
@@ -234,7 +234,6 @@ public:
   xts::xts_aol_t* in_aol[MAX_AOLS];
   xts::xts_aol_t* out_aol[MAX_AOLS];
   bool verify_db = true;
-  uint16_t seq_xts_status_index = 0;
   unsigned char* iv = NULL;
 
   // ctx data needed for verification of op completion

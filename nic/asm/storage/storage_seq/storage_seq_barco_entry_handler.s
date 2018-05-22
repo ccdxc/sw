@@ -19,7 +19,7 @@ struct phv_ p;
 #define r_num_descs                     r1  // number of Barco descriptors
 
 %%
-   .param storage_seq_barco_ring_pndx_read
+   .param storage_seq_barco_ring_pndx_pre_read0
 
 storage_seq_barco_entry_handler:
 
@@ -43,5 +43,5 @@ storage_seq_barco_entry_handler:
 
    // Advance to a common stage for executing table lock read to get the
    // Barco ring pindex.
-   LOAD_TABLE_NO_LKUP_PC_IMM_e(0, storage_seq_barco_ring_pndx_read)
+   LOAD_TABLE_NO_LKUP_PC_IMM_e(0, storage_seq_barco_ring_pndx_pre_read0)
 

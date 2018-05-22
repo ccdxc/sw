@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "dol/test/storage/acc_ring.hpp"
 #include "dol/test/storage/dp_mem.hpp"
+#include "dol/test/storage/chain_params.hpp"
 
 using namespace dp_mem;
 
@@ -158,6 +159,8 @@ void comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
                           dp_mem_t *comp_buf,
                           uint32_t blk_size,
                           uint32_t num_blks);
+void chain_sgl_pdma_packed_fill(dp_mem_t *seq_sgl_pdma,
+                                dp_mem_t *dst_buf);
 bool comp_status_poll(dp_mem_t *status,
                       const cp_desc_t &d,
                       bool suppress_log = false);
@@ -182,6 +185,8 @@ int decompress_status_verify(dp_mem_t *status,
                              uint32_t exp_output_data_len,
                              bool log_error=true);
 uint32_t comp_status_output_data_len_get(dp_mem_t *status);
+
+int seq_comp_status_desc_fill(chain_params_comp_t& chain_params);
 
 }  // namespace tests
 

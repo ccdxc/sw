@@ -11,23 +11,6 @@ struct s3_tbl3_k k;
 struct phv_ p;
 
 /*
- * AOL rearranged to little-endian layout
- */
-struct barco_aol_le_t {
-    rsvd : 64;
-    next_addr : 64;
-    L2 : 32;
-    O2 : 32;
-    A2 : 64;
-    L1 : 32;
-    O1 : 32;
-    A1 : 64;
-    L0 : 32;
-    O0 : 32;
-    A0 : 64;
-};
-
-/*
  * Registers usage:
  */
 #define r_last_blk_no               r1  // last block number

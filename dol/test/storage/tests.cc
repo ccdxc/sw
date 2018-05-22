@@ -2596,130 +2596,28 @@ int test_run_rdma_e2e_xts_read1(void)
                                       xts_ctx);
 }
 
-// Set up post compression accelerator chain entry
-int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
-                                          dp_mem_t *seq_status_desc) {
-
-  seq_status_desc->clear();
-
-  // desc bytes 0-63
-  if (chain_ent.next_db_action_barco_push) {
-    seq_status_desc->write_bit_fields(0, 64, chain_ent.push_entry.barco_ring_addr);
-    seq_status_desc->write_bit_fields(64, 64, chain_ent.push_entry.barco_desc_addr);
-    seq_status_desc->write_bit_fields(128, 34, chain_ent.push_entry.barco_pndx_addr);
-    seq_status_desc->write_bit_fields(162, 34, chain_ent.push_entry.barco_pndx_shadow_addr);
-    seq_status_desc->write_bit_fields(196, 4, chain_ent.push_entry.barco_desc_size);
-    seq_status_desc->write_bit_fields(200, 3, chain_ent.push_entry.barco_pndx_size);
-    seq_status_desc->write_bit_fields(203, 5, chain_ent.push_entry.barco_ring_size);
-    seq_status_desc->write_bit_fields(208, 6, chain_ent.push_entry.barco_desc_set_total);
-  } else {
-    seq_status_desc->write_bit_fields(0, 64, chain_ent.db_entry.next_doorbell_addr);
-    seq_status_desc->write_bit_fields(64, 64, chain_ent.db_entry.next_doorbell_data);
-  }
-
-  seq_status_desc->write_bit_fields(214, 64, chain_ent.status_addr0);
-  seq_status_desc->write_bit_fields(278, 64, chain_ent.status_addr1);
-  seq_status_desc->write_bit_fields(342, 64, chain_ent.intr_addr);
-  seq_status_desc->write_bit_fields(406, 32, chain_ent.intr_data);
-  seq_status_desc->write_bit_fields(438, 16, chain_ent.status_len);
-  seq_status_desc->write_bit_fields(454, 1, chain_ent.status_dma_en);
-  seq_status_desc->write_bit_fields(455, 1, chain_ent.next_doorbell_en);
-  seq_status_desc->write_bit_fields(456, 1, chain_ent.intr_en);
-  seq_status_desc->write_bit_fields(457, 1, chain_ent.next_db_action_barco_push);
-
-  // desc bytes 64-127
-  seq_status_desc->write_bit_fields(512 + 0, 64, 0); // reserved
-  seq_status_desc->write_bit_fields(512 + 64, 64, chain_ent.flat_dst_buf_addr);
-  seq_status_desc->write_bit_fields(512 + 128, 64, chain_ent.aol_src_vec_addr);
-  seq_status_desc->write_bit_fields(512 + 192, 64, chain_ent.aol_dst_vec_addr);
-  seq_status_desc->write_bit_fields(512 + 256, 64, chain_ent.sgl_vec_addr);
-  seq_status_desc->write_bit_fields(512 + 320, 64, chain_ent.pad_buf_addr);
-  seq_status_desc->write_bit_fields(512 + 384, 16, chain_ent.data_len);
-  seq_status_desc->write_bit_fields(512 + 400, 5, chain_ent.pad_len_shift);
-  seq_status_desc->write_bit_fields(512 + 405, 1, chain_ent.stop_chain_on_error);
-  seq_status_desc->write_bit_fields(512 + 406, 1, chain_ent.data_len_from_desc);
-  seq_status_desc->write_bit_fields(512 + 407, 1, chain_ent.aol_pad_en);
-  seq_status_desc->write_bit_fields(512 + 408, 1, chain_ent.sgl_pad_en);
-  seq_status_desc->write_bit_fields(512 + 409, 1, chain_ent.sgl_pdma_en);
-  seq_status_desc->write_bit_fields(512 + 410, 1, chain_ent.sgl_pdma_pad_only);
-  seq_status_desc->write_bit_fields(512 + 411, 1, chain_ent.desc_vec_push_en);
-  seq_status_desc->write_bit_fields(512 + 412, 1, chain_ent.copy_src_dst_on_error);
-  seq_status_desc->write_thru();
-
-  return 0;
-}
-
-// Set up post XTS accelerator chain entry
-int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
-                                         dp_mem_t *seq_status_desc) {
-
-  seq_status_desc->clear();
-
-  if (chain_ent.next_db_action_barco_push) {
-    seq_status_desc->write_bit_fields(0, 64, chain_ent.push_entry.barco_ring_addr);
-    seq_status_desc->write_bit_fields(64, 64, chain_ent.push_entry.barco_desc_addr);
-    seq_status_desc->write_bit_fields(128, 34, chain_ent.push_entry.barco_pndx_addr);
-    seq_status_desc->write_bit_fields(162, 34, chain_ent.push_entry.barco_pndx_shadow_addr);
-    seq_status_desc->write_bit_fields(196, 4, chain_ent.push_entry.barco_desc_size);
-    seq_status_desc->write_bit_fields(200, 3, chain_ent.push_entry.barco_pndx_size);
-    seq_status_desc->write_bit_fields(203, 5, chain_ent.push_entry.barco_ring_size);
-  } else {
-    seq_status_desc->write_bit_fields(0, 64, chain_ent.db_entry.next_doorbell_addr);
-    seq_status_desc->write_bit_fields(64, 64, chain_ent.db_entry.next_doorbell_data);
-  }
-
-  seq_status_desc->write_bit_fields(208, 64, chain_ent.status_addr0);
-  seq_status_desc->write_bit_fields(272, 64, chain_ent.status_addr1);
-  seq_status_desc->write_bit_fields(336, 64, chain_ent.intr_addr);
-  seq_status_desc->write_bit_fields(400, 32, chain_ent.intr_data);
-  seq_status_desc->write_bit_fields(432, 16, chain_ent.status_len);
-  seq_status_desc->write_bit_fields(448, 1, chain_ent.status_dma_en);
-  seq_status_desc->write_bit_fields(449, 1, chain_ent.next_doorbell_en);
-  seq_status_desc->write_bit_fields(450, 1, chain_ent.intr_en);
-  seq_status_desc->write_bit_fields(451, 1, chain_ent.next_db_action_barco_push);
-  seq_status_desc->write_bit_fields(452, 1, chain_ent.stop_chain_on_error);
-  seq_status_desc->write_thru();
-
-  return 0;
-}
-
-// Set up sequencer accelerator chain entry
-int test_setup_seq_acc_chain_entry(acc_chain_params_t& params) {
- 
-  dp_mem_t *seq_status_desc;
-
-  seq_status_desc = queues::seq_sq_consume_entry(params.seq_status_q,
-                                                 &params.ret_seq_status_index);
-  // Form the doorbell to be returned by the API
-  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                             params.seq_status_q, 0, params.ret_seq_status_index, 
-                             &params.ret_doorbell_addr, &params.ret_doorbell_data);
-  
-  return (*params.desc_format_fn)(params.chain_ent, seq_status_desc);
-}
-
-
 // Verify data and dump on any miscompare.
 int
 test_data_verify_and_dump(uint8_t *expected_data,
                           uint8_t *actual_data,
                           uint32_t len)
 {
-    int     cmp_result;
+    int         cmp_result;
+    uint32_t    offs;
 
     cmp_result = memcmp(expected_data, actual_data, len);
     if (cmp_result) {
-        if (cmp_result < 0) {
-            cmp_result = -cmp_result;
+        for (offs = 0; offs < len; offs++) {
+            if (actual_data[offs] != expected_data[offs]) {
+                break;
+            }
         }
-        printf("Data of length %u mismatch at offset %d\n", len, cmp_result);
+        printf("Data of length %u mismatch at offset %d\n", len, offs);
 #if 0
-        if (cmp_result < (int)len) {
-            printf("\nDumping expected data starting at offset %u\n", cmp_result);
-            utils::dump(expected_data + cmp_result, len - cmp_result);
-            printf("\nDumping actual data starting at offset %u\n", cmp_result);
-            utils::dump(actual_data + cmp_result, len - cmp_result);
-        }
+        printf("\nDumping expected data starting at offset %u\n", offs);
+        utils::dump(expected_data + offs, len - offs);
+        printf("\nDumping actual data starting at offset %u\n", offs);
+        utils::dump(actual_data + offs, len - offs);
 #endif
         return -1;
     }

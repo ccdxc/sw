@@ -312,7 +312,7 @@ public:
 private:
 
     void  hash_setup(uint32_t block_no,
-                     acc_chain_params_t& chain_params);
+                     chain_params_comp_t& chain_params);
 
     uint32_t        app_max_size;
     uint32_t        app_blk_size;

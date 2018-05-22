@@ -13,23 +13,6 @@ struct s2_tbl_seq_comp_status_handler_d d;
 struct phv_ p;
 
 /*
- * SGL rearranged to little-endian layout
- */
-struct barco_sgl_le_t {
-    rsvd : 64;
-    link : 64;
-    rsvd2: 32;
-    len2 : 32;
-    addr2: 64;
-    rsvd1: 32;
-    len1 : 32;
-    addr1: 64;
-    rsvd0: 32;
-    len0 : 32;
-    addr0: 64;
-};
-
-/*
  * Registers usage
  */
 #define r_comp_data_len             r1  // compression output data length

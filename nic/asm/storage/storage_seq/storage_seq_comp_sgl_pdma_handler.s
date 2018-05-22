@@ -1,6 +1,5 @@
 /*****************************************************************************
- *  seq_comp_sgl_pdma_xfer: Parse the destination SGL and DMA the status,
- *                          data (if status was success) and set the interrupt.
+ *  seq_comp_sgl_pdma_xfer: Parse the destination SGL and DMA the data from
  *****************************************************************************/
 
 #include "storage_asm_defines.h"
@@ -51,7 +50,7 @@ storage_seq_comp_sgl_pdma_xfer:
    // entirely in storage_seq_comp_sgl_pad_only_xfer().
    
    bbeq         SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 1, limited_sgl_case
-   add		r_src_addr, SEQ_KIVEC3_FLAT_BUF_ADDR, r0        // delay slot
+   add		r_src_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0        // delay slot
 
 all_sgl_plus_padding_case:
    
