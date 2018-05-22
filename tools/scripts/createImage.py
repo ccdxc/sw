@@ -34,7 +34,7 @@ static_images = {
 
 # images which are compiled every time
 dynamic_images = [
-    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm"
+    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy"
 ]
 
 # dictionary of module name(specified in venice/globals/modules.go )  to containerImage
