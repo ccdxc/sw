@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"github.com/pensando/sw/api"
 )
 
 /*
@@ -508,6 +510,8 @@ type UserSpec struct {
 }
 
 type User struct {
+	api.TypeMeta
+	api.ObjectMeta
 	Spec UserSpec `json:"spec"`
 }
 
@@ -605,6 +609,155 @@ func TestParseForStruct(t *testing.T) {
 		sel, err := ParseForStruct(v, badTests[ii])
 		if err == nil {
 			t.Fatalf("Expected to fail parsing, but found %v", sel)
+		}
+	}
+}
+
+func TestMatchesObj(t *testing.T) {
+	u := &User{
+		Spec: UserSpec{
+			Groups: []*UserGroup{
+				&UserGroup{},
+			},
+			Perms: map[string]RolePerms{
+				"test": RolePerms{
+					Perms: []string{"test"},
+				},
+				"foo": RolePerms{
+					Perms: []string{"bar"},
+				},
+			},
+			PermsIdx: map[int8]RolePerms{
+				0: RolePerms{
+					Perms: []string{"test"},
+				},
+				1: RolePerms{
+					Perms: []string{"bar"},
+				},
+			},
+		},
+	}
+	tests := []struct {
+		selector Selector
+		match    bool
+	}{
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Name",
+						Operator: "equals",
+						Values:   []string{""},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Name",
+						Operator: "equals",
+						Values:   []string{"foo"},
+					},
+				},
+			},
+			match: false,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Perms[*].Perms",
+						Operator: "in",
+						Values:   []string{"foo", "bar", "test"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Perms[*].Perms",
+						Operator: "in",
+						Values:   []string{"bar"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Perms[*].Perms",
+						Operator: "in",
+						Values:   []string{"blah"},
+					},
+				},
+			},
+			match: false,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Perms[*].Perms",
+						Operator: "notIn",
+						Values:   []string{"blah"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.PermsIdx[0].Perms",
+						Operator: "equals",
+						Values:   []string{"test"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.PermsIdx[0].Perms",
+						Operator: "notEquals",
+						Values:   []string{"foo"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Groups.Group",
+						Operator: "equals",
+						Values:   []string{"foo"},
+					},
+					&Requirement{
+						Key:      "Spec.Perms[*].Perms",
+						Operator: "equals",
+						Values:   []string{"test"},
+					},
+				},
+			},
+			match: false,
+		},
+	}
+	for ii := range tests {
+		if tests[ii].selector.MatchesObj(u) != tests[ii].match {
+			t.Fatalf("Expected to match, but failed: index %v, selector %v", ii, tests[ii].selector)
 		}
 	}
 }

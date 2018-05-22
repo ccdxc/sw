@@ -1586,6 +1586,59 @@ func subObj(kind string) interface{} {
 	return nil
 }
 
+func TestParseVal(t *testing.T) {
+	tests := []struct {
+		kind       reflect.Kind
+		value      string
+		expSuccess bool
+	}{
+		{reflect.Bool, "true", true},
+		{reflect.Bool, "false", true},
+		{reflect.Bool, "foo", false},
+		{reflect.Float32, "100.01", true},
+		{reflect.Float32, "100", true},
+		{reflect.Float32, "7893894732984723984792387493287493274923749237493274.342342", false},
+		{reflect.Float64, "100.01", true},
+		{reflect.Float64, "7893894732984723984792387493287493274923749237493274.342342", true},
+		{reflect.Int8, "127", true},
+		{reflect.Int8, "-127", true},
+		{reflect.Int16, "128", true},
+		{reflect.Int16, "32767", true},
+		{reflect.Int16, "-32767", true},
+		{reflect.Int16, "32768", false},
+		{reflect.Int32, "32768", true},
+		{reflect.Int32, "2147483647", true},
+		{reflect.Int32, "-2147483647", true},
+		{reflect.Int32, "2147483648", false},
+		{reflect.Int64, "2147483648", true},
+		{reflect.Int64, "-2147483648", true},
+		{reflect.Uint8, "255", true},
+		{reflect.Uint8, "-127", false},
+		{reflect.Uint8, "256", false},
+		{reflect.Uint16, "256", true},
+		{reflect.Uint16, "65535", true},
+		{reflect.Uint16, "-32767", false},
+		{reflect.Uint16, "65536", false},
+		{reflect.Uint32, "65536", true},
+		{reflect.Uint32, "4294967295", true},
+		{reflect.Uint32, "-2147483647", false},
+		{reflect.Uint32, "4294967296", false},
+		{reflect.Uint64, "4294967296", true},
+		{reflect.Uint64, "-2147483648", false},
+		{reflect.Complex64, "213312312", false},
+		{reflect.Complex128, "213312312", false},
+	}
+	for ii := range tests {
+		_, err := ParseVal(tests[ii].kind, tests[ii].value)
+		if tests[ii].expSuccess && err != nil {
+			t.Fatalf("Expected to succeed but failed, kind %v, value %v, err: %v", tests[ii].kind, tests[ii].value, err)
+		}
+		if !tests[ii].expSuccess && err == nil {
+			t.Fatalf("Expected to fail but succeeded, kind %v, value %v", tests[ii].kind, tests[ii].value)
+		}
+	}
+}
+
 // These structs are temporary until ref can handle nested maps/slices.
 type Attribute struct {
 	Attr string `json:"attr,omitempty"`
@@ -1596,10 +1649,11 @@ type PolicyRule struct {
 }
 
 type NewPolicy struct {
-	ToGroup    string               `json:"toGroup,omitempty"`
-	FromGroup  string               `json:"fromGroup,omitempty"`
-	Attributes map[string]Attribute `json:"attrs,omitempty"`
-	Rules      []PolicyRule         `json:"rules,omitempty"`
+	ToGroup       string               `json:"toGroup,omitempty"`
+	FromGroup     string               `json:"fromGroup,omitempty"`
+	Attributes    map[string]Attribute `json:"attrs,omitempty"`
+	Rules         []PolicyRule         `json:"rules,omitempty"`
+	StrAttributes map[string]string    `json:"strAttrs,omitempty"`
 }
 
 type RuleAttribute struct {
@@ -1612,13 +1666,16 @@ type NewSGRule struct {
 }
 
 type NewUserSpec struct {
-	Alias        string               `json:"alias,omitempty"`
-	Roles        []string             `json:"roles,omitempty"`
-	Perm         *Permission          `json:"perm,omitempty"`
-	PolicyMap    map[string]NewPolicy `json:"policiesMap,omitempty"`
-	PolicyIdxMap map[int8]NewPolicy   `json:"policiesIndexMap,omitempty"`
-	PolicySlice  []NewPolicy          `json:"policiesSlice,omitempty"`
-	InRules      []NewSGRule          `json:"igRules,omitempty" venice:"ins=in"`
+	Alias          string               `json:"alias,omitempty"`
+	Roles          []string             `json:"roles,omitempty"`
+	Perm           *Permission          `json:"perm,omitempty"`
+	NilPerm        *Permission          `json:"nilPerm,omitempty"`
+	PolicyMap      map[string]NewPolicy `json:"policiesMap,omitempty"`
+	NilPolicyMap   map[string]NewPolicy `json:"nilPoliciesMap,omitempty"`
+	PolicyIdxMap   map[int8]NewPolicy   `json:"policiesIndexMap,omitempty"`
+	PolicySlice    []NewPolicy          `json:"policiesSlice,omitempty"`
+	NilPolicySlice []NewPolicy          `json:"nilPoliciesSlice,omitempty"`
+	InRules        []NewSGRule          `json:"igRules,omitempty" venice:"ins=in"`
 }
 
 type NewUser struct {
@@ -1696,6 +1753,102 @@ func TestFieldByJSONTag(t *testing.T) {
 		}
 		if tests[ii].expSuccess && field != tests[ii].expField {
 			t.Fatalf("Expected %v for %v, found %v with err %v", tests[ii].expField, tests[ii].jsonTag, field, err)
+		}
+	}
+}
+
+func TestFieldValues(t *testing.T) {
+	u := NewUser{
+		Spec: &NewUserSpec{
+			Roles: []string{"foo", "bar"},
+			Perm:  &Permission{},
+			PolicyMap: map[string]NewPolicy{
+				"key1": {
+					ToGroup:       "to-key1",
+					FromGroup:     "from-key1",
+					Attributes:    map[string]Attribute{"foo": {"foo"}, "bar": {"bar"}},
+					StrAttributes: map[string]string{"foo": "bar"},
+					Rules:         []PolicyRule{{"a"}, {"b"}},
+				},
+				"key2": {
+					ToGroup:    "to-key2",
+					FromGroup:  "from-key2",
+					Attributes: map[string]Attribute{"bas": {"bas"}, "baz": {"baz"}},
+				},
+			},
+			PolicyIdxMap: map[int8]NewPolicy{
+				10: {
+					ToGroup:       "to-key1",
+					FromGroup:     "from-key1",
+					Attributes:    map[string]Attribute{"foo": {"bar"}},
+					StrAttributes: map[string]string{"foo": "bar"},
+					Rules:         []PolicyRule{{"a"}, {"b"}},
+				},
+			},
+			PolicySlice: []NewPolicy{
+				{
+					ToGroup:       "to-key1",
+					FromGroup:     "from-key1",
+					Attributes:    map[string]Attribute{"foo": {"bar"}},
+					StrAttributes: map[string]string{"foo": "bar"},
+					Rules:         []PolicyRule{{"a"}, {"b"}},
+				},
+			},
+			InRules: []NewSGRule{NewSGRule{Action: "permit", Attributes: map[string]Attribute{"foo": {"bar"}}}},
+		},
+	}
+	v := reflect.ValueOf(u)
+	tests := []struct {
+		key        string
+		expSuccess bool
+		expValues  []string
+	}{
+		{"Spec.Alias", true, []string{""}},                                                   // Uninitialized field
+		{"Spec.Roles", true, []string{"foo", "bar"}},                                         // Slice of strings
+		{"Spec.Perm.RWX", true, []string{""}},                                                // A single nested uninitialized field
+		{"Spec.NilPerm.RWX", true, []string{}},                                               // Nil ptr
+		{"Spec.PolicyMap[key1]", false, []string{""}},                                        // Non leaf
+		{"Spec.PolicyMap[key1].Rules.Something", true, []string{"a", "b"}},                   // Map with a specific key
+		{"Spec.PolicyMap[*].Attributes[*].Attr", true, []string{"foo", "bar", "bas", "baz"}}, // Map with *
+		{"Spec.PolicyMap[*].Rules.Something", true, []string{"a", "b"}},                      // Map with *
+		{"Spec.PolicyMap[key2].Rules.Something", true, []string{}},                           // Map with non existent key
+		{"Spec.PolicyMap[key1].ToGroup", true, []string{"to-key1"}},                          // Map with a specific key
+		{"Spec.NilPolicyMap[key1].Rules.Something", true, []string{}},                        // Nil map
+		{"Spec.InRules.Attributes[foo].Attr", true, []string{"bar"}},                         // Map with specific key
+		{"Spec.InRules.Attributes[*].Attr", true, []string{"bar"}},                           // Map with *
+		{"Spec.InRules.Attributes[foo1].Attr", true, []string{}},                             // Map with non existent key
+		{"Spec.PolicyIdxMap[10].StrAttributes[foo]", true, []string{"bar"}},                  // Leap map with specific key
+		{"Spec.PolicyIdxMap[10].StrAttributes[*]", true, []string{"bar"}},                    // Leap map with *
+		{"Spec.PolicyIdxMap[*].StrAttributes[*]", true, []string{"bar"}},                     // Multiple *
+		{"Spec.PolicyIdxMap[100].StrAttributes[*]", true, []string{}},                        // Non existent key
+		{"Spec.PolicyIdxMap[*].StrAttributes[fool]", true, []string{}},                       // Non existent key
+		{"Spec.PolicySlice.Rules", false, []string{}},                                        // Non leaf
+		{"Spec.PolicySlice.Rules.Something", true, []string{"a", "b"}},                       // Slice
+		{"Spec.NilPolicySlice.Rules.Something", true, []string{}},                            // Nil Slice
+		{"Spec.InRules.Action", true, []string{"permit"}},                                    // Slice
+		{"Spec.ABC.DEF", false, []string{}},                                                  // Non existent field
+		{"Spec.Perm.DEF", false, []string{}},                                                 // Non existent field
+		{"Spec.InRules.Attributes[foo].ABC", false, []string{}},                              // Non existent field
+		{"superrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrlooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongone", false, []string{}}, // Long field
+	}
+	for ii := range tests {
+		values, err := FieldValues(v, tests[ii].key)
+		if !tests[ii].expSuccess && err == nil {
+			t.Fatalf("Expected %v to fail, found %v", tests[ii].key, values)
+		}
+		if tests[ii].expSuccess {
+			if len(values) != len(tests[ii].expValues) {
+				t.Fatalf("Expected %v values, found %v values for %v", len(tests[ii].expValues), len(values), tests[ii].key)
+			}
+			valuesMap := make(map[string]struct{})
+			for jj := range tests[ii].expValues {
+				valuesMap[tests[ii].expValues[jj]] = struct{}{}
+			}
+			for jj := range values {
+				if _, ok := valuesMap[values[jj]]; !ok {
+					t.Fatalf("Expected %v values, found %v values", tests[ii].expValues, values)
+				}
+			}
 		}
 	}
 }

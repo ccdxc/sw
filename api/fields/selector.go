@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/pensando/sw/venice/utils/ref"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 /*
@@ -99,6 +100,37 @@ func (r *Requirement) Matches(fs Fields) bool {
 			return true
 		}
 		return !r.hasValue(fs.Get(r.Key))
+	default:
+		return false
+	}
+}
+
+// MatchesObj returns true if the Requirement matches the input object.
+// There is a match in the following cases:
+// (1) The operator is Equals or In, Fields has the Requirement's key and obj's
+//     value(s) for that key is/are in Requirement's value set.
+// (2) The operator is NotEquals or NotIn, Fields has the Requirement's key and
+//     obj's value(s) for that key is/are not in Requirement's value set.
+func (r *Requirement) MatchesObj(obj runtime.Object) bool {
+	vals, err := ref.FieldValues(reflect.ValueOf(obj), r.Key)
+	if err != nil {
+		return false
+	}
+	switch Operator(Operator_value[r.Operator]) {
+	case Operator_equals, Operator_in:
+		for ii := range vals {
+			if r.hasValue(vals[ii]) {
+				return true
+			}
+		}
+		return false
+	case Operator_notEquals, Operator_notIn:
+		for ii := range vals {
+			if r.hasValue(vals[ii]) {
+				return false
+			}
+		}
+		return true
 	default:
 		return false
 	}
@@ -821,4 +853,18 @@ func ParseForStruct(v reflect.Value, selector string) (*Selector, error) {
 		sel.Requirements[ii].Key = found
 	}
 	return sel, err
+}
+
+// MatchesObj for a Selector returns true if all of the Requirements match the
+// provided object. It returns false for an empty selector.
+func (s *Selector) MatchesObj(obj runtime.Object) bool {
+	if len(s.Requirements) == 0 {
+		return false
+	}
+	for ii := range s.Requirements {
+		if matches := s.Requirements[ii].MatchesObj(obj); !matches {
+			return false
+		}
+	}
+	return true
 }

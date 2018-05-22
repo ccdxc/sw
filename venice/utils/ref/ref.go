@@ -902,6 +902,97 @@ func fieldByJSONTag(t reflect.Type, json string) (*reflect.StructField, int) {
 	return nil, 0
 }
 
+// ParseVal is a utility function to parse a string to a value. It uses the provided kind
+// to do the validation and parsing.
+func ParseVal(kind reflect.Kind, value string) (reflect.Value, error) {
+	size := 0
+	unsigned := false
+	var v reflect.Value
+	switch kind {
+	case reflect.Bool:
+		v = reflect.Indirect(reflect.New(reflect.TypeOf(true)))
+		switch value {
+		case "true":
+			v.SetBool(true)
+		case "false":
+			v.SetBool(false)
+		default:
+			return reflect.Value{}, fmt.Errorf("Error parsing %v as bool", value)
+		}
+		return v, nil
+	case reflect.Float32:
+		size = 32
+		v = reflect.New(reflect.TypeOf(float32(0)))
+		fallthrough
+	case reflect.Float64:
+		if size == 0 {
+			size = 64
+			v = reflect.New(reflect.TypeOf(float64(0)))
+		}
+		key, err := strconv.ParseFloat(value, size)
+		if err != nil {
+			return reflect.Value{}, fmt.Errorf("Error parsing %v as float%v: %v", value, size, err)
+		}
+		v = reflect.Indirect(v)
+		v.SetFloat(key)
+		return v, nil
+	case reflect.Int:
+		size = 32
+		v = reflect.New(reflect.TypeOf(0))
+	case reflect.Int8:
+		size = 8
+		v = reflect.New(reflect.TypeOf(int8(0)))
+	case reflect.Int16:
+		size = 16
+		v = reflect.New(reflect.TypeOf(int16(0)))
+	case reflect.Int32:
+		size = 32
+		v = reflect.New(reflect.TypeOf(int32(0)))
+	case reflect.Int64:
+		size = 64
+		v = reflect.New(reflect.TypeOf(int64(0)))
+	case reflect.Uint:
+		size = 32
+		unsigned = true
+		v = reflect.New(reflect.TypeOf(uint(0)))
+	case reflect.Uint8:
+		size = 8
+		unsigned = true
+		v = reflect.New(reflect.TypeOf(uint8(0)))
+	case reflect.Uint16:
+		size = 16
+		unsigned = true
+		v = reflect.New(reflect.TypeOf(uint16(0)))
+	case reflect.Uint32:
+		size = 32
+		unsigned = true
+		v = reflect.New(reflect.TypeOf(uint32(0)))
+	case reflect.Uint64:
+		size = 64
+		unsigned = true
+		v = reflect.New(reflect.TypeOf(uint64(0)))
+	case reflect.String:
+		return reflect.ValueOf(value), nil
+	default:
+		return reflect.Value{}, fmt.Errorf("Unsupported kind %v for ParseVal", kind)
+	}
+	v = reflect.Indirect(v)
+	if unsigned {
+		key, err := strconv.ParseUint(value, 10, size)
+		if err != nil {
+			return reflect.Value{}, fmt.Errorf("Error parsing %v as uint%v: %v", value, size, err)
+		}
+		v.SetUint(key)
+		return v, nil
+	}
+	key, err := strconv.ParseInt(value, 10, size)
+	if err != nil {
+		return reflect.Value{}, fmt.Errorf("Error parsing %v as int%v: %v", value, size, err)
+	}
+	v.SetInt(key)
+	return v, nil
+}
+
 // FieldByJSONTag converts hierachical json tag based field to name based field.
 // 'v' must be a dummy structure with pointers, maps, slices instantiated. In the
 // future, this will be rewritten to use generated schema.
@@ -953,49 +1044,10 @@ func FieldByJSONTag(v reflect.Value, f string) (string, error) {
 			case reflect.Slice:
 				return "", fmt.Errorf("Indexing is not supported on slice %v, found %v", t, indexStr)
 			case reflect.Map:
-				size := 0
-				unsigned := false
-				intCheck := true
-				switch t.Key().Kind() {
-				case reflect.Int:
-					size = 32
-				case reflect.Int8:
-					size = 8
-				case reflect.Int16:
-					size = 16
-				case reflect.Int32:
-					size = 32
-				case reflect.Int64:
-					size = 64
-				case reflect.Uint:
-					size = 32
-					unsigned = true
-				case reflect.Uint8:
-					size = 8
-					unsigned = true
-				case reflect.Uint16:
-					size = 16
-					unsigned = true
-				case reflect.Uint32:
-					size = 32
-					unsigned = true
-				case reflect.Uint64:
-					size = 64
-					unsigned = true
-				default:
-					intCheck = false
-				}
 				// "*" is ok for indexing maps with int keys
-				if intCheck && indexStr != "*" {
-
-					if unsigned {
-						if _, err := strconv.ParseUint(indexStr, 10, size); err != nil {
-							return "", fmt.Errorf("Error parsing %v as uint%v for indexing %v: %v", indexStr, size, t, err)
-						}
-					} else {
-						if _, err := strconv.ParseInt(indexStr, 10, size); err != nil {
-							return "", fmt.Errorf("Error parsing %v as int%v for indexing %v: %v", indexStr, size, t, err)
-						}
+				if indexStr != "*" {
+					if _, err := ParseVal(t.Key().Kind(), indexStr); err != nil {
+						return "", err
 					}
 				}
 
@@ -1019,7 +1071,123 @@ func FieldByJSONTag(v reflect.Value, f string) (string, error) {
 	case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
 		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
 	default:
-		return "", fmt.Errorf("Lead kind is %v, not scalar for %v", t.Kind(), t)
+		return "", fmt.Errorf("Leaf kind is %v, not scalar for %v", t.Kind(), t)
 	}
 	return result, nil
+}
+
+// sliceValues is a helper for fieldValues, see below.
+func sliceValues(v reflect.Value, f string) ([]string, error) {
+	result := []string{}
+	if v.Kind() != reflect.Slice {
+		return nil, fmt.Errorf("%v is not a slice", v)
+	}
+	for ii := 0; ii < v.Len(); ii++ {
+		res, err := fieldValues(v.Index(ii), f)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, res...)
+	}
+	return result, nil
+}
+
+// mapValues is a helper for fieldValues, see below.
+func mapValues(v reflect.Value, index, f string) ([]string, error) {
+	if v.Kind() != reflect.Map {
+		return nil, fmt.Errorf("%v is not a map", v)
+	}
+	if index == "*" {
+		keys := v.MapKeys()
+		result := []string{}
+		for _, key := range keys {
+			res, err := fieldValues(v.MapIndex(key), f)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, res...)
+		}
+		return result, nil
+	}
+	key, err := ParseVal(v.Type().Key().Kind(), index)
+	if err != nil {
+		return nil, err
+	}
+	newV := v.MapIndex(key)
+	if !newV.IsValid() {
+		return []string{}, nil
+	}
+	return fieldValues(newV, f)
+}
+
+// fieldValues is a helper for FieldValues, see below.
+func fieldValues(v reflect.Value, f string) ([]string, error) {
+	if v.Kind() == reflect.Ptr {
+		v = reflect.Indirect(v)
+		if !v.IsValid() {
+			return nil, fmt.Errorf("Invalid or nil pointer for %v", v)
+		}
+	}
+	if isKindPrimitive(v.Kind()) {
+		if f != "" {
+			return nil, fmt.Errorf("Non empty field at leaf: %v", f)
+		}
+		return []string{fmt.Sprintf("%v", v)}, nil
+	}
+	switch v.Kind() {
+	case reflect.Struct:
+		if f == "" {
+			return nil, fmt.Errorf("Empty field at non-leaf: %v", v)
+		}
+		fList := strings.Split(f, ".")
+		fName := fList[0]
+		ii := strings.Index(fList[0], "[")
+		indexStr := ""
+		if ii != -1 {
+			fName = fList[0][:ii]
+			indexStr = fList[0][ii+1 : len(fList[0])-1]
+		}
+		newV := v.FieldByName(fName)
+		if !newV.IsValid() {
+			return nil, fmt.Errorf("Field %v is not valid", fName)
+		}
+		if newV.Kind() == reflect.Map && ii == -1 || newV.Kind() == reflect.Map && indexStr == "" ||
+			newV.Kind() != reflect.Map && ii != -1 {
+			return nil, fmt.Errorf("Non indexed map or indexed but not map, Val: %v, Field: %v", v, fList[0])
+		}
+		newF := strings.TrimPrefix(f, fList[0])
+		newF = strings.TrimPrefix(newF, ".")
+		switch newV.Kind() {
+		case reflect.Slice:
+			return sliceValues(newV, newF)
+		case reflect.Map:
+			return mapValues(newV, indexStr, newF)
+		default:
+			return fieldValues(newV, newF)
+		}
+		// Slice of Slice, Slice of Map, Map of Map, Map of Slice fields not supported.
+		// Examples: [][]string, []map[string]string, map[string][]string
+	}
+	return nil, fmt.Errorf("Hit leaf on non-leaf field %v", f)
+}
+
+const (
+	maxFieldLen = 1000
+)
+
+// FieldValues retrieves string values for a hierarchical field in a struct.
+// 'v' must be a struct or a pointer to a struct and 'f' must be a valid
+// hierarchical field within 'v'. If the heirarchy includes a map field,
+// the traversal is based on a the specified index. '*' results in traversing
+// the entire map. A specific key only traverses that key. If that key is not
+// found, it returns an empty result with no error.
+//
+// Returns an error on failure.
+//
+//
+func FieldValues(v reflect.Value, f string) ([]string, error) {
+	if len(f) > maxFieldLen {
+		return nil, fmt.Errorf("%v exceeds max field length of %v", f, maxFieldLen)
+	}
+	return fieldValues(v, f)
 }
