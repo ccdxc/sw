@@ -58,7 +58,7 @@ eth_tx_commit:
   bcf             [!c3], eth_tx_commit_done
   nop
 
-  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.eth_tx_to_s2_qtype, k.eth_tx_to_s2_lif)   // R4 = ADDR
+  CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.eth_tx_to_s2_qtype, k.eth_tx_to_s2_lif)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.eth_tx_to_s2_qid, 0, 0)   // R3 = DATA
   memwr.dx        r4, r3
 
