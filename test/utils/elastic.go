@@ -95,3 +95,28 @@ func StopElasticsearch(name string) error {
 
 	return err
 }
+
+// GetElasticsearchAddress returns the address of elasticsearch server
+func GetElasticsearchAddress(name string) (string, error) {
+	if len(strings.TrimSpace(name)) == 0 {
+		return "", nil
+	}
+
+	cmd := []string{"inspect", "-f", "{{range $p, $conf := .HostConfig.PortBindings}}{{range $conf}}{{println .HostPort}}{{end}}{{end}}", name}
+	ports, err := exec.Command("docker", cmd...).CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	if len(strings.TrimSpace(string(ports))) == 0 {
+		return "", fmt.Errorf("no ports exposed")
+	}
+
+	// it takes the first exposed port
+	port := strings.Split(string(ports), "\n")[0]
+	addr := fmt.Sprintf("%s:%s", elasticHost, strings.TrimSpace(port))
+
+	log.Infof("elasticsearch address: %v", addr)
+
+	return addr, nil
+}

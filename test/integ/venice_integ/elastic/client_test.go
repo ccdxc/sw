@@ -192,7 +192,9 @@ func updateEventsThroughBulk(ctx context.Context, client elastic.ESClient, c *C)
 	AssertEventually(c,
 		func() (bool, interface{}) {
 			var result *es.SearchResult
-			query := es.NewMatchQuery("message", "test - index operation").Operator("and")
+			query := es.NewBoolQuery().Must(
+				es.NewMatchPhraseQuery("message", "test - index operation"),
+				es.NewMatchQuery("meta.creation-time", cTime))
 			result, err = client.Search(ctx, indexName, indexType, query, nil, from, maxResults, sortBy)
 			if err != nil {
 				log.Fatalf("failed to search events for query: %v, err:%v", query, err)
@@ -246,7 +248,9 @@ func updateEventsThroughBulk(ctx context.Context, client elastic.ESClient, c *C)
 	AssertEventually(c,
 		func() (bool, interface{}) {
 			var result *es.SearchResult
-			query := es.NewMatchQuery("message", "test - index operation").Operator("and")
+			query := es.NewBoolQuery().Must(
+				es.NewMatchPhraseQuery("message", "test - index operation"),
+				es.NewMatchQuery("meta.creation-time", cTime))
 			result, err = client.Search(ctx, indexName, indexType, query, nil, from, maxResults, sortBy)
 			if err != nil {
 				log.Fatalf("failed to search events for query: %v, err:%v", query, err)
@@ -264,7 +268,9 @@ func updateEventsThroughBulk(ctx context.Context, client elastic.ESClient, c *C)
 	AssertEventually(c,
 		func() (bool, interface{}) {
 			var result *es.SearchResult
-			query := es.NewMatchQuery("message", "test - update operation").Operator("and")
+			query := es.NewBoolQuery().Must(
+				es.NewMatchPhraseQuery("message", "test - update operation"),
+				es.NewMatchQuery("meta.creation-time", cTime))
 			result, err = client.Search(ctx, indexName, indexType, query, nil, from, maxResults, sortBy)
 			if err != nil {
 				log.Fatalf("failed to search events for query: %v, err:%v", query, err)
@@ -482,12 +488,14 @@ func setup(c *C, name string) {
 	// construct event object to be indexed
 	constructEvent()
 
+	var err error
+
 	// skip the setup
 	if *skipESSetup {
+		elasticAddr, err = testutils.GetElasticsearchAddress(name)
+		Assert(c, err == nil, fmt.Sprintf("failed to get elasticsearch addr, err: %v", err))
 		return
 	}
-
-	var err error
 
 	// spin up a single node elasticsearch with the given name; running separate elasticsearch for
 	// each test helps to run the tests in parallel.
