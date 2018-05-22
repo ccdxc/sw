@@ -39,7 +39,6 @@ NMDService::NMDService(delphi::SdkPtr sk, string name) {
     this->sdk_ = sk;
     this->svcName_ = name;
     delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
-    delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadMode);
 
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<NMDSvcHandler>(), name, AGENT);
 

@@ -6,7 +6,7 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
 #include "upgrade_mgr.hpp"
-#include "upgrade_resp_handlers.hpp"
+#include "upgrade_app_resp_handlers.hpp"
 
 namespace upgrade {
 

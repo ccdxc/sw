@@ -5,7 +5,7 @@
 
 #include "upgrade.hpp"
 #include "upgrade_mgr.hpp"
-#include "upgrade_resp_handlers.hpp"
+#include "upgrade_app_resp_handlers.hpp"
 
 namespace upgrade {
 
@@ -36,7 +36,7 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
             break;
         case DataplaneDowntimeStart:
             //TODO set UpgSuccess/UpgFailed
-            nextReqType = Cleanup;
+            nextReqType = UpgSuccess;
             break;
         case Cleanup:
             nextReqType = InvalidUpgState;
@@ -147,7 +147,7 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
     for (vector<delphi::objects::UpgAppRespPtr>::iterator appResp=upgAppRespList.begin(); appResp!=upgAppRespList.end(); ++appResp) {
         if (((*appResp)->upgapprespval() != passType) &&
             ((*appResp)->upgapprespval() != failType)){
-            LogInfo("Application {} still processing {}", (*appResp)->key(), reqType);
+            LogInfo("Application {} still processing {}", (*appResp)->key(), UpgReqStateTypeToStr(reqType));
             ret = false;
         } else if ((*appResp)->upgapprespval() == passType) {
             LogInfo("Got pass from application {}", (*appResp)->key());
@@ -175,6 +175,10 @@ string UpgradeMgr::UpgReqStateTypeToStr(UpgReqStateType type) {
             return "Dataplane Downtime Start";
         case Cleanup:
             return "Cleanup State";
+        case UpgSuccess:
+            return "Upgrade Success";
+        case UpgFailed:
+            return "Upgrade Fail";
         default:
             return "";
     }
