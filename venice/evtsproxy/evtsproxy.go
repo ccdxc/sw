@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/venice/evtsproxy/rpcserver"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/dispatcher"
@@ -30,13 +29,13 @@ type EventsProxy struct {
 }
 
 // NewEventsProxy creates and returns a events proxy instance
-func NewEventsProxy(serverName, serverURL, evtsMgrURL string, dedupInterval, batchInterval time.Duration, logger log.Logger) (*EventsProxy, error) {
+func NewEventsProxy(serverName, serverURL, evtsMgrURL string, dedupInterval, batchInterval time.Duration, eventsStoreDir string, logger log.Logger) (*EventsProxy, error) {
 	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || utils.IsEmpty(evtsMgrURL) || logger == nil {
 		return nil, errors.New("all parameters are required")
 	}
 
 	// create the events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, globals.EventsDir, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, eventsStoreDir, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating events proxy RPC server")
 	}

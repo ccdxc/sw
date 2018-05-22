@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -34,13 +36,14 @@ var (
 
 // tInfo represents test info.
 type tInfo struct {
-	logger            log.Logger
-	mockResolver      *mockresolver.ResolverClient // resolver
-	esClient          elastic.ESClient             // elastic client to verify the results
-	elasticsearchAddr string                       // elastic address
-	elasticsearchName string                       // name of the elasticsearch server name; used to stop the server
-	evtsMgr           *evtsmgr.EventsManager       // events manager to write events to elastic
-	evtsProxy         *evtsproxy.EventsProxy       // events proxy to receive and distribute events
+	logger              log.Logger
+	mockResolver        *mockresolver.ResolverClient // resolver
+	esClient            elastic.ESClient             // elastic client to verify the results
+	elasticsearchAddr   string                       // elastic address
+	elasticsearchName   string                       // name of the elasticsearch server name; used to stop the server
+	evtsMgr             *evtsmgr.EventsManager       // events manager to write events to elastic
+	evtsProxy           *evtsproxy.EventsProxy       // events proxy to receive and distribute events
+	proxyEventsStoreDir string                       // local events store directory
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
@@ -52,6 +55,13 @@ func (t *tInfo) setup() error {
 
 	t.logger = log.GetNewLogger(logConfig)
 	t.mockResolver = mockresolver.New()
+
+	//  local persistent events store for the proxy
+	t.proxyEventsStoreDir, err = ioutil.TempDir("", "")
+	if err != nil {
+		log.Errorf("failed to create temp events dir, err: %v", err)
+		return err
+	}
 
 	// start elasticsearch
 	if err = t.startElasticsearch(); err != nil {
@@ -90,6 +100,11 @@ func (t *tInfo) teardown() {
 
 	t.stopEvtsMgr()
 	t.stopEvtsProxy()
+
+	// remove the local persisitent events store
+	log.Infof("removing events store %s", t.proxyEventsStoreDir)
+
+	os.RemoveAll(t.proxyEventsStoreDir)
 }
 
 // startEvtsProxy helper function to start events proxy
@@ -99,7 +114,7 @@ func (t *tInfo) startEvtsProxy(listenURL string) error {
 	log.Infof("starting events proxy")
 
 	t.evtsProxy, err = evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL,
-		t.evtsMgr.RPCServer.GetListenURL(), 10*time.Second, 100*time.Millisecond, t.logger)
+		t.evtsMgr.RPCServer.GetListenURL(), 10*time.Second, 100*time.Millisecond, t.proxyEventsStoreDir, t.logger)
 	if err != nil {
 		return fmt.Errorf("failed start events proxy, err: %v", err)
 	}

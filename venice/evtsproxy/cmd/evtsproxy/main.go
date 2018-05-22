@@ -26,6 +26,7 @@ func main() {
 		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")
 		dedupInterval   = flag.Duration("dedup-interval", 100*time.Second, "Events deduplication interval")
 		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching inteval")
+		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
 	)
 
 	flag.Parse()
@@ -50,7 +51,7 @@ func main() {
 	logger := log.SetConfig(config)
 
 	// create events proxy
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, *evtsMgrURL, *dedupInterval, *batchInterval, logger)
+	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, *evtsMgrURL, *dedupInterval, *batchInterval, *evtsStoreDir, logger)
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}
