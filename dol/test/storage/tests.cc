@@ -78,7 +78,8 @@ int test_setup() {
   if (run_acc_scale_tests_map) {
       queues::seq_queue_acc_sub_num_set(FLAGS_acc_scale_submissions,
                                         FLAGS_acc_scale_chain_replica,
-                                        ACC_SCALE_TEST_MAX,
+                                        ACC_SCALE_TEST_MAX +
+                                        ACC_SCALE_TEST_NUM_DUAL_SQ_TESTS,
                                         ACC_SCALE_TEST_NUM_TRUE_CHAINING_TESTS);
   }
 

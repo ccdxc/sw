@@ -31,7 +31,7 @@ enum {
                                   ACC_SCALE_TEST_COMP_ENCRYPT       |
                                   ACC_SCALE_TEST_COMP_HASH          |
                                   ACC_SCALE_TEST_ENCRYPT_ONLY       |
-                                  0, // ACC_SCALE_TEST_CHKSUM_DECOMP      |
+                                  ACC_SCALE_TEST_CHKSUM_DECOMP,
   ACC_SCALE_TEST_MAX            = 5,
 
   /*
@@ -41,7 +41,13 @@ enum {
    * no inter-dependency between checksum and decompression so both
    * operations would be submitted simultaneously to HW).
    */
-   ACC_SCALE_TEST_NUM_TRUE_CHAINING_TESTS = 3
+   ACC_SCALE_TEST_NUM_TRUE_CHAINING_TESTS = 3,
+
+  /*
+   * Number of tests requiring dual sequencer queues:
+   * - checksum-decompress: 1 SQ for chksum and 1 SQ for decomp
+   */
+    ACC_SCALE_TEST_NUM_DUAL_SQ_TESTS = 1,
 };
 
 extern uint32_t run_acc_scale_tests_map;

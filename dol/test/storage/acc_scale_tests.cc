@@ -1116,9 +1116,8 @@ encrypt_only_scale_t::full_verify(void)
 acc_scale_tests_t * 
 acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
                                     uint32_t app_blk_size,
-                                    uint32_t sq_idx,
-                                    uint32_t status_sq_start_idx,
-                                    void *seed_test_chain)
+                                    void *seed_test_chain,
+                                    acc_scale_seq_sq_info_t& seq_sq_info)
 {
     comp_encrypt_chain_scale_params_t   cec_scale;
     comp_encrypt_chain_params_t         cec_params;
@@ -1141,8 +1140,13 @@ acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
                                                        app_blk_size(app_blk_size).
                                                        comp_ring(cp_ring).
                                                        push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
-                                                       seq_comp_qid(queues::get_seq_comp_sq(sq_idx)).
-                                                       seq_comp_status_qid(queues::get_seq_comp_status_sq(status_sq_start_idx)));
+                                                       seq_comp_qid(queues::get_seq_comp_sq(seq_sq_info.seq_sq_idx)).
+                                                       seq_comp_status_qid(queues::get_seq_comp_status_sq(seq_sq_info.seq_status_sq_idx)));
+    /*
+     * Return number of sequencer queues actually consumed by the test
+     */
+    seq_sq_info.num_seq_sq_consumed = 1;
+    seq_sq_info.num_seq_status_sq_consumed = num_submissions;
     return comp_encrypt_chain_scale;
 }
 
@@ -1154,9 +1158,8 @@ acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
 acc_scale_tests_t * 
 acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
                                       uint32_t app_blk_size,
-                                      uint32_t sq_idx,
-                                      uint32_t status_sq_start_idx,
-                                      void *seed_test_chain)
+                                      void *seed_test_chain,
+                                      acc_scale_seq_sq_info_t& seq_sq_info)
 {
     decrypt_decomp_chain_scale_params_t ddc_scale;
     decrypt_decomp_chain_params_t       ddc_params;
@@ -1176,8 +1179,13 @@ acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
                                                    destructor_free_buffers(true));
     decrypt_decomp_chain_scale->push_params_set(ddc_push.comp_encrypt_chain((comp_encrypt_chain_t *)seed_test_chain).
                                                          decomp_ring(dc_ring).
-                                                         seq_xts_qid(queues::get_seq_xts_sq(sq_idx)).
-                                                         seq_xts_status_qid(queues::get_seq_xts_status_sq(status_sq_start_idx)));
+                                                         seq_xts_qid(queues::get_seq_xts_sq(seq_sq_info.seq_sq_idx)).
+                                                         seq_xts_status_qid(queues::get_seq_xts_status_sq(seq_sq_info.seq_status_sq_idx)));
+    /*
+     * Return number of sequencer queues actually consumed by the test
+     */
+    seq_sq_info.num_seq_sq_consumed = 1;
+    seq_sq_info.num_seq_status_sq_consumed = num_submissions;
     return decrypt_decomp_chain_scale;
 }
 
@@ -1189,9 +1197,8 @@ acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
 acc_scale_tests_t * 
 acc_comp_hash_chain_scale_create(uint32_t num_submissions,
                                  uint32_t app_blk_size,
-                                 uint32_t sq_idx,
-                                 uint32_t status_sq_start_idx,
-                                 void *seed_test_chain)
+                                 void *seed_test_chain,
+                                 acc_scale_seq_sq_info_t& seq_sq_info)
 {
     comp_hash_chain_scale_params_t   chc_scale;
     comp_hash_chain_params_t         chc_params;
@@ -1215,8 +1222,13 @@ acc_comp_hash_chain_scale_create(uint32_t num_submissions,
                                                     comp_ring(cp_ring).
                                                     hash_ring(cp_hot_ring).
                                                     push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
-                                                    seq_comp_qid(queues::get_seq_comp_sq(sq_idx)).
-                                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(status_sq_start_idx)));
+                                                    seq_comp_qid(queues::get_seq_comp_sq(seq_sq_info.seq_sq_idx)).
+                                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(seq_sq_info.seq_status_sq_idx)));
+    /*
+     * Return number of sequencer queues actually consumed by the test
+     */
+    seq_sq_info.num_seq_sq_consumed = 1;
+    seq_sq_info.num_seq_status_sq_consumed = num_submissions;
     return comp_hash_chain_scale;
 }
 
@@ -1228,9 +1240,8 @@ acc_comp_hash_chain_scale_create(uint32_t num_submissions,
 acc_scale_tests_t * 
 acc_chksum_decomp_chain_scale_create(uint32_t num_submissions,
                                      uint32_t app_blk_size,
-                                     uint32_t sq_idx,
-                                     uint32_t status_sq_start_idx,
-                                     void *seed_test_chain)
+                                     void *seed_test_chain,
+                                     acc_scale_seq_sq_info_t& seq_sq_info)
 {
     chksum_decomp_chain_scale_params_t cdc_scale;
     chksum_decomp_chain_params_t       cdc_params;
@@ -1248,8 +1259,13 @@ acc_chksum_decomp_chain_scale_create(uint32_t num_submissions,
                                                         chksum_ring(dc_ring).
                                                         decomp_ring(dc_hot_ring).
                                                         push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
-                                                        seq_chksum_qid(queues::get_seq_comp_sq(sq_idx)).
-                                                        seq_decomp_qid(queues::get_seq_comp_sq(sq_idx + 1)));
+                                                        seq_chksum_qid(queues::get_seq_comp_sq(seq_sq_info.seq_sq_idx)).
+                                                        seq_decomp_qid(queues::get_seq_comp_sq(seq_sq_info.seq_sq_idx + 1)));
+    /*
+     * Two sequencer queues are consumed above: 1 for chksum and 1 for decomp
+     */
+    seq_sq_info.num_seq_sq_consumed = 2;
+    seq_sq_info.num_seq_status_sq_consumed = 0;
     return chksum_decomp_chain_scale;
 }
 
@@ -1261,9 +1277,8 @@ acc_chksum_decomp_chain_scale_create(uint32_t num_submissions,
 acc_scale_tests_t * 
 acc_encrypt_only_scale_create(uint32_t num_submissions,
                               uint32_t app_blk_size,
-                              uint32_t sq_idx,
-                              uint32_t status_sq_start_idx,
-                              void *seed_test_chain)
+                              void *seed_test_chain,
+                              acc_scale_seq_sq_info_t& seq_sq_info)
 {
     encrypt_only_scale_params_t   enc_scale;
     encrypt_only_params_t         enc_params;
@@ -1280,7 +1295,12 @@ acc_encrypt_only_scale_create(uint32_t num_submissions,
                                            destructor_free_buffers(true));
     encrypt_only_scale->push_params_set(enc_push.app_blk_size(app_blk_size).
                                                  push_type(ACC_RING_PUSH_SEQUENCER_BATCH).
-                                                 seq_xts_qid(queues::get_seq_xts_sq(sq_idx)));
+                                                 seq_xts_qid(queues::get_seq_xts_sq(seq_sq_info.seq_sq_idx)));
+    /*
+     * Return number of sequencer queues actually consumed by the test
+     */
+    seq_sq_info.num_seq_sq_consumed = 1;
+    seq_sq_info.num_seq_status_sq_consumed = 0;
     return encrypt_only_scale;
 }
 
@@ -1297,9 +1317,8 @@ acc_scale_tests_push(void)
 {
 	typedef std::pair<std::function<acc_scale_tests_t*(uint32_t,
                                                        uint32_t,
-                                                       uint32_t,
-                                                       uint32_t,
-                                                       void*)>,
+                                                       void*,
+                                                       acc_scale_seq_sq_info_t&)>,
                       void*> acc_scale_tests_spec_t;
 
     std::vector<acc_scale_tests_t*>     seed_tests_vec;
@@ -1309,13 +1328,13 @@ acc_scale_tests_push(void)
     comp_encrypt_chain_t        *seed_comp_encrypt_chain = nullptr;
     comp_hash_chain_scale_t     *seed_comp_hash_chain_scale = nullptr;
     comp_hash_chain_t           *seed_comp_hash_chain = nullptr;
+    acc_scale_seq_sq_info_t     acc_scale_seq_sq_info = {0};
     uint32_t                    num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
     uint32_t                    num_replicas = NUM_TO_VAL(FLAGS_acc_scale_chain_replica);
     uint32_t                    app_blk_size = NUM_TO_VAL(FLAGS_acc_scale_blk_size);
     uint32_t                    poll_factor = app_blk_size / kCompAppMinSize;
     tests::Poller               poll(FLAGS_long_poll_interval * poll_factor);
     acc_scale_tests_list_t      tests_list(poll_factor);
-    uint32_t                    sq_idx;
     uint32_t                    r, v;
     int                         ret_val;
 
@@ -1327,7 +1346,7 @@ acc_scale_tests_push(void)
     if (run_acc_scale_tests_map & ACC_SCALE_TEST_DECRYPT_DECOMP) {
         seed_comp_encrypt_chain_scale = (comp_encrypt_chain_scale_t *)
                                          acc_comp_encrypt_chain_scale_create(1, app_blk_size,
-                                                                             0, 0, nullptr);
+                                                          nullptr, acc_scale_seq_sq_info);
         seed_comp_encrypt_chain = seed_comp_encrypt_chain_scale->chain_get(0);
         seed_tests_vec.push_back(seed_comp_encrypt_chain_scale);
         tests_vec.push_back(std::make_pair(&acc_decrypt_decomp_chain_scale_create,
@@ -1340,7 +1359,7 @@ acc_scale_tests_push(void)
     if (run_acc_scale_tests_map & ACC_SCALE_TEST_CHKSUM_DECOMP) {
         seed_comp_hash_chain_scale = (comp_hash_chain_scale_t *)
                                       acc_comp_hash_chain_scale_create(1, app_blk_size,
-                                                                       0, 0, nullptr);
+                                                    nullptr, acc_scale_seq_sq_info);
         seed_comp_hash_chain = seed_comp_hash_chain_scale->chain_get(0);
         seed_tests_vec.push_back(seed_comp_hash_chain_scale);
         tests_vec.push_back(std::make_pair(&acc_chksum_decomp_chain_scale_create,
@@ -1367,13 +1386,17 @@ acc_scale_tests_push(void)
      * Create test list,
      * each chain is replicated by num_replicas times
      */
-    sq_idx = 0;
+    acc_scale_seq_sq_info.seq_sq_idx = 0;
+    acc_scale_seq_sq_info.seq_status_sq_idx = 0;
     for (r = 0; r < num_replicas; r++) {
         for (v = 0; v < tests_vec.size(); v++) {
             tests_list.push(tests_vec[v].first(num_submissions, app_blk_size,
-                                               sq_idx, (sq_idx * num_submissions),
-                                               tests_vec[v].second));
-            sq_idx++;
+                                               tests_vec[v].second,
+                                               acc_scale_seq_sq_info));
+            acc_scale_seq_sq_info.seq_sq_idx += 
+                                  acc_scale_seq_sq_info.num_seq_sq_consumed;
+            acc_scale_seq_sq_info.seq_status_sq_idx += 
+                                  acc_scale_seq_sq_info.num_seq_status_sq_consumed;
         }
     }
 

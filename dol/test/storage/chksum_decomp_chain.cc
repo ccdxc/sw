@@ -20,6 +20,15 @@
 
 namespace tests {
 
+/*
+ * Workaround for standalone model:
+ * For checksum (intgerity data) calculation, SAM requires both src and dst buffers.
+ * In simulation runs, SAM seems to write about 100 bytes worth of data into dst
+ * even though it really has no business writing any destination data. Note that
+ * RTL does not seem to have this issue.
+ */
+static dp_mem_t     *sam_chksum_dst_buf;
+
 
 /*
  * Constructor
@@ -59,6 +68,14 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
     chksum_status_vec = new dp_mem_t(max_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
                                      DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                      kMinHostMemAllocSize);
+    /*
+     * Allocate standalone model workaround buffer
+     */
+    if (!sam_chksum_dst_buf) {
+        sam_chksum_dst_buf = new dp_mem_t(1, kCompAppHashBlkSize,
+                                          DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HBM,
+                                          0, DP_MEM_ALLOC_NO_FILL);
+    }
 }
 
 
@@ -246,6 +263,15 @@ chksum_decomp_chain_t::chksum_setup(uint32_t block_no)
     chksum_desc.cmd_bits.integrity_type = comp_hash_chain->integrity_type_get();
 
     chksum_desc.src = caller_comp_buf->pa() + (block_no * app_hash_size);
+    if (!FLAGS_with_rtl_skipverify) {
+
+        /*
+         * Add standalone model workaround (the closest flag to indicate RTL
+         * we currently have is FLAGS_with_rtl_skipverify). But it won't
+         * hurt to specify a dst buffer for RTL anyway.
+         */
+        chksum_desc.dst = sam_chksum_dst_buf->pa();
+    }
     chksum_desc.datain_len = app_hash_size;
     chksum_desc.threshold_len = app_hash_size;
     chksum_desc.status_addr = caller_chksum_status_vec->pa();
@@ -285,6 +311,7 @@ chksum_decomp_chain_t::decomp_setup(void)
                                      uncomp_buf, caller_decomp_status_buf,
                                      comp_hash_chain->cp_output_data_len_get(),
                                      uncomp_buf->line_size_get());
+    dc_desc.cmd_bits.cksum_verify_en = 0;
     dc_desc.status_data = 0xb0be;
 
     /*
