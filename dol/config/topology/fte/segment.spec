@@ -8,6 +8,7 @@ broadcast   : flood
 multicast   : flood
 l4lb        : False
 eplearn :
+    remote            : False 
     arp_entry_timeout : 99999
     dhcp              : True
 endpoints   :

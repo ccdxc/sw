@@ -13,16 +13,39 @@ namespace plugins {
 namespace network {
 
 
+static bool
+is_broadcast(fte::ctx_t &ctx) {
+    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
+    ether_header_t *eth_hdr;
+    if (!ctx.pkt()) {
+        return false;
+    }
+
+    eth_hdr = (ether_header_t*)(ctx.pkt() + cpu_hdr->l2_offset);
+    for (int i = 0; i < ETHER_ADDR_LEN; i++) {
+        if (eth_hdr->dmac[i] != 0xff) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static inline hal_ret_t
 update_src_if(fte::ctx_t&ctx)
 {
     bool src_local = (ctx.sep() && ctx.sep()->ep_flags & EP_FLAGS_LOCAL);
     bool dst_local = (ctx.dep() && ctx.dep()->ep_flags & EP_FLAGS_LOCAL);
+    bool broadcast_pkt = is_broadcast(ctx);
+    if_t *sif;
 
+    if (broadcast_pkt) {
+        return HAL_RET_OK;
+    }
     // drop remote to remote sessions
     if (!src_local &&  !dst_local) {
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
         flowupd.action = session::FLOW_ACTION_DROP;
+        HAL_TRACE_DEBUG("Dropping packet for remote to remote");
         return ctx.update_flow(flowupd);
     }
 
@@ -31,7 +54,7 @@ update_src_if(fte::ctx_t&ctx)
         return HAL_RET_OK;
     }
 
-    hal::if_t *sif = hal::find_if_by_handle(ctx.dep()->pinned_if_handle);
+    sif = hal::find_if_by_handle(ctx.dep()->pinned_if_handle);
     HAL_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
 
     // Drop the packet if the pkt src_if is not the expected if
@@ -42,6 +65,7 @@ update_src_if(fte::ctx_t&ctx)
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && ctx.cpu_rxhdr() &&
         ctx.cpu_rxhdr()->src_lif != args.hw_lif_id) {
         // ctx.cpu_rxhdr()->src_lif != hal::pd::if_get_hw_lif_id(sif)) {
+        HAL_TRACE_DEBUG("Dropping for srclif mismatch.. {} {}", args.hw_lif_id, ctx.cpu_rxhdr()->src_lif);
         ctx.set_drop();
     }
 

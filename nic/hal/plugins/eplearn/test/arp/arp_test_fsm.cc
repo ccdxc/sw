@@ -8,6 +8,7 @@
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include "nic/include/pd_api.hpp"
 
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"
@@ -40,11 +41,25 @@ extern twheel *g_twheel;
 }  // namespace hal
 
 vrf_t *dummy_ten;
+uint64_t dummy_l2seg_hdl;
 #define MAX_ENDPOINTS 8
 #define ARP_ENTRY_TIMEOUT 5
 hal_handle_t ep_handles[MAX_ENDPOINTS];
-string mac_addr_base = "12345";
-#define GET_MAC_ADDR(_ep) ((unsigned char*)((mac_addr_base + std::to_string(_ep)).c_str()))
+uint32_t mac_addr_base = 12345;
+uint8_t mac_addr_buffer[MAX_ENDPOINTS][ETH_ADDR_LEN + 1];
+
+#define GET_MAC_ADDR(_ep) ((unsigned char*)mac_addr_buffer[_ep])
+
+static void
+init_mac_addresses(void)
+{
+    for (uint32_t i = 0; i < MAX_ENDPOINTS; i++) {
+        uint32_t mac_addr = mac_addr_base + i;
+        memset(mac_addr_buffer[i], 0, ETH_ADDR_LEN + 1);
+        mac_addr_buffer[i][5] = ((uint8_t*)(&mac_addr))[0];
+        mac_addr_buffer[i][4] = ((uint8_t*)(&mac_addr))[1];
+    }
+}
 
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
@@ -67,6 +82,7 @@ void arp_topo_setup()
    NetworkResponse             nw_rsp, nw_rsp1;
    NetworkKeyHandle            *nkh = NULL;
 
+   init_mac_addresses();
    // Create vrf
    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -110,6 +126,7 @@ void arp_topo_setup()
    hal::hal_cfg_db_close();
    ASSERT_TRUE(ret == HAL_RET_OK);
    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+   dummy_l2seg_hdl = l2seg_hdl;
 
    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
    nkh = l2seg_spec.add_network_key_handle();
@@ -133,33 +150,54 @@ void arp_topo_setup()
    ASSERT_TRUE(ret == HAL_RET_OK);
    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-   up_spec.set_type(intf::IF_TYPE_UPLINK);
-   up_spec.mutable_key_or_handle()->set_interface_id(2);
-   up_spec.mutable_if_uplink_info()->set_port_num(2);
-   hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-   ret = hal::interface_create(up_spec, &up_rsp);
-   hal::hal_cfg_db_close();
-   ASSERT_TRUE(ret == HAL_RET_OK);
-   ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
-   dummy_ten = vrf_lookup_by_id(1);
-   ASSERT_TRUE(dummy_ten != NULL);
-
-
    ep_t *dummy_ep;
    for (int i = 0; i < MAX_ENDPOINTS; i++) {
        ep_spec.mutable_vrf_key_handle()->set_vrf_id(1);
        ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
-       ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
-       ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD + i);
+
+
+       // Create a lif
+       LifSpec                     lif_spec;
+       LifResponse                 lif_rsp;
+       lif_spec.mutable_key_or_handle()->set_lif_id(40 + i);
+       hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+       ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+       hal::hal_cfg_db_close();
+       ASSERT_TRUE(ret == HAL_RET_OK);
+
+       InterfaceSpec                   enicif_spec;
+       InterfaceResponse               enicif_rsp;
+       enicif_spec.set_type(intf::IF_TYPE_ENIC);
+       enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(40 + i);
+       enicif_spec.mutable_key_or_handle()->set_interface_id(200 + i);
+       enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+       enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(1);
+       enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(100 + i);
+       hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+       ret = hal::interface_create(enicif_spec, &enicif_rsp);
+       hal::hal_cfg_db_close();
+       ASSERT_TRUE(ret == HAL_RET_OK);
+
+       ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(enicif_rsp.mutable_status()->if_handle());
+       ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(
+               (mac_addr_base + i));
        //ep_spec.mutable_endpoint_attrs()->add_ip_address();
        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
        ret = hal::endpoint_create(ep_spec, &ep_rsp);
        hal::hal_cfg_db_close();
        ASSERT_TRUE(ret == HAL_RET_OK);
        ep_handles[i] = ep_rsp.endpoint_status().endpoint_handle();
+
        dummy_ep = find_ep_by_handle(ep_handles[i]);
-       strcpy((char*)(dummy_ep->l2_key.mac_addr),
-               (mac_addr_base + std::to_string(i)).c_str());
+       HAL_TRACE_INFO(" SMAC {} ",
+                    macaddr2str(dummy_ep->l2_key.mac_addr));
+       uint8_t *mac_addr = dummy_ep->l2_key.mac_addr;
+       //ep_t *sep = hal::find_ep_by_l2_key(1, (uint8_t*)(mac_addr_base.c_str()));
+       //ASSERT_TRUE(sep != nullptr);
+
+       //strcpy((char*)(dummy_ep->l2_key.mac_addr),
+       //        (mac_addr_base + std::to_string(i)).c_str());
+       mac_addr[0] = mac_addr[0];
    }
 
 }
@@ -198,6 +236,7 @@ EthernetII *get_default_arp_packet(ARP::Flags type,
                                    const char *target_ip_addr,
                                    unsigned char *target_hw_addr) {
     EthernetII *eth = new EthernetII();
+    eth->src_addr(sender_hw_addr);
     ARP *arp = new ARP();
 
     eth->inner_pdu(arp);
@@ -263,6 +302,19 @@ EthernetII *get_default_neighbor_disc_packet(ICMPv6::Types type,
     return eth;
 }
 
+
+static hal::pd::l2seg_hw_id_t
+get_l2seg_hw_id(hal_handle_t l2seg_handle)
+{
+    hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(l2seg_handle);
+    //ASSERT_TRUE(l2seg != nullptr);
+    hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    args.l2seg = l2seg;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+    return args.hwid;
+}
+
+
 hal_ret_t arp_packet_send(hal_handle_t ep_handle,
                      ARP::Flags type, const char *sender_ip_address,
                      unsigned char *sender_hw_addr, const char *target_ip_addr,
@@ -283,6 +335,8 @@ hal_ret_t arp_packet_send(hal_handle_t ep_handle,
     }
     fte::cpu_rxhdr_t cpu_rxhdr;
     cpu_rxhdr.flags = 0;
+    cpu_rxhdr.l2_offset = 0;
+    cpu_rxhdr.lkp_vrf = get_l2seg_hw_id(dummy_l2seg_hdl);
     fte::feature_state_t feature_state[100];
     eplearn_info_t info;
     memset(&info, 0, sizeof(info));

@@ -107,6 +107,7 @@ typedef struct acl_internal_match_spec_s {
     bool            tunnel_terminate;
     bool            from_cpu;
     bool            drop_reasons[acl::DropReason_ARRAYSIZE];
+    bool            no_drop;
     mac_addr_t      outer_mac_da;
 } __PACK__ acl_internal_match_spec_t;
 #endif

@@ -477,14 +477,20 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     uint64_t drop_reason = 0;
     uint64_t drop_reason_mask = 0;
 
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_key.drop_reasons); i++) {
-        if (ms->int_key.drop_reasons[i]) {
-            drop_reason |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
+
+    if (ms->int_key.no_drop) {
+        drop_reason = 0;
+        drop_reason_mask = ~0;
+    } else {
+        for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_key.drop_reasons); i++) {
+            if (ms->int_key.drop_reasons[i]) {
+                drop_reason |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
+            }
         }
-    }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_mask.drop_reasons); i++) {
-        if (ms->int_mask.drop_reasons[i]) {
-            drop_reason_mask |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
+        for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_mask.drop_reasons); i++) {
+            if (ms->int_mask.drop_reasons[i]) {
+                drop_reason_mask |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
+            }
         }
     }
     memcpy(key.control_metadata_drop_reason, &drop_reason,

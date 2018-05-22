@@ -244,6 +244,8 @@ hal_eplearn_acl_config_init (void)
         match->mutable_eth_selector()->set_eth_type_mask(0xffff);
         match->mutable_internal_key()->set_flow_miss(true);
         match->mutable_internal_mask()->set_flow_miss(true);
+        match->mutable_internal_key()->set_no_drop(true);
+        match->mutable_internal_mask()->set_no_drop(true);
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {

@@ -1012,6 +1012,8 @@ extract_match_spec (acl_match_spec_t *ms,
     ms->int_mask.ip_options = sel.internal_mask().ip_options();
     ms->int_key.ip_frag = sel.internal_key().ip_frag();
     ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
+    ms->int_key.no_drop = sel.internal_key().no_drop();
+    ms->int_mask.no_drop = sel.internal_mask().no_drop();
     for (i = 0; i < sel.internal_key().drop_reason_size(); i++) {
         ms->int_key.drop_reasons[sel.internal_key().drop_reason(i)] = true;
     }

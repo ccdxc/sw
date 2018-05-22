@@ -255,13 +255,13 @@ class EndpointObject(base.ConfigObjectBase):
         self.intf_id        = self.intf.id
 
         if GlobalOptions.classic is False:
-            if not self.segment.IsIPV4EpLearnEnabled():
+            if not self.segment.IsIPV4EpLearnEnabled(remote_ep = self.IsRemote()):
                 for ipaddr in self.ipaddrs:
                     ip = req_spec.endpoint_attrs.ip_address.add()
                     ip.ip_af = haldefs.common.IP_AF_INET
                     ip.v4_addr = ipaddr.getnum()
 
-            if not self.segment.IsIPV6EpLearnEnabled():
+            if not self.segment.IsIPV6EpLearnEnabled(remote_ep = self.IsRemote()):
                 for ipv6addr in self.ipv6addrs:
                     ip = req_spec.endpoint_attrs.ip_address.add()
                     ip.ip_af = haldefs.common.IP_AF_INET6

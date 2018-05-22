@@ -131,6 +131,7 @@ message AclInternalSelector {
   bool                tunnel_terminate = 6;    // Tunnel terminate
   bool                direction        = 7;    // Flow direction
   bool                from_cpu         = 8;    // Match if from cpu
+  bool                no_drop          = 9;    // Match on no drop packets
 }
 
 // AclInternalActionInfo has action parameters for internal use only with 

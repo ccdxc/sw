@@ -6,7 +6,6 @@
 #include "arp_learn.hpp"
 #include "nic/include/eth.h"
 
-
 namespace hal {
 namespace eplearn {
 
