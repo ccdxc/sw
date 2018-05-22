@@ -24,7 +24,7 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
 
 // createTimerHandler creates a dummy code upgrade request
 void ExUpgSvc::createTimerHandler(ev::timer &watcher, int revents) {
-    LogInfo("Creating the timer");
+    LogInfo("Processing finished by application. Going to ask UpgSdk to respond with success.");
     this->upgsdk_->SendAppRespSuccess();
 }
 } // namespace example 

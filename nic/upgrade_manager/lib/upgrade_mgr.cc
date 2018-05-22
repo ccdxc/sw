@@ -132,27 +132,52 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
     UpgRespStateType passType, failType;
     UpgReqStateType  reqType;
     bool ret = true;
-    LogInfo("UpgradeMgr::CanMoveStateMachine called");
+    LogInfo("Checking if state machine can be moved forward");
     //Find UpgStateReq object
     vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
     for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
         reqType = (*reqStatus)->upgreqstate();
         passType = GetPassRespType(reqType);
         failType = GetFailRespType(reqType);
-        LogInfo("reqType/passType/failType: {}/{}/{}", reqType, passType, failType);
+        //LogInfo("reqType/passType/failType: {}/{}/{}", reqType, passType, failType);
     }
 
     //check if all responses have come
     vector<delphi::objects::UpgAppRespPtr> upgAppRespList = delphi::objects::UpgAppResp::List(sdk_);
     for (vector<delphi::objects::UpgAppRespPtr>::iterator appResp=upgAppRespList.begin(); appResp!=upgAppRespList.end(); ++appResp) {
-        LogInfo("Got application {}", (*appResp)->key());
         if (((*appResp)->upgapprespval() != passType) &&
             ((*appResp)->upgapprespval() != failType)){
-            LogInfo("Application not done processing {}", reqType);
+            LogInfo("Application {} still processing {}", (*appResp)->key(), reqType);
             ret = false;
+        } else if ((*appResp)->upgapprespval() == passType) {
+            LogInfo("Got pass from application {}", (*appResp)->key());
+        } else {
+            LogInfo("Got fail from application {}", (*appResp)->key());
         }
     }
+    if (ret) {
+        LogInfo("Got pass response from all applications. Can move state machine.");
+    }
     return ret;
+}
+
+string UpgradeMgr::UpgReqStateTypeToStr(UpgReqStateType type) {
+    switch (type) {
+        case UpgReqRcvd:
+            return "Upgrade Request Received";
+        case PreUpgState:
+            return "Perform Compat Check";
+        case ProcessesQuiesced:
+            return "Quiesce Processes Pre-Restart";
+        case PostBinRestart:
+            return "Post Process Restart";
+        case DataplaneDowntimeStart:
+            return "Dataplane Downtime Start";
+        case Cleanup:
+            return "Cleanup State";
+        default:
+            return "";
+    }
 }
 
 delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
@@ -160,10 +185,11 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     LogInfo("UpgradeMgr::MoveStateMachine");
     vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
     for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
-        LogInfo("Setting next UpgReqStateType to {}", type);
         (*reqStatus)->set_upgreqstate(type);
         sdk_->SetObject(*reqStatus);
     }
+    if (type != InvalidUpgState)
+        LogInfo("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));
     return delphi::error::OK();
 }
 

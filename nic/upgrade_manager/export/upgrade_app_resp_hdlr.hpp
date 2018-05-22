@@ -42,6 +42,8 @@ public:
          }
         return ret;
     }
+
+    string UpgAppRespValToStr(UpgRespStateType type);
 };
 typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;
 

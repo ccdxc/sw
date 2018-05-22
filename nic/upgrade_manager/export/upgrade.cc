@@ -19,7 +19,7 @@ void UpgSdk::OnMountComplete(void) {
 }
 
 void UpgSdk::SendAppRespSuccess(void) {
-    LogInfo("UpgSdk::SendAppRespSuccess");
+    LogInfo("Application returning success via UpgSdk");
     this->upgAppRespPtr_->UpdateUpgAppResp(
           this->upgAppRespPtr_->GetUpgAppRespNextPass(
                 this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()));

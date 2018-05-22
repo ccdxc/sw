@@ -35,6 +35,8 @@ public:
 
     UpgReqStateType GetNextState(void);
 
+    string UpgReqStateTypeToStr(UpgReqStateType type);
+
     bool CanMoveStateMachine(void);
 
     delphi::error MoveStateMachine(UpgReqStateType type);

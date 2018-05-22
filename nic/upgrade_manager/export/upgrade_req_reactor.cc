@@ -41,13 +41,13 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
 
 // OnUpgReqState gets called when UpgReqState attribute changes
 delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
-    LogInfo("UpgReqReactor OnUpgReqState called");
-
     HdlrRespCode hdlrRespCode;
     if (!this->upgHdlrPtr_) {
         LogInfo("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
     }
+    if (req->upgreqstate() != InvalidUpgState)
+        LogInfo("\n\n\n===== Incoming Message =====");
     switch (req->upgreqstate()) {
         case UpgReqRcvd:
             LogInfo("Upgrade: Request Received");
@@ -82,7 +82,7 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
             hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgFailed(req);
             break;
         case InvalidUpgState:
-            LogInfo("Upgrade: Invalid Upgrade State");
+            //LogInfo("Upgrade: Invalid Upgrade State");
             hdlrRespCode = this->upgHdlrPtr_->HandleStateInvalidUpgState(req);
             break; 
         default:
@@ -90,7 +90,11 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
             break; 
     }
     if (hdlrRespCode != INPROGRESS) {
+        if (req->upgreqstate() != InvalidUpgState)
+            LogInfo("Application returned {}", (hdlrRespCode==SUCCESS)?"success":"fail");
         this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+    } else {
+        LogInfo("Application still processing"); 
     }
     return delphi::error::OK();
 }
