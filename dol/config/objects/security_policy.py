@@ -58,35 +58,26 @@ class SGPairObjectHelper:
     def __init__(self):
         self.sgpair_objlist = []
 
-    def __get_sg_pair(self):
-        tenant_list = Store.objects.GetAllByClass(TenantObject)
-        for tenant in tenant_list:
-            print("Tenant id: {}", tenant.id)
-            #sglist = Store.objects.GetAllByClass(SecurityGroupObject)
-            sglist = tenant.GetSecurityGroups()
+    def __get_sg_pair(self, sp):
+            print("Tenant id: {}", sp.tenant.id)
+            sglist = sp.tenant.GetSecurityGroups()
             for sg1,sg2 in itertools.combinations_with_replacement(sglist, 2):
-                    yield ([sg1, sg2], tenant.id)
+                    yield ([sg1, sg2], sp.tenant.id)
 
-    def Generate(self, sp_obj):
-        sp_len = len(sp_obj.sps)
-        index = 0
-        for sgpair,tenant_id in self.__get_sg_pair():
+    def Generate(self, sp):
+        for sgpair,tenant_id in self.__get_sg_pair(sp):
             if (sgpair[0].id != sgpair[1].id):
                 sgpair_obj = SGPairObject(sgpair[0].id, sgpair[1].id,tenant_id,
-                                        sp_obj.sps[index])
+                                        sp)
                 sgpair_obj_rev = SGPairObject(sgpair[1].id, sgpair[0].id,tenant_id,
-                                        sp_obj.sps[index])
+                                        sp)
 
                 self.sgpair_objlist.extend([sgpair_obj, sgpair_obj_rev])
             else:
                 sgpair_obj = SGPairObject(sgpair[0].id, sgpair[1].id,tenant_id,
-                                        sp_obj.sps[index])
+                                        sp)
                 self.sgpair_objlist.extend([sgpair_obj])
-            index = index + 1
-            if (index == sp_len): index = 0
         Store.objects.SetAll(self.sgpair_objlist)
-
-SGPairHelper = SGPairObjectHelper()
 
 class SecurityGroupPolicyObject(base.ConfigObjectBase):
     def __init__(self):
@@ -96,13 +87,14 @@ class SecurityGroupPolicyObject(base.ConfigObjectBase):
         self.eg_rules=[]
         return
 
-    def Init(self, spec):
+    def Init(self, spec, ten):
         if spec.in_rules:
             for rule_spec in spec.in_rules:
                 rule_obj = rules.RuleObject()
                 rule_obj.Init(rule_spec.rule)
                 self.in_rules.append(rule_obj)
-        self.GID(spec.id)
+        self.tenant = ten
+        self.GID("TEN%04dPOL%04s" % (ten.id,spec.id))
         return
 
     def IsFilterMatch(self, spec):
@@ -112,7 +104,7 @@ class SecurityGroupPolicyObject(base.ConfigObjectBase):
 class SecurityGroupPolicyObjectHelper:
     def __init__(self):
         self.sps = []
-        self.default_sps = []
+        self.sg_pair = None
         return
 
     def Configure(self):
@@ -168,17 +160,15 @@ class SecurityGroupPolicyObjectHelper:
             return
         spec = topospec.security_policy.Get(Store)
         logger.info("Creating %d SecurityPolicies." % len(spec.policies))
-        for p in spec.policies:
+        policy_list = spec.policies
+        tenant_list = Store.objects.GetAllByClass(TenantObject)
+        for tenant,p in itertools.product(tenant_list, policy_list):
             policy = SecurityGroupPolicyObject()
-            policy.Init(p.policy)
-            #if p.policy.default == True:
-            #    self.default_sps.append(policy)
-            #else:
+            policy.Init(p.policy, tenant)
             self.sps.append(policy)
+            policy.sg_pair = SGPairObjectHelper()
+            policy.sg_pair.Generate(policy)
         Store.objects.SetAll(self.sps)
-        #Store.objects.SetAll(self.default_sps)
-        #Update the SGPair Object
-        SGPairHelper.Generate(self)
 
     def main(self, topospec):
         self.Generate(topospec)

@@ -85,6 +85,9 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 #define RULE_MATCH_GET_PORT(port_entry)  \
     dllist_entry(port_entry, port_list_elem_t, list_ctxt)
 
+#define RULE_MATCH_GET_SG(sg_entry)  \
+    dllist_entry(sg_entry, sg_list_elem_t, list_ctxt)
+
 // ----------------------------------------------------------------------------
 // Function prototype
 // ----------------------------------------------------------------------------

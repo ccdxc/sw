@@ -51,15 +51,4 @@ policies:
                     - svc:
                         proto    : 0
                         dst_port : 0
-    - policy:
-        id         : SEC_POLICY_ALLOW2
-        default    : False
-        in_rules:
-            - rule:
-                action :  DENY 
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 0
-                        dst_port : 0
 

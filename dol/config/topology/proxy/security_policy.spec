@@ -22,24 +22,3 @@ policies:
                     - svc:
                         proto    : 0
                         dst_port : 0
-
-    - policy:
-        id         : SEC_POLICY_ALLOW12
-        default    : False
-        in_rules:
-            - rule:
-                action :  ALLOW
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 6
-                        dst_port : 9080
-                apps:
-                    - app : "HTTP"
-            - rule:
-                action :  ALLOW
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 0
-                        dst_port : 0
