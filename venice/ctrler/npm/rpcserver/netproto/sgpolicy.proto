@@ -1,0 +1,89 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for security group policy
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "match.proto";
+
+// ---------------------------- SGPolicy API ----------------------------
+// SGPolicy controller api
+service SGPolicyApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "SGPolicy",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+    };
+
+    rpc GetSGPolicy (api.ObjectMeta) returns (SGPolicy) {};
+    rpc ListSGPolicys (api.ObjectMeta) returns (SGPolicyList) {};
+    rpc WatchSGPolicys (api.ObjectMeta) returns (stream SGPolicyEvent) {};
+}
+
+// SGPolicy object
+message SGPolicy {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    SGPolicySpec    Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    SGPolicyStatus  Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+
+// SGPolicySpec captures all the security policy configuration
+message SGPolicySpec {
+    // list of security groups on which the policy is applied.
+    repeated string AttachGroup = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-group,omitempty"];
+
+    // specifies if the set of rules need to be attached globally to a tenant
+    bool AttachTenant           = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-tenant,omitempty"];
+
+    // list of rules
+    repeated PolicyRule Rules   = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "policy-rules,omitempty"];
+}
+
+message PolicyRule {
+    enum PolicyAction
+    {
+        PERMIT  = 0;  // permit traffic flow
+        DENY    = 1;  // drop traffic without any response to the client
+        REJECT  = 2;  // drop traffic and report unreachable to client
+        LOG     = 3;  // log access
+    }
+
+    // list of actions for the rule. Some combinations are invalid, eg: ["PERMIT", "DENY"]
+    repeated string Action  = 1 [(venice.check) = "StrEnum(PolicyRule.PolicyAction)",
+                                (gogoproto.nullable) = true, (gogoproto.jsontag) = "action,omitemtpy"];
+
+    // inbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
+    // Emtpy src is interpreted as match all
+    MatchSelector Src       = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "source,omitempty"];
+
+    // outbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
+    // Emtpy dst is interpreted as match all
+    MatchSelector Dst       = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "destination,omitempty"];
+}
+
+
+// SGPolicyStatus captures the sg policy status
+message SGPolicyStatus {
+    uint64 SGPolicyID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+message SGPolicyList {
+    repeated SGPolicy sgpolicies  = 1;
+}
+
+// sg policy watch event
+message SGPolicyEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    SGPolicy        SGPolicy    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-policy,omitempty"];
+}

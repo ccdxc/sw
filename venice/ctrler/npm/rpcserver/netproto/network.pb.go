@@ -8,14 +8,15 @@
 		network.proto
 		endpoint.proto
 		security.proto
-		service.proto
 		tenant.proto
 		interface.proto
 		nat.proto
 		route.proto
 		namespace.proto
 		ipsec.proto
+		sgpolicy.proto
 		match.proto
+		service.proto
 
 	It has these top-level messages:
 		Network
@@ -35,13 +36,6 @@
 		SecurityGroupStatus
 		SecurityGroupList
 		SecurityGroupEvent
-		ServiceBackend
-		ServiceSpec
-		HealthCheck
-		ServiceStatus
-		Service
-		ServiceBackendSpec
-		ServiceBackendStatus
 		TenantStatus
 		TenantSpec
 		Tenant
@@ -98,7 +92,20 @@
 		IPSecSADecryptStatus
 		IPSecSADecryptList
 		IPSecSADecryptEvent
+		SGPolicy
+		SGPolicySpec
+		PolicyRule
+		SGPolicyStatus
+		SGPolicyList
+		SGPolicyEvent
 		MatchSelector
+		ServiceBackend
+		ServiceSpec
+		HealthCheck
+		ServiceStatus
+		Service
+		ServiceBackendSpec
+		ServiceBackendStatus
 */
 package netproto
 
