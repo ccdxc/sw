@@ -12,20 +12,20 @@ import (
 
 var typesMapSearch = map[string]*runtime.Struct{
 
-	"search.Aggregation": &runtime.Struct{
+	"search.Category": &runtime.Struct{
+		Fields: map[string]runtime.Field{},
+	},
+	"search.CategoryAggregation": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"Entries": runtime.Field{Name: "Entries", JSONTag: "entries", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.EntryList"},
+			"Categories": runtime.Field{Name: "Categories", JSONTag: "categories", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.KindAggregation"},
 		},
 	},
-	"search.Aggregation.EntriesEntry": &runtime.Struct{
+	"search.CategoryAggregation.CategoriesEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.EntryList"},
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.KindAggregation"},
 		},
-	},
-	"search.Category": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
 	},
 	"search.Entry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
@@ -49,16 +49,16 @@ var typesMapSearch = map[string]*runtime.Struct{
 	"search.Kind": &runtime.Struct{
 		Fields: map[string]runtime.Field{},
 	},
-	"search.NestedAggregation": &runtime.Struct{
+	"search.KindAggregation": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"Entries": runtime.Field{Name: "Entries", JSONTag: "entries", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.Aggregation"},
+			"Kinds": runtime.Field{Name: "Kinds", JSONTag: "kinds", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.EntryList"},
 		},
 	},
-	"search.NestedAggregation.EntriesEntry": &runtime.Struct{
+	"search.KindAggregation.KindsEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.Aggregation"},
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.EntryList"},
 		},
 	},
 	"search.SearchQuery": &runtime.Struct{
@@ -82,15 +82,13 @@ var typesMapSearch = map[string]*runtime.Struct{
 
 			"MaxResults": runtime.Field{Name: "MaxResults", JSONTag: "max-results", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT32"},
 
+			"SortBy": runtime.Field{Name: "SortBy", JSONTag: "sort-by", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"Query": runtime.Field{Name: "Query", JSONTag: "query", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.SearchQuery"},
 		},
 	},
 	"search.SearchResponse": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
-
 			"TotalHits": runtime.Field{Name: "TotalHits", JSONTag: "total-hits", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
 
 			"ActualHits": runtime.Field{Name: "ActualHits", JSONTag: "actual-hits", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
@@ -101,7 +99,19 @@ var typesMapSearch = map[string]*runtime.Struct{
 
 			"Entries": runtime.Field{Name: "Entries", JSONTag: "entries", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.Entry"},
 
-			"AggregatedEntries": runtime.Field{Name: "AggregatedEntries", JSONTag: "aggregated-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.NestedAggregation"},
+			"AggregatedEntries": runtime.Field{Name: "AggregatedEntries", JSONTag: "aggregated-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.TenantAggregation"},
+		},
+	},
+	"search.TenantAggregation": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Tenants": runtime.Field{Name: "Tenants", JSONTag: "tenants", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.CategoryAggregation"},
+		},
+	},
+	"search.TenantAggregation.TenantsEntry": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.CategoryAggregation"},
 		},
 	},
 	"search.TextRequirement": &runtime.Struct{

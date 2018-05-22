@@ -97,7 +97,9 @@ var typesMapMirror = map[string]*runtime.Struct{
 
 			"NICStatus": runtime.Field{Name: "NICStatus", JSONTag: "smart-nic-status", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.SmartNICMirrorSessionStatus"},
 
-			"PacketCaptureFileURL": runtime.Field{Name: "PacketCaptureFileURL", JSONTag: "packet-capture-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"SrcPacketCaptureFileURL": runtime.Field{Name: "SrcPacketCaptureFileURL", JSONTag: "src-packet-capture-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DstPacketCaptureFileURL": runtime.Field{Name: "DstPacketCaptureFileURL", JSONTag: "dst-packet-capture-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorStartConditions": &runtime.Struct{
@@ -116,9 +118,9 @@ var typesMapMirror = map[string]*runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"SmartNIC": runtime.Field{Name: "SmartNIC", JSONTag: "smart-nic", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NumIngressPackets": runtime.Field{Name: "NumIngressPackets", JSONTag: "num-ingress-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"NumSrcPackets": runtime.Field{Name: "NumSrcPackets", JSONTag: "num-src-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"NumEgressPackets": runtime.Field{Name: "NumEgressPackets", JSONTag: "num-egress-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"NumDstPackets": runtime.Field{Name: "NumDstPackets", JSONTag: "num-dst-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"SessionId": runtime.Field{Name: "SessionId", JSONTag: "session-id", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 		},

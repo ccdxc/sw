@@ -82,21 +82,24 @@
                                 <span class="app-l-side-nav-item-label">Cluster</span>
                             </a>
                             <ul class="collapse list-unstyled app-l-side-nav-ul-submenu" id="clusterSubmenu">
-                                <li class="app-l">
-                                    <a class="app-sidenav-item">Cluster Details</a>
+                                <li>
+                                    <a class="app-sidenav-item" id="cluster">Cluster</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item">Tenants</a>
+                                    <a class="app-sidenav-item" id="nodes">Nodes</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item" id="naples">Naples</a>
+                                    <a class="app-sidenav-item" id="naples">NAPLES</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item" id="updates">Updates</a>
                                 </li>
                             </ul>
                         </li>
                         <li routerLink="/workload" routerLinkActive="app-sidenav-selected">
                             <a class="app-sidenav-item" id="workload">
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-workload"></i>
-                                <span class="app-l-side-nav-item-label">Workload</span>
+                                <span class="app-l-side-nav-item-label">Workloads</span>
                             </a>
                         </li>
                         <li>
@@ -106,16 +109,10 @@
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="securitySubmenu">
                                 <li>
-                                    <a class="app-sidenav-item" id="securitygroup">Security Group</a>
+                                    <a class="app-sidenav-item" id="sgpolicy">Security Policies</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item" id="sgpolicy">Security Policy</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">Firewall Policy</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">ALG</a>
+                                    <a class="app-sidenav-item" id="app">Apps</a>
                                 </li>
                             </ul>
                         </li>
@@ -127,19 +124,7 @@
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="networkSubmenu">
                                 <li>
-                                    <a class="app-sidenav-item" id="network">Network</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">Services</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item" id="lbpolicy">Loadbalance Policy</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">QoS Policy</a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item">Mirror Policy</a>
+                                    <a class="app-sidenav-item" id="networks">Networks</a>
                                 </li>
                             </ul>
                         </li>
@@ -151,13 +136,22 @@
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="monitoringSubmenu">
                                 <li>
-                                    <a class="app-sidenav-item">Metrics</a>
+                                    <a class="app-sidenav-item" id="metrics">Metrics</a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item">Events</a>
+                                    <a class="app-sidenav-item" id="events">Events</a>
                                 </li>
                                 <li>
-                                    <a id="troubleshooting" class="app-sidenav-item">Troubleshooting</a>
+                                    <a class="app-sidenav-item" id="alerts">Alerts</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item" id="fwlogs">Firewall Logs</a>
+				</li>
+                                <li>
+                                    <a class="app-sidenav-item" id="flowexport">Flow Export</a>
+				</li>
+                                <li>
+                                    <a class="app-sidenav-item" id="troubleshooting">Troubleshooting</a>
                                 </li>
                             </ul>
                         </li>
