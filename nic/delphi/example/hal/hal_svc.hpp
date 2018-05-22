@@ -5,6 +5,8 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "endpoint_svc.hpp"
+#include "interface_svc.hpp"
+#include "lif_svc.hpp"
 
 namespace hal {
 namespace svc {

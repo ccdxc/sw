@@ -67,6 +67,7 @@ targets:
   naples-docker:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make release && ./tools/validate-naples-docker.sh; ret=$? ; make sanity_logs ; exit $ret" ]
   agent/up2up:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./tools/run-agent-sanity.sh --topo agentup2up --feature agentup2up ; ret=$? ; make sanity_logs ; exit $ret" ]
   upgmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all ; ret=$? ; exit $ret" ]
+  delphi:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/delphi/... ; ret=$? ; exit $ret" ]
 
 cache:
   name: "sw"

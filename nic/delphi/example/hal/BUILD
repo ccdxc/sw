@@ -21,9 +21,10 @@ cc_binary(
     deps = [
         ":hal_svc",
         "//nic/delphi/sdk",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
     linkopts = [
-        "-lev",
-        "-L/usr/local/lib",
+        "-lpthread",
     ],
 )
