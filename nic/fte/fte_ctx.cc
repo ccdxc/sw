@@ -463,9 +463,6 @@ ctx_t::create_session()
 void
 ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl, 
                         fwlog::FWEvent *fwlog) {
-    if (logger_ == NULL)
-        return;
-
     HAL_TRACE_DEBUG("FWEvent size: {}", fwlog->ByteSizeLong());
     fwlog->set_source_vrf(key.svrf_id);
     fwlog->set_dest_vrf(key.dvrf_id);
@@ -481,7 +478,8 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
         fwlog->set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
     fwlog->set_session_id(sess_hdl); 
 
-    logger_->fw_log(*fwlog);
+    if (logger_ != NULL) 
+        logger_->fw_log(*fwlog);
 }
 
 //------------------------------------------------------------------------------

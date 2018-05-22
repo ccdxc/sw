@@ -8,6 +8,8 @@
 
 namespace utils {
 
+static const size_t kShmTopRegionSize = 12 * 64 * 1024 * 1024;
+
 class HostMem {
  public:
   static HostMem *New(bool bhalf = false);

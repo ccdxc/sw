@@ -46,7 +46,6 @@ import gft_pb2              as gft_pb2
 import dos_pb2              as dos_pb2
 
 HAL_MAX_BATCH_SIZE = 64
-HAL_CONNECTION_TIMEOUT = 10 * 60 # 10 Minutes
 
 HalChannel = None
 def __process_response(resp_msg, req_msg, req_objs, respcb):
@@ -153,11 +152,7 @@ def init():
     HalChannel = grpc.insecure_channel(server)
     logger.info("HAL Server IP and Port = ", server)
     logger.info("Waiting for HAL to be ready ...")
-    try:
-        grpc.channel_ready_future(HalChannel).result(timeout=HAL_CONNECTION_TIMEOUT)
-    except grpc.FutureTimeoutError:
-        logger.info("Connection to HAL timed out.")
-        sys.exit(1)
+    grpc.channel_ready_future(HalChannel).result()
     logger.info("Connected to HAL!")
     if GlobalOptions.mbt:
         SignalingClient.Connect()

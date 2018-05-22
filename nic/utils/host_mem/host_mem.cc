@@ -7,10 +7,12 @@ static uint32_t NumUnits(size_t size) {
   return (size + kAllocUnit - 1) >> kAllocUnitShift;
 }
 
-HostMem *HostMem::New(bool bhalf){
+HostMem *HostMem::New(bool use_bottom_region){
   std::unique_ptr<HostMem> mem(new HostMem());
-  if(bhalf) {
-    mem->offset_ = kShmSize/2;
+  uint32_t num_units = kShmTopRegionSize/kAllocUnit;
+  if(use_bottom_region) {
+    mem->offset_ = kShmTopRegionSize;
+    num_units = (kShmSize - kShmTopRegionSize)/kAllocUnit;
   }
   mem->shmid_ = shmget(HostMemHandle(), kShmSize, 0666);
   if (mem->shmid_ < 0)
@@ -19,7 +21,6 @@ HostMem *HostMem::New(bool bhalf){
   if (mem->shmaddr_ == (void*)-1)
     return nullptr;
 
-  uint32_t num_units = (kShmSize/2)/kAllocUnit;
   uint64_t mask = kAllocUnit - 1;
   if ((uint64_t)mem->shmaddr_ & mask) {
     mem->base_addr_ = (void *)

@@ -9,7 +9,7 @@
 
 using namespace utils;
 
-static const size_t kShmAvlSize = kShmSize / 2;
+static const size_t kShmAvlSize = kShmTopRegionSize;
 class HostMemTest : public ::testing::Test {
  protected:
     virtual void SetUp() {

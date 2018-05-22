@@ -467,6 +467,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             HAL_TRACE_ERR("Unknown feature set {}", sparam.c_str());
         }
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
+        // Used to enable IPC logger
         hal_cfg->shm_mode = pt.get<bool>("sw.shm", false);
 
         // parse threads config
@@ -673,7 +674,7 @@ hal_init (hal_cfg_t *hal_cfg)
         for (uint32_t i = 0; (i < hal_cfg->num_data_threads &&
                    hal_cfg->features != HAL_FEATURE_SET_GFT); i++) {
             // Init IPC logger infra for FTE
-            if (!i && ipc_logger::init() != HAL_RET_OK) {
+            if (!i && hal_cfg->shm_mode && ipc_logger::init() != HAL_RET_OK) {
                 HAL_TRACE_ERR("IPC logger init failed");
             }
             tid = HAL_THREAD_ID_FTE_MIN + i;
