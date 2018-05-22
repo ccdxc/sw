@@ -120,18 +120,18 @@ public:
 
     chksum_decomp_chain_push_params_t() :
         comp_hash_chain_(nullptr),
-        chksum_queue_(nullptr),
-        decomp_queue_(nullptr),
-        push_type_(COMP_QUEUE_PUSH_SEQUENCER),
+        chksum_ring_(nullptr),
+        decomp_ring_(nullptr),
+        push_type_(ACC_RING_PUSH_SEQUENCER),
         seq_chksum_qid_(0),
         seq_decomp_qid_(0)
     {
     }
 
     comp_hash_chain_t   *comp_hash_chain_;
-    comp_queue_t        *chksum_queue_;
-    comp_queue_t        *decomp_queue_;
-    comp_queue_push_t   push_type_;
+    acc_ring_t          *chksum_ring_;
+    acc_ring_t          *decomp_ring_;
+    acc_ring_push_t     push_type_;
     uint32_t            seq_chksum_qid_;
     uint32_t            seq_decomp_qid_;
 
@@ -142,19 +142,19 @@ public:
         return *this;
     }
     chksum_decomp_chain_push_params_t&
-    chksum_queue(comp_queue_t *chksum_queue)
+    chksum_ring(acc_ring_t *chksum_ring)
     {
-        chksum_queue_ = chksum_queue;
+        chksum_ring_ = chksum_ring;
         return *this;
     }
     chksum_decomp_chain_push_params_t&
-    decomp_queue(comp_queue_t *decomp_queue)
+    decomp_ring(acc_ring_t *decomp_ring)
     {
-        decomp_queue_ = decomp_queue;
+        decomp_ring_ = decomp_ring;
         return *this;
     }
     chksum_decomp_chain_push_params_t&
-    push_type(comp_queue_push_t push_type)
+    push_type(acc_ring_push_t push_type)
     {
         push_type_ = push_type;
         return *this;
@@ -220,10 +220,9 @@ private:
     std::vector<cp_desc_t>  chksum_desc_vec;
     cp_desc_t           dc_desc;
 
-    comp_queue_t        *chksum_queue;
-    comp_queue_t        *decomp_queue;
-    comp_queue_push_t   chksum_push_type;
-    comp_queue_push_t   decomp_push_type;
+    acc_ring_t          *chksum_ring;
+    acc_ring_t          *decomp_ring;
+    acc_ring_push_t     push_type;
     uint32_t            seq_chksum_qid;
     uint32_t            seq_decomp_qid;
 

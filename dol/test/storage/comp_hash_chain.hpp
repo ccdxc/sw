@@ -148,9 +148,9 @@ public:
         sha_type_(COMP_DEDUP_SHA512),
         integrity_src_(COMP_INTEGRITY_SRC_UNCOMP_DATA),
         integrity_type_(COMP_INTEGRITY_M_CRC64),
-        comp_queue_(nullptr),
-        hash_queue_(nullptr),
-        push_type_(COMP_QUEUE_PUSH_SEQUENCER),
+        comp_ring_(nullptr),
+        hash_ring_(nullptr),
+        push_type_(ACC_RING_PUSH_SEQUENCER),
         seq_comp_qid_(0),
         seq_comp_status_qid_(0)
     {
@@ -162,9 +162,9 @@ public:
     uint8_t             sha_type_;
     uint8_t             integrity_src_;
     uint8_t             integrity_type_;
-    comp_queue_t        *comp_queue_;
-    comp_queue_t        *hash_queue_;
-    comp_queue_push_t   push_type_;
+    acc_ring_t          *comp_ring_;
+    acc_ring_t          *hash_ring_;
+    acc_ring_push_t     push_type_;
     uint32_t            seq_comp_qid_;
     uint32_t            seq_comp_status_qid_;
 
@@ -205,19 +205,19 @@ public:
         return *this;
     }
     comp_hash_chain_push_params_t&
-    comp_queue(comp_queue_t *comp_queue)
+    comp_ring(acc_ring_t *comp_ring)
     {
-        comp_queue_ = comp_queue;
+        comp_ring_ = comp_ring;
         return *this;
     }
     comp_hash_chain_push_params_t&
-    hash_queue(comp_queue_t *hash_queue)
+    hash_ring(acc_ring_t *hash_ring)
     {
-        hash_queue_ = hash_queue;
+        hash_ring_ = hash_ring;
         return *this;
     }
     comp_hash_chain_push_params_t&
-    push_type(comp_queue_push_t push_type)
+    push_type(acc_ring_push_t push_type)
     {
         push_type_ = push_type;
         return *this;
@@ -351,9 +351,9 @@ private:
 
     // other context info
     cp_desc_t       cp_desc;
-    comp_queue_t    *comp_queue;
-    comp_queue_t    *hash_queue;
-    comp_queue_push_t push_type;
+    acc_ring_t      *comp_ring;
+    acc_ring_t      *hash_ring;
+    acc_ring_push_t push_type;
     uint32_t        seq_comp_qid;
 
     uint32_t        last_cp_output_data_len;

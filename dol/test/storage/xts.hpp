@@ -4,12 +4,14 @@
 #include <stdint.h>
 #include <string>
 #include "dol/test/storage/dp_mem.hpp"
+#include "dol/test/storage/acc_ring.hpp"
 #include "gflags/gflags.h"
 
 using namespace dp_mem;
 
 DECLARE_uint64(poll_interval);
 
+extern const uint32_t  kXtsDescSize;
 extern const uint32_t  kXtsQueueSize;
 
 //model/cap_hens/readonly/cap_hese_csr_define.h
@@ -201,12 +203,13 @@ public:
   XtsCtx();
   ~XtsCtx();
   int cmd_eval_seq_xts(xts::xts_cmd_t& cmd);
-  xts::xts_desc_t *desc_prefill_seq_xts(dp_mem_t *xts_desc);
-  int desc_write_seq_xts(dp_mem_t *xts_desc);
+  void desc_prefill_seq_xts(xts::xts_desc_t *xts_desc);
+  int desc_write_seq_xts(xts::xts_desc_t *xts_desc);
   int desc_write_seq_xts_status(dp_mem_t *xts_status_desc);
   int test_seq_xts();
   void status_invalidate(void);
   int ring_doorbell();
+  uint16_t seq_xts_index_get(void);
   int verify_doorbell(bool verify_pi=true,
                       uint64_t poll_interval=FLAGS_poll_interval);
   int queue_req_n_ring_db_from_host();
@@ -230,12 +233,8 @@ public:
   uint32_t start_sec_num = 5;
   xts::xts_aol_t* in_aol[MAX_AOLS];
   xts::xts_aol_t* out_aol[MAX_AOLS];
-  bool copy_desc = true;
-  bool ring_db = true;
   bool verify_db = true;
-  uint16_t seq_xts_index = 0;
   uint16_t seq_xts_status_index = 0;
-  dp_mem_t* xts_desc = NULL;
   unsigned char* iv = NULL;
 
   // ctx data needed for verification of op completion
@@ -252,10 +251,8 @@ public:
   bool is_gcm=false;
   void* auth_tag_addr = NULL;
 
-  uint64_t xts_ring_base_addr;
-  uint64_t xts_ring_pi_addr;
-  dp_mem_t *xts_ring_pi_shadow_addr;
-  bool use_seq = true;
+  acc_ring_t *acc_ring = nullptr;
+  acc_ring_push_t push_type = ACC_RING_PUSH_SEQUENCER;
 };
 
 

@@ -1611,8 +1611,7 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   xts_ctx.dst_buf = (void*)write_hbm_buf->va();
   xts_ctx.is_dst_hbm_buf = write_hbm_buf->is_mem_type_hbm();
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
-  xts_ctx.copy_desc = false;
-  xts_ctx.ring_db = false;
+  xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
   xts_ctx.init(kDefaultBufSize);
   queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_r2n_q, 0,
                              seq_r2n_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
@@ -1620,7 +1619,9 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   printf("r2n_db_addr %lx r2n_db_data %lu\n", xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
   xts_ctx.test_seq_xts();
   queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
-                             xts_ctx.seq_xts_index, &db_addr, &db_data);
+                             xts_ctx.seq_xts_index_get(), &db_addr, &db_data);
+  queues::seq_sq_batch_consume_end(xts_ctx.seq_xts_q);
+
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
   // Enable the next doorbell
@@ -1704,13 +1705,13 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   xts_ctx.dst_buf = (void*)read_hbm_buf2->va();
   xts_ctx.is_dst_hbm_buf = read_hbm_buf2->is_mem_type_hbm();
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
-  xts_ctx.copy_desc = false;
-  xts_ctx.ring_db = false;
+  xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
   xts_ctx.init(kDefaultBufSize);
   queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
       seq_pdma_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
   //xts_ctx.exp_db_data = bswap_64(xts_ctx.exp_db_data);
   xts_ctx.test_seq_xts();
+  queues::seq_sq_batch_consume_end(xts_ctx.seq_xts_q);
 
   // Sequencer #2: PDMA descriptor
 
@@ -1726,7 +1727,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
 
   // Update the R2N WQE with the doorbell to the PDMA descriptor
   r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_seq_lif(), SQ_TYPE,
-                         xts_ctx.seq_xts_q, xts_ctx.seq_xts_index);
+                         xts_ctx.seq_xts_q, xts_ctx.seq_xts_index_get());
 
   // Kickstart the R2N module with the read command (whose completion will
   // trigger the sequencer)
@@ -2362,8 +2363,7 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   xts_ctx.dst_buf = (void*)r2n_pyld->va();
   xts_ctx.is_dst_hbm_buf = r2n_pyld->is_mem_type_hbm();
   xts_ctx.num_sectors = rdma_r2n_data_size() / SECTOR_SIZE;
-  xts_ctx.copy_desc = false;
-  xts_ctx.ring_db = false;
+  xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
   xts_ctx.init(rdma_r2n_data_size());
 
   // Xfer sequence is: pdma (seq_pdma_desc) -> xts encrypt -> seq roce (seq_roce_desc) ->
@@ -2378,7 +2378,9 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
          xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
   xts_ctx.test_seq_xts();
   queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
-                             xts_ctx.seq_xts_index, &db_addr, &db_data);
+                             xts_ctx.seq_xts_index_get(), &db_addr, &db_data);
+  queues::seq_sq_batch_consume_end(xts_ctx.seq_xts_q);
+
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
 
@@ -2477,8 +2479,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   xts_ctx.dst_buf = (void*)read_hbm_buf->va();
   xts_ctx.is_dst_hbm_buf = read_hbm_buf->is_mem_type_hbm();
   xts_ctx.num_sectors = rdma_r2n_data_size() / SECTOR_SIZE;
-  xts_ctx.copy_desc = false;
-  xts_ctx.ring_db = false;
+  xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
   xts_ctx.init(rdma_r2n_data_size());
   queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
                              seq_pdma_index, &xts_ctx.xts_db_addr,
@@ -2486,6 +2487,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   printf("After XTS, db_addr is %lx db_data %lx\n",
          xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
   xts_ctx.test_seq_xts();
+  queues::seq_sq_batch_consume_end(xts_ctx.seq_xts_q);
 
   // Pre-fill the PDMA descriptor
   seq_pdma_desc->write_bit_fields(128, 64, read_hbm_buf->pa());

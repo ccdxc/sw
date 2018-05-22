@@ -13,6 +13,18 @@ using namespace dp_mem;
 
 namespace queues {
 
+// P4+ TxDMA max MEM2MEM transfer size is limited to 14 bits
+// which influences how many (Barco) descriptors can be batch
+// enqueued to a Sequencer queue.
+const static uint32_t  kMaxMem2MemSize      = (1 << 14);
+
+#define QUEUE_BATCH_LIMIT(desc_size)        \
+    ((kMaxMem2MemSize / (desc_size)) - 1)
+
+typedef void (*seq_sq_batch_end_notify_t)(void *user_ctx,
+                                          dp_mem_t *seq_desc,
+                                          uint16_t batch_size);
+
 int nvme_e2e_ssd_handle();
 
 void seq_queue_pdma_num_set(uint64_t& num_pdma_queues);
@@ -50,6 +62,14 @@ dp_mem_t *nvme_sq_consume_entry(uint16_t qid, uint16_t *index);
 dp_mem_t *pvm_sq_consume_entry(uint16_t qid, uint16_t *index);
 
 dp_mem_t *seq_sq_consume_entry(uint16_t qid, uint16_t *index);
+
+dp_mem_t *seq_sq_batch_consume_entry(uint16_t qid,
+                                     uint64_t batch_id,
+                                     uint16_t *index,
+                                     bool *new_batch,
+                                     seq_sq_batch_end_notify_t end_notify_fn,
+                                     void *user_ctx);
+void seq_sq_batch_consume_end(uint16_t qid);
 
 dp_mem_t *nvme_cq_consume_entry(uint16_t qid, uint16_t *index);
 

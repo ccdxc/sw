@@ -109,13 +109,13 @@ public:
 
     encrypt_only_push_params_t() :
         app_blk_size_(0),
-        push_type_(COMP_QUEUE_PUSH_SEQUENCER),
+        push_type_(ACC_RING_PUSH_SEQUENCER),
         seq_xts_qid_(0)
     {
     }
 
     uint32_t            app_blk_size_;
-    comp_queue_push_t   push_type_;
+    acc_ring_push_t     push_type_;
     uint32_t            seq_xts_qid_;
 
     encrypt_only_push_params_t&
@@ -125,7 +125,7 @@ public:
         return *this;
     }
     encrypt_only_push_params_t&
-    push_type(comp_queue_push_t push_type)
+    push_type(acc_ring_push_t push_type)
     {
         push_type_ = push_type;
         return *this;

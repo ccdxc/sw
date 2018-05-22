@@ -34,7 +34,7 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     caller_comp_status_buf(nullptr),
     caller_comp_opaque_buf(nullptr),
     caller_comp_opaque_data(0),
-    decomp_queue(nullptr),
+    decomp_ring(nullptr),
     actual_enc_blks(-1),
     num_enc_blks(0),
     last_dc_output_data_len(0),
@@ -160,7 +160,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     xts_decrypt_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
     uncomp_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
-    decomp_queue = params.decomp_queue_;
+    decomp_ring = params.decomp_ring_;
     success = false;
     decompress_cp_desc_template_fill(cp_desc, xts_decrypt_buf, uncomp_buf,
                                      caller_comp_status_buf,
@@ -183,18 +183,18 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     chain_params.chain_ent.next_doorbell_en = 1;
     chain_params.chain_ent.next_db_action_barco_push = 1;
     chain_params.chain_ent.push_entry.barco_ring_addr =
-                           decomp_queue->q_base_mem_pa_get();
+                           decomp_ring->ring_base_mem_pa_get();
     chain_params.chain_ent.push_entry.barco_pndx_addr =
-                           decomp_queue->cfg_q_pd_idx_get();
+                           decomp_ring->cfg_ring_pd_idx_get();
     chain_params.chain_ent.push_entry.barco_pndx_shadow_addr =
-                           decomp_queue->shadow_pd_idx_pa_get();
+                           decomp_ring->shadow_pd_idx_pa_get();
     chain_params.chain_ent.push_entry.barco_desc_addr = xts_decomp_cp_desc->pa();
     chain_params.chain_ent.push_entry.barco_desc_size = 
                            (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
     chain_params.chain_ent.push_entry.barco_pndx_size = 
                            (uint8_t)log2(sizeof(uint32_t));
     chain_params.chain_ent.push_entry.barco_ring_size =
-                           (uint8_t)log2(decomp_queue->q_size_get());
+                           (uint8_t)log2(decomp_ring->ring_size_get());
     if (xts_status_vec1 != xts_status_vec2) {
 
         // xts_status_vec2 will receive the content of xts_status_vec1
@@ -271,7 +271,7 @@ decrypt_decomp_chain_t::decrypt_setup(uint32_t block_no,
                                       acc_chain_params_t& chain_params)
 {
     xts::xts_cmd_t  cmd;
-    xts::xts_desc_t *xts_desc_addr;
+    xts::xts_desc_t *xts_desc;
 
     xts_status_vec1->line_set(block_no);
     xts_ctx.status = xts_status_vec1->fragment_find(0, xts_status_vec1->line_size_get());
@@ -280,11 +280,9 @@ decrypt_decomp_chain_t::decrypt_setup(uint32_t block_no,
     // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
     xts_ctx.op = xts::AES_DECR_ONLY;
-    xts_ctx.use_seq = true;
     xts_ctx.seq_xts_q = chain_params.seq_q;
     xts_ctx.seq_xts_status_q = chain_params.seq_status_q;
-    xts_ctx.copy_desc = false;
-    xts_ctx.ring_db = false;
+    xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
 
     // Set up XTS encrypt descriptor
     xts_src_aol_vec->line_set(block_no);
@@ -292,20 +290,21 @@ decrypt_decomp_chain_t::decrypt_setup(uint32_t block_no,
     xts_desc_vec->line_set(block_no);
 
     xts_ctx.cmd_eval_seq_xts(cmd);
-    xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_vec);
-    xts_desc_addr->in_aol = xts_src_aol_vec->pa();
-    xts_desc_addr->out_aol = xts_dst_aol_vec->pa();
-    xts_desc_addr->cmd = cmd;
+    xts_desc = (xts::xts_desc_t *)xts_desc_vec->read();
+    xts_ctx.desc_prefill_seq_xts(xts_desc);
+    xts_desc->in_aol = xts_src_aol_vec->pa();
+    xts_desc->out_aol = xts_dst_aol_vec->pa();
+    xts_desc->cmd = cmd;
 
     // Chain XTS decrypt of the last block to XTS status sequencer
     if ((enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK) ||
         (block_no == (num_enc_blks - 1))) {
 
-        xts_desc_addr->db_addr = chain_params.ret_doorbell_addr;
-        xts_desc_addr->db_data = chain_params.ret_doorbell_data;
+        xts_desc->db_addr = chain_params.ret_doorbell_addr;
+        xts_desc->db_data = chain_params.ret_doorbell_data;
     }
     xts_desc_vec->write_thru();
-    xts_ctx.desc_write_seq_xts(xts_desc_vec);
+    xts_ctx.desc_write_seq_xts(xts_desc);
 }
 
 
