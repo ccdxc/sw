@@ -4,38 +4,19 @@
 #define __NMD_SERVICE_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
+#include "nic/upgrade_manager/export/upgrade.hpp"
 
 namespace nmd {
 
+using namespace upgrade;
 using namespace std;
-
-class NMDUpgAppRespHdlr : public delphi::objects::UpgAppRespReactor {
-    delphi::SdkPtr     sdk_;
-public:
-    NMDUpgAppRespHdlr() {}
-
-    NMDUpgAppRespHdlr(delphi::SdkPtr sk) {
-        this->sdk_ = sk;
-    }
-    NMDUpgAppRespHdlr(delphi::SdkPtr sk, string name) {
-        this->sdk_ = sk;
-    }
-
-    // OnUpgAppRespCreate gets called when UpgAppResp object is created
-    virtual delphi::error OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp);
-    
-    // OnUpgAppRespVal gets called when UpgAppRespVal attribute changes
-    virtual delphi::error OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp);
-};
-typedef std::shared_ptr<NMDUpgAppRespHdlr> NMDUpgAppRespHdlrPtr;
 
 // NMDService is the service object for NMD manager 
 class NMDService : public delphi::Service, public enable_shared_from_this<NMDService> {
 private:
     delphi::SdkPtr        sdk_;
     string                svcName_;
-    NMDUpgAppRespHdlrPtr  nmdUpgAppRespHdlr_;
+    UpgSdkPtr             upgsdk_;
 public:
     // NMDService constructor
     NMDService(delphi::SdkPtr sk);
@@ -55,6 +36,25 @@ public:
 };
 typedef std::shared_ptr<NMDService> NMDServicePtr;
 
+class NMDSvcHandler : public upgrade::UpgHandler {
+public:
+    NMDSvcHandler() {}
+
+    HdlrRespCode UpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+        LogInfo("UpgHandler UpgStateReqCreate called for the NMD");
+        return SUCCESS;
+    }
+
+    HdlrRespCode UpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+        LogInfo("UpgHandler UpgStateReqDelete called for the NMD");
+        return SUCCESS;
+    }
+
+    HdlrRespCode HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req) {
+        LogInfo("UpgHandler HandleStateUpgReqRcvd called for the NMD");
+        return SUCCESS;
+    }
+};
 } // namespace example
 
 #endif // __NMD_SERVICE_H__
