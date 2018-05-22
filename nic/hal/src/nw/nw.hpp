@@ -40,6 +40,7 @@ typedef struct network_s {
     hal_spinlock_t    slock;                // lock to protect this structure
     network_key_t     nw_key;               // key of the network object
     hal_handle_t      gw_ep_handle;         // gateway EP's handle
+    ip_addr_t         gw_ip;                // gateway IP address
     mac_addr_t        rmac_addr;            // RMAC address of the network
 
     // operational state of network
@@ -160,29 +161,6 @@ network_cleanup (network_t *network)
     // Destroy block lists if there are any
 
     return network_free(network);
-}
-
-static inline bool
-network_get_ht_cb (void *ht_entry, void *ctxt)
-{
-    hal_handle_id_ht_entry_t *entry      = (hal_handle_id_ht_entry_t *)ht_entry;
-    NetworkGetResponseMsg    *response   = (NetworkGetResponseMsg *)ctxt;
-    network_t                *nw         = NULL;
-    NetworkGetResponse       *rsp;
-
-    if (entry->handle_id != HAL_HANDLE_INVALID) {
-        nw = (network_t *)hal_handle_get_obj(entry->handle_id);
-        rsp = response->add_response();
-        // fill config spec of this vrf
-        rsp->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
-        rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
-        rsp->mutable_status()->set_nw_handle(nw->hal_handle);
-        rsp->set_api_status(types::API_STATUS_OK);
-    }
-
-    // always return false here, so that we walk through all hash table
-    // entries.
-    return false;
 }
 
 // find a network instance by its id

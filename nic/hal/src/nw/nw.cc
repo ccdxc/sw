@@ -344,33 +344,38 @@ network_read_security_groups (network_t *nw, const NetworkSpec& spec)
 hal_ret_t
 nw_init_from_spec (network_t *nw, const NetworkSpec& spec)
 {
-    vrf_id_t        tid;
+    vrf_id_t        vrf_id;
+    ep_t            *gw_ep;
     hal_handle_t    gw_ep_handle = HAL_HANDLE_INVALID;
     hal_ret_t       ret = HAL_RET_OK;
     uint64_t        rmac;
+    ep_l3_key_t     ep_l3_key;
 
     auto kh = spec.key_or_handle();
     auto nw_pfx = kh.nw_key().ip_prefix();
 
     // fetch the vrf information
-    tid = spec.key_or_handle().nw_key().vrf_key_handle().vrf_id();
+    vrf_id = spec.key_or_handle().nw_key().vrf_key_handle().vrf_id();
 
-    // check if gateway IP is present
+    // check if gateway IP is present and look for corresponding EP
     if (spec.gateway_ip().v4_or_v6_case()) {
-        /* TODO
-        gw_ep = find_ep_by_handle(spec.gateway_ep_handle());
+        ip_addr_spec_to_ip_addr(&nw->gw_ip, spec.gateway_ip());
+        ep_l3_key.vrf_id = vrf_id;
+        memcpy(&ep_l3_key.ip_addr, &nw->gw_ip, sizeof(ip_addr_t));
+        gw_ep = find_ep_by_l3_key(&ep_l3_key);
         if (gw_ep == NULL) {
-            HAL_TRACE_ERR("unable to retrieve gateway endpoint");
-            ret = HAL_RET_EP_NOT_FOUND;
-            goto end;
+            HAL_TRACE_ERR("Unable to retrieve gateway endpoint");
+            // TODO: we either ARP now and resolve it or ARP later in
+            // the packet path (but drop the packet)
+        } else {
+            gw_ep_handle = gw_ep->hal_handle;
         }
-        */
     } else {
         HAL_TRACE_DEBUG("gateway IP is not present."
                         " flows using this network will not have reachability info.");
     }
 
-    nw->nw_key.vrf_id = tid;
+    nw->nw_key.vrf_id = vrf_id;
     nw->gw_ep_handle = gw_ep_handle;
     if (spec.rmac()) {
         MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
@@ -809,6 +814,7 @@ network_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     network_free(nw);
 
 end:
+
     return ret;
 }
 
@@ -827,7 +833,8 @@ network_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // checks if sg in network
 //------------------------------------------------------------------------------
 bool
-sg_in_network (network_t *nw, uint32_t sg_id, hal_handle_id_list_entry_t **handle_entry)
+sg_in_network (network_t *nw, uint32_t sg_id,
+               hal_handle_id_list_entry_t **handle_entry)
 {
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
@@ -851,11 +858,11 @@ sg_in_network (network_t *nw, uint32_t sg_id, hal_handle_id_list_entry_t **handl
 // checks sg list change for network update
 //------------------------------------------------------------------------------
 hal_ret_t
-network_check_sglist_update(NetworkSpec& spec, network_t *nw,
-                            bool *sglist_change,
-                            dllist_ctxt_t **add_sglist,
-                            dllist_ctxt_t **del_sglist,
-                            dllist_ctxt_t **aggr_sglist)
+network_check_sglist_update (NetworkSpec& spec, network_t *nw,
+                             bool *sglist_change,
+                             dllist_ctxt_t **add_sglist,
+                             dllist_ctxt_t **del_sglist,
+                             dllist_ctxt_t **aggr_sglist)
 {
     hal_ret_t                       ret       = HAL_RET_OK;
     uint16_t                        num_sgs   = 0, i          = 0;
@@ -972,7 +979,7 @@ network_check_update (NetworkSpec& spec, network_t *nw,
 
     // check for the gateway ep change
     if (spec.gateway_ip().v4_or_v6_case()) {
-        // TODO Find gw_ep_handle from IP and vrf
+        // TODO: find gw_ep_handle from IP and vrf
     }
 
     if (nw->gw_ep_handle != gw_ep_handle) {
@@ -1084,10 +1091,36 @@ network_process_get (network_t *nw, NetworkGetResponse *response)
 {
     response->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
     ip_pfx_to_spec(response->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix(), &nw->nw_key.ip_pfx);
+    ip_addr_to_spec(response->mutable_spec()->mutable_gateway_ip(), &nw->gw_ip);
     response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
     response->mutable_status()->set_nw_handle(nw->hal_handle);
 
     return HAL_RET_OK;
+}
+
+static inline bool
+network_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry      = (hal_handle_id_ht_entry_t *)ht_entry;
+    NetworkGetResponseMsg    *response   = (NetworkGetResponseMsg *)ctxt;
+    network_t                *nw         = NULL;
+    NetworkGetResponse       *rsp;
+
+    if (entry->handle_id != HAL_HANDLE_INVALID) {
+        nw = (network_t *)hal_handle_get_obj(entry->handle_id);
+        rsp = response->add_response();
+        // fill config spec of this vrf
+        auto nw_key = rsp->mutable_spec()->mutable_key_or_handle()->mutable_nw_key();
+        nw_key->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
+        ip_pfx_to_spec(nw_key->mutable_ip_prefix(), &nw->nw_key.ip_pfx);
+        rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
+        rsp->mutable_status()->set_nw_handle(nw->hal_handle);
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+
+    // always return false here, so that we walk through all hash table
+    // entries.
+    return false;
 }
 
 //------------------------------------------------------------------------------

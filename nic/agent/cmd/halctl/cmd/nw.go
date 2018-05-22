@@ -107,13 +107,13 @@ func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func nwShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("VrfId:	     NW's Vrf Id                       NWHandle: Network Handle\n")
-	fmt.Printf("GatewayIP:   Gateway IP                        Router MAC:  Router MAC for of IF in this NW\n")
-	fmt.Printf("SGHandle:    Security Group Handles\n")
-	hdrLine := strings.Repeat("-", 86)
+	fmt.Printf("VrfId:	     NW's Vrf Id         Subnet: Network's subnet\n")
+	fmt.Printf("NWHandle: Network Handle         GatewayIP:   Gateway IP\n")
+	fmt.Printf("Router MAC:  Router MAC          SGHandle:    Security Group Handles\n")
+	hdrLine := strings.Repeat("-", 96)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-18s%-24s%-24s\n",
-		"VrfId", "NWHandle", "GatewayIP", "Router MAC", "SGHandle")
+	fmt.Printf("%-6s%-32s%-10s%-18s%-18s%-24s\n",
+		"VrfId", "Subnet", "NWHandle", "GatewayIP", "Router MAC", "SGHandle")
 	fmt.Println(hdrLine)
 }
 
@@ -136,8 +136,9 @@ func nwShowOneResp(resp *halproto.NetworkGetResponse) {
 		sgKhStr += "-"
 	}
 
-	fmt.Printf("%-10d%-10d%-18s%-24s%-24s\n",
+	fmt.Printf("%-6d%-32s%-10d%-18s%-18s%-24s\n",
 		spec.GetKeyOrHandle().GetNwKey().GetVrfKeyHandle().GetVrfId(),
+		utils.IPPrefixToStr(spec.GetKeyOrHandle().GetNwKey().GetIpPrefix()),
 		status.GetNwHandle(),
 		utils.IPAddrToStr(spec.GetGatewayIp()),
 		utils.MactoStr(spec.GetRmac()),

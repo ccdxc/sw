@@ -72,8 +72,8 @@ typedef struct ep_l2_key_s {
 
 // L3 key of the endpoint
 typedef struct ep_l3_key_s {
-    vrf_id_t    vrf_id;    // VRF id
-    ip_addr_t      ip_addr;      // IP address of the endpoint
+    vrf_id_t     vrf_id;    // VRF id
+    ip_addr_t    ip_addr;   // IP address of the endpoint
 } __PACK__ ep_l3_key_t;
 
 // endpoint's L3/IP information -- an endpoint can have multiple IPs
