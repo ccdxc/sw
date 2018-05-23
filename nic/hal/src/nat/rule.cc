@@ -113,10 +113,8 @@ nat_cfg_rule_alloc_init (void)
 static inline void
 nat_cfg_rule_uninit_free (nat_cfg_rule_t *rule)
 {
-    if (rule) {
-        nat_cfg_rule_uninit(rule);
-        nat_cfg_rule_free(rule);
-    }
+    nat_cfg_rule_uninit(rule);
+    nat_cfg_rule_free(rule);
 }
 
 static inline void
@@ -129,6 +127,26 @@ static inline void
 nat_cfg_rule_db_del (nat_cfg_rule_t *rule)
 {
     dllist_del(&rule->list_ctxt);
+}
+
+static inline void
+nat_cfg_rule_cleanup (nat_cfg_rule_t *rule)
+{
+    rule_match_cleanup(&rule->match);
+    nat_cfg_rule_db_del(rule);
+    nat_cfg_rule_uninit_free(rule);
+}
+
+void
+nat_cfg_rule_list_cleanup (dllist_ctxt_t *head)
+{
+    dllist_ctxt_t *curr, *next;
+    nat_cfg_rule_t *rule;
+
+    dllist_for_each_safe(curr, next, head) {
+        rule = dllist_entry(curr, nat_cfg_rule_t, list_ctxt);
+        nat_cfg_rule_cleanup(rule);
+    }
 }
 
 static hal_ret_t
@@ -205,7 +223,7 @@ nat_cfg_rule_data_spec_build (nat_cfg_rule_t *rule, nat::NatRuleSpec *spec)
 }
 
 static inline hal_ret_t
-nat_cfg_rule_key_spec_build(nat_cfg_rule_key_t *key, nat::NatRuleSpec *spec)
+nat_cfg_rule_key_spec_build (nat_cfg_rule_key_t *key, nat::NatRuleSpec *spec)
 {
     spec->set_rule_id(key->rule_id);
     return HAL_RET_OK;
@@ -229,26 +247,8 @@ nat_cfg_rule_spec_build (nat_cfg_rule_t *rule, nat::NatRuleSpec *spec)
 // Operational handling (hal handles, acl libs, etc)
 //-----------------------------------------------------------------------------
 
-acl_config_t nat_ip_acl_config_glbl;
-
-const char *
-nat_acl_ctx_name (vrf_id_t vrf_id)
-{
-    thread_local static char name[ACL_NAMESIZE];
-
-    std::snprintf(name, sizeof(name), "nat-ipv4-rules:%lu", vrf_id);
-    return name;
-}
-
-const acl::acl_ctx_t *
-nat_cfg_pol_create_app_ctxt_init (nat_cfg_pol_t *pol)
-{
-    return (rule_lib_init(nat_acl_ctx_name(
-               pol->key.vrf_id), &nat_ip_acl_config_glbl));
-}
-
 hal_ret_t
-nat_cfg_rule_create_oper_handle (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
+nat_cfg_rule_acl_build (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
 {
     rule_data_t *rule_data;
 
@@ -257,7 +257,5 @@ nat_cfg_rule_create_oper_handle (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx
     rule_data->data_free = nat_cfg_rule_free;
     return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, rule_data);
 }
-
-
 
 } // namespace hal

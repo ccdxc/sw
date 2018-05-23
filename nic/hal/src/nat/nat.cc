@@ -821,7 +821,8 @@ nat_policy_create (NatPolicySpec& spec, NatPolicyResponse *rsp)
         goto end;
 
 end:
-    nat_cfg_pol_rsp_build(rsp, ret, pol ? pol->hal_hdl : HAL_HANDLE_INVALID);
+    nat_cfg_pol_create_rsp_build(
+        rsp, ret, pol ? pol->hal_hdl : HAL_HANDLE_INVALID);
     return ret;
 }
 
@@ -832,10 +833,25 @@ nat_policy_update (NatPolicySpec& spec, NatPolicyResponse *rsp)
 }
 
 hal_ret_t
-nat_policy_delete (NatPolicyDeleteRequest& req,
-                   NatPolicyDeleteResponse *res)
+nat_policy_delete (NatPolicyDeleteRequest& req, NatPolicyDeleteResponse *rsp)
 {
-    return HAL_RET_OK;
+    hal_ret_t ret;
+    nat_cfg_pol_t *pol;
+
+    if ((pol = nat_cfg_pol_key_or_handle_lookup(req.key_or_handle())) == NULL) {
+        ret = HAL_RET_NAT_POLICY_NOT_FOUND;
+        goto end;
+    }
+
+    if ((ret = nat_cfg_pol_delete_oper_handle(pol)) != HAL_RET_OK)
+        goto end;
+
+    if ((ret = nat_cfg_pol_delete_cfg_handle(pol)) != HAL_RET_OK)
+        goto end;
+
+end:
+    nat_cfg_pol_delete_rsp_build(rsp, ret);
+    return ret;
 }
 
 hal_ret_t

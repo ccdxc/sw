@@ -76,16 +76,22 @@ addr_list_elem_db_del (addr_list_elem_t *addr)
     dllist_del(&addr->list_ctxt);
 }
 
+static inline void
+addr_list_elem_cleanup (addr_list_elem_t *addr)
+{
+    addr_list_elem_db_del(addr);
+    addr_list_elem_uninit_free(addr);
+}
+
 void
 addr_list_cleanup (dllist_ctxt_t *head)
 {
-    dllist_ctxt_t       *curr, *next;
-    addr_list_elem_t    *addr;
+    dllist_ctxt_t *curr, *next;
+    addr_list_elem_t *addr;
 
     dllist_for_each_safe(curr, next, head) {
         addr = dllist_entry(curr, addr_list_elem_t, list_ctxt);
-        addr_list_elem_db_del(addr);
-        addr_list_elem_free(addr);
+        addr_list_elem_cleanup(addr);
     }
 }
 
@@ -379,16 +385,22 @@ mac_addr_list_elem_del (mac_addr_list_elem_t *addr)
     dllist_del(&addr->list_ctxt);
 }
 
+static inline void
+mac_addr_list_elem_cleanup (mac_addr_list_elem_t *addr)
+{
+    mac_addr_list_elem_del(addr);
+    mac_addr_list_elem_uninit_free(addr);
+}
+
 void
 mac_addr_list_cleanup (dllist_ctxt_t *head)
 {
-    dllist_ctxt_t       *curr, *next;
-    mac_addr_list_elem_t    *addr;
+    dllist_ctxt_t *curr, *next;
+    mac_addr_list_elem_t *addr;
 
     dllist_for_each_safe(curr, next, head) {
         addr = dllist_entry(curr, mac_addr_list_elem_t, list_ctxt);
-        mac_addr_list_elem_del(addr);
-        mac_addr_list_elem_free(addr);
+        mac_addr_list_elem_cleanup(addr);
     }
 }
 

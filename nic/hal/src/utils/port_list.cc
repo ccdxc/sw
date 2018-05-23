@@ -74,6 +74,13 @@ port_list_elem_db_del (port_list_elem_t *port)
     dllist_del(&port->list_ctxt);
 }
 
+static inline void
+port_list_elem_cleanup (port_list_elem_t *port)
+{
+    port_list_elem_db_del(port);
+    port_list_elem_free(port);
+}
+
 void
 port_list_cleanup (dllist_ctxt_t *head)
 {
@@ -82,8 +89,7 @@ port_list_cleanup (dllist_ctxt_t *head)
 
     dllist_for_each_safe(curr, next, head) {
         port = dllist_entry(curr, port_list_elem_t, list_ctxt);
-        port_list_elem_db_del(port);
-        port_list_elem_free(port);
+        port_list_elem_cleanup(port);
     }
 }
 

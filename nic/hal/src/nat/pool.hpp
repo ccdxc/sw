@@ -8,7 +8,6 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/utils/nat/addr_db.hpp"
-#include "nic/gen/proto/hal/kh.pb.h"
 
 #ifndef __NAT_POOL_HPP__
 #define __NAT_POOL_HPP__

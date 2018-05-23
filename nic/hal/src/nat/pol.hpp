@@ -8,6 +8,7 @@
 #define __NAT_POL_HPP__
 
 #include "sdk/ht.hpp"
+#include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 
 using sdk::lib::ht_ctxt_t;
@@ -131,6 +132,21 @@ nat_cfg_pol_key_func_compare (void *key1, void *key2)
     return false;
 }
 
+inline void
+nat_cfg_pol_create_rsp_build (nat::NatPolicyResponse *rsp, hal_ret_t ret,
+                              hal_handle_t hal_handle)
+{
+    if (ret == HAL_RET_OK)
+        rsp->mutable_policy_status()->set_nat_policy_handle(hal_handle);
+    rsp->set_api_status(hal_prepare_rsp(ret));
+}
+
+inline void
+nat_cfg_pol_delete_rsp_build (nat::NatPolicyDeleteResponse *rsp, hal_ret_t ret)
+{
+    rsp->set_api_status(hal_prepare_rsp(ret));
+}
+
 //-----------------------------------------------------------------------------
 // Function prototypes
 //-----------------------------------------------------------------------------
@@ -139,19 +155,21 @@ nat_cfg_pol_key_func_compare (void *key1, void *key2)
 void nat_cfg_pol_dump(nat::NatPolicySpec& spec);
 hal_ret_t nat_cfg_pol_create_cfg_handle(
     nat::NatPolicySpec& spec, nat_cfg_pol_t **out_pol);
-void nat_cfg_pol_rsp_build(
-    nat::NatPolicyResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle);
 hal_ret_t nat_cfg_pol_create_oper_handle(nat_cfg_pol_t *pol);
+nat_cfg_pol_t * nat_cfg_pol_key_or_handle_lookup(
+    const kh::NatPolicyKeyHandle& kh);
 hal_ret_t nat_cfg_pol_get_cfg_handle(
     nat::NatPolicyGetRequest& req, nat::NatPolicyGetResponseMsg *rsp);
+hal_ret_t nat_cfg_pol_delete_cfg_handle(nat_cfg_pol_t *pol);
+hal_ret_t nat_cfg_pol_delete_oper_handle(nat_cfg_pol_t *pol);
 
 // rule.cc
 hal_ret_t nat_cfg_rule_spec_handle(
     const nat::NatRuleSpec& spec, dllist_ctxt_t *head);
-hal_ret_t nat_cfg_rule_create_oper_handle(
-    nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctxt);
+hal_ret_t nat_cfg_rule_acl_build(
+    nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx);
 hal_ret_t nat_cfg_rule_spec_build(nat_cfg_rule_t *rule, nat::NatRuleSpec *spec);
-const acl::acl_ctx_t* nat_cfg_pol_create_app_ctxt_init(nat_cfg_pol_t *pol);
+void nat_cfg_rule_list_cleanup(dllist_ctxt_t *head);
 
 }  // namespace hal
 

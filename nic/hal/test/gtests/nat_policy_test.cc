@@ -151,8 +151,7 @@ typedef struct nat_test_pol_s {
 } nat_test_pol_t;
 
 static inline void
-nat_test_rule_action_fill (nat_test_rule_action_t *action, int offset,
-                           hal_handle_t pool_hdl)
+nat_test_rule_action_fill (nat_test_rule_action_t *action, hal_handle_t pool_hdl)
 {
     action->src_nat_action = action->dst_nat_action =
         nat::NatAction::NAT_TYPE_DYNAMIC_ADDRESS;
@@ -206,8 +205,8 @@ nat_test_pol_fill (nat_test_pol_t *pol, int num_rules, int num_src_ip,
     for (i = 0; i < num_rules; i++) {
         pol->rules[i].rule_id = i+1;
         rule_match_test_fill(&pol->rules[i].match, num_src_ip, num_dst_ip,
-                             num_src_port, num_dst_port, i);
-        nat_test_rule_action_fill(&pol->rules[i].action, i, pool_hdl);
+                             num_src_port, num_dst_port, i*100);
+        nat_test_rule_action_fill(&pol->rules[i].action, pool_hdl);
     }
 }
 
@@ -263,8 +262,18 @@ nat_test_pol_dump (nat_test_pol_t *pol, const char *header, int indent)
     printf("%*sKey: vrf_id %d pol_id %d handle %lu\n", indent, "",
            pol->vrf_id, pol->pol_id, pol->hal_hdl);
     printf("%*sData: %d rules\n", indent, "", pol->num_rules);
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < pol->num_rules; i++)
         nat_test_rule_dump(&pol->rules[i], indent+2);
+}
+
+static inline bool
+nat_test_pol_cmp (nat_test_pol_t *a, nat_test_pol_t *b)
+{
+    if ((a->num_rules != b->num_rules) ||
+        (memcmp(a->rules, b->rules, sizeof(a->rules)) != 0))
+        return false;
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -596,6 +605,7 @@ nat_test_pol_get (nat::NatPolicyGetRequest& req, nat_test_pol_t *pol)
     hal_ret_t ret;
     nat::NatPolicyGetResponseMsg rsp;
 
+    memset(pol, 0, sizeof(nat_test_pol_t));
     rsp.Clear();
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
@@ -603,6 +613,22 @@ nat_test_pol_get (nat::NatPolicyGetRequest& req, nat_test_pol_t *pol)
     hal::hal_cfg_db_close();
 
     nat_test_pol_spec_extract(rsp.response(0).spec(), pol);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// nat policy DELETE routines
+//-----------------------------------------------------------------------------
+
+static inline hal_ret_t
+nat_test_pol_delete (nat::NatPolicyDeleteRequest &req)
+{
+    hal_ret_t ret;
+    nat::NatPolicyDeleteResponse rsp;
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nat_policy_delete(req, &rsp);
+    hal::hal_cfg_db_close();
     return ret;
 }
 
@@ -673,18 +699,21 @@ TEST_F(nat_policy_test, create_pol_with_no_rules)
 }
 #endif
 
-TEST_F(nat_policy_test, create_pol_with_one_rule)
+TEST_F(nat_policy_test, create_get_delete_get_pol)
 {
     hal_ret_t ret;
     NatPolicySpec spec; NatPolicyResponse rsp;
-    NatPolicyGetRequest get_req; NatPolicyGetResponseMsg get_rsp;
+    NatPolicyGetRequest get_req;
+    NatPolicyDeleteRequest del_req;
     nat_test_pol_t in_pol, out_pol;
     hal_handle_t pool_hdl;
 
+    // pre-requisites
     nat_test_vrf_create(TEST_VRF_ID);
     pool_hdl = nat_test_natpool_create(TEST_VRF_ID);
 
-    nat_test_pol_fill(&in_pol, 1, 2, 2, 2, 2, pool_hdl);
+    // create nat pol
+    nat_test_pol_fill(&in_pol, 2, 2, 2, 2, 2, pool_hdl);
     nat_test_pol_dump(&in_pol, "Input Policy", 2);
     nat_test_pol_spec_build(&in_pol, &spec);
     ret = nat_test_pol_create(spec, &rsp);
@@ -692,10 +721,23 @@ TEST_F(nat_policy_test, create_pol_with_one_rule)
     out_pol.hal_hdl = rsp.policy_status().nat_policy_handle();
     ASSERT_TRUE(out_pol.hal_hdl != HAL_HANDLE_INVALID);
 
+    // get nat pol
     nat_test_pol_key_spec_build(&in_pol, get_req.mutable_key_or_handle());
     ret = nat_test_pol_get(get_req, &out_pol);
     nat_test_pol_dump(&out_pol, "Output Policy", 2);
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // compare to see if both create & get policies match
+    ASSERT_TRUE(nat_test_pol_cmp(&in_pol, &out_pol) == true);
+
+    // delete nat pol
+    nat_test_pol_key_spec_build(&in_pol, del_req.mutable_key_or_handle());
+    ret = nat_test_pol_delete(del_req);
+
+    // get nat pol
+    nat_test_pol_key_spec_build(&in_pol, get_req.mutable_key_or_handle());
+    ret = nat_test_pol_get(get_req, &out_pol);
+    ASSERT_TRUE(ret == HAL_RET_NAT_POLICY_NOT_FOUND);
 
     nat_test_vrf_delete(TEST_VRF_ID);
 }

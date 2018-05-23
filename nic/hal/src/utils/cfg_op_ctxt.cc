@@ -57,30 +57,16 @@ cfg_op_ctxt_hal_hdl_db_add (cfg_op_ctxt_t *cfg_ctxt, hal_handle_t hal_hdl,
                               abort_cb, cleanup_cb);
 }
 
-#if 0
-static hal_ret_t
-cfg_op_ctxt_hal_hdl_add_handle (cfg_op_ctxt_t *cfg_ctxt, hal_obj_id_t obj_id,
-                                hal_cfg_op_cb_t add_cb,
-                                hal_cfg_commit_cb_t commit_cb,
-                                hal_cfg_abort_cb_t abort_cb,
-                                hal_cfg_cleanup_cb_t cleanup_cb,
-                                hal_handle_t *out_hal_hdl)
+static inline hal_ret_t
+cfg_op_ctxt_hal_hdl_db_del (cfg_op_ctxt_t *cfg_ctxt, hal_handle_t hal_hdl,
+                            hal_cfg_op_cb_t add_cb,
+                            hal_cfg_commit_cb_t commit_cb,
+                            hal_cfg_abort_cb_t abort_cb,
+                            hal_cfg_cleanup_cb_t cleanup_cb)
 {
-    hal_ret_t ret;
-    hal_handle_t hal_hdl;
-
-    if ((hal_hdl = cfg_op_ctxt_hal_hdl_alloc_init(obj_id)) ==
-            HAL_HANDLE_INVALID)
-        return HAL_RET_HANDLE_INVALID;
-
-    if ((ret = cfg_op_ctxt_hal_hdl_db_add(cfg_ctxt, hal_hdl,
-            add_cb, commit_cb, abort_cb, cleanup_cb)) != HAL_RET_OK)
-        return ret;
-
-    *out_hal_hdl = hal_hdl;
-    return HAL_RET_OK;
+    return hal_handle_del_obj(hal_hdl, cfg_ctxt, add_cb, commit_cb,
+                              abort_cb, cleanup_cb);
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // DHL Entry routines
@@ -156,6 +142,31 @@ cfg_ctxt_op_create_handle (hal_obj_id_t obj_id, void *obj, void *app_ctxt,
 
     if ((ret = cfg_op_ctxt_hal_hdl_db_add(&cfg_ctxt, *hal_hdl,
             add_cb, commit_cb, abort_cb, cleanup_cb)) != HAL_RET_OK)
+        return ret;
+
+    return ret;
+}
+
+hal_ret_t
+cfg_ctxt_op_delete_handle (hal_obj_id_t obj_id, void *obj, void *app_ctxt,
+                           hal_cfg_op_cb_t del_cb,
+                           hal_cfg_commit_cb_t commit_cb,
+                           hal_cfg_abort_cb_t abort_cb,
+                           hal_cfg_cleanup_cb_t cleanup_cb,
+                           hal_handle_t hal_hdl)
+{
+    hal_ret_t ret;
+    dhl_entry_t dhl_entry = { 0 };
+    cfg_op_ctxt_t cfg_ctxt = { 0 };
+
+    cfg_op_ctxt_init(&cfg_ctxt, app_ctxt);
+
+    if ((ret = cfg_op_ctxt_dhl_entry_handle(&cfg_ctxt, &dhl_entry, hal_hdl,
+            obj)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = cfg_op_ctxt_hal_hdl_db_del(&cfg_ctxt, hal_hdl,
+            del_cb, commit_cb, abort_cb, cleanup_cb)) != HAL_RET_OK)
         return ret;
 
     return ret;

@@ -21,7 +21,7 @@ using acl::acl_ctx_t;
 namespace hal {
 
 //-----------------------------------------------------------------------------
-// NAT policy object management routines
+// NAT policy object alloc/free routines
 //-----------------------------------------------------------------------------
 
 static inline nat_cfg_pol_t *
@@ -65,10 +65,70 @@ nat_cfg_pol_alloc_init (void)
 static inline void
 nat_cfg_pol_uninit_free (nat_cfg_pol_t *pol)
 {
+    nat_cfg_pol_uninit(pol);
+    nat_cfg_pol_free(pol);
+}
+
+static inline void
+nat_cfg_pol_cleanup (nat_cfg_pol_t *pol)
+{
     if (pol) {
-        nat_cfg_pol_uninit(pol);
-        nat_cfg_pol_free(pol);
+        nat_cfg_rule_list_cleanup(&pol->rule_list);
+        nat_cfg_pol_uninit_free(pol);
     }
+}
+
+//-----------------------------------------------------------------------------
+// ACL LIB operational handling
+//-----------------------------------------------------------------------------
+
+acl_config_t nat_ip_acl_config_glbl;
+
+static hal_ret_t
+nat_cfg_pol_rule_acl_build (nat_cfg_pol_t *pol, const acl_ctx_t **acl_ctx)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    nat_cfg_rule_t *rule;
+    dllist_ctxt_t *entry;
+    uint32_t prio = 0;
+
+    dllist_for_each(entry, &pol->rule_list) {
+        rule = dllist_entry(entry, nat_cfg_rule_t, list_ctxt);
+        rule->prio = prio++;
+        if ((ret = nat_cfg_rule_acl_build(rule, acl_ctx)) != HAL_RET_OK)
+            return ret;
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+nat_cfg_pol_acl_build (nat_cfg_pol_t *pol, const acl_ctx_t **out_acl_ctx)
+{
+    hal_ret_t ret = HAL_RET_ERR;
+    const acl_ctx_t *acl_ctx;
+
+    if ((acl_ctx = rule_lib_init(nat_acl_ctx_name(pol->key.vrf_id),
+                                 &nat_ip_acl_config_glbl)) == NULL)
+        return ret;
+
+    if ((ret = nat_cfg_pol_rule_acl_build(pol, &acl_ctx)) != HAL_RET_OK) 
+        return ret;
+
+    *out_acl_ctx = acl_ctx;
+    return ret;
+}
+
+static inline hal_ret_t
+nat_cfg_pol_acl_cleanup (nat_cfg_pol_t *pol)
+{
+    const acl_ctx_t *acl_ctx;
+
+    if ((acl_ctx = acl::acl_get(nat_acl_ctx_name(pol->key.vrf_id))) == NULL)
+        return HAL_RET_NAT_POLICY_NOT_FOUND;
+
+    acl::acl_delete(acl_ctx);
+    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -80,25 +140,6 @@ nat_cfg_pol_uninit_free (nat_cfg_pol_t *pol)
 //   b) key: config object key, data: hal_handle
 // In case of #b, a second lookup is done to get to object from hal_handle
 //-----------------------------------------------------------------------------
-
-static inline hal_ret_t
-nat_cfg_pol_db_add (hal_handle_id_ht_entry_t *entry, nat_cfg_pol_t *pol)
-{
-    HAL_TRACE_DEBUG("Inserting hal_handle_id node {} with key vrf {}, id {}",
-                    entry->handle_id, pol->key.vrf_id, pol->key.pol_id);
-
-    return hal_handle_id_ht_entry_db_add(
-        g_hal_state->nat_policy_ht(), &pol->key, entry);
-}
-
-static inline hal_handle_id_ht_entry_t *
-nat_cfg_pol_db_del (nat_cfg_pol_key_t *key)
-{
-    HAL_TRACE_DEBUG("Removing hal_handle_id node with key vrf {}, id {}",
-                    key->vrf_id, key->pol_id);
-    return hal_handle_id_ht_entry_db_del(
-        g_hal_state->nat_policy_ht(), key);
-}
 
 static inline nat_cfg_pol_t *
 nat_cfg_pol_hal_hdl_db_lookup (hal_handle_t hal_hdl)
@@ -116,37 +157,27 @@ nat_cfg_pol_hal_hdl_db_lookup (hal_handle_t hal_hdl)
 static inline nat_cfg_pol_t *
 nat_cfg_pol_db_lookup (nat_cfg_pol_key_t *key)
 {
-    hal_handle_id_ht_entry_t *entry = hal_handle_id_ht_entry_db_lookup(
-        g_hal_state->nat_policy_ht(), key);
-    HAL_TRACE_DEBUG("Looking up hal_handle_id node with key vrf {}, po {}, "
-                    "res {}", key->vrf_id, key->pol_id, entry->handle_id);
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_db_lookup(
+            g_hal_state->nat_policy_ht(), key)) == NULL)
+        return NULL;
+
     return nat_cfg_pol_hal_hdl_db_lookup(entry->handle_id);
 }
 
 static inline hal_ret_t
 nat_cfg_pol_create_db_handle (nat_cfg_pol_t *pol)
 {
-    hal_ret_t ret;
     hal_handle_id_ht_entry_t *entry;
 
-    HAL_TRACE_DEBUG("Processing policy-create database event for policy "
-                    "vrf:{} pol:{} hal hdl:{}",
-                     pol->key.vrf_id, pol->key.pol_id, pol->hal_hdl);
-
     if ((entry = hal_handle_id_ht_entry_alloc_init(
-            g_hal_state->hal_handle_id_ht_entry_slab(), pol->hal_hdl)) == NULL){
-        HAL_TRACE_ERR("Memory allocation failure");
+            g_hal_state->hal_handle_id_ht_entry_slab(),
+            pol->hal_hdl)) == NULL)
         return HAL_RET_OOM;
-    }
 
-    if ((ret = nat_cfg_pol_db_add(entry, pol)) != HAL_RET_OK) {
-        hal_handle_id_ht_entry_uninit_free(entry);
-        HAL_TRACE_ERR("Couldn't add policy vrf:{} pol:{} hal hdl:{} to db",
-                      pol->key.vrf_id, pol->key.pol_id, pol->hal_hdl);
-        return ret;
-    }
-
-    return ret;
+    return hal_handle_id_ht_entry_db_add(
+        g_hal_state->nat_policy_ht(), &pol->key, entry);
 }
 
 static inline hal_ret_t
@@ -154,7 +185,8 @@ nat_cfg_pol_delete_db_handle (nat_cfg_pol_key_t *key)
 {
     hal_handle_id_ht_entry_t *entry;
 
-    if ((entry = nat_cfg_pol_db_del(key)) == NULL)
+    if ((entry = hal_handle_id_ht_entry_db_del(
+            g_hal_state->nat_policy_ht(), key)) == NULL)
         return HAL_RET_NAT_POLICY_NOT_FOUND;
 
     hal_handle_id_ht_entry_uninit_free(entry);
@@ -162,7 +194,7 @@ nat_cfg_pol_delete_db_handle (nat_cfg_pol_key_t *key)
 }
 
 //-----------------------------------------------------------------------------
-// Create configuration handling
+// CREATE configuration handling
 //-----------------------------------------------------------------------------
 
 void
@@ -204,22 +236,22 @@ nat_cfg_pol_data_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
 }
 
 static inline hal_ret_t
-nat_cfg_pol_key_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_key_t *key)
+nat_cfg_pol_key_spec_extract (const kh::NatPolicyKeyHandle& spec,
+                              nat_cfg_pol_key_t *key)
 {
     vrf_t *vrf;
 
-    key->pol_id = spec.key_or_handle().policy_key().nat_policy_id();
+    key->pol_id = spec.policy_key().nat_policy_id();
 
-    if (spec.key_or_handle().policy_key().
-        vrf_key_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
-        key->vrf_id = spec.key_or_handle().policy_key().
-            vrf_key_or_handle().vrf_id();
+    if (spec.policy_key().vrf_key_or_handle().key_or_handle_case() ==
+        kh::VrfKeyHandle::kVrfId) {
+        key->vrf_id = spec.policy_key().vrf_key_or_handle().vrf_id();
 
         if ((vrf = vrf_lookup_by_id(key->vrf_id)) == NULL)
             return  HAL_RET_VRF_NOT_FOUND;
     } else {
-        if ((vrf = vrf_lookup_by_handle(spec.key_or_handle().policy_key().
-                vrf_key_or_handle().vrf_handle())) == NULL)
+        if ((vrf = vrf_lookup_by_handle(spec.policy_key().vrf_key_or_handle().
+                                        vrf_handle())) == NULL)
             return HAL_RET_VRF_NOT_FOUND;
 
         key->vrf_id = vrf->vrf_id;
@@ -232,7 +264,8 @@ nat_cfg_pol_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
 {
     hal_ret_t ret;
 
-    if ((ret = nat_cfg_pol_key_spec_extract(spec, &pol->key)) != HAL_RET_OK)
+    if ((ret = nat_cfg_pol_key_spec_extract(
+            spec.key_or_handle(), &pol->key)) != HAL_RET_OK)
         return ret;
 
     if ((ret = nat_cfg_pol_data_spec_extract(spec, pol)) != HAL_RET_OK)
@@ -290,17 +323,62 @@ nat_cfg_pol_create_cfg_handle (nat::NatPolicySpec& spec,
     return HAL_RET_OK;
 }
 
-void
-nat_cfg_pol_rsp_build (nat::NatPolicyResponse *rsp, hal_ret_t ret,
-                       hal_handle_t hal_handle)
+//-----------------------------------------------------------------------------
+// CREATE operational handling
+//-----------------------------------------------------------------------------
+
+static hal_ret_t
+nat_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    if (ret == HAL_RET_OK)
-        rsp->mutable_policy_status()->set_nat_policy_handle(hal_handle);
-    rsp->set_api_status(hal_prepare_rsp(ret));
+    hal_ret_t ret = HAL_RET_INVALID_ARG;
+    nat_cfg_pol_create_app_ctxt_t *app_ctx;
+
+    if (!cfg_ctxt || !cfg_ctxt->app_ctxt)
+        goto end;
+
+    app_ctx = (nat_cfg_pol_create_app_ctxt_t *) cfg_ctxt->app_ctxt;
+
+    if ((ret = acl::acl_commit(app_ctx->acl_ctx)) != HAL_RET_OK)
+        goto end;
+
+    acl_deref(app_ctx->acl_ctx);
+
+end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("nat create commit failed");
+        //todo: free resources
+    }
+    return ret;
+}
+
+
+hal_ret_t
+nat_cfg_pol_create_oper_handle (nat_cfg_pol_t *pol)
+{
+    hal_ret_t ret;
+    hal_handle_t hal_hdl;
+    nat_cfg_pol_create_app_ctxt_t app_ctxt = { 0 };
+
+    // build acl before operating on the callbacks
+    if ((ret = nat_cfg_pol_acl_build(pol, &app_ctxt.acl_ctx)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = cfg_ctxt_op_create_handle(
+            HAL_OBJ_ID_NAT_POLICY, pol, &app_ctxt, hal_cfg_op_null_cb,
+            nat_cfg_pol_create_commit_cb, hal_cfg_op_null_cb,
+            hal_cfg_op_null_cb, &hal_hdl)) != HAL_RET_OK)
+        return ret;
+
+    // save the hal handle and add policy to databases
+    pol->hal_hdl = hal_hdl;
+    if ((ret = nat_cfg_pol_create_db_handle(pol)) != HAL_RET_OK)
+        return ret;
+
+    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
-// Get configuration handling
+// GET configuration handling
 //-----------------------------------------------------------------------------
 
 static inline hal_ret_t
@@ -356,13 +434,12 @@ nat_cfg_pol_spec_build (nat_cfg_pol_t *pol, nat::NatPolicySpec *spec)
     return ret;
 }
 
-static inline nat_cfg_pol_t *
-nat_cfg_pol_key_or_handle_lookup (const NatPolicyKeyHandle& kh)
+nat_cfg_pol_t *
+nat_cfg_pol_key_or_handle_lookup (const kh::NatPolicyKeyHandle& kh)
 {
     if (kh.has_policy_key()) {
         nat_cfg_pol_key_t key = {0};
-        key.pol_id = kh.policy_key().nat_policy_id();
-        key.vrf_id = kh.policy_key().vrf_key_or_handle().vrf_id();
+        nat_cfg_pol_key_spec_extract(kh, &key);
         return nat_cfg_pol_db_lookup(&key);
     } else {
         return nat_cfg_pol_hal_hdl_db_lookup(kh.policy_handle());
@@ -390,6 +467,7 @@ nat_cfg_pol_get_cfg_handle (NatPolicyGetRequest& req,
 {
     nat_cfg_pol_t *pol;
 
+    // walk all policies as no key is specified
     if (!req.has_key_or_handle()) {
         g_hal_state->nat_policy_ht()->walk(nat_policy_get_ht_cb, rsp);
         HAL_API_STATS_INC(HAL_API_NAT_POLICY_GET_SUCCESS);
@@ -398,8 +476,7 @@ nat_cfg_pol_get_cfg_handle (NatPolicyGetRequest& req,
 
     auto kh = req.key_or_handle();
     auto response = rsp->add_response();
-    pol = nat_cfg_pol_key_or_handle_lookup(kh);
-    if (!pol) {
+    if ((pol = nat_cfg_pol_key_or_handle_lookup(kh)) == NULL) { 
         response->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_API_STATS_INC(HAL_API_NAT_POLICY_GET_FAIL);
         return HAL_RET_NAT_POLICY_NOT_FOUND;
@@ -410,82 +487,35 @@ nat_cfg_pol_get_cfg_handle (NatPolicyGetRequest& req,
 }
 
 //-----------------------------------------------------------------------------
-// Operational handling (hal handles, acl libs, etc)
+// DELETE configuration handling
 //-----------------------------------------------------------------------------
 
-static hal_ret_t
-nat_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+hal_ret_t
+nat_cfg_pol_delete_cfg_handle (nat_cfg_pol_t *pol)
 {
-    hal_ret_t ret = HAL_RET_INVALID_ARG;
-    nat_cfg_pol_create_app_ctxt_t *app_ctx;
-
-    if (!cfg_ctxt || !cfg_ctxt->app_ctxt)
-        goto end;
-
-    app_ctx = (nat_cfg_pol_create_app_ctxt_t *) cfg_ctxt->app_ctxt;
-
-    if ((ret = acl::acl_commit(app_ctx->acl_ctx)) != HAL_RET_OK)
-        goto end;
-
-    acl_deref(app_ctx->acl_ctx);
-
-end:
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nat create commit failed");
-        //todo: free resources
-    }
-    return ret;
+    nat_cfg_pol_cleanup(pol);
+    return HAL_RET_OK;
 }
 
-static hal_ret_t
-nat_cfg_pol_create_rule_oper_handle (
-    nat_cfg_pol_t *pol, nat_cfg_pol_create_app_ctxt_t *app_ctxt)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    nat_cfg_rule_t *rule;
-    dllist_ctxt_t *entry;
-    uint32_t       prio=0;
-
-    dllist_for_each(entry, &pol->rule_list) {
-        rule = dllist_entry(entry, nat_cfg_rule_t, list_ctxt);
-        rule->prio = prio++;
-        if ((ret = nat_cfg_rule_create_oper_handle(
-               rule, &app_ctxt->acl_ctx)) != HAL_RET_OK)
-            return ret;
-    }
-    return ret;
-}
-
-static inline void
-nat_cfg_pol_create_oper_init (nat_cfg_pol_t *pol, hal_handle_t hal_hdl)
-{
-    pol->hal_hdl = hal_hdl;
-}
+//-----------------------------------------------------------------------------
+// DELETE operational handling
+//-----------------------------------------------------------------------------
 
 hal_ret_t
-nat_cfg_pol_create_oper_handle (nat_cfg_pol_t *pol)
+nat_cfg_pol_delete_oper_handle (nat_cfg_pol_t *pol)
 {
-
     hal_ret_t ret;
-    hal_handle_t hal_hdl;
-    nat_cfg_pol_create_app_ctxt_t app_ctxt = { 0 };
 
-    app_ctxt.acl_ctx = nat_cfg_pol_create_app_ctxt_init(pol);
-
-    if ((ret = nat_cfg_pol_create_rule_oper_handle(
-            pol, &app_ctxt)) != HAL_RET_OK)
+    if ((ret = nat_cfg_pol_delete_db_handle(&pol->key)) != HAL_RET_OK)
         return ret;
 
-    if ((ret = cfg_ctxt_op_create_handle(HAL_OBJ_ID_NAT_POLICY, pol, &app_ctxt,
-                                         hal_cfg_op_null_cb,
-                                         nat_cfg_pol_create_commit_cb,
-                                         hal_cfg_op_null_cb,
-                                         hal_cfg_op_null_cb,
-                                         &hal_hdl)) != HAL_RET_OK)
+    if ((ret = cfg_ctxt_op_delete_handle(
+            HAL_OBJ_ID_NAT_POLICY, pol, NULL, hal_cfg_op_null_cb,
+            hal_cfg_op_null_cb, hal_cfg_op_null_cb,
+            hal_cfg_op_null_cb, pol->hal_hdl)) != HAL_RET_OK)
         return ret;
 
-    nat_cfg_pol_create_oper_init(pol, hal_hdl);
-    if ((ret = nat_cfg_pol_create_db_handle(pol)) != HAL_RET_OK)
+    if ((ret = nat_cfg_pol_acl_cleanup(pol)) != HAL_RET_OK)
         return ret;
 
     return HAL_RET_OK;
