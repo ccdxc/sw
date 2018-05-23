@@ -50,21 +50,13 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp types.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenURL string, resolverClient resolver.Interface, mode protos.AgentMode) (*Agent, error) {
+func NewAgent(dp types.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode) (*Agent, error) {
 	var ag Agent
 	// create a new network agent
 	nagent, err := state.NewNetAgent(dp, mode, dbPath, nodeUUID)
 
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
-		return nil, err
-	}
-
-	// create REST api server
-	// ToDo Open Agent REST Server only in Classic Mode prior to FCS for security reasons.
-	restServer, err := restapi.NewRestServer(nagent, restListenURL)
-	if err != nil {
-		log.Errorf("Error creating the rest API server. Err: %v", err)
 		return nil, err
 	}
 
@@ -77,11 +69,12 @@ func NewAgent(dp types.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenUR
 		}
 
 		log.Infof("NPM client {%+v} is running", npmClient)
+
+		// create the agent instance
 		ag = Agent{
 			datapath:     dp,
 			NetworkAgent: nagent,
 			npmClient:    npmClient,
-			RestServer:   restServer,
 			Mode:         mode,
 		}
 		return &ag, nil
@@ -89,7 +82,6 @@ func NewAgent(dp types.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenUR
 	ag = Agent{
 		datapath:     dp,
 		NetworkAgent: nagent,
-		RestServer:   restServer,
 		npmClient:    nil,
 		Mode:         mode,
 	}

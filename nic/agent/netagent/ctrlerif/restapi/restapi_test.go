@@ -58,7 +58,7 @@ func setup() (*RestServer, error) {
 		return nil, err
 	}
 
-	return NewRestServer(nagent, agentRestURL)
+	return NewRestServer(nagent, nil, agentRestURL)
 
 }
 
@@ -432,7 +432,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 func TestRestServerStartStop(t *testing.T) {
 	t.Parallel()
 	// Don't need agent
-	restSrv, err := NewRestServer(nil, ":0")
+	restSrv, err := NewRestServer(nil, nil, ":0")
 	if err != nil {
 		t.Errorf("Could not start REST Server. Error: %v", err)
 	}
@@ -450,13 +450,13 @@ func TestRestServerStartStop(t *testing.T) {
 
 func TestRestServerListenFailures(t *testing.T) {
 	t.Parallel()
-	restSrv, err := NewRestServer(nil, "")
+	restSrv, err := NewRestServer(nil, nil, "")
 	if err != nil {
 		t.Errorf("Could not start RestServer")
 	}
 	restSrv.Stop()
 
-	_, err = NewRestServer(nil, ":65536")
+	_, err = NewRestServer(nil, nil, ":65536")
 	if err == nil {
 		t.Errorf("Should see listener errors for the invalid port: %v", err)
 	}

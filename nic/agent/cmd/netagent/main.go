@@ -9,9 +9,13 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	"github.com/pensando/sw/nic/agent/troubleshooting"
+	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
+	tstypes "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -105,10 +109,40 @@ func main() {
 	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, *restURL, resolverClient, agMode)
+	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, resolverClient, agMode)
 	if err != nil {
 		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}
+	log.Printf("NetAgent {%+v} instantiated", ag)
+
+	// create the new Troublehshooting agent
+	var tsdp tstypes.TsDatapathAPI
+	// ToDo Remove mock hal datapath prior to FCS
+	if *datapath == "hal" {
+		tsdp, err = tshal.NewHalDatapath("hal")
+		if err != nil {
+			log.Fatalf("Error creating hal datapath. Err: %v", err)
+		}
+	} else {
+		// Set expectations to allow mock testing
+		mockDp, err := tshal.NewHalDatapath("mock")
+		if err != nil {
+			log.Fatalf("Error creating hal datapath. Err: %v", err)
+		}
+		tsdp = mockDp
+	}
+	tsa, err := troubleshooting.NewTsAgent(tsdp, "/tmp/naples-TsAgent.db", macAddr.String(), *npmURL, resolverClient, agMode)
+	if err != nil {
+		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
+	}
+	log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
+
+	// create REST api server
+	restServer, err := restapi.NewRestServer(ag.NetworkAgent, tsa.TroubleShootingAgent, *restURL)
+	if err != nil {
+		log.Errorf("Error creating the rest API server. Err: %v", err)
+	}
+	ag.RestServer = restServer
 	log.Printf("Naples NetAgent {%+v} is running", ag)
 
 	// wait forever

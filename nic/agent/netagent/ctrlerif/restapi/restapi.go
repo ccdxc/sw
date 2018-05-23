@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	troubleshooting "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -18,10 +19,11 @@ import (
 
 // RestServer is the REST api server
 type RestServer struct {
-	listenURL  string           // URL where http server is listening
-	agent      types.CtrlerIntf // net Agent API
-	listener   net.Listener     // socket listener
-	httpServer *http.Server     // HTTP server
+	listenURL  string                     // URL where http server is listening
+	agent      types.CtrlerIntf           // net Agent API
+	TsAgent    troubleshooting.CtrlerIntf //Troubleshooting agent
+	listener   net.Listener               // socket listener
+	httpServer *http.Server               // HTTP server
 }
 
 // Response captures the HTTP Response sent by Agent REST Server
@@ -34,11 +36,12 @@ type Response struct {
 type routeAddFunc func(*mux.Router, *RestServer)
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(agent types.CtrlerIntf, listenURL string) (*RestServer, error) {
+func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, listenURL string) (*RestServer, error) {
 	// create server instance
 	srv := RestServer{
 		listenURL: listenURL,
 		agent:     agent,
+		TsAgent:   tsagent,
 	}
 
 	// if no URL was specified, just return (used during unit/integ tests)
@@ -63,6 +66,7 @@ func NewRestServer(agent types.CtrlerIntf, listenURL string) (*RestServer, error
 		"/api/ipsec/encryption/":  addIPSecSAEncryptAPIRoutes,
 		"/api/ipsec/decryption/":  addIPSecSADecryptAPIRoutes,
 		"/api/security/policies/": addSGPolicyAPIRoutes,
+		"/api/mirror/sessions/":   addMirrorSessionAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/plugins/k8s/cni"
@@ -81,10 +82,12 @@ func main() {
 	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, ":"+globals.AgentRESTPort, resolverClient, state.AgentMode_MANAGED)
+	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, resolverClient, state.AgentMode_MANAGED)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}
+	restServer, err := restapi.NewRestServer(ag.NetworkAgent, nil, ":"+globals.AgentRESTPort)
+	ag.RestServer = restServer
 	log.Printf("NetAgent {%+v} is running", ag)
 
 	// create a CNI server

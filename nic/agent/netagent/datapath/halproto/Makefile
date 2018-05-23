@@ -15,6 +15,7 @@ default:
 	mockgen -source=nw.pb.go -destination=network_mock.go -package=halproto
 	mockgen -source=nat.pb.go -destination=nat_mock.go -package=halproto
 	mockgen -source=ipsec.pb.go -destination=ipsec_mock.go -package=halproto
+	mockgen -source=telemetry.pb.go -destination=telemetry_mock.go -package=halproto
 	# Run go imports on mock files
 	goimports -w -l *mock.go
 

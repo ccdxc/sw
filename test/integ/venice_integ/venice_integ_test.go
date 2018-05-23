@@ -15,7 +15,10 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/troubleshooting"
+	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -239,10 +242,31 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 			dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		}
 
-		// agent
-		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, "", rc, state.AgentMode_MANAGED)
+		// Create netagent
+		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, rc, state.AgentMode_MANAGED)
 		c.Assert(aerr, IsNil)
+
+		tsdp, aerr := tshal.NewHalDatapath("mock")
+		c.Assert(aerr, IsNil)
+		//it.datapaths = append(it.datapaths, dp)
+
+		log.Infof("creating troubleshooting subagent")
+		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("/tmp/TsAgent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, tsmrc, state.AgentMode_MANAGED)
+		c.Assert(aerr, IsNil)
+		if tsa == nil {
+			c.Fatalf("cannot create troubleshooting agent. Err: %v", err)
+		}
+		log.Infof("created troubleshooting subagent")
+
+		// create new RestServer instance. Not started yet.
+		restServer, err := restapi.NewRestServer(agent.NetworkAgent, tsa.TroubleShootingAgent, "")
+		c.Assert(err, IsNil)
+		if restServer == nil {
+			c.Fatalf("cannot create REST server . Err: %v", err)
+		}
+		agent.RestServer = restServer
 		it.agents = append(it.agents, agent)
+
 	}
 	// XXX create a new agent to handle TS requests - Once the netagent has this functionality, this can be removed
 	// TBD - for now test until memDB of TsController
@@ -295,6 +319,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.datapaths = []*datapath.Datapath{}
 
 	// stop server and client
+	log.Infof("Stop all Test Controllers")
 	it.tpm.Stop()
 	it.ctrler.Stop()
 	it.ctrler = nil
