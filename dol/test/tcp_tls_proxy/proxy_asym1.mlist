@@ -46,3 +46,14 @@ modules:
         module  : crypto_apis
         args    :
             api:    CRYPTO_API_ASYM_RSA2K_DECRYPT
+ 
+    - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4
+        spec    : one_pkt.testspec
+        module  : in_order
+        rtl     : True
+        args    :
+            maxflows : 1
+        iterate :
+            - flow: filter://type=IPV4
+

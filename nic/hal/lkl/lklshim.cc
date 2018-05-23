@@ -22,6 +22,7 @@ namespace hal {
 
 slab                     *lklshim_flowdb_slab;
 lklshim_flow_t           *lklshim_flow_by_qid[MAX_PROXY_FLOWS];
+static thread_local uint16_t lklshim_current_qid = (uint16_t) -1;
 
 // byte array to hex string for logging
 std::string hex_dump(const uint8_t *buf, size_t sz)
@@ -299,6 +300,9 @@ lklshim_release_client_syn(uint16_t qid)
     HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
     HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
 
+    lklshim_current_qid = qid;
+    HAL_TRACE_DEBUG("lklshim: saving qid for release client syn for qid = {}", qid);
+
     lkl_tcp_v4_rcv(pkt_skb);
 
     return true;
@@ -535,6 +539,8 @@ void lklshim_process_tx_packet(unsigned char* pkt,
                                void *tcpcb,
                                bool tx_pkt) 
 {
+    lklshim_flow_t *flow;
+
     if (pkt) {
         HAL_TRACE_DEBUG("lklshim_process_tx_packet len={} pkt={}", len, hex_dump((const uint8_t *)pkt, len));
     } else {
@@ -545,7 +551,14 @@ void lklshim_process_tx_packet(unsigned char* pkt,
     } else {
         HAL_TRACE_DEBUG("flowp={} is_connect_req={} tcpcb=NULL tx_pkt={}", flowp, is_connect_req, tx_pkt);
     }
-    lklshim_flow_t* flow = (lklshim_flow_t*)flowp;
+
+    if (lklshim_current_qid != (uint16_t) -1) {
+        HAL_TRACE_DEBUG("lklshim: retrieving flow for saved current qid in tx-packet = {}", lklshim_current_qid);
+        flow = lklshim_flow_by_qid[lklshim_current_qid];
+        lklshim_current_qid = (uint16_t) -1;
+    } else {
+        flow = (lklshim_flow_t*)flowp;
+    }
     if (flow) {
         uint32_t qid = (is_connect_req?flow->rqid:flow->iqid);
         HAL_TRACE_DEBUG("flow qid={}, dir={}", qid, flow->itor_dir);
