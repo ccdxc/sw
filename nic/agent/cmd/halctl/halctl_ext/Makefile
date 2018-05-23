@@ -12,5 +12,5 @@ halctl-ext:
 	mkdir -p man_pages
 	halctl_ext
 	@# For bash completion
-	cp bash_completion/out.sh /etc/bash_completion.d/halctl_bash_complete.sh
+	#cp bash_completion/out.sh /etc/bash_completion.d/halctl_bash_complete.sh
 	# Do this for halctl bash completion: source /etc/bash_completion.d/halctl_bash_complete.sh
