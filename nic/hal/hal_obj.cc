@@ -7,6 +7,8 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/aclqos/acl.hpp"
+#include "nic/hal/src/aclqos/qos.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/interface.hpp"
@@ -67,16 +69,16 @@ hal_obj_meta_init (void)
                          hal_default_unmarshall_cb);
     g_obj_meta[HAL_OBJ_ID_ACL] =
         new hal_obj_meta(HAL_SLAB_ACL,
-                         hal_default_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         acl_store_cb,
+                         acl_restore_cb);
     g_obj_meta[HAL_OBJ_ID_QOS_CLASS] =
         new hal_obj_meta(HAL_SLAB_QOS_CLASS,
-                         hal_default_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         qos_class_store_cb,
+                         qos_class_restore_cb);
     g_obj_meta[HAL_OBJ_ID_COPP] =
         new hal_obj_meta(HAL_SLAB_COPP,
-                         hal_default_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         copp_store_cb,
+                         copp_restore_cb);
     g_obj_meta[HAL_OBJ_ID_MC_ENTRY] =
         new hal_obj_meta(HAL_SLAB_MC_ENTRY,
                          hal_default_marshall_cb,

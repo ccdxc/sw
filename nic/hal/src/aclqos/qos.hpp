@@ -243,6 +243,9 @@ hal_ret_t qosclass_delete(qos::QosClassDeleteRequest& req,
                           qos::QosClassDeleteResponse *rsp);
 hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
                        qos::QosClassGetResponseMsg *rsp);
+hal_ret_t qos_class_store_cb(void *obj, uint8_t *mem,
+                             uint32_t len, uint32_t *mlen);
+uint32_t qos_class_restore_cb(void *obj, uint32_t len);
 
 #define POLICER_TYPES(ENTRY) \
     ENTRY(POLICER_TYPE_PPS,                 0, "pps") \
@@ -384,6 +387,10 @@ hal_ret_t copp_update(qos::CoppSpec& spec,
                       qos::CoppResponse *rsp);
 hal_ret_t copp_get(qos::CoppGetRequest& req,
                    qos::CoppGetResponseMsg *rsp);
+hal_ret_t copp_store_cb(void *obj, uint8_t *mem,
+                        uint32_t len, uint32_t *mlen);
+uint32_t copp_restore_cb(void *obj, uint32_t len);
+
 }    // namespace hal
 
 #endif    // __QOS_HPP__

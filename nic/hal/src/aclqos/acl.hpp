@@ -304,8 +304,9 @@ hal_ret_t acl_delete(acl::AclDeleteRequest& req,
                      acl::AclDeleteResponse *rsp);
 hal_ret_t acl_get(acl::AclGetRequest& req,
                   acl::AclGetResponseMsg *rsp);
-
-
+hal_ret_t acl_store_cb(void *obj, uint8_t *mem,
+                       uint32_t len, uint32_t *mlen);
+uint32_t acl_restore_cb(void *obj, uint32_t len);
 }    // namespace hal
 
 #endif    // __ACL_HPP__
