@@ -1,10 +1,12 @@
 #include <linux/interrupt.h>
 #include <linux/module.h>
 #include <linux/mman.h>
+#include <linux/printk.h>
 #include <net/addrconf.h>
 #include <rdma/ib_addr.h>
 #include <rdma/ib_cache.h>
 #include <rdma/ib_mad.h>
+#include <rdma/ib_user_verbs.h>
 
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
@@ -421,18 +423,15 @@ static int ionic_query_port(struct ib_device *ibdev, u8 port,
 			    struct ib_port_attr *attr)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
-	int rc;
 
 	if (port != 1)
 		return -EINVAL;
 
 	*attr = dev->port_attr;
 
-	rc = ib_get_eth_speed(ibdev, port,
-			      &attr->active_speed,
-			      &attr->active_width);
-
-	return 0;
+	return ib_get_eth_speed(ibdev, port,
+				&attr->active_speed,
+				&attr->active_width);
 }
 
 static enum rdma_link_layer ionic_get_link_layer(struct ib_device *ibdev,
@@ -467,14 +466,23 @@ static int ionic_query_gid(struct ib_device *ibdev, u8 port, int index,
 	return rc;
 }
 
+/* XXX instead change ib_core ib_gid_to_network_type to const */
+static enum rdma_network_type
+const_ib_gid_to_network_type(enum ib_gid_type gid_type,
+			     const union ib_gid *gid)
+{
+	union ib_gid gid_copy = *gid;
+
+	return ib_gid_to_network_type(gid_type, &gid_copy);
+}
+
 static int ionic_add_gid(struct ib_device *ibdev, u8 port, unsigned int index,
 			 const union ib_gid *gid,
 			 const struct ib_gid_attr *attr, void **context)
 {
 	enum rdma_network_type net;
 
-	/* XXX const cast */
-	net = ib_gid_to_network_type(attr->gid_type, (union ib_gid *)gid);
+	net = const_ib_gid_to_network_type(attr->gid_type, gid);
 	if (net != RDMA_NETWORK_IPV4 && net != RDMA_NETWORK_IPV6)
 		return -EINVAL;
 
@@ -752,9 +760,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 	dev_put(sgid_attr.ndev); /* hold from ib_get_cached_gid */
 	sgid_attr.ndev = NULL;
 
-	/* XXX const cast */
-	if (net != ib_gid_to_network_type(sgid_attr.gid_type,
-					  (union ib_gid *)&grh->dgid))
+	if (net != const_ib_gid_to_network_type(sgid_attr.gid_type, &grh->dgid))
 		return -EINVAL;
 
 	rc = ib_ud_header_init(0,	/* no payload */
@@ -777,8 +783,8 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 		hdr->ip4.tos = grh->traffic_class;
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
-		hdr->ip4.saddr = *(__be32 *)(sgid.raw + 12);
-		hdr->ip4.daddr = *(__be32 *)(grh->dgid.raw + 12);
+		hdr->ip4.saddr = *(const __be32 *)(sgid.raw + 12);
+		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
 	} else {
 		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
 		hdr->grh.traffic_class = grh->traffic_class;
@@ -2152,7 +2158,6 @@ static int ionic_peek_cq(struct ib_cq *ibcq, int nwc)
 static int ionic_req_notify_cq(struct ib_cq *ibcq,
 			       enum ib_cq_notify_flags flags)
 {
-	//struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
 	struct cqwqe_be_t *qcqe;
 	u32 dbell_val;
@@ -2734,8 +2739,10 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_qp *qp;
+	struct ionic_cq *cq;
 	struct ionic_qp_req req;
 	struct ionic_qp_resp resp = {0};
+	unsigned long irqflags;
 	int rc;
 
 	if (!ctx) {
@@ -2836,6 +2843,18 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	tbl_insert(&dev->qp_tbl, qp, qp->qpid);
 	mutex_unlock(&dev->tbl_lock);
 
+	if (qp->has_sq) {
+		cq = to_ionic_cq(attr->send_cq);
+		spin_lock_irqsave(&cq->lock, irqflags);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
+
+	if (qp->has_rq) {
+		cq = to_ionic_cq(attr->recv_cq);
+		spin_lock_irqsave(&cq->lock, irqflags);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
+
 	return &qp->ibqp;
 
 err_resp:
@@ -2895,12 +2914,16 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	tbl_delete(&dev->qp_tbl, qp->qpid);
 	mutex_unlock(&dev->tbl_lock);
 
-	synchronize_rcu();
-
 	if (qp->has_sq) {
 		cq = to_ionic_cq(qp->ibqp.send_cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
 		list_del(&qp->cq_poll_ent);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
+
+	if (qp->has_rq) {
+		cq = to_ionic_cq(qp->ibqp.recv_cq);
+		spin_lock_irqsave(&cq->lock, irqflags);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
 
@@ -4406,22 +4429,22 @@ static void ionic_netdev_work(struct work_struct *ws)
 	switch (work->event) {
 	case NETDEV_REGISTER:
 		if (dev) {
-			dev_dbg(&ndev->dev, "already registered\n");
+			netdev_dbg(ndev, "already registered\n");
 			break;
 		}
 
-		dev_dbg(&ndev->dev, "register ibdev\n");
+		netdev_dbg(ndev, "register ibdev\n");
 
 		dev = ionic_create_ibdev(work->lif, ndev);
 		if (IS_ERR(dev)) {
-			dev_dbg(&ndev->dev, "error register ibdev %d\n",
+			netdev_dbg(ndev, "error register ibdev %d\n",
 				(int)PTR_ERR(dev));
 			break;
 		}
 
 		rc = ionic_api_set_private(work->lif, dev, IONIC_RDMA_PRIVATE);
 		if (rc) {
-			dev_dbg(&ndev->dev, "error set private %d\n", rc);
+			netdev_dbg(ndev, "error set private %d\n", rc);
 			ionic_destroy_ibdev(dev);
 		}
 
@@ -4429,11 +4452,11 @@ static void ionic_netdev_work(struct work_struct *ws)
 
 	case NETDEV_UNREGISTER:
 		if (!dev) {
-			dev_dbg(&ndev->dev, "not registered\n");
+			netdev_dbg(ndev, "not registered\n");
 			break;
 		}
 
-		dev_dbg(&ndev->dev, "unregister ibdev\n");
+		netdev_dbg(ndev, "unregister ibdev\n");
 
 		ionic_api_set_private(work->lif, NULL, IONIC_RDMA_PRIVATE);
 		ionic_destroy_ibdev(dev);
@@ -4488,7 +4511,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 		if (!dev)
 			break;
 
-		dev_dbg(&ndev->dev, "unhandled event %lu\n", work->event);
+		netdev_dbg(ndev, "unhandled event %lu\n", work->event);
 	}
 
 	dev_put(ndev);
@@ -4509,13 +4532,12 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 
 	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION);
 	if (!lif) {
-		pr_devel("unrecognized netdev: %s (%s)\n",
-			 ndev->name, ndev->name);
+		pr_devel("unrecognized netdev: %s\n", netdev_name(ndev));
 		goto out;
 	}
 
-	pr_devel("ionic netdev: %s\n", ndev->name);
-	dev_dbg(&ndev->dev, "event %lu\n", event);
+	pr_devel("ionic netdev: %s\n", netdev_name(ndev));
+	netdev_dbg(ndev, "event %lu\n", event);
 
 	if (!try_module_get(THIS_MODULE))
 		goto out;

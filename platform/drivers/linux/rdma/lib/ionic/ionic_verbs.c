@@ -621,6 +621,7 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_qp *qp;
+	struct ionic_cq *cq;
 	struct ionic_qp_req req;
 	struct ionic_qp_resp resp;
 	int rc;
@@ -687,8 +688,17 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	tbl_insert(&ctx->qp_tbl, qp, qp->qpid);
 	pthread_mutex_unlock(&ctx->mut);
 
-	ionic_synchronize_cq(to_ionic_cq(ex->send_cq));
-	ionic_synchronize_cq(to_ionic_cq(ex->recv_cq));
+	if (qp->has_sq) {
+		cq = to_ionic_cq(qp->vqp.qp.send_cq);
+		pthread_spin_lock(&cq->lock);
+		pthread_spin_unlock(&cq->lock);
+	}
+
+	if (qp->has_rq) {
+		cq = to_ionic_cq(qp->vqp.qp.recv_cq);
+		pthread_spin_lock(&cq->lock);
+		pthread_spin_unlock(&cq->lock);
+	}
 
 	ex->cap.max_send_wr = qp->sq.mask;
 	ex->cap.max_recv_wr = qp->rq.mask;
@@ -768,7 +778,7 @@ static int ionic_destroy_qp(struct ibv_qp *ibqp)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
-	struct ionic_cq *send_cq = to_ionic_cq(ibqp->send_cq);
+	struct ionic_cq *cq;
 	int rc;
 
 	IONIC_LOG("");
@@ -781,11 +791,18 @@ static int ionic_destroy_qp(struct ibv_qp *ibqp)
 	tbl_delete(&ctx->qp_tbl, qp->qpid);
 	pthread_mutex_unlock(&ctx->mut);
 
-	pthread_spin_lock(&send_cq->lock);
-	list_del(&qp->cq_poll_ent);
-	pthread_spin_unlock(&send_cq->lock);
+	if (qp->has_sq) {
+		cq = to_ionic_cq(qp->vqp.qp.send_cq);
+		pthread_spin_lock(&cq->lock);
+		list_del(&qp->cq_poll_ent);
+		pthread_spin_unlock(&cq->lock);
+	}
 
-	ionic_synchronize_cq(to_ionic_cq(ibqp->recv_cq));
+	if (qp->has_rq) {
+		cq = to_ionic_cq(qp->vqp.qp.recv_cq);
+		pthread_spin_lock(&cq->lock);
+		pthread_spin_unlock(&cq->lock);
+	}
 
 	ionic_unmap(qp->sq_hbm_ptr, qp->sq.size);
 
