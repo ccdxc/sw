@@ -19,6 +19,7 @@ import (
 )
 
 var pkgName = "tpm"
+var dbgSock = "/var/run/pensando/tpm.sock"
 
 // main function of the Telemetry Policy Manager
 func main() {
@@ -67,11 +68,12 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/debug", pm.Debug).Methods("GET")
 	// sudo curl --unix-socket /var/run/pensando/tpm.sock http://localhost/debug
-	l, err := net.Listen("unix", "/var/run/pensando/tpm.sock")
-
+	os.Remove(dbgSock)
+	l, err := net.Listen("unix", dbgSock)
 	if err != nil {
 		log.Fatalf("failed to initialize debug, %s", err)
 	}
+	defer l.Close()
 	go log.Fatal(http.Serve(l, router))
 
 	select {}
