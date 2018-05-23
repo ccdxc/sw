@@ -25,31 +25,19 @@ INC_HAL_DIRS = -I$(TOPDIR)/../../vendor/github.com/gogo/protobuf/gogoproto
 # To use from proto/hal
 INC_DIRS_HAL = -I.. -I$(TOPDIR)/../../vendor/github.com/gogo/protobuf/gogoproto -I../../hal/third-party/google/include
 
-#$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/types_proto $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto $(GEN_DIR)/cp_mfile_proto cxx_build
-#$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/types_proto $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto
-$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/types_proto $(GEN_DIR)/hal_proto $(GEN_DIR)/gogo_proto
+#$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto $(GEN_DIR)/cp_mfile_proto cxx_build
+#$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto
+$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/hal_proto $(GEN_DIR)/gogo_proto
 	cp Makefile.protobuf $(GEN_DIR)/Makefile
 	touch $@
 
-tproto_src = $(wildcard ./*.proto)
 gogoproto_src = $(wildcard ../../vendor/github.com/gogo/protobuf/gogoproto/*.proto)
-hproto_src = $(wildcard hal/*.proto)
+proto_src = $(wildcard hal/*.proto)
 
-# .PHONY: types_proto agents_proto hal_proto
-$(GEN_DIR)/types_proto: $(tproto_src)
-	@echo tproto_src = $(tproto_src)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(PROTOC) $(INC_DIRS) --cpp_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $(tproto_src)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(PROTOC) $(INC_DIRS) --python_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_PYTHON_PLUGIN_PATH) $(tproto_src)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(C_PROTOC) $(INC_DIRS) -I$(COMMON_PROTO_DIR) --c_out=$(GEN_DIR) $(tproto_src)
-	@( cd $(COMMON_PROTO_DIR); \
-	   for file in $(patsubst $(COMMON_PROTO_DIR)/%.proto,%.proto,$(wildcard $(COMMON_PROTO_DIR)/*.proto));  do \
-		  LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(PROTOC) $(INC_DIRS) --gofast_out=plugins=grpc:$(GEN_DIR) $${file}; \
-	   done )
-	touch $@
-
-$(GEN_DIR)/hal_proto: $(hproto_src)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(PROTOC) -I$(COMMON_PROTO_DIR) -I$(HAL_PROTO_DIR) $(INC_DIRS) -I$(TOPDIR)/.. --cpp_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $(hproto_src)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(PROTOC) -I$(COMMON_PROTO_DIR) -I$(HAL_PROTO_DIR) $(INC_DIRS) -I$(TOPDIR)/.. --python_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_PYTHON_PLUGIN_PATH) $(hproto_src)
+# .PHONY: agents_proto hal_proto
+$(GEN_DIR)/hal_proto: $(proto_src)
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(PROTOC) -I$(COMMON_PROTO_DIR) -I$(HAL_PROTO_DIR) $(INC_DIRS) -I$(TOPDIR)/.. --cpp_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $(proto_src)
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(PROTOC) -I$(COMMON_PROTO_DIR) -I$(HAL_PROTO_DIR) $(INC_DIRS) -I$(TOPDIR)/.. --python_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_PYTHON_PLUGIN_PATH) $(proto_src)
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(C_PROTOC) -I$(COMMON_PROTO_DIR) -I$(HAL_PROTO_DIR) $(INC_DIRS) -I$(TOPDIR)/.. --c_out=$(GEN_DIR) hal/*.proto
 	@( cd $(HAL_PROTO_DIR); \
 	   for file in $(patsubst $(HAL_PROTO_DIR)/%.proto,%.proto,$(wildcard $(HAL_PROTO_DIR)/*.proto));  do \
