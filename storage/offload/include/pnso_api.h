@@ -132,7 +132,7 @@ struct pnso_buffer_list {
  *	value in the compression header (ex: version).
  *
  *	PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM - the field is used as input to set
- *	checksum value in the compression header derived from previous service. 
+ *	checksum value in the compression header derived from previous service.
  *
  *	PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH - the field is used as input to set
  *	length of the compressed buffer as the value in the compression header.
@@ -226,13 +226,10 @@ struct pnso_crypto_desc {
 	uint64_t iv_addr;
 };
 
-/* descriptor flags */
-#define PNSO_DFLAG_ZERO_PAD			(1 << 0)
-#define PNSO_DFLAG_INSERT_HEADER		(1 << 1)
-#define PNSO_DFLAG_BYPASS_ONFAIL		(1 << 2)
-#define PNSO_DFLAG_HEADER_PRESENT		(1 << 3)
-#define PNSO_DFLAG_HASH_PER_BLOCK		(1 << 4)
-#define PNSO_DFLAG_CHKSUM_PER_BLOCK		(1 << 5)
+/* compression descriptor flags */
+#define PNSO_CP_DFLAG_ZERO_PAD				(1 << 0)
+#define PNSO_CP_DFLAG_INSERT_HEADER			(1 << 1)
+#define PNSO_CP_DFLAG_BYPASS_ONFAIL			(1 << 2)
 
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
@@ -241,17 +238,16 @@ struct pnso_crypto_desc {
  * algorithm (i.e. pnso_compressor_type).
  * @flags: specifies the following applicable descriptor flags to compression
  * descriptor.
- *	PNSO_DFLAG_ZERO_PAD - indicates to zero fill the compressed output
+ *	PNSO_CP_DFLAG_ZERO_PAD - indicates to zero fill the compressed output
  *	buffer aligning to block size.
  *
- *	PNSO_DFLAG_INSERT_HEADER - indicates whether or not to
- *	insert compression header defined by the format supplied in 'struct
- *	pnso_init_params'.
+ *	PNSO_CP_DFLAG_INSERT_HEADER - indicates to insert compression header
+ *	defined by the format supplied in 'struct pnso_init_params'.
  *
- *	PNSO_DFLAG_BYPASS_ONFAIL - indicates to use the source buffer as input
- *	buffer to hash and/or checksum, services, when compression operation
- *	fails.  This flag is effective only when compression, hash and/or
- *	checksum operation is requested.
+ *	PNSO_CP_DFLAG_BYPASS_ONFAIL - indicates to use the source buffer as
+ *	input buffer to hash and/or checksum, services, when compression
+ *	operation fails.  This flag is effective only when compression, hash
+ *	and/or checksum operation is requested.
  *
  * @threshold_len: specifies the expected compressed buffer length in bytes.
  * This is to instruct the compression operation, upon its completion, to
@@ -267,6 +263,9 @@ struct pnso_compression_desc {
 	uint16_t rsvd;
 };
 
+/* decompression descriptor flag(s) */
+#define PNSO_DC_DFLAG_HEADER_PRESENT		(1 << 0)
+
 /**
  * struct pnso_decompression_desc - represents the descriptor for decompression
  * operation.
@@ -274,7 +273,8 @@ struct pnso_compression_desc {
  * algorithm (i.e. pnso_compressor_type) for decompression.
  * @flags: specifies the following applicable descriptor flags to decompression
  * descriptor.
- *	PNSO_DFLAG_HEADER_PRESENT - indicates the compression header is present.
+ *	PNSO_DC_DFLAG_HEADER_PRESENT - indicates the compression header is
+ *	present.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
@@ -283,6 +283,9 @@ struct pnso_decompression_desc {
 	uint16_t flags;
 };
 
+/* hash descriptor flag(s) */
+#define PNSO_HASH_DFLAG_PER_BLOCK		(1 << 0)
+
 /**
  * struct pnso_hash_desc - represents the descriptor for data deduplication hash
  * operation.
@@ -290,8 +293,9 @@ struct pnso_decompression_desc {
  * (i.e. pnso_hash_type) for data deduplication.
  * @flags: specifies the following applicable descriptor flag(s) to hash
  * descriptor.
- *	PNSO_DFLAG_HASH_PER_BLOCK - indicates whether to produce one hash per
- *	block or one for the entire buffer.
+ *	PNSO_HASH_DFLAG_PER_BLOCK - indicates to produce one hash per block.
+ *	When this flag is not specified, hash for the entire buffer will be
+ *	produced.
  *
  */
 struct pnso_hash_desc {
@@ -299,14 +303,18 @@ struct pnso_hash_desc {
 	uint16_t flags;
 };
 
+/* chksum descriptor flag(s) */
+#define PNSO_CHKSUM_DFLAG_PER_BLOCK		(1 << 0)
+
 /**
  * struct pnso_checksum_desc - represents the descriptor for checksum operation.
  * @algo_type: specifies one of the enumerated values of the checksum
  * algorithm (i.e. pnso_chksum_type).
  * @flags: specifies the following applicable descriptor flag(s) to checksum
  * descriptor.
- *	PNSO_DFLAG_CHKSUM_PER_BLOCK - indicates whether to produce one checksum
- *	per block or one for the entire buffer.
+ *	PNSO_CHKSUM_DFLAG_PER_BLOCK - indicates to produce one checksum
+ *	per block. When this flag is not specified, checksum for the entire
+ *	buffer will be produced.
  *
  */
 struct pnso_checksum_desc {
