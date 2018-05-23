@@ -92,6 +92,7 @@ message CryptoAsymApiReqECDSASignatureGenFp {
   bytes                             k                   = 3;
   bytes                             h                   = 4;
   int32                             key_idx             = 5;
+  bool                              async_en            = 6;
 }
 message CryptoAsymApiRespECDSASignatureGenFp {
   bytes                             r                   = 1;
@@ -105,6 +106,7 @@ message CryptoAsymApiReqECDSASignatureVerifyFp {
   bytes                             r                   = 3;
   bytes                             s                   = 4;
   bytes                             h                   = 5;
+  bool                              async_en            = 6;
 }
 
 // RSA Encryption
@@ -142,6 +144,7 @@ message CryptoAsymApiReqRSACRTDecrypt {
   bytes                             qinv                = 6;
   bytes                             cipher_text         = 7;
   int32                             key_idx             = 8;
+  bool                              async_en            = 9;
 }
 
 message CryptoAsymApiRespRSACRTDecrypt {
@@ -188,7 +191,8 @@ message CryptoAsymApiReqRSASignatureGen {
   bytes                             mod_n               = 2;
   bytes                             d                   = 3;
   bytes                             h                   = 4;
-  int32                             key_idx             = 5;                       
+  int32                             key_idx             = 5;
+  bool                              async_en            = 6;
 }
 
 message CryptoAsymApiRespRSASignatureGen {

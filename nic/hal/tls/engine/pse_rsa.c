@@ -271,7 +271,9 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
                                     bn.data,
                                     NULL,
                                     buf,
-                                    to);
+                                    to,
+                                    true,
+                                    (const uint8_t *)engine_pse_id);
 #else 
     ret = RSA_meth_get_priv_enc(RSA_PKCS1_OpenSSL())(flen, from, to, rsa, padding);
 #endif
@@ -320,7 +322,9 @@ int pse_rsa_priv_dec(int flen, const unsigned char *from,
 #ifndef NO_PEN_HW_OFFLOAD
     ret = pd_tls_asym_rsa2k_crt_decrypt(ex_data->decrypt_key_id,
                                         NULL, NULL, NULL, NULL, NULL,
-                                        (uint8_t *)from, to);
+                                        (uint8_t *)from, to,
+                                        true,
+                                        (const uint8_t *)engine_pse_id);
     INFO("ret: %d", ret);
     if(ret < 0) {
         WARN("rsa decrypt failed...");

@@ -89,12 +89,15 @@ hal_ret_t capri_barco_asym_ecdsa_sig_gen_test(void)
     hal_ret_t           ret = HAL_RET_OK;
     uint8_t             r[32];
     uint8_t             s[32];
+    pd_capri_barco_asym_async_args_t async_args = {0};
+    async_args.async_en = false;
 
     /* Using k for private key (dA)     */
     /* Using n for the message hash h   */
 
     ret = capri_barco_asym_ecdsa_p256_sig_gen(-1, p, n,
-        xg, yg, a, b, k/*da*/, k, n/*h*/, r, s);
+                                              xg, yg, a, b, k/*da*/, k, n/*h*/, r, s,
+                                              &async_args);
 
     return ret;
 }
@@ -116,9 +119,11 @@ uint8_t s[] = {
 hal_ret_t capri_barco_asym_ecdsa_sig_verify_test(void)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_capri_barco_asym_async_args_t async_args = {0};
+    async_args.async_en = false;
 
     ret = capri_barco_asym_ecdsa_p256_sig_verify(p, n,
-        xg, yg, a, b, xq, yq, r, s, n/*h*/);
+                                                 xg, yg, a, b, xq, yq, r, s, n/*h*/, &async_args);
 
     return ret;
 }
@@ -470,9 +475,11 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt_test(void)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint8_t             out_m[256];
+    pd_capri_barco_asym_async_args_t async_args = {0};
+    async_args.async_en = false;
 
     ret = capri_barco_asym_rsa2k_crt_decrypt(-1, rsa_p, rsa_q, rsa_dp,
-            rsa_dq, rsa_qinv, out_c, out_m);
+                                             rsa_dq, rsa_qinv, out_c, out_m, &async_args);
 
     return ret;
 }
@@ -481,9 +488,11 @@ uint8_t             out_s[256];
 hal_ret_t capri_barco_asym_rsa2k_sig_gen_test(void)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_capri_barco_asym_async_args_t async_args = {0};
+    async_args.async_en = false;
 
     ret = capri_barco_asym_rsa2k_sig_gen(-1, modulo_n, rsa_d,
-            m /* h */, out_s);
+                                         m /* h */, out_s, &async_args);
 
     return ret;
 }

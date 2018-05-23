@@ -191,7 +191,8 @@ pd_capri_barco_asym_ecdsa_p256_sig_gen (pd_capri_barco_asym_ecdsa_p256_sig_gen_a
                                                args->k,
                                                args->h,
                                                args->r,
-                                               args->s);
+                                               args->s,
+                                               &args->async_args);
 }
 
 hal_ret_t
@@ -207,7 +208,8 @@ pd_capri_barco_asym_ecdsa_p256_sig_verify (pd_capri_barco_asym_ecdsa_p256_sig_ve
                                                   args->yq,
                                                   args->r,
                                                   args->s,
-                                                  args->h);
+                                                  args->h,
+                                                  &args->async_args);
 }
 
 hal_ret_t
@@ -239,7 +241,8 @@ pd_capri_barco_asym_rsa2k_crt_decrypt (pd_capri_barco_asym_rsa2k_crt_decrypt_arg
                                               args->dq,
                                               args->qinv,
                                               args->c,
-                                              args->m);
+                                              args->m,
+                                              &args->async_args);
 }
 
 hal_ret_t
@@ -268,7 +271,8 @@ pd_capri_barco_asym_rsa2k_sig_gen (pd_capri_barco_asym_rsa2k_sig_gen_args_t *arg
                                           args->n, 
                                           args->d,
                                           args->h,
-                                          args->s);
+                                          args->s,
+                                          &args->async_args);
 }
 
 hal_ret_t

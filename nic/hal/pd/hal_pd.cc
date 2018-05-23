@@ -948,8 +948,9 @@ cleanup:
 
 extern "C" int
 pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
-        uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *da,
-        uint8_t *k, uint8_t *h, uint8_t *r, uint8_t *s)
+                               uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *da,
+                               uint8_t *k, uint8_t *h, uint8_t *r, uint8_t *s,
+                               bool async, const uint8_t *unique_key)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t args = {0};
@@ -966,6 +967,8 @@ pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
     args.h = h;
     args.r = r;
     args.s = s;
+    args.async_args.async_en = async;
+    args.async_args.unique_key = unique_key;
 
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, (void *)&args);
     if(ret != HAL_RET_OK) {
@@ -976,8 +979,9 @@ pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
 
 extern "C" int
 pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
-        uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
-        uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h)
+                                   uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
+                                   uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h,
+                                   bool async, const uint8_t *unique_key)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t args = {0};
@@ -993,6 +997,8 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     args.r = r;
     args.s = s;
     args.h = h;
+    args.async_args.async_en = async;
+    args.async_args.unique_key = unique_key;
 
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, (void*)&args);
     if (ret != HAL_RET_OK) {
@@ -1023,7 +1029,8 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
 
 extern "C" int
 pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
-                          uint8_t *h,  uint8_t *s)
+                          uint8_t *h,  uint8_t *s,
+                          bool async, const uint8_t *unique_key)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_rsa2k_sig_gen_args_t args = {0};
@@ -1032,6 +1039,8 @@ pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
     args.d = d;
     args.h = h;
     args.s = s;
+    args.async_args.async_en = async;
+    args.async_args.unique_key = unique_key;
 
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, (void*)&args);
     if (ret != HAL_RET_OK) {
@@ -1042,7 +1051,8 @@ pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
 
 extern "C" int
 pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *dp,
-                              uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m)
+                              uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m,
+                              bool async, const uint8_t *unique_key)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_rsa2k_crt_decrypt_args_t args = {0};
@@ -1054,6 +1064,8 @@ pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *
     args.qinv = qinv;
     args.c = c;
     args.m = m;
+    args.async_args.async_en = async;
+    args.async_args.unique_key = unique_key;
 
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, (void*)&args);
     if (ret != HAL_RET_OK) {

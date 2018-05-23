@@ -114,6 +114,8 @@ hal_ret_t crypto_asym_api_ecdsa_sig_gen(cryptoapis::CryptoApiRequest &req,
             args.h = (uint8_t *)req.ecdsa_sig_gen_fp().h().data();
             args.r = r;
             args.s = s;
+            args.async_args.async_en = req.ecdsa_sig_gen_fp().async_en();
+
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, (void *)&args);
             if (ret == HAL_RET_OK) {
                 resp->mutable_ecdsa_sig_gen_fp()->mutable_r()->assign(
@@ -158,6 +160,7 @@ hal_ret_t crypto_asym_api_ecdsa_sig_verify(cryptoapis::CryptoApiRequest &req,
             args.r = (uint8_t *)req.ecdsa_sig_verify_fp().r().data();
             args.s = (uint8_t *)req.ecdsa_sig_verify_fp().s().data();
             args.h = (uint8_t *)req.ecdsa_sig_verify_fp().h().data();
+            args.async_args.async_en = (uint8_t *)req.ecdsa_sig_verify_fp().async_en();
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, (void *)&args);
             break;
         default:
@@ -267,6 +270,7 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
             args.qinv = (uint8_t *)req.rsa_crt_decrypt().qinv().data();
             args.c = (uint8_t *)req.rsa_crt_decrypt().cipher_text().data();
             args.m = plain_text;
+            args.async_args.async_en = req.rsa_crt_decrypt().async_en();
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, (void *)&args);
             break;
         default:
@@ -588,6 +592,7 @@ hal_ret_t crypto_asym_api_rsa_sig_gen(cryptoapis::CryptoApiRequest &req,
             args.d = (uint8_t *)req.rsa_sig_gen().d().data();
             args.h = (uint8_t *)req.rsa_sig_gen().h().data();
             args.s = s;
+            args.async_args.async_en = req.rsa_sig_gen().async_en();
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, (void *)&args);
             break;
         default:

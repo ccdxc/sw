@@ -503,8 +503,9 @@ cleanup:
 }
 
 hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
-        uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *da,
-        uint8_t *k, uint8_t *h, uint8_t *r, uint8_t *s)
+                                              uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *da,
+                                              uint8_t *k, uint8_t *h, uint8_t *r, uint8_t *s,
+                                              pd_capri_barco_asym_async_args_t *async_args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
@@ -639,10 +640,10 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
         ret = HAL_RET_ERR;
         goto cleanup;
     }
-    /* Poll for completion */
-    while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
-        //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
-    }
+
+    // Wait for operation to be completed
+    capri_barco_wait_for_resp(req_tag, async_args);
+
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr); 
@@ -714,8 +715,9 @@ cleanup:
 }
 
 hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
-        uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
-        uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h)
+                                                 uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
+                                                 uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h,
+                                                 pd_capri_barco_asym_async_args_t *async_args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    ilist_dma_descr_addr = 0;
@@ -947,10 +949,10 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         ret = HAL_RET_ERR;
         goto cleanup;
     }
-    /* Poll for completion */
-    while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
-        //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
-    }
+
+    // Wait for operation to be completed
+    capri_barco_wait_for_resp(req_tag, async_args);
+
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr); 
@@ -1992,7 +1994,8 @@ cleanup:
 }
 
 hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *dp,
-                                             uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m)
+                                             uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m,
+                                             pd_capri_barco_asym_async_args_t *async_args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
@@ -2121,10 +2124,9 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         ret = HAL_RET_ERR;
         goto cleanup;
     }
-    /* Poll for completion */
-    while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
-        //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
-    }
+    // Wait for operation to be completed
+    capri_barco_wait_for_resp(req_tag, async_args);
+    
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr); 
@@ -2191,7 +2193,8 @@ cleanup:
 }
 
 hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
-        uint8_t *h, uint8_t *s)
+                                         uint8_t *h, uint8_t *s,
+                                         pd_capri_barco_asym_async_args_t *async_args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
@@ -2316,10 +2319,10 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
         ret = HAL_RET_ERR;
         goto cleanup;
     }
-    /* Poll for completion */
-    while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
-        //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
-    }
+
+    // Wait for operation to be completed
+    capri_barco_wait_for_resp(req_tag, async_args);
+    
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr); 

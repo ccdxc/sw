@@ -151,6 +151,7 @@ def ecdsa_p256_sig_gen(key_idx, p, n, a, b, gx, gy, da, k, h):
     req_spec.ecdsa_sig_gen_fp.da = da
     req_spec.ecdsa_sig_gen_fp.k = k
     req_spec.ecdsa_sig_gen_fp.h = h
+    req_spec.ecdsa_sig_gen_fp.async_en = False
 
     print("Invoking CryptoAPI: ECDSA Signature Generate P-256");
     resp_msg = stub.CryptoApiInvoke(req_msg)
@@ -216,6 +217,7 @@ def ecdsa_p256_sig_verify(p, n, a, b, gx, gy, qx, qy, r, s, h):
     req_spec.ecdsa_sig_verify_fp.r = r
     req_spec.ecdsa_sig_verify_fp.s = s
     req_spec.ecdsa_sig_verify_fp.h = h
+    req_spec.ecdsa_sig_verify_fp.async_en = False
 
     print("Invoking CryptoAPI: ECDSA Signature Verify P-256");
     resp_msg = stub.CryptoApiInvoke(req_msg)
@@ -762,6 +764,7 @@ def rsa2k_crt_decrypt(key_idx, rsa_p, rsa_q, rsa_dp, rsa_dq, rsa_qinv, cipher_te
     req_spec.rsa_crt_decrypt.dq = rsa_dq
     req_spec.rsa_crt_decrypt.qinv  = rsa_qinv
     req_spec.rsa_crt_decrypt.cipher_text = cipher_text
+    req_spec.rsa_crt_decrypt.async_en = False
 
     print("Invoking CryptoAPI: RSA 2K CRT Decrypt");
     resp_msg = stub.CryptoApiInvoke(req_msg)
@@ -815,6 +818,7 @@ def rsa2k_sig_gen(key_idx, mod_n, d, h):
     req_spec.rsa_sig_gen.mod_n = mod_n
     req_spec.rsa_sig_gen.d = d
     req_spec.rsa_sig_gen.h = h
+    req_spec.rsa_sig_gen.async_en = False
 
     print("Invoking CryptoAPI: RSA 2K Signature Gen");
     resp_msg = stub.CryptoApiInvoke(req_msg)

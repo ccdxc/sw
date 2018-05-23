@@ -2431,6 +2431,7 @@ typedef struct pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s {
     uint8_t *h;
     uint8_t *r;
     uint8_t *s;
+    pd_capri_barco_asym_async_args_t async_args;
 } __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_ecdsa_p256_sig_verify_args_s {
@@ -2445,6 +2446,7 @@ typedef struct pd_capri_barco_asym_ecdsa_p256_sig_verify_args_s {
     uint8_t *r;
     uint8_t *s;
     uint8_t *h;
+    pd_capri_barco_asym_async_args_t async_args;
 } __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_encrypt_args_s {
@@ -2471,6 +2473,7 @@ typedef struct pd_capri_barco_asym_rsa2k_crt_decrypt_args_s {
     uint8_t *qinv;
     uint8_t *c;
     uint8_t *m;
+    pd_capri_barco_asym_async_args_t async_args;
 } __PACK__ pd_capri_barco_asym_rsa2k_crt_decrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_s {
@@ -2494,6 +2497,7 @@ typedef struct pd_capri_barco_asym_rsa2k_sig_gen_args_s {
     uint8_t *d;
     uint8_t *h;
     uint8_t *s;
+    pd_capri_barco_asym_async_args_t async_args;
 } __PACK__ pd_capri_barco_asym_rsa2k_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_sig_verify_args_s {

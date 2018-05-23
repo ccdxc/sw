@@ -222,7 +222,10 @@ ECDSA_SIG *pse_ecdsa_sign_sig(const unsigned char *dgst,
                                              bk.data,           // k
                                              bh.data,           // h,
                                              buf_r,             // r
-                                             buf_s);             // s
+                                             buf_s,             // s
+                                             true,
+                                             (const uint8_t *)engine_pse_id);
+
         INFO("ret : %d", ret);
         if(ret < 0) {
             WARN("ecdsa_sign_gen failed...retrying..");
@@ -428,7 +431,10 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
                                             byq.data,
                                             br.data,
                                             bs.data,
-                                            (uint8_t*)dgst);
+                                            (uint8_t*)dgst,
+                                            true,
+                                            (const uint8_t *)engine_pse_id);
+    
 #else
     ret = 1;
 #endif
