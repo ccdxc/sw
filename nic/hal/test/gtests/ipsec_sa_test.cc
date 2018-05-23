@@ -313,12 +313,14 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+    //uint64_t vrf1_handle = ten_rsp.mutable_vrf_status()->vrf_handle();
 
     ten_spec.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t vrf2_handle = ten_rsp.mutable_vrf_status()->vrf_handle();
 
     // Create network
     nw_spec.set_rmac(0x0000EEFF0002);
@@ -544,9 +546,10 @@ TEST_F(ipsec_encrypt_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ipsec_sa_encrypt_test_spec_dump(enc_get_rsp_msg);
 
-    rule_req.mutable_key_or_handle()->set_rule_handle(1);
-    rule_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    rule_req.mutable_key_or_handle()->set_rule_handle(0);
+    rule_req.mutable_vrf_key_handle()->set_vrf_handle(vrf2_handle);
     rule_req.add_rules();
+    rule_req.mutable_key_or_handle()->mutable_rule_key()->mutable_vrf_key_or_handle()->set_vrf_handle(vrf2_handle);
     rule_req.mutable_rules(0)->set_rule_id(1);
     types::RuleMatch *match_spec = rule_req.mutable_rules(0)->mutable_match();
     //match_spec->mutable_src_address(0)->mutable_address()->set_type(types::IPAddressType::IP_ADDRESS_IPV4_ANY);
@@ -556,12 +559,10 @@ TEST_F(ipsec_encrypt_test, test1)
     v4_range->mutable_low_ipaddr()->set_v4_addr(0x40010000);
     v4_range->mutable_high_ipaddr()->set_v4_addr(0x400100ff);
 
-#if 0
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_rule_create(rule_req, &rule_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-#endif
 
 
     del_enc_req.mutable_key_or_handle()->set_cb_id(1);

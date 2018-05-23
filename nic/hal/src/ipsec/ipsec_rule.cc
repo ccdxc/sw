@@ -88,8 +88,10 @@ ipsec_cfg_pol_rule_spec_extract (ipsec::IpsecRuleSpec& spec, ipsec_cfg_pol_t *po
 
     for (int i = 0; i < spec.rules_size(); i++) {
         if ((ret = ipsec_cfg_rule_spec_handle(
-               spec.rules(i), &pol->rule_list)) != HAL_RET_OK)
+               spec.rules(i), &pol->rule_list)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
             return ret;
+        }
     }
 
     return ret;
@@ -100,8 +102,10 @@ ipsec_cfg_pol_data_spec_extract (ipsec::IpsecRuleSpec& spec, ipsec_cfg_pol_t *po
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if ((ret = ipsec_cfg_pol_rule_spec_extract(spec, pol)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_pol_rule_spec_extract(spec, pol)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     return ret;
 }
@@ -118,12 +122,16 @@ ipsec_cfg_pol_key_spec_extract (ipsec::IpsecRuleSpec& spec, ipsec_cfg_pol_key_t 
         key->vrf_id = spec.key_or_handle().rule_key().
             vrf_key_or_handle().vrf_id();
 
-        if ((vrf = vrf_lookup_by_id(key->vrf_id)) == NULL)
+        if ((vrf = vrf_lookup_by_id(key->vrf_id)) == NULL) {
+        HAL_TRACE_DEBUG("Failed here");
             return  HAL_RET_VRF_NOT_FOUND;
+        }
     } else {
         if ((vrf = vrf_lookup_by_handle(spec.key_or_handle().rule_key().
-                vrf_key_or_handle().vrf_handle())) == NULL)
+                vrf_key_or_handle().vrf_handle())) == NULL) {
+        HAL_TRACE_DEBUG("Failed here");
             return HAL_RET_VRF_NOT_FOUND;
+         }
 
         key->vrf_id = vrf->vrf_id;
     }
@@ -135,11 +143,15 @@ ipsec_cfg_pol_spec_extract (ipsec::IpsecRuleSpec& spec, ipsec_cfg_pol_t *pol)
 {
     hal_ret_t ret;
 
-    if ((ret = ipsec_cfg_pol_key_spec_extract(spec, &pol->key)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_pol_key_spec_extract(spec, &pol->key)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
-    if ((ret = ipsec_cfg_pol_data_spec_extract(spec, pol)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_pol_data_spec_extract(spec, pol)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     return ret;
 }
@@ -186,8 +198,10 @@ ipsec_cfg_pol_spec_validate (ipsec::IpsecRuleSpec& spec, bool create)
     }
 
     if (create) {
-        if ((ret = validate_ipsec_rule_create(spec)) != HAL_RET_OK)
+        if ((ret = validate_ipsec_rule_create(spec)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
             return ret;
+        }
     }
 
     return HAL_RET_OK;
@@ -229,8 +243,10 @@ ipsec_cfg_pol_alloc_init (void)
 {
     ipsec_cfg_pol_t *pol;
 
-    if ((pol = ipsec_cfg_pol_alloc()) ==  NULL)
+    if ((pol = ipsec_cfg_pol_alloc()) ==  NULL) {
+        HAL_TRACE_DEBUG("Failed here");
         return NULL;
+    }
 
     ipsec_cfg_pol_init(pol);
     return pol;
@@ -252,14 +268,20 @@ ipsec_cfg_pol_create_cfg_handle (ipsec::IpsecRuleSpec& spec,
     hal_ret_t ret = HAL_RET_OK;
     ipsec_cfg_pol_t *pol;
 
-    if ((ret = ipsec_cfg_pol_spec_validate(spec, true)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_pol_spec_validate(spec, true)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
-    if ((pol = ipsec_cfg_pol_alloc_init()) == NULL)
+    if ((pol = ipsec_cfg_pol_alloc_init()) == NULL) {
+        HAL_TRACE_DEBUG("Failed here");
         return HAL_RET_OOM;
+    }
 
-    if ((ret = ipsec_cfg_pol_spec_extract(spec, pol)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_pol_spec_extract(spec, pol)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     *out_pol = pol;
     return HAL_RET_OK;
@@ -278,10 +300,12 @@ ipsec_rule_create (IpsecRuleSpec& spec, IpsecRuleResponse *rsp)
 
     ipsec_cfg_pol_dump(spec);
     if ((ret = ipsec_cfg_pol_create_cfg_handle(spec, &pol)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         goto end;
     }
 
     if ((ret = ipsec_cfg_pol_create_oper_handle(pol)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         goto end;
     }
 
@@ -322,6 +346,7 @@ ipsec_cfg_pol_rule_spec_build (ipsec_cfg_pol_t *pol,
         auto rule_spec = spec->add_rules();
         if ((ret = ipsec_cfg_rule_spec_build(
                rule, rule_spec)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
             return ret;
         }
     }
@@ -342,6 +367,7 @@ ipsec_cfg_pol_spec_build (ipsec_cfg_pol_t *pol,
     spec->mutable_key_or_handle()->set_rule_handle(pol->hal_hdl);
 
     if ((ret = ipsec_cfg_pol_rule_spec_build(pol, spec)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
     }
 
@@ -355,8 +381,10 @@ ipsec_cfg_pol_get_cfg_handle (ipsec_cfg_pol_t *pol,
     hal_ret_t ret = HAL_RET_OK;
     auto spec = response->mutable_spec();
 
-    if ((ret = ipsec_cfg_pol_spec_build(pol, spec)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_pol_spec_build(pol, spec)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     return ret;
 }
@@ -439,10 +467,12 @@ ipsec_rule_get (IpsecRuleGetRequest& req, IpsecRuleGetResponseMsg *rsp)
             auto response = rsp->add_response();
             response->set_api_status(types::API_STATUS_NOT_FOUND);
             HAL_API_STATS_INC(HAL_API_IPSEC_RULE_GET_FAIL);
+        HAL_TRACE_DEBUG("Failed here");
             return HAL_RET_IPSEC_RULE_NOT_FOUND;
         }
         auto response = rsp->add_response();
         if ((ret = ipsec_cfg_pol_get_cfg_handle(pol, response)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
             return ret;
         }
     }
@@ -474,13 +504,17 @@ ipsec_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t *lnode;
     dhl_entry_t *dhl_entry;
 
-    if (!cfg_ctxt || !cfg_ctxt->app_ctxt)
+    if (!cfg_ctxt || !cfg_ctxt->app_ctxt) {
+        HAL_TRACE_DEBUG("Failed here");
         goto end;
+    }
 
     app_ctx = (ipsec_cfg_pol_create_app_ctxt_t *) cfg_ctxt->app_ctxt;
 
-    if ((ret = acl::acl_commit(app_ctx->acl_ctx)) != HAL_RET_OK)
+    if ((ret = acl::acl_commit(app_ctx->acl_ctx)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         goto end;
+    }
 
     acl_deref(app_ctx->acl_ctx);
 
@@ -518,8 +552,10 @@ ipsec_cfg_pol_rule_oper_handle (
         rule = dllist_entry(entry, ipsec_cfg_rule_t, list_ctxt);
         rule->prio = prio++;
         if ((ret = ipsec_cfg_rule_create_oper_handle(
-               rule, app_ctxt->acl_ctx)) != HAL_RET_OK)
+               rule, app_ctxt->acl_ctx)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
             return ret;
+        }
     }
     return ret;
 }
@@ -544,13 +580,17 @@ ipsec_cfg_pol_create_oper_handle (ipsec_cfg_pol_t *pol)
                                          ipsec_cfg_pol_create_commit_cb,
                                          hal_cfg_op_null_cb,
                                          hal_cfg_op_null_cb,
-                                         &hal_hdl)) != HAL_RET_OK)
+                                         &hal_hdl)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     ipsec_cfg_pol_oper_init(pol, hal_hdl);
 
-    if ((ret = ipsec_cfg_pol_rule_oper_handle(pol, &app_ctxt)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_pol_rule_oper_handle(pol, &app_ctxt)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     return HAL_RET_OK;
 }
@@ -637,12 +677,16 @@ ipsec_cfg_rule_data_spec_extract (const ipsec::IpsecRuleMatchSpec& spec,
     hal_ret_t ret = HAL_RET_OK;
 
     if ((ret = rule_match_spec_extract(
-           spec.match(), &rule->match)) != HAL_RET_OK)
+           spec.match(), &rule->match)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     if ((ret = ipsec_cfg_rule_action_spec_extract(
-           spec.sa_action(), &rule->action)) != HAL_RET_OK)
+           spec.sa_action(), &rule->action)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     return ret;
 }
@@ -661,12 +705,16 @@ ipsec_cfg_rule_spec_extract (const ipsec::IpsecRuleMatchSpec& spec, ipsec_cfg_ru
     hal_ret_t ret;
 
     if ((ret = ipsec_cfg_rule_key_spec_extract(
-           spec, &rule->key)) != HAL_RET_OK)
+           spec, &rule->key)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     if ((ret = ipsec_cfg_rule_data_spec_extract(
-           spec, rule)) != HAL_RET_OK)
+           spec, rule)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
    return ret;
 }
@@ -677,11 +725,15 @@ ipsec_cfg_rule_spec_handle (const ipsec::IpsecRuleMatchSpec& spec, dllist_ctxt_t
     hal_ret_t ret;
     ipsec_cfg_rule_t *rule;
 
-    if ((rule = ipsec_cfg_rule_alloc_init()) == NULL)
+    if ((rule = ipsec_cfg_rule_alloc_init()) == NULL) {
+        HAL_TRACE_DEBUG("Failed here");
         return HAL_RET_OOM;
+    }
 
-    if ((ret = ipsec_cfg_rule_spec_extract(spec, rule)) != HAL_RET_OK)
+    if ((ret = ipsec_cfg_rule_spec_extract(spec, rule)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
+    }
 
     ipsec_cfg_rule_db_add(head, rule);
     return ret;
@@ -701,6 +753,7 @@ ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *sp
 
     if ((ret = rule_match_spec_build(
            &rule->match, spec->mutable_match())) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
         return ret;
     }
 
@@ -719,6 +772,7 @@ ipsec_acl_ctx_name (vrf_id_t vrf_id)
     thread_local static char name[ACL_NAMESIZE];
 
     std::snprintf(name, sizeof(name), "ipsec-ipv4-rules:%lu", vrf_id);
+    HAL_TRACE_DEBUG("Acl Name: {}", name);
     return name;
 }
 

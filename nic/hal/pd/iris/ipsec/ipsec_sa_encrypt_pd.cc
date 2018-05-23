@@ -105,14 +105,14 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
    
         ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipsec_sa->sa_id * IPSEC_CB_RING_ENTRY_SIZE));
-        HAL_TRACE_DEBUG("Ring base 0x{:#x} CB Ring Addr 0x{:#x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
+        HAL_TRACE_DEBUG("Ring base {:#x} CB Ring Addr {:#x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
         data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr = htonl((uint32_t)(ipsec_cb_ring_addr & 0xFFFFFFFF));
         data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex = 0;
         data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex = 0;
          
         ipsec_barco_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB_BARCO);
         ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipsec_sa_pd->ipsec_sa->sa_id * IPSEC_BARCO_RING_ENTRY_SIZE));
-        HAL_TRACE_DEBUG("Ring base 0x{:#x} Barco Ring Addr 0x{:#x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
+        HAL_TRACE_DEBUG("Ring base {:#x} Barco Ring Addr {:#x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
         ipsec_barco_ring_addr = htonl(ipsec_barco_ring_addr);
 
         data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = ipsec_barco_ring_addr;
@@ -143,7 +143,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         }
         HAL_TRACE_DEBUG("is_v6 {} is_nat_t {} is_random {} extra_pad {}", ipsec_sa->is_v6, ipsec_sa->is_nat_t, ipsec_sa->is_random, ipsec_sa->extra_pad);
     }
-    HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: 0x{:#x}", hwid); 
+    HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
