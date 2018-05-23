@@ -165,7 +165,9 @@ int pse_rsa_pub_enc(int flen, const unsigned char *from,
     ret = pd_tls_asym_rsa2k_encrypt(bn.data,
                                     be.data,
                                     buf,
-                                    to);
+                                    to,
+                                    true,
+                                    (const uint8_t *)engine_pse_id);
 #else 
     ret = RSA_meth_get_pub_enc(RSA_PKCS1_OpenSSL())(flen, from, to, rsa, padding);
 #endif

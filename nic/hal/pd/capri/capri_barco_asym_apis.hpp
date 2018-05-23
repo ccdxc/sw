@@ -66,7 +66,8 @@ hal_ret_t capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t 
                                                             uint8_t *dq, uint8_t *qinv, int32_t* key_idx);
 
 hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
-        uint8_t *m,  uint8_t *c);
+                                         uint8_t *m,  uint8_t *c,
+                                         pd_capri_barco_asym_async_args_t *async_args);
 
 hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         uint8_t *c,  uint8_t *m);
@@ -79,6 +80,11 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
 
 hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         uint8_t *h, uint8_t *s);
+
+hal_ret_t capri_barco_asym_add_pend_req(uint32_t hw_id, uint32_t sw_id);
+
+hal_ret_t capri_barco_asym_poll_pend_req(uint32_t batch_size,
+                                         uint32_t* id_count, uint32_t *ids);
 
 }    // namespace pd
 }    // namespace hal

@@ -2,11 +2,25 @@
 #define __CAPRI_BARCO_RES_HPP__
 
 #include "sdk/indexer.hpp"
+#include "sdk/list.hpp"
+#include "sdk/slab.hpp"
 
 using sdk::lib::indexer;
+using sdk::lib::dllist_ctxt_t;
+using sdk::lib::slab;
 
 namespace hal {
 namespace pd {
+
+extern slab *g_hal_capri_barco_pend_req_pd_slab;
+extern thread_local dllist_ctxt_t g_pend_req_list;
+
+/* Pending requests to Barco */ 
+typedef struct crypto_pend_req_s {
+    uint32_t                     hw_id;     // hw-id for the req e.g. PI/CI tag
+    uint32_t                     sw_id;     // s/w id: match resp with the req e.g. qid
+    dllist_ctxt_t                list_ctxt; // list context
+} crypto_pend_req_t;
 
 /* Indexer based allocator */
 
@@ -49,6 +63,9 @@ hal_ret_t capri_barco_res_region_size_get(capri_barco_res_type_t region_type,
         uint16_t *region_size);
 hal_ret_t capri_barco_res_obj_count_get(capri_barco_res_type_t region_type,
         uint32_t *obj_count);
+
+hal_ret_t capri_barco_add_pend_req_to_db(uint32_t hw_id, uint32_t sw_id);
+hal_ret_t capri_barco_del_pend_req_from_db(crypto_pend_req_t *req);
 
 }    // namespace pd
 }    // namespace hal

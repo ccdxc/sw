@@ -268,6 +268,31 @@ SSLConnection::get_hs_args(hs_out_args_t& args)
 }
 
 hal_ret_t
+SSLConnection::handle_ssl_async()
+{
+    size_t num_fds = 0;
+    hal::pd::pd_capri_barco_asym_add_pend_req_args_t args = {0};
+
+    HAL_TRACE_DEBUG("SSL: id: {} waiting for async", id);
+
+    if(SSL_get_all_async_fds(ssl, NULL, &num_fds) > 0) {
+        HAL_TRACE_DEBUG("SSL: number of async fds: {}", num_fds);
+        OSSL_ASYNC_FD  fds[num_fds] = {0};
+
+        if(SSL_get_all_async_fds(ssl, fds, &num_fds) > 0) {
+            for(size_t i = 0; i < num_fds; i++) {
+                HAL_TRACE_DEBUG("SSL: id: {} received fd: {}", id, fds[i]);
+                args.hw_id = fds[i];
+                args.sw_id = id;
+                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ,
+                                         (void *) &args);
+            }
+        }
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 SSLConnection::do_handshake()
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -281,13 +306,18 @@ SSLConnection::do_handshake()
 
     err = SSL_do_handshake(ssl);
     ret = handle_ssl_ret(err);
-    if(ret != HAL_RET_OK) {
+    if(ret != HAL_RET_OK && ret != HAL_RET_ASYNC) {
         HAL_TRACE_ERR("SSL: handshake failed for id: {}", id);
         if(helper && helper->get_hs_done_cb()) {
             helper->get_hs_done_cb()(id, oflowid, ret, NULL);
         }
         return ret;
     }
+
+    if (SSL_waiting_for_async(ssl)) {
+        handle_ssl_async();
+    }
+
     transmit_pending_data();
 
     if(SSL_is_init_finished(ssl)){
@@ -348,6 +378,18 @@ SSLConnection::process_nw_data(uint8_t* data, size_t len)
 }
 
 hal_ret_t
+SSLConnection::process_hw_oper_done()
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("SSL: Received oper done for id: {}", id);
+    if((SSL_in_init(ssl) > 0)) {
+        ret = do_handshake();
+    }
+    return ret;
+}
+
+hal_ret_t
 SSLConnection::handle_ssl_ret(int ret)
 {
     if(ret >= 0) {
@@ -360,6 +402,10 @@ SSLConnection::handle_ssl_ret(int ret)
     case SSL_ERROR_ZERO_RETURN:
     case SSL_ERROR_WANT_READ:
         break;
+    
+    case SSL_ERROR_WANT_ASYNC:
+        HAL_TRACE_DEBUG("SSL: async operation in progress");
+        return HAL_RET_ASYNC;
 
     default:
         char buf[256];
@@ -532,11 +578,14 @@ SSLHelper::init_ssl_ctxt()
     client_ctx =  SSL_CTX_new(TLS_client_method());
     HAL_ASSERT(client_ctx != NULL);
     SSL_CTX_set_info_callback(client_ctx, ssl_info_callback);
+    SSL_CTX_set_mode(client_ctx, SSL_MODE_ASYNC);
 
     // Server
     server_ctx = SSL_CTX_new(TLS_server_method());
     HAL_ASSERT(server_ctx != NULL);
     SSL_CTX_set_info_callback(server_ctx, ssl_info_callback);
+    SSL_CTX_set_mode(server_ctx, SSL_MODE_ASYNC);
+
     return HAL_RET_OK;
 }
 
@@ -569,6 +618,12 @@ hal_ret_t
 SSLHelper::process_nw_data(conn_id_t id, uint8_t* data, size_t len)
 {
     return conn[id].process_nw_data(data, len);
+}
+
+hal_ret_t
+SSLHelper::process_hw_oper_done(conn_id_t id)
+{
+    return conn[id].process_hw_oper_done();
 }
 
 } // namespace tls

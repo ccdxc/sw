@@ -57,7 +57,8 @@ public:
     hal_ret_t   terminate();
     hal_ret_t   do_handshake();
     hal_ret_t   process_nw_data(uint8_t* data, size_t len);
-    
+    hal_ret_t   process_hw_oper_done(void);
+
     conn_id_t   get_id() const {return id;};
     conn_id_t   get_oflowid() const {return oflowid;};
     void        set_oflowid(conn_id_t oflowid_) {oflowid = oflowid_; };
@@ -69,6 +70,7 @@ public:
                            const void* buf, size_t len, SSL* ssl, void *arg);
 private:
     hal_ret_t       handle_ssl_ret(int ret);
+    hal_ret_t       handle_ssl_async();
     hal_ret_t       transmit_pending_data();
     void            get_hs_args(hs_out_args_t& args);
     hal_ret_t       load_certs_key(const hal::tls_proxy_flow_info_t *tls_flow_cfg) const;
@@ -104,6 +106,7 @@ public:
     hal_ret_t init(void);
     hal_ret_t start_connection(const ssl_conn_args_t &args);
     hal_ret_t process_nw_data(conn_id_t id, uint8_t* data, size_t len);
+    hal_ret_t process_hw_oper_done(conn_id_t id);
 
     void set_send_cb(nw_send_cb cb) {send_cb = cb;};
     nw_send_cb get_send_cb(void){return send_cb;};

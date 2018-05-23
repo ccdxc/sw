@@ -1,4 +1,5 @@
 #include "nic/include/base.h"
+#include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 
 namespace hal {
@@ -448,8 +449,9 @@ uint8_t             out_c[256];
 hal_ret_t capri_barco_asym_rsa2k_encrypt_test(void)
 {
     hal_ret_t           ret = HAL_RET_OK;
-
-    ret = capri_barco_asym_rsa2k_encrypt(modulo_n, e, m, out_c);
+    pd_capri_barco_asym_async_args_t async_args = {0};
+    async_args.async_en = false;
+    ret = capri_barco_asym_rsa2k_encrypt(modulo_n, e, m, out_c, &async_args);
 
     return ret;
 }

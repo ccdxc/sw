@@ -7,9 +7,8 @@
 /* OpenSSL includes */
 
 /* pse engine id declarations */
-static const char *engine_pse_id = "pse";
-static const char *engine_pse_name = 
-    "Pensando TLS/SSL offload engine";
+const char *engine_pse_id = "pse";
+const char *engine_pse_name = "Pensando TLS/SSL offload engine";
 
 static EVP_PKEY* pse_load_privkey(ENGINE* engine, const char *key_id,
                                   UI_METHOD *ui_method, void *callback_data)
@@ -22,6 +21,7 @@ static EVP_PKEY* pse_load_privkey(ENGINE* engine, const char *key_id,
         WARN("No key found");
         return NULL;
     }
+
     switch(key->type) {
     case EVP_PKEY_RSA:
         pkey = pse_rsa_get_evp_key(engine, key, ui_method, callback_data);

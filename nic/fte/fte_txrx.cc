@@ -11,6 +11,7 @@
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
 namespace fte {
 
@@ -51,6 +52,7 @@ private:
 
     void process_arq();
     void process_softq();
+    void process_tls_pendq();
     void ctx_mem_init();
 };
 
@@ -314,6 +316,7 @@ void inst_t::start()
         ctx_mem_init();
         process_arq();
         process_softq();
+        process_tls_pendq();
     }
 }
 
@@ -436,6 +439,13 @@ void inst_t::process_arq()
     } while(false);
 
     hal::hal_cfg_db_close();
+}
+//------------------------------------------------------------------------------
+// Process a pkt from TLS asym pending request queue
+//------------------------------------------------------------------------------
+void inst_t::process_tls_pendq()
+{
+    hal::proxy::tls_poll_asym_pend_req_q();
 }
 
 } //   namespace fte

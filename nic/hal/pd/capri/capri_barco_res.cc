@@ -1,9 +1,13 @@
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 
 namespace hal {
 namespace pd {
+
+slab *g_hal_capri_barco_pend_req_pd_slab = NULL;
+thread_local dllist_ctxt_t g_pend_req_list;
 
 capri_barco_resources_t capri_barco_resources[] = {
     /* 0 - CRYPTO_BARCO_RES_ASYM_DMA_DESCR */
@@ -208,6 +212,16 @@ hal_ret_t capri_barco_res_allocator_init(void)
     uint32_t                region_size = 0;
     indexer                 *barco_indexers[CRYPTO_BARCO_RES_MAX];
 
+    // slab
+    if(!g_hal_capri_barco_pend_req_pd_slab) {
+        g_hal_capri_barco_pend_req_pd_slab = 
+            slab::factory("CRYPTO PEND-REQ PD", HAL_SLAB_CRYPTO_PEND_REQ_PD,
+                          sizeof(hal::pd::crypto_pend_req_t), 128,
+                          true, true, true);
+        HAL_ASSERT_RETURN(g_hal_capri_barco_pend_req_pd_slab != NULL, HAL_RET_OOM);
+    }
+    dllist_init(&g_pend_req_list);
+    
     barco_indexers[CRYPTO_BARCO_RES_ASYM_DMA_DESCR] =
         sdk::lib::indexer::factory(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
     HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_ASYM_DMA_DESCR] != NULL,
@@ -313,8 +327,35 @@ hal_ret_t capri_barco_res_get_by_id(capri_barco_res_type_t region_type,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+capri_barco_add_pend_req_to_db(uint32_t hw_id, uint32_t sw_id)
+{
+    crypto_pend_req_t* req = 
+        (crypto_pend_req_t *)g_hal_capri_barco_pend_req_pd_slab->alloc();
+    if(!req) {
+        HAL_TRACE_ERR("Failed to allocate the req");
+        return HAL_RET_OOM;
+    }
 
+    req->hw_id = hw_id;
+    req->sw_id = sw_id;
+    dllist_init(&req->list_ctxt);
+    
+    dllist_add_tail(&g_pend_req_list, &req->list_ctxt);
+    return HAL_RET_OK;
+}
 
+hal_ret_t 
+capri_barco_del_pend_req_from_db(crypto_pend_req_t *req) 
+{
+    if(!req) {
+        return HAL_RET_OK;
+    }
+    
+    dllist_del(&req->list_ctxt);
+    g_hal_capri_barco_pend_req_pd_slab->free(req);
+    return HAL_RET_OK;
+}
 
 } // namespace pd
 

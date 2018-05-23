@@ -363,5 +363,11 @@ tls_api_data_receive(uint32_t qid, uint8_t* data, size_t len)
     return g_ssl_helper.process_nw_data(qid, data, len);
 }
 
+hal_ret_t
+tls_api_process_hw_oper_done(uint32_t qid) 
+{
+    return g_ssl_helper.process_hw_oper_done(qid);
+}
+
 } // namespace tls
 } // namespace hal

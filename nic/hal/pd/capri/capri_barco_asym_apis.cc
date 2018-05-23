@@ -5,9 +5,77 @@
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/src/internal/crypto_keys.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
+#include <openssl/async.h>
 
 namespace hal {
 namespace pd {
+
+hal_ret_t
+capri_barco_asym_poll_pend_req(uint32_t batch_size, uint32_t* id_count, uint32_t *ids) 
+{
+    dllist_ctxt_t          *entry = NULL;
+    crypto_pend_req_t      *req = NULL;
+
+    *id_count = 0;
+
+    if(dllist_empty(&g_pend_req_list)) {
+        return HAL_RET_OK;
+    }
+
+    dllist_for_each(entry, &g_pend_req_list) {
+        req = dllist_entry(entry, crypto_pend_req_t, list_ctxt);
+        HAL_TRACE_DEBUG("Checking status for req: {}", req->hw_id);
+        if(capri_barco_ring_poll(types::BARCO_RING_ASYM, req->hw_id) != TRUE) {
+            return HAL_RET_OK;
+        }
+        ids[*id_count] = req->sw_id;
+        HAL_TRACE_DEBUG("Request completed for count: {} hw-id: {} sw-id: {} id: {}", 
+                        *id_count, req->hw_id, req->sw_id, ids[*id_count]);
+        capri_barco_del_pend_req_from_db(req);
+        if(++(*id_count) >= batch_size)
+            break;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+capri_barco_asym_add_pend_req(uint32_t hw_id, uint32_t sw_id)
+{
+    return capri_barco_add_pend_req_to_db(hw_id, sw_id);
+}
+
+void 
+capri_barco_wait_for_resp(uint32_t req_tag, pd_capri_barco_asym_async_args_t *async_args) 
+{
+    ASYNC_JOB           *job = NULL;
+    ASYNC_WAIT_CTX      *wait_ctx = NULL;
+    OSSL_ASYNC_FD       hw_id;
+
+    if(async_args->async_en && ((job = ASYNC_get_current_job()) != NULL)) {
+        HAL_TRACE_DEBUG("Async: Pausing existing job to wait for resp..");
+        if((wait_ctx = ASYNC_get_wait_ctx(job)) == NULL) {
+            HAL_TRACE_ERR("Failed to get wait_ctx");
+            return;
+        }
+
+        hw_id = req_tag;
+        if(ASYNC_WAIT_CTX_set_wait_fd(wait_ctx, async_args->unique_key,
+                                      hw_id, NULL, NULL) == 0) {
+            HAL_TRACE_ERR("Failed to set fd to wait_ctx");
+            return;
+        }
+
+        ASYNC_pause_job();
+        HAL_TRACE_DEBUG("Async: Job resumed..");
+    } else {
+        HAL_TRACE_DEBUG("Poll: Waiting for resp");
+        /* Poll for completion */
+        while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
+            //HAL_TRACE_DEBUG("Waiting for Barco completion...");
+        }
+    }
+    return;
+}
 
 hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *x1, uint8_t *y1,
@@ -1083,7 +1151,8 @@ cleanup:
 }
 
 hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
-        uint8_t *m,  uint8_t *c)
+                                         uint8_t *m,  uint8_t *c,
+                                         pd_capri_barco_asym_async_args_t *async_args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
@@ -1104,6 +1173,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"n", (char *)n, 256);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"e", (char *)e, 256);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"m", (char *)m, 256);
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "async: {}", async_args->async_en);
 
     /* Setup params in the key memory */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -1277,10 +1347,10 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         ret = HAL_RET_ERR;
         goto cleanup;
     }
-    /* Poll for completion */
-    while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
-        //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
-    }
+
+    // Wait for operation to be completed
+    capri_barco_wait_for_resp(req_tag, async_args);
+
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr); 

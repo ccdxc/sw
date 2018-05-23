@@ -358,6 +358,8 @@ PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_sig_gen);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_sig_verify);
+PD_FUNC_STUB(pd_capri_barco_asym_add_pend_req);
+PD_FUNC_STUB(pd_capri_barco_asym_poll_pend_req);
 PD_FUNC_STUB(pd_capri_barco_sym_hash_process_request);
 
 // clock

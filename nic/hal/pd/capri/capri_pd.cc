@@ -134,6 +134,21 @@ pd_capri_barco_ring_meta_get (pd_capri_barco_ring_meta_get_args_t *args)
 }
 
 hal_ret_t
+pd_capri_barco_asym_add_pend_req(pd_capri_barco_asym_add_pend_req_args_t *args)
+{
+    return capri_barco_asym_add_pend_req(args->hw_id,
+                                         args->sw_id);
+}
+
+hal_ret_t
+pd_capri_barco_asym_poll_pend_req(pd_capri_barco_asym_poll_pend_req_args_t *args) 
+{
+    return capri_barco_asym_poll_pend_req(args->batch_size,
+                                          args->id_count,
+                                          args->ids);
+}
+
+hal_ret_t
 pd_capri_barco_asym_ecc_point_mul_p256 (pd_capri_barco_asym_ecc_point_mul_p256_args_t *args)
 {
     return capri_barco_asym_ecc_point_mul_p256(args->p, 
@@ -201,7 +216,8 @@ pd_capri_barco_asym_rsa2k_encrypt (pd_capri_barco_asym_rsa2k_encrypt_args_t *arg
     return capri_barco_asym_rsa2k_encrypt(args->n,
                                           args->e,
                                           args->m,
-                                          args->c);
+                                          args->c,
+                                          &args->async_args);
 }
 
 hal_ret_t

@@ -2378,6 +2378,21 @@ typedef struct pd_capri_barco_ring_meta_get_args_s {
 } __PACK__ pd_capri_barco_ring_meta_get_args_t;
 
 // crypto
+typedef struct pd_capri_barco_asym_async_args_s {
+    bool async_en;       
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
+} pd_capri_barco_asym_async_args_t;
+
+typedef struct pd_capri_barco_asym_add_pend_req_args_s {
+    uint32_t hw_id;
+    uint32_t sw_id;
+} pd_capri_barco_asym_add_pend_req_args_t;
+typedef struct pd_capri_barco_asym_poll_pend_req_args_s {
+    uint32_t batch_size;
+    uint32_t *id_count;
+    uint32_t *ids;
+} __PACK__ pd_capri_barco_asym_poll_pend_req_args_t;
+
 typedef struct pd_capri_barco_asym_ecc_point_mul_p256_args_s {
     uint8_t *p;
     uint8_t *n;
@@ -2437,6 +2452,7 @@ typedef struct pd_capri_barco_asym_rsa2k_encrypt_args_s {
     uint8_t *e;
     uint8_t *m;
     uint8_t *c;
+    pd_capri_barco_asym_async_args_t async_args;
 } __PACK__ pd_capri_barco_asym_rsa2k_encrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_decrypt_args_s {
@@ -2834,7 +2850,9 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_NWSEC_PROF_GET,           244, "PD_FUNC_ID_NWSEC_PROF_GET")\
     ENTRY(PD_FUNC_ID_IF_RESTORE,               245, "PD_FUNC_ID_IF_RESTORE") \
     ENTRY(PD_FUNC_ID_EP_RESTORE,               246, "PD_FUNC_ID_EP_RESTORE")\
-    ENTRY(PD_FUNC_ID_MAX,                      247, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ,  247, "PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ") \
+    ENTRY(PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, 248, "PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ") \
+    ENTRY(PD_FUNC_ID_MAX,                      249, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3187,6 +3205,8 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_gen);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_verify);
 PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_add_pend_req);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_poll_pend_req);
 
 // gft exact match profile apis
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_create, pd_gft_exact_match_profile);
@@ -3558,6 +3578,8 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_sig_gen);
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_sig_verify);
         PD_UNION_FIELD(pd_capri_barco_sym_hash_process_request);
+        PD_UNION_FIELD(pd_capri_barco_asym_add_pend_req);
+        PD_UNION_FIELD(pd_capri_barco_asym_poll_pend_req);
 
         // gft APIs
         PD_UNION_FIELD(pd_gft_exact_match_profile_create);

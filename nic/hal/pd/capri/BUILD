@@ -83,6 +83,7 @@ cc_library(
                "//nic:google_includes",
                "//nic:grpc_includes",
                "//nic/hal/periodic:periodic",
+               "//nic:openssl",
                "//nic/hal/pd/asicpd:asicpd",
                "@sdk//obj:sdk_csrlite",
            ] + capri_util_deps +

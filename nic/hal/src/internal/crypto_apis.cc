@@ -191,7 +191,9 @@ hal_ret_t crypto_asym_api_rsa_encrypt(cryptoapis::CryptoApiRequest &req,
             args.e = (uint8_t *)req.rsa_encrypt().e().data();
             args.m = (uint8_t *)req.rsa_encrypt().plain_text().data();
             args.c = cipher_text;
-            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, (void *)&args);
+            args.async_args.async_en = req.rsa_encrypt().async_en();
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT,
+                                  (void *)&args);
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);

@@ -30,6 +30,8 @@ hal_ret_t tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp);
 void tcp_ring_doorbell(uint32_t qid);
 
 void quiesce_message_tx(void);
+hal_ret_t tls_poll_asym_pend_req_q(void);
+
 } // namespace proxy
 } // namespace hal
 

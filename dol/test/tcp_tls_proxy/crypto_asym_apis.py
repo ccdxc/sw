@@ -661,7 +661,8 @@ def rsa2k_encrypt(mod_n, e, plain_text):
     req_spec.rsa_encrypt.mod_n = mod_n
     req_spec.rsa_encrypt.e = e
     req_spec.rsa_encrypt.plain_text = plain_text
-
+    req_spec.rsa_encrypt.async_en = False
+    
     print("Invoking CryptoAPI: RSA 2K Encrypt");
     resp_msg = stub.CryptoApiInvoke(req_msg)
 

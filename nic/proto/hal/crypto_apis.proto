@@ -113,6 +113,7 @@ message CryptoAsymApiReqRSAEncrypt {
   bytes                             mod_n               = 2;
   bytes                             e                   = 3;
   bytes                             plain_text          = 4;
+  bool                              async_en            = 5;
 }
 
 message CryptoAsymApiRespRSAEncrypt {

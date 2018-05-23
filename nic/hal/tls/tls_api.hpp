@@ -15,6 +15,7 @@ hal_ret_t tls_api_start_connection(uint32_t enc_qid, uint32_t dec_qid,
                                    bool is_v4_flow, bool is_server_ctxt,
                                    proxy_flow_info_t *pfi);
 hal_ret_t tls_api_data_receive(uint32_t qid, uint8_t* data, size_t len);
+hal_ret_t tls_api_process_hw_oper_done(uint32_t qid);
 
 } // namespace tls
 } // namespace hal

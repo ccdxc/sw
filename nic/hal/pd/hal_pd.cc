@@ -401,7 +401,9 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request)
+    PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ, pd_capri_barco_asym_add_pend_req);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, pd_capri_barco_asym_poll_pend_req);
 
     // hw clock to sw clock conversion api
     PD_SYMBOL_LOAD(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
@@ -784,7 +786,8 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
-
+    PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ, pd_capri_barco_asym_add_pend_req);
+    PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, pd_capri_barco_asym_poll_pend_req);
 
     //clock
     PD_SYMBOL_CALL(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
@@ -999,7 +1002,8 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
 }
 
 extern "C" int
-pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c)
+pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
+                          bool async, const uint8_t *unique_key)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_rsa2k_encrypt_args_t args = {0};
@@ -1007,6 +1011,8 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c)
     args.e = e;
     args.m = m;
     args.c = c;
+    args.async_args.async_en = async;
+    args.async_args.unique_key = unique_key;
 
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, (void*)&args);
     if (ret != HAL_RET_OK) {

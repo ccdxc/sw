@@ -1,4 +1,5 @@
 #include "nic/include/base.h"
+#include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 

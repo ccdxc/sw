@@ -11,4 +11,7 @@
 
 //#define NO_PEN_HW_OFFLOAD
 
+extern const char *engine_pse_id;
+extern const char *engine_pse_name;
+
 #endif /* __E_PSE_H__ */

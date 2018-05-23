@@ -29,10 +29,13 @@ tls_exec(fte::ctx_t& ctx)
 
     // Give the data to SSL/TLS library
     ret = hal::tls::tls_api_data_receive(cpu_rxhdr->qid, data, datalen);
-    if(ret != HAL_RET_OK) {
+    if(ret == HAL_RET_ASYNC) {
+        HAL_TRACE_DEBUG("Async operation in progress. Skipping");
+        return fte::PIPELINE_CONTINUE;
+    } else if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls-proxy: failed to process tls packet: {}", ret);
     }
-
+    
     // get tlscb
     get_req.mutable_key_or_handle()->set_tlscb_id(cpu_rxhdr->qid);
     ret = tlscb_get(get_req, &resp_msg);
@@ -93,6 +96,34 @@ tls_exec(fte::ctx_t& ctx)
 #endif
     }
 	return fte::PIPELINE_CONTINUE;
+}
+
+hal_ret_t 
+tls_poll_asym_pend_req_q(void) 
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    uint32_t       batch_size = 1;
+    uint32_t       qid_count = 0;
+    uint32_t       qid[batch_size] = {0};
+    
+    hal::pd::pd_capri_barco_asym_poll_pend_req_args_t args = {0};
+    args.batch_size = batch_size;
+    args.id_count = &qid_count;
+    args.ids = qid;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, (void *)&args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to poll barco pending queue: {}", ret);
+        return ret;
+    }
+    for(uint32_t i = 0; i < qid_count; i++) {
+        HAL_TRACE_DEBUG("Received status for qid {}", qid[i]);
+        ret = hal::tls::tls_api_process_hw_oper_done(qid[i]);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to process hw operation completion");
+            return ret;
+        }
+    }
+    return ret;
 }
 
 } // namespace hal
