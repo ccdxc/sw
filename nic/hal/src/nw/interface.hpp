@@ -31,6 +31,7 @@ using intf::LifDeleteResponseMsg;
 using intf::LifGetRequestMsg;
 using intf::LifGetResponseMsg;
 using intf::InterfaceSpec;
+using intf::InterfaceStats;
 using intf::InterfaceStatus;
 using intf::InterfaceResponse;
 using kh::InterfaceKeyHandle;

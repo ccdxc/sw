@@ -104,6 +104,7 @@ hal_ret_t pd_app_redir_if_delete(pd_if_delete_args_t *args);
 hal_ret_t pd_app_redir_if_get (pd_if_get_args_t *args);
 hal_ret_t pd_app_redir_if_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_app_redir_if_mem_free(pd_if_mem_free_args_t *args);
+hal_ret_t pd_app_redir_if_restore(pd_if_restore_args_t *args);
 
 hal_ret_t pd_app_redir_if_restore (pd_if_restore_args_t *args);
 }   // namespace pd

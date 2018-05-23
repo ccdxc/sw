@@ -119,11 +119,11 @@ hal_ret_t tnnl_rw_entry_find(pd_tnnl_rw_entry_key_t *tnnl_rw_key, pd_tnnl_rw_ent
 
 // Public APIs
 hal_ret_t tnnl_rw_entry_find_or_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
-                                      uint32_t *tnnl_rw_idx);
+                                      uint32_t *tnnl_rw_idx, bool is_upgrade = false);
 hal_ret_t tnnl_rw_entry_delete(pd_tnnl_rw_entry_key_t *tnnl_rw_key);
 hal_ret_t tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
                               pd_tnnl_rw_entry_info_t *tnnl_rw_info, 
-                              uint32_t *tnnl_rw_idx);
+                              uint32_t *tnnl_rw_idx, bool is_upgrade = false);
 
 }   // namespace pd
 }   // namespace hal

@@ -671,6 +671,14 @@ pd_if_mem_free_args_init (pd_if_mem_free_args_t *args)
     return;
 }
 
+static inline void
+pd_if_restore_args_init (pd_if_restore_args_t *args)
+{
+    args->hal_if = NULL;
+    args->if_status = NULL;
+    return;
+}
+
 // ep
 typedef struct pd_ep_create_args_s {
     vrf_t        *vrf;
@@ -753,8 +761,26 @@ typedef struct pd_ep_make_clone_args_s {
     ep_t *clone;
 } pd_ep_make_clone_args_t;
 
+typedef struct pd_ep_restore_args_s {
+    vrf_t                   *vrf;
+    l2seg_t                 *l2seg;
+    if_t                    *intf;
+    ep_t                    *ep;
+    const EndpointStatus    *ep_status;
+} __PACK__ pd_ep_restore_args_t;
+
+static inline void
+pd_ep_restore_args_init (pd_ep_restore_args_t *args)
+{
+    args->vrf = NULL;
+    args->l2seg = NULL;
+    args->intf = NULL;
+    args->ep = NULL;
+    return;
+}
+
 // session
-typedef struct pd_sessoin_create_args_s {
+typedef struct pd_session_create_args_s {
     vrf_t              *vrf;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
@@ -775,7 +801,7 @@ pd_session_create_args_init (pd_session_create_args_t *args)
     return;
 }
 
-typedef struct pd_sessoin_delete_args_s {
+typedef struct pd_session_delete_args_s {
     vrf_t              *vrf;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
@@ -796,7 +822,7 @@ pd_session_delete_args_init (pd_session_delete_args_t *args)
     return;
 }
 
-typedef struct pd_sessoin_update_args_s {
+typedef struct pd_session_update_args_s {
     vrf_t              *vrf;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
@@ -2807,7 +2833,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_NWSEC_PROF_RESTORE,       243, "PD_FUNC_ID_NWSEC_PROF_RESTORE") \
     ENTRY(PD_FUNC_ID_NWSEC_PROF_GET,           244, "PD_FUNC_ID_NWSEC_PROF_GET")\
     ENTRY(PD_FUNC_ID_IF_RESTORE,               245, "PD_FUNC_ID_IF_RESTORE") \
-    ENTRY(PD_FUNC_ID_MAX,                      246, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_EP_RESTORE,               246, "PD_FUNC_ID_EP_RESTORE")\
+    ENTRY(PD_FUNC_ID_MAX,                      247, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2897,6 +2924,7 @@ PD_FUNCP_TYPEDEF(pd_ep_delete);
 PD_FUNCP_TYPEDEF(pd_ep_mem_free);
 PD_FUNCP_TYPEDEF(pd_ep_make_clone);
 PD_FUNCP_TYPEDEF(pd_ep_get);
+PD_FUNCP_TYPEDEF(pd_ep_restore);
 
 // session calls
 PD_FUNCP_TYPEDEF(pd_session_create);
@@ -3268,6 +3296,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_ep_mem_free);
         PD_UNION_FIELD(pd_ep_make_clone);
         PD_UNION_FIELD(pd_ep_get);
+        PD_UNION_FIELD(pd_ep_restore);
 
         // session calls
         PD_UNION_FIELD(pd_session_create);

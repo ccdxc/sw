@@ -8,6 +8,7 @@
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nw/nw.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
+#include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
 
@@ -58,8 +59,8 @@ hal_obj_meta_init (void)
                          nwsec_prof_restore_cb);
     g_obj_meta[HAL_OBJ_ID_ENDPOINT] =
         new hal_obj_meta(HAL_SLAB_EP,
-                         hal_default_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         ep_store_cb,
+                         ep_restore_cb);
     g_obj_meta[HAL_OBJ_ID_SESSION] =
         new hal_obj_meta(HAL_SLAB_SESSION,
                          hal_default_marshall_cb,

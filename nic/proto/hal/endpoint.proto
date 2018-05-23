@@ -63,7 +63,8 @@ message EndpointIpAddress {
   bool                   learn_source_arp    = 3;    // TRUE if learnt via ARP/GARP
   bool                   learn_source_rarp   = 4;    // TRUE if learnt via RARP
   bool                   learn_source_config = 5;    // TRUE if learnt via configuration
-  eplearn.EplearnStatus  learn_status        = 6;   // ep learning status
+  eplearn.EplearnStatus  learn_status        = 6;    // ep learning status
+  uint32                 ipsg_tbl_idx        = 7;    // ipsg tbl index             
 };
 
 message EndpointStatusEpd {

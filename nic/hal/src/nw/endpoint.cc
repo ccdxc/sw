@@ -595,20 +595,10 @@ end:
 // 3. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
-endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+endpoint_create_abort_cleanup (ep_t *ep, hal_handle_t hal_handle)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
     pd::pd_ep_delete_args_t         pd_ep_args = { 0 };
-    dllist_ctxt_t                   *lnode = NULL;
-    dhl_entry_t                     *dhl_entry = NULL;
-    ep_t                            *ep = NULL;
-    hal_handle_t                    hal_handle = 0;
-
-    HAL_ASSERT(cfg_ctxt != NULL);
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    ep = (ep_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
+    hal_ret_t                       ret = HAL_RET_OK;           
 
     HAL_TRACE_DEBUG("EP create abort cb");
     if (ep->pd) {
@@ -626,6 +616,26 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 3. free PI EP
     // endpoint_cleanup(ep);
 
+    return ret;
+}
+
+hal_ret_t
+endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    dllist_ctxt_t                   *lnode = NULL;
+    dhl_entry_t                     *dhl_entry = NULL;
+    ep_t                            *ep = NULL;
+    hal_handle_t                    hal_handle = 0;
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    ep = (ep_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    ret = endpoint_create_abort_cleanup(ep, hal_handle);
+    
     return ret;
 }
 
@@ -700,6 +710,131 @@ pin_endpoint (ep_t *ep)
 }
 
 //------------------------------------------------------------------------------
+// Initialize EP from Spec
+//------------------------------------------------------------------------------
+hal_ret_t
+ep_init_from_spec (ep_t *ep, const EndpointSpec& spec, bool create)
+{
+    int                             i, num_ips = 0, num_sgs = 0;
+    vrf_id_t                        tid;
+    L2SegmentKeyHandle              l2seg_key_handle;
+    InterfaceKeyHandle              if_key_handle;
+    vrf_t                           *vrf = NULL;
+    l2seg_t                         *l2seg = NULL;
+    if_t                            *hal_if = NULL;
+    ep_l3_entry_t                   **l3_entry = NULL;
+    ep_ip_entry_t                   **ip_entry = NULL;
+    nwsec_group_t                   *nwsec_group = NULL;
+    hal_ret_t                       ret = HAL_RET_OK;
+
+    // Fetch the VRF information
+    tid = spec.vrf_key_handle().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+
+    // Fetch the L2 segment information
+    l2seg_key_handle =
+        spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle();
+    l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
+
+    // Fetch the interface information
+    if_key_handle = spec.endpoint_attrs().interface_key_handle();
+    hal_if = if_lookup_key_or_handle(if_key_handle);
+
+    // Initialize the EP
+    ep->l2_key.l2_segid = l2seg->seg_id;
+    MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
+    HAL_TRACE_DEBUG("L2seg id {}, Mac {} if {}", l2seg->seg_id,
+                    ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)),
+                    hal_if->if_id);
+    ep->l2seg_handle = l2seg->hal_handle;
+    ep->if_handle = hal_if->hal_handle;
+    ep->vrf_handle = vrf->hal_handle;
+    ep->useg_vlan = spec.endpoint_attrs().useg_vlan();
+    ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        ep->ep_flags |= EP_FLAGS_LOCAL;
+        HAL_TRACE_DEBUG("Setting local flag in EP {}", ep->ep_flags);
+    } else {
+        ep->ep_flags |= EP_FLAGS_REMOTE;
+        HAL_TRACE_DEBUG("Setting remote flag in EP {}", ep->ep_flags);
+    }
+
+    // Process Host pinning mode, if enabled.
+    ret = pin_endpoint(ep);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+    // allocate memory for each IP entry in the EP
+    num_ips = spec.endpoint_attrs().ip_address_size();
+    HAL_TRACE_DEBUG("Num IPs in EP {}", num_ips);
+    if (num_ips) {
+        l3_entry = (ep_l3_entry_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP,
+                                                num_ips * sizeof(ep_l3_entry_t *));
+        ip_entry = (ep_ip_entry_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP,
+                                                num_ips * sizeof(ep_ip_entry_t *));
+
+        for (i = 0; i < num_ips; i++) {
+            l3_entry[i] = (ep_l3_entry_t *)g_hal_state->ep_l3_entry_slab()->alloc();
+            if (l3_entry[i] == NULL) {
+                ret = HAL_RET_OOM;
+                goto end;
+            }
+
+            ip_entry[i] = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
+            if (ip_entry[i] == NULL) {
+                ret = HAL_RET_OOM;
+                goto end;
+            }
+        }
+    }
+
+    // handle IP address information, if any
+    // TODO: check if any IPs are already known to us already !!
+    sdk::lib::dllist_reset(&ep->ip_list_head);
+    for (i = 0; i < num_ips; i++) {
+        // add the IP to EP
+        sdk::lib::dllist_reset(&ip_entry[i]->ep_ip_lentry);
+        ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.endpoint_attrs().ip_address(i));
+        ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG;
+        sdk::lib::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
+    }
+
+    if (create) {
+        // Alloc HAL Handle
+        ep->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ENDPOINT);
+        if (ep->hal_handle == HAL_HANDLE_INVALID) {
+            HAL_TRACE_ERR("Failed to alloc handle for EP");
+            ep_cleanup(ep);
+            ret = HAL_RET_HANDLE_INVALID;
+            goto end;
+        }
+    }
+
+    num_sgs = spec.endpoint_attrs().sg_key_handle_size();
+    if (num_sgs) {
+        //To Do:Handle cases where the num_sgs greater that MAX_SG_PER_ARRAY
+        for (i = 0; i < num_sgs; i++) {
+            /* Lookup the SG by handle and then get the SG-id */
+            nwsec_group = nwsec_group_lookup_key_or_handle(spec.endpoint_attrs().sg_key_handle(i));
+            if (!nwsec_group) {
+                ret = HAL_RET_NWSEC_ID_INVALID;
+                goto end;
+            }
+            ep->sgs.arr_sg_id[i] = nwsec_group->sg_id;
+            ep->sgs.sg_id_cnt++;
+            ep->sgs.next_sg_p = NULL;
+            ret = add_ep_to_security_group(nwsec_group->sg_id, ep->hal_handle);
+            HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+        }
+    }
+
+end:
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // process a endpoint create request
 // TODO: check if EP or any of its IPs exists already
 //------------------------------------------------------------------------------
@@ -707,19 +842,15 @@ hal_ret_t
 endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    int                             i, num_ips = 0, num_sgs = 0;
     vrf_id_t                        tid;
     InterfaceKeyHandle              if_key_handle;
     ep_t                            *ep = NULL;
     vrf_t                           *vrf = NULL;
     l2seg_t                         *l2seg = NULL;
     if_t                            *hal_if = NULL;
-    ep_l3_entry_t                   **l3_entry = NULL;
-    ep_ip_entry_t                   **ip_entry = NULL;
     ep_create_app_ctxt_t            app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
-    nwsec_group_t                   *nwsec_group = NULL;
     L2SegmentKeyHandle              l2seg_key_handle;
 
     // dump incoming request
@@ -767,93 +898,10 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     }
 
     // initialize the EP record
-    ep->l2_key.l2_segid = l2seg->seg_id;
-    MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
-    HAL_TRACE_DEBUG("L2seg id {}, Mac {} if {}", l2seg->seg_id,
-                    ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)),
-                    hal_if->if_id);
-    ep->l2seg_handle = l2seg->hal_handle;
-    ep->if_handle = hal_if->hal_handle;
-    ep->vrf_handle = vrf->hal_handle;
-    ep->useg_vlan = spec.endpoint_attrs().useg_vlan();
-    ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
-    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
-        ep->ep_flags |= EP_FLAGS_LOCAL;
-        HAL_TRACE_DEBUG("Setting local flag in EP {}", ep->ep_flags);
-    } else {
-        ep->ep_flags |= EP_FLAGS_REMOTE;
-        HAL_TRACE_DEBUG("Setting remote flag in EP {}", ep->ep_flags);
-    }
-
-    // Process Host pinning mode, if enabled.
-    ret = pin_endpoint(ep);
+    ret = ep_init_from_spec(ep, spec, true);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(hal_prepare_rsp(ret));
         goto end;
-    }
-
-    // allocate memory for each IP entry in the EP
-    num_ips = spec.endpoint_attrs().ip_address_size();
-    HAL_TRACE_DEBUG("Num IPs in EP {}", num_ips);
-    if (num_ips) {
-        l3_entry = (ep_l3_entry_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP,
-                                                num_ips * sizeof(ep_l3_entry_t *));
-        ip_entry = (ep_ip_entry_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP,
-                                                num_ips * sizeof(ep_ip_entry_t *));
-
-        for (i = 0; i < num_ips; i++) {
-            l3_entry[i] = (ep_l3_entry_t *)g_hal_state->ep_l3_entry_slab()->alloc();
-            if (l3_entry[i] == NULL) {
-                ret = HAL_RET_OOM;
-                rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-                goto end;
-            }
-
-            ip_entry[i] = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
-            if (ip_entry[i] == NULL) {
-                ret = HAL_RET_OOM;
-                rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-                goto end;
-            }
-        }
-    }
-
-    // handle IP address information, if any
-    // TODO: check if any IPs are already known to us already !!
-    sdk::lib::dllist_reset(&ep->ip_list_head);
-    for (i = 0; i < num_ips; i++) {
-        // add the IP to EP
-        sdk::lib::dllist_reset(&ip_entry[i]->ep_ip_lentry);
-        ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.endpoint_attrs().ip_address(i));
-        ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG;
-        sdk::lib::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
-    }
-
-    // allocate hal handle id
-    ep->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ENDPOINT);
-    if (ep->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("Failed to alloc handle for EP");
-        ep_cleanup(ep);
-        ret = HAL_RET_HANDLE_INVALID;
-        goto end;
-    }
-
-    num_sgs = spec.endpoint_attrs().sg_key_handle_size();
-    if (num_sgs) {
-        //To Do:Handle cases where the num_sgs greater that MAX_SG_PER_ARRAY
-        for (i = 0; i < num_sgs; i++) {
-            /* Lookup the SG by handle and then get the SG-id */
-            nwsec_group = nwsec_group_lookup_key_or_handle(spec.endpoint_attrs().sg_key_handle(i));
-            if (!nwsec_group) {
-                ret = HAL_RET_NWSEC_ID_INVALID;
-                goto end;
-            }
-            ep->sgs.arr_sg_id[i] = nwsec_group->sg_id;
-            ep->sgs.sg_id_cnt++;
-            ep->sgs.next_sg_p = NULL;
-            ret = add_ep_to_security_group(nwsec_group->sg_id, ep->hal_handle);
-            HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-        }
     }
 
     // form ctxt and call infra add
@@ -2345,6 +2393,219 @@ void
 register_arp_ep_status_callback (arp_status_func_t func)
 {
     arp_status_func = func;
+}
+
+//-----------------------------------------------------------------------------
+// given a endpoint, marshall it for persisting the endpoint state (spec, status, stats)
+//
+// obj points to endpoint object i.e., ep_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
+//-----------------------------------------------------------------------------
+hal_ret_t
+ep_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    EndpointGetResponse     ep_info;
+    uint32_t                serialized_state_sz;
+    ep_t                    *ep = (ep_t *)obj;
+
+    HAL_TRACE_DEBUG("Storing EPs");
+    HAL_ASSERT((ep != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this ep (includes spec, status & stats)
+    ep_to_ep_get_response(ep, &ep_info);
+    serialized_state_sz = ep_info.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall EP {}, not enough room, "
+                      "required size {}, available size {}",
+                      ep_l2_key_to_str(ep), serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (ep_info.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize EP {}", ep_l2_key_to_str(ep));
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled EP {}, len {}",
+                    ep_l2_key_to_str(ep), serialized_state_sz);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize an EP's oper status from its status object
+//------------------------------------------------------------------------------
+static hal_ret_t
+ep_init_from_status (ep_t *ep, const EndpointStatus& status)
+{
+    ep->hal_handle = status.endpoint_handle();
+    if (status.learn_source_config()) {
+        ep->ep_flags |= EP_FLAGS_LEARN_SRC_CFG;
+    }
+    if (status.is_endpoint_local()) {
+        ep->ep_flags |= EP_FLAGS_LOCAL;
+    }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize an EP's oper stats from its stats object
+//------------------------------------------------------------------------------
+static hal_ret_t
+ep_init_from_stats (ep_t *ep, const EndpointStats& stats)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// ep's restore add PD
+//------------------------------------------------------------------------------
+static hal_ret_t
+ep_restore_add (ep_t *ep, vrf_t *vrf,
+                l2seg_t *l2seg, if_t *hal_if,
+                const EndpointGetResponse& ep_info)
+{
+    hal_ret_t                    ret;
+    pd::pd_ep_restore_args_t    pd_ep_args = { 0 };
+
+    // restore pd state
+    pd::pd_ep_restore_args_init(&pd_ep_args);
+    pd_ep_args.ep = ep;
+    pd_ep_args.vrf = vrf;
+    pd_ep_args.l2seg = l2seg;
+    pd_ep_args.intf = hal_if;
+
+    pd_ep_args.ep_status = &ep_info.status();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_RESTORE, &pd_ep_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore EP {} pd, err : {}",
+                       ep_l2_key_to_str(ep), ret);
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+ep_restore_commit (ep_t *ep, vrf_t *vrf,
+                   const EndpointGetResponse& ep_info)
+{
+    dllist_ctxt_t        *ip_lnode    = NULL;
+    ep_ip_entry_t        *pi_ip_entry = NULL;
+    ep_l3_key_t          l3_key       = {0};
+    hal_ret_t            ret          = HAL_RET_OK;
+
+    // add EP to L2 DB
+    ret = ep_add_to_l2_db (ep, ep->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add EP {} to L2 DB, err : {}",
+                      ep_l2_key_to_str(ep), ret);
+        goto end;
+    }
+
+    // add EP to L3 DB
+    dllist_for_each(ip_lnode, &ep->ip_list_head) {
+        pi_ip_entry = dllist_entry(ip_lnode, ep_ip_entry_t, ep_ip_lentry);
+        l3_key.vrf_id = vrf->vrf_id;
+        l3_key.ip_addr = pi_ip_entry->ip_addr;
+        ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, ep->hal_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add EP {} to L3 DB, err : {}",
+                          ep_l2_key_to_str(ep), ret);
+            goto end;
+        }
+        HAL_TRACE_DEBUG("Added EP ({}, {}) to L3 DB",
+                        l3_key.vrf_id, ipaddr2str(&l3_key.ip_addr));
+    }
+
+end:
+
+    return ret;
+}
+
+static hal_ret_t
+ep_restore_abort (ep_t *ep, const EndpointGetResponse& ep_info)
+{
+    HAL_TRACE_ERR("Aborting EP {} restore", ep_l2_key_to_str(ep));
+    endpoint_create_abort_cleanup(ep, ep->hal_handle);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// ep's restore cb.
+//  - restores EP to the PI and PD state before the upgrade
+//------------------------------------------------------------------------------
+uint32_t
+ep_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t               ret;
+    EndpointGetResponse     ep_info;
+    ep_t                    *ep;
+    vrf_id_t                tid;
+    L2SegmentKeyHandle      l2seg_key_handle;
+    InterfaceKeyHandle      if_key_handle;
+    vrf_t                   *vrf = NULL;
+    l2seg_t                 *l2seg = NULL;
+    if_t                    *hal_if = NULL;
+ 
+    HAL_TRACE_DEBUG("Restoring EPs");
+
+    // de-serialize the object
+    if (ep_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized EP obj");
+        HAL_ASSERT(0);
+        return 0;
+    }
+
+    // fetch the vrf information
+    tid = ep_info.spec().vrf_key_handle().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("Failed to find vrf while restoring EP");
+        return HAL_RET_VRF_NOT_FOUND;
+    }
+
+    // fetch the L2 segment information
+    l2seg_key_handle =
+        ep_info.spec().key_or_handle().endpoint_key().l2_key().l2segment_key_handle();
+    l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
+    if (l2seg == NULL) {
+        HAL_TRACE_ERR("Failed to find l2seg while restoring EP");
+        return HAL_RET_L2SEG_NOT_FOUND;
+    }
+
+    // fetch the interface information
+    if_key_handle = ep_info.spec().endpoint_attrs().interface_key_handle();
+    hal_if = if_lookup_key_or_handle(if_key_handle);
+    if (hal_if == NULL) {
+        HAL_TRACE_ERR("Failed to find hal_if while restoring EP");
+        return HAL_RET_IF_NOT_FOUND;
+    }
+
+    // allocate EP obj from slab
+    ep = ep_alloc_init();
+    if (ep == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init EP, err : {}", ret);
+        return 0;
+    }
+
+    ep_init_from_status(ep, ep_info.status());
+    // initialize ep attrs from its spec
+    ep_init_from_spec(ep, ep_info.spec(), false);
+    ep_init_from_stats(ep, ep_info.stats());
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_ENDPOINT, ep->hal_handle, (void *)ep);
+
+    ret = ep_restore_add(ep, vrf, l2seg, hal_if, ep_info);
+    if (ret != HAL_RET_OK) {
+        ep_restore_abort(ep, ep_info);
+    }
+    ep_restore_commit(ep, vrf, ep_info);
+
+    return 0;    // TODO: fix me
 }
 
 }    // namespace hal

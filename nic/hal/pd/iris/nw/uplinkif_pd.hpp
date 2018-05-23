@@ -110,10 +110,10 @@ hal_ret_t uplinkif_pd_deprogram_hw (pd_uplinkif_t *pd_upif);
 hal_ret_t pd_uplinkif_create(pd_if_create_args_t *args);
 hal_ret_t pd_uplinkif_update(pd_if_update_args_t *args);
 hal_ret_t pd_uplinkif_delete(pd_if_delete_args_t *args);
-hal_ret_t pd_uplinkif_get (pd_if_get_args_t *args);
+hal_ret_t pd_uplinkif_get(pd_if_get_args_t *args);
 hal_ret_t pd_uplinkif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_uplinkif_mem_free(pd_if_mem_free_args_t *args);
-hal_ret_t pd_uplinkif_restore (pd_if_restore_args_t *args);
+hal_ret_t pd_uplinkif_restore(pd_if_restore_args_t *args);
 
 }   // namespace pd
 }   // namespace hal

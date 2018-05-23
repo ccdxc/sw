@@ -136,6 +136,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_EP_MEM_FREE, pd_ep_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_EP_MAKE_CLONE, pd_ep_make_clone);
     PD_SYMBOL_LOAD(PD_FUNC_ID_EP_GET, pd_ep_get);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_EP_RESTORE, pd_ep_restore);
 
     // session pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_SESSION_CREATE, pd_session_create);
@@ -518,6 +519,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_EP_MEM_FREE, pd_ep_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_EP_MAKE_CLONE, pd_ep_make_clone);
     PD_SYMBOL_CALL(PD_FUNC_ID_EP_GET, pd_ep_get);
+    PD_SYMBOL_CALL(PD_FUNC_ID_EP_RESTORE, pd_ep_restore);
 
     // session pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_SESSION_CREATE, pd_session_create);

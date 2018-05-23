@@ -95,7 +95,7 @@ end:
 hal_ret_t
 tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
                     pd_tnnl_rw_entry_info_t *tnnl_rw_info, 
-                    uint32_t *tnnl_rw_idx)
+                    uint32_t *tnnl_rw_idx, bool is_upgrade)
 {
     hal_ret_t             ret = HAL_RET_OK;
     uint32_t            tmp_tnnl_rw_idx = 0;
@@ -129,7 +129,7 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
             HAL_TRACE_ERR("Indexer err: {}", rs);
             goto end;
         }
-    } else {
+    } else if (!is_upgrade) {
         rs = g_hal_state_pd->tnnl_rw_tbl_idxr()->alloc(&tmp_tnnl_rw_idx);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("Resource Exhaustion Usage: {} for ",
@@ -137,6 +137,8 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
             tnnl_rw_entry_key_trace(tnnl_rw_key);
             ret = HAL_RET_NO_RESOURCE;
         }
+    } else {
+        tmp_tnnl_rw_idx = *tnnl_rw_idx;
     }
 
     // Insert into hash table
@@ -187,7 +189,9 @@ end:
 //   the indexer.
 //-----------------------------------------------------------------------------
 hal_ret_t
-tnnl_rw_entry_find_or_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, uint32_t *tnnl_rw_idx)
+tnnl_rw_entry_find_or_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
+                            uint32_t *tnnl_rw_idx,
+                            bool is_upgrade)
 {
     hal_ret_t         ret = HAL_RET_OK;
     pd_tnnl_rw_entry_t       *tnnl_rwe = NULL;
@@ -212,7 +216,7 @@ tnnl_rw_entry_find_or_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, uint32_t *tnnl_
         goto end;
     }
     
-    ret = tnnl_rw_entry_alloc(tnnl_rw_key, NULL, tnnl_rw_idx);
+    ret = tnnl_rw_entry_alloc(tnnl_rw_key, NULL, tnnl_rw_idx, is_upgrade);
  end:
     return ret;
 }

@@ -96,6 +96,7 @@ PD_FUNC_STUB(pd_ep_delete);
 PD_FUNC_STUB(pd_ep_mem_free);
 PD_FUNC_STUB(pd_ep_make_clone);
 PD_FUNC_STUB(pd_ep_get);
+PD_FUNC_STUB(pd_ep_restore);
 
 // session calls
 PD_FUNC_STUB(pd_session_create);

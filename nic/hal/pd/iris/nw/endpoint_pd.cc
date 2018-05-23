@@ -47,7 +47,7 @@ pd_ep_create(pd_ep_create_args_t *args)
     ep_link_pi_pd(pd_ep, args->ep);
 
     // Create EP L3 entry PDs
-    ret = ep_pd_alloc_ip_entries(args);
+    ret = ep_pd_alloc_ip_entries(args->ep);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to alloc. ip entries: ep:{}",
                       ep_l2_key_to_str(args->ep));
@@ -148,15 +148,28 @@ pd_ep_get(pd_ep_get_args_t *args)
     ep_t                    *ep = args->ep;
     pd_ep_t                 *ep_pd = (pd_ep_t *)ep->pd;
     EndpointGetResponse     *rsp = args->rsp;
+    dllist_ctxt_t           *lnode = NULL;
+    ep_ip_entry_t           *pi_ip_entry = NULL;
+    int                     i;
 
     auto ep_info = rsp->mutable_status()->mutable_epd_status();
 
     ep_info->set_reg_mac_tbl_idx(ep_pd->reg_mac_tbl_idx);
 
-    for (int i = 0; i < REWRITE_MAX_ID; i++) {
+    for (i = 0; i < REWRITE_MAX_ID; i++) {
         if (ep_pd->rw_tbl_idx[i]) {
             ep_info->add_rw_tbl_idx(ep_pd->rw_tbl_idx[i]);
         }
+    }
+
+    lnode = ep->ip_list_head.next;
+    i = 0;
+    dllist_for_each(lnode, &(ep->ip_list_head)) {
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
+                offsetof(ep_ip_entry_t, ep_ip_lentry));
+        EndpointIpAddress *endpoint_ip_addr = rsp->mutable_status()->mutable_ip_address(i);
+        endpoint_ip_addr->set_ipsg_tbl_idx(pi_ip_entry->pd->ipsg_tbl_idx);
+        i ++;
     }
 
     return ret;
@@ -205,6 +218,78 @@ ep_pd_cleanup(pd_ep_t *ep_pd)
     // Freeing PD
     ep_pd_free(ep_pd);
 end:
+    return ret;
+}
+
+hal_ret_t
+ep_pd_restore_data (pd_ep_restore_args_t *args)
+{
+    ep_t *ep        = args->ep;
+    pd_ep_t *ep_pd  = ep->pd;
+
+    auto ep_status = args->ep_status->epd_status();
+
+    ep_pd->reg_mac_tbl_idx = ep_status.reg_mac_tbl_idx();
+
+    for (int i = 0; i < ep_status.rw_tbl_idx_size(); i++) {
+        ep_pd->rw_tbl_idx[i] = ep_status.rw_tbl_idx(i);
+    }
+
+    return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// EP Restore
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_restore (pd_ep_restore_args_t *args)
+{
+    hal_ret_t           ret = HAL_RET_OK;;
+    pd_ep_t             *pd_ep;
+    mac_addr_t          *mac;
+
+    mac = ep_get_mac_addr(args->ep);
+
+    HAL_TRACE_DEBUG("creating pd state for ep: {}",
+                    ep_l2_key_to_str(args->ep));
+
+    // Create ep PD
+    pd_ep = ep_pd_alloc_init();
+    if (pd_ep == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // Link PI & PD
+    ep_link_pi_pd(pd_ep, args->ep);
+
+    // Restore data
+    ret = ep_pd_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore data for EP: {}:{}",
+                      ep_get_l2segid(args->ep),
+                ether_ntoa((struct ether_addr*)*mac));
+        goto end;
+    }
+
+    // Create EP L3 entry PDs
+    ret = ep_pd_alloc_ip_entries(args->ep);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to alloc. ip entries: ep:{}",
+                      ep_l2_key_to_str(args->ep));
+        goto end;
+    }
+
+    // Program HW
+    ret = ep_pd_program_hw(pd_ep, true);
+
+end:
+    if (ret != HAL_RET_OK) {
+        // unlink_pi_pd(pd_ep, args->ep);
+        // ep_pd_free(pd_ep);
+        ep_pd_cleanup(pd_ep);
+    }
+
     return ret;
 }
 
@@ -310,10 +395,9 @@ end:
 // Allocate and Initialize EP L3 entries
 // ----------------------------------------------------------------------------
 hal_ret_t
-ep_pd_alloc_ip_entries(pd_ep_create_args_t *args)
+ep_pd_alloc_ip_entries(ep_t *pi_ep)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    ep_t            *pi_ep = args->ep;
 
     ret = ep_pd_alloc_pd_ip_entries(&(pi_ep->ip_list_head));
     if (ret != HAL_RET_OK) {
@@ -425,12 +509,12 @@ ep_pd_dealloc_res(pd_ep_t *pd_ep)
 // Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-ep_pd_program_hw(pd_ep_t *pd_ep)
+ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
 {
     hal_ret_t            ret = HAL_RET_OK;
 
     // Program IPSG Table
-    ret = ep_pd_pgm_ipsg_tbl(pd_ep);
+    ret = ep_pd_pgm_ipsg_tbl(pd_ep, is_upgrade);
 
     // Classic mode:
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
@@ -441,7 +525,7 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
 }
 
 hal_ret_t
-ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
+ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list, bool is_upgrade)
 {
     hal_ret_t           ret = HAL_RET_OK;
     dllist_ctxt_t       *lnode = NULL;
@@ -453,7 +537,7 @@ ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
         pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
         pd_ip_entry = pi_ip_entry->pd;
 
-        ret = ep_pd_pgm_ipsg_tble_per_ip(pi_ep->pd, pd_ip_entry);
+        ret = ep_pd_pgm_ipsg_tble_per_ip(pi_ep->pd, pd_ip_entry, is_upgrade);
         if (ret != HAL_RET_OK) {
             goto end;
         }
@@ -468,7 +552,7 @@ end:
 // Program IPSG table for every IP entry
 // ----------------------------------------------------------------------------
 hal_ret_t
-ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep)
+ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep, bool is_upgrade)
 {
     hal_ret_t           ret = HAL_RET_OK;
     // dllist_ctxt_t       *lnode = NULL;
@@ -476,7 +560,7 @@ ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep)
     // ep_ip_entry_t       *pi_ip_entry = NULL;
     // pd_ep_ip_entry_t    *pd_ip_entry = NULL;
 
-    ret = ep_pd_pgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head));
+    ret = ep_pd_pgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head), is_upgrade);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program IPSG entries");
         goto end;
@@ -573,7 +657,7 @@ end:
 // Program IPSG table for IP entry
 // ----------------------------------------------------------------------------
 hal_ret_t
-ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
+ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry, bool is_upgrade)
 {
     hal_ret_t           ret = HAL_RET_OK;
     sdk_ret_t           sdk_ret;
@@ -634,26 +718,31 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     if_l2seg_get_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
             &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
 
-     sdk_ret = ipsg_tbl->insert(&key, &key_mask, &data,
+    if (is_upgrade) {
+        sdk_ret = ipsg_tbl->insert_withid(&key, &key_mask, &data,
+                            pd_ip_entry->ipsg_tbl_idx);
+    } else {
+        sdk_ret = ipsg_tbl->insert(&key, &key_mask, &data,
                             &(pd_ip_entry->ipsg_tbl_idx));
-     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-     if (ret != HAL_RET_OK) {
-         HAL_TRACE_ERR("Unable to program IPSG for: {}",
+    }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program IPSG for: {}",
                        ipaddr2str(&(pi_ip_entry->ip_addr)));
-         goto end;
-     } else {
-         HAL_TRACE_DEBUG("Programmed IPSG for: at: {} "
-                         "(vrf:{}, ip:{}) => "
-                         "act_id:{}, lif:{}, vlan_v:{}, vlan_vid:{}, mac:{}",
-                         pd_ip_entry->ipsg_tbl_idx,
-                         key.flow_lkp_metadata_lkp_vrf,
-                         ipaddr2str(&(pi_ip_entry->ip_addr)),
-                         data.actionid,
-                         data.ipsg_action_u.ipsg_ipsg_hit.src_lif,
-                         data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
-                         data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
-                         macaddr2str(*mac));
-     }
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("Programmed IPSG for: at: {} "
+                        "(vrf:{}, ip:{}) => "
+                        "act_id:{}, lif:{}, vlan_v:{}, vlan_vid:{}, mac:{}",
+                        pd_ip_entry->ipsg_tbl_idx,
+                        key.flow_lkp_metadata_lkp_vrf,
+                        ipaddr2str(&(pi_ip_entry->ip_addr)),
+                        data.actionid,
+                        data.ipsg_action_u.ipsg_ipsg_hit.src_lif,
+                        data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
+                        data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
+                        macaddr2str(*mac));
+    }
 
 end:
     return ret;

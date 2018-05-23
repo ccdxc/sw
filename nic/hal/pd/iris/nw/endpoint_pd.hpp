@@ -125,14 +125,15 @@ hal_ret_t ep_pd_dealloc_res(pd_ep_t *up_ep);
 hal_ret_t ep_pd_cleanup(pd_ep_t *ep_pd);
 
 
-hal_ret_t ep_pd_alloc_ip_entries(pd_ep_create_args_t *args);
-hal_ret_t ep_pd_program_hw(pd_ep_t *up_ep);
+hal_ret_t ep_pd_alloc_ip_entries(ep_t *ep);
+hal_ret_t ep_pd_program_hw(pd_ep_t *up_ep, bool is_upgrade = false);
 void ep_link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep);
 void ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_up_ep);
 // hal_ret_t ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep);
-hal_ret_t ep_pd_pgm_ipsg_tbl(pd_ep_t *pd_ep);
+hal_ret_t ep_pd_pgm_ipsg_tbl(pd_ep_t *pd_ep, bool is_upgrade);
 hal_ret_t ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, 
-                                     pd_ep_ip_entry_t *pd_ip_entry);
+                                     pd_ep_ip_entry_t *pd_ip_entry,
+                                     bool is_upgrade = false);
 uint32_t ep_pd_get_hw_lif_id(ep_t *pi_ep);
 intf::IfType ep_pd_get_if_type(ep_t *pi_ep);
 uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
@@ -147,7 +148,8 @@ uint32_t ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act);
 hal_ret_t pd_ep_upd_iplist_change (pd_ep_update_args_t *pd_ep_upd_args);
 hal_ret_t ep_pd_alloc_pd_ip_entries (dllist_ctxt_t *pi_ep_list);
 hal_ret_t ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, 
-                                        dllist_ctxt_t *pi_ep_list);
+                                        dllist_ctxt_t *pi_ep_list,
+                                        bool is_upgrade = false);
 hal_ret_t pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper);
 
 hal_ret_t ep_pd_depgm_ipsg_tbl_ip_entries(ep_t *pi_ep, 

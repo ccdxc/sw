@@ -221,6 +221,8 @@ hal_ret_t endpoint_delete(EndpointDeleteRequest& spec,
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
 
+hal_ret_t ep_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
+uint32_t ep_restore_cb(void *obj, uint32_t len);
 
 void register_dhcp_ep_status_callback(dhcp_status_func_t func);
 void register_arp_ep_status_callback(arp_status_func_t func);
