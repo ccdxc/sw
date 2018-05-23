@@ -40,6 +40,8 @@ import (
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "NatPolicy"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}{{title .}} )
+                        {{else if strEq $crudObject "SGPolicy"}}
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}{{title .}} )
                         {{end}}
@@ -175,6 +177,34 @@ import (
                                                       }
                               err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &{{lower .}}Data, &resp)
                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}List )
+                          {{else if strEq $crudObject "SGPolicy"}}
+                                                       {{lower .}}Data := netproto.SGPolicy{
+                                                           TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+                                                           ObjectMeta: api.ObjectMeta{
+                                                               Tenant: "default",
+                                                               Namespace: "default",
+                                                               Name:   "test{{title .}}{{title $crudObject}}",
+                                                           },
+                                                           Spec: netproto.{{title $crudObject}}Spec{
+                                                             AttachGroup: []string{"preCreatedSecurityGroup"},
+                                                             AttachTenant: false,
+                                                             Rules: []netproto.PolicyRule{
+                                                             				{
+                                                             					Action: []string{"PERMIT"},
+                                                                      Src: &netproto.MatchSelector{
+                                                                  						Address: "10.0.0.0 - 10.0.1.0",
+                                                                              App: "L4PORT",
+                                                                              AppConfig: "80",
+                                                                  					},
+                                                                  					Dst: &netproto.MatchSelector{
+                                                                  						Address: "192.168.0.1 - 192.168.1.0",
+                                                                  					},
+                                                             				},
+                                                             			},
+                                                           },
+                                                       }
+                               err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &{{lower .}}Data, &resp)
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &{{lower $crudObject}}List )
                          {{else if strEq $crudObject "NatPool"}}
                                                    {{lower .}}Data := netproto.NatPool{
                                                        TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -690,6 +720,40 @@ import (
                                                                     }
                                                                 }
                                  AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
+
+                           {{else if strEq $crudObject "SGPolicy"}}
+                                var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
+                                updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                      AttachGroup: []string{"preCreatedSecurityGroup"},
+                                                                      Rules: [] netproto.PolicyRule{
+                                                                           {
+                                                                                  Action: []string{"DENY", "LOG"},
+                                                                           },
+                                                                      },
+                                                                   }
+                                {{lower .}}Data := netproto.{{title $crudObject}}{
+                                    TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                    ObjectMeta: api.ObjectMeta{
+                                        Tenant: "default",
+                                        Name:   "preCreated{{title $crudObject}}",
+                                        Namespace: "default",
+                                    },
+                                    Spec: updated{{title $crudObject}}Spec,
+                                }
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
+
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &{{lower $crudObject}}List )
+                               AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+                               for _, o := range {{lower $crudObject}}List{
+                                    if o.Name == "preCreated{{title $crudObject}}"{
+                                            actual{{title $crudObject}}Spec = o.Spec
+                                            break
+                                  }
+                               }
+                               AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
+
+
                             {{else if strEq $crudObject "Interface"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
@@ -982,6 +1046,35 @@ import (
                              err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/namespaces/preCreatedTenant/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
 
+                         {{else if strEq $crudObject "SGPolicy"}}
+                              {{lower .}}Data := netproto.{{title $crudObject}}{
+                                  TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                  ObjectMeta: api.ObjectMeta{
+                                      Tenant: "default",
+                                      Namespace: "default",
+                                      Name: "test{{title .}}{{title $crudObject}}",
+                                  },
+                                  Spec: netproto.{{title $crudObject}}Spec{
+                                      Rules: []netproto.PolicyRule{
+                                             {
+                                               Action: []string{"PERMIT"},
+                                               Src: &netproto.MatchSelector{
+                                                       Address: "10.0.0.0 - 10.0.1.0",
+                                                       App: "L4PORT",
+                                                       AppConfig: "80",
+                                                     },
+                                                     Dst: &netproto.MatchSelector{
+                                                       Address: "192.168.0.1 - 192.168.1.0",
+                                                     },
+                                             },
+                                           },
+                                     },
+                              }
+                              postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &{{lower .}}Data, &resp)
+                              err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &{{lower $crudObject}}List )
+
+
                          {{else if strEq $crudObject "Interface"}}
                               {{lower .}}Data := netproto.{{title $crudObject}}{
                                                       TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -1053,6 +1146,9 @@ import (
              err := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &badPostData, &resp)
           {{else if strEq $crudObject "SecurityGroup"}}
              err := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &badPostData, &resp)
+          {{else if strEq $crudObject "SGPolicy"}}
+            err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &badPostData, &resp)
+
           {{end}}
           Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
         }
@@ -1093,6 +1189,9 @@ import (
           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
        {{else if strEq $crudObject "SecurityGroup"}}
           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "SGPolicy"}}
+         err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/policies/default/default/badObject", &badDelData, &resp)
+
        {{end}}
        Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
      }
@@ -1133,6 +1232,9 @@ import (
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
     {{else if strEq $crudObject "SecurityGroup"}}
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
+    {{else if strEq $crudObject "SGPolicy"}}
+       err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/policies/default/default/badObject", &badDelData, &resp)
+
     {{end}}
     Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
   }

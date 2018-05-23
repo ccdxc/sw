@@ -328,6 +328,38 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachGroup:  []string{"preCreatedSecurityGroup"},
+			AttachTenant: false,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: []string{"PERMIT"},
+					Src: &netproto.MatchSelector{
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "L4PORT",
+						AppConfig: "80",
+					},
+					Dst: &netproto.MatchSelector{
+						Address: "192.168.0.1 - 192.168.1.0",
+					},
+				},
+			},
+		},
+	}
+
+	err = nagent.CreateSGPolicy(&sgPolicy)
+	if err != nil {
+		log.Errorf("Failed to create SG policy. {%v}", sg)
+		return
+	}
+
 	lif := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{

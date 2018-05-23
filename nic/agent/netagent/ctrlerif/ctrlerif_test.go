@@ -392,6 +392,31 @@ func (ag *fakeAgent) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt) error {
 	return nil
 }
 
+// CreateSGPolicy creates a security group policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateSGPolicy(np *netproto.SGPolicy) error {
+	return nil
+}
+
+// FindSGPolicy finds a security group policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) {
+	return nil, nil
+}
+
+// ListSGPolicy lists a security group policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListSGPolicy() []*netproto.SGPolicy {
+	return nil
+}
+
+// UpdateSGPolicy updates a security group policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateSGPolicy(np *netproto.SGPolicy) error {
+	return nil
+}
+
+// DeleteSGPolicy deletes a security group policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteSGPolicy(np *netproto.SGPolicy) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

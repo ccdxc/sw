@@ -49,19 +49,20 @@ func NewRestServer(agent types.CtrlerIntf, listenURL string) (*RestServer, error
 	// setup the top level routes
 	router := mux.NewRouter()
 	prefixRoutes := map[string]routeAddFunc{
-		"/api/networks/":         addNetworkAPIRoutes,
-		"/api/endpoints/":        addEndpointAPIRoutes,
-		"/api/sgs/":              addSecurityGroupAPIRoutes,
-		"/api/tenants/":          addTenantAPIRoutes,
-		"/api/interfaces/":       addInterfaceAPIRoutes,
-		"/api/namespaces/":       addNamespaceAPIRoutes,
-		"/api/nat/pools/":        addNatPoolAPIRoutes,
-		"/api/nat/policies/":     addNatPolicyAPIRoutes,
-		"/api/routes/":           addRouteAPIRoutes,
-		"/api/nat/bindings/":     addNatBindingAPIRoutes,
-		"/api/ipsec/policies/":   addIPSecPolicyAPIRoutes,
-		"/api/ipsec/encryption/": addIPSecSAEncryptAPIRoutes,
-		"/api/ipsec/decryption/": addIPSecSADecryptAPIRoutes,
+		"/api/networks/":          addNetworkAPIRoutes,
+		"/api/endpoints/":         addEndpointAPIRoutes,
+		"/api/sgs/":               addSecurityGroupAPIRoutes,
+		"/api/tenants/":           addTenantAPIRoutes,
+		"/api/interfaces/":        addInterfaceAPIRoutes,
+		"/api/namespaces/":        addNamespaceAPIRoutes,
+		"/api/nat/pools/":         addNatPoolAPIRoutes,
+		"/api/nat/policies/":      addNatPolicyAPIRoutes,
+		"/api/routes/":            addRouteAPIRoutes,
+		"/api/nat/bindings/":      addNatBindingAPIRoutes,
+		"/api/ipsec/policies/":    addIPSecPolicyAPIRoutes,
+		"/api/ipsec/encryption/":  addIPSecSAEncryptAPIRoutes,
+		"/api/ipsec/decryption/":  addIPSecSADecryptAPIRoutes,
+		"/api/security/policies/": addSGPolicyAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

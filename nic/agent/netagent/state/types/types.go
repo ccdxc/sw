@@ -26,6 +26,7 @@ const (
 	IPSecSAEncryptID = "ipSecSAEncryptID"
 	IPSecSADecryptID = "ipSecSADencryptID"
 	IPSecRuleID      = "ipSecRuleID"
+	SGPolicyID       = "securityGroupPolicyID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -68,6 +69,7 @@ type NetAgent struct {
 	IPSecPolicyDB    map[string]*netproto.IPSecPolicy    // IPSecPolicy Object DB
 	IPSecSAEncryptDB map[string]*netproto.IPSecSAEncrypt // IPSecSAEncrypt Object DB
 	IPSecSADecryptDB map[string]*netproto.IPSecSADecrypt // IPSecSADecrypt Object DB
+	SGPolicyDB       map[string]*netproto.SGPolicy       // Security group policy DB
 	IPSecPolicyLUT   map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
 	NatPoolLUT       map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	HwIfDB           map[string]*netproto.Interface      // Has all the Uplinks and Lifs
@@ -144,6 +146,11 @@ type CtrlerIntf interface {
 	ListIPSecSADecrypt() []*netproto.IPSecSADecrypt                           // lists IPSec SA Decrypt Rules
 	UpdateIPSecSADecrypt(rt *netproto.IPSecSADecrypt) error                   // updates an IPSec SA Decrypt Rule
 	DeleteIPSecSADecrypt(rt *netproto.IPSecSADecrypt) error                   // deletes an IPSec SA Decrypt Rule
+	CreateSGPolicy(rt *netproto.SGPolicy) error                               // creates an Security Group Policy
+	FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error)             // finds an Security Group Policy
+	ListSGPolicy() []*netproto.SGPolicy                                       // lists Security Group Policy
+	UpdateSGPolicy(rt *netproto.SGPolicy) error                               // updates an Security Group Policy
+	DeleteSGPolicy(rt *netproto.SGPolicy) error                               // deletes an Security Group Policy
 	GetHwInterfaces() error                                                   // Gets all the uplinks created on the hal by nic mgr
 }
 
@@ -196,6 +203,9 @@ type NetDatapathAPI interface {
 	CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                            // creates a IPSecSA decrypt rule in the datapath
 	UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                            // updates a IPSecSA decrypt rule in the datapath
 	DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                            // deletes a IPSecSA decrypt rule in the datapath
+	CreateSGPolicy(np *netproto.SGPolicy, ns *netproto.Namespace) error                                                                                        // creates a security group policy in the datapath
+	UpdateSGPolicy(np *netproto.SGPolicy, ns *netproto.Namespace) error                                                                                        // updates a security group policy in the datapath
+	DeleteSGPolicy(np *netproto.SGPolicy, ns *netproto.Namespace) error                                                                                        // deletes a security group policy in the datapath
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths
