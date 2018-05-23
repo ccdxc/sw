@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Update source tree from bsd host
+# usage: rsync_from [user@hostname]
+
+# too slow, rsync doesn't filter by --existing before listing files on src
+#rsync --existing -Rrcv "${1:-root@bsd}":/etc "${1:-root@bsd}":/usr/src .
+
+rsync -cv --exclude='.*.swp' --ignore-missing-args \
+  --files-from <(find etc usr -type f) "${1:-root@bsd}":/ .

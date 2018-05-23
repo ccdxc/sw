@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Compare bsd drivers to linux drivers
+
+FREEBSD_ETH=usr/src/sys/dev/ionic/ionic_eth
+FREEBSD_RDMA=usr/src/sys/dev/ionic/ionic_rdma
+FREEBSD_RDMA_LIB=usr/src/contrib/ofed/libionic
+FREEBSD_RDMA_UAPI=usr/src/sys/ofed/include/uapi/rdma
+LINUX_ETH=../linux/eth/ionic
+LINUX_RDMA=../linux/rdma/drv/ionic
+LINUX_RDMA_UAPI="$LINUX_RDMA/uapi/rdma"
+LINUX_RDMA_LIB=../linux/rdma/lib/ionic
+
+diff -up --from-file="$LINUX_ETH" "$FREEBSD_ETH"/*.[ch]
+diff -up --from-file="$LINUX_RDMA" "$FREEBSD_RDMA"/*.[ch]
+diff -up "$LINUX_RDMA_UAPI/ionic-abi.h" "$FREEBSD_RDMA_UAPI/ionic-abi.h"
+diff -up --from-file="$LINUX_RDMA_LIB" "$FREEBSD_RDMA_LIB"/*.[ch]

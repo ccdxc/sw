@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Purge ionic files on bsd host
+#
+# Affects added files only, not modified files like makefiles.
+#
+# usage: purge [user@hostname]
+
+ssh "${1:-root@bsd}" rm -rv \
+  /usr/src/sys/dev/ionic \
+  /usr/src/sys/modules/ionic \
+  /usr/src/sys/modules/ionic_rdma \
+  /usr/src/sys/ofed/include/uapi/rdma/ionic-abi.h \
+  /usr/src/contrib/ofed/libionic

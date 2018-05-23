@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Copy source tree to bsd host
+# usage: rsync_to [user@hostname]
+
+rsync -Rrcv --exclude='*.swp' etc usr/src "${1:-root@bsd}":/
