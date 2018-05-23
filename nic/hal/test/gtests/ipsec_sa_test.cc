@@ -559,6 +559,9 @@ TEST_F(ipsec_encrypt_test, test1)
     v4_range->mutable_low_ipaddr()->set_v4_addr(0x40010000);
     v4_range->mutable_high_ipaddr()->set_v4_addr(0x400100ff);
 
+    rule_req.mutable_rules(0)->mutable_sa_action()->set_sa_action_type(ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_ENCRYPT);
+    rule_req.mutable_rules(0)->mutable_sa_action()->mutable_enc_handle()->set_cb_id(1);
+
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_rule_create(rule_req, &rule_rsp);
     hal::hal_cfg_db_close();
