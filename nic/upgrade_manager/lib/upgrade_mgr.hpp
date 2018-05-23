@@ -5,6 +5,7 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
+#include "upgrade_resp.hpp"
 
 namespace upgrade {
 
@@ -12,10 +13,12 @@ using namespace std;
 
 // UpgradeMgr is the reactor for the UpgReq object
 class UpgradeMgr : public delphi::objects::UpgReqReactor {
-    delphi::SdkPtr sdk_;
+    delphi::SdkPtr    sdk_;
+    UpgMgrRespPtr     upgMgrResp_;
 public:
     UpgradeMgr(delphi::SdkPtr sk) {
         this->sdk_ = sk;
+        this->upgMgrResp_ = make_shared<UpgMgrResp>(sk);
     }
 
     // OnUpgReqCreate gets called when UpgReq object is created

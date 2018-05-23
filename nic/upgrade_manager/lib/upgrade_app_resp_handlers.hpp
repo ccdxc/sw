@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#ifndef __UPGRADE_RESP_HANDLERS_H__
-#define __UPGRADE_RESP_HANDLERS_H__
+#ifndef __UPGRADE_APP_RESP_HANDLERS_H__
+#define __UPGRADE_APP_RESP_HANDLERS_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
@@ -32,4 +32,4 @@ typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;
 
 } // namespace upgrade 
 
-#endif // __UPGRADE_RESP_HANDLERS_H__
+#endif // __UPGRADE_APP_RESP_HANDLERS_H__

@@ -23,6 +23,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
 
     // mount objects
     delphi::objects::UpgReq::Mount(sdk_, delphi::ReadMode);
+    delphi::objects::UpgResp::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadMode);
 

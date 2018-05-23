@@ -192,6 +192,10 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
         (*reqStatus)->set_upgreqstate(type);
         sdk_->SetObject(*reqStatus);
     }
+    if ((type == UpgSuccess) || (type == UpgFailed)) {
+        //Notify Agent
+        this->upgMgrResp_->UpgradeFinish(type == UpgSuccess);
+    }
     if (type != InvalidUpgState)
         LogInfo("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));
     return delphi::error::OK();
