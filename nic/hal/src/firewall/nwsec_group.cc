@@ -988,6 +988,36 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
         HAL_TRACE_ERR("Failed to retrieve rule_match");
         return ret;
     }
+
+    nwsec_policy_appid_t* nwsec_plcy_appid = NULL;
+    uint32_t apps_sz = spec.appid_size();
+    HAL_TRACE_DEBUG("Policy_rules::AppidSize {}", apps_sz);
+    for (uint32_t apps_cnt = 0; apps_cnt < apps_sz; apps_cnt++) {
+        nwsec_plcy_appid = nwsec_policy_appid_alloc_and_init();
+        if (nwsec_plcy_appid == NULL) {
+            HAL_TRACE_ERR("{}: unable to"
+                          "allocate handle/memory"
+                          "ret: {}", __FUNCTION__, ret);
+            //ToDo:Cleanup the nwsec_plcy_rules allocated till now
+            return HAL_RET_OOM;
+        }
+
+        uint32_t appid;
+        ret = hal::app_redir::app_to_appid(
+                  spec.appid(apps_cnt),
+                  appid);
+        // TODO: Handle resource cleanup before returning
+        if(HAL_RET_OK != ret) {
+            HAL_TRACE_ERR("{}: unknown app {}", __FUNCTION__,
+                          spec.appid(apps_cnt));
+            return ret;
+        }
+        nwsec_plcy_appid->appid = appid;
+
+         //To Do: Check to Get lock on nwsec_plcy_rules ??
+        dllist_add_tail(&rule->appid_list_head,
+                        &nwsec_plcy_appid->lentry);
+    }
     rule->hash_value = spec.rule_id(); // lns: Will evaluate at a later time: Using rule id as hv (or unique identifier).
     return ret;
 }
@@ -1286,7 +1316,7 @@ end:
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_CREATE_FAIL);
     }
     nwsec_policy_prepare_rsp(res, ret, nwsec_policy ? nwsec_policy->hal_handle : HAL_HANDLE_INVALID);
-    HAL_TRACE_DEBUG("------------------------ API End -----------------------------");
+    HAL_TRACE_DEBUG("------------------------ API End -----------------------------"); 
     return HAL_RET_OK;
 }
 

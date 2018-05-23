@@ -86,6 +86,8 @@ InterruptAllocator      = objects.TemplateFieldObject("range/1/4096")
 GftExmProfileIdAllocator = objects.TemplateFieldObject("range/1/32768")
 GftTranspositionProfileIdAllocator = objects.TemplateFieldObject("range/1/32768")
 
+SecurityPolicyIDAllocator = objects.TemplateFieldObject("range/1/32768")
+
 def CreateIpv4AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipstep/" + subnet + "/0.0.0.1")
     # Dont use the Subnet/32 address

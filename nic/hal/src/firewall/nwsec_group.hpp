@@ -551,7 +551,8 @@ typedef uint64_t rule_key_t;
 typedef struct nwsec_rule_s {
     rule_key_t            rule_id;
     rule_match_t          fw_rule_match;        // Rule match conditions
-    fw_action_t           fw_rule_action;       // Rule actions
+    fw_action_t           fw_rule_action;       // Rule actionsd
+    dllist_ctxt_t         appid_list_head;
 
     //Operationl state of rules
     uint32_t              hash_value;
@@ -772,6 +773,7 @@ nwsec_rule_init (nwsec_rule_t *rule)
 
     rule_match_init(&rule->fw_rule_match);
     dllist_reset(&rule->dlentry);
+    dllist_reset(&rule->appid_list_head);
     return rule;
 }
 

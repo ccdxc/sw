@@ -15,16 +15,21 @@ class SvcObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.ip_protocol = self.proto
+        req_spec.match.protocol = self.proto
         proto_str = 'IPPROTO_' + defs.ipprotos.str(self.proto)
         logger.info("prot %s" %(proto_str))
         if proto_str in ('IPPROTO_ICMP', 'IPPROTO_ICMPV6'):
-            req_spec.icmp_msg_type = self.icmp_msg_type
+            req_spec.match.app_match.icmp_info.icmp_type = self.icmp_msg_type
         else:
-            req_spec.dst_port = self.dst_port
+            app_match = req_spec.match.app_match.add()
+            dst_port_range = app_match.port_info.dst_port_range.add()
+            dst_port_range.port_low = self.dst_port
+            dst_port_range.port_high= self.dst_port
 
-        alg_name = "APP_SVC_" + self.alg
-        req_spec.alg = haldefs.nwsec.ALGName.Value(alg_name.upper())
+        if self.alg is not "None":
+            app_data = req_spec.action.app_data.add();
+            alg_name = "APP_SVC_" + self.alg
+            app_data.alg = haldefs.nwsec.ALGName.Value(alg_name)
         return
 
 class RuleObject(base.ConfigObjectBase):
@@ -45,13 +50,11 @@ class RuleObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        for svc_obj in self.svc_objs:
-            svc_req_spec  = req_spec.svc.add()
-            svc_obj.PrepareHALRequestSpec(svc_req_spec)
         if len(self.apps) > 0:
-            req_spec.apps.extend(self.apps)    	
+            req_spec.appid.extend(self.apps)
+
         action = "FIREWALL_ACTION_" + self.action
-        req_spec.action = haldefs.nwsec.FirewallAction.Value(action)
-        req_spec.log    = self.log
+        req_spec.action.sec_action = haldefs.nwsec.FirewallAction.Value(action)
+        req_spec.action.log_action = self.log
         return
 

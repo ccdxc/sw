@@ -85,7 +85,7 @@ def __invoke_api(api, req_msg):
 
 def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
     req_msg = None
-    if reqmsg_class: 
+    if reqmsg_class:
         req_msg = reqmsg_class()
     req_objs = []
     count = 0
@@ -95,7 +95,6 @@ def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
             req_spec = req_msg.request.add()
         getattr(obj,reqcb)(req_spec)
         req_objs.append(obj)
-
         count += 1
         if count >= HAL_MAX_BATCH_SIZE:
             resp_msg = __invoke_api(api, req_msg)
@@ -499,9 +498,9 @@ def GetSecurityGroups(objlist):
 def ConfigureSecurityGroupPolicies(objlist, update = False):
     if not IsConfigAllowed(objlist): return
     stub = nwsec_pb2.NwSecurityStub(HalChannel)
-    api = stub.SecurityGroupPolicyCreate
-    msg = nwsec_pb2.SecurityGroupPolicyRequestMsg
-    if update: api = stub.SecurityGroupPolicyUpdate
+    api = stub.SecurityPolicyCreate
+    msg = nwsec_pb2.SecurityPolicyRequestMsg
+    if update: api = stub.SecurityPolicyUpdate
     __config(objlist, msg, api)
     if not update and GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)

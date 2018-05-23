@@ -39,6 +39,46 @@ namespace plugins {
 namespace sfw {
 
 hal_ret_t
+net_sfw_match_app_redir(ctx_t                   &ctx,
+                        nwsec_rule_t            *rule,
+                        net_sfw_match_result_t  *match_rslt)
+{
+    dllist_ctxt_t        *lnode2 = NULL;
+    nwsec_policy_appid_t *appid_policy = NULL;
+    app_redir_ctx_t *app_ctx = app_redir_ctx(ctx, false);
+
+    dllist_for_each(lnode2, &rule->appid_list_head) {
+        appid_policy = dllist_entry(lnode2, nwsec_policy_appid_t, lentry);
+        if(appid_policy) {
+            if(!app_ctx->appid_started()) {
+                app_ctx->set_appid_needed(ctx);
+                match_rslt->valid  = 1;
+                match_rslt->action = session::FLOW_ACTION_ALLOW;
+                return HAL_RET_OK;
+            }
+
+            // Phase II invocation of dfw in flow miss pipeline or phase I invocation of dfw in l7 flow-hit pipeline
+            appid_info_t* appid_info = app_ctx->appid_info();
+            for(int i = 0; i < appid_info->id_count_; i++) {
+                if(appid_policy->appid == appid_info->ids_[i]) {
+                    match_rslt->valid  = 1;
+                    match_rslt->alg = rule->fw_rule_action.alg;
+                    if (rule->fw_rule_action.sec_action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
+                        match_rslt->action = session::FLOW_ACTION_ALLOW;
+                    } else {
+                        match_rslt->action = session::FLOW_ACTION_DROP;
+                    }
+                    match_rslt->log    = rule->fw_rule_action.log_action;
+                    match_rslt->sfw_action = rule->fw_rule_action.sec_action;
+                    return HAL_RET_OK;
+                }
+            }
+        }
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 net_sfw_match_rules(ctx_t                  &ctx,
                     nwsec_policy_rules_t        *nwsec_plcy_rules,
                     net_sfw_match_result_t *match_rslt)
@@ -171,8 +211,10 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     hal_ret_t ret;
     rule_data_t *rule_data;
     hal::ipv4_tuple acl_key = {};
+    ep_t            *sep = NULL;
+    ep_t            *dep = NULL;
 
-    const hal::nwsec_rule_t *nwsec_rule;
+    hal::nwsec_rule_t *nwsec_rule;
     const hal::ipv4_rule_t *rule = NULL;
     const acl::acl_ctx_t *acl_ctx = NULL;
 
@@ -185,16 +227,13 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
         return HAL_RET_FTE_RULE_NO_MATCH;
     }
 
-    // initialize the acl key
-    if (ctx.key().flow_type != hal::FLOW_TYPE_V4) {
-        // TODO(goli) only v4 rules for now
-        ret = HAL_RET_FTE_RULE_NO_MATCH;
-        goto end;
+    // initialize the acl key for v4 rules only, v6 we use only src_sg, dst_sg
+    if (ctx.key().flow_type == hal::FLOW_TYPE_V4) {
+        acl_key.ip_src =  ctx.key().sip.v4_addr;
+        acl_key.ip_dst =  ctx.key().dip.v4_addr;
     }
 
     acl_key.proto =  ctx.key().proto;
-    acl_key.ip_src =  ctx.key().sip.v4_addr;
-    acl_key.ip_dst =  ctx.key().dip.v4_addr;
     switch ( ctx.key().proto) {
     case types::IPPROTO_ICMP:
     case types::IPPROTO_ICMPV6:
@@ -213,37 +252,61 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     default:
         HAL_ASSERT(true);
         ret = HAL_RET_FTE_RULE_NO_MATCH;
-        goto end;
+        goto end_match;
     }
 
-    ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
-    if (ret != HAL_RET_OK) {
-        goto end;
-    }
+    sep = ctx.sep();
+    dep = ctx.dep();
 
-    if (rule == NULL) {
-        ret = HAL_RET_FTE_RULE_NO_MATCH;
-        goto end;
-    }
+    if (((!sep) || (!dep)) || (sep && dep && sep->sgs.sg_id_cnt == 0 && dep->sgs.sg_id_cnt == 0)) {
+        ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
+        if (ret != HAL_RET_OK) {
+            goto end_match;
+        }
 
-
-    rule_data = ( hal::rule_data_t *)rule->data.userdata;
-    nwsec_rule = (const hal::nwsec_rule_t *)rule_data->userdata;
-
-    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",
-                    nwsec_rule->rule_id, nwsec_rule->fw_rule_action.sec_action, nwsec_rule->fw_rule_action.alg);
-
-    match_rslt->valid = 1;
-    if (nwsec_rule->fw_rule_action.sec_action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
-        match_rslt->action = session::FLOW_ACTION_ALLOW;
+        if (rule == NULL) {
+            ret = HAL_RET_FTE_RULE_NO_MATCH;
+        }
     } else {
-        match_rslt->action = session::FLOW_ACTION_DROP;
-    }
-    match_rslt->alg = nwsec_rule->fw_rule_action.alg;
-    match_rslt->sfw_action = nwsec_rule->fw_rule_action.sec_action;
+        for (int i = 0; i < sep->sgs.sg_id_cnt; i++) {
+            for (int j = 0; j < dep->sgs.sg_id_cnt; j++) {
+                acl_key.src_sg = sep->sgs.arr_sg_id[i];
+                acl_key.dst_sg = dep->sgs.arr_sg_id[i];
+                ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
+                if (ret != HAL_RET_OK) {
+                    goto end_match;
+                }
 
- end:
-    if (ret != HAL_RET_OK) {
+                if (rule != NULL) {
+                    goto end_match;
+                }
+            }
+        }
+        ret = HAL_RET_FTE_RULE_NO_MATCH;
+    }
+
+
+ end_match:
+    if (rule != NULL) {
+        rule_data = ( hal::rule_data_t *)rule->data.userdata;
+        nwsec_rule = (hal::nwsec_rule_t *)rule_data->userdata;
+
+        if(!dllist_empty(&nwsec_rule->appid_list_head)) {
+            net_sfw_match_app_redir(ctx, nwsec_rule, match_rslt);
+        } else {
+            HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",
+                    nwsec_rule->rule_id, nwsec_rule->fw_rule_action.sec_action, nwsec_rule->fw_rule_action.alg);
+            match_rslt->valid = 1;
+            if (nwsec_rule->fw_rule_action.sec_action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
+                match_rslt->action = session::FLOW_ACTION_ALLOW;
+            } else {
+                match_rslt->action = session::FLOW_ACTION_DROP;
+            }
+            match_rslt->alg = nwsec_rule->fw_rule_action.alg;
+            match_rslt->log = nwsec_rule->fw_rule_action.log_action;
+            match_rslt->sfw_action = nwsec_rule->fw_rule_action.sec_action;
+        }
+    } else {
         HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy rule lookup failed ret={}", ret);
     }
 
@@ -258,8 +321,6 @@ hal_ret_t
 net_sfw_pol_check_sg_policy(ctx_t                  &ctx,
                             net_sfw_match_result_t *match_rslt)
 {
-    ep_t        *sep = NULL;
-    ep_t        *dep = NULL;
     hal_ret_t    ret;
 
 
@@ -280,9 +341,11 @@ net_sfw_pol_check_sg_policy(ctx_t                  &ctx,
         return ret;
     }
 
-    // TODO(goli) - folloing code is kept for DOLs using the old policy model
+#if 0
+    // TODO- LSESHAN: Remove below code once rule_match based sfw stabilizes
+    sep  = ctx.sep();
+    dep  = ctx.dep();
 
-    //ToDo (lseshan) - For now if a sep or dep is not found allow
     // Eventually use prefix to find the sg
     if (ctx.sep() == NULL ||  (ctx.dep() == NULL)) {
         match_rslt->valid = 1;
@@ -313,6 +376,7 @@ net_sfw_pol_check_sg_policy(ctx_t                  &ctx,
     // accordingly
     match_rslt->valid = 1;
     match_rslt->action = session::FLOW_ACTION_ALLOW;
+#endif
 
     return HAL_RET_OK;
 }
