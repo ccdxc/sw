@@ -1,0 +1,82 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for tunnel
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// ---------------------------- Tunnel API ----------------------------
+// Tunnel controller api
+service TunnelApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Tunnel",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+    };
+
+    rpc GetTunnel (api.ObjectMeta) returns (Tunnel) {};
+    rpc ListTunnels (api.ObjectMeta) returns (TunnelList) {};
+    rpc WatchTunnels (api.ObjectMeta) returns (stream TunnelEvent) {};
+}
+
+// Tunnel object
+message Tunnel {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    TunnelSpec      Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    TunnelStatus    Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// TunnelSpec captures all the tunnel level configuration
+message TunnelSpec {
+    // Captures tunnel type
+    enum Encap {
+        NONE                = 0;
+        VXLAN               = 1;
+        GRE                 = 2;
+    }
+    string Type         = 1 [(venice.check) = "StrEnum(TunnelSpec.Encap)",
+                             (gogoproto.jsontag) = "type,omitempty"];
+
+    // Captures tunnel admin status
+    string AdminStatus  = 2 [(venice.check) = "StrEnum(TunnelStatus.IFStatus)",
+                             (gogoproto.jsontag) = "admin-status,omitempty"];
+    // Captures local tep in case of vxlan and source ip address for GRE
+    string Src          = 3 [(gogoproto.jsontag) = "source,omitempty"];
+
+    // Captures remote tep in case of vxlan and destination ip address for GRE
+    string Dst          = 4 [(gogoproto.jsontag) = "destination,omitempty"];
+}
+
+// Tunnel Status
+message TunnelStatus {
+    enum IFStatus {
+        NONE              = 0;
+        UP                = 1;
+        DOWN              = 2;
+    }
+    string OperStatus     = 1 [(venice.check) = "StrEnum(TunnelStatus.IFStatus)",
+                               (gogoproto.jsontag) = "oper-status,omitempty"];
+
+    uint64 TunnelID       = 2 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+message TunnelList {
+    repeated Tunnel tunnels  = 1;
+}
+
+// tunnel watch event
+message TunnelEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Tunnel          Tunnel      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "tunnel,omitempty"];
+}
