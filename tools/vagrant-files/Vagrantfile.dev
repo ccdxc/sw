@@ -15,14 +15,14 @@ end
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "venice/centos74"
-  config.vm.box_version = "0.7"
+  config.vm.box_version = "0.8"
   config.ssh.insert_key = false
   config.vm.provision :shell, inline: 'ulimit -n 4096'
 
 if ENV['SCALE_SETUP']
   nodeprops = build_nodes(3, 3, "10.100.0.")
 else
-  nodeprops = build_nodes(3, 3, "192.168.30.")
+  nodeprops = build_nodes(1, 1, "192.168.30.")
 end
 
   nodeprops[:num_nodes].times do |n|
@@ -45,8 +45,8 @@ end
               v.memory = 16384
       else
           if n == 0
-              v.cpus = 2
-              v.memory = 3072
+              v.cpus = 4
+              v.memory = 4096
           elsif n < 3
               v.cpus = 2
               v.memory = 2500
@@ -100,8 +100,13 @@ END
 
       # mount the host directories
       if File.dirname(__FILE__).include? "src/github.com/pensando/sw"
-          node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
-          node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
+		  if ENV['NFS_MOUNT'] && ENV['NFS_MOUNT'] != "" then
+			  node.vm.synced_folder "../../../", File.join("/import", "src"), type: "nfs"
+	          node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), type: "nfs"
+		  else
+	          node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
+	          node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
+		  end
       else
           node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
       end
@@ -113,14 +118,6 @@ END
       node.vm.provision "shell" do |s|
         s.inline = "echo '#{nodeprops[:node_ips][0]} master.local' >> /etc/hosts"
       end
-
-      # install additional packages
-      node.vm.provision "shell", inline: <<-EOF
-          sudo yum install -y softhsm libtool-ltdl-devel libev libev-devel
-          wget -q https://github.com/bazelbuild/bazel/releases/download/0.5.4/bazel-0.5.4-installer-linux-x86_64.sh
-          chmod +x bazel-0.5.4-installer-linux-x86_64.sh
-          ./bazel-0.5.4-installer-linux-x86_64.sh
-      EOF
 
       # port mappings
       if n == 0 then

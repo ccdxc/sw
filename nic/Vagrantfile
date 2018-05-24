@@ -3,8 +3,8 @@
 
 $num_nodes = 1
 $base_ip = "192.168.50."
-$node_box = "centos/7"
-$node_box_ver = "0.1"
+$node_box = "venice/centos74"
+$node_box_ver = "0.8"
 $pens_node_id = 0
 
 # globals
@@ -15,6 +15,7 @@ $node_names = ['devvm']
 # main config logic
 Vagrant.configure("2") do |config|
   config.vm.box = $node_box
+  config.vm.box_version = $node_box_ver
 
   # getting node IPs
   $node_ips = $num_nodes.times.collect { |n| $base_ip + "#{n+11}" }
@@ -45,6 +46,10 @@ def configure_node(config, nid, node_name, node_addr)
       # v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
     end
 
+    # mount shared folder
+    node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
+
+    # provision the VM
     node.vm.provision "shell" do |s|
       s.inline = $pens_vm_script
       s.args = [node_name, node_addr, $cluster_ip_nodes]
@@ -65,92 +70,8 @@ export DEBIAN_FRONTEND=noninteractive
 echo -n "$1" > /etc/hostname
 hostname -F /etc/hostname
 
-# install all base packages
-yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-yum -y install python36u python36u-pip
-ln -s /usr/bin/python3.6 /usr/bin/python3
-ln -s /usr/bin/pip3.6 /usr/bin/pip3
-yum install -y vim
-yum install -y bison
-yum install -y python36u-devel python-pip python-devel python-yaml
-yum install -y Judy-devel cmake git git gcc-c++ gcc-c++ wget autoconf automake libtool libtool make g++
-yum install -y unzip pkg-config graphviz flex gmp-devel mpfr-devel mpc-devel libmpc-devel bzip2 which
-yum install -y python-setuptools python-enum34 swig openssl-devel libpcap-devel
-yum install -y cscope
-yum install -y ctags
-yum install -y softhsm libtool-ltdl-devel
-yum install -y nfs-utils nfs-utils-lib
-yum install -y dhcp dhclient
-
-# install golang
-ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
-curl -sSL https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar xz -C /usr/local
-go get github.com/golang/protobuf/... google.golang.org/grpc
-go get golang.org/x/tools/cmd/goimports
-
-# install docker
-curl -sSL https://get.docker.com | CHANNEL=stable bash
-
-# install gcc 6.1
-cd /tmp
-curl ftp://ftp.gnu.org/pub/gnu/gcc/gcc-6.1.0/gcc-6.1.0.tar.bz2 | tar xj
-cd gcc-6.1.0
-./configure --enable-languages=c,c++ --disable-multilib --prefix=/usr
-make -j$(grep -c processor /proc/cpuinfo)
-make install
-ldconfig
-
-# install zeromq
-cd /tmp
-wget https://github.com/zeromq/zeromq3-x/releases/download/v3.2.5/zeromq-3.2.5.tar.gz
-tar zxf zeromq-3.2.5.tar.gz
-cd zeromq-3.2.5
-./configure --prefix=/usr
-make -j$(grep -c processor /proc/cpuinfo)
-make install
-
-# install libtins
-cd /tmp
-git clone https://github.com/mfontanini/libtins.git
-cd libtins
-mkdir build
-cd build
-cmake ../ -DLIBTINS_ENABLE_CXX11=1
-make
-make install
-ldconfig
-
-# untar sknobs.tar.gz
-cd /
-tar xzf /home/vagrant/sknobs.tar.gz
-
-# cleanup /tmp/ now
-cd /tmp
-# rm -rf *
-
-# install all python3 packages
-pip3 install --upgrade ruamel.yaml scapy-python3 google-api-python-client Tenjin enum34 protobuf grpcio zmq cmd2 PyOpenSSL pysendfile pyftpdlib jsonrpc2_zeromq
-pip3 install tenjin
-pip3 install click click_repl
-pip3 install docker
-
-# install all python2.7 packages
-pip install --upgrade ply==3.9 cmd2 tftpy
-
-#install pipenv
-pip install setuptools
-pip install pipenv
-
-yum install -y kernel-devel kernel-headers dkms iproute2 net-tools zip zlib1g-dev
-yum install -y gdb
-
-# install bazel
-cd /tmp
-wget https://github.com/bazelbuild/bazel/releases/download/0.5.4/bazel-0.5.4-installer-linux-x86_64.sh
-chmod +x bazel-0.5.4-installer-linux-x86_64.sh
-./bazel-0.5.4-installer-linux-x86_64.sh
-echo /usr/local/lib >>/etc/ld.so.conf
-ldconfig -v
+# change file ownership
+chown -R vagrant /import
 
 # turn off StrictHostKeyChecking
 f='/home/ubuntu/.ssh/config'
@@ -158,18 +79,9 @@ mkdir -p /home/ubuntu/.ssh/ && touch $f
 grep -q 'StrictHostKeyChecking' $f
 echo 'StrictHostKeyChecking no' >> $f
 
-# install valgrind
-cd /tmp
-mkdir valgrind
-cd valgrind
-wget ftp://sourceware.org/pub/valgrind/valgrind-3.11.0.tar.bz2
-tar xvjf valgrind-3.11.0.tar.bz2
-cd valgrind-3.11.0
-./autogen.sh
-./configure --prefix=...
-make
-make install
-
+## Populate environment vars
+echo 'export PATH=$PATH:/usr/local/bin:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
 SCRIPT
 
 # copy your environment
@@ -182,5 +94,4 @@ def get_files_into_server(node)
   node.vm.provision "file", source: "~/.vim", destination: ".vim"
   node.vm.provision "file", source: "~/.vim_go_runtime", destination: ".vim_go_runtime"
   node.vm.provision "file", source: "~/.gdbinit", destination: ".gdbinit"
-  node.vm.provision "file", source: "~/sknobs.tar.gz", destination: "sknobs.tar.gz"
 end

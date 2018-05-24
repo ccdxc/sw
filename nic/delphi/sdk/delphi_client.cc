@@ -166,6 +166,8 @@ error DelphiClient::HandleNotify(vector<ObjectData *> objlist) {
         // find the watcher for the kind
         ReactorListPtr rl = this->GetReactorList(kind);
         if (rl != NULL) {
+            LogDebug("Triggering event {} for object {}", (*oi)->op(), (*oi)->DebugString());
+
             // trigger events on the object
             error err = objinfo->TriggerEvent(oldObj, (*oi)->op(), rl);
             if (err.IsNotOK()) {
@@ -520,6 +522,9 @@ void DelphiClient::eventTimerHandler(ev::timer &watcher, int revents) {
             // find the watcher for the kind
             ReactorListPtr rl = this->GetReactorList(newObj->GetMeta()->kind());
             if (rl != NULL) {
+
+                LogDebug("Triggering event {} for object {}", op, newObj->GetMeta()->DebugString());
+
                 // trigger events on the object
                 error err = newObj->TriggerEvent(oldObj, op, rl);
                 if (err.IsNotOK()) {
@@ -602,6 +607,8 @@ void DelphiClient::msgqTimerHandler(ev::timer &watcher, int revents) {
         // find the watcher for the kind
         ReactorListPtr rl = this->GetReactorList(kind);
         if (rl != NULL) {
+            LogDebug("Triggering event {} for object {}", (*iter)->op, objinfo->GetMeta()->DebugString());
+
             // trigger events on the object
             error err = objinfo->TriggerEvent(oldObj, (*iter)->op, rl);
             if (err.IsNotOK()) {

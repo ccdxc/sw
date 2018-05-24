@@ -5,7 +5,7 @@ platform=$(shell uname)
 ifeq ($(platform),Darwin)
 CACHEMOUNT := ":cached"
 else
-CACHEMOUNT := 
+CACHEMOUNT :=
 endif
 
 # Lists excluded patterns to "go list"
@@ -57,6 +57,7 @@ TARGETS ?= ws-tools gen build
 
 default:
 	$(MAKE) ws-tools
+	$(MAKE) gen
 	$(MAKE) checks
 	$(MAKE) build
 	$(MAKE) unit-test-cover
@@ -67,7 +68,7 @@ ws-tools:
 	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_INSTALL}
 
 # checks ensure that the go code meets standards
-checks: gen goimports-src golint-src govet-src
+checks: goimports-src golint-src govet-src
 
 # gen does all the autogeneration. viz venice cli, proto sources. Ensure that any new autogen target is added to TO_GEN above
 gen:
@@ -77,7 +78,7 @@ gen:
 # goimports-src formats the source and orders imports
 # Target directories is needed only for goipmorts where it doesn't accept package names.
 # Doing the go list here avoids an additional global go list
-goimports-src: gen
+goimports-src:
 	$(info +++ goimports sources)
 	$(eval GO_FILES=`gopkgs -short -f '{{.Dir}}/*.go' | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}`)
 ifdef JOB_ID
@@ -90,14 +91,14 @@ endif
 	@${GOIMPORTS_CMD} -w ${GO_FILES}
 
 # golint-src runs go linter and verifies code style matches golang recommendations
-golint-src: gen
+golint-src:
 	$(info +++ golint sources)
 	@$(eval LINT := $(shell golint ${GO_PKG} | grep -v pb.go))
 	@echo $(LINT)
 	@test -z "$(LINT)"
 
 # govet-src validates source code and reports suspicious constructs
-govet-src: gen
+govet-src:
 	$(info +++ govet sources)
 	@go vet -source ${GO_PKG}
 

@@ -18,21 +18,22 @@ Likely you would modify an existing box image to include a few more binaries/pac
 you can do it simply by making the changes to the shell script in `scripts/centos7.3/pnsd.sh`,
 for example, and run the make target:
 ```
-make dev-build-centos73
+cd tools
+make dev-build-centos74
 ```
 
 #### 2. Creating a new box image
 These instructions provide you with creating a new box image from scratch.
 
-##### 2.1 Choose the target OS distro 
+##### 2.1 Choose the target OS distro
 Pick a target distro file in `packer-templates/*.json` that matches the target environment
 you need to make changes to, for example, Ubuntu16.10, Centos7.2, etc.
-If adding a new custom script, edit the json file to add `pnsd` custom script location. 
+If adding a new custom script, edit the json file to add `pnsd` custom script location.
 See `packer-templates/centos-7.2-x86_64.json` for example.
 If the new scripts need to be added, it could be located in `packer-templates/scripts/<distro>`
 directory. See `packer-templates/scripts/centos-7.2/pnsd.sh` for example.
 
-##### 2.2 Create a make target for the Box image 
+##### 2.2 Create a make target for the Box image
 Add following commands in the Makefile target in `tools/Makefile` for the new
 box image, for example for `dev-build-centos73` target has following two commands
 ```
