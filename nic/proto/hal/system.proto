@@ -129,6 +129,11 @@ message DropStatsEntry {
   uint64              drop_count                    = 2;    // drop count for multiple drop reasons
 }
 
+message EgressDropStatsEntry {
+  types.EgressDropReasons   reasons                 = 1;    // drop reasons
+  uint64              drop_count                    = 2;    // drop count for multiple drop reasons
+}
+
 // Table types
 enum TableType {
   TABLE_TYPE_NONE                                   = 0;
@@ -231,11 +236,16 @@ message SystemResponse {
 // Stats object
 message Stats {
   DropStats         drop_stats          = 1;    // Drop statistics
-  TableStats        table_stats         = 2;    // Table statistics
-  PacketBufferStats packet_buffer_stats = 3;    // Packet buffer block statistics
+  EgressDropStats   egress_drop_stats   = 2;    // Egress drop statistics
+  TableStats        table_stats         = 3;    // Table statistics
+  PacketBufferStats packet_buffer_stats = 4;    // Packet buffer block statistics
 }
 
 // Drop Stats object
 message DropStats {
   repeated DropStatsEntry drop_entries  = 1;               // list of drop statistics
+}
+
+message EgressDropStats {
+  repeated EgressDropStatsEntry drop_entries  = 1;         // list of egress drop statistics
 }

@@ -121,6 +121,8 @@ using sys::SystemResponse;
 using sys::Stats;
 using sys::DropStats;
 using sys::DropStatsEntry;
+using sys::EgressDropStats;
+using sys::EgressDropStatsEntry;
 using sys::TableStats;
 using sys::TableStatsEntry;
 using types::Empty;
@@ -558,6 +560,20 @@ public:
 
             for (int i = 0; i < count; i ++) {
                 DropStatsEntry drop_entry = drop_stats.drop_entries(i);
+                std::cout << "Stats " << i
+                << ": " << drop_entry.drop_count() << "\n";
+            }
+
+            // Get EgressDropStats
+            EgressDropStats egress_drop_stats = stats.egress_drop_stats();
+
+            // Get count of EgressDropEntries
+            count = egress_drop_stats.drop_entries_size();
+
+            std::cout << "\nEgress Drop Statistics:\n";
+
+            for (int i = 0; i < count; i ++) {
+                EgressDropStatsEntry drop_entry = egress_drop_stats.drop_entries(i);
                 std::cout << "Stats " << i
                 << ": " << drop_entry.drop_count() << "\n";
             }

@@ -80,6 +80,98 @@ pd_drop_stats_get (pd_drop_stats_get_args_t *args)
     return ret;
 }
 
+hal_ret_t
+pd_system_egress_drop_decode (egress_drop_stats_swkey *key, egress_drop_stats_swkey_mask *key_mask,
+                              egress_drop_stats_actiondata *data, EgressDropStatsEntry *stats_entry)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    uint64_t drop_reason, drop_reason_mask;
+
+    memcpy(&drop_reason, key->control_metadata_egress_drop_reason,
+           sizeof(key->control_metadata_egress_drop_reason));
+    memcpy(&drop_reason_mask, key_mask->control_metadata_egress_drop_reason_mask,
+           sizeof(key_mask->control_metadata_egress_drop_reason_mask));
+    drop_reason &= drop_reason_mask;
+    memcpy(key->control_metadata_egress_drop_reason, &drop_reason,
+           sizeof(key->control_metadata_egress_drop_reason));
+
+    stats_entry->mutable_reasons()->set_drop_output_mapping(
+            drop_reason & (1 << EGRESS_DROP_OUTPUT_MAPPING));
+    stats_entry->mutable_reasons()->set_drop_prune_src_port(
+            drop_reason & (1 << EGRESS_DROP_PRUNE_SRC_PORT));
+    stats_entry->mutable_reasons()->set_drop_mirror(
+            drop_reason & (1 << EGRESS_DROP_MIRROR));
+    stats_entry->mutable_reasons()->set_drop_policer(
+            drop_reason & (1 << EGRESS_DROP_POLICER));
+    stats_entry->mutable_reasons()->set_drop_copp(
+            drop_reason & (1 << EGRESS_DROP_COPP));
+    stats_entry->mutable_reasons()->set_drop_checksum_err(
+            drop_reason & (1 << EGRESS_DROP_CHECKSUM_ERR));
+
+    uint64_t drop_stats_pkts = 0;
+    memcpy(&drop_stats_pkts,
+           data->egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts,
+           sizeof(data->egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts));
+    stats_entry->set_drop_count(drop_stats_pkts);
+
+    return ret;
+}
+
+hal_ret_t
+pd_system_populate_egress_drop_stats (EgressDropStatsEntry *stats_entry, uint8_t idx)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
+    tcam                            *tcam;
+    egress_drop_stats_swkey         key = { 0 };
+    egress_drop_stats_swkey_mask    key_mask = { 0 };
+    egress_drop_stats_actiondata    data = { 0 };
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    // Retrieve from SW to get the stats idx
+    sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to retrieve egress drop stats idx for: {}",
+                idx);
+        goto end;
+    }
+
+    // Read from drop stats table
+    sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to retrieve egress drop stats for entry: {}",
+                idx);
+        goto end;
+    }
+
+    pd_system_egress_drop_decode(&key, &key_mask, &data, stats_entry);
+
+end:
+
+    return ret;
+}
+
+hal_ret_t
+pd_egress_drop_stats_get (pd_egress_drop_stats_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd_system_args_t        *pd_sys_args = args->pd_sys_args;
+    SystemResponse          *rsp = pd_sys_args->rsp;
+    EgressDropStatsEntry    *stats_entry = NULL;
+
+    HAL_TRACE_DEBUG("Querying egress drop stats");
+    for (int i = 0; i < (EGRESS_DROP_MAX + 1); i++) {
+        stats_entry = rsp->mutable_stats()->mutable_egress_drop_stats()->
+            add_drop_entries();
+        pd_system_populate_egress_drop_stats(stats_entry, i);
+    }
+
+    return ret;
+}
 inline hbm_addr_t
 hbm_get_addr_for_stat_index (p4pd_table_id table_id,
                              uint8_t idx)

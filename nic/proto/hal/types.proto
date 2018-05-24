@@ -329,6 +329,15 @@ message DropReasons {
   bool      drop_hardware_error                     = 24;       
 }
 
+message EgressDropReasons {
+  bool      drop_output_mapping                     = 1;        // output mapping table miss
+  bool      drop_prune_src_port                     = 2;        // prune source port drop
+  bool      drop_mirror                             = 3;        // mirror drop
+  bool      drop_policer                            = 4;        // policer drop
+  bool      drop_copp                               = 5;        // copp drop
+  bool      drop_checksum_err                       = 6;        // checksum error drop
+}
+
 message RuleMatch {
   message L4PortAppInfo {
     repeated types.L4PortRange    dst_port_range = 1; // dst port range low, high value

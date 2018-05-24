@@ -321,6 +321,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 
     // stats
     PD_SYMBOL_LOAD(PD_FUNC_ID_DROP_STATS_GET, pd_drop_stats_get);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_EGRESS_DROP_STATS_GET, pd_egress_drop_stats_get);
     PD_SYMBOL_LOAD(PD_FUNC_ID_TABLE_STATS_GET, pd_table_stats_get);
 
     // oifl
@@ -706,6 +707,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
 
     // stats
     PD_SYMBOL_CALL(PD_FUNC_ID_DROP_STATS_GET, pd_drop_stats_get);
+    PD_SYMBOL_CALL(PD_FUNC_ID_EGRESS_DROP_STATS_GET, pd_egress_drop_stats_get);
     PD_SYMBOL_CALL(PD_FUNC_ID_TABLE_STATS_GET, pd_table_stats_get);
 
     // oifl

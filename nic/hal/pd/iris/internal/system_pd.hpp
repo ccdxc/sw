@@ -5,6 +5,7 @@
 #include "nic/include/pd_api.hpp"
 
 using sys::DropStatsEntry;
+using sys::EgressDropStatsEntry;
 namespace hal {
 namespace pd {
 

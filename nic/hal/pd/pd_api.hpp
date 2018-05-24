@@ -2104,6 +2104,10 @@ typedef struct pd_table_stats_get_args_s {
     pd_system_args_t *pd_sys_args;
 } __PACK__ pd_table_stats_get_args_t;
 
+typedef struct pd_egress_drop_stats_get_args_s {
+    pd_system_args_t *pd_sys_args;
+} __PACK__ pd_egress_drop_stats_get_args_t;
+
 // oiflist
 typedef struct pd_oif_list_create_args_s {
     oif_list_id_t *list;
@@ -2856,7 +2860,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_EP_RESTORE,               246, "PD_FUNC_ID_EP_RESTORE")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ,  247, "PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ") \
     ENTRY(PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, 248, "PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ") \
-    ENTRY(PD_FUNC_ID_MAX,                      249, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_GET,    249, "PD_FUNC_ID_EGRESS_DROP_STATS_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      250, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3129,6 +3134,7 @@ PD_FUNCP_TYPEDEF(pd_get_opaque_tag_addr);
 
 // stats
 PD_FUNCP_TYPEDEF(pd_drop_stats_get);
+PD_FUNCP_TYPEDEF(pd_egress_drop_stats_get);
 PD_FUNCP_TYPEDEF(pd_table_stats_get);
 
 // oifl
@@ -3503,6 +3509,7 @@ typedef struct pd_call_s {
 
         // stats
         PD_UNION_FIELD(pd_drop_stats_get);
+        PD_UNION_FIELD(pd_egress_drop_stats_get);
         PD_UNION_FIELD(pd_table_stats_get);
 
         // oifl
