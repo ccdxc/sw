@@ -766,6 +766,7 @@ ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *sp
 
 acl_config_t ipsec_ip_acl_config_glbl;
 
+#if 0
 const char *
 ipsec_acl_ctx_name (vrf_id_t vrf_id)
 {
@@ -775,6 +776,7 @@ ipsec_acl_ctx_name (vrf_id_t vrf_id)
     HAL_TRACE_DEBUG("Acl Name: {}", name);
     return name;
 }
+#endif
 
 const acl::acl_ctx_t *
 ipsec_cfg_pol_create_app_ctxt_init (ipsec_cfg_pol_t *pol)
