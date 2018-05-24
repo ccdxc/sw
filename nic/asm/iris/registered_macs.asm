@@ -17,6 +17,8 @@ registered_macs:
   DBG_WR(0x14b, k.control_metadata_flow_miss_idx)
   bcf         [c1], registered_macs_hit
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
+  seq         c2, k.flow_lkp_metadata_lkp_vrf, r0
+  bcf         [c2], registered_macs_input_properites_miss_drop
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
   bcf         [c1], registered_macs_all_multicast
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
@@ -42,6 +44,9 @@ registered_macs_all_multicast:
   phvwr.e     p.capri_intrinsic_tm_replicate_en, TRUE
   phvwr       p.capri_intrinsic_tm_replicate_ptr, r1
 
+registered_macs_input_properites_miss_drop:
+  phvwr.e       p.control_metadata_drop_reason[DROP_INPUT_PROPERTIES_MISS], 1
+  phvwr         p.capri_intrinsic_drop, 1
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/

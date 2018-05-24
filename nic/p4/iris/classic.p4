@@ -17,6 +17,13 @@ action registered_macs(dst_lport, multicast_en) {
     //    return
     //}
 
+    // Current assumption is for input_properties miss case we don't
+    // need to honor promiscuous receivers list.
+    if (flow_lkp_metadata.lkp_vrf == 0) {
+        modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
+        drop_packet();
+    }
+
     if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
         modify_field(capri_intrinsic.tm_replicate_en, TRUE);
         add(capri_intrinsic.tm_replicate_ptr,
