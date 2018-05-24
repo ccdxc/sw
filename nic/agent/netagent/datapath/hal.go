@@ -142,6 +142,10 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
+	hd.MockClients.MockSgclient.EXPECT().SecurityPolicyCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockSgclient.EXPECT().SecurityPolicyUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockSgclient.EXPECT().SecurityPolicyDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
 	hd.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTnclient.EXPECT().VrfUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTnclient.EXPECT().VrfDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)

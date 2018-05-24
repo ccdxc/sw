@@ -24,8 +24,7 @@ func TestSGPolicyCreateDelete(t *testing.T) {
 			Name:      "testSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
-			AttachGroup:  []string{"preCreatedSecurityGroup"},
-			AttachTenant: false,
+			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
 					Action: []string{"PERMIT"},
@@ -83,8 +82,7 @@ func TestSGPolicyUpdate(t *testing.T) {
 			Name:      "testSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
-			AttachGroup:  []string{"preCreatedSecurityGroup"},
-			AttachTenant: false,
+			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
 					Action: []string{"PERMIT"},
@@ -169,8 +167,7 @@ func TestSGPolicyOnMatchAllSrc(t *testing.T) {
 			Name:      "testSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
-			AttachGroup:  []string{"preCreatedSecurityGroup"},
-			AttachTenant: false,
+			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
 					Action: []string{"PERMIT"},
@@ -202,8 +199,7 @@ func TestSGPolicyOnMatchAllDst(t *testing.T) {
 			Name:      "testSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
-			AttachGroup:  []string{"preCreatedSecurityGroup"},
-			AttachTenant: false,
+			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
 					Action: []string{"PERMIT"},
@@ -237,8 +233,7 @@ func TestSGPolicyOnMatchAll(t *testing.T) {
 			Name:      "testSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
-			AttachGroup:  []string{"preCreatedSecurityGroup"},
-			AttachTenant: false,
+			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
 					Action: []string{"PERMIT"},
@@ -304,4 +299,172 @@ func TestSGPolicyUpdateOnNonExistentSGPolicy(t *testing.T) {
 	// create sg policy
 	err = ag.UpdateSGPolicy(&sgPolicy)
 	Assert(t, err != nil, "Nat policy updates on non existing nat policies fail")
+}
+
+func TestSGPolicyOnNonExistentSG(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachGroup:  []string{"nonExistentSG"},
+			AttachTenant: false,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: []string{"PERMIT"},
+					Src: &netproto.MatchSelector{
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "L4PORT",
+						AppConfig: "80",
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	Assert(t, err != nil, "SG Policy creation with non existent security group attachment point should fail.")
+}
+
+func TestSGPolicyOnNonAttachmentPoints(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			Rules: []netproto.PolicyRule{
+				{
+					Action: []string{"PERMIT"},
+					Src: &netproto.MatchSelector{
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "L4PORT",
+						AppConfig: "80",
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	Assert(t, err != nil, "SG Policy creation with non existent attachment points.")
+}
+
+func TestSGPolicyMatchAllPorts(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: []string{"PERMIT"},
+					Src: &netproto.MatchSelector{
+						Address: "10.0.0.0 - 10.0.1.0",
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "Policies with empty port configs should not fail")
+}
+
+func TestSGPolicyBadPortRange(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: []string{"PERMIT"},
+					Src: &netproto.MatchSelector{
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "L4PORT",
+						AppConfig: "foo",
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	Assert(t, err != nil, "Policies with bad l4port config should fail")
+}
+
+func TestSGPolicyOutsidePortRange(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: []string{"PERMIT"},
+					Src: &netproto.MatchSelector{
+						Address:   "10.0.0.0 - 10.0.1.0",
+						App:       "L4PORT",
+						AppConfig: "123456-123456",
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	Assert(t, err != nil, "Policies with ports > 64K should fail")
 }

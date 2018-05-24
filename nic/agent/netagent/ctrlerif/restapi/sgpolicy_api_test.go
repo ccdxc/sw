@@ -97,6 +97,7 @@ func TestSGPolicyDelete(t *testing.T) {
 			Name:      "testDeleteSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
 					Action: []string{"PERMIT"},

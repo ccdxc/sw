@@ -16,6 +16,8 @@ import (
 
 // CreateSGPolicy creates a security group policy
 func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
+	var vrfID uint64
+	var securityGroups []uint64
 	err := na.validateMeta(sgp.Kind, sgp.ObjectMeta)
 	if err != nil {
 		return err
@@ -39,6 +41,35 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// validate security group policy message
+	if sgp.Spec.AttachTenant == false && len(sgp.Spec.AttachGroup) == 0 {
+		log.Errorf("Missing attachment point for the fw policy. Must specify either tenant or a list of security groups")
+		return fmt.Errorf("missing attachment point for %s. Must specify either a tenant or a list of security groups", sgp.Name)
+	}
+
+	if sgp.Spec.AttachTenant {
+		tn, err := na.FindTenant(sgp.Tenant)
+		if err != nil {
+			log.Errorf("Could not find the tenant to attach the sg policy")
+			return err
+		}
+		vrfID = tn.Status.TenantID
+	} else {
+		vrfID = ns.Status.NamespaceID
+	}
+
+	for _, grp := range sgp.Spec.AttachGroup {
+		sgMeta := api.ObjectMeta{
+			Tenant:    sgp.Tenant,
+			Namespace: sgp.Namespace,
+			Name:      grp,
+		}
+		sg, err := na.FindSecurityGroup(sgMeta)
+		if err != nil {
+			log.Errorf("Could not find the security group to attach the sg policy")
+			return err
+		}
+		securityGroups = append(securityGroups, sg.Status.SecurityGroupID)
+	}
 
 	sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
 
@@ -48,7 +79,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateSGPolicy(sgp, ns)
+	err = na.Datapath.CreateSGPolicy(sgp, vrfID, securityGroups)
 	if err != nil {
 		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp, err)
 		return err

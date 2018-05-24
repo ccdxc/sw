@@ -1055,6 +1055,7 @@ import (
                                       Name: "test{{title .}}{{title $crudObject}}",
                                   },
                                   Spec: netproto.{{title $crudObject}}Spec{
+                                      AttachTenant:  true,
                                       Rules: []netproto.PolicyRule{
                                              {
                                                Action: []string{"PERMIT"},

@@ -70,6 +70,10 @@ message PolicyRule {
     // outbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
     // Emtpy dst is interpreted as match all
     MatchSelector Dst       = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "destination,omitempty"];
+
+    // Allocated ID
+    uint64 ID               = 4 [(gogoproto.jsontag) = "rule-id,omitempty"];
+
 }
 
 
