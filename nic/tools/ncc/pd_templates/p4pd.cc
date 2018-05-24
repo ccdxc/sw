@@ -2253,6 +2253,7 @@ hash_${table}_unpack_action_data(uint32_t tableid,
             } else {
                 copy_before_key = false;
                 packed_action_data = packed_actiondata_after_key;
+                src_start_bit = ${mat_key_bit_length % 8};
             }
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
@@ -3217,38 +3218,35 @@ ${table}_entry_read(uint32_t tableid,
 //::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
 //::            #endif
 //::            spilled_adata_bits = 0
-//::            max_adata_bits_before_key = max_actionfld_len
-//::            if max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
+//::            delta_bits = 0
+//::            if mat_key_start_bit > 0 and max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - (max_actionfld_len - (max_actionfld_len % 16))) > 16:
 //::                spilled_adata_bits = max_actionfld_len % 16
-//::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits
 //::            #endif
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
+//::                max_adata_bits_before_key = mat_key_start_bit
 //::                max_adata_bits_before_key -= 8
 //::            else:
 //::                action_pc_added = False
+//::                max_adata_bits_before_key = mat_key_start_bit
 //::            #endif
 //::            if action_pc_added:
+//::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) - 8 if max_actionfld_len < mat_key_start_bit else 0
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
     actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
+//::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) if max_actionfld_len < mat_key_start_bit else 0
     actiondata->actionid = 0;
     int adatabyte = 0;
 //::            #endif
+//::            max_adata_bits_before_key -= delta_bits
 
-    uint16_t axi_shift_bytes = 0;
-    if ((${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)) < ${mat_key_start_bit}) {
-        // compute axi_shift if applied.
-        uint16_t delta_bits = (${mat_key_start_bit} - (${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)));
-        axi_shift_bytes = ((delta_bits >> 4) << 1);
-    }
+    uint16_t axi_shift_bytes = ((${delta_bits} >> 4) << 1);
     // when axi_shift_bytes > 0, table entry is left shifted by positive number of bytes.
-    ${table}_hwkey_unbuild(tableid, hwentry, 
+    ${table}_hwkey_unbuild(tableid, hwentry,
                            ${mat_key_bit_length}, swkey, axi_shift_bytes);
 
-    // Since actionpc is not in KM, when unbuilding key into p4fld,
-    // pass pointer to hwentry byte stream after action-pc
     packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
     actiondata_len_before_key = ${max_adata_bits_before_key};
@@ -3331,39 +3329,39 @@ ${table}_entry_decode(uint32_t tableid,
                       ${table}_swkey_t *swkey,
                       ${table}_actiondata *actiondata)
 {
-    // Since actionpc is not in KM, when unbuilding key into p4fld,
-    // pass pointer to hwentry byte stream after action-pc
-//::            if len(pddict['tables'][table]['actions']) > 1:
-//::                action_pc_added = True
-//::            else:
-//::                action_pc_added = False
-//::            #endif
-//::            if action_pc_added:
-    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
-    int adatabyte = 1;
-//::            else:
-    actiondata->actionid = 0;
-    int adatabyte = 0;
-//::            #endif
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
+//::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
 //::            if pddict['tables'][table]['is_wide_key']:
 //::                mat_key_start_byte = (keylen - (keylen % 512)) / 8
 //::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
 //::            #endif
 //::            spilled_adata_bits = 0
-//::            max_adata_bits_before_key = max_actionfld_len
-//::            if max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
+//::            delta_bits = 0
+//::            if mat_key_start_bit > 0 and max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - (max_actionfld_len - (max_actionfld_len % 16))) > 16:
 //::                spilled_adata_bits = max_actionfld_len % 16
-//::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits
 //::            #endif
-    uint16_t axi_shift_bytes = 0;
-    if ((${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)) < ${mat_key_start_bit}) {
-        // compute axi_shift if applied.
-        uint16_t delta_bits = (${mat_key_start_bit} - (${max_adata_bits_before_key} + (adatabyte ? P4PD_ACTIONPC_BITS : 0)));
-        axi_shift_bytes = ((delta_bits >> 4) << 1);
-    }
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                action_pc_added = True
+//::                max_adata_bits_before_key = mat_key_start_bit
+//::                max_adata_bits_before_key -= 8
+//::            else:
+//::                action_pc_added = False
+//::                max_adata_bits_before_key = mat_key_start_bit
+//::            #endif
+//::            if action_pc_added:
+//::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) - 8 if max_actionfld_len < mat_key_start_bit else 0
+    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
+    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    int adatabyte = 1;
+//::            else:
+//::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) if max_actionfld_len < mat_key_start_bit else 0
+    actiondata->actionid = 0;
+    int adatabyte = 0;
+//::            #endif
+//::            max_adata_bits_before_key -= delta_bits
+
+    uint16_t axi_shift_bytes = ((${delta_bits} >> 4) << 1);
     // when axi_shift_bytes > 0, table entry is left shifted by positive number of bytes.
     ${table}_hwkey_unbuild(tableid, hwentry, hwentry_len, swkey, axi_shift_bytes);
     uint8_t *packed_actiondata_before_key;
