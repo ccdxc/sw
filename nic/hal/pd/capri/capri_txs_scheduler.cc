@@ -38,6 +38,110 @@
 
 extern class capri_state_pd *g_capri_state_pd;
 
+void
+capri_txs_timer_init_hsh_depth(uint32_t key_lines)
+{
+    uint64_t timer_key_hbm_base_addr;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+
+    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+
+    txs_csr->cfg_timer_static.read();
+    HAL_TRACE_DEBUG("hbm_base 0x{0:x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
+    txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
+    txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
+    txs_csr->cfg_timer_static.write();
+
+}
+
+// pre init and call timer hbm and sram init
+static void
+capri_txs_timer_init_pre (uint32_t key_lines)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+    hal::hal_cfg_t *hal_cfg =
+                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+
+    HAL_ASSERT(hal_cfg);
+
+    // Set timer_hsh_depth to actual value + 1
+    // Per Cino we need to add 1 for an ASIC bug workaround
+    capri_txs_timer_init_hsh_depth(key_lines + 1);
+
+    // timer hbm and sram init
+
+    // sram_hw_init is not implemented in the C++ model, so skip it there
+    txs_csr->cfw_timer_glb.read();
+    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
+        HAL_TRACE_DEBUG("timer sram init");
+        txs_csr->cfw_timer_glb.sram_hw_init(1);
+    }
+
+    // skip hbm init in model (C++ and RTL) as memory is 0 there and this
+    // takes a long time
+    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM &&
+            hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_RTL) {
+        HAL_TRACE_DEBUG("timer hbm init");
+        txs_csr->cfw_timer_glb.hbm_hw_init(1);
+    }
+    txs_csr->cfw_timer_glb.write();
+
+    HAL_TRACE_DEBUG("Done timer pre init");
+}
+
+// This is called after hbm and sram init
+static void
+capri_txs_timer_init_post (uint32_t key_lines)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+
+    // 0 the last element of sram
+    // Per Cino this is needed for an ASIC bug workaround
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].read();
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].slow_bcnt(0);
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].slow_lcnt(0);
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].fast_bcnt(0);
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].fast_lcnt(0);
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].write();
+
+    // Set timer_hsh_depth back to original size
+    // Per Cino this is needed for an ASIC bug workaround
+    capri_txs_timer_init_hsh_depth(key_lines);
+
+    // Set the tick resolution
+    txs_csr->cfg_fast_timer.read();
+    txs_csr->cfg_fast_timer.tick(10 * 1000);
+    txs_csr->cfg_fast_timer.write();
+
+    txs_csr->cfg_slow_timer.read();
+    txs_csr->cfg_slow_timer.tick(10 * 1000 * 1000);
+    txs_csr->cfg_slow_timer.write();
+
+    // Timer doorbell config
+    txs_csr->cfg_fast_timer_dbell.read();
+    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_fast_timer_dbell.write();
+
+    txs_csr->cfg_slow_timer_dbell.read();
+    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_slow_timer_dbell.write();
+
+    // Enable slow and fast timers
+    txs_csr->cfw_timer_glb.read();
+    txs_csr->cfw_timer_glb.ftmr_enable(1);
+    txs_csr->cfw_timer_glb.stmr_enable(1);
+    txs_csr->cfw_timer_glb.write();
+
+    HAL_TRACE_DEBUG("Done timer post init");
+}
+
+
 hal_ret_t
 capri_txs_scheduler_init (uint32_t admin_cos)
 {
@@ -78,6 +182,9 @@ capri_txs_scheduler_init (uint32_t admin_cos)
 
     txs_csr.cfw_scheduler_static.write();
     txs_csr.cfw_scheduler_glb.write();
+
+    // init timer
+    capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
 
 #if 0
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.
@@ -143,6 +250,9 @@ capri_txs_scheduler_init (uint32_t admin_cos)
         psp_csr.cfg_npv_cos_to_tm_oq_map[i].tm_oq(i);
         psp_csr.cfg_npv_cos_to_tm_oq_map[i].write();
     }
+
+    // init timer post init done
+    capri_txs_timer_init_post(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
 
     HAL_TRACE_DEBUG("Set hbm base addr for TXS sched to {:#x}, dtdm_lo_map {:#x}, dtdm_hi_map {:#x}",
                     txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);

@@ -345,13 +345,6 @@ asicpd_p4plus_recirc_init (void)
 }
 
 hal_ret_t
-asicpd_timer_init (void)
-{
-    capri_timer_init();
-    return HAL_RET_OK;
-}
-
-hal_ret_t
 asicpd_program_table_mpu_pc (void)
 {
     p4pd_table_properties_t       tbl_ctx;

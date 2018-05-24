@@ -10,7 +10,7 @@
 #include "nic/hal/pd/iris/p4pd_tcp_proxy_api.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -623,10 +623,10 @@ debug_dol_test_timer_full(int state)
          * Debug code to force num key_lines to 2
          */
         HAL_TRACE_DEBUG("setting num key_lines = 2");
-        capri_timer_init_helper(DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES);
+        capri_txs_timer_init_hsh_depth(DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES);
     } else {
         HAL_TRACE_DEBUG("resetting num key_lines back to default");
-        capri_timer_init_helper(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+        capri_txs_timer_init_hsh_depth(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
     }
 
     debug_dol_init_timer_full_area(state);

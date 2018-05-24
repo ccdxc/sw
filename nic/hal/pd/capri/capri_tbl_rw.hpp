@@ -15,29 +15,6 @@
 #include "nic/include/base.h"
 #endif
 
-#define CAPRI_TIMER_WHEEL_DEPTH         4096
-
-#define CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE    16
-#define CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE   12
-
-// This needs to be a power of 2
-#define CAPRI_TIMER_NUM_KEY_CACHE_LINES 1024
-
-// each line is 64B
-// Each key in key line takes up 1 line in data space
-#define CAPRI_TIMER_HBM_DATA_SPACE \
-    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64)
-
-#define CAPRI_TIMER_HBM_KEY_SPACE \
-    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * 64)
-
-#define CAPRI_TIMER_HBM_SPACE \
-    (CAPRI_TIMER_HBM_KEY_SPACE + CAPRI_TIMER_HBM_DATA_SPACE)
-
-#define CAPRI_MAX_TIMERS \
-    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * \
-     CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE)
-
 #define CAPRI_P4_NUM_STAGES     6
 #define CAPRI_P4PLUS_NUM_STAGES 8
 
@@ -168,8 +145,6 @@ void capri_program_table_mpu_pc(int tableid, bool gress, int stage, int stage_ta
                            uint64_t capri_table_asm_err_offset,
                            uint64_t capri_table_asm_base);
 
-void capri_timer_init_helper(uint32_t key_lines);
-
 int capri_toeplitz_init(int stage, int stage_tableid);
 
 int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
@@ -185,8 +160,6 @@ void capri_program_hbm_table_base_addr(int stage_tableid, char *tablename,
                                        int stage, bool ingress);
 
 void capri_p4plus_recirc_init();
-
-void capri_timer_init();
 
 uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc);
 

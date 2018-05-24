@@ -538,61 +538,6 @@ capri_p4plus_recirc_init (void)
     cap_top_csr.free(cfg_profie);
 }
 
-void
-capri_timer_init_helper (uint32_t key_lines)
-{
-    using namespace sdk::lib::csrlite;
-    uint64_t timer_key_hbm_base_addr;
-    sdk::lib::csrlite::cap_txs_csr_t *txs_csr = cap_top_csr.txs.txs.alloc();
-
-    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
-
-    txs_csr->cfg_timer_static.read();
-    HAL_TRACE_DEBUG("hbm_base 0x{0:x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
-    txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
-    txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
-    txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
-    txs_csr->cfg_timer_static.write();
-
-    txs_csr->cfg_fast_timer_dbell.read();
-    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
-    txs_csr->cfg_fast_timer_dbell.write();
-
-    txs_csr->cfg_slow_timer_dbell.read();
-    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
-    txs_csr->cfg_slow_timer_dbell.write();
-
-    // TODO:remove
-    txs_csr->cfg_timer_static.read();
-    HAL_TRACE_DEBUG("hbm_base 0x{0:x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
-
-    // initialize timer wheel to 0
-#if 0
-    HAL_TRACE_DEBUG("Initializing timer wheel...");
-    for (int i = 0; i <= CAPRI_TIMER_WHEEL_DEPTH; i++) {
-        HAL_TRACE_DEBUG("timer wheel index {}", i);
-        txs_csr->dhs_tmr_cnt_sram.entry[i].read();
-        txs_csr->dhs_tmr_cnt_sram.entry[i].slow_bcnt(0);
-        txs_csr->dhs_tmr_cnt_sram.entry[i].slow_lcnt(0);
-        txs_csr->dhs_tmr_cnt_sram.entry[i].fast_bcnt(0);
-        txs_csr->dhs_tmr_cnt_sram.entry[i].fast_lcnt(0);
-        txs_csr->dhs_tmr_cnt_sram.entry[i].write();
-    }
-#endif
-    cap_top_csr.free(txs_csr);
-    HAL_TRACE_DEBUG("Done initializing timer wheel");
-}
-
-void
-capri_timer_init (void)
-{
-    capri_timer_init_helper(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
-}
-
 /* This function initializes the stage id register for p4 plus pipelines such that:
          val0  : 4
          val1  : 5

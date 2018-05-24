@@ -18,6 +18,31 @@
 #define CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES 2048
 #define CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY 8192
 
+// Timer definitions
+#define CAPRI_TIMER_WHEEL_DEPTH         4096
+
+#define CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE    16
+#define CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE   12
+
+// This needs to be a power of 2
+#define CAPRI_TIMER_NUM_KEY_CACHE_LINES 1024
+
+// each line is 64B
+// Each key in key line takes up 1 line in data space
+#define CAPRI_TIMER_HBM_DATA_SPACE \
+    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64)
+
+#define CAPRI_TIMER_HBM_KEY_SPACE \
+    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * 64)
+
+#define CAPRI_TIMER_HBM_SPACE \
+    (CAPRI_TIMER_HBM_KEY_SPACE + CAPRI_TIMER_HBM_DATA_SPACE)
+
+#define CAPRI_MAX_TIMERS \
+    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * \
+     CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE)
+
+
 /* (lif,queue,cos) mapping params in scheduler table */
 typedef struct capri_txs_sched_lif_params_s_ {
     uint32_t             sched_table_offset;
@@ -39,6 +64,8 @@ typedef struct capri_txs_policer_lif_params_s {
  */
 
 hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos);
+
+void capri_txs_timer_init_hsh_depth(uint32_t key_lines);
 
 /** capri_txs_scheduler_lif_params_update
  * API to program txs scheduler table with lif,queue,cos mappings.
