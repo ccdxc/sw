@@ -16,9 +16,9 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
     upgAppRespPtr_->CreateUpgAppResp(req);
     if (this->upgHdlrPtr_) {
         HdlrRespCode hdlrRespCode;
-        hdlrRespCode = this->upgHdlrPtr_->UpgStateReqCreate(req);
+        hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
         if (hdlrRespCode != INPROGRESS) {
-            //this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+            this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
         }
     }
     return delphi::error::OK();

@@ -209,7 +209,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     auto upgReqStatus = this->findUpgStateReq(req->key());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        RETURN_IF_FAILED(this->createUpgStateReq(req->key(), upgrade::InvalidUpgState));
+        RETURN_IF_FAILED(this->createUpgStateReq(req->key(), upgrade::UpgReqRcvd));
     }
 
     return delphi::error::OK();
