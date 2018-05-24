@@ -32,5 +32,11 @@ ulimit -c unlimited
 # wrapper for our table debug CLI
 function debug_cli
 {
-  $PYTHON $NIC_DIR/cli/debugshell.py repl
+  if [ $1 == "iris" || $1 == "" ]; then
+      $PYTHON $NIC_DIR/cli/debug_cli_iris.py repl
+  elif [ $1 == "gft" ]; then
+      $PYTHON $NIC_DIR/cli/debug_cli_gft.py repl
+  else
+      echo "Unknown pipeline $1"
+  fi
 }

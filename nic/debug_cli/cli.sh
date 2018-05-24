@@ -19,7 +19,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/gen/x86_64/lib:.
 # start the debug CLI prompt
 if [ $1 == 'iris' ]
 then
-    python3 cli/cli_main.py repl
+    python3 cli/debug_cli_iris.py repl
 else
-    python3 cli/cli_main_gft.py repl
+    python3 cli/debug_cli_gft.py repl
 fi

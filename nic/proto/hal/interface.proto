@@ -438,8 +438,8 @@ message IfTunnelGREInfo {
 message IfTunnelInfo {
   IfTunnelEncapType     encap_type      = 1;
   oneof encap_info {
-    IfTunnelVxlanInfo   vxlan_info      = 2;
-    IfTunnelGREInfo     gre_info        = 3;
+    IfTunnelVxlanInfo   vxlan_info      = 2 [(gogoproto.moretags) = "venice:constraints={intf.IfTunnelInfo.encap_type==interface_pb2.IF_TUNNEL_ENCAP_TYPE_VXLAN}"];
+    IfTunnelGREInfo     gre_info        = 3 [(gogoproto.moretags) = "venice:constraints={intf.IfTunnelInfo.encap_type==interface_pb2.IF_TUNNEL_ENCAP_TYPE_GRE}"];
   }
   kh.VrfKeyHandle       vrf_key_handle  = 4 [(gogoproto.moretags) = "venice:ref"];
 }

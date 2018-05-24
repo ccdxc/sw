@@ -9,7 +9,7 @@ bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so             /nic/lib/
 
 # CLI
 nic/gen/common/cli/cli_frontend.py                                /nic/cli/
-nic/debug_cli/cli/cli_main.py                                     /nic/cli/
+nic/debug_cli/cli/debug_cli_iris.py                               /nic/cli/
 nic/debug_cli/cli/cli.py                                          /nic/cli/
 nic/debug_cli/cli/_cli.so                                         /nic/cli/
 nic/gen/iris/cli/iris_frontend.py                                 /nic/cli/
