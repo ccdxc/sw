@@ -20,6 +20,9 @@ descraol_get(DescrAolRequest& request, DescrAolResponseMsg *resp_msg)
     DescrAolSpec *response = resp_msg->add_response();
 
     pd_descr_ptr = (pd::pd_descr_aol_t*) request.descr_aol_handle();
+    if (pd_descr_ptr == 0) {
+        return HAL_RET_OK;
+    }
     args.src = pd_descr_ptr;
     args.dst = &pd_descr;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DESC_AOL_GET, (void *)&args);
