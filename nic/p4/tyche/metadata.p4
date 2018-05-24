@@ -76,7 +76,16 @@ header_type flow_act_metadata_t {
         tcam_flow_index           : 20;
         tcam_parent_policer_index : 13;
         tcam_child_policer_index  : 13;
+        tcam_lif                  : 11;
+        tcam_tm_oport             : 4;
         overflow_lkp              : 1;
+    }
+}
+
+header_type control_metadata_t {
+    fields {
+        update_checksum_1   : 1;
+        update_checksum_2   : 1;
     }
 }
 
@@ -112,6 +121,7 @@ metadata tunnel_metadata_t     tunnel_metadata;
 metadata l4_metadata_t         l4_metadata;
 metadata flow_lkp_metadata_t   flow_lkp_metadata;
 metadata flow_act_metadata_t   flow_action_metadata;
+metadata control_metadata_t    control_metadata;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t    scratch_metadata;

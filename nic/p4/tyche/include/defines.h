@@ -125,45 +125,14 @@
 #define MATCH_CUSTOM_FIELD_3           0x00004000
 
 /*****************************************************************************/
-/* Match types - bit positions                                               */
-/*****************************************************************************/
-#define MATCH_ETHERNET_DST_BIT_POS              0
-#define MATCH_ETHERNET_SRC_BIT_POS              1
-#define MATCH_ETHERNET_TYPE_BIT_POS             2
-#define MATCH_CUSTOMER_VLAN_ID_BIT_POS          3
-#define MATCH_IP_SRC_BIT_POS                    4
-#define MATCH_IP_DST_BIT_POS                    5
-#define MATCH_IP_DSCP_BIT_POS                   6
-#define MATCH_IP_PROTO_BIT_POS                  7
-#define MATCH_IP_TTL_BIT_POS                    8
-
-#define MATCH_TRANSPORT_SRC_PORT_1_BIT_POS      0
-#define MATCH_TRANSPORT_DST_PORT_1_BIT_POS      1
-#define MATCH_TCP_FLAGS_1_BIT_POS               2
-#define MATCH_ICMP_TYPE_1_BIT_POS               3
-#define MATCH_ICMP_CODE_1_BIT_POS               4
-#define MATCH_TENANT_ID_1_BIT_POS               5
-#define MATCH_MPLS_1_BIT_POS                    6
-#define MATCH_TRANSPORT_SRC_PORT_2_BIT_POS      7
-#define MATCH_TRANSPORT_DST_PORT_2_BIT_POS      8
-#define MATCH_TCP_FLAGS_2_BIT_POS               9
-#define MATCH_ICMP_TYPE_2_BIT_POS               10
-#define MATCH_ICMP_CODE_2_BIT_POS               11
-#define MATCH_CUSTOM_FIELD_1_BIT_POS            12
-#define MATCH_CUSTOM_FIELD_2_BIT_POS            13
-#define MATCH_CUSTOM_FIELD_3_BIT_POS            14
-
-/*****************************************************************************/
 /* Rewrite types                                                             */
 /*****************************************************************************/
 #define REWRITE_PUSH_ETHERNET_0                 0x00000001
-#define REWRITE_PUSH_IPV4_0                     0x00000002
-#define REWRITE_PUSH_IPV6_0                     0x00000004
-#define REWRITE_PUSH_CTAG_0                     0x00000008
+#define REWRITE_PUSH_CTAG_0                     0x00000002
+#define REWRITE_PUSH_IPV4_0                     0x00000004
+#define REWRITE_PUSH_IPV6_0                     0x00000008
 
-#define REWRITE_ENCAP_LEN_MASK_0                0x00FF0000
 #define REWRITE_ENCAP_LEN_MASK_0                0x0000FF00
-#define REWRITE_ENCAP_LEN_SHIFT_0               16
 #define REWRITE_ENCAP_LEN_SHIFT_0               8
 
 #define REWRITE_POP_ETHERNET                    0x00000001
@@ -180,24 +149,31 @@
 #define REWRITE_MODIFY_IP_PROTO                 0x00000800
 #define REWRITE_MODIFY_IP_TTL                   0x00001000
 
-#define REWRITE_PUSH_VXLAN_0                    0x00000000
-#define REWRITE_PUSH_GRE_0                      0x00000000
-#define REWRITE_PUSH_UDP_0                      0x00000000
-#define REWRITE_PUSH_MPLS_0                     0x00000000
+#define REWRITE_PUSH_VXLAN_0                    0x00000001
+#define REWRITE_PUSH_GRE_0                      0x00000002
+#define REWRITE_PUSH_UDP_0                      0x00000004
+#define REWRITE_PUSH_MPLS_0                     0x00000008
 
-#define REWRITE_POP_VXLAN_1                     0x00000000
-#define REWRITE_POP_GRE_1                       0x00000000
-#define REWRITE_POP_UDP_1                       0x00000000
-#define REWRITE_POP_MPLS_1                      0x00000000
-#define REWRITE_MODIFY_UDP_SPORT_1              0x00000000
-#define REWRITE_MODIFY_UDP_DPORT_1              0x00000000
-#define REWRITE_MODIFY_TCP_SPORT_1              0x00000000
-#define REWRITE_MODIFY_TCP_DPORT_1              0x00000000
-#define REWRITE_MODIFY_ICMP_TYPE_1              0x00000000
-#define REWRITE_MODIFY_ICMP_CODE_1              0x00000000
-#define REWRITE_MODIFY_UDP_SPORT_2              0x00000000
-#define REWRITE_MODIFY_UDP_DPORT_2              0x00000000
-#define REWRITE_MODIFY_TCP_SPORT_2              0x00000000
-#define REWRITE_MODIFY_TCP_DPORT_2              0x00000000
-#define REWRITE_MODIFY_ICMP_TYPE_2              0x00000000
-#define REWRITE_MODIFY_ICMP_CODE_2              0x00000000
+#define REWRITE_POP_VXLAN_1                     0x00000001
+#define REWRITE_POP_GRE_1                       0x00000002
+#define REWRITE_POP_UDP_1                       0x00000004
+#define REWRITE_POP_MPLS_1                      0x00000008
+#define REWRITE_MODIFY_UDP_SPORT_1              0x00000010
+#define REWRITE_MODIFY_UDP_DPORT_1              0x00000020
+#define REWRITE_MODIFY_TCP_SPORT_1              0x00000040
+#define REWRITE_MODIFY_TCP_DPORT_1              0x00000080
+#define REWRITE_MODIFY_ICMP_TYPE_1              0x00000100
+#define REWRITE_MODIFY_ICMP_CODE_1              0x00000200
+#define REWRITE_MODIFY_UDP_SPORT_2              0x00000400
+#define REWRITE_MODIFY_UDP_DPORT_2              0x00000800
+#define REWRITE_MODIFY_TCP_SPORT_2              0x00001000
+#define REWRITE_MODIFY_TCP_DPORT_2              0x00002000
+#define REWRITE_MODIFY_ICMP_TYPE_2              0x00004000
+#define REWRITE_MODIFY_ICMP_CODE_2              0x00008000
+
+/*****************************************************************************/
+/* Header sizes                                                              */
+/*****************************************************************************/
+#define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
+#define CAPRI_P4_INTRINSIC_HDR_SZ      5
+#define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15

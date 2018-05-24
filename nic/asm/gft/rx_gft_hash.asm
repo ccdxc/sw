@@ -15,10 +15,6 @@ rx_gft_hash_info:
     phvwr       p.flow_action_metadata_policer_index, \
                     d.rx_gft_hash_info_d.policer_index
 
-    // copy flow index (12 bits) to the top bits of ethernet src address
-    // for packet verification
-    // phvwr       p.ethernet_1_srcAddr[47:36], d.rx_gft_hash_info_d.flow_index
-
     // copy hint only if is non-zero
     sne         c1, d.rx_gft_hash_info_d.hint9, r0
     phvwr.c1    p.flow_action_metadata_overflow_lkp, TRUE

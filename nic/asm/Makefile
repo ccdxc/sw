@@ -14,7 +14,7 @@ LIBDIRS = \
           ipfix \
           adminq \
           gft \
-          p4pt \
+          tyche \
           $(NULL)
 
 IRIS_SUBDIRS = \
@@ -32,7 +32,6 @@ IRIS_SUBDIRS = \
           eth \
           ipfix \
           adminq \
-          p4pt \
           $(NULL)
 
 MSFT_GFT_SUBDIRS= \
@@ -49,7 +48,6 @@ MSFT_GFT_SUBDIRS= \
           eth \
           adminq \
           gft \
-          p4pt \
           $(NULL)
 
 PGMDIRS = $(NULL)
@@ -66,7 +64,7 @@ iris: $(IRIS_SUBDIRS)
 msft_gft: $(MSFT_GFT_SUBDIRS)
 
 $(SUBDIRS):
-	make -C $@
+	$(MAKE) -C $@
 
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc

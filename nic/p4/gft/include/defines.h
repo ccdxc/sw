@@ -211,41 +211,6 @@
 #define MATCH_GRE_PROTO_3              0x00100000
 
 /*****************************************************************************/
-/* Match types - bit positions                                               */
-/*****************************************************************************/
-#define MATCH_ETHERNET_DST_BIT_POS              0
-#define MATCH_ETHERNET_SRC_BIT_POS              1
-#define MATCH_ETHERNET_TYPE_BIT_POS             2
-#define MATCH_CUSTOMER_VLAN_ID_BIT_POS          3
-#define MATCH_IP_SRC_BIT_POS                    4
-#define MATCH_IP_DST_BIT_POS                    5
-#define MATCH_IP_DSCP_BIT_POS                   6
-#define MATCH_IP_PROTO_BIT_POS                  7
-#define MATCH_IP_TTL_BIT_POS                    8
-
-#define MATCH_TRANSPORT_SRC_PORT_1_BIT_POS      0
-#define MATCH_TRANSPORT_DST_PORT_1_BIT_POS      1
-#define MATCH_TCP_FLAGS_1_BIT_POS               2
-#define MATCH_ICMP_TYPE_1_BIT_POS               3
-#define MATCH_ICMP_CODE_1_BIT_POS               4
-#define MATCH_TENANT_ID_1_BIT_POS               5
-#define MATCH_GRE_PROTO_1_BIT_POS               6
-#define MATCH_TRANSPORT_SRC_PORT_2_BIT_POS      7
-#define MATCH_TRANSPORT_DST_PORT_2_BIT_POS      8
-#define MATCH_TCP_FLAGS_2_BIT_POS               9
-#define MATCH_ICMP_TYPE_2_BIT_POS               10
-#define MATCH_ICMP_CODE_2_BIT_POS               11
-#define MATCH_TENANT_ID_2_BIT_POS               12
-#define MATCH_GRE_PROTO_2_BIT_POS               13
-#define MATCH_TRANSPORT_SRC_PORT_3_BIT_POS      14
-#define MATCH_TRANSPORT_DST_PORT_3_BIT_POS      15
-#define MATCH_TCP_FLAGS_3_BIT_POS               16
-#define MATCH_ICMP_TYPE_3_BIT_POS               17
-#define MATCH_ICMP_CODE_3_BIT_POS               18
-#define MATCH_TENANT_ID_3_BIT_POS               19
-#define MATCH_GRE_PROTO_3_BIT_POS               20
-
-/*****************************************************************************/
 /* Transposition types                                                       */
 /*****************************************************************************/
 #define TRANSPOSITIONS_PUSH_ETHERNET_00            0x00000001

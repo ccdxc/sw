@@ -89,6 +89,7 @@ action rewrite_layer_1(hdr_bits, ethernet_src, ethernet_dst, ethernet_type,
         if ((hdr_bits & REWRITE_MODIFY_IP_TTL) != 0) {
             modify_field(ipv4_1.ttl, ip_ttl);
         }
+        modify_field(control_metadata.update_checksum_1, TRUE);
     }
 
     if (ipv6_1.valid == TRUE) {
@@ -106,6 +107,9 @@ action rewrite_layer_1(hdr_bits, ethernet_src, ethernet_dst, ethernet_type,
         }
         if ((hdr_bits & REWRITE_MODIFY_IP_TTL) != 0) {
             modify_field(ipv6_1.hopLimit, ip_ttl);
+        }
+        if ((hdr_bits & (REWRITE_MODIFY_IP_SRC|REWRITE_MODIFY_IP_DST)) != 0) {
+            modify_field(control_metadata.update_checksum_1, TRUE);
         }
     }
 }
@@ -157,6 +161,7 @@ action rewrite_layer_2(hdr_bits, ethernet_src, ethernet_dst, ethernet_type,
         if ((hdr_bits & REWRITE_MODIFY_IP_TTL) != 0) {
             modify_field(ipv4_2.ttl, ip_ttl);
         }
+        modify_field(control_metadata.update_checksum_2, TRUE);
     }
 
     if (ipv6_2.valid == TRUE) {
@@ -174,6 +179,9 @@ action rewrite_layer_2(hdr_bits, ethernet_src, ethernet_dst, ethernet_type,
         }
         if ((hdr_bits & REWRITE_MODIFY_IP_TTL) != 0) {
             modify_field(ipv6_2.hopLimit, ip_ttl);
+        }
+        if ((hdr_bits & (REWRITE_MODIFY_IP_SRC|REWRITE_MODIFY_IP_DST)) != 0) {
+            modify_field(control_metadata.update_checksum_2, TRUE);
         }
     }
 }
@@ -257,6 +265,12 @@ action l4_rewrite_layer_1(hdr_bits, l4_sport, l4_dport) {
     if ((hdr_bits & REWRITE_MODIFY_ICMP_CODE_1) != 0) {
         modify_field(icmp_1.icmp_code, l4_dport);
     }
+    if ((hdr_bits & (REWRITE_MODIFY_UDP_SPORT_1 |
+                     REWRITE_MODIFY_UDP_DPORT_1 |
+                     REWRITE_MODIFY_TCP_SPORT_1 |
+                     REWRITE_MODIFY_TCP_DPORT_1)) != 0) {
+        modify_field(control_metadata.update_checksum_1, TRUE);
+    }
 }
 
 action l4_rewrite_layer_2(hdr_bits, l4_sport, l4_dport) {
@@ -277,6 +291,12 @@ action l4_rewrite_layer_2(hdr_bits, l4_sport, l4_dport) {
     }
     if ((hdr_bits & REWRITE_MODIFY_ICMP_CODE_2) != 0) {
         modify_field(icmp_2.icmp_code, l4_dport);
+    }
+    if ((hdr_bits & (REWRITE_MODIFY_UDP_SPORT_2 |
+                     REWRITE_MODIFY_UDP_DPORT_2 |
+                     REWRITE_MODIFY_TCP_SPORT_2 |
+                     REWRITE_MODIFY_TCP_DPORT_2)) != 0) {
+        modify_field(control_metadata.update_checksum_1, TRUE);
     }
 }
 
@@ -301,8 +321,9 @@ action rx_l4_rewrite(hdr_bits, l4_sport_1, l4_dport_1, l4_sport_2, l4_dport_2,
     l4_rewrite_layer_2(hdr_bits, l4_sport_2, l4_dport_2);
 
     modify_field(scratch_metadata.hdr_bits, hdr_bits);
-    modify_field(scratch_metadata.in_packets, in_packets);
-    modify_field(scratch_metadata.in_bytes, in_bytes);
+    modify_field(scratch_metadata.in_packets, in_packets + 1);
+    modify_field(scratch_metadata.in_bytes,
+                 in_bytes + capri_p4_intrinsic.packet_len);
 }
 
 @pragma stage 5

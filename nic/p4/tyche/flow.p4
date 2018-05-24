@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Rx pipeline                                                               */
 /*****************************************************************************/
-action rx_flow_hash_info(entry_valid, prio, flow_index,
+action rx_flow_hash_info(entry_valid, prio, flow_index, lif, oport,
                          parent_policer_index, child_policer_index,
                          hash1, hint1, hash2, hint2, hash3, hint3,
                          hash4, hint4, hash5, hint5, hash6, hint6,
@@ -15,6 +15,8 @@ action rx_flow_hash_info(entry_valid, prio, flow_index,
                      parent_policer_index);
         modify_field(flow_action_metadata.child_policer_index,
                      child_policer_index);
+        modify_field(capri_intrinsic.lif, lif);
+        modify_field(capri_intrinsic.tm_oport, oport);
 
         // if register c1 indicates miss, compare hints and lookup
         // overflow hash table
@@ -45,8 +47,8 @@ action rx_flow_hash_info(entry_valid, prio, flow_index,
     modify_field(scratch_metadata.hint, hint10);
 }
 
-action rx_flow_tcam_info(tcam_index, prio, flow_index, parent_policer_index,
-                         child_policer_index) {
+action rx_flow_tcam_info(tcam_index, prio, flow_index, lif, oport,
+                         parent_policer_index, child_policer_index) {
     modify_field(flow_action_metadata.tcam_prio, prio);
     modify_field(flow_action_metadata.tcam_index, tcam_index);
     modify_field(flow_action_metadata.tcam_flow_index, flow_index);
@@ -54,16 +56,21 @@ action rx_flow_tcam_info(tcam_index, prio, flow_index, parent_policer_index,
                  parent_policer_index);
     modify_field(flow_action_metadata.tcam_child_policer_index,
                  child_policer_index);
+    modify_field(flow_action_metadata.tcam_lif, lif);
+    modify_field(flow_action_metadata.tcam_tm_oport, oport);
 }
 
 action rx_flow_result() {
-    if (flow_action_metadata.tcam_prio < flow_action_metadata.prio) {
+    if (flow_action_metadata.tcam_prio > flow_action_metadata.prio) {
         modify_field(flow_action_metadata.flow_index,
                      flow_action_metadata.tcam_flow_index);
         modify_field(flow_action_metadata.parent_policer_index,
                      flow_action_metadata.tcam_parent_policer_index);
         modify_field(flow_action_metadata.child_policer_index,
                      flow_action_metadata.tcam_child_policer_index);
+        modify_field(capri_intrinsic.lif, flow_action_metadata.tcam_lif);
+        modify_field(capri_intrinsic.tm_oport,
+                     flow_action_metadata.tcam_tm_oport);
     }
 }
 
@@ -123,7 +130,7 @@ table rx_flow_hash {
 }
 
 @pragma stage 2
-table rx_flow_tcam_1 {
+table rx_flow_tcam1 {
     reads {
         flow_lkp_metadata.ethernet_dst_1     : ternary;
         flow_lkp_metadata.ethernet_src_1     : ternary;
@@ -140,12 +147,13 @@ table rx_flow_tcam_1 {
     }
     actions {
         rx_flow_tcam_info;
+        nop;
     }
     size : FLOW_TCAM_TABLE_SIZE;
 }
 
 @pragma stage 3
-table rx_flow_tcam_2 {
+table rx_flow_tcam2 {
     reads {
         flow_action_metadata.tcam_index      : ternary;
         flow_lkp_metadata.ethernet_dst_2     : ternary;
@@ -161,6 +169,7 @@ table rx_flow_tcam_2 {
     }
     actions {
         rx_flow_tcam_info;
+        nop;
     }
     size : FLOW_TCAM_TABLE_SIZE;
 }
@@ -190,15 +199,15 @@ control rx_flow_lookup {
     if (flow_action_metadata.overflow_lkp == TRUE) {
         apply(rx_flow_hash_overflow);
     }
-    apply(rx_flow_tcam_1);
-    apply(rx_flow_tcam_2);
+    apply(rx_flow_tcam1);
+    apply(rx_flow_tcam2);
     apply(rx_flow_result);
 }
 
 /*****************************************************************************/
 /* Tx pipeline                                                               */
 /*****************************************************************************/
-action tx_flow_hash_info(entry_valid, prio, flow_index,
+action tx_flow_hash_info(entry_valid, prio, flow_index, oport,
                          parent_policer_index, child_policer_index,
                          hash1, hint1, hash2, hint2, hash3, hint3,
                          hash4, hint4, hash5, hint5, hash6, hint6,
@@ -212,6 +221,7 @@ action tx_flow_hash_info(entry_valid, prio, flow_index,
                      parent_policer_index);
         modify_field(flow_action_metadata.child_policer_index,
                      child_policer_index);
+        modify_field(capri_intrinsic.tm_oport, oport);
 
         // if register c1 indicates miss, compare hints and lookup
         // overflow hash table
@@ -242,8 +252,8 @@ action tx_flow_hash_info(entry_valid, prio, flow_index,
     modify_field(scratch_metadata.hint, hint10);
 }
 
-action tx_flow_tcam_info(tcam_index, prio, flow_index, parent_policer_index,
-                         child_policer_index) {
+action tx_flow_tcam_info(tcam_index, prio, flow_index, oport,
+                         parent_policer_index, child_policer_index) {
     modify_field(flow_action_metadata.tcam_prio, prio);
     modify_field(flow_action_metadata.tcam_index, tcam_index);
     modify_field(flow_action_metadata.tcam_flow_index, flow_index);
@@ -251,16 +261,19 @@ action tx_flow_tcam_info(tcam_index, prio, flow_index, parent_policer_index,
                  parent_policer_index);
     modify_field(flow_action_metadata.tcam_child_policer_index,
                  child_policer_index);
+    modify_field(flow_action_metadata.tcam_tm_oport, oport);
 }
 
 action tx_flow_result() {
-    if (flow_action_metadata.tcam_prio < flow_action_metadata.prio) {
+    if (flow_action_metadata.tcam_prio > flow_action_metadata.prio) {
         modify_field(flow_action_metadata.flow_index,
                      flow_action_metadata.tcam_flow_index);
         modify_field(flow_action_metadata.parent_policer_index,
                      flow_action_metadata.tcam_parent_policer_index);
         modify_field(flow_action_metadata.child_policer_index,
                      flow_action_metadata.tcam_child_policer_index);
+        modify_field(capri_intrinsic.tm_oport,
+                     flow_action_metadata.tcam_tm_oport);
     }
 }
 
@@ -307,6 +320,7 @@ table tx_flow_tcam {
     }
     actions {
         tx_flow_tcam_info;
+        nop;
     }
     size : FLOW_TCAM_TABLE_SIZE;
 }
