@@ -35,6 +35,7 @@ struct key_entry_aligned_t d;
 
 resp_tx_rsqrkey_process:
 
+    CAPRI_SET_TABLE_0_VALID(0)
     bbeq        CAPRI_KEY_FIELD(IN_P, skip_rkey), 1, add_headers
     
     // lkey_p = lkey_p + lkey_info_p->key_id;
