@@ -34,4 +34,14 @@ void UpgAgentHandler::UpgStateCleanupComplete(string status, string name) {
     return;
 }
 
+void UpgAgentHandler::UpgSuccessful(void) {
+    LogInfo("Upgrade completed successfully!!!!");
+    return;
+}
+
+void UpgAgentHandler::UpgFailed(void) {
+    LogInfo("Upgrade failed!!!!");
+    return;
+}
+
 } // namespace upgrade

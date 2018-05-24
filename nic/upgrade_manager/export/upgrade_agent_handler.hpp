@@ -19,6 +19,9 @@ public:
     virtual void UpgStateDataplaceDowntimeComplete(string status, string name);
     virtual void UpgStateCleanupComplete(string status, string name);
 
+    virtual void UpgSuccessful(void);
+    virtual void UpgFailed(void);
+
 };
 typedef std::shared_ptr<UpgAgentHandler> UpgAgentHandlerPtr;
 

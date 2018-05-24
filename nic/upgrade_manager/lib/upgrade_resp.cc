@@ -40,6 +40,7 @@ delphi::error UpgMgrResp::UpgradeFinish(bool success) {
     if (upgResp == NULL) {
         RETURN_IF_FAILED(this->createUpgMgrResp(10, respType));
     }
+    LogInfo("Responded back to the agent");
     return delphi::error::OK();
 }
 

@@ -22,7 +22,7 @@ public:
     }
 
     // OnUpgAppRespCreate gets called when UpgAppResp object is created
-    virtual delphi::error OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr respp);
+    virtual delphi::error OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp);
 
     // OnUpgAppRespVal gets called when UpgAppRespVal attribute changes
     virtual delphi::error OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp);
