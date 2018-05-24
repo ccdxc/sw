@@ -227,6 +227,27 @@ func (m *Local) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PasswordCredential) Clone(into interface{}) (interface{}, error) {
+	var out *PasswordCredential
+	var ok bool
+	if into == nil {
+		out = &PasswordCredential{}
+	} else {
+		out, ok = into.(*PasswordCredential)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PasswordCredential) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *Permission) Clone(into interface{}) (interface{}, error) {
 	var out *Permission
 	var ok bool
@@ -547,6 +568,10 @@ func (m *LdapAttributeMapping) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *Local) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *PasswordCredential) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 

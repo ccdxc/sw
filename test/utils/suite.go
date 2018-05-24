@@ -19,9 +19,11 @@ import (
 	"github.com/pensando/sw/api"
 
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -43,6 +45,9 @@ type TestBedConfig struct {
 	SSHAuthMethod  string `json:",omitempty"` // Only password is implemented now. Cert will come later.
 	FirstVeniceIP  string `json:",omitempty"`
 	SSHPrivKeyFile string `json:",omitempty"`
+	User           string `json:",omitempty"`
+	Password       string `json:",omitempty"`
+	AuthMethod     string `json:",omitempty"`
 }
 
 var defaultTestBedConfig = TestBedConfig{
@@ -55,6 +60,9 @@ var defaultTestBedConfig = TestBedConfig{
 	SSHAuthMethod:  "password",
 	FirstVeniceIP:  "192.168.30.11",
 	SSHPrivKeyFile: "/root/.ssh/id_rsa",
+	User:           "test",
+	Password:       "pensando",
+	AuthMethod:     auth.Authenticators_LOCAL.String(),
 }
 
 // TestUtils holds test config, state and any helper caches .
@@ -175,6 +183,19 @@ func (tu *TestUtils) sshInit() {
 
 }
 
+// SetupAuth bootstraps authentication policy, local user
+func (tu *TestUtils) SetupAuth() {
+	apicl, err := apiclient.NewRestAPIClient(tu.apiGwAddr)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create rest client, err: %v", err))
+	}
+	// create authentication policy with local auth enabled
+	testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: tu.AuthMethod == auth.Authenticators_LOCAL.String()},
+		&auth.Ldap{Enabled: tu.AuthMethod == auth.Authenticators_LDAP.String()})
+	// create user
+	testutils.CreateTestUser(apicl, tu.User, tu.Password, "default")
+}
+
 // Init starts connecting to the nodes and builds initial data about cluster
 func (tu *TestUtils) Init() {
 	ip := net.ParseIP(tu.FirstVeniceIP).To4()
@@ -197,12 +218,15 @@ func (tu *TestUtils) Init() {
 	ginkgo.By(fmt.Sprintf("IPToNameMap: %+v", tu.IPToNameMap))
 	ginkgo.By(fmt.Sprintf("apiGwAddr : %+v ", tu.apiGwAddr))
 
+	tu.SetupAuth()
+	ginkgo.By("auth setup complete")
+
 	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.apiGwAddr)
 	clusterIf := cmdClient.Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
 	var cl *cluster.Cluster
 	gomega.Eventually(func() bool {
-		cl, err = clusterIf.Get(context.Background(), &obj)
+		cl, err = clusterIf.Get(tu.NewLoggedInContext(context.Background()), &obj)
 		if err == nil {
 			return true
 		}
@@ -242,6 +266,7 @@ func (tu *TestUtils) Init() {
 
 // Close any open connections to nodes
 func (tu *TestUtils) Close() {
+
 	if tu.resolver != nil {
 		tu.resolver.Stop()
 		tu.resolver = nil
@@ -253,6 +278,16 @@ func (tu *TestUtils) Close() {
 	if tu.vIPClient != nil {
 		tu.vIPClient.Close()
 		tu.vIPClient = nil
+	}
+
+	if tu.APIClient != nil {
+		// Clean up auth setup
+		testutils.DeleteAuthenticationPolicy(tu.APIClient)
+		testutils.DeleteUser(tu.APIClient, tu.User, "default")
+		ginkgo.By("Cleaned up auth setup")
+
+		tu.APIClient.Close()
+		tu.APIClient = nil
 	}
 }
 
@@ -340,4 +375,13 @@ func (tu *TestUtils) DebugStatsOnNode(node string, restPort string, statsStruct 
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
+}
+
+// NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
+func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
+	nctx, err := testutils.NewLoggedInContext(ctx, tu.apiGwAddr, &auth.PasswordCredential{Username: tu.User, Password: tu.Password, Tenant: "default"})
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("err : %s", err))
+	}
+	return nctx
 }

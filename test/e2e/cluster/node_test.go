@@ -47,7 +47,7 @@ var _ = Describe("node tests", func() {
 				},
 			}
 
-			node, err = nodeIf.Create(context.Background(), node)
+			node, err = nodeIf.Create(ts.tu.NewLoggedInContext(context.Background()), node)
 			Expect(err).ShouldNot(HaveOccurred())
 			By(fmt.Sprintf("Added %+v to cluster", node.Name))
 		})
@@ -80,7 +80,7 @@ var _ = Describe("node tests", func() {
 
 		AfterEach(func() {
 			obj := api.ObjectMeta{Name: nonQnode}
-			n, err2 := nodeIf.Delete(context.Background(), &obj)
+			n, err2 := nodeIf.Delete(ts.tu.NewLoggedInContext(context.Background()), &obj)
 			Expect(err2).ShouldNot(HaveOccurred())
 			By(fmt.Sprintf("Disjoin %+v from cluster", n.Name))
 		})

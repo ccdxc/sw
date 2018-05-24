@@ -14,6 +14,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
@@ -47,6 +48,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/monitoring/gateway"
 	_ "github.com/pensando/sw/api/generated/network/gateway"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
+	_ "github.com/pensando/sw/venice/apigw/svc"
 
 	"github.com/golang/mock/gomock"
 
@@ -54,6 +56,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent/protos"
 
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 
 	"github.com/pensando/sw/venice/ctrler/tpm"
@@ -75,6 +78,9 @@ const (
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
 	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
+	// test user
+	testUser     = "test"
+	testPassword = "pensando"
 )
 
 // veniceIntegSuite is the state of integ test
@@ -94,6 +100,7 @@ type veniceIntegSuite struct {
 	vcHub          vchSuite
 	resolverSrv    *rpckit.RPCServer
 	resolverClient resolver.Interface
+	userCred       *auth.PasswordCredential
 }
 
 // test args
@@ -293,6 +300,15 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 	it.tpm = tpm
 
+	// create authentication policy with local auth enabled
+	CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	// create user
+	CreateTestUser(apicl, testUser, testPassword, "default")
+	it.userCred = &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   "default",
+	}
 	it.vcHub.SetUp(c, it.numAgents)
 }
 

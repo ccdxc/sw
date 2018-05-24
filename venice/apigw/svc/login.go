@@ -15,11 +15,11 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/manager"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,14 +27,8 @@ import (
 )
 
 const (
-	// CsrfHeader is CSRF Token header name set in http response upon login
-	CsrfHeader = "X-CSRF-TOKEN"
 	// CsrfTokenLen is length in bytes of CSRF token
 	CsrfTokenLen = 32
-	// TokenExpInDays is JWT expiration in days
-	TokenExpInDays = 6
-	// LoginURLPath is where handler for login POST request is registered
-	LoginURLPath = "/v1/login/"
 	// LoginSvc is name under which the Login service is registered in API Gateway
 	LoginSvc = "loginV1"
 	// LoginSvcPath is path under which the Login service is registered in API Gateway
@@ -83,10 +77,10 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 	wg *sync.WaitGroup) error {
 	// cache resolver
 	s.rslvr = rslvr
-	apigw := apigwpkg.MustGetAPIGateway()
+	apiGateway := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := globals.APIServer
-	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
+	grpcaddr = apiGateway.GetAPIServerAddr(grpcaddr)
 	// create AuthenticationManager
 	authnMgr, err := manager.NewAuthenticationManager(globals.APIGw, grpcaddr, s.rslvr, s.tokenExpiration)
 	if err != nil {
@@ -95,7 +89,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	s.authnMgr = authnMgr
 	router := mux.NewRouter()
-	router.Path(LoginURLPath).Methods("POST").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	router.Path(login.LoginURLPath).Methods("POST").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
@@ -105,7 +99,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 			return
 		}
 
-		cred := &authn.PasswordCredential{}
+		cred := &auth.PasswordCredential{}
 		if err := json.Unmarshal(body, cred); err != nil {
 			log.Errorf("failed to unmarshal credentials from request body: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -137,8 +131,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 			return
 		}
 
-		// set CSRF token header
-		w.Header().Set(CsrfHeader, csrfToken)
+		w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
 		// set cookie
 		http.SetCookie(w, createCookie(sessionToken, s.tokenExpiration))
 		w.WriteHeader(http.StatusOK)
@@ -149,20 +142,20 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 			return
 		}
 	})
-	m.Handle(LoginURLPath, router)
+	m.Handle(login.LoginURLPath, router)
 	return nil
 }
 
 func init() {
-	apigw := apigwpkg.MustGetAPIGateway()
+	apiGateway := apigwpkg.MustGetAPIGateway()
 	svcLoginV1 := loginV1GwService{
-		tokenExpiration: time.Duration(TokenExpInDays * 24 * time.Hour),
+		tokenExpiration: time.Duration(apigw.TokenExpInDays * 24 * 60 * 60), //expiration in seconds
 		csrfTokenLength: CsrfTokenLen,
 	}
-	apigw.Register(LoginSvc, LoginSvcPath, &svcLoginV1)
+	apiGateway.Register(LoginSvc, LoginSvcPath, &svcLoginV1)
 }
 
-func (s *loginV1GwService) login(ctx context.Context, in *authn.PasswordCredential) (*auth.User, error) {
+func (s *loginV1GwService) login(ctx context.Context, in *auth.PasswordCredential) (*auth.User, error) {
 	user, ok, err := s.authnMgr.Authenticate(in)
 	if err != nil {
 		log.Errorf("failed to authenticate user [%s] in tenant [%s]:  err: %v", in.Username, in.Tenant, err)
@@ -195,12 +188,13 @@ func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User) (string
 
 func createCookie(token string, expiration time.Duration) *http.Cookie {
 	cookie := &http.Cookie{
-		Name:     "sid",
+		Name:     login.SessionID,
 		Value:    token,
-		Expires:  time.Now().Add(expiration),
-		MaxAge:   int(expiration.Seconds()),
-		Secure:   true,
+		Expires:  time.Now().Add(expiration * time.Second), //expiration in seconds
+		MaxAge:   int((expiration * time.Second).Seconds()),
+		Secure:   false,
 		HttpOnly: true,
+		Path:     "/",
 	}
 	return cookie
 }

@@ -26,6 +26,8 @@ const (
 	hostSimURL         = "http://192.168.30.121:5050"
 	hostMac            = "02:02:02:02:02:01"
 	apigwURL           = "pen-master:9000"
+	user               = "test"
+	password           = "pensando"
 )
 
 type e2eSuite struct {

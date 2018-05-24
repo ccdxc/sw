@@ -255,6 +255,40 @@ func DecodeGrpcRespLocal(ctx context.Context, response interface{}) (interface{}
 	return response, nil
 }
 
+func encodeHTTPPasswordCredential(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPasswordCredential(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PasswordCredential
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPasswordCredential encodes GRPC request
+func EncodeGrpcReqPasswordCredential(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PasswordCredential)
+	return req, nil
+}
+
+// DecodeGrpcReqPasswordCredential decodes GRPC request
+func DecodeGrpcReqPasswordCredential(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PasswordCredential)
+	return req, nil
+}
+
+// EncodeGrpcRespPasswordCredential encodes GRC response
+func EncodeGrpcRespPasswordCredential(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPasswordCredential decodes GRPC response
+func DecodeGrpcRespPasswordCredential(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPPermission(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

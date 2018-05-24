@@ -9,7 +9,6 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
-	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/password"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -118,7 +117,7 @@ func TestAuthenticate(t *testing.T) {
 	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
 
 	Assert(t, ok, "Unsuccessful local user authentication")
 	Assert(t, (autheduser.Name == user.Name && autheduser.Tenant == user.Tenant), "User returned by password auth module didn't match user being authenticated")
@@ -134,7 +133,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Tenant: "default", Password: "wrongpassword"})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: "wrongpassword"})
 
 	Assert(t, !ok, "Successful local user authentication")
 	Assert(t, (autheduser == nil), "User returned while authenticating with wrong password")
@@ -150,7 +149,7 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: "test1", Tenant: "default", Password: "password"})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: "test1", Tenant: "default", Password: "password"})
 
 	Assert(t, !ok, "Successful local user authentication")
 	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
@@ -167,7 +166,7 @@ func TestDisabledPasswordAuthenticator(t *testing.T) {
 	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful local user authentication")
 	Assert(t, autheduser == nil, "User returned with disabled password authenticator")
 	AssertOk(t, err, "Error returned with disabled password authenticator")

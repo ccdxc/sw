@@ -9,6 +9,8 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
+
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
 )
 
 // createTenant creates a tenant using REST api
@@ -20,9 +22,12 @@ func (it *veniceIntegSuite) createTenant(tenantName string) (*cluster.Tenant, er
 			Name: tenantName,
 		},
 	}
-
+	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	if err != nil {
+		return nil, err
+	}
 	// create it
-	return it.restClient.ClusterV1().Tenant().Create(context.Background(), &ten)
+	return it.restClient.ClusterV1().Tenant().Create(ctx, &ten)
 }
 
 // deleteTenant deletes a tenant using REST api
@@ -31,9 +36,12 @@ func (it *veniceIntegSuite) deleteTenant(tenantName string) (*cluster.Tenant, er
 	meta := api.ObjectMeta{
 		Name: tenantName,
 	}
-
+	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	if err != nil {
+		return nil, err
+	}
 	// delete it
-	return it.restClient.ClusterV1().Tenant().Delete(context.Background(), &meta)
+	return it.restClient.ClusterV1().Tenant().Delete(ctx, &meta)
 }
 
 // createNetwork creates a network using REST api
@@ -52,9 +60,12 @@ func (it *veniceIntegSuite) createNetwork(tenant, namespace, net, subnet, gw str
 		},
 		Status: network.NetworkStatus{},
 	}
-
+	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	if err != nil {
+		return nil, err
+	}
 	// create it
-	return it.restClient.NetworkV1().Network().Create(context.Background(), &nw)
+	return it.restClient.NetworkV1().Network().Create(ctx, &nw)
 }
 
 // deleteNetwork deletes a network using REST api
@@ -65,9 +76,12 @@ func (it *veniceIntegSuite) deleteNetwork(tenant, net string) (*network.Network,
 		Namespace: "",
 		Tenant:    tenant,
 	}
-
+	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	if err != nil {
+		return nil, err
+	}
 	// delete it
-	return it.restClient.NetworkV1().Network().Delete(context.Background(), &ometa)
+	return it.restClient.NetworkV1().Network().Delete(ctx, &ometa)
 }
 
 // getStatsPolicy gets a stats policy

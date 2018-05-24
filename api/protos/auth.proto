@@ -271,3 +271,10 @@ message RoleBinding {
     // Status contains the current state of the role binding.
     RoleBindingStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
+
+// PasswordCredential is user credential to login to Venice. It consists of username, password and tenant.
+message PasswordCredential {
+    string Username = 1 [(gogoproto.jsontag) = "username,omitempty"];
+    string Password = 2 [(gogoproto.jsontag) = "password,omitempty"];
+    string Tenant   = 3 [(gogoproto.jsontag) = "tenant,omitempty"];
+}

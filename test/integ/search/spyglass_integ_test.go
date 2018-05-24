@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -21,14 +20,17 @@ import (
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/search"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
+	loginctx "github.com/pensando/sw/api/login/context"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
@@ -36,6 +38,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
+	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -61,6 +64,9 @@ const (
 	maxResults = int32(50)
 	// objectCount is count of objects to be generated
 	objectCount int64 = 5
+	// test user
+	testUser     = "test"
+	testPassword = "pensando"
 )
 
 type testInfo struct {
@@ -76,6 +82,7 @@ type testInfo struct {
 	certSrv       *certsrv.CertSrv
 	esClient      elastic.ESClient
 	apiClient     apiclient.Services
+	authzHeader   string
 }
 
 var tInfo testInfo
@@ -240,6 +247,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Validate the object count
 	expectedCount := uint64(3*objectCount + int64(len(Tenants)))
+	expectedCount += 2 // for auth policy and test user
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
@@ -258,7 +266,9 @@ func TestSpyglass(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
-			err = netutils.HTTPGet(getSearchURLWithParams("tesla", 0, 10, ""), &resp)
+			restcl := netutils.NewHTTPClient()
+			restcl.SetHeader("Authorization", tInfo.authzHeader)
+			_, err = restcl.Req("GET", getSearchURLWithParams("tesla", 0, 10, ""), nil, &resp)
 			if err != nil {
 				log.Errorf("GET on search REST endpoint: %s failed, err:%+v",
 					getSearchURLWithParams("tesla", 0, 10, ""), err)
@@ -315,7 +325,7 @@ func performSearchTests(t *testing.T) {
 
 	// Http error for InvalidArgument test cases
 	httpInvalidArgErrCode := grpcruntime.HTTPStatusFromCode(grpccodes.InvalidArgument)
-	httpInvalidArgErr := fmt.Errorf("%d %s", httpInvalidArgErrCode, http.StatusText(httpInvalidArgErrCode))
+	httpInvalidArgErr := fmt.Errorf("Server responded with %d", httpInvalidArgErrCode)
 
 	// Testcases for various queries on config objects
 	queryTestcases := []struct {
@@ -1357,7 +1367,7 @@ func performSearchTests(t *testing.T) {
 			"",
 			0,
 			nil,
-			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+			fmt.Errorf("Server responded with 400"),
 		},
 		{
 			// Non-existent Text
@@ -1393,7 +1403,7 @@ func performSearchTests(t *testing.T) {
 			"",
 			0,
 			nil,
-			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+			fmt.Errorf("Server responded with 400"),
 		},
 		{
 			// Invalid From offset (-1)
@@ -1407,7 +1417,7 @@ func performSearchTests(t *testing.T) {
 			"",
 			0,
 			nil,
-			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+			fmt.Errorf("Server responded with 400"),
 		},
 		{
 			// Invalid From offset (>1023)
@@ -1421,7 +1431,7 @@ func performSearchTests(t *testing.T) {
 			"",
 			0,
 			nil,
-			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+			fmt.Errorf("Server responded with 400"),
 		},
 		{
 			// Invalid MaxResults offset (-1)
@@ -1435,7 +1445,7 @@ func performSearchTests(t *testing.T) {
 			"",
 			0,
 			nil,
-			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+			fmt.Errorf("Server responded with 400"),
 		},
 		{
 			// Invalid MaxResults offset (> 8192)
@@ -1449,7 +1459,7 @@ func performSearchTests(t *testing.T) {
 			"",
 			0,
 			nil,
-			fmt.Errorf("HTTP error response. Status: 400 Bad Request, StatusCode: 400"),
+			fmt.Errorf("Server responded with 400"),
 		},
 	}
 
@@ -1469,7 +1479,9 @@ func performSearchTests(t *testing.T) {
 						// Query using URI params - via GET method
 						searchURL = getSearchURLWithParams(tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.sortBy)
 						resp = search.SearchResponse{}
-						err = netutils.HTTPGet(searchURL, &resp)
+						restcl := netutils.NewHTTPClient()
+						restcl.SetHeader("Authorization", tInfo.authzHeader)
+						_, err = restcl.Req("GET", searchURL, nil, &resp)
 					} else {
 						// Query using Body - via POST method
 						// GET with body is not supported by many http clients including
@@ -1477,7 +1489,9 @@ func performSearchTests(t *testing.T) {
 						fmt.Printf("## Query Body: %+v\n", tc.query)
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
-						err = netutils.HTTPPost(searchURL, &tc.query, &resp)
+						restcl := netutils.NewHTTPClient()
+						restcl.SetHeader("Authorization", tInfo.authzHeader)
+						_, err = restcl.Req("POST", searchURL, &tc.query, &resp)
 					}
 
 					if (err != nil && tc.err == nil) ||
@@ -1643,6 +1657,7 @@ func startAPIserverAPIgw(t *testing.T) {
 	}
 	tInfo.apiGwPort = port
 
+	setupAuth(t)
 	t.Logf("ApiServer & ApiGW are UP: {%+v}", tInfo)
 }
 
@@ -1658,6 +1673,31 @@ func stopAPIserverAPIgw(t *testing.T) {
 	tInfo.certSrv.Stop()
 
 	t.Logf("ApiGW, ApiServer and Elastic server are STOPPED")
+}
+
+func setupAuth(t *testing.T) {
+	// create authentication policy with local auth enabled
+	authntestutils.CreateAuthenticationPolicy(tInfo.apiClient, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	// create user
+	authntestutils.CreateTestUser(tInfo.apiClient, testUser, testPassword, "default")
+	getAuthorizationHeader(t)
+}
+
+func getAuthorizationHeader(t *testing.T) {
+	ctx, err := authntestutils.NewLoggedInContext(context.Background(), "http://127.0.0.1:"+tInfo.apiGwPort, &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   "default",
+	})
+	if err != nil {
+		t.Fatalf("failed to create logged in context - %v", err)
+	}
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		t.Fatal("failed to get authorization header from context")
+	}
+	tInfo.authzHeader = authzHeader
+	return
 }
 
 func TestMain(m *testing.M) {

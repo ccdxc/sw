@@ -11,6 +11,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	apicache "github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/api/client"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -19,6 +21,7 @@ import (
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
+	"github.com/pensando/sw/venice/utils/authn/testutils"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,6 +36,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apigw"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
+	_ "github.com/pensando/sw/venice/apigw/svc"
 )
 
 const (
@@ -40,6 +44,9 @@ const (
 	certPath  = "../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../venice/utils/certmgr/testdata/ca.key.pem"
 	rootsPath = "../../venice/utils/certmgr/testdata/roots.pem"
+	// test user
+	testUser     = "test"
+	testPassword = "pensando"
 )
 
 type tInfo struct {
@@ -49,6 +56,7 @@ type tInfo struct {
 	cache         apicache.Interface
 	esServer      *esmock.ElasticServer
 	certsrvurl    string
+	userCred      *auth.PasswordCredential
 }
 
 var tinfo tInfo
@@ -177,7 +185,22 @@ func TestMain(m *testing.M) {
 	}
 	tinfo.apigwport = port
 
+	apicl, err := client.NewGrpcUpstream("CrudOpsTest", "localhost:"+tinfo.apiserverport, tinfo.l)
+	if err != nil {
+		tinfo.l.Fatalf("cannot create API server client (%v)", err)
+	}
+	// create authentication policy with local auth enabled
+	testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	// create user
+	testutils.CreateTestUser(apicl, testUser, testPassword, "default")
+	tinfo.userCred = &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   "default",
+	}
+
 	rcode := m.Run()
+	apicl.Close()
 	srv.Stop()
 	gw.Stop()
 	os.Exit(rcode)

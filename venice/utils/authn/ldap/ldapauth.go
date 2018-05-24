@@ -92,7 +92,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		return nil, false, err
 	}
 
-	ldapCredential, found := credential.(*authn.PasswordCredential)
+	ldapCredential, found := credential.(*auth.PasswordCredential)
 	if !found {
 		log.Errorf("Incorrect credential type: expected '*authn.PasswordCredential', got [%T]", credential)
 		return nil, false, authn.ErrInvalidCredentialType

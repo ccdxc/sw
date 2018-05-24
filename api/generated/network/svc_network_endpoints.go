@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -1234,6 +1235,10 @@ func (r *EndpointsNetworkV1RestClient) getHTTPRequest(ctx context.Context, in in
 	req, err := http.NewRequest(method, target.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
+	}
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		req.Header.Add("Authorization", val)
 	}
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)

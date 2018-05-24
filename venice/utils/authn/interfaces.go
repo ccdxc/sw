@@ -23,10 +23,3 @@ type Authenticator interface {
 	//  error if there is any error authenticating user
 	Authenticate(credential Credential) (*auth.User, bool, error)
 }
-
-// PasswordCredential is user credential passed to Authenticator to authenticate user. It consists of username, password and tenant.
-type PasswordCredential struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Tenant   string `json:"tenant"`
-}

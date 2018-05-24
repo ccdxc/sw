@@ -19,28 +19,20 @@ var (
 
 // AuthenticationManager authenticates and returns user information
 type AuthenticationManager struct {
-	authGetter      AuthGetter
-	name            string
-	apiServer       string
-	resolver        resolver.Interface
-	tokenExpiration time.Duration
+	AuthGetter AuthGetter
 }
 
 // NewAuthenticationManager returns an instance of AuthenticationManager
 func NewAuthenticationManager(name, apiServer string, rslver resolver.Interface, tokenExpiration time.Duration) (*AuthenticationManager, error) {
 
 	return &AuthenticationManager{
-		authGetter:      GetAuthGetter(name, apiServer, rslver, tokenExpiration), // get singleton user cache
-		name:            name,
-		apiServer:       apiServer,
-		resolver:        rslver,
-		tokenExpiration: tokenExpiration,
+		AuthGetter: GetAuthGetter(name, apiServer, rslver, tokenExpiration), // get singleton user cache
 	}, nil
 }
 
 // Authenticate authenticates user using authenticators in the order defined in AuthenticationPolicy. If any authenticator succeeds, it doesn't try the remaining authenticators.
 func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
-	authenticators, err := authnmgr.authGetter.GetAuthenticators()
+	authenticators, err := authnmgr.AuthGetter.GetAuthenticators()
 	if err != nil {
 		return nil, false, err
 	}
@@ -60,7 +52,7 @@ func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential)
 // CreateToken creates session token. It should be called only after successful authentication. It saves passed in objects in the session.
 // Objects should support JSON serialization.
 func (authnmgr *AuthenticationManager) CreateToken(user *auth.User, objects map[string]interface{}) (string, error) {
-	tokenManager, err := authnmgr.authGetter.GetTokenManager()
+	tokenManager, err := authnmgr.AuthGetter.GetTokenManager()
 	if err != nil {
 		return "", err
 	}
@@ -74,7 +66,7 @@ func (authnmgr *AuthenticationManager) CreateToken(user *auth.User, objects map[
 //  true if token/session is valid/not expired
 //  CSRF synchronizer token
 func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, bool, string, error) {
-	tokenManager, err := authnmgr.authGetter.GetTokenManager()
+	tokenManager, err := authnmgr.AuthGetter.GetTokenManager()
 	if err != nil {
 		return nil, false, "", err
 	}
@@ -92,7 +84,7 @@ func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, 
 	tenant, _ := tokenInfo[TenantClaim].(string)
 
 	// get user from cache
-	user, ok := authnmgr.authGetter.GetUser(username, tenant)
+	user, ok := authnmgr.AuthGetter.GetUser(username, tenant)
 	if !ok {
 		log.Errorf("User [%s] in tenant [%s] not found in cache", username, tenant)
 		return nil, ok, "", ErrUserNotFound
@@ -104,5 +96,5 @@ func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, 
 
 // Uninitialize stops watchers, un-initializes authentication manager. It should be called only when server is shutting down.
 func (authnmgr *AuthenticationManager) Uninitialize() {
-	authnmgr.authGetter.Stop()
+	authnmgr.AuthGetter.Stop()
 }

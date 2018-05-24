@@ -111,7 +111,8 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 }
 
 type apiRestServerClient struct {
-	url string
+	url    string
+	logger log.Logger
 
 	aAuthV1       auth.AuthV1Interface
 	aBookstoreV1  bookstore.BookstoreV1Interface
@@ -158,7 +159,8 @@ func (a *apiRestServerClient) WorkloadV1() workload.WorkloadV1Interface {
 // NewRestAPIClient returns a REST client
 func NewRestAPIClient(url string) (Services, error) {
 	return &apiRestServerClient{
-		url: url,
+		url:    url,
+		logger: log.WithContext("module", "RestAPIClient"),
 
 		aAuthV1:       authClient.NewRestCrudClientAuthV1(url),
 		aBookstoreV1:  bookstoreClient.NewRestCrudClientBookstoreV1(url),

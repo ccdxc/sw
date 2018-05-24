@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -127,7 +128,10 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 			ms.Spec.StartConditions.ScheduleTime.Timestamp = *ts
 			log.Infof("Setting ScheduleTime to %v\n", ms.Spec.StartConditions.ScheduleTime)
 		}
-		_, err := it.restClient.MonitoringV1().MirrorSession().Create(context.Background(), &ms)
+
+		ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+		AssertOk(c, err, "Error creating logged in context")
+		_, err = it.restClient.MonitoringV1().MirrorSession().Create(ctx, &ms)
 		if err != nil {
 			log.Infof("%v", err)
 			Assert(c, false, "Failed to create mirror session")
@@ -137,7 +141,9 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 	intervals = []string{"1s", "30s"}
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, ms := range testMirrorSessions {
-			tms, err := it.restClient.MonitoringV1().MirrorSession().Get(context.Background(), &ms.ObjectMeta)
+			ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+			AssertOk(c, err, "Error creating logged in context")
+			tms, err := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
 			if err != nil {
 				log.Infof("Get():MirrorSession %s:%s ... Not Found", ms.Tenant, ms.Name)
 				return false, nil

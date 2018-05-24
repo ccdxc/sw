@@ -10,7 +10,6 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
-	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -213,7 +212,7 @@ func TestAuthenticate(t *testing.T) {
 		authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, ldapconf)
 
 		// authenticate
-		autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 		DeleteAuthenticationPolicy(apicl)
 
 		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
@@ -232,7 +231,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: "wrongpassword"})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: "wrongpassword"})
 
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned while authenticating with wrong password")
@@ -247,7 +246,7 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: "test1", Password: "password"})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: "test1", Password: "password"})
 
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
@@ -273,7 +272,7 @@ func TestMissingLdapAttributeMapping(t *testing.T) {
 	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Missing LDAP Attribute Mapping")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Missing LDAP Attribute Mapping")
@@ -302,7 +301,7 @@ func TestIncorrectLdapAttributeMapping(t *testing.T) {
 	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
@@ -331,7 +330,7 @@ func TestIncorrectBaseDN(t *testing.T) {
 	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Base DN")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Base DN")
@@ -360,7 +359,7 @@ func TestIncorrectBindPassword(t *testing.T) {
 	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Bind Password")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Bind Password")
@@ -389,7 +388,7 @@ func TestDisabledLdapAuthenticator(t *testing.T) {
 	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with disabled LDAP authenticator")
 	AssertOk(t, err, "Error returned with disabled LDAP authenticator")

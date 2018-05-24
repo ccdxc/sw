@@ -14,6 +14,7 @@ The following Messages are defined.
   Ldap
   LdapAttributeMapping
   Local
+  PasswordCredential
   Permission
   Radius
   Role

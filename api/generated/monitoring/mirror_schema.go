@@ -19,18 +19,6 @@ var typesMapMirror = map[string]*runtime.Struct{
 			"Apps": runtime.Field{Name: "Apps", JSONTag: "applications", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"monitoring.AutoMsgMirrorSessionWatchHelper": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent"},
-		},
-	},
-	"monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
-		},
-	},
 	"monitoring.MatchRule": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Src": runtime.Field{Name: "Src", JSONTag: "source", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MatchSelector"},
@@ -65,15 +53,6 @@ var typesMapMirror = map[string]*runtime.Struct{
 			"Spec": runtime.Field{Name: "Spec", JSONTag: "mirror-session-spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSessionSpec"},
 
 			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSessionStatus"},
-		},
-	},
-	"monitoring.MirrorSessionList": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
-
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
 		},
 	},
 	"monitoring.MirrorSessionSpec": &runtime.Struct{

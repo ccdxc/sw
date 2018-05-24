@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/globals"
+	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -68,6 +69,9 @@ func TestSecretsTransformer(t *testing.T) {
 	// REST Client -- should not see any secret
 	restClient, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
 	AssertOk(t, err, "cannot create REST client")
+	// create logged in context
+	ctx, err = authntestutils.NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
 
 	fullCustomer := bookstore.Customer{
 		ObjectMeta: api.ObjectMeta{

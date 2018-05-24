@@ -11,12 +11,19 @@ import (
 	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	otext "github.com/opentracing/opentracing-go/ext"
 
+	"github.com/pensando/grpc-gateway/runtime"
+
+	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authn/manager"
+	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -35,6 +42,7 @@ type apiGw struct {
 	}
 	backendOverride map[string]string
 	devmode         bool
+	authnMgr        *manager.AuthenticationManager
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -123,7 +131,7 @@ func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 func (a *apiGw) preflightHandler(w http.ResponseWriter, r *http.Request) {
 	headers := []string{"Content-Type", "Accept"}
 	w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
-	methods := []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	methods := []string{"GET", "OPTIONS"}
 	w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
 	a.logger.DebugLog("msg", "preflight request", "URL", r.URL.Path)
 	return
@@ -145,17 +153,38 @@ func (a *apiGw) tracerMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-// allowCORS enables CORS and returns other preflight check headers.
-func (a *apiGw) allowCORS(h http.Handler) http.Handler {
+// checkCORS allows CORS for GET and returns preflight check headers for OPTIONS. It doesn't allow CORS request for other http methods.
+func (a *apiGw) checkCORS(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		a.logger.DebugLog("headers", r.Header)
 		if origin := r.Header.Get("Origin"); origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
-				// TODO(sanjayt): This is treating the OPTIONS request as a *. Make it more granular
-				//  to resource level.
-				a.preflightHandler(w, r)
-				return
+			switch r.Method {
+			case "OPTIONS":
+				if r.Header.Get("Access-Control-Request-Method") != "" {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+					// Vary header to indicate server response differs based on Origin
+					w.Header().Set("Vary", "Origin")
+					// TODO(sanjayt): This is treating the OPTIONS request as a *. Make it more granular
+					//  to resource level.
+					a.preflightHandler(w, r)
+					return
+				}
+			case "GET":
+				// no cross origin check for GET
+			default:
+				// if there is a proxy in front of API Gw
+				forwardedHost := r.Header.Get(apigw.XForwardedHostHeader)
+				// r.Host contains Host header from http request. It is compared against Origin header to check if request is same origin.
+				if origin != "http://"+forwardedHost && origin != "http://"+r.Host { //TODO: TLS should be enabled
+					w.WriteHeader(http.StatusForbidden)
+					a.logger.InfoLog("msg", "Denied CORS request", "Origin", origin, "Host", r.Host, apigw.XForwardedHostHeader, forwardedHost)
+					vErrors.SendUnauthorized(w, "CORS request not allowed")
+					return
+				}
 			}
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			// Vary header to indicate server response differs based on Origin
+			w.Header().Set("Vary", "Origin")
 		}
 		h.ServeHTTP(w, r)
 	})
@@ -223,7 +252,7 @@ func (a *apiGw) Run(config apigw.Config) {
 	wg.Add(1)
 	go func() {
 		wg.Done()
-		a.doneCh <- http.Serve(ln, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
+		a.doneCh <- http.Serve(ln, a.extractHdrInfo(a.checkCORS(a.tracerMiddleware(m))))
 	}()
 
 	for name, svc := range a.svcmap {
@@ -255,6 +284,14 @@ func (a *apiGw) Run(config apigw.Config) {
 		}
 	}
 	wg.Wait()
+
+	// create authentication manager
+	grpcaddr := globals.APIServer
+	grpcaddr = a.GetAPIServerAddr(grpcaddr)
+	a.authnMgr, err = manager.NewAuthenticationManager(globals.APIGw, grpcaddr, rslvr, apigw.TokenExpInDays*24*60*60) // expiration in seconds
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
+	}
 
 	// We are ready to set runstate we have started listening on HTTP port and
 	//  all backends are connected
@@ -330,11 +367,10 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 
 	// Call all PreAuthZHooks, if any of them return err then abort
 	if !skipAuth {
-		// Call to Authenticate
-		// if !skipAuth {
-		//	token, err := auth.Authenticate(nctx, i)
-		// }
-
+		_, ok := a.isRequestAuthenticated(nctx)
+		if !ok {
+			return nil, vErrors.NewUnauthorized("")
+		}
 		pzHooks := prof.PreAuthZHooks()
 		for _, h := range pzHooks {
 			nctx, i, err = h(nctx, i)
@@ -375,4 +411,75 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 
 	a.copyToOutgoingContext(nctx, ctx)
 	return out, err
+}
+
+func (a *apiGw) isRequestAuthenticated(ctx context.Context) (*auth.User, bool) {
+	// Get metadata from context
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if !ok {
+		a.logger.Errorf("Unable to get metadata from context (%v)", ctx)
+		return nil, false
+	}
+	a.logger.DebugLog("metadata", md)
+
+	// Get JWT from Cookie or Authorization header
+	var token string
+	tokenHeader, ok := md[strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader))]
+	if ok {
+		// Only one cookie header should be present according to RFC6265
+		rawCookies := tokenHeader[0]
+		header := http.Header{}
+		header.Add(apigw.CookieHeader, rawCookies)
+		request := http.Request{Header: header}
+		var err error
+		token, err = login.GetTokenFromCookies(request.Cookies())
+		if err != nil {
+			a.logger.Errorf("session token not found in cookie, err (%v)", err)
+			return nil, false
+		}
+	} else {
+		// check authorization header
+		tokenHeader, ok = md[strings.ToLower(apigw.GrpcMDAuthorizationHeader)]
+		if !ok {
+			a.logger.Debug("Authorization header not found")
+			return nil, false
+		}
+		tokenSlice := strings.Split(tokenHeader[0], "Bearer ")
+		if len(tokenSlice) != 2 {
+			a.logger.Debugf("incorrect Authorization header value (%s)", tokenHeader[0])
+			return nil, false
+		}
+		token = tokenSlice[1]
+	}
+
+	// Validate JWT
+	user, ok, csrfTok, err := a.authnMgr.ValidateToken(token)
+	if !ok {
+		a.logger.Debugf("invalid JWT token (%s), err (%v)", token, err)
+		return nil, false
+	}
+
+	reqMethodHeader, ok := md["req-method"]
+	if !ok {
+		a.logger.Error("req-method header is not present")
+		return nil, false
+	}
+	// Validate CSRF token for non GET requests
+	if reqMethodHeader[0] != "GET" {
+		_, ok = md[strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, "Origin"))]
+		if ok {
+			csrfHeader, ok := md[strings.ToLower(apigw.GrpcMDCsrfHeader[len(runtime.MetadataHeaderPrefix):])]
+			if !ok {
+				a.logger.Debugf("no CSRF header in request (%v)", csrfHeader)
+				return nil, false
+			}
+			csrfTokFromRequest := csrfHeader[0]
+			if csrfTok != csrfTokFromRequest {
+				a.logger.Debugf("invalid CSRF token from request (%v), from JWT (%v)", csrfTokFromRequest, csrfTok)
+				return nil, false
+			}
+		}
+	}
+
+	return user, true
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
-	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -235,7 +234,7 @@ func TestAuthenticate(t *testing.T) {
 		var ok bool
 		var err error
 		AssertEventually(t, func() (bool, interface{}) {
-			autheduser, ok, err = authnmgr.Authenticate(&authn.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
+			autheduser, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
 			return ok, nil
 		}, fmt.Sprintf("[%v] Unsuccessful local user authentication", testtype))
 
@@ -257,7 +256,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 		var ok bool
 		var err error
 		AssertConsistently(t, func() (bool, interface{}) {
-			autheduser, ok, err = authnmgr.Authenticate(authn.PasswordCredential{Username: testUser, Password: "wrongpassword"})
+			autheduser, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Password: "wrongpassword"})
 			return !ok, nil
 		}, fmt.Sprintf("[%v] Successful local user authentication", testtype))
 
@@ -296,7 +295,7 @@ func TestNotYetImplementedAuthenticator(t *testing.T) {
 	var ok bool
 	var err error
 	AssertConsistently(t, func() (bool, interface{}) {
-		user, ok, err = authnmgr.Authenticate(&authn.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
+		user, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
 		return !ok, nil
 	}, "User authenticated when unimplemented authenticator is configured")
 
@@ -354,7 +353,7 @@ func TestAuthenticateWithDisabledAuthenticators(t *testing.T) {
 		var ok bool
 		var err error
 		AssertConsistently(t, func() (bool, interface{}) {
-			autheduser, ok, err = authnmgr.Authenticate(authn.PasswordCredential{Username: testUser, Password: testPassword})
+			autheduser, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 			return !ok, nil
 		}, fmt.Sprintf("[%v] local user authentication should fail", testtype))
 
@@ -399,102 +398,8 @@ func TestAuthnMgrValidateToken(t *testing.T) {
 	Assert(t, user != nil && user.Name == testUser && user.Tenant == tenant, "incorrect user returned")
 }
 
-const (
-	invalidUserClaim     = "invalidUser"
-	invalidTenantClaim   = "invalidTenant"
-	nonExistentUserClaim = "nonExistentUser"
-)
-
-type mockTokenManager struct{}
-
-func (tm *mockTokenManager) ValidateToken(token string) (map[string]interface{}, bool, error) {
-	claims := make(map[string]interface{})
-	switch token {
-	case invalidUserClaim:
-		claims[SubClaim] = 0
-	case invalidTenantClaim:
-		claims[TenantClaim] = 0
-	case nonExistentUserClaim:
-		claims[SubClaim] = nonExistentUserClaim
-	}
-	return claims, true, nil
-}
-
-func (tm *mockTokenManager) CreateToken(*auth.User, map[string]interface{}) (string, error) {
-	return "", nil
-}
-
-func (tm *mockTokenManager) Get(token, key string) (interface{}, bool, error) {
-	return nil, false, nil
-}
-
-type mockAuthGetter struct{}
-
-func (ag *mockAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
-	switch name {
-	case nonExistentUserClaim:
-		return nil, false
-	default:
-		// user object
-		user := &auth.User{
-			TypeMeta: api.TypeMeta{Kind: "User"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant: tenant,
-				Name:   name,
-			},
-			Spec: auth.UserSpec{
-				Fullname: "Test User" + name,
-				Password: "",
-				Email:    name + "@pensandio.io",
-				Type:     auth.UserSpec_LOCAL.String(),
-			},
-		}
-		return user, true
-	}
-
-}
-
-// GetAuthenticationPolicy returns authentication policy
-func (ag *mockAuthGetter) GetAuthenticationPolicy() (*auth.AuthenticationPolicy, error) {
-	policy := &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: true,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-			},
-			Secret: secret,
-		},
-	}
-	return policy, nil
-}
-
-func (ag *mockAuthGetter) GetAuthenticators() ([]authn.Authenticator, error) {
-	return nil, nil
-}
-
-func (ag *mockAuthGetter) GetTokenManager() (TokenManager, error) {
-	return &mockTokenManager{}, nil
-}
-
-// Stop un-initializes AuthGetter
-func (ag *mockAuthGetter) Stop() {}
-
-// Start re-initializes AuthGetter. It blocks if AuthGetter has not been un-initialized through Stop()
-func (ag *mockAuthGetter) Start() {}
-
 func TestValidateTokenErrors(t *testing.T) {
-	mockAuthnmgr := &AuthenticationManager{
-		authGetter: &mockAuthGetter{},
-	}
+	mockAuthnmgr := NewMockAuthenticationManager()
 	tests := []struct {
 		name     string
 		token    string

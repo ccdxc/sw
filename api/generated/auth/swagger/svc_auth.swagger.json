@@ -151,14 +151,12 @@
           },
           {
             "name": "Spec.Authenticators.Ldap.TLSOptions.ServerName",
-            "description": "Spec contains the configuration of the role.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Authenticators.Ldap.TLSOptions.TrustedCerts",
-            "description": "Status contains the current state of the role.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -550,6 +548,7 @@
           },
           {
             "name": "Spec.Users",
+            "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -559,6 +558,7 @@
           },
           {
             "name": "Spec.UserGroups",
+            "description": "ResourceGroup is grouping of resource types for which a permission is defined.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -568,7 +568,7 @@
           },
           {
             "name": "Spec.Role",
-            "description": "Spec contains configuration of authentication mechanisms.",
+            "description": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1149,12 +1149,14 @@
           },
           {
             "name": "Spec.Password",
+            "description": "Spec contains the configuration of the role binding.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Type",
+            "description": "Status contains the current state of the role binding.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1591,8 +1593,7 @@
           "type": "string"
         },
         "ResourceGroup": {
-          "type": "string",
-          "title": "UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search"
+          "type": "string"
         },
         "ResourceKind": {
           "type": "string"
@@ -1604,8 +1605,7 @@
           "type": "array",
           "items": {
             "type": "string"
-          },
-          "title": "GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search"
+          }
         },
         "Actions": {
           "type": "array",
@@ -1651,7 +1651,8 @@
         "Status": {
           "$ref": "#/definitions/authRoleStatus"
         }
-      }
+      },
+      "title": "status part of authentication policy object"
     },
     "authRoleBinding": {
       "type": "object",
@@ -1663,13 +1664,15 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/authRoleBindingSpec"
+          "$ref": "#/definitions/authRoleBindingSpec",
+          "description": "Spec contains configuration of authentication mechanisms."
         },
         "Status": {
-          "$ref": "#/definitions/authRoleBindingStatus"
+          "$ref": "#/definitions/authRoleBindingStatus",
+          "description": "Status contains the current state of the authentication policy."
         }
       },
-      "title": "status part of authentication policy object"
+      "title": "AuthenticationPolicy defines various authentication mechanisms available and order in which they are used"
     },
     "authRoleBindingList": {
       "type": "object",
@@ -1695,24 +1698,26 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant."
         },
         "UserGroups": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "ResourceGroup is grouping of resource types for which a permission is defined"
         },
         "Role": {
           "type": "string",
-          "description": "Spec contains configuration of authentication mechanisms."
+          "title": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint"
         }
       },
-      "title": "AuthenticationPolicy defines various authentication mechanisms available and order in which they are used"
+      "description": "Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints."
     },
     "authRoleBindingStatus": {
       "type": "object",
-      "description": "Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints."
+      "title": "spec part of role object"
     },
     "authRoleList": {
       "type": "object",
@@ -1738,15 +1743,14 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/authPermission"
-          },
-          "title": "Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint"
+          }
         }
       },
-      "title": "spec part of role object"
+      "title": "status part of role object"
     },
     "authRoleStatus": {
       "type": "object",
-      "title": "status part of role object"
+      "title": "Role is a collection of permissions"
     },
     "authTLSOptions": {
       "type": "object",
@@ -1760,15 +1764,13 @@
           "format": "boolean"
         },
         "ServerName": {
-          "type": "string",
-          "description": "Spec contains the configuration of the role."
+          "type": "string"
         },
         "TrustedCerts": {
-          "type": "string",
-          "description": "Status contains the current state of the role."
+          "type": "string"
         }
       },
-      "title": "Role is a collection of permissions"
+      "title": "spec part of role binding object"
     },
     "authUser": {
       "type": "object",
@@ -1786,7 +1788,7 @@
           "$ref": "#/definitions/authUserStatus"
         }
       },
-      "title": "spec part of role binding object"
+      "title": "status part of role binding object"
     },
     "authUserList": {
       "type": "object",
@@ -1815,13 +1817,15 @@
           "type": "string"
         },
         "Password": {
-          "type": "string"
+          "type": "string",
+          "description": "Spec contains the configuration of the role binding."
         },
         "Type": {
-          "type": "string"
+          "type": "string",
+          "description": "Status contains the current state of the role binding."
         }
       },
-      "title": "status part of role binding object"
+      "title": "RoleBinding is an assignment of a role to users or groups"
     },
     "authUserStatus": {
       "type": "object",
@@ -1839,11 +1843,10 @@
           }
         },
         "LastSuccessfulLogin": {
-          "$ref": "#/definitions/apiTimestamp",
-          "description": "Spec contains the configuration of the role binding."
+          "$ref": "#/definitions/apiTimestamp"
         }
       },
-      "title": "RoleBinding is an assignment of a role to users or groups"
+      "description": "PasswordCredential is user credential to login to Venice. It consists of username, password and tenant."
     }
   }
 }

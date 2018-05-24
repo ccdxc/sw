@@ -4,22 +4,28 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
-	"strings"
+	"github.com/pensando/grpc-gateway/runtime"
 
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 var hooksCalled int
@@ -124,7 +130,7 @@ func TestPreflightHandler(t *testing.T) {
 	req.Header.Set("Access-Control-Request-Method", "GET")
 	resp := httptest.NewRecorder()
 	dummyfn := http.HandlerFunc(dummyHandler)
-	handler := a.allowCORS(dummyfn)
+	handler := a.checkCORS(dummyfn)
 	handler.ServeHTTP(resp, req)
 
 	if resp.Code != http.StatusOK {
@@ -146,14 +152,64 @@ func TestPreflightHandler(t *testing.T) {
 		}
 	}
 
-	// allowed methods should be [GET,POST,PUT,DELETE,OPTIONS]
+	// allowed methods should be [GET, OPTIONS]
 	if v, ok := hdr["Access-Control-Allow-Methods"]; ok {
 		for _, h := range v {
-			if !strings.Contains(h, "GET") || !strings.Contains(h, "POST") || !strings.Contains(h, "PUT") ||
-				!strings.Contains(h, "DELETE") || !strings.Contains(h, "OPTIONS") {
+			if !strings.Contains(h, "GET") || !strings.Contains(h, "OPTIONS") {
 				t.Errorf("Allow Methods not set [%v]", h)
 			}
 		}
+	}
+}
+
+func TestCheckCORS(t *testing.T) {
+	_ = MustGetAPIGateway()
+	a := singletonAPIGw
+
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig)
+	a.logger = l
+	tests := []struct {
+		name     string
+		method   string
+		origin   string
+		host     string
+		expected int
+	}{
+		{
+			name:     "cross origin GET request",
+			method:   "GET",
+			origin:   "http://test.com",
+			host:     "127.0.0.1",
+			expected: http.StatusOK,
+		},
+		{
+			name:     "cross origin POST request",
+			method:   "POST",
+			origin:   "http://test.com",
+			host:     "127.0.0.1",
+			expected: http.StatusForbidden,
+		},
+		{
+			name:     "same origin POST request",
+			method:   "POST",
+			origin:   "http://127.0.0.1",
+			host:     "127.0.0.1",
+			expected: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		req, err := http.NewRequest(test.method, "http://127.0.0.1/test/a", nil)
+		if err != nil {
+			t.Fatal("could not create request")
+		}
+		req.Header.Set("Origin", test.origin)
+		req.Header.Set("Host", test.host)
+		resp := httptest.NewRecorder()
+		dummyfn := http.HandlerFunc(dummyHandler)
+		handler := a.checkCORS(dummyfn)
+		handler.ServeHTTP(resp, req)
+		Assert(t, resp.Code == test.expected, fmt.Sprintf("[%v] test failed", test.name))
 	}
 }
 
@@ -235,6 +291,7 @@ func TestRunApiGw(t *testing.T) {
 		HTTPAddr:  ":0",
 		DebugMode: true,
 		Logger:    l,
+		Resolvers: []string{""},
 	}
 	_ = MustGetAPIGateway()
 	a := singletonAPIGw
@@ -294,8 +351,20 @@ func TestHandleRequest(t *testing.T) {
 		return in, nil
 	}
 	mock.retObj = &input
-	gw := MustGetAPIGateway()
-	out, err := gw.HandleRequest(context.TODO(), &input, prof, call)
+	_ = MustGetAPIGateway()
+
+	a := singletonAPIGw
+	buf := &bytes.Buffer{}
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
+	a.logger = l
+	a.authnMgr = manager.NewMockAuthenticationManager()
+
+	// create authenticated context
+	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
+		"req-method", "GET"))
+
+	out, err := a.HandleRequest(ctx, &input, prof, call)
 	if !reflect.DeepEqual(&input, out) {
 		t.Errorf("returned object does not match [%v]/[%v]", input, out)
 	}
@@ -329,7 +398,10 @@ func TestHandleRequest(t *testing.T) {
 	mock.skipCallFn = skipfn
 	mock.preCallCnt, mock.postCallCnt, mock.preAuthNCnt, mock.preAuthZCnt = 0, 0, 0, 0
 	called = 0
-	out, err = gw.HandleRequest(context.TODO(), &input, prof, call)
+	// create authenticated context
+	ctx = metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
+		"req-method", "GET"))
+	out, err = a.HandleRequest(ctx, &input, prof, call)
 	if !reflect.DeepEqual(&input, out) {
 		t.Errorf("returned object does not match [%v]/[%v]", input, out)
 	}
@@ -375,5 +447,90 @@ func TestIsSkipped(t *testing.T) {
 		if ret != c.ret {
 			t.Errorf("for svc [%v] expecting [%v] got [%v]", c.svc, c.ret, ret)
 		}
+	}
+}
+
+func TestIsRequestAuthenticated(t *testing.T) {
+	tests := []struct {
+		name     string
+		md       metadata.MD
+		expected bool
+	}{
+		{
+			name:     "no metadata in context",
+			md:       nil,
+			expected: false,
+		},
+		{
+			name:     "no Cookie and Authorization headers in metadata",
+			md:       metadata.Pairs(),
+			expected: false,
+		},
+		{
+			name: "Cookie header in metadata",
+			md: metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
+				"req-method", "GET"),
+			expected: true,
+		},
+		{
+			name: "sid cookie missing in Cookie header",
+			md: metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), "random=jwt",
+				"req-method", "GET"),
+			expected: false,
+		},
+		{
+			name: "Authorization header in metadata",
+			md: metadata.Pairs(strings.ToLower(apigw.GrpcMDAuthorizationHeader), "Bearer jwt",
+				"req-method", "GET"),
+			expected: true,
+		},
+		{
+			name: "incorrect (without 'Bearer') Authorization header in metadata",
+			md: metadata.Pairs(strings.ToLower(apigw.GrpcMDAuthorizationHeader), "jwt",
+				"req-method", "GET"),
+			expected: false,
+		},
+		{
+			name: "invalid JWT in Authorization header in metadata",
+			md: metadata.Pairs(strings.ToLower(apigw.GrpcMDAuthorizationHeader), "Bearer "+"invalidToken",
+				"req-method", "GET"),
+			expected: false,
+		},
+		{
+			name:     "no req-method header in metadata",
+			md:       metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt"),
+			expected: false,
+		},
+		{
+			name: "CORS request with no CSRF token in metadata",
+			md: metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
+				strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, "Origin")), "somedomain.com",
+				"req-method", "POST"),
+			expected: false,
+		},
+		{
+			name: "CORS request with invalid CSRF token in metadata",
+			md: metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
+				strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, "Origin")), "somedomain.com",
+				strings.ToLower(apigw.GrpcMDCsrfHeader[len(runtime.MetadataHeaderPrefix):]), "csrfToken",
+				"req-method", "POST"),
+			expected: false,
+		},
+	}
+	for _, test := range tests {
+		_ = MustGetAPIGateway()
+
+		a := singletonAPIGw
+
+		logConfig := log.GetDefaultConfig("TestApiGw")
+		l := log.GetNewLogger(logConfig)
+		a.logger = l
+		a.authnMgr = manager.NewMockAuthenticationManager()
+		ctx := context.TODO()
+		if test.md != nil {
+			ctx = metadata.NewOutgoingContext(ctx, test.md)
+		}
+		_, ok := a.isRequestAuthenticated(ctx)
+		Assert(t, test.expected == ok, fmt.Sprintf("[%v] test failed", test.name))
 	}
 }

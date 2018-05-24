@@ -123,6 +123,18 @@ var typesMapSvc_monitoring = map[string]*runtime.Struct{
 			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.FwlogPolicy"},
 		},
 	},
+	"monitoring.AutoMsgMirrorSessionWatchHelper": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent"},
+		},
+	},
+	"monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
+		},
+	},
 	"monitoring.AutoMsgStatsPolicyWatchHelper": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgStatsPolicyWatchHelper.WatchEvent"},
@@ -169,6 +181,15 @@ var typesMapSvc_monitoring = map[string]*runtime.Struct{
 			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
 			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.FwlogPolicy"},
+		},
+	},
+	"monitoring.MirrorSessionList": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+
+			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
 		},
 	},
 	"monitoring.StatsPolicyList": &runtime.Struct{

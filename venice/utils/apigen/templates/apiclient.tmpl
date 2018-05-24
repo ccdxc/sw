@@ -53,6 +53,7 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 
 type apiRestServerClient struct {
     url string
+    logger log.Logger
     {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}{{if (ne 0 (len $v.Messages))}}
     a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}{{end}}
 }
@@ -61,6 +62,7 @@ type apiRestServerClient struct {
 func (a *apiRestServerClient) Close() error {
     return nil
 }
+
 {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
 func (a *apiRestServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {
     return a.a{{$k}}
@@ -70,6 +72,7 @@ func (a *apiRestServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {
 func NewRestAPIClient(url string) (Services, error) {
     return &apiRestServerClient{
         url: url,
+        logger: log.WithContext("module", "RestAPIClient"),
         {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
         a{{$k}}: {{$pkgname}}Client.NewRestCrudClient{{$k}}(url), {{end}}{{end}}
     }, nil

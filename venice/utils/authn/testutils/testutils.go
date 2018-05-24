@@ -13,7 +13,9 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/venice/utils/authn"
+	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/testutils"
 )
 
 func encodeHTTPRequest(req *http.Request, request interface{}) error {
@@ -26,8 +28,8 @@ func encodeHTTPRequest(req *http.Request, request interface{}) error {
 	return nil
 }
 
-// GetHTTPRequest creates a http request
-func GetHTTPRequest(instance string, in interface{}, method, path string) (*http.Request, error) {
+// getHTTPRequest creates a http request
+func getHTTPRequest(instance string, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(instance)
 	if err != nil {
 		return nil, fmt.Errorf("invalid instance %s", instance)
@@ -44,9 +46,9 @@ func GetHTTPRequest(instance string, in interface{}, method, path string) (*http
 }
 
 // Login sends a login request to API Gateway and returns a *http.Response
-func Login(apiGW string, in *authn.PasswordCredential) (*http.Response, error) {
+func Login(apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
 	path := "/v1/login/"
-	req, err := GetHTTPRequest(apiGW, in, "POST", path)
+	req, err := getHTTPRequest(apiGW, in, "POST", path)
 	if err != nil {
 		return nil, err
 	}
@@ -56,21 +58,23 @@ func Login(apiGW string, in *authn.PasswordCredential) (*http.Response, error) {
 	return resp, err
 }
 
-// LoginUser sends a login request to API Gateway and returns authenticated user and session token upon success
-func LoginUser(apiGW string, in *authn.PasswordCredential) (*auth.User, string, error) {
-	resp, err := Login(apiGW, in)
-	if err != nil {
-		return nil, "", err
+// NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
+// Returns original context in case of error.
+func NewLoggedInContext(ctx context.Context, apiGW string, in *auth.PasswordCredential) (context.Context, error) {
+	var err error
+	var nctx context.Context
+	if testutils.CheckEventually(func() (bool, interface{}) {
+		nctx, err = login.NewLoggedInContext(ctx, apiGW, in)
+		if err == nil {
+			return true, nil
+		}
+		log.Errorf("unable to get logged in context (%v)", err)
+		return false, nil
+	}) {
+		return nctx, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, "", fmt.Errorf("login failed, status code: %v", resp.StatusCode)
-	}
-	var user auth.User
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		return nil, "", err
-	}
-	cookies := resp.Cookies()
-	return &user, cookies[0].Value, nil
+
+	return ctx, err
 }
 
 // CreateSecret creates random bytes of length len
@@ -142,7 +146,7 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 	// create authentication policy object in api server
 	_, err := apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), &policy)
 	if err != nil {
-		panic("Error creating authentication policy")
+		panic(fmt.Sprintf("Error creating authentication policy, Err: %v", err))
 	}
 	return &policy
 }

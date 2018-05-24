@@ -83,6 +83,15 @@ var typesMapAuth = map[string]*runtime.Struct{
 			"Enabled": runtime.Field{Name: "Enabled", JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
+	"auth.PasswordCredential": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Username": runtime.Field{Name: "Username", JSONTag: "username", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Password": runtime.Field{Name: "Password", JSONTag: "password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Tenant": runtime.Field{Name: "Tenant", JSONTag: "tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"auth.Permission": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"ResourceTenant": runtime.Field{Name: "ResourceTenant", JSONTag: "resource-tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},

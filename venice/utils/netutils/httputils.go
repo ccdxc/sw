@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"strings"
 
+	"bytes"
+	"net/url"
+
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -255,4 +258,31 @@ func HTTPDelete(url string, req interface{}, resp interface{}) error {
 	}
 
 	return nil
+}
+
+func encodeHTTPRequest(req *http.Request, request interface{}) error {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(request)
+	if err != nil {
+		return err
+	}
+	req.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// CreateHTTPRequest creates a http request
+func CreateHTTPRequest(instance string, in interface{}, method, path string) (*http.Request, error) {
+	target, err := url.Parse(instance)
+	if err != nil {
+		return nil, fmt.Errorf("invalid instance %s", instance)
+	}
+	target.Path = path
+	req, err := http.NewRequest(method, target.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not create request (%s)", err)
+	}
+	if err = encodeHTTPRequest(req, in); err != nil {
+		return nil, fmt.Errorf("could not encode request (%s)", err)
+	}
+	return req, nil
 }

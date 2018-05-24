@@ -61,7 +61,7 @@ var _ = Describe("cluster tests", func() {
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
 			nodeIf := cmdClient.Node()
-			nodes, err = nodeIf.List(context.Background(), &api.ListWatchOptions{})
+			nodes, err = nodeIf.List(ts.tu.NewLoggedInContext(context.Background()), &api.ListWatchOptions{})
 		})
 		It("Node fields should be ok", func() {
 			Expect(err).ShouldNot(HaveOccurred())
@@ -89,7 +89,7 @@ var _ = Describe("cluster tests", func() {
 			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
 			clusterIf := cmdClient.Cluster()
 			obj = api.ObjectMeta{Name: "testCluster"}
-			cl, err = clusterIf.Get(context.Background(), &obj)
+			cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
 		})
 		It("Cluster fields should be ok", func() {
 			Expect(err).ShouldNot(HaveOccurred())
@@ -115,7 +115,7 @@ var _ = Describe("cluster tests", func() {
 			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
 			clusterIf = cmdClient.Cluster()
 			obj = api.ObjectMeta{Name: "testCluster"}
-			cl, err = clusterIf.Get(context.Background(), &obj)
+			cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
 		})
 		It("Pause the master", func() {
 			Expect(err).ShouldNot(HaveOccurred())
@@ -125,7 +125,7 @@ var _ = Describe("cluster tests", func() {
 			By(fmt.Sprintf("Pausing cmd on old leader %v", oldLeader))
 			ts.tu.CommandOutput(oldLeaderIP, "docker pause pen-cmd")
 			Eventually(func() bool {
-				cl, err = clusterIf.Get(context.Background(), &obj)
+				cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
 				if err != nil {
 					return false
 				}

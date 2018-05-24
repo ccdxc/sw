@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/apiserver"
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -60,6 +61,9 @@ func TestCrudOps(t *testing.T) {
 		t.Fatalf("cannot create REST client")
 	}
 	defer restcl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
 
 	// Create some objects for use
 	var pub, pub2 bookstore.Publisher

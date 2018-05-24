@@ -8,9 +8,11 @@ import (
 	"net"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/simapi"
+	"github.com/pensando/sw/venice/utils/authn/testutils"
 	n "github.com/pensando/sw/venice/utils/netutils"
 )
 
@@ -94,8 +96,12 @@ func (s *e2eSuite) createNetwork(tenant, net, subnet, gw string) (*network.Netwo
 		Status: network.NetworkStatus{},
 	}
 
+	ctx, err := s.NewLoggedInContext(context.Background())
+	if err != nil {
+		return nil, err
+	}
 	// create it
-	return s.restClient.NetworkV1().Network().Create(context.Background(), &nw)
+	return s.restClient.NetworkV1().Network().Create(ctx, &nw)
 }
 
 // deleteNetwork deletes a network using REST api
@@ -107,6 +113,15 @@ func (s *e2eSuite) deleteNetwork(tenant, net string) (*network.Network, error) {
 		Tenant:    tenant,
 	}
 
+	ctx, err := s.NewLoggedInContext(context.Background())
+	if err != nil {
+		return nil, err
+	}
 	// delete it
-	return s.restClient.NetworkV1().Network().Delete(context.Background(), &ometa)
+	return s.restClient.NetworkV1().Network().Delete(ctx, &ometa)
+}
+
+func (s *e2eSuite) NewLoggedInContext(ctx context.Context) (context.Context, error) {
+	nctx, err := testutils.NewLoggedInContext(ctx, apigwURL, &auth.PasswordCredential{Username: user, Password: password, Tenant: "default"})
+	return nctx, err
 }

@@ -13,6 +13,11 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
+const (
+	// TokenExpInDays is JWT expiration in days
+	TokenExpInDays = 6
+)
+
 // APIGatewayService is the interface satisfied by all all services registering to the API gateway
 type APIGatewayService interface {
 	// CompleteRegistration is a callback invoked after the API Gateway is done initializing.
