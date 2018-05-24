@@ -6,7 +6,10 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 
+	"github.com/pkg/sftp"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -15,12 +18,16 @@ const (
 	jsonPath   = "/warmd.json"
 )
 
-func runSSH(ip net.IP, command string) error {
-	sclient, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", ip), &ssh.ClientConfig{
+func getSSHClient(ip net.IP) (*ssh.Client, error) {
+	return ssh.Dial("tcp", fmt.Sprintf("%s:22", ip), &ssh.ClientConfig{
 		User:            "vm",
 		Auth:            []ssh.AuthMethod{ssh.Password("vm")},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	})
+}
+
+func runSSH(ip net.IP, command string) error {
+	sclient, err := getSSHClient(ip)
 	if err != nil {
 		return err
 	}
@@ -48,14 +55,7 @@ func runSSH(ip net.IP, command string) error {
 	return sSession.Wait()
 }
 
-// RunSingle runs a make target on a single instance
-func RunSingle(makeTarget string) error {
-	cmd := scriptPath + makeTarget
-	return RunCmd(cmd)
-}
-
-// RunCmd runs a target cmd on a single instance
-func RunCmd(cmd string) error {
+func getVMIP() net.IP {
 	warmd, err := os.Open(jsonPath)
 	if err != nil {
 		panic(err)
@@ -74,9 +74,59 @@ func RunCmd(cmd string) error {
 		instances = append(instances, key)
 	}
 
-	server := net.ParseIP(instanceMap[instances[0]].(string))
-	err = runSSH(server, cmd)
+	return net.ParseIP(instanceMap[instances[0]].(string))
+}
+
+// RunSingle runs a make target on a single instance
+func RunSingle(makeTarget string) error {
+	cmd := scriptPath + makeTarget
+	return RunCmd(cmd)
+}
+
+// RunCmd runs a target cmd on a single instance
+func RunCmd(cmd string) error {
+	server := getVMIP()
+	err := runSSH(server, cmd)
 
 	os.Stdout.Sync()
 	return err
+}
+
+// CopyLogs copies logs
+func CopyLogs(logs []string, destFolder string) error {
+	ip := getVMIP()
+	sshC, err := getSSHClient(ip)
+	if err != nil {
+		return err
+	}
+
+	sftpC, err := sftp.NewClient(sshC)
+	if err != nil {
+		logrus.Error(err)
+		return err
+	}
+	defer sftpC.Close()
+
+	for _, log := range logs {
+		src, err := sftpC.Open(log)
+		if err != nil {
+			logrus.Errorf("Skipping %s - %v", log, err)
+			continue
+		}
+
+		dest, err := os.Create(filepath.Join(destFolder, filepath.Base(log)))
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(dest, src)
+		if err != nil {
+			return err
+		}
+		src.Close()
+		dest.Close()
+		logrus.Infof("Wrote %s ", log)
+	}
+
+	return nil
 }

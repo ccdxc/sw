@@ -281,3 +281,7 @@ required = ["github.com/GeertJohan/go.rice",
 [[constraint]]
   name = "github.com/cpuguy83/go-md2man"
   version = "1.0.8"
+
+[[constraint]]
+  name = "github.com/pkg/sftp"
+  version = "1.7.0"

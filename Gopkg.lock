@@ -827,6 +827,12 @@
   revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
 
 [[projects]]
+  name = "github.com/kr/fs"
+  packages = ["."]
+  revision = "1455def202f6e05b95cc7bfc7e8ae67ae5141eba"
+  version = "v0.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/kr/logfmt"
   packages = ["."]
@@ -1034,6 +1040,12 @@
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  name = "github.com/pkg/sftp"
+  packages = ["."]
+  revision = "d2aa419835609d317c34baae11bc345d1f9971a7"
+  version = "1.7.0"
 
 [[projects]]
   name = "github.com/prometheus/client_golang"
@@ -1658,6 +1670,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c5e1c4b735485b8091635cb5bae25b8b776210abdd99522be04bc939bd20a063"
+  inputs-digest = "544f50bce024efc4b9dbe80bc3f31b649156b0aa4a4b43e5dd5c2ffe9483ae70"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -19,3 +19,6 @@ warmd:
     password: vm
     # additional vars to pass to ansible.
     vars:
+
+logfiles:
+  - /go/src/github.com/pensando/sw/test/suites/e2e/clusterlogs.tgz
