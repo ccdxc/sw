@@ -27,6 +27,8 @@ func TestNetworkCreateDelete(t *testing.T) {
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
 			IPv4Gateway: "10.1.1.254",
+			VlanID:      42,
+			VxlanVNI:    84,
 		},
 	}
 
