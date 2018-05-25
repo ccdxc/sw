@@ -468,6 +468,10 @@ comp_encrypt_chain_t::full_verify(void)
     uint32_t        max_blks;
     uint32_t        block_no;
     uint32_t        exp_encrypt_output_data_len;
+    uint64_t        src_len0;
+    uint64_t        src_len1;
+    uint64_t        src_len2;
+    uint64_t        dst_len_total;
     uint32_t        poll_factor = app_blk_size / kCompAppMinSize;
 
     assert(poll_factor);
@@ -483,6 +487,19 @@ comp_encrypt_chain_t::full_verify(void)
     }
     exp_encrypt_output_data_len = COMP_MAX_HASH_BLKS(last_cp_output_data_len,
                                                      app_enc_size) * app_enc_size;
+    /*
+     * Before we start validation of AOLs, ensure that P4+ has had a chance
+     * to write them. For that, we wait for completion of at least one 
+     * encryption block.
+     */ 
+    caller_xts_opaque_vec->line_set(0);
+    xts_ctx.xts_db = 
+        caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
+    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
+        printf("ERROR: comp_encrypt_chain block 0 XTS doorbell engine never came\n");
+        return -1;
+    }
+
     /* 
      * In XTS_ENC_DEC_ENTIRE_APP_BLK mode, P4+ would have calculated the
      * actual # of blocks required and terminated the last AOL by setting
@@ -492,11 +509,15 @@ comp_encrypt_chain_t::full_verify(void)
      */
     max_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ?
                xts_dst_aol_vec->num_lines_get() : (uint32_t)actual_enc_blks;
-    last_encrypt_output_data_len = 0;
+    src_len0 = 0;
+    src_len1 = 0;
+    src_len2 = 0;
     for (block_no = 0; block_no < max_blks; block_no++) {
-        xts_dst_aol_vec->line_set(block_no);
-        xts_aol = (xts::xts_aol_t *)xts_dst_aol_vec->read_thru();
-        last_encrypt_output_data_len += xts_aol->l0 + xts_aol->l1 + xts_aol->l2;
+        xts_src_aol_vec->line_set(block_no);
+        xts_aol = (xts::xts_aol_t *)xts_src_aol_vec->read_thru();
+        src_len0 += xts_aol->l0;
+        src_len1 += xts_aol->l1;
+        src_len2 += xts_aol->l2;
 
         /*
          * Re-establish correct pointer to doorbell in XTS context
@@ -520,10 +541,53 @@ comp_encrypt_chain_t::full_verify(void)
         }
     }
 
+    /*
+     * Validate total accumulated length
+     */
+    last_encrypt_output_data_len = src_len0 + src_len1 + src_len2;
     if (last_encrypt_output_data_len != exp_encrypt_output_data_len) {
         printf("ERROR: comp_encrypt_chain last_encrypt_output_data_len %u != "
                "exp_encrypt_output_data_len %u\n", last_encrypt_output_data_len,
                exp_encrypt_output_data_len);
+        return -1;
+    }
+
+    /*
+     * Validate padding length
+     */
+    if (src_len1 != (exp_encrypt_output_data_len - last_cp_output_data_len)) {
+        printf("ERROR: comp_encrypt_chain invalid src_len1 %lu in relation to "
+               "exp_encrypt_output_data_len %u and last_cp_output_data_len %u\n",
+               src_len1, exp_encrypt_output_data_len, last_cp_output_data_len);
+        return -1;
+    }
+
+    /*
+     * Validate other lengths
+     */
+    if (src_len2) {
+        printf("ERROR: comp_encrypt_chain unexpected src_len2 %lu\n", src_len2);
+        return -1;
+    }
+
+    /*
+     * Validate p4+ writes to xts_dst_aol_vec
+     */
+    dst_len_total = 0;
+    for (block_no = 0; block_no < max_blks; block_no++) {
+        xts_dst_aol_vec->line_set(block_no);
+        xts_aol = (xts::xts_aol_t *)xts_dst_aol_vec->read_thru();
+
+        dst_len_total += xts_aol->l0 + xts_aol->l1 + xts_aol->l2;
+        if ((enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK) && !xts_aol->next) {
+            break;
+        }
+    }
+
+    if (dst_len_total != exp_encrypt_output_data_len) {
+        printf("ERROR: comp_encrypt_chain dst_len_total %lu != "
+               "exp_encrypt_output_data_len %u\n",
+               dst_len_total, exp_encrypt_output_data_len);
         return -1;
     }
 

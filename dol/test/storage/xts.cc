@@ -41,37 +41,58 @@ static acc_ring_t *xts1_ring;
 static acc_ring_t *gcm0_ring;
 static acc_ring_t *gcm1_ring;
 
-static uint64_t ring_base_addr_get(bool decr_en, bool is_gcm) {
+static uint64_t ring_base_addr_get(bool decr_en, bool is_gcm,
+                                   uint64_t &opaque_tag_addr) {
   uint64_t ring_base_addr;
 
   if(hal_if::get_xts_ring_base_address(decr_en, &ring_base_addr, is_gcm) < 0) {
-    printf("can't get xts ring base address \n");
+    printf("can't get xts ring base address\n");
     assert(0);
   }
-  printf("decr_en %u is_gcm %u 0x%lx\n", decr_en, is_gcm, ring_base_addr);
+  if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr, is_gcm)) {
+    printf("can't get xts opaque tag address\n");
+    assert(0);
+  }
+  printf("decr_en %u is_gcm %u base 0x%lx tag 0x%lx\n", decr_en, is_gcm,
+         ring_base_addr, opaque_tag_addr);
   return ring_base_addr;
 }
 
 int xts_init(void) {
   uint64_t ring_base_addr;
+  uint64_t opaque_tag_addr;
 
-  ring_base_addr = ring_base_addr_get(false, false);
-  xts0_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX,
-                             kXtsQueueSize, kXtsDescSize, ring_base_addr,
-                             xts::kXtsPISize);
-  ring_base_addr = ring_base_addr_get(true, false);
-  xts1_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX,
-                             kXtsQueueSize, kXtsDescSize, ring_base_addr,
-                             xts::kXtsPISize);
-  ring_base_addr = ring_base_addr_get(false, true);
-  gcm0_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
-                             kGcmQueueSize, kGcmDescSize, ring_base_addr,
-                             xts::kXtsPISize);
-  ring_base_addr = ring_base_addr_get(true, true);
-  gcm1_ring = new acc_ring_t(CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX,
-                             kGcmQueueSize, kGcmDescSize, ring_base_addr,
-                             xts::kXtsPISize);
+  ring_base_addr = ring_base_addr_get(false, false, opaque_tag_addr);
+  xts0_ring = new acc_ring_t("xts0_ring", CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX,
+                             kXtsQueueSize, kXtsDescSize, ring_base_addr, xts::kXtsPISize,
+                             opaque_tag_addr, sizeof(exp_opaque_tag_encr));
+  ring_base_addr = ring_base_addr_get(true, false, opaque_tag_addr);
+  xts1_ring = new acc_ring_t("xts1_ring", CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX,
+                             kXtsQueueSize, kXtsDescSize, ring_base_addr, xts::kXtsPISize,
+                             opaque_tag_addr, sizeof(exp_opaque_tag_encr));
+  ring_base_addr = ring_base_addr_get(false, true, opaque_tag_addr);
+  gcm0_ring = new acc_ring_t("gcm0_ring", CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
+                             kGcmQueueSize, kGcmDescSize, ring_base_addr, xts::kXtsPISize,
+                             opaque_tag_addr, sizeof(gcm_exp_opaque_tag_encr));
+  ring_base_addr = ring_base_addr_get(true, true, opaque_tag_addr);
+  gcm1_ring = new acc_ring_t("gcm1_ring", CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX, 
+                             kGcmQueueSize, kGcmDescSize, ring_base_addr, xts::kXtsPISize,
+                             opaque_tag_addr, sizeof(gcm_exp_opaque_tag_encr));
   return 0;
+}
+
+/*
+ * This function may be invoked at the end of any series of tests to resync
+ * shadow-to-PI for all rings.
+ */
+int
+xts_resync()
+{
+    xts0_ring->resync();
+    xts1_ring->resync();
+    gcm0_ring->resync();
+    gcm1_ring->resync();
+    return 0;
 }
 
 int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,

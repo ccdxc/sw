@@ -53,6 +53,9 @@ static const uint64_t cp_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
 static const uint64_t cp_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_BYTE_ADDRESS;
 
+static const uint64_t cp_cfg_host_opaque_tag_addr = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
+
 static const uint64_t dc_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_GLB_BYTE_ADDRESS;
 
@@ -76,6 +79,9 @@ static const uint64_t dc_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
 
 static const uint64_t dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_host_opaque_tag_addr = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
 
 // compression/decompression blocks initialized by HAL
 // or by this DOL module.
@@ -338,14 +344,10 @@ uint64_t
 queue_mem_pa_get(uint64_t reg_addr)
 {
     uint32_t lo_val, hi_val;
-    uint64_t full_val;
 
     read_reg(reg_addr, lo_val);
     read_reg(reg_addr + 4, hi_val);
-
-    full_val = ((uint64_t)hi_val << 32) | lo_val;
-    printf("%s 0x%lx\n", __FUNCTION__, full_val);
-    return full_val;
+    return ((uint64_t)hi_val << 32) | lo_val;
 }
 
 
@@ -482,8 +484,10 @@ void
 compression_init()
 {
   uint64_t cp_ring_base_pa = 0;
+  uint64_t cp_ring_opaque_tag_pa = 0;
   uint64_t cp_hot_ring_base_pa = 0;
   uint64_t dc_ring_base_pa = 0;
+  uint64_t dc_ring_opaque_tag_pa = 0;
   uint64_t dc_hot_ring_base_pa = 0;
   uint32_t lo_reg, hi_reg;
 
@@ -507,19 +511,23 @@ compression_init()
              cp_ring_size, cp_hot_ring_size, dc_ring_size, dc_hot_ring_size);
 
       cp_ring_base_pa = queue_mem_pa_get(cp_cfg_q_base);
+      cp_ring_opaque_tag_pa = queue_mem_pa_get(cp_cfg_host_opaque_tag_addr);
       cp_hot_ring_base_pa = queue_mem_pa_get(cp_cfg_hotq_base);
       dc_ring_base_pa = queue_mem_pa_get(dc_cfg_q_base);
+      dc_ring_opaque_tag_pa = queue_mem_pa_get(dc_cfg_host_opaque_tag_addr);
       dc_hot_ring_base_pa = queue_mem_pa_get(dc_cfg_hotq_base);
   }
 
-  cp_ring = new acc_ring_t(cp_cfg_q_pd_idx, cp_ring_size, sizeof(cp_desc_t),
-                           cp_ring_base_pa, sizeof(uint32_t));
-  cp_hot_ring = new acc_ring_t(cp_cfg_hotq_pd_idx, cp_hot_ring_size, sizeof(cp_desc_t),
-                               cp_hot_ring_base_pa, sizeof(uint32_t));
-  dc_ring = new acc_ring_t(dc_cfg_q_pd_idx, dc_ring_size, sizeof(cp_desc_t),
-                           dc_ring_base_pa, sizeof(uint32_t));
-  dc_hot_ring = new acc_ring_t(dc_cfg_hotq_pd_idx, dc_hot_ring_size, sizeof(cp_desc_t),
-                               dc_hot_ring_base_pa, sizeof(uint32_t));
+  cp_ring = new acc_ring_t("cp_ring", cp_cfg_q_pd_idx, cp_ring_size,
+                           sizeof(cp_desc_t), cp_ring_base_pa, sizeof(uint32_t),
+                           cp_ring_opaque_tag_pa, sizeof(uint32_t));
+  cp_hot_ring = new acc_ring_t("cp_hot_ring", cp_cfg_hotq_pd_idx, cp_hot_ring_size,
+                               sizeof(cp_desc_t), cp_hot_ring_base_pa, sizeof(uint32_t));
+  dc_ring = new acc_ring_t("dc_ring", dc_cfg_q_pd_idx, dc_ring_size,
+                           sizeof(cp_desc_t), dc_ring_base_pa, sizeof(uint32_t),
+                           dc_ring_opaque_tag_pa, sizeof(uint32_t));
+  dc_hot_ring = new acc_ring_t("dc_hot_ring", dc_cfg_hotq_pd_idx, dc_hot_ring_size,
+                               sizeof(cp_desc_t), dc_hot_ring_base_pa, sizeof(uint32_t));
 
   compression_buf_init();
 
@@ -573,6 +581,20 @@ compression_init()
   }
 
   printf("Compression init done\n");
+}
+
+/*
+ * This function may be invoked at the end of any series of tests to resync
+ * shadow-to-PI for all rings.
+ */
+int
+compression_resync()
+{
+    cp_ring->resync();
+    cp_hot_ring->resync();
+    dc_ring->resync();
+    dc_hot_ring->resync();
+    return 0;
 }
 
 int run_cp_test(cp_desc_t& desc,

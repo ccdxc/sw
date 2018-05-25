@@ -31,17 +31,21 @@ typedef enum {
 class acc_ring_t
 {
 public:
-    acc_ring_t(uint64_t cfg_ring_pd_idx,
+    acc_ring_t(const char *ring_name,
+               uint64_t cfg_ring_pd_idx,
                uint32_t ring_size,
                uint32_t desc_size,
                uint64_t ring_base_mem_pa = 0,
-               uint32_t pi_size = sizeof(uint32_t));
+               uint32_t pi_size = sizeof(uint32_t),
+               uint64_t ring_opaque_tag_pa = 0,
+               uint32_t opaque_data_size = 0);
     void push(const void *src_desc,
               acc_ring_push_t push_type,
               uint32_t seq_qid);
     void reentrant_tuple_set(acc_ring_push_t push_type,
                              uint32_t seq_qid);
-    void post_push(uint16_t push_amount = 0);
+    void post_push(uint32_t push_amount = 0);
+    void resync(void);
 
     uint32_t ring_size_get(void)
     {
@@ -78,12 +82,13 @@ public:
         return curr_seq_pd_idx;
     }
 
-    uint16_t ring_pd_idx_get(void)
+    uint32_t ring_pd_idx_get(void)
     {
         return curr_pd_idx;
     }
 
 private:
+    const char      *ring_name;
     uint64_t        cfg_ring_pd_idx;
     dp_mem_t        *shadow_pd_idx_mem;
     uint8_t         *ring_base_mem;
@@ -92,10 +97,10 @@ private:
     uint32_t        ring_size;
     uint32_t        desc_size;
     uint32_t        pi_size;
+    uint32_t        curr_pd_idx;
+    uint32_t        prev_pd_idx;
     uint32_t        curr_seq_qid;
     uint16_t        curr_seq_pd_idx;
-    uint16_t        curr_pd_idx;
-    uint16_t        prev_pd_idx;
     acc_ring_push_t curr_push_type;
 };
 

@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <byteswap.h>
 #include "chksum_decomp_chain.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 namespace tests {
 
@@ -75,6 +76,12 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
         sam_chksum_dst_buf = new dp_mem_t(1, kCompAppHashBlkSize,
                                           DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HBM,
                                           0, DP_MEM_ALLOC_NO_FILL);
+        /*
+         * Since only SAM writes to this memory but not RTL,
+         * turn off EOS comparison on it.
+         */
+        eos_ignore_addr(sam_chksum_dst_buf->pa(),
+                        sam_chksum_dst_buf->line_size_get());
     }
 }
 

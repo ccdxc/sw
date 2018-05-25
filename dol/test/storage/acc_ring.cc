@@ -18,20 +18,24 @@ namespace tests {
 /*
  * Constructor
  */
-acc_ring_t::acc_ring_t(uint64_t cfg_ring_pd_idx,
+acc_ring_t::acc_ring_t(const char *ring_name,
+                       uint64_t cfg_ring_pd_idx,
                        uint32_t ring_size,
                        uint32_t desc_size,
                        uint64_t ring_base_mem_pa,
-                       uint32_t pi_size) :
+                       uint32_t pi_size,
+                       uint64_t ring_opaque_tag_pa,
+                       uint32_t opaque_data_size) :
+    ring_name(ring_name),
     cfg_ring_pd_idx(cfg_ring_pd_idx),
     ring_base_mem_pa(ring_base_mem_pa),
     ring_size(ring_size),
     desc_size(desc_size),
     pi_size(pi_size),
-    curr_seq_qid(0),
-    curr_seq_pd_idx(0),
     curr_pd_idx(0),
     prev_pd_idx(0),
+    curr_seq_qid(0),
+    curr_seq_pd_idx(0),
     curr_push_type(ACC_RING_PUSH_INVALID)
 {
     assert(ring_size && desc_size && pi_size);
@@ -57,6 +61,19 @@ acc_ring_t::acc_ring_t(uint64_t cfg_ring_pd_idx,
     if (!ring_base_mem_pa) {
         ring_base_mem_pa = host_mem_v2p((void *)ring_base_mem);
     }
+
+    /*
+     * Ring memory is concurrently updated by multiple P4+ instances in RTL
+     * which will be different from how standalone model would update it.
+     * Hence, so turn off EOS comparison on the ring to prevent false alarms.
+     */
+    eos_ignore_addr(ring_base_mem_pa, desc_size * ring_size);
+    if (ring_opaque_tag_pa) {
+        eos_ignore_addr(ring_opaque_tag_pa, opaque_data_size);
+    }
+
+    printf("%s ring_base_mem_pa 0x%lx ring_opaque_tag_pa 0x%lx\n",
+           ring_name, ring_base_mem_pa, ring_opaque_tag_pa);
 }
 
 /*
@@ -92,7 +109,7 @@ acc_ring_t::push(const void *src_desc,
     uint8_t     *dst_desc;
     dp_mem_t    *seq_desc;
     bool        update_seq_desc;
-    uint16_t    pd_idx;
+    uint32_t    pd_idx;
 
     switch (push_type) {
 
@@ -181,7 +198,7 @@ acc_ring_t::push(const void *src_desc,
         break;
 
     default:
-        printf("%s unsupported push_type %d\n", __FUNCTION__, push_type);
+        printf("%s unsupported push_type %d\n", ring_name, push_type);
         assert(0);
         break;
     }
@@ -205,15 +222,33 @@ acc_ring_t::reentrant_tuple_set(acc_ring_push_t push_type,
 }
 
 /*
+ * DOL tests use a mixture of HW_DIRECT and sequencer push so a resync of
+ * shadow to real PI may be called for. Real applications (such as storage
+ * driver) always use the sequencer approach and resync would not be
+ * needed in that case.
+ */
+void
+acc_ring_t::resync(void)
+{
+    uint32_t    curr_shadow;
+
+    curr_shadow = *((uint32_t *)shadow_pd_idx_mem->read_thru()) % ring_size;
+    printf("%s resync shadow %u to PI %u\n", ring_name,
+           curr_shadow, curr_pd_idx);
+    curr_pd_idx = curr_shadow;
+    prev_pd_idx = curr_shadow;
+}
+
+/*
  * Execute any deferred push() on the given acc_ring. The argument
  * 'push_amount', applicable only to ACC_RING_PUSH_HW_DIRECT_BATCH, controls
  * how many entries to push.
  */
 void
-acc_ring_t::post_push(uint16_t push_amount)
+acc_ring_t::post_push(uint32_t push_amount)
 {
-    uint16_t    push_pd_idx;
-    uint16_t    curr_amount;
+    uint32_t    push_pd_idx;
+    uint32_t    curr_amount;
 
     switch (curr_push_type) {
 
@@ -252,8 +287,8 @@ acc_ring_t::post_push(uint16_t push_amount)
          */
 
     default:
-        printf("%s nothing to do for curr_push_type %d\n", __FUNCTION__,
-               curr_push_type);
+        printf("%s nothing to do for curr_push_type %d\n",
+               ring_name, curr_push_type);
         curr_push_type = ACC_RING_PUSH_INVALID;
         break;
     }
