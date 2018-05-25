@@ -137,136 +137,6 @@ TEST_F(nwsec_test, test1)
     ASSERT_TRUE(is_leak == false);
 }
 
-
-// ----------------------------------------------------------------------------
-// Create a SecurityGroupPolicySpec
-// ----------------------------------------------------------------------------
-TEST_F(nwsec_test, test2)
-{
-    hal_ret_t                                   ret;
-    SecurityGroupSpec                           sg_spec;
-    SecurityGroupResponse                       sg_rsp;
-    SecurityGroupPolicySpec                     sp_spec;
-    SecurityGroupPolicyResponse                 sp_rsp;
-    SecurityGroupPolicyDeleteRequest            del_req;
-    SecurityGroupPolicyDeleteResponseMsg        del_rsp;
-    //slab_stats_t                               *pre = NULL, *post = NULL;
-    //bool                                        is_leak = false;
-
-    //pre = hal_test_utils_collect_slab_stats();
-
-    // Create SecurityGroupPolicySpec
-    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(1);
-    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(2);
-
-    nwsec::FirewallRuleSpec *fw_rule = sp_spec.mutable_policy_rules()->add_in_fw_rules();
-    Service *svc =  fw_rule->add_svc();
-    svc->set_ip_protocol(IPProtocol::IPPROTO_IPV4);
-    svc->set_dst_port(1000);
-    svc->set_alg(ALGName::APP_SVC_TFTP);
-
-    /*fw_rule = sp_spec.mutable_egress_policy()->add_fw_rules();
-    svc = fw_rule->add_svc();
-    svc->set_ip_protocol(IPProtocol::IPPROTO_IPV4);
-    svc->set_dst_port(2000);
-    svc->set_alg(ALGName::APP_SVC_TFTP);*/
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::securitygrouppolicy_create(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-    // Update nwsec
-    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(1);
-    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(2);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::securitygrouppolicy_update(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
-    //post = hal_test_utils_collect_slab_stats();
-    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
-    //ASSERT_TRUE(is_leak == false);
-}
-
-TEST_F(nwsec_test, test3)
-{
-    hal_ret_t                               ret;
-    SecurityGroupSpec                       sp_spec;
-    SecurityGroupResponse                   sp_rsp;
-
-    dllist_ctxt_t                           *curr, *next, *nw_list, *ep_list;
-    hal_handle_id_list_entry_t              *nw_ent = NULL, *ep_ent = NULL;
-    //slab_stats_t                            *pre = NULL, *post = NULL;
-    //bool                                    is_leak = false;
-
-    //pre = hal_test_utils_collect_slab_stats();
-
-    // Create SecurityGroupSpec
-    sp_spec.mutable_key_or_handle()->set_security_group_id(1);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::securitygroup_create(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-    for (int i = 0; i < 4; i++) {
-        ret = add_nw_to_security_group(1, 0x1000 + i);
-        ASSERT_TRUE(ret == HAL_RET_OK);
-    }
-
-    nw_list = get_nw_list_for_security_group(1);
-    if (nw_list != NULL) {
-        dllist_for_each_safe(curr, next, nw_list) {
-            nw_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            HAL_TRACE_DEBUG("nw handle {}", nw_ent->handle_id);
-        }
-    }
-    ret = del_nw_from_security_group(1, 0x1002);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-    nw_list = get_nw_list_for_security_group(1);
-    if (nw_list != NULL) {
-        dllist_for_each_safe(curr, next, nw_list) {
-            nw_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            HAL_TRACE_DEBUG("nw handle {}", nw_ent->handle_id);
-        }
-    }
-
-    curr = NULL;
-    next = NULL;
-    for (int i = 0; i < 4; i++) {
-        ret = add_ep_to_security_group(1, 0x2000 + i);
-        ASSERT_TRUE(ret == HAL_RET_OK);
-    }
-
-    ep_list = get_ep_list_for_security_group(1);
-    if (ep_list != NULL) {
-        dllist_for_each_safe(curr, next, ep_list) {
-            ep_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            HAL_TRACE_DEBUG("ep handle {}", ep_ent->handle_id);
-        }
-    }
-    ret = del_ep_from_security_group(1, 0x2002);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-    ep_list = get_ep_list_for_security_group(1);
-    if (ep_list != NULL) {
-        dllist_for_each_safe(curr, next, ep_list) {
-            ep_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            HAL_TRACE_DEBUG("ep handle {}", ep_ent->handle_id);
-        }
-    }
-
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
-    //post = hal_test_utils_collect_slab_stats();
-    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
-    //ASSERT_TRUE(is_leak == false);
-}
-
 TEST_F(nwsec_test, test4)
 {
     hal_ret_t                               ret;
@@ -355,9 +225,13 @@ TEST_F(nwsec_test, test4)
     ASSERT_TRUE(is_leak == false);
 }
 
+
+
+#if 0
 namespace hal {
 namespace plugins {
 namespace sfw {
+
 extern hal_ret_t
 net_sfw_match_rules(fte::ctx_t& ctx,
                     hal::nwsec_policy_rules_t *rules,
@@ -377,7 +251,10 @@ public:
     using ctx_t::init;
 
 };
+#endif
 // Test to validate the appid logic in firewall.cc
+#if 0 
+move it to rule match
 TEST_F(nwsec_test, test5)
 {
     hal_ret_t ret;
@@ -462,6 +339,7 @@ TEST_F(nwsec_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ASSERT_TRUE(app_redir_ctx(ctx, false)->appid_needed());
 }
+#endif
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

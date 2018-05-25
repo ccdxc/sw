@@ -1,8 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
-
-#ifndef __HAL_STATE_HPP__
-#define __HAL_STATE_HPP__
-
+#ifndef  __HAL_STATE_HPP__
+#define  __HAL_STATE_HPP__
 #include "sdk/list.hpp"
 #include "sdk/catalog.hpp"
 #include "sdk/slab.hpp"
@@ -112,10 +110,7 @@ public:
     slab *nwsec_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE]); }
     slab *ipv4_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPV4_RULE]); }
     slab *rule_data_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RULE_DATA]); }
-    slab *nwsec_policy_rules_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_RULES]); }
-    slab *nwsec_policy_cfg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_CFG]); }
     slab *nwsec_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY]); }
-    slab *nwsec_policy_svc_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_SVC]); }
     slab *nwsec_policy_appid_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_APPID]); }
     slab *dos_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY]); }
     slab *l2seg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG]); }
@@ -201,7 +196,6 @@ public:
     ht *vrf_id_ht(void) const { return vrf_id_ht_; }
     ht *network_key_ht(void) const { return network_key_ht_; }
     ht *nwsec_profile_id_ht(void) const { return nwsec_profile_id_ht_; }
-    ht *nwsec_policy_cfg_ht(void) const { return nwsec_policy_cfg_ht_; }
     ht *nwsec_policy_ht(void) const { return nwsec_policy_ht_; }
     ht *nat_policy_ht(void) const { return nat_policy_ht_; }
     ht *nwsec_group_ht(void) const { return nwsec_group_ht_; }
@@ -275,7 +269,6 @@ private:
     ht    *vrf_id_ht_;
     ht    *network_key_ht_;
     ht    *nwsec_profile_id_ht_;
-    ht    *nwsec_policy_cfg_ht_;
     ht    *nwsec_policy_ht_;
     ht    *nat_policy_ht_;
     ht    *nwsec_group_ht_;
@@ -389,12 +382,8 @@ public:
     slab *nwsec_rule_slab(void) const { return cfg_db_->nwsec_rule_slab(); }
     slab *ipv4_rule_slab(void) const { return cfg_db_->ipv4_rule_slab(); }
     slab *rule_data_slab(void) const { return cfg_db_->rule_data_slab(); }
-    slab *nwsec_policy_rules_slab(void) const { return cfg_db_->nwsec_policy_rules_slab(); }
-    slab *nwsec_policy_cfg_slab(void) const { return cfg_db_->nwsec_policy_cfg_slab(); }
     slab *nwsec_policy_slab(void) const { return cfg_db_->nwsec_policy_slab(); }
-    slab *nwsec_policy_svc_slab(void) const { return cfg_db_->nwsec_policy_svc_slab(); }
     slab *nwsec_policy_appid_slab(void) const { return cfg_db_->nwsec_policy_appid_slab(); }
-    ht   *nwsec_policy_cfg_ht(void) const { return oper_db_->nwsec_policy_cfg_ht(); }
     ht   *nwsec_policy_ht(void) const { return oper_db_->nwsec_policy_ht(); }
     ht   *nat_policy_ht(void) const { return oper_db_->nat_policy_ht(); }
     ht   *nwsec_group_ht(void) const { return oper_db_->nwsec_group_ht(); }

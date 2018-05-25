@@ -496,30 +496,11 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                                    false, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXYCCB] != NULL), false);
 
-    slabs_[HAL_SLAB_NWSEC_POLICY_RULES] =
-        slab::factory("nwsec_policy_rules",
-                      HAL_SLAB_NWSEC_POLICY_RULES,
-                      sizeof(hal::nwsec_policy_rules_t), 64,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_RULES] != NULL), false);
-
-    slabs_[HAL_SLAB_NWSEC_POLICY_CFG] =
-        slab::factory("nwsec_policy_cfg", HAL_SLAB_NWSEC_POLICY_CFG,
-                      sizeof(hal::nwsec_policy_cfg_t), 64,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_CFG] != NULL), false);
-
-    slabs_[HAL_SLAB_NWSEC_POLICY] =
+   slabs_[HAL_SLAB_NWSEC_POLICY] =
         slab::factory("nwsec_policy", HAL_SLAB_NWSEC_POLICY,
                       sizeof(hal::nwsec_policy_t), 64,
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY] != NULL), false);
-
-    slabs_[HAL_SLAB_NWSEC_POLICY_SVC] =
-        slab::factory("nwsec_policy_svc", HAL_SLAB_NWSEC_POLICY_SVC,
-                      sizeof(hal::nwsec_policy_svc_t), 64,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_SVC] != NULL), false);
 
     slabs_[HAL_SLAB_NWSEC_POLICY_APPID] =
         slab::factory("nwsec_policy_appid", HAL_SLAB_NWSEC_POLICY_APPID,
@@ -527,7 +508,6 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                       64, true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_APPID] != NULL), false);
 
-    // TODO - cleanup !! why same slab id for the 2 slabs below ?
     slabs_[HAL_SLAB_NWSEC_RULE] =
         slab::factory("nwsec_rule", HAL_SLAB_NWSEC_RULE,
                       sizeof(hal::nwsec_rule_t), 1024,
@@ -539,7 +519,6 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                       sizeof(hal::ipv4_rule_t), 1024,
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPV4_RULE] != NULL), false);
-
 
     slabs_[HAL_SLAB_RULE_DATA] =
         slab::factory("ipv4_rule", HAL_SLAB_RULE_DATA,
@@ -1092,13 +1071,6 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::proxyccb_compare_key_func);
     HAL_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
 
-    HAL_HT_CREATE("nwsec-policy-cfg", nwsec_policy_cfg_ht_,
-                  HAL_MAX_VRFS >> 1,
-                  hal::nwsec_policy_cfg_get_key_func,
-                  hal::nwsec_policy_cfg_compute_hash_func,
-                  hal::nwsec_policy_cfg_compare_key_func);
-    HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
-
     HAL_HT_CREATE("sfw policy", nwsec_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::nwsec_policy_get_key_func,
@@ -1164,7 +1136,6 @@ hal_oper_db::hal_oper_db()
     session_hal_iflow_ht_ = NULL;
     session_hal_rflow_ht_ = NULL;
     l4lb_ht_ = NULL;
-    nwsec_policy_cfg_ht_ = NULL;
     nwsec_policy_ht_ = NULL;
     nat_policy_ht_ = NULL;
     nwsec_group_ht_ = NULL;
@@ -1239,7 +1210,6 @@ hal_oper_db::~hal_oper_db()
     rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;
     proxyrcb_id_ht_ ? ht::destroy(proxyrcb_id_ht_) : HAL_NOP;
     proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
-    nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
     nat_policy_ht_ ? ht::destroy(nat_policy_ht_) : HAL_NOP;
     nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
@@ -1748,20 +1718,8 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->rule_data_slab()->free(elem);
         break;
 
-    case HAL_SLAB_NWSEC_POLICY_CFG:
-        g_hal_state->nwsec_policy_cfg_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_NWSEC_POLICY:
+   case HAL_SLAB_NWSEC_POLICY:
         g_hal_state->nwsec_policy_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_NWSEC_POLICY_RULES:
-        g_hal_state->nwsec_policy_rules_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_NWSEC_POLICY_SVC:
-        g_hal_state->nwsec_policy_svc_slab()->free(elem);
         break;
 
     case HAL_SLAB_CRYPTO_CERT_STORE:

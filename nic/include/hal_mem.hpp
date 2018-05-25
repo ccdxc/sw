@@ -48,8 +48,6 @@ typedef enum hal_slab_e {
     HAL_SLAB_NWSEC_POLICY                    = 34,
     HAL_SLAB_NWSEC_GROUP                     = 35,
     HAL_SLAB_NWSEC_POLICY_RULES              = 36,
-    HAL_SLAB_NWSEC_POLICY_CFG                = 37,
-    HAL_SLAB_NWSEC_POLICY_SVC                = 38,
     HAL_SLAB_NWSEC_POLICY_APPID              = 39,
     HAL_SLAB_NWSEC_POLICY_EP_INFO            = 40,
     HAL_SLAB_DOS_POLICY                      = 41,
