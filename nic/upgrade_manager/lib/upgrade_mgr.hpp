@@ -46,6 +46,8 @@ public:
 
     UpgRespStateType GetFailRespType(UpgReqStateType);
     UpgRespStateType GetPassRespType(UpgReqStateType);
+
+    delphi::error DeleteUpgMgrResp (void);
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
 

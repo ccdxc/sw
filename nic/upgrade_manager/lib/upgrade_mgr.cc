@@ -184,6 +184,9 @@ string UpgradeMgr::UpgReqStateTypeToStr(UpgReqStateType type) {
     }
 }
 
+delphi::error UpgradeMgr::DeleteUpgMgrResp (void) {
+    return this->upgMgrResp_->DeleteUpgMgrResp();
+}
 delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     //Find UpgStateReq object
     LogInfo("UpgradeMgr::MoveStateMachine");

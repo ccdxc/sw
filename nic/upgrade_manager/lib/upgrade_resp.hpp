@@ -21,6 +21,9 @@ public:
     // createUpgMgrResp will create the upgResp API and set the right value
     delphi::error createUpgMgrResp(uint32_t id, upgrade::UpgRespType val);
 
+    // DeleteUpgMgrResp will delete the UpgResp object
+    delphi::error DeleteUpgMgrResp(void);
+
     //UpgradeFinish is the API that will respond to the agent with success/fail
     delphi::error UpgradeFinish(bool success);
 };

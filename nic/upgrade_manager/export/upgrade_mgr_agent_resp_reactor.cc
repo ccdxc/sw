@@ -20,6 +20,19 @@ string UpgMgrAgentRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
     }
 }
 
+delphi::error UpgMgrAgentRespReact::DeleteUpgReqSpec(void) {
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_key(10);
+
+    // find the object
+    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
+
+    req = static_pointer_cast<delphi::objects::UpgReq>(obj);
+ 
+    sdk_->DeleteObject(req);
+    return delphi::error::OK();
+}
+
 void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
     switch (resp->upgrespval()) {
         case upgrade::UpgPass:
@@ -31,11 +44,14 @@ void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) 
         default:
             break;
     }
+    if (this->DeleteUpgReqSpec() == delphi::error::OK()) {
+        LogInfo("Upgrade Req Object deleted for next request");
+    }
 }
 
 delphi::error UpgMgrAgentRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
     LogInfo("UpgRespHdlr::OnUpgRespCreate called with status {}", this->GetRespStr(resp));
-    InvokeAgentHandler(resp);
+    this->InvokeAgentHandler(resp);
     return delphi::error::OK();
 }
 
@@ -43,7 +59,7 @@ delphi::error UpgMgrAgentRespReact::OnUpgRespVal(delphi::objects::UpgRespPtr
 resp) {
     if (this->GetRespStr(resp) != "")
         LogInfo("UpgRespHdlr::OnUpgRespVal called with status: {}", this->GetRespStr(resp));
-    InvokeAgentHandler(resp);
+    this->InvokeAgentHandler(resp);
     return delphi::error::OK();
 }
 

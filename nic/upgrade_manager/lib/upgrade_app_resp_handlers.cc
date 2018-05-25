@@ -25,6 +25,18 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr 
     return delphi::error::OK();
 }
 
+
+delphi::error UpgAppRespHdlr::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr resp) {
+    LogInfo("UpgAppResp got deleted for {}/{}", resp, resp->meta().ShortDebugString());
+    vector<delphi::objects::UpgAppRespPtr> upgAppResplist = delphi::objects::UpgAppResp::List(sdk_);
+    if (upgAppResplist.empty()) {
+        LogInfo("All UpgAppResp objects got deleted");
+        this->upgMgr_->DeleteUpgMgrResp();
+    }
+
+    return delphi::error::OK();
+}
+
 string UpgAppRespHdlr::UpgRespStateTypeToStr(UpgRespStateType type) {
     switch (type) {
         case UpgReqRcvdPass:

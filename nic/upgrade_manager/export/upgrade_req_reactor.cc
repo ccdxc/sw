@@ -13,7 +13,7 @@ using namespace std;
 delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
     LogInfo("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
-    upgAppRespPtr_->CreateUpgAppResp(req);
+    upgAppRespPtr_->CreateUpgAppResp();
     if (this->upgHdlrPtr_) {
         HdlrRespCode hdlrRespCode;
         hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
@@ -28,6 +28,7 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
 delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
     LogInfo("UpgReqReactor UpgStateReq got deleted");
     //delete the object
+    upgAppRespPtr_->DeleteUpgAppResp();
     HdlrRespCode hdlrRespCode;
     if (this->upgHdlrPtr_) {
         hdlrRespCode = this->upgHdlrPtr_->UpgStateReqDelete(req);

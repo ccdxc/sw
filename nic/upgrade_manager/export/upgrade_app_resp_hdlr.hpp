@@ -21,7 +21,9 @@ public:
     }
 
     //CreateUpgAppResp creates the object UpgAppResp
-    delphi::error CreateUpgAppResp(delphi::objects::UpgStateReqPtr ptr);
+    delphi::error CreateUpgAppResp(void);
+    //DeleteUpgAppResp deletes the object UpgAppResp
+    delphi::error DeleteUpgAppResp(void);
 
     UpgRespStateType GetUpgAppRespNextPass(UpgReqStateType reqType);
     UpgRespStateType GetUpgAppRespNextFail(UpgReqStateType reqType);

@@ -33,6 +33,15 @@ delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, upgrade::UpgRespType val
     return delphi::error::OK();
 }
 
+delphi::error UpgMgrResp::DeleteUpgMgrResp(void) {
+    auto upgResp = this->findUpgMgrRespObj(10);
+    if (upgResp != NULL) {
+        LogInfo("UpgResp object got deleted for agent");
+        sdk_->DeleteObject(upgResp);
+    }
+    return delphi::error::OK();
+}
+
 delphi::error UpgMgrResp::UpgradeFinish(bool success) {
     UpgRespType respType = success ? UpgPass : UpgFail; 
     LogInfo("Returning response {} to agent", (respType==UpgPass)?"Upgrade successful":"Upgrade Fail");

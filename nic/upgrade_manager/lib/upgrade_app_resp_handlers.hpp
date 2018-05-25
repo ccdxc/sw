@@ -26,6 +26,9 @@ public:
     // OnUpgAppRespVal gets called when UpgAppRespVal attribute changes
     virtual delphi::error OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp);
 
+    // OnUpgAppRespDelete gets called when UpgAppResp object is deleted
+    virtual delphi::error OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr resp);
+
     string UpgRespStateTypeToStr(UpgRespStateType type);
 };
 typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;

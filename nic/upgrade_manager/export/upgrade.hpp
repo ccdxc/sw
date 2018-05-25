@@ -48,7 +48,7 @@ public:
             svcRole_ = AGENT;
             delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
             upgAgentHandlerPtr_ = make_shared<UpgAgentHandler>();
-            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(upgAgentHandlerPtr_);
+            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(sk, upgAgentHandlerPtr_);
             delphi::objects::UpgResp::Mount(sdk_, delphi::ReadMode);
             delphi::objects::UpgResp::Watch(sdk_, upgMgrAgentRespPtr_);
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
@@ -68,7 +68,7 @@ public:
             svcRole_ = AGENT;
             delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
             delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
-            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(uah);
+            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(sk, uah);
             delphi::objects::UpgResp::Mount(sdk_, delphi::ReadMode);
             delphi::objects::UpgResp::Watch(sdk_, upgMgrAgentRespPtr_);
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
@@ -89,7 +89,7 @@ public:
             delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
             delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
             upgAgentHandlerPtr_ = make_shared<UpgAgentHandler>();
-            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(upgAgentHandlerPtr_);
+            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(sk, upgAgentHandlerPtr_);
             delphi::objects::UpgResp::Mount(sdk_, delphi::ReadMode);
             delphi::objects::UpgResp::Watch(sdk_, upgMgrAgentRespPtr_);
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
@@ -109,7 +109,7 @@ public:
             svcRole_ = AGENT;
             delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
             delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
-            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(uah);
+            upgMgrAgentRespPtr_ = make_shared<UpgMgrAgentRespReact>(sk, uah);
             delphi::objects::UpgResp::Mount(sdk_, delphi::ReadMode);
             delphi::objects::UpgResp::Watch(sdk_, upgMgrAgentRespPtr_);
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);

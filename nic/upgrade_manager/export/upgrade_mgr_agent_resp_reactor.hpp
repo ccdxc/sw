@@ -12,12 +12,16 @@ namespace upgrade {
 using namespace std;
 
 class UpgMgrAgentRespReact : public delphi::objects::UpgRespReactor {
-    UpgAgentHandlerPtr upgAgentHandler_;
+    delphi::SdkPtr           sdk_;
+    UpgAgentHandlerPtr       upgAgentHandler_;
+
+    delphi::error DeleteUpgReqSpec(void);
 public:
     UpgMgrAgentRespReact() {}
 
-    UpgMgrAgentRespReact(UpgAgentHandlerPtr ptr) {
+    UpgMgrAgentRespReact(delphi::SdkPtr sk, UpgAgentHandlerPtr ptr) {
         upgAgentHandler_ = ptr;
+        sdk_ = sk;
     }
 
     // OnUpgRespCreate gets called when UpgResp object is created

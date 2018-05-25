@@ -19,7 +19,7 @@ delphi::objects::UpgAppRespPtr UpgAppRespHdlr::findUpgAppResp(string name) {
     return static_pointer_cast<delphi::objects::UpgAppResp>(obj);
 }
 
-delphi::error UpgAppRespHdlr::CreateUpgAppResp(delphi::objects::UpgStateReqPtr ptr) {
+delphi::error UpgAppRespHdlr::CreateUpgAppResp(void) {
     LogInfo("UpgAppRespHdlr::CreateUpgAppResp called");
     auto upgAppResp = this->findUpgAppResp(this->appName_);
     if (upgAppResp == NULL) {
@@ -29,6 +29,16 @@ delphi::error UpgAppRespHdlr::CreateUpgAppResp(delphi::objects::UpgStateReqPtr p
             return delphi::error("application unable to create response object");
     }
     this->sdk_->SetObject(upgAppResp);
+    return delphi::error::OK();
+}
+
+delphi::error UpgAppRespHdlr::DeleteUpgAppResp(void) {
+    LogInfo("UpgAppRespHdlr::DeleteUpgAppResp called");
+    auto upgAppResp = this->findUpgAppResp(this->appName_);
+    if (upgAppResp == NULL) {
+        return delphi::error("Response object does not exist");
+    }
+    this->sdk_->DeleteObject(upgAppResp);
     return delphi::error::OK();
 }
 
