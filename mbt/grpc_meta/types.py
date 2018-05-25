@@ -71,7 +71,7 @@ def generate_int(field, negative_test=False):
         val = re.match(regex_range, expr).groups()
         if negative_test:
             # If we're running a negative test we want wrong values.
-            return int(val[1]) + random.randint(1 , 2147483647)
+            return ( int(val[1]) + random.randint(1 , 2147483647) & 0xFFFFFFFF )
         else:
             return random.randint(int(val[0]), int(val[1]))
     return random.randint(0, 99999)

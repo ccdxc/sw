@@ -1700,11 +1700,6 @@ acl_update (AclSpec& spec, AclResponse *rsp)
     }
 
     acl_clone = (acl_t *)dhl_entry.cloned_obj;
-    if (acl->priority != acl_clone->priority) {
-        HAL_TRACE_ERR("priority updates are currently not supported");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
 
     // form ctxt and call infra update object
     dhl_entry.handle = acl->hal_handle;

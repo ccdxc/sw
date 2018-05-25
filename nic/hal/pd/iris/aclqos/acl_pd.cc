@@ -510,7 +510,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 
     // Insert the entry
     if (update) {
-        ret = acl_tbl->update(pd_acl->handle, &key, &mask, &data);
+        ret = acl_tbl->update(pd_acl->handle, &key, &mask, &data, 
+                              acl_get_priority(pi_acl));
     } else {
         ret = acl_tbl->insert(&key, &mask, &data, acl_get_priority(pi_acl), &pd_acl->handle);
     }

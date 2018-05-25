@@ -62,6 +62,7 @@ public:
         STATS_UPD_SUCCESS,
         STATS_UPD_FAIL_INVALID_ARG,
         STATS_UPD_FAIL_ENTRY_NOT_FOUND,
+        STATS_UPD_FAIL_NO_RES,
         STATS_UPD_FAIL_HW,
         STATS_REM_SUCCESS,
         STATS_REM_FAIL_ENTRY_NOT_FOUND,
@@ -84,7 +85,8 @@ public:
     hal_ret_t insert(void *key, void *key_mask, void *data,
                      priority_t priority, acl_tcam_entry_handle_t *handle);
     hal_ret_t update(acl_tcam_entry_handle_t handle, 
-                     void *key, void *key_mask, void *data);
+                     void *key, void *key_mask, void *data,
+                     priority_t priority);
     hal_ret_t remove(acl_tcam_entry_handle_t handle);
     hal_ret_t retrieve(acl_tcam_entry_handle_t handle, void *key, 
                       void *key_mask, void *data);
@@ -135,15 +137,22 @@ private:
                    uint32_t swkey_len, uint32_t swdata_len, 
                    bool priority_0_lowest, bool allow_same_priority);
 
+    hal_ret_t place_entry_(void *key, void *key_mask, void *data,
+                           priority_t priority, TcamEntry **tentry_p);
+    hal_ret_t cleanup_entry_(TcamEntry *tentry);
+
     acl_tcam_entry_handle_t alloc_handle_(void) { return ++handle_allocator; }
 
     void set_entry_(uint32_t index, TcamEntry *tentry);
     void clear_entry_(TcamEntry *tentry);
     TcamEntry* get_entry_(uint32_t index) { return tcam_entries_[index]; }
 
-    void set_prio_range_(TcamEntry *tentry, prio_range_t *prio_range);
+    void set_prio_range_(priority_t priority, prio_range_t *prio_range);
 
-    prio_range_t *get_prio_range_(TcamEntry *tentry);
+    prio_range_t *get_prio_range_(priority_t priority);
+
+    void update_priority_range_for_insert_(priority_t priority, uint32_t index);
+    void update_priority_range_for_clear_(priority_t priority, uint32_t index);
 
     hal_ret_t find_allowed_range_(priority_t priority,
                                   bool *prev_exists_p, uint32_t *prev_end_p,

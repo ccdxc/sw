@@ -74,8 +74,9 @@ TcamEntry::~TcamEntry()
 // Updates Data 
 //---------------------------------------------------------------------------
 void
-TcamEntry::update_key_data(void *key, void *key_mask, void *data)
+TcamEntry::update(void *key, void *key_mask, void *data, priority_t priority)
 {
+    priority_ = priority;
     std::memcpy(key_, key, key_len_);
     std::memcpy(key_mask_, key_mask, key_len_);
     std::memcpy(data_, data, data_len_);

@@ -191,7 +191,7 @@ message AclSpec {
   types.ObjectMeta meta          = 1;    // common object meta
   // key_or_handle is ACL's key or handle
   kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
-  uint32           priority      = 3 [(gogoproto.moretags) = "venice:immutable"];    // priority of the rule (0 being highest)
+  uint32           priority      = 3 [(gogoproto.moretags) = "venice:unique,venice:constraints={range:100-4294967295}"];    // priority of the rule (0 being highest)
                                          // TBD: is this per-vrf priority ? or global ?
   AclSelector      match         = 4;    // match conditions
   AclActionInfo    action        = 5 [(gogoproto.moretags) = "venice:mandatory"];    // action(s)

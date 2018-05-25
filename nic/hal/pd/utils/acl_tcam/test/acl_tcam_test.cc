@@ -73,11 +73,12 @@ protected:
     virtual void TearDown();
 
 
-    hal_ret_t
-    add_entry(priority_t priority, acl_tcam_entry_handle_t *handle_p = NULL);
+    hal_ret_t add_entry(priority_t priority, acl_tcam_entry_handle_t *handle_p = NULL);
+    hal_ret_t update_entry(priority_t priority, acl_tcam_entry_handle_t handle);
     hal_ret_t remove_entry(acl_tcam_entry_handle_t handle);
 
     void verify_order(void);
+    void print_order(void);
 
     std::string table_name_;
     acl_tcam *test_tcam_;
@@ -95,6 +96,7 @@ acl_tcam_test::SetUp()
                                    (uint32_t)sizeof(input_mapping_native_swkey_t),
                                    (uint32_t)sizeof(input_mapping_native_actiondata));
     seed_ = rand();
+    seed_ = 1234;
     std::cout << "Random seed used " << seed_ << std::endl;
     srand(seed_);
     num_entries_ = 0;
@@ -111,10 +113,18 @@ void
 acl_tcam_test::verify_order()
 {
     hal_ret_t ret = HAL_RET_OK;
+    // indexes tracks the tcam-indexes allocated
     std::set<uint32_t> indexes;
+    // range_indexes tracks the range of tcam-indexes allocated for entries of
+    // same priority
     std::set<uint32_t> range_indexes;
     uint32_t tcam_idx;
+    uint32_t max_seen_idx;
 
+    // Go from low priority to high priority and ensure the priority order
+    // is maintained.
+    // indexes set tracks the indexes allocated. So the current entries index
+    // should be greater than the highest index in the indexes set
     for (auto mitr = entries.begin();
          mitr != entries.end();
          mitr++) {
@@ -126,6 +136,10 @@ acl_tcam_test::verify_order()
 
             range_indexes.insert(tcam_idx);
             if (!indexes.empty()) {
+                max_seen_idx = *std::max_element(indexes.begin(), indexes.end());
+                if (tcam_idx <= max_seen_idx) {
+                    std::cout << "tcam idx " << tcam_idx << " less than max seen " << max_seen_idx << std::endl;
+                }
                 ASSERT_GT(tcam_idx, *std::max_element(indexes.begin(), indexes.end()));
             }
         }
@@ -135,6 +149,24 @@ acl_tcam_test::verify_order()
     }
 }
 
+void
+acl_tcam_test::print_order()
+{
+    uint32_t tcam_idx;
+
+    std::cout << "PRINTING ORDER" << std::endl;
+    for (auto mitr = entries.begin();
+         mitr != entries.end();
+         mitr++) {
+        for (auto hitr = mitr->second.begin();
+             hitr != mitr->second.end();
+             hitr++) {
+            test_tcam_->get_index(*hitr, &tcam_idx);
+            std::cout << mitr->first << "\t" << tcam_idx << std::endl;
+        }
+    }
+    std::cout << "----------------------------------------------------" << std::endl;
+}
 hal_ret_t
 acl_tcam_test::add_entry(priority_t priority, acl_tcam_entry_handle_t *handle_p)
 {
@@ -162,8 +194,47 @@ acl_tcam_test::add_entry(priority_t priority, acl_tcam_entry_handle_t *handle_p)
     num_entries_++;
 
     entries[priority].insert(handle);
+    valid_handles[handle] = priority;
 
     if (handle_p) { *handle_p = handle;}
+
+    verify_order();
+    return ret;
+}
+
+hal_ret_t
+acl_tcam_test::update_entry(priority_t priority, acl_tcam_entry_handle_t handle)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    input_mapping_native_swkey_t key;
+    input_mapping_native_swkey_mask_t key_mask;
+    input_mapping_native_actiondata data;
+    priority_t old_priority;
+    auto hitr = valid_handles.find(handle);
+
+    old_priority = hitr->second;
+
+    memset(&key, 0, sizeof(key));
+    memset(&key_mask, 0, sizeof(key_mask));
+    memset(&data, 0, sizeof(data));
+
+    key.tunnel_metadata_tunnel_type = 1;
+    data.actionid = 1;
+    memset(&key_mask, ~0, sizeof(tcam_key_t));
+
+    std::cout << old_priority <<  " --> " << priority << std::endl;
+
+    ret = test_tcam_->update(handle, (void *)&key, (void *)&key_mask,
+                             (void *)&data, priority);
+
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+
+    valid_handles[handle] = priority;
+    entries[old_priority].erase(handle);
+    entries[priority].insert(handle);
 
     verify_order();
     return ret;
@@ -318,6 +389,51 @@ TEST_F(acl_tcam_test, test4)
     ASSERT_TRUE(ret != HAL_RET_OK);
 
     for (int i = 0; i < NUM_ENTRIES; i++) {
+        ASSERT_NO_FATAL_FAILURE(ret = remove_entry(handles[i]));
+        ASSERT_EQ(ret, HAL_RET_OK);
+    }
+    // table is empty error out
+    ASSERT_NO_FATAL_FAILURE(ret = remove_entry(100));
+    ASSERT_TRUE(ret != HAL_RET_OK);
+}
+
+/* ---------------------------------------------------------------------------
+ *
+ * Test Case 5:
+ * - Create acl_tcam table
+ * - Insert acl_tcam entries with random priority (involves moving of
+ *   entries)
+ * - Update acl_tcam entries with random priority
+ *
+ */
+TEST_F(acl_tcam_test, test5)
+{
+
+    hal_ret_t ret = HAL_RET_OK;
+    priority_t priority;
+    acl_tcam_entry_handle_t handles[NUM_ENTRIES];
+
+    // Keep 1 space free for updates where priority changes (make before break
+    // needs 1 free space)
+    for (int i = 0; i < NUM_ENTRIES - 1; i++) {
+        priority = rand();
+
+        ASSERT_NO_FATAL_FAILURE(ret = add_entry(priority, &handles[i]));
+        ASSERT_EQ(ret, HAL_RET_OK);
+    }
+
+    std::cout << "INITIAL ORDER" << std::endl;
+
+    // Update 
+    for (int i = 0; i < NUM_ENTRIES - 1; i++) {
+        priority = rand();
+
+        ASSERT_NO_FATAL_FAILURE(ret = update_entry(priority, handles[i]));
+        ASSERT_EQ(ret, HAL_RET_OK);
+    }
+
+
+    for (int i = 0; i < NUM_ENTRIES - 1; i++) {
         ASSERT_NO_FATAL_FAILURE(ret = remove_entry(handles[i]));
         ASSERT_EQ(ret, HAL_RET_OK);
     }

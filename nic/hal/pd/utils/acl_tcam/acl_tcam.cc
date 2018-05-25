@@ -41,14 +41,14 @@ acl_tcam::init(std::string table_name, uint32_t table_id, uint32_t table_size,
 
     inuse_bmp_ = bitmap::factory(tcam_size_, true);
     if (!inuse_bmp_) {
-        HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, tcam_entries_); 
+        HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, tcam_entries_);
         return HAL_RET_OOM;
     }
 
     tcam_prio_map_ = new tcam_prio_map(priority_0_lowest ?
                                        priority_0_lowest_compare : priority_0_highest_compare);
     if (!tcam_prio_map_) {
-        HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, tcam_entries_); 
+        HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, tcam_entries_);
         bitmap::destroy(inuse_bmp_);
         return HAL_RET_OOM;
     }
@@ -65,7 +65,7 @@ acl_tcam::init(std::string table_name, uint32_t table_id, uint32_t table_size,
     hwkeymask_len_ = (hwkeymask_len_ + 7) >> 3;
     hwdata_len_ = (hwdata_len_ + 7) >> 3;
 
-    HAL_TRACE_DEBUG("ACL-TCAM::{:<30}: tableid: {:<3} swkey_len: {:<4} "
+    HAL_TRACE_DEBUG("{:<30}: tableid: {:<3} swkey_len: {:<4} "
                     "hwkey_len_: {:<4} hwkeymask_len_: {:<4} "
                     "hwdata_len_: {:<4}",
                     table_name.c_str(), table_id, swkey_len,
@@ -73,7 +73,7 @@ acl_tcam::init(std::string table_name, uint32_t table_id, uint32_t table_size,
 
     // Initialize for Stats
     // stats_ = new uint64_t[STATS_MAX]();
-    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_ACL_TCAM_STATS, 
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_ACL_TCAM_STATS,
                                     sizeof(uint64_t) * STATS_MAX);
     return HAL_RET_OK;
 }
@@ -111,10 +111,10 @@ acl_tcam::~acl_tcam()
 }
 
 hal_ret_t
-acl_tcam::insert(void *key, void *key_mask, void *data,
-                 priority_t priority, acl_tcam_entry_handle_t *handle_p)
+acl_tcam::place_entry_(void *key, void *key_mask, void *data,
+                       priority_t priority, TcamEntry **tentry_p)
 {
-    // Follow the below steps to insert an entry
+    // Follow the below steps to place an entry
     // 1. Find the start of the next priority and the end
     //                     of previous priority
     // 2. Find a free spot within the above 2
@@ -137,15 +137,12 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
     // - update the inuse_bmp_
     //
     // After adding the new entry
-    // - Allocate a handle for the entry
-    // - update the tcam_entry_map_ with the new entry and handle
     // - update the tcam_prio_map_ with the new start/end
     // - update the tcam_entries_ array and move the entries accordingly
     // - update the inuse_bmp_
     hal_ret_t ret = HAL_RET_OK;
     bool prev_exists = false, next_exists = false;
     uint32_t prev_end, next_start;
-    acl_tcam_entry_handle_t handle;
     uint32_t target_up = 0;
     uint32_t target_down = tcam_size_ - 1;
     move_chain_t *move_chain = NULL;
@@ -160,16 +157,16 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
     ret = find_allowed_range_(priority, &prev_exists, &prev_end,
                               &next_exists, &next_start, &cur_exists);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} insert failed due to internal "
+        HAL_TRACE_ERR("Table {} placing entry failed due to internal "
                       "error finding allowed range. Err {}",
-                      __func__, __LINE__, table_name_.c_str(), ret);
+                        table_name_.c_str(), ret);
         goto end;
     }
 
     if (!allow_same_priority_ && cur_exists) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} insert failed due to an existing "
+        HAL_TRACE_ERR("Table {} placing entry failed due to an existing "
                       "entry with the same priority {}. Err {}",
-                      __func__, __LINE__, table_name_.c_str(), priority, ret);
+                        table_name_.c_str(), priority, ret);
         ret = HAL_RET_ENTRY_EXISTS;
         goto end;
     }
@@ -186,28 +183,29 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
         ret = inuse_bmp_->first_free(&free_spot);
         if (ret != HAL_RET_OK) {
             // There is no space at all!
-            HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} insert failed due to no space",
-                          __func__, __LINE__, table_name_.c_str());
+            HAL_TRACE_ERR("Table {} placing entry failed due to no space",
+                            table_name_.c_str());
             goto end;
         }
     }
 
     if (next_exists) {
         target_down = next_start;
-    } else if (prev_exists) {
+    } 
+    
+    if (prev_exists) {
         target_up = prev_end;
     }
 
-    if ((free_spot >= tcam_size_) ||
-        (next_exists && (free_spot > next_start)) ||
-        (prev_exists && (free_spot < prev_end))) {
+    if ((free_spot > target_down) ||
+        (free_spot < target_up)) {
         // We need to move some entries
         // Create a move chain
         move_chain = create_move_chain_(target_up, target_down, &free_spot, &num_moves);
         if (move_chain == NULL) {
             // There is no space at all
-            HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} insert failed due to no space",
-                          __func__, __LINE__, table_name_.c_str());
+            HAL_TRACE_ERR("Table {} placing entry failed due to no space",
+                            table_name_.c_str());
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
@@ -217,9 +215,9 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
     ret = move_entries_(move_chain, free_spot, num_moves);
     if (ret != HAL_RET_OK) {
         // Oops moving failed
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} insert failed due to failure "
+        HAL_TRACE_ERR("Table {} placing entry failed due to failure "
                       " in moving entries. Err: {}",
-                      __func__, __LINE__, table_name_.c_str(), ret);
+                        table_name_.c_str(), ret);
         goto end;
     }
 
@@ -232,8 +230,6 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
         target_spot = free_spot;
     }
 
-    // Allocate a handle and the tcam_entry
-    handle = alloc_handle_();
     tentry = TcamEntry::factory(key, key_mask, swkey_len_, data, swdata_len_,
                                 TCAM_ENTRY_INVALID_INDEX,
                                 priority = priority);
@@ -243,9 +239,9 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
     if (ret != HAL_RET_OK) {
         // Programming new entry failed. Roll back the moves
         unroll_moves_(move_chain, num_moves, num_moves);
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} insert failed due to failure "
+        HAL_TRACE_ERR("Table {} placing entry failed due to failure "
                       " in programming. Err: {}",
-                      __func__, __LINE__, table_name_.c_str(), ret);
+                        table_name_.c_str(), ret);
         goto end;
     }
 
@@ -254,18 +250,41 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
 
     // Update the state for the new entry
     set_entry_(target_spot, tentry);
-    tcam_entry_map_[handle] = tentry;
-
-    *handle_p = handle;
+    *tentry_p = tentry;
 
 end:
-    stats_update(INSERT, ret);
     if (move_chain) {
         HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, move_chain);
     }
     if (ret != HAL_RET_OK) {
         tentry ? TcamEntry::destroy(tentry) : HAL_NOP;
     }
+    return ret;
+}
+
+hal_ret_t
+acl_tcam::insert(void *key, void *key_mask, void *data,
+                 priority_t priority, acl_tcam_entry_handle_t *handle_p)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    acl_tcam_entry_handle_t handle;
+    TcamEntry *tentry = NULL;
+
+    ret = place_entry_(key, key_mask, data, priority, &tentry);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Table {} placing entry with priority {} failed, ret {}",
+                      table_name_, priority, ret);
+        goto end;
+    }
+
+    // Allocate a handle and update mapping
+    handle = alloc_handle_();
+    tcam_entry_map_[handle] = tentry;
+
+    *handle_p = handle;
+
+end:
+    stats_update(INSERT, ret);
     return ret;
 }
 
@@ -278,37 +297,131 @@ end:
 //		- HAL_RET_ENTRY_NOT_FOUND 	: Entry not found
 // ---------------------------------------------------------------------------
 hal_ret_t
-acl_tcam::update(acl_tcam_entry_handle_t handle, 
-                 void *key, void *key_mask, void *data)
+acl_tcam::update(acl_tcam_entry_handle_t handle,
+                 void *key, void *key_mask, void *data,
+                 priority_t priority)
 {
     hal_ret_t ret = HAL_RET_OK;
     TcamEntry *tentry = NULL;
+    TcamEntry *updated_tentry = NULL;
     tcam_entry_map::iterator itr;
+    bool move_needed = false;
+    bool prev_exists = false, next_exists = false;
+    uint32_t prev_end, next_start;
+    bool cur_exists = false;
+    uint32_t tindex;
 
     // check if entry exists
     itr = tcam_entry_map_.find(handle);
     if (itr == tcam_entry_map_.end()) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
-                      __func__, __LINE__, table_name_.c_str(), handle);
+        HAL_TRACE_ERR("Table {} entry {} not found",
+                        table_name_.c_str(), handle);
         ret = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
     tentry = itr->second;
+    tindex = tentry->get_index();
 
-    ret = program_table_(tentry, tentry->get_index(), key, key_mask, data);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Error in programming Table {} entry {} "
-                      "Err: {}",
-                      __func__, __LINE__, table_name_.c_str(), handle, ret);
-        goto end;
+    if (tentry->get_priority() != priority) {
+        // Figure out if the existing entry can be re-used in the same location
+        // i.e. The new priority conforms to the priority order of the other
+        // existing entries
+        //
+        ret = find_allowed_range_(priority, &prev_exists, &prev_end,
+                                  &next_exists, &next_start, &cur_exists);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Table {} placing entry failed due to internal "
+                          "error finding allowed range. Err {}",
+                          table_name_.c_str(), ret);
+            goto end;
+        }
+
+        if (!allow_same_priority_ && cur_exists) {
+            HAL_TRACE_ERR("Table {} placing entry failed due to an existing "
+                          "entry with the same priority {}. Err {}",
+                          table_name_.c_str(), priority, ret);
+            ret = HAL_RET_ENTRY_EXISTS;
+            goto end;
+        }
+
+        move_needed = true;
+        if (prev_exists && (prev_end == tindex)) {
+            // Current entry is at the edge of prev block. So
+            // it can be updated
+            move_needed = false;
+        }
+
+        if (next_exists && (next_start == tindex)) {
+            // Current entry is at the edge of next block. So
+            // it can be updated
+            move_needed = false;
+        }
     }
 
-    // update the entry
-    tentry->update_key_data(key, key_mask, data);
+    if (move_needed) {
+        // Make-before-break. Add entry with new priority and then
+        // cleanup the current entry
+        ret = place_entry_(key, key_mask, data, priority, &updated_tentry);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Table {} placing entry with priority {} failed, ret {}",
+                          table_name_, priority, ret);
+            goto end;
+        }
+
+        // Update the handle to entry mapping
+        tcam_entry_map_[handle] = updated_tentry;
+
+        // Cleanup the existing entry at the old location
+        ret = cleanup_entry_(tentry);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error cleaning up Table {} entry {}, ret {}",
+                          table_name_, handle, ret);
+            goto end;
+        }
+        // Now the tentry is not valid anymore
+        tentry = NULL;
+    } else {
+
+        ret = program_table_(tentry, tentry->get_index(), key, key_mask, data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error in programming Table {} entry {} "
+                          "Err: {}",
+                            table_name_.c_str(), handle, ret);
+            goto end;
+        }
+
+        if (tentry->get_priority() != priority) {
+            // update tcam_prio_map_
+            update_priority_range_for_clear_(tentry->get_priority(), tentry->get_index());
+            update_priority_range_for_insert_(priority, tentry->get_index());
+        }
+
+        // update the entry
+        tentry->update(key, key_mask, data, priority);
+    }
 
 end:
     stats_update(UPDATE, ret);
+    return ret;
+}
+
+hal_ret_t
+acl_tcam::cleanup_entry_(TcamEntry *tentry)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    ret = deprogram_table_(tentry->get_index());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in programming Table {} entry index {} "
+                      "Err: {}",
+                        table_name_.c_str(), tentry->get_index(), ret);
+        goto end;
+    }
+
+    // Clean up the software data structures
+    clear_entry_(tentry);
+    TcamEntry::destroy(tentry);
+end:
     return ret;
 }
 
@@ -324,32 +437,23 @@ hal_ret_t
 acl_tcam::remove(acl_tcam_entry_handle_t handle)
 {
     hal_ret_t ret = HAL_RET_OK;
-    TcamEntry *tentry = NULL;
     tcam_entry_map::iterator itr;
 
     // check if entry exists
     itr = tcam_entry_map_.find(handle);
     if (itr == tcam_entry_map_.end()) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
-                      __func__, __LINE__, table_name_.c_str(), handle);
+        HAL_TRACE_ERR("Table {} entry {} not found",
+                        table_name_.c_str(), handle);
         ret = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
-    tentry = itr->second;
-
-    ret = deprogram_table_(tentry->get_index());
+    ret = cleanup_entry_(itr->second);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Error in programming Table {} entry {} "
-                      "Err: {}",
-                      __func__, __LINE__, table_name_.c_str(), handle, ret);
+        HAL_TRACE_ERR("Error cleaning up Table {} entry {}, ret {}",
+                      table_name_, handle, ret);
         goto end;
     }
-
-    // Clean up the software data structures
-    clear_entry_(tentry);
-    TcamEntry::destroy(tentry);
-    // delete itr->second;
     tcam_entry_map_.erase(itr);
 
 end:
@@ -371,8 +475,8 @@ acl_tcam::retrieve(acl_tcam_entry_handle_t handle, void *key, void *key_mask,
     // check if entry exists
     itr = tcam_entry_map_.find(handle);
     if (itr == tcam_entry_map_.end()) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
-                      __func__, __LINE__, table_name_.c_str(), handle);
+        HAL_TRACE_ERR("Table {} entry {} not found",
+                        table_name_.c_str(), handle);
         ret = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -409,8 +513,8 @@ acl_tcam::retrieve_from_hw(acl_tcam_entry_handle_t handle, void *key, void *key_
     // check if entry exists
     itr = tcam_entry_map_.find(handle);
     if (itr == tcam_entry_map_.end()) {
-        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
-                      __func__, __LINE__, table_name_.c_str(), handle);
+        HAL_TRACE_ERR("Table {} entry {} not found",
+                        table_name_.c_str(), handle);
         ret = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -504,7 +608,7 @@ end:
 // Program HW table
 // ----------------------------------------------------------------------------
 hal_ret_t
-acl_tcam::program_table_(TcamEntry *te, uint32_t index, 
+acl_tcam::program_table_(TcamEntry *te, uint32_t index,
                          void *key, void *key_mask, void *data)
 {
     p4pd_error_t pd_err = P4PD_SUCCESS;
@@ -529,7 +633,7 @@ acl_tcam::program_table_(TcamEntry *te, uint32_t index,
     std::memset(hwkey, 0, hwkey_len_);
     std::memset(hwkeymask, 0, hwkeymask_len_);
 
-    pd_err = p4pd_hwkey_hwmask_build(table_id_, k, m, 
+    pd_err = p4pd_hwkey_hwmask_build(table_id_, k, m,
                                      (uint8_t *)hwkey, (uint8_t *)hwkeymask);
 
     HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
@@ -701,11 +805,10 @@ acl_tcam::move_chain_state_update_(move_chain_t *move_chain,
 }
 
 void
-acl_tcam::set_entry_(uint32_t index,
-                     TcamEntry *tentry)
+acl_tcam::update_priority_range_for_insert_(priority_t priority, uint32_t index)
 {
     prio_range_t *prio_range = NULL;
-    prio_range = get_prio_range_(tentry);
+    prio_range = get_prio_range_(priority);
 
     if (prio_range == NULL) {
         prio_range = (prio_range_t*)HAL_CALLOC(hal::HAL_MEM_ALLOC_LIB_ACL_TCAM,
@@ -713,7 +816,7 @@ acl_tcam::set_entry_(uint32_t index,
         prio_range->start = index;
         prio_range->end = index;
 
-        set_prio_range_(tentry, prio_range);
+        set_prio_range_(priority, prio_range);
     } else {
         if (index < prio_range->start) {
             prio_range->start = index;
@@ -722,27 +825,21 @@ acl_tcam::set_entry_(uint32_t index,
             prio_range->end = index;
         }
     }
-
-    tentry->set_index(index);
-    inuse_bmp_->set(index);
-    HAL_ASSERT(tcam_entries_[index] == NULL);
-    tcam_entries_[index] = tentry;
 }
 
 void
-acl_tcam::clear_entry_(TcamEntry *tentry)
+acl_tcam::update_priority_range_for_clear_(priority_t priority, uint32_t index)
 {
-    prio_range_t *prio_range;
     hal_ret_t ret;
-    uint32_t index = tentry->get_index();
+    prio_range_t *prio_range;
 
-    prio_range = get_prio_range_(tentry);
+    prio_range = get_prio_range_(priority);
     HAL_ASSERT((index >= prio_range->start) &&
                (index <= prio_range->end));
     if (prio_range->start == prio_range->end) {
         // We have only one entry in this priority range
         HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, prio_range);
-        tcam_prio_map_->erase(tentry->get_priority());
+        tcam_prio_map_->erase(priority);
     } else if (prio_range->start == index) {
         // New start is the next in use bit
         ret = inuse_bmp_->next_set(index, &prio_range->start);
@@ -752,7 +849,25 @@ acl_tcam::clear_entry_(TcamEntry *tentry)
         ret = inuse_bmp_->prev_set(index, &prio_range->end);
         HAL_ASSERT(ret == HAL_RET_OK);
     }
+}
 
+void
+acl_tcam::set_entry_(uint32_t index,
+                     TcamEntry *tentry)
+{
+    update_priority_range_for_insert_(tentry->get_priority(), index);
+    tentry->set_index(index);
+    inuse_bmp_->set(index);
+    HAL_ASSERT(tcam_entries_[index] == NULL);
+    tcam_entries_[index] = tentry;
+}
+
+void
+acl_tcam::clear_entry_(TcamEntry *tentry)
+{
+    uint32_t index = tentry->get_index();
+
+    update_priority_range_for_clear_(tentry->get_priority(), index);
     inuse_bmp_->clear(index);
     tcam_entries_[index] = NULL;
 }
@@ -841,7 +956,7 @@ acl_tcam::populate_move_chain_(move_chain_t *move_chain, uint32_t num_moves,
     tcam_prio_map::iterator itr;
     itr = tcam_prio_map_->find(tentry->get_priority());
     HAL_ASSERT_GOTO(itr != tcam_prio_map_->end()
-                    && "ACL-TCAM:Priority map entry doesn't exist", cleanup);
+                    && "Priority map entry doesn't exist", cleanup);
 
     if (!move_up) {
         itr++;
@@ -850,12 +965,12 @@ acl_tcam::populate_move_chain_(move_chain_t *move_chain, uint32_t num_moves,
     for (i = 0; i < num_moves; i++) {
         if (move_up) {
             HAL_ASSERT_GOTO(itr != tcam_prio_map_->end() &&
-                            "ACL-TCAM:Priority map iter encountered end", cleanup);
+                            "Priority map iter encountered end", cleanup);
             move_chain[i] = itr->second->end;
             itr++;
         } else {
             HAL_ASSERT_GOTO(itr != tcam_prio_map_->begin() &&
-                            "ACL-TCAM:Priority map iter encountered begin", cleanup);
+                            "Priority map iter encountered begin", cleanup);
             itr--;
             move_chain[i] = itr->second->start;
         }
@@ -866,17 +981,17 @@ cleanup:
 }
 
 void
-acl_tcam::set_prio_range_(TcamEntry *tentry, prio_range_t *prio_range)
+acl_tcam::set_prio_range_(priority_t priority, prio_range_t *prio_range)
 {
-    tcam_prio_map_->insert(std::make_pair(tentry->get_priority(), prio_range));
+    tcam_prio_map_->insert(std::make_pair(priority, prio_range));
 }
 
 prio_range_t *
-acl_tcam::get_prio_range_(TcamEntry *tentry)
+acl_tcam::get_prio_range_(priority_t priority)
 {
 
     tcam_prio_map::iterator itr;
-    itr = tcam_prio_map_->find(tentry->get_priority());
+    itr = tcam_prio_map_->find(priority);
     if (itr != tcam_prio_map_->end()) {
         return itr->second;
     }
@@ -932,28 +1047,29 @@ acl_tcam::stats_update(acl_tcam::api ap, hal_ret_t rs)
             break;
         case UPDATE:
             if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
-            else if(rs == HAL_RET_ENTRY_NOT_FOUND) 
+            else if(rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_UPD_FAIL_HW);
             else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INVALID_ARG);
+            else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_UPD_FAIL_NO_RES);
             else HAL_ASSERT(0);
             break;
         case REMOVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
-            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
             else HAL_ASSERT(0);
             break;
         case RETRIEVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_RETR_SUCCESS);
-            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_RETR_FAIL_ENTRY_NOT_FOUND);
             else HAL_ASSERT(0);
             break;
         case RETRIEVE_FROM_HW:
             if (rs == HAL_RET_OK) stats_incr(STATS_RETR_FROM_HW_SUCCESS);
-            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_RETR_FROM_HW_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_RETR_FROM_HW_FAIL_HW);
             else HAL_ASSERT(0);
@@ -975,7 +1091,7 @@ acl_tcam::table_num_entries_in_use(void)
 // ----------------------------------------------------------------------------
 // Number of insert operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 acl_tcam::table_num_inserts(void)
 {
     return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_INVALID_ARG] +
@@ -985,7 +1101,7 @@ acl_tcam::table_num_inserts(void)
 // ----------------------------------------------------------------------------
 // Number of failed insert operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 acl_tcam::table_num_insert_errors(void)
 {
     return stats_[STATS_INS_FAIL_INVALID_ARG] +
@@ -995,7 +1111,7 @@ acl_tcam::table_num_insert_errors(void)
 // ----------------------------------------------------------------------------
 // Number of delete operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 acl_tcam::table_num_deletes(void)
 {
     return stats_[STATS_REM_SUCCESS] +
@@ -1005,7 +1121,7 @@ acl_tcam::table_num_deletes(void)
 // ----------------------------------------------------------------------------
 // Number of failed delete operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 acl_tcam::table_num_delete_errors(void)
 {
     return stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
@@ -1021,7 +1137,7 @@ acl_tcam::entry_trace_(void *key, void *key_mask, void *data, uint32_t index)
     p4pd_error_t    p4_err;
 
     p4_err = p4pd_table_ds_decoded_string_get(table_id_, index,
-            key, key_mask, data, 
+            key, key_mask, data,
             buff, sizeof(buff));
     HAL_ASSERT(p4_err == P4PD_SUCCESS);
 
