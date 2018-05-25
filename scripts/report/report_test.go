@@ -131,6 +131,28 @@ func TestCoverageFail(t *testing.T) {
 	AssertEquals(t, true, tr.RunFailed, "expected the run to fail due to low coverage")
 
 }
+func TestFilterFailTests(t *testing.T) {
+
+	tr := TestReport{
+		RunFailed: true,
+		Results: []*Target{
+			{
+				Name:     "test",
+				Coverage: 45.0,
+				Error:    ErrTestCovFailed.Error(),
+			},
+			{
+				Name:     "test2",
+				Coverage: 88.0,
+				Error:    "",
+			},
+		},
+	}
+	tr2 := tr.filterFailedTests()
+	AssertEquals(t, tr.RunFailed, tr2.RunFailed, "RunFailed should be same after filterFailedTests")
+	AssertEquals(t, len(tr2.Results), 1, "Only failed test should be present")
+	AssertEquals(t, tr.Results[0], tr2.Results[0], "Only failed test should be present")
+}
 
 func TestStdOutParsing(t *testing.T) {
 	tgt := Target{

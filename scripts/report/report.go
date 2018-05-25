@@ -61,10 +61,23 @@ func main() {
 	t.testCoveragePass()
 
 	if t.RunFailed {
-		log.Fatalf("Tests failed. %s", fmt.Sprintf(string(j)))
+		t = t.filterFailedTests()
+		failedTests, _ := t.reportToJSON()
+		log.Fatalf("Tests failed. %s", fmt.Sprintf(string(failedTests)))
 	}
 
 	fmt.Println(string(j))
+}
+
+func (t *TestReport) filterFailedTests() TestReport {
+	var retval TestReport
+	retval.RunFailed = t.RunFailed
+	for _, tgt := range t.Results {
+		if tgt.Error != "" {
+			retval.Results = append(retval.Results, tgt)
+		}
+	}
+	return retval
 }
 
 func (t *TestReport) runCoverage() {
