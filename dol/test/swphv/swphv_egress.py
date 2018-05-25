@@ -32,14 +32,14 @@ def swphv_get_state():
     return resp_status
 
 def Setup(infra, module):
-    print("Triggering txdma sw phv test")
-    swphv_inject()
     return
 
 def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    print("Triggering txdma sw phv test")
+    swphv_inject()
     return
 
 def TestCaseTrigger(tc):

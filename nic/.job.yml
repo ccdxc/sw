@@ -61,7 +61,7 @@ targets:
   base:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo base --feature eth_base,nw_base,rdma_base,proxy_base --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
   gft_rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo rdma_gft --feature rdma_perf --gft ; ret=$? ; make sanity_logs ; exit $ret" ]
   gft_rdma_l2l:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo rdma_gft --feature rdma_send_only_inline_l2l,rdma_send_l2l --l2l --gft ; ret=$? ; make sanity_logs ; exit $ret" ]
-  swphv:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature swphv" ]
+  swphv:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo firewall --feature swphv ; ret=$? ; make sanity_logs ; exit $ret" ]
   proto-sync: ["sh", "-c", "cd /sw && make pull-assets && cd $GOPATH/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto && make proto-sync" ]
   hal-rtl/parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make hal-rtl && ./run.py  --topo parser --feature parser ; ret=$? ; make sanity_logs ; exit $ret" ]
   naples-docker:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make release && ./tools/validate-naples-docker.sh; ret=$? ; make sanity_logs ; exit $ret" ]

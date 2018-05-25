@@ -53,6 +53,8 @@ conf/dol.conf
 conf/hntap.conf
 debug_cli/swig/ccfiles/p4pd_wrap.cc
 debug_cli/swig/pyfiles/p4pd.py
+debug_cli/cli/cli.py
+debug_cli/cli/cli_wrap.cc
 nic.tar
 nic.tgz
 naples.tgz

@@ -55,4 +55,3 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-

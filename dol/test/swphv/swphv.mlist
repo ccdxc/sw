@@ -29,6 +29,5 @@ modules:
         name    : SWPHV_INJECT_EGRESS
         module  : swphv_egress
         spec    : swphv_egress.testspec
-        # Can not inject SW phv into Egress pipeline because it needs a dummy packet.
-        ignore  : True 
+        ignore  : True
 
