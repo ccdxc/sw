@@ -47,7 +47,7 @@ def TestCaseSetup(tc):
     ipseccb.icv_size                  = 16
     ipseccb.block_size                = 16
     ipseccb.key_index                 = 0
-    ipseccb.barco_enc_cmd             = 0x30000000
+    ipseccb.barco_enc_cmd             = 0x30100000
     ipseccb.iv                        = 0xaaaaaaaaaaaaaaaa
     ipseccb.iv_salt                   = 0xbbbbbbbb
     ipseccb.esn_hi                    = 0
