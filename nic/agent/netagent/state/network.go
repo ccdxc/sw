@@ -38,6 +38,13 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
+	// reject config that specifies both vlan and vxlan configs.
+
+	if nt.Spec.VlanID != 0 && nt.Spec.VxlanVNI != 0 {
+		log.Errorf("Should specify either vlan-id or vxlan-vni, but not both")
+		return fmt.Errorf("must specify either vlan-id or vxlan-id, but not both. vlan-id: %v, vxlan-vni: %v", nt.Spec.VlanID, nt.Spec.VxlanVNI)
+	}
+
 	nt.Status.NetworkID, err = na.Store.GetNextID(types.NetworkID)
 	if err != nil {
 		log.Errorf("Could not allocate network id. {%+v}", err)

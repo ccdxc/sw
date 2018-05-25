@@ -16,6 +16,7 @@ import (
 func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
 	var nwKey halproto.NetworkKeyHandle
 	var macAddr uint64
+	var wireEncap halproto.EncapInfo
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -102,6 +103,14 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			}
 		}
 	}
+	// build the appropriate wire encap
+	if nw.Spec.VxlanVNI != 0 {
+		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_VXLAN
+		wireEncap.EncapValue = nw.Spec.VxlanVNI
+	} else {
+		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_DOT1Q
+		wireEncap.EncapValue = nw.Spec.VlanID
+	}
 
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
@@ -113,15 +122,8 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		},
 		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
 		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
-		WireEncap: &halproto.EncapInfo{
-			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
-			EncapValue: nw.Spec.VlanID,
-		},
-		TunnelEncap: &halproto.EncapInfo{
-			EncapType:  halproto.EncapType_ENCAP_TYPE_VXLAN,
-			EncapValue: nw.Spec.VxlanVNI,
-		},
-		VrfKeyHandle: vrfKey,
+		WireEncap:      &wireEncap,
+		VrfKeyHandle:   vrfKey,
 		NetworkKeyHandle: []*halproto.NetworkKeyHandle{
 			&nwKey,
 		},

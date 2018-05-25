@@ -52,7 +52,7 @@ class AgentSegmentObject(base.AgentObjectBase):
             "ipv6-subnet": self.spec.IPv6Subnet,\
             "ipv6-gateway": self.spec.IPv6Gateway,\
             "vlan-id": self.spec.VlanID,\
-            "vxlan-vni": self.spec.VxlanVNI\
+            # "vxlan-vni": self.spec.VxlanVNI\
         }
         return json.dumps(seg)
 

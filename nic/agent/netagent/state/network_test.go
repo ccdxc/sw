@@ -28,7 +28,6 @@ func TestNetworkCreateDelete(t *testing.T) {
 			IPv4Subnet:  "10.1.1.0/24",
 			IPv4Gateway: "10.1.1.254",
 			VlanID:      42,
-			VxlanVNI:    84,
 		},
 	}
 
@@ -224,4 +223,88 @@ func TestNetworkUpdateOnNonExistingNetwork(t *testing.T) {
 	// make create network call
 	err := ag.UpdateNetwork(&nt)
 	Assert(t, err != nil, "network update on non existent network should fail")
+}
+
+func TestNetworkCreateWithVxLAN(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	network := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			VxlanVNI:    42,
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&network)
+	AssertOk(t, err, "Error creating network")
+	nt, err := ag.FindNetwork(network.ObjectMeta)
+	AssertOk(t, err, "Network was not found in DB")
+	Assert(t, nt.Spec.VxlanVNI == 42, "Network vnid did not match", nt)
+}
+
+func TestNetworkCreateWithL3(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	network := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&network)
+	AssertOk(t, err, "Error creating network")
+	nt, err := ag.FindNetwork(network.ObjectMeta)
+	AssertOk(t, err, "Network was not found in DB")
+	Assert(t, nt.Spec.IPv4Subnet == "10.1.1.0/24", "Network ipv4 subnet did not match", nt)
+}
+
+func TestNetworkCreateBothVLANAndVxLAN(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	network := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			VxlanVNI:    42,
+			VlanID:      84,
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&network)
+	Assert(t, err != nil, "Specifying both vlan and vxlan must fail")
 }
