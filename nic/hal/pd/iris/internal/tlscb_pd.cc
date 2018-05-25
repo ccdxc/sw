@@ -573,11 +573,11 @@ pd_tlscb_get (pd_tlscb_get_args_t *args)
 }
 
 uint32_t
-pd_tlscb_serq_ci_offset_get(void)
+pd_tlscb_sesq_ci_offset_get(void)
 {
     // offsetof() does not work on bitfields
-    //return offsetof(tx_table_s0_t0_d, u.read_tls_stg0_d.sw_serq_ci);
-    return 32;
+    //return offsetof(tx_table_s0_t0_d, u.read_tls_stg0_d.sw_sesq_ci);
+    return 44;
 }
 
 }    // namespace pd

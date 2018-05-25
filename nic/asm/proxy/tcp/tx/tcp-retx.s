@@ -34,6 +34,7 @@ table_launch_cc_and_fra:
     bcf             [c1], tcp_retx_retransmit
 
     seq             c1, k.common_phv_pending_sesq, 1
+    memwr.h.c1      d.sesq_ci_addr, k.to_s3_wb_ci
     seq.!c1         c1, k.common_phv_pending_asesq, 1
 
     b.c1            tcp_retx_enqueue

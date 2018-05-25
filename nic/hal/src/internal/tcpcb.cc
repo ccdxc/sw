@@ -112,6 +112,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     }
 
     tcpcb->cb_id = spec.key_or_handle().tcpcb_id();
+    tcpcb->other_qid = spec.other_qid();
     tcpcb->rcv_nxt = spec.rcv_nxt();
     tcpcb->snd_nxt = spec.snd_nxt();
     tcpcb->snd_una = spec.snd_una();

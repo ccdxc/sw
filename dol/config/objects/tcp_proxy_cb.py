@@ -65,6 +65,7 @@ class TcpCbObject(base.ConfigObjectBase):
         #req_spec.meta.tcpcb_id             = self.id
         req_spec.key_or_handle.tcpcb_id    = self.id
         if req_spec.__class__.__name__ != 'TcpCbGetRequest':
+           req_spec.other_qid                 = self.other_qid
            req_spec.rcv_nxt                   = self.rcv_nxt
            req_spec.snd_nxt                   = self.snd_nxt
            req_spec.snd_una                   = self.snd_una
@@ -97,6 +98,7 @@ class TcpCbObject(base.ConfigObjectBase):
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'TcpCbResponse':
+            self.other_qid = resp_spec.spec.other_qid
             self.rx_ts = resp_spec.spec.rx_ts
             self.rcv_nxt = resp_spec.spec.rcv_nxt
             self.snd_nxt = resp_spec.spec.snd_nxt

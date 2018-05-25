@@ -221,6 +221,7 @@ header_type to_stage_3_phv_t {
         addr                    : HBM_FULL_ADDRESS_WIDTH;
         offset                  : OFFSET_WIDTH;
         len                     : LEN_WIDTH;
+        wb_ci                   : 16;
     }
 }
 
@@ -667,6 +668,7 @@ action retx(RETX_SHARED_PARAMS) {
     modify_field(to_s3_scratch.addr, to_s3.addr);
     modify_field(to_s3_scratch.offset, to_s3.offset);
     modify_field(to_s3_scratch.len, to_s3.len);
+    modify_field(to_s3_scratch.wb_ci, to_s3.wb_ci);
 
     // from stage to stage
     modify_field(t0_s2s_scratch.next_addr, t0_s2s.next_addr);

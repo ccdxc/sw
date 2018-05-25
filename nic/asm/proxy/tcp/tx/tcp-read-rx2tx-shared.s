@@ -89,6 +89,11 @@ tcp_tx_launch_sesq:
                      r3, TABLE_SIZE_64_BITS)
 
     /*
+     * Relay SESQ CI to S3 for updation in the TLS-CB
+     */
+    phvwr           p.to_s3_wb_ci, d.{ci_0}.hx
+
+    /*
      * Ring doorbell to set CI if pi == ci
      */
     seq             c1, d.{ci_0}.hx, d.{pi_0}.hx

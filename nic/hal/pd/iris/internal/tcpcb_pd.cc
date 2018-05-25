@@ -748,6 +748,12 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_RETX);
 
     if(!del) {
+        uint64_t tls_stage0_addr;
+
+        tls_stage0_addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
+                    tcpcb_pd->tcpcb->other_qid);
+        data.sesq_ci_addr = 
+            htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
     }
     
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),

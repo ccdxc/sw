@@ -472,9 +472,9 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     flow->pfi = pfi;
     memcpy(&flow->flow_encap, flow_encap, sizeof(lklshim_flow_encap_t));
 
-    proxy::tcp_create_cb(flow->iqid, flow_encap->i_src_lif, flow_encap->i_src_vlan_id,
+    proxy::tcp_create_cb(flow->iqid, flow->rqid, flow_encap->i_src_lif, flow_encap->i_src_vlan_id,
                          eth, vlan, ip, tcp, true, proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid));
-    proxy::tcp_create_cb(flow->rqid, flow->flow_encap.r_src_lif, flow->flow_encap.r_src_vlan_id,
+    proxy::tcp_create_cb(flow->rqid, flow->iqid, flow->flow_encap.r_src_lif, flow->flow_encap.r_src_vlan_id,
                          eth, vlan, ip, tcp, false, proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid));
 
     // create tlscb

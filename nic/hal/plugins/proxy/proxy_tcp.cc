@@ -228,7 +228,7 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 }
 
 hal_ret_t
-tcp_create_cb(qid_t qid, uint16_t src_lif, uint16_t src_vlan_id,
+tcp_create_cb(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id,
               ether_header_t *eth, vlan_header_t* vlan,
               ipv4_header_t *ip, tcp_header_t *tcp,
               bool is_itor_dir, types::AppRedirType l7_proxy_type)
@@ -244,6 +244,7 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, uint16_t src_vlan_id,
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
+    spec.set_other_qid(other_qid);
     spec.set_source_lif(src_lif);
     HAL_TRACE_DEBUG("tcp-proxy: source lif: {}", spec.source_lif());
 
@@ -272,7 +273,7 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, uint16_t src_vlan_id,
 }
 
 hal_ret_t
-tcp_create_cb_v6(qid_t qid, uint16_t src_lif, uint16_t src_vlan_id, ether_header_t *eth, vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, types::AppRedirType l7_proxy_type)
+tcp_create_cb_v6(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id, ether_header_t *eth, vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, types::AppRedirType l7_proxy_type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
@@ -285,6 +286,7 @@ tcp_create_cb_v6(qid_t qid, uint16_t src_lif, uint16_t src_vlan_id, ether_header
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
+    spec.set_other_qid(other_qid);
     spec.set_source_lif(src_lif);
 
     ret = proxy_tcp_cb_init_def_params(spec);
@@ -364,6 +366,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
     spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
     spec->set_pred_flags(get_rsp.mutable_spec()->pred_flags());
+    spec->set_other_qid(get_rsp.mutable_spec()->other_qid());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),

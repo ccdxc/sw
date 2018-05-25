@@ -108,6 +108,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         retx_next_desc                  : HBM_ADDRESS_WIDTH     ;\
         retx_head_offset                : 16                    ;\
         retx_head_len                   : 16                    ;\
+        sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
 
 #define TCB_CC_AND_FRA_SHARED_STATE \
         prr_out                 : 16;   \
@@ -160,7 +161,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 #define RETX_SHARED_PARAMS \
 retx_snd_una, retx_head_desc, retx_tail_desc,\
 retx_xmit_cursor, retx_next_desc,\
-retx_head_offset, retx_head_len
+retx_head_offset, retx_head_len, sesq_ci_addr
 
 #define CC_AND_FRA_SHARED_PARAMS \
 prr_out,\
@@ -192,6 +193,7 @@ quick_acks_decr
     modify_field(retx_d.retx_next_desc, retx_next_desc); \
     modify_field(retx_d.retx_head_offset, retx_head_offset); \
     modify_field(retx_d.retx_head_len, retx_head_len); \
+    modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
 
 #define GENERATE_CC_AND_FRA_SHARED_D \
     modify_field(cc_and_fra_d.prr_out, prr_out); \
