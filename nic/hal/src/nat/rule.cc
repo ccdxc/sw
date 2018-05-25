@@ -258,4 +258,11 @@ nat_cfg_rule_acl_build (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
     return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, rule_data);
 }
 
+void
+nat_cfg_rule_acl_cleanup (nat_cfg_rule_t *rule)
+{
+    // todo  - figure out acl lib mechanisms to free rule_data
+    return;
+}
+
 } // namespace hal

@@ -22,6 +22,30 @@ using namespace hal;
 using namespace fte;
 using namespace nwsec;
 
+static inline void
+nat_test_memleak_checks (void)
+{
+    // Pre-reqs (might not be complete)
+    EXPECT_EQ(g_hal_state->nat_pool_slab()->num_in_use(), 0);
+    EXPECT_EQ(g_hal_state->vrf_slab()->num_in_use(), 0);
+
+    // NAT policy config
+    EXPECT_EQ(g_hal_state->nat_cfg_pol_slab()->num_in_use(), 0);
+    EXPECT_EQ(g_hal_state->nat_policy_ht()->num_entries(), 0);
+
+    // NAT rules config
+    EXPECT_EQ(g_hal_state->nat_cfg_rule_slab()->num_in_use(), 0);
+    EXPECT_EQ(g_hal_state->v4addr_list_elem_slab()->num_in_use(), 0);
+    EXPECT_EQ(g_hal_state->v6addr_list_elem_slab()->num_in_use(), 0);
+    EXPECT_EQ(g_hal_state->mac_addr_list_elem_slab()->num_in_use(), 0);
+    EXPECT_EQ(g_hal_state->port_list_elem_slab()->num_in_use(), 0);
+
+    // NAT rules oper -- acl etc
+    //EXPECT_EQ(g_hal_state->rule_data_slab()->num_in_use(), 0);
+    EXPECT_EQ(g_hal_state->ipv4_rule_slab()->num_in_use(), 0);
+    // todo - stuff from acl lib
+}
+
 class nat_policy_test : public hal_base_test {
 protected:
     nat_policy_test() { }
@@ -32,15 +56,7 @@ protected:
 
     // will be called immediately after each test before the destructor
     virtual void TearDown() {
-#if 0
-        //Route acl is holding one - so increasing it to 1 till we fix that
-        EXPECT_EQ(acl_ctx_t::num_ctx_in_use(), 1);
-        EXPECT_EQ(list_t::num_lists_in_use(), 1);
-        EXPECT_EQ(list_t::num_items_in_use(), 0);
-        EXPECT_EQ(g_hal_state->nwsec_policy_ht()->num_entries(), 0);
-        EXPECT_EQ(g_hal_state->nwsec_rule_slab()->num_in_use(), 0);
-        EXPECT_EQ(g_hal_state->ipv4_rule_slab()->num_in_use(), 0);
-#endif
+        nat_test_memleak_checks();
     }
 
     // Will be called at the beginning of all test cases in this class
@@ -54,39 +70,39 @@ protected:
 // dependency routines
 //-----------------------------------------------------------------------------
 
-static inline hal_handle_t
-nat_test_vrf_create (int vrf_id)
+static inline void
+nat_test_vrf_create (int vrf_id, hal_handle_t *vrf_hdl)
 {
-    //hal_ret_t ret;
+    hal_ret_t ret;
     VrfSpec spec;
     VrfResponse rsp;
 
     spec.mutable_key_or_handle()->set_vrf_id(vrf_id);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    hal::vrf_create(spec, &rsp);
+    ret = hal::vrf_create(spec, &rsp);
     hal::hal_cfg_db_close();
-    //ASSERT_TRUE(ret == HAL_RET_OK);
-    return rsp.vrf_status().vrf_handle();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    *vrf_hdl = rsp.vrf_status().vrf_handle();
 }
 
 static inline void
-nat_test_vrf_delete (int vrf_id)
+nat_test_vrf_delete (hal_handle_t vrf_hdl)
 {
     hal_ret_t ret;
     VrfDeleteRequest req;
     VrfDeleteResponse rsp;
 
-    req.mutable_key_or_handle()->set_vrf_id(vrf_id);
+    req.mutable_key_or_handle()->set_vrf_handle(vrf_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(req, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
-static inline hal_handle_t
-nat_test_natpool_create (int vrf_id)
+static inline void
+nat_test_natpool_create (int vrf_id, hal_handle_t *pool_hdl)
 {
-    //hal_ret_t ret;
+    hal_ret_t ret;
     NatPoolSpec req;
     NatPoolResponse rsp;
 
@@ -103,10 +119,24 @@ nat_test_natpool_create (int vrf_id)
     req.mutable_address(0)->mutable_range()->mutable_ipv4_range()->
         mutable_high_ipaddr()->set_v4_addr(0x0a000003);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    hal::nat_pool_create(req, &rsp);
+    ret = hal::nat_pool_create(req, &rsp);
     hal::hal_cfg_db_close();
-    //ASSERT_TRUE(ret == HAL_RET_OK);
-    return rsp.pool_status().pool_handle();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    *pool_hdl = rsp.pool_status().pool_handle();
+}
+
+static inline void
+nat_test_natpool_delete (hal_handle_t pool_hdl)
+{
+    hal_ret_t ret;
+    NatPoolDeleteRequest req;
+    NatPoolDeleteResponse rsp;
+
+    req.mutable_key_or_handle()->set_pool_handle(pool_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nat_pool_delete(req, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 //-----------------------------------------------------------------------------
@@ -200,6 +230,7 @@ nat_test_pol_fill (nat_test_pol_t *pol, int num_rules, int num_src_ip,
 
     memset(pol, 0, sizeof(nat_test_pol_t));
     pol->vrf_id = TEST_VRF_ID; pol->pol_id = TEST_POL_ID;
+    pol->hal_hdl = HAL_HANDLE_INVALID;
 
     pol->num_rules = num_rules;
     for (i = 0; i < num_rules; i++) {
@@ -436,15 +467,17 @@ nat_test_pol_data_spec_build (nat_test_pol_t *pol, nat::NatPolicySpec *spec)
 static inline void
 nat_test_pol_key_spec_build (nat_test_pol_t *pol, kh::NatPolicyKeyHandle *spec)
 {
-    if (pol->hal_hdl != HAL_HANDLE_INVALID)
+    if (pol->hal_hdl != HAL_HANDLE_INVALID) {
         spec->set_policy_handle(pol->hal_hdl);
-
-    if (pol->vrf_id != -1)
-        spec->mutable_policy_key()->
-            mutable_vrf_key_or_handle()->set_vrf_id(pol->vrf_id);
-
-    if (pol->pol_id != -1)
-        spec->mutable_policy_key()->set_nat_policy_id(pol->pol_id);
+    } else {  
+        if (pol->vrf_id != -1) {
+            spec->mutable_policy_key()->mutable_vrf_key_or_handle()->
+                set_vrf_id(pol->vrf_id);
+        }
+        if (pol->pol_id != -1) {
+            spec->mutable_policy_key()->set_nat_policy_id(pol->pol_id);
+        }
+    }
 }
 
 static inline void
@@ -612,7 +645,8 @@ nat_test_pol_get (nat::NatPolicyGetRequest& req, nat_test_pol_t *pol)
     ret = hal::nat_policy_get(req, &rsp);
     hal::hal_cfg_db_close();
 
-    nat_test_pol_spec_extract(rsp.response(0).spec(), pol);
+    if (rsp.response_size() > 0)
+        nat_test_pol_spec_extract(rsp.response(0).spec(), pol);
     return ret;
 }
 
@@ -633,88 +667,27 @@ nat_test_pol_delete (nat::NatPolicyDeleteRequest &req)
 }
 
 //-----------------------------------------------------------------------------
-// tests
+// workflows - define common workflows to use across different tests
 //-----------------------------------------------------------------------------
 
-#if 0
-TEST_F(nat_policy_test, create_pol_without_key_or_handle)
-{
-    hal_ret_t ret;
-    NatPolicySpec spec;
-    NatPolicyResponse rsp;
-
-    ret = nat_test_pol_create(spec, &rsp);
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
-    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == HAL_HANDLE_INVALID);
-}
-
-TEST_F(nat_policy_test, create_pol_with_handle)
-{
-    hal_ret_t ret;
-    NatPolicySpec spec;
-    NatPolicyResponse rsp;
-    nat_test_pol_t pol;
-
-    memset(&pol, 0, sizeof(nat_test_pol_t));
-    pol.hal_hdl = 0x10000; pol.vrf_id = -1; pol.pol_id = -1;
-
-    nat_test_pol_key_spec_build(spec.mutable_key_or_handle(), &pol);
-    ret = nat_test_pol_create(spec, &rsp);
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
-    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == HAL_HANDLE_INVALID);
-}
-
-TEST_F(nat_policy_test, create_pol_without_vrf)
-{
-    hal_ret_t ret;
-    NatPolicySpec spec;
-    NatPolicyResponse rsp;
-    nat_test_pol_t pol;
-
-    memset(&pol, 0, sizeof(nat_test_pol_t));
-    pol.hal_hdl = HAL_HANDLE_INVALID; pol.vrf_id = -1; pol.pol_id = 10;
-
-    nat_test_pol_key_spec_build(spec.mutable_key_or_handle(), &pol);
-    ret = nat_test_pol_create(spec, &rsp);
-    ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
-    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == HAL_HANDLE_INVALID);
-}
-
-TEST_F(nat_policy_test, create_pol_with_no_rules)
-{
-    hal_ret_t ret;
-    NatPolicySpec spec;
-    NatPolicyResponse rsp;
-    nat_test_pol_t pol;
-
-    memset(&pol, 0, sizeof(nat_test_pol_t));
-    pol.hal_hdl = HAL_HANDLE_INVALID; pol.vrf_id = TEST_VRF_ID; pol.pol_id = 10;
-
-    nat_test_vrf_create(TEST_VRF_ID);
-    nat_test_pol_key_spec_build(spec.mutable_key_or_handle(), &pol);
-    ret = nat_test_pol_create(spec, &rsp);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() != HAL_HANDLE_INVALID);
-    nat_test_vrf_delete(TEST_VRF_ID);
-}
-#endif
-
-TEST_F(nat_policy_test, create_get_delete_get_pol)
+static void
+nat_test_wf_create_get_delete_get_nat_pol (int num_rules, bool use_hdl)
 {
     hal_ret_t ret;
     NatPolicySpec spec; NatPolicyResponse rsp;
     NatPolicyGetRequest get_req;
     NatPolicyDeleteRequest del_req;
     nat_test_pol_t in_pol, out_pol;
-    hal_handle_t pool_hdl;
+    hal_handle_t vrf_hdl, pool_hdl;
 
     // pre-requisites
-    nat_test_vrf_create(TEST_VRF_ID);
-    pool_hdl = nat_test_natpool_create(TEST_VRF_ID);
+    nat_test_vrf_create(TEST_VRF_ID, &vrf_hdl);
+    nat_test_natpool_create(TEST_VRF_ID, &pool_hdl);
 
     // create nat pol
-    nat_test_pol_fill(&in_pol, 2, 2, 2, 2, 2, pool_hdl);
-    nat_test_pol_dump(&in_pol, "Input Policy", 2);
+    nat_test_pol_fill(&in_pol, num_rules, 2, 2, 2, 2, pool_hdl);
+    //nat_test_pol_dump(&in_pol, "Input Policy", 2);
+    spec.Clear();
     nat_test_pol_spec_build(&in_pol, &spec);
     ret = nat_test_pol_create(spec, &rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
@@ -722,24 +695,210 @@ TEST_F(nat_policy_test, create_get_delete_get_pol)
     ASSERT_TRUE(out_pol.hal_hdl != HAL_HANDLE_INVALID);
 
     // get nat pol
-    nat_test_pol_key_spec_build(&in_pol, get_req.mutable_key_or_handle());
+    get_req.Clear();
+    nat_test_pol_key_spec_build(use_hdl ? &out_pol : &in_pol,
+                                get_req.mutable_key_or_handle());
     ret = nat_test_pol_get(get_req, &out_pol);
-    nat_test_pol_dump(&out_pol, "Output Policy", 2);
+    //nat_test_pol_dump(&out_pol, "Output Policy", 2);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // compare to see if both create & get policies match
     ASSERT_TRUE(nat_test_pol_cmp(&in_pol, &out_pol) == true);
 
     // delete nat pol
-    nat_test_pol_key_spec_build(&in_pol, del_req.mutable_key_or_handle());
+    del_req.Clear();
+    nat_test_pol_key_spec_build(use_hdl ? &out_pol : &in_pol,
+                                del_req.mutable_key_or_handle());
     ret = nat_test_pol_delete(del_req);
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // get nat pol
-    nat_test_pol_key_spec_build(&in_pol, get_req.mutable_key_or_handle());
+    get_req.Clear();
+    nat_test_pol_key_spec_build(use_hdl ? &out_pol : &in_pol,
+                                get_req.mutable_key_or_handle());
     ret = nat_test_pol_get(get_req, &out_pol);
     ASSERT_TRUE(ret == HAL_RET_NAT_POLICY_NOT_FOUND);
 
-    nat_test_vrf_delete(TEST_VRF_ID);
+    nat_test_natpool_delete(pool_hdl);
+    nat_test_vrf_delete(vrf_hdl);
+}
+
+// crgd = create/get/delete
+enum Oper { CREATE = 0, GET, DEL };
+enum UnknownData { HANDLE = 0, VRF, ID  };
+static void
+nat_test_wf_crgd_nat_pol_with_unknown_data (Oper oper, UnknownData ud)
+{
+    hal_ret_t ret;
+    nat_test_pol_t pol;
+    hal_handle_t vrf_hdl, pool_hdl;
+
+    // assign some random values for unknown data
+    memset(&pol, 0, sizeof(nat_test_pol_t));
+    switch (ud) {
+    case HANDLE:
+        pol.hal_hdl = 0x10000; pol.vrf_id = -1; pol.pol_id = -1;
+        break;
+    case VRF:
+        pol.hal_hdl = HAL_HANDLE_INVALID;
+        pol.vrf_id = TEST_VRF_ID + 1; pol.pol_id = 0x10;
+        break;
+    case ID:
+        pol.hal_hdl = HAL_HANDLE_INVALID;
+        pol.vrf_id = TEST_VRF_ID; pol.pol_id = 0x10;
+    }
+
+    // pre-requisites
+    nat_test_vrf_create(TEST_VRF_ID, &vrf_hdl);
+    nat_test_natpool_create(TEST_VRF_ID, &pool_hdl);
+
+    switch (oper) {
+    case CREATE:
+    {
+        NatPolicySpec spec; NatPolicyResponse rsp;
+
+        nat_test_pol_key_spec_build(&pol, spec.mutable_key_or_handle());
+        ret = nat_test_pol_create(spec, &rsp);
+        if (ud == VRF)
+            ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
+        else
+            ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+        ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == 
+                    HAL_HANDLE_INVALID);
+        break;
+    }
+    case GET:
+    {
+        NatPolicyGetRequest get_req;
+        nat_test_pol_key_spec_build(&pol, get_req.mutable_key_or_handle());
+        ret = nat_test_pol_get(get_req, &pol);
+        ASSERT_TRUE(ret == HAL_RET_NAT_POLICY_NOT_FOUND);
+        break;
+    }
+    case DEL:
+    {
+        NatPolicyDeleteRequest del_req;
+        ret = nat_test_pol_delete(del_req);
+        ASSERT_TRUE(ret == HAL_RET_NAT_POLICY_NOT_FOUND);
+        break;
+    }
+    }
+
+    nat_test_natpool_delete(pool_hdl);
+    nat_test_vrf_delete(vrf_hdl);
+}
+
+//-----------------------------------------------------------------------------
+// tests
+//-----------------------------------------------------------------------------
+
+TEST_F(nat_policy_test, create_get_delete_get_pol_using_keys)
+{
+    nat_test_wf_create_get_delete_get_nat_pol(2, false);
+}
+
+TEST_F(nat_policy_test, create_get_delete_get_pol_using_hal_hdl)
+{
+    nat_test_wf_create_get_delete_get_nat_pol(2, true);
+}
+
+TEST_F(nat_policy_test, create_pol_without_rules)
+{
+    nat_test_wf_create_get_delete_get_nat_pol(0, false);
+}
+
+TEST_F(nat_policy_test, create_pol_without_key_or_handle)
+{
+    hal_ret_t ret;
+    hal_handle_t vrf_hdl, pool_hdl;
+    NatPolicySpec spec; NatPolicyResponse rsp;
+
+    // pre-requisites
+    nat_test_vrf_create(TEST_VRF_ID, &vrf_hdl);
+    nat_test_natpool_create(TEST_VRF_ID, &pool_hdl);
+
+    ret = nat_test_pol_create(spec, &rsp);
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(rsp.policy_status().nat_policy_handle() == HAL_HANDLE_INVALID);
+
+    nat_test_natpool_delete(pool_hdl);
+    nat_test_vrf_delete(vrf_hdl);
+}
+
+TEST_F(nat_policy_test, create_pol_with_unknown_vrf)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(CREATE, VRF);
+}
+
+TEST_F(nat_policy_test, create_pol_with_handle)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(CREATE, HANDLE);
+}
+
+TEST_F(nat_policy_test, get_pol_without_key_or_handle)
+{
+    hal_ret_t ret;
+    nat_test_pol_t pol;
+    NatPolicyGetRequest get_req;
+    hal_handle_t vrf_hdl, pool_hdl;
+
+    // pre-requisites
+    nat_test_vrf_create(TEST_VRF_ID, &vrf_hdl);
+    nat_test_natpool_create(TEST_VRF_ID, &pool_hdl);
+
+    get_req.Clear();
+    ret = nat_test_pol_get(get_req, &pol);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    nat_test_natpool_delete(pool_hdl);
+    nat_test_vrf_delete(vrf_hdl);
+}
+
+TEST_F(nat_policy_test, get_pol_with_unknown_vrf)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(GET, VRF);
+}
+
+TEST_F(nat_policy_test, get_pol_with_unknown_id)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(GET, ID);
+}
+
+TEST_F(nat_policy_test, get_pol_with_unknown_handle)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(GET, HANDLE);
+}
+
+TEST_F(nat_policy_test, del_pol_without_key_or_handle)
+{
+    hal_ret_t ret;
+    NatPolicyDeleteRequest del_req;
+    hal_handle_t vrf_hdl, pool_hdl;
+
+    // pre-requisites
+    nat_test_vrf_create(TEST_VRF_ID, &vrf_hdl);
+    nat_test_natpool_create(TEST_VRF_ID, &pool_hdl);
+
+    ret = nat_test_pol_delete(del_req);
+    ASSERT_TRUE(ret == HAL_RET_NAT_POLICY_NOT_FOUND);
+
+    nat_test_natpool_delete(pool_hdl);
+    nat_test_vrf_delete(vrf_hdl);
+}
+
+TEST_F(nat_policy_test, del_pol_with_unknown_vrf)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(DEL, VRF);
+}
+
+TEST_F(nat_policy_test, del_pol_with_unknown_id)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(DEL, ID);
+}
+
+TEST_F(nat_policy_test, del_pol_with_unknown_handle)
+{
+    nat_test_wf_crgd_nat_pol_with_unknown_data(DEL, HANDLE);
 }
 
 int main (int argc, char **argv) {

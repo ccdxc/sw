@@ -119,6 +119,18 @@ nat_cfg_pol_acl_build (nat_cfg_pol_t *pol, const acl_ctx_t **out_acl_ctx)
     return ret;
 }
 
+static inline void
+nat_cfg_pol_rule_acl_cleanup (nat_cfg_pol_t *pol)
+{
+    nat_cfg_rule_t *rule;
+    dllist_ctxt_t *entry;
+
+    dllist_for_each(entry, &pol->rule_list) {
+        rule = dllist_entry(entry, nat_cfg_rule_t, list_ctxt);
+        nat_cfg_rule_acl_cleanup(rule);
+    }
+}
+
 static inline hal_ret_t
 nat_cfg_pol_acl_cleanup (nat_cfg_pol_t *pol)
 {
@@ -127,6 +139,7 @@ nat_cfg_pol_acl_cleanup (nat_cfg_pol_t *pol)
     if ((acl_ctx = acl::acl_get(nat_acl_ctx_name(pol->key.vrf_id))) == NULL)
         return HAL_RET_NAT_POLICY_NOT_FOUND;
 
+    nat_cfg_pol_rule_acl_cleanup(pol);
     acl::acl_delete(acl_ctx);
     return HAL_RET_OK;
 }
@@ -246,9 +259,6 @@ nat_cfg_pol_key_spec_extract (const kh::NatPolicyKeyHandle& spec,
     if (spec.policy_key().vrf_key_or_handle().key_or_handle_case() ==
         kh::VrfKeyHandle::kVrfId) {
         key->vrf_id = spec.policy_key().vrf_key_or_handle().vrf_id();
-
-        if ((vrf = vrf_lookup_by_id(key->vrf_id)) == NULL)
-            return  HAL_RET_VRF_NOT_FOUND;
     } else {
         if ((vrf = vrf_lookup_by_handle(spec.policy_key().vrf_key_or_handle().
                                         vrf_handle())) == NULL)
@@ -275,11 +285,22 @@ nat_cfg_pol_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
 }
 
 static inline hal_ret_t
-nat_cfg_pol_create_spec_validate (nat::NatPolicySpec& spec)
+nat_cfg_pol_key_spec_validate (const kh::NatPolicyKeyHandle& spec, bool create)
 {
-    if (spec.key_or_handle().policy_handle() != HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: handle set for create request", __FUNCTION__);
-        return HAL_RET_INVALID_ARG;
+    if (create) {
+        if (spec.policy_handle() != HAL_HANDLE_INVALID)
+            return HAL_RET_INVALID_ARG;
+    }
+
+    if (spec.policy_key().vrf_key_or_handle().key_or_handle_case() ==
+        kh::VrfKeyHandle::kVrfId) {
+        if (vrf_lookup_by_id(spec.policy_key().vrf_key_or_handle().
+                             vrf_id()) == NULL)
+            return  HAL_RET_VRF_NOT_FOUND;
+    } else {
+        if (vrf_lookup_by_handle(spec.policy_key().vrf_key_or_handle().
+                                 vrf_handle()) == NULL)
+            return HAL_RET_VRF_NOT_FOUND;
     }
 
     return HAL_RET_OK;
@@ -290,15 +311,12 @@ nat_cfg_pol_spec_validate (nat::NatPolicySpec& spec, bool create)
 {
     hal_ret_t ret;
 
-    if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}: no key information set in request", __FUNCTION__);
+    if (!spec.has_key_or_handle())
         return HAL_RET_INVALID_ARG;
-    }
 
-    if (create) {
-        if ((ret = nat_cfg_pol_create_spec_validate(spec)) != HAL_RET_OK)
-            return ret;
-    }
+    if ((ret = nat_cfg_pol_key_spec_validate(
+            spec.key_or_handle(), create)) != HAL_RET_OK)
+        return ret;
 
     return HAL_RET_OK;
 }
@@ -350,7 +368,6 @@ end:
     }
     return ret;
 }
-
 
 hal_ret_t
 nat_cfg_pol_create_oper_handle (nat_cfg_pol_t *pol)
@@ -437,12 +454,12 @@ nat_cfg_pol_spec_build (nat_cfg_pol_t *pol, nat::NatPolicySpec *spec)
 nat_cfg_pol_t *
 nat_cfg_pol_key_or_handle_lookup (const kh::NatPolicyKeyHandle& kh)
 {
-    if (kh.has_policy_key()) {
+    if (kh.policy_handle() != HAL_HANDLE_INVALID) {
+        return nat_cfg_pol_hal_hdl_db_lookup(kh.policy_handle());
+    } else {
         nat_cfg_pol_key_t key = {0};
         nat_cfg_pol_key_spec_extract(kh, &key);
         return nat_cfg_pol_db_lookup(&key);
-    } else {
-        return nat_cfg_pol_hal_hdl_db_lookup(kh.policy_handle());
     }
 }
 

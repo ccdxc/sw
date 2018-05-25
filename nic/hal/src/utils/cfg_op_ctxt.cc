@@ -169,6 +169,8 @@ cfg_ctxt_op_delete_handle (hal_obj_id_t obj_id, void *obj, void *app_ctxt,
             del_cb, commit_cb, abort_cb, cleanup_cb)) != HAL_RET_OK)
         return ret;
 
+    cfg_op_ctxt_hal_hdl_uninit_free(hal_hdl);
+
     return ret;
 }
 

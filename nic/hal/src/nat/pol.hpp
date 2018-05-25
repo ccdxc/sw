@@ -168,6 +168,7 @@ hal_ret_t nat_cfg_rule_spec_handle(
     const nat::NatRuleSpec& spec, dllist_ctxt_t *head);
 hal_ret_t nat_cfg_rule_acl_build(
     nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx);
+void nat_cfg_rule_acl_cleanup(nat_cfg_rule_t *rule);
 hal_ret_t nat_cfg_rule_spec_build(nat_cfg_rule_t *rule, nat::NatRuleSpec *spec);
 void nat_cfg_rule_list_cleanup(dllist_ctxt_t *head);
 
