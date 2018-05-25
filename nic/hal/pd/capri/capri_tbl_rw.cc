@@ -589,16 +589,16 @@ p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
 
     while ((int)size_in_bytes > 0) {
         if (action & P4PLUS_CACHE_INVALIDATE_RXDMA) {
-            sdk::lib::csrlite::cap_pics_csr_t & pics_csr = *cap_top_csr.rpc.pics.alloc();
-            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
-            pics_csr.picc.dhs_cache_invalidate.entry.write();
-            cap_top_csr.free(&pics_csr);
+            sdk::lib::csrlite::cap_picc_csr_dhs_cache_invalidate_entry_t *entry = cap_top_csr.rpc.pics.picc.dhs_cache_invalidate.entry.alloc();
+            entry->addr(addr >> CACHE_LINE_SIZE_SHIFT);
+            entry->write();
+            cap_top_csr.rpc.pics.picc.dhs_cache_invalidate.entry.free(entry);
         }
         if (action & P4PLUS_CACHE_INVALIDATE_TXDMA) {
-            sdk::lib::csrlite::cap_pics_csr_t & pics_csr = *cap_top_csr.tpc.pics.alloc();
-            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
-            pics_csr.picc.dhs_cache_invalidate.entry.write();
-            cap_top_csr.free(&pics_csr);
+            sdk::lib::csrlite::cap_picc_csr_dhs_cache_invalidate_entry_t *entry = cap_top_csr.tpc.pics.picc.dhs_cache_invalidate.entry.alloc();
+            entry->addr(addr >> CACHE_LINE_SIZE_SHIFT);
+            entry->write();
+            cap_top_csr.tpc.pics.picc.dhs_cache_invalidate.entry.free(entry);
         }
         size_in_bytes -= CACHE_LINE_SIZE;
         addr += CACHE_LINE_SIZE;
