@@ -29,6 +29,7 @@ struct resp_rx_s1_t1_k k;
     .param  resp_rx_rqlkey_process
     .param  rdma_atomic_resource_addr
     .param  rdma_pcie_atomic_base_addr
+    .param  resp_rx_recirc_mpu_only_process
 
 .align
 resp_rx_atomic_resource_process:
@@ -177,5 +178,13 @@ exit:
     nop
 
 nak_rnr:
-    phvwr.e     p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_1_VALID(0)  //Exit Slot
+    /* When atomic resources are not available,
+       fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
+    */
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+
+    CAPRI_SET_TABLE_1_VALID(0)
+
+    phvwr.e     p.common.p4_intr_recirc, 1
+    phvwr       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_ATOMIC_RNR
+

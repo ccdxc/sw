@@ -67,7 +67,7 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
-        id          : EXP_PKT    # Expected Ack packet
+        id          : EXP_PKT    # Expected RNR NAK packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True

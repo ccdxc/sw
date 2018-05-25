@@ -80,6 +80,7 @@ message RdmaQpResponse {
   uint64              nic_sq_base_addr = 5;    // NIC SQ base addr
   uint64              nic_rq_base_addr = 6;    // NIC RQ base addr
   uint64              header_temp_addr = 7;    // Header template addr
+  uint64              rdma_atomic_res_addr = 8; // RDMA atomic resource addr
 }
 
 // RdmaQpResponseMsg is response to RdmaQpRequestMsg

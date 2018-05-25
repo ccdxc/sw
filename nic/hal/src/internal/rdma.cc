@@ -790,6 +790,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb_t       *rqcb_p = &rqcb;
     uint64_t     header_template_addr, rrq_base_addr, rsq_base_addr;
     uint64_t     hbm_sq_base_addr, hbm_rq_base_addr;
+    uint64_t     rdma_atomic_res_addr;
     uint64_t     offset;
     uint64_t     offset_verify;
     hal_ret_t    ret;
@@ -1036,6 +1037,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial RQCB State", __FUNCTION__, lif);
     g_lif_manager->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
 
+    pd::pd_get_start_offset_args_t off_args = {0};
+    off_args.reg_name = "rdma-atomic-resource-addr";
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
+    rdma_atomic_res_addr = off_args.offset;
 
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->set_rsq_base_addr(rsq_base_addr);
@@ -1043,6 +1048,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rsp->set_nic_sq_base_addr(hbm_sq_base_addr);
     rsp->set_nic_rq_base_addr(hbm_rq_base_addr);
     rsp->set_header_temp_addr(header_template_addr);
+    rsp->set_rdma_atomic_res_addr(rdma_atomic_res_addr);
 
     // For UD QPs, please add it to the Segment's Broadcast OIFs list
     // For testing purpose, please add only Queuepairs with QID less than or equal to 6

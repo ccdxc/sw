@@ -526,6 +526,11 @@ process_read:
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
 
 process_atomic:
+    /* Disable speculation so that other requests
+       don't end up modifying e_psn, RSQ pindex etc
+       before atomic errors out in stage 1
+     */ 
+    tblwr           d.disable_speculation, 1
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
     CAPRI_SET_FIELD2(TO_S_ATOMIC_INFO_P, rsqwqe_ptr, RSQWQE_P)
 
@@ -539,7 +544,7 @@ process_atomic:
 
     bcf             [c6], process_cswap
     // increment e_psn
-    tblmincri   d.e_psn, 24, 1      //BD Slot
+    tblmincri.f     d.e_psn, 24, 1      //BD Slot
 
 process_fna:
     //c5:fna
@@ -555,6 +560,15 @@ process_cswap:
     CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(r5)
     phvwrpair.e     p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_CSWAP, p.pcie_atomic.tlp_len, PCIE_TLP_LEN_CSWAP
     phvwr           p.pcie_atomic.swap_data, r5.dx  //Exit Slot
+
+recirc_atomic_rnr:
+    // decrement rsq_pindex
+    add         r1, r0, -1 
+    tblmincr    d.rsq_pindex, d.log_rsq_size, r1
+
+    b           process_rnr
+    // enable speculation
+    tblwr       d.disable_speculation, 0 // BD Slot
 
 /****** Logic for handling out-of-order packets ******/
 seq_err_or_duplicate:
@@ -673,11 +687,11 @@ process_rnr:
     ARE_ALL_FLAGS_SET(c7, r7, RESP_RX_FLAG_SEND|RESP_RX_FLAG_FIRST)
 
     // decrement msn if not Send First
-    add         r1, r0, -1 //BD Slot
+    add         r1, r0, -1 
     tblmincr.!c7   d.msn, 24, r1
 
     // decrement e_psn
-    tblmincr      d.e_psn, 24, r1
+    tblmincr    d.e_psn, 24, r1
     phvwr       p.ack_info.aeth.syndrome, AETH_RNR_SYNDROME_INLINE_GET(RNR_NAK_TIMEOUT)    
 
 nak_prune:
@@ -709,12 +723,12 @@ nak:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
 
 skip_nak:
-    // release chance to next packet
-    // instead of incrementing the nxt_to_go_token_id, decrement the token_id itself
-    // this is done because, nxt_to_go_token_id is modified in S4 and as a general rule
-    // two stages should not be updating the same variable.
-    tblsub.e    d.token_id, 1
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
+
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, skip_completion, 1)
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
 /****** Logic for UD ******/
 
@@ -832,6 +846,8 @@ recirc_pkt:
     bcf     [c2], recirc_sge_work_pending
     seq     c3, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // BD Slot
     bcf     [c3], start_recirc_packet
+    seq     c4, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_ATOMIC_RNR // BD Slot
+    bcf     [c4], recirc_atomic_rnr
     nop     //BD Slot
 
     // For any any known or non-handled recirc reasons, drop the packet

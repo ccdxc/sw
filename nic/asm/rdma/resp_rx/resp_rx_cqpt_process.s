@@ -26,6 +26,7 @@ struct resp_rx_s5_t2_k k;
 #define EQ_INFO_P t2_s2s_cqcb_to_eq_info
 
 #define IN_P t2_s2s_cqcb_to_pt_info
+#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pa_next_index_sbit0_ebit7, pa_next_index_sbit8_ebit15)
 
 %%
     .param  resp_rx_eqcb_process
@@ -47,7 +48,8 @@ resp_rx_cqpt_process:
     add             CQCB_PA_ADDR, CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit23, cqcb_addr_sbit32_ebit33), offsetof(struct cqcb_t, pt_next_pa) 
     memwr.d         CQCB_PA_ADDR, PAGE_ADDR_P
     add             CQCB_PA_INDEX, CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit23, cqcb_addr_sbit32_ebit33), offsetof(struct cqcb_t, pt_next_pa_index)
-    memwr.h         CQCB_PA_INDEX, CAPRI_KEY_FIELD(IN_P, pa_next_index)
+    //memwr.h         CQCB_PA_INDEX, CAPRI_KEY_FIELD(IN_P, pa_next_index)
+    memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 
     bcf             [c2], fire_eqcb
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ) //BD slot    

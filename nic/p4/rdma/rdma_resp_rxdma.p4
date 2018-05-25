@@ -178,7 +178,8 @@ header_type resp_rx_rqcb1_write_back_info_t {
         current_sge_offset               :   32;
         current_sge_id                   :    8;
         num_sges                         :    8;
-        pad                              :   40;
+        skip_completion                  :    1;
+        pad                              :   39;
     }
 }
 
@@ -1542,6 +1543,7 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(t2_s2s_rqcb1_write_back_info_scr.current_sge_offset, t2_s2s_rqcb1_write_back_info.current_sge_offset);
     modify_field(t2_s2s_rqcb1_write_back_info_scr.current_sge_id, t2_s2s_rqcb1_write_back_info.current_sge_id);
     modify_field(t2_s2s_rqcb1_write_back_info_scr.num_sges, t2_s2s_rqcb1_write_back_info.num_sges);
+    modify_field(t2_s2s_rqcb1_write_back_info_scr.skip_completion, t2_s2s_rqcb1_write_back_info.skip_completion);
     modify_field(t2_s2s_rqcb1_write_back_info_scr.pad, t2_s2s_rqcb1_write_back_info.pad);
 
 }

@@ -53,6 +53,7 @@
 #define CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE   1
 #define CAPRI_RECIRC_REASON_INORDER_WORK_DONE       2
 #define CAPRI_RECIRC_REASON_SGE_WORK_PENDING        3
+#define CAPRI_RECIRC_REASON_ATOMIC_RNR              4
 
 #define CAPRI_APP_DATA_RECIRC_REASON k.rdma_recirc_recirc_reason
 #define CAPRI_APP_DATA_RECIRC_TOKEN_ID k.rdma_recirc_token_id
@@ -358,8 +359,10 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_SET_TABLE_3_VALID_C(_c, _vld) \
     phvwri._c    p.common.app_header_table3_valid, _vld;
 
+#define CAPRI_SET_TABLE_1_VALID_CE(_c, _vld) \
+    phvwri._c.e  p.common.app_header_table1_valid, _vld;
 #define CAPRI_SET_TABLE_2_VALID_CE(_c, _vld) \
-    phvwri._c.e  p.common.app_header_table3_valid, _vld;
+    phvwri._c.e  p.common.app_header_table2_valid, _vld;
     
 #define CAPRI_SET_ALL_TABLES_VALID(_vld) \
     CAPRI_SET_TABLE_0_VALID(_vld); \

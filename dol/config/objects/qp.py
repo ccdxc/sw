@@ -211,6 +211,7 @@ class QpObject(base.ConfigObjectBase):
             self.header_temp_addr = resp_spec.header_temp_addr
             self.nic_sq_base_addr = resp_spec.nic_sq_base_addr
             self.nic_rq_base_addr = resp_spec.nic_rq_base_addr
+            self.rdma_atomic_res_addr = resp_spec.rdma_atomic_res_addr
             if self.sq_in_nic:
                 self.sq.SetRingParams('SQ', True, True,
                                   None,
@@ -248,11 +249,11 @@ class QpObject(base.ConfigObjectBase):
             logger.info("QP: %s PD: %s Remote: %s"
                            "sq_base_addr: 0x%x rq_base_addr: 0x%x "
                            "rsq_base_addr: 0x%x rrq_base_addr: 0x%x "
-                           "header_temp_addr: 0x%x" %\
+                           "header_temp_addr: 0x%x atomic_res_addr: 0x%x " %\
                             (self.GID(), self.pd.GID(), self.remote,
                              self.sq_slab.address, self.rq_slab.address,
                              self.rsq_base_addr, self.rrq_base_addr,
-                             self.header_temp_addr))
+                             self.header_temp_addr, self.rdma_atomic_res_addr))
     
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
@@ -347,6 +348,23 @@ class QpObject(base.ConfigObjectBase):
         logger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 66, 64))
         return
 
+    # Routines to read and write to atomic_res_addr
+    def WriteAtomicResData(self):
+        if (GlobalOptions.dryrun): return
+        logger.info("Writing Atomic resource address @0x%x  size: %d" % (self.rdma_atomic_res_addr, 64))
+        model_wrap.write_mem_pcie(self.rdma_atomic_res_addr, bytes(self.atomic_res_data), 64)
+        self.ReadAtomicResData()
+        return
+
+    def ReadAtomicResData(self):
+        if (GlobalOptions.dryrun):
+            atomic_res_data = bytes(64)
+            self.atomic_res_data = RdmaAtomicResState(atomic_res_data)
+            return
+        self.atomic_res_data = RdmaAtomicResState(model_wrap.read_mem(self.rdma_atomic_res_addr, 64))
+        logger.ShowScapyObject(self.atomic_res_data)
+        return
+
 class RdmaDCQCNstate(scapy.Packet):
     name = "RdmaDCQCNstate"
     fields_desc = [
@@ -379,6 +397,20 @@ class RdmaDCQCNstate(scapy.Packet):
 
         scapy.ByteField("num_sched_drop", 0),
         scapy.BitField("cur_timestamp", 0, 32),
+    ]
+
+class RdmaAtomicResState(scapy.Packet):
+    name = "RdmaAtomicResState"
+    fields_desc = [
+        scapy.LongField("data0", 0),
+        scapy.LongField("data1", 0),
+        scapy.LongField("data2", 0),
+        scapy.LongField("data3", 0),
+
+        scapy.LongField("pad0", 0),
+        scapy.LongField("pad1", 0),
+        scapy.LongField("pad2", 0),
+        scapy.LongField("pad3", 0),
     ]
 
 class QpObjectHelper:

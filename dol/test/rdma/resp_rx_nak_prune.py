@@ -101,7 +101,33 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'nak_prune', 0):
             return False
     
-    elif step.step_id == 2 or step.step_id == 3 or step.step_id == 4:
+    elif step.step_id == 2 or step.step_id == 3:
+        ############     RQ VALIDATIONS #################
+        # verify that e_psn is NOT incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
+            return False
+
+        # verify that msn is NOT incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'msn', 0):
+            return False
+
+        # verify that proxy_cindex is NOT incremented
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 0):
+            return False
+
+        # verify that token_id is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
+            return False
+
+        # verify that nxt_to_go_token_id is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
+            return False
+
+        # verify that nak_prune is set to 1
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'nak_prune', 1):
+            return False
+
+    elif step.step_id == 4:
         ############     RQ VALIDATIONS #################
         # verify that e_psn is NOT incremented
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
