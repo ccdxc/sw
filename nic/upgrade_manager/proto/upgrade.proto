@@ -16,37 +16,35 @@ enum UpgRespType {
 
 // Upgrade Request Status
 enum UpgReqStateType {
-    InvalidUpgState          = 0;
-    UpgReqRcvd               = 1;
-    PreUpgState              = 2;
-    ProcessesQuiesced        = 3;
-    PostBinRestart           = 4;
-    DataplaneDowntimeStart   = 5;
-    Cleanup                  = 6;
-    UpgSuccess               = 7;
-    UpgFailed                = 8;
+    UpgReqRcvd               = 0;
+    PreUpgState              = 1;
+    ProcessesQuiesced        = 2;
+    PostBinRestart           = 3;
+    DataplaneDowntimeStart   = 4;
+    Cleanup                  = 5;
+    UpgSuccess               = 6;
+    UpgFailed                = 7;
+    UpgStateTerminal         = 8;
 }
 
 // Upgrade Request Status
 enum UpgRespStateType {
-    InvalidUpgStatePass          = 0;
-    InvalidUpgStateFail          = 1;
-    UpgReqRcvdPass               = 2;
-    UpgReqRcvdFail               = 3;
-    PreUpgStatePass              = 4;
-    PreUpgStateFail              = 5;
-    ProcessesQuiescedPass        = 6;
-    ProcessesQuiescedFail        = 7;
-    PostBinRestartPass           = 8;
-    PostBinRestartFail           = 9;
-    DataplaneDowntimeStartPass   = 10;
-    DataplaneDowntimeStartFail   = 11;
-    CleanupPass                  = 12;
-    CleanupFail                  = 13;
-    UpgSuccessPass               = 14;
-    UpgSuccessFail               = 15;
-    UpgFailedPass                = 16;
-    UpgFailedFail                = 17;
+    UpgReqRcvdPass               = 0;
+    UpgReqRcvdFail               = 1;
+    PreUpgStatePass              = 2;
+    PreUpgStateFail              = 3;
+    ProcessesQuiescedPass        = 4;
+    ProcessesQuiescedFail        = 5;
+    PostBinRestartPass           = 6;
+    PostBinRestartFail           = 7;
+    DataplaneDowntimeStartPass   = 8;
+    DataplaneDowntimeStartFail   = 9;
+    CleanupPass                  = 10;
+    CleanupFail                  = 11;
+    UpgSuccessPass               = 12;
+    UpgSuccessFail               = 13;
+    UpgFailedPass                = 14;
+    UpgFailedFail                = 15;
 }
 
 // spec part of the object
@@ -77,5 +75,6 @@ message UpgAppResp {
     delphi.ObjectMeta      Meta              = 1;
     string                 Key               = 2;
     UpgRespStateType       UpgAppRespVal     = 3 [(delphi.event) = true];
+    string                 AppRespString     = 4;
 }
 

@@ -59,9 +59,4 @@ HdlrRespCode UpgHandler::HandleStateUpgFailed(delphi::objects::UpgStateReqPtr re
     return SUCCESS;
 }
 
-HdlrRespCode UpgHandler::HandleStateInvalidUpgState(delphi::objects::UpgStateReqPtr req) {
-//    LogInfo("UpgHandler HandleStateInvalidUpgState not implemented by service");
-    return SUCCESS;
-}
-
 } // namespace upgrade

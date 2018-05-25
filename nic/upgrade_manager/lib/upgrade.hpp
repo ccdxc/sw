@@ -39,6 +39,6 @@ public:
 };
 typedef std::shared_ptr<UpgradeService> UpgradeServicePtr;
 
-} // namespace example
+} // namespace upgrade
 
 #endif // __UPGRADE_SERVICE_H__

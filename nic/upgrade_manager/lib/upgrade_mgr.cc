@@ -19,9 +19,6 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
         break;
     }
     switch (reqType) {
-        case InvalidUpgState:
-            nextReqType = InvalidUpgState;
-            break;
         case UpgReqRcvd:
             nextReqType = PreUpgState;
             break;
@@ -39,7 +36,7 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
             nextReqType = UpgSuccess;
             break;
         case Cleanup:
-            nextReqType = InvalidUpgState;
+            nextReqType = UpgStateTerminal;
             break;
         case UpgSuccess:
             nextReqType = Cleanup;
@@ -48,7 +45,7 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
             nextReqType = Cleanup;
             break;
         default:
-            nextReqType = InvalidUpgState;
+            nextReqType = UpgStateTerminal;
             break;
     }
     return nextReqType;
@@ -57,9 +54,6 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
 UpgRespStateType UpgradeMgr::GetFailRespType(UpgReqStateType type) {
     UpgRespStateType ret;
     switch(type) {
-        case InvalidUpgState:
-            ret = InvalidUpgStateFail;
-            break;
         case UpgReqRcvd:
             ret = UpgReqRcvdFail;
             break;
@@ -85,7 +79,7 @@ UpgRespStateType UpgradeMgr::GetFailRespType(UpgReqStateType type) {
             ret = UpgFailedFail;
             break;
         default:
-            ret = InvalidUpgStateFail;
+            ret = UpgSuccessFail;
             break;
     }
     return ret;
@@ -94,9 +88,6 @@ UpgRespStateType UpgradeMgr::GetFailRespType(UpgReqStateType type) {
 UpgRespStateType UpgradeMgr::GetPassRespType(UpgReqStateType type) {
     UpgRespStateType ret;
     switch(type) {
-        case InvalidUpgState:
-            ret = InvalidUpgStatePass;
-            break;
         case UpgReqRcvd:
             ret = UpgReqRcvdPass;
             break;
@@ -122,7 +113,7 @@ UpgRespStateType UpgradeMgr::GetPassRespType(UpgReqStateType type) {
             ret = UpgFailedPass;
             break;
         default:
-            ret = InvalidUpgStatePass;
+            ret = UpgSuccessPass;
             break;
     }
     return ret;
@@ -199,7 +190,7 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
         //Notify Agent
         this->upgMgrResp_->UpgradeFinish(type == UpgSuccess);
     }
-    if (type != InvalidUpgState)
+    if (type != UpgStateTerminal)
         LogInfo("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));
     return delphi::error::OK();
 }

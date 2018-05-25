@@ -51,6 +51,6 @@ public:
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
 
-} // namespace example
+} // namespace upgrade
 
 #endif // __UPGRADE_MGR_H__

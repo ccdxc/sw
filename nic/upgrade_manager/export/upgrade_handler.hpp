@@ -29,7 +29,6 @@ public:
     virtual HdlrRespCode HandleStateCleanup(delphi::objects::UpgStateReqPtr req);
     virtual HdlrRespCode HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req);
     virtual HdlrRespCode HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStateInvalidUpgState(delphi::objects::UpgStateReqPtr req);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

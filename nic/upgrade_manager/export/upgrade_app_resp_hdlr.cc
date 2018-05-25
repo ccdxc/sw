@@ -108,10 +108,8 @@ UpgAppRespHdlr::GetUpgAppRespNextPass(UpgReqStateType reqType) {
             return UpgSuccessPass;
         case UpgFailed:
             return UpgFailedPass;
-        case InvalidUpgState:
-            return InvalidUpgStatePass;
         default:
-            return InvalidUpgStatePass;
+            return UpgSuccessPass;
      }
 }
 
@@ -134,10 +132,8 @@ UpgAppRespHdlr::GetUpgAppRespNextFail(UpgReqStateType reqType) {
             return UpgSuccessFail;
         case UpgFailed:
             return UpgFailedFail;
-        case InvalidUpgState:
-            return InvalidUpgStateFail;
         default:
-            return InvalidUpgStateFail;
+            return UpgSuccessFail;
      }
 }
 
