@@ -287,3 +287,16 @@ func (hd *Datapath) convertIPRange(sel string) ([]*halproto.IPAddressObj, error)
 
 	return addressObj, nil
 }
+
+func (hd *Datapath) convertIfAdminStatus(status string) (halproto.IfStatus, error) {
+	switch status {
+	case "UP":
+		return halproto.IfStatus_IF_STATUS_UP, nil
+	case "DOWN":
+		return halproto.IfStatus_IF_STATUS_DOWN, nil
+	default:
+		log.Errorf("Invalid admin status type")
+		return halproto.IfStatus_IF_STATUS_DOWN, fmt.Errorf("invalid admin status type. %v", status)
+	}
+
+}
