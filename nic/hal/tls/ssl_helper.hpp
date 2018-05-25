@@ -44,7 +44,7 @@ typedef struct ssl_conn_args_s {
 typedef hal_ret_t (*nw_send_cb)(conn_id_t id, uint8_t* data, size_t len);
 typedef hal_ret_t (*hs_done_cb)(conn_id_t id, conn_id_t oflowid, hal_ret_t ret,
                                 hs_out_args_t* args);
-typedef hal_ret_t (*key_prog_cb)(conn_id_t id, const uint8_t* key, size_t key_len,
+typedef hal_ret_t (*key_prog_cb)(conn_id_t id, types::CryptoKeyType key_type, const uint8_t* key, size_t key_len,
                                  uint32_t* key_hw_index);
 
 class SSLConnection {
@@ -80,6 +80,7 @@ private:
     hal_ret_t       get_pse_key(PSE_KEY &pse_key,
                                 const hal::tls_proxy_flow_info_t *tls_flow_cfg,
                                 const hal::crypto_cert_t *cert) const;
+    hal_ret_t       get_sym_key_type(int cipher_nid, types::CryptoKeyType& key_type);
 
     SSLHelper       *helper;
     SSL_CTX         *ctx;

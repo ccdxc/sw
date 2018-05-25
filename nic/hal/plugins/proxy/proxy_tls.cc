@@ -118,12 +118,12 @@ tls_poll_asym_pend_req_q(void)
     for(uint32_t i = 0; i < qid_count; i++) {
         HAL_TRACE_DEBUG("Received status for qid {}", qid[i]);
         ret = hal::tls::tls_api_process_hw_oper_done(qid[i]);
-        if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to process hw operation completion");
+        if(ret != HAL_RET_OK && ret != HAL_RET_ASYNC) {
+            HAL_TRACE_ERR("Failed to process hw operation completion: {}", ret);
             return ret;
         }
     }
-    return ret;
+    return HAL_RET_OK;
 }
 
 } // namespace hal

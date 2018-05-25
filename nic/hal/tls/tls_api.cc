@@ -99,13 +99,18 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
 }
 
 hal_ret_t
-tls_api_program_crypto_key(const uint8_t* key, uint32_t* key_index)
+tls_api_program_crypto_key(types::CryptoKeyType key_type, size_t key_len, const uint8_t* key, uint32_t* key_index)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     CryptoKeyCreateRequest      create_req;
     CryptoKeyCreateResponse     create_resp;
     CryptoKeyUpdateRequest      update_req;
     CryptoKeyUpdateResponse     update_resp;
+
+    if(!key) {
+        HAL_TRACE_DEBUG("KEY IS NULL");
+        return HAL_RET_INVALID_ARG;
+    }
 
     ret = cryptokey_create(create_req, &create_resp);
     if(ret != HAL_RET_OK) {
@@ -115,16 +120,13 @@ tls_api_program_crypto_key(const uint8_t* key, uint32_t* key_index)
 
     *key_index = create_resp.keyindex();
 
-    HAL_TRACE_DEBUG("Updating crypto key with index: {}", *key_index);
-    if(!key) {
-        HAL_TRACE_DEBUG("KEY IS NULL");
-        return HAL_RET_INVALID_ARG;
-    }
+    HAL_TRACE_DEBUG("Updating crypto key type: {}, len: {} with index: {}",
+                    key_type, key_len, *key_index);
 
     CryptoKeySpec* spec = update_req.mutable_key();
     spec->set_keyindex(*key_index);
-    spec->set_key_type(types::CRYPTO_KEY_TYPE_AES128);
-    spec->set_key_size(16);
+    spec->set_key_type(key_type);
+    spec->set_key_size(key_len);
     spec->mutable_key()->assign((const char*)key, 16);
     ret = cryptokey_update(update_req, &update_resp);
     if(ret != HAL_RET_OK) {
@@ -228,14 +230,15 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret,
 }
 
 hal_ret_t
-tls_api_key_prog_cb(uint32_t id, const uint8_t* key, size_t key_len, uint32_t* key_hw_index)
+tls_api_key_prog_cb(uint32_t id, types::CryptoKeyType key_type,
+                    const uint8_t* key, size_t key_len, uint32_t* key_hw_index)
 {
     hal_ret_t ret = HAL_RET_OK;
     if(!key) {
         return HAL_RET_INVALID_ARG;
     }
     //HAL_TRACE_DEBUG("Programming key for id: {}, key: {}", id, key);
-    ret = tls_api_program_crypto_key(key, key_hw_index);
+    ret = tls_api_program_crypto_key(key_type, key_len, key, key_hw_index);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program dec crypto key, ret {}", ret);
         return ret;

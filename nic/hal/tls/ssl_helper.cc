@@ -270,16 +270,17 @@ SSLConnection::get_hs_args(hs_out_args_t& args)
 hal_ret_t
 SSLConnection::handle_ssl_async()
 {
-    size_t num_fds = 0;
+    size_t num_fds = 0, num_del_fds = 0;
     hal::pd::pd_capri_barco_asym_add_pend_req_args_t args = {0};
 
     HAL_TRACE_DEBUG("SSL: id: {} waiting for async", id);
 
     if(SSL_get_all_async_fds(ssl, NULL, &num_fds) > 0) {
-        HAL_TRACE_DEBUG("SSL: number of async fds: {}", num_fds);
+        HAL_TRACE_DEBUG("SSL: number of all async fds: {}", num_fds);
         OSSL_ASYNC_FD  fds[num_fds] = {0};
 
-        if(SSL_get_all_async_fds(ssl, fds, &num_fds) > 0) {
+        if(SSL_get_changed_async_fds(ssl, fds, &num_fds, NULL, &num_del_fds) > 0) {
+            HAL_TRACE_DEBUG("SSL: number of added async fds: {}", num_fds);
             for(size_t i = 0; i < num_fds; i++) {
                 HAL_TRACE_DEBUG("SSL: id: {} received fd: {}", id, fds[i]);
                 args.hw_id = fds[i];
@@ -417,19 +418,50 @@ SSLConnection::handle_ssl_ret(int ret)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+SSLConnection::get_sym_key_type(int cipher_nid, types::CryptoKeyType& key_type)
+{
+    switch(cipher_nid) {
+    case NID_aes_128_gcm:
+    case NID_aes_128_cbc:
+    case NID_aes_128_ccm:
+        key_type = types::CRYPTO_KEY_TYPE_AES128;
+        break;
+    case NID_aes_256_gcm:
+    case NID_aes_256_cbc:
+    case NID_aes_256_ccm:
+        key_type = types::CRYPTO_KEY_TYPE_AES256;
+        break;
+    case NID_des_cbc:
+    case NID_des_ede3_cbc:
+        key_type = types::CRYPTO_KEY_TYPE_DES;
+        break;
+    default: 
+        HAL_TRACE_DEBUG("Unsupported nid: {}", cipher_nid);
+        break;
+    }
+
+    HAL_TRACE_DEBUG("cipher nid: {}, key_type: {}", cipher_nid, key_type);
+    return HAL_RET_OK;
+}
 void
 SSLConnection::ssl_msg_cb(int writep, int version, int contentType,
                           const void* buf, size_t len, SSL* ssl, void *arg)
 {
+    int nid = 0;
+    types::CryptoKeyType key_type;
     if(writep != 2 && writep != PEN_MSG_WRITEP)
         return;
- 
+    
     switch(contentType) {
         case TLS1_RT_CRYPTO_READ | TLS1_RT_CRYPTO_KEY:
-            HAL_TRACE_DEBUG("read key: {}",
-                                hex_dump((uint8_t *)buf, len));
+            nid = SSL_CIPHER_get_cipher_nid(SSL_get_current_cipher(ssl));
+            get_sym_key_type(nid, key_type);
+            HAL_TRACE_DEBUG("read key: {}, len: {}",
+                            hex_dump((uint8_t *)buf, len), len);
             if(helper && helper->get_key_prog_cb()) {
-                helper->get_key_prog_cb()(id, 
+                helper->get_key_prog_cb()(id,
+                                          key_type,
                                           (const uint8_t *)buf,
                                           len,
                                           &read_key_index);     
@@ -437,10 +469,13 @@ SSLConnection::ssl_msg_cb(int writep, int version, int contentType,
             break;
 
         case TLS1_RT_CRYPTO_WRITE | TLS1_RT_CRYPTO_KEY:
-            HAL_TRACE_DEBUG("write key: {}",
-                                hex_dump((uint8_t *)buf, len));
+            nid = SSL_CIPHER_get_cipher_nid(SSL_get_current_cipher(ssl));
+            get_sym_key_type(nid, key_type);
+            HAL_TRACE_DEBUG("write key: {}, len: {}",
+                            hex_dump((uint8_t *)buf, len), len);
             if(helper && helper->get_key_prog_cb()) {
                 helper->get_key_prog_cb()(id,
+                                          key_type,
                                           (const uint8_t*)buf,
                                           len,
                                           &write_key_index);     
