@@ -27,6 +27,7 @@ func main() {
 	var (
 		nsURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort,
 			"comma separated list of resolver URLs of the form 'ip:port'")
+		listenURL       = flag.String("listen-url", ":"+globals.TpmRPCPort, "gRPC listener URL")
 		logFile         = flag.String("logfile", "/var/log/pensando/"+pkgName+".log", "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		debugFlag       = flag.Bool("debug", false, "enable debug mode")
@@ -58,7 +59,7 @@ func main() {
 	nsClient := resolver.New(&resolver.Config{Name: pkgName, Servers: strings.Split(*nsURLs, ",")})
 
 	// init policy manager
-	pm, err := tpm.NewPolicyManager(nsClient)
+	pm, err := tpm.NewPolicyManager(*listenURL, nsClient)
 	if err != nil {
 		// let the scheduler restart tpm
 		log.Fatalf("failed to init policy agent, %s", err)

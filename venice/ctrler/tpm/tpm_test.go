@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"reflect"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	telemetry "github.com/pensando/sw/api/generated/monitoring"
@@ -22,9 +24,11 @@ import (
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )
 
+const listenURL = "127.0.0.1:"
+
 func TestProcessStatsPolicy(t *testing.T) {
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(r)
+	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 	pol := &telemetry.StatsPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "stats"},
@@ -59,7 +63,7 @@ func TestProcessStatsPolicy(t *testing.T) {
 
 func TestProcessFwlogPolicy(t *testing.T) {
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(r)
+	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	pol := &telemetry.FwlogPolicy{
@@ -95,7 +99,7 @@ func TestProcessFwlogPolicy(t *testing.T) {
 
 func TestProcessExportPolicy(t *testing.T) {
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(r)
+	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	pol := &telemetry.FlowExportPolicy{
@@ -109,14 +113,24 @@ func TestProcessExportPolicy(t *testing.T) {
 
 	v, err := pa.policyDb.FindObject(pol.GetKind(), pol.GetObjectMeta())
 	tu.AssertOk(t, err, "export policy not found")
-	tu.Assert(t, v == pol, "export policy didn't match")
+	tu.Assert(t, v.GetObjectKind() == pol.GetObjectKind(),
+		fmt.Sprintf("export policy kind didn't match, got %+v expected %+v",
+			v.GetObjectKind(), pol.GetObjectKind()))
+	tu.Assert(t, reflect.DeepEqual(v.GetObjectMeta(), pol.GetObjectMeta()),
+		fmt.Sprintf("export policy meta didn't match, got %+v expected %+v",
+			v.GetObjectMeta(), pol.GetObjectMeta()))
 
 	// update
 	err = pa.processExportPolicy(kvstore.Updated, pol)
 	tu.AssertOk(t, err, "failed to update export policy")
 	v, err = pa.policyDb.FindObject(pol.GetKind(), pol.GetObjectMeta())
 	tu.AssertOk(t, err, "export policy not found")
-	tu.Assert(t, v == pol, "export policy didn't match")
+	vMeta := v.GetObjectMeta()
+	polMeta := pol.GetObjectMeta()
+	tu.Assert(t, vMeta.Name == polMeta.Name, fmt.Sprintf("export policy didn't match, exptected %+v got %+v",
+		vMeta.Name, polMeta.Name))
+	tu.Assert(t, vMeta.Tenant == polMeta.Tenant, fmt.Sprintf("export policy didn't match, exptected %+v got %+v",
+		vMeta.Tenant, polMeta.Tenant))
 
 	// delete
 	err = pa.processExportPolicy(kvstore.Deleted, pol)
@@ -265,7 +279,7 @@ func TestEventLoop(t *testing.T) {
 	defer cancel()
 
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(r)
+	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	opts := &api.ListWatchOptions{}
@@ -427,7 +441,7 @@ func TestProcessTenant(t *testing.T) {
 	defer cancel()
 
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(r)
+	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	mapi := mockapi.NewMockServices(ctrl)
@@ -489,7 +503,7 @@ func TestClientRetry(t *testing.T) {
 
 	retry := 2
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(r)
+	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	_, err = pa.initGrpcClient("rpc-service", retry)

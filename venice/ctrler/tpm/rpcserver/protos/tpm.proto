@@ -1,0 +1,131 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for policies served by tpm
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package protos;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/export.proto";
+import "github.com/pensando/sw/api/protos/telemetry.proto";
+
+//================================ statsPolicy ==========================================================
+
+// stats policy watch events to agent
+message statsPolicyEvent {
+    // event type create/update/delete
+    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    // stats policy
+    StatsPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
+}
+
+message StatsPolicySpec {
+    // collection interval
+    string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty"];
+}
+
+message StatsPolicyStatus {
+
+}
+
+// StatsPolicy stats Policy object
+message StatsPolicy {
+    api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    StatsPolicySpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    StatsPolicyStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// StatsPolicyApi REST interface for agent
+service StatsPolicyApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "StatsPolicy",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
+    rpc WatchStatsPolicy (api.ObjectMeta) returns (stream statsPolicyEvent) {};
+}
+//================================ FwlogPolicy ==========================================================
+
+message FwlogPolicyEvent {
+    // event type create/update/delete
+    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    // fwlog policy
+    FwlogPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
+}
+
+message FwlogPolicySpec {
+    // filter firewall logs for venice
+    repeated string Filter = 1 [(gogoproto.jsontag) = "filter,omitempty"];
+    // fwlog exports
+    repeated monitoring.FwlogExport Exports = 2[(gogoproto.jsontag) = "exports,omitempty"];
+}
+
+message FwlogPolicyStatus {
+
+}
+
+// FwlogPolicy firewall log Policy object
+message FwlogPolicy {
+    api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    FwlogPolicySpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    FwlogPolicyStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// FwlogPolicyApi REST interface for agent
+service FwlogPolicyApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "FwlogPolicy",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
+    rpc WatchFwlogPolicy (api.ObjectMeta) returns (stream FwlogPolicyEvent) {};
+}
+//============================ flowExportPolicy ==========================================================
+
+message FlowExportPolicyEvent {
+    // event type create/update/delete
+    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+
+    // flow export policy
+    FlowExportPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
+}
+
+message FlowExportPolicySpec {
+    repeated monitoring.FlowExportTarget Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
+}
+
+message FlowExportPolicyStatus {
+
+}
+
+// FlowExportPolicy flow export Policy object
+message FlowExportPolicy {
+    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    FlowExportPolicySpec    Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    FlowExportPolicyStatus  Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// FlowExportPolicyApi REST interface for agent
+service FlowExportPolicyApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "FlowExportPolicy",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
+    rpc WatchFlowExportPolicy (api.ObjectMeta) returns (stream FlowExportPolicyEvent) {};
+}

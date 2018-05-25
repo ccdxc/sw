@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	telemetry "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/debug"
@@ -38,26 +39,38 @@ type PolicyManager struct {
 	debugStats *debug.Stats
 	// policyDB
 	policyDb *memdb.Memdb
+	// tpm rpc server
+	rpcServer *rpcserver.PolicyRPCServer
 }
 
 const pkgName = "tpm"
 const maxRetry = 15
 
+// stats collection interval
+const statsCollectionInterval = "30s"
+
 var pmLog vLog.Logger
 
 // NewPolicyManager creates a policy manager instance
-func NewPolicyManager(nsClient resolver.Interface) (*PolicyManager, error) {
+func NewPolicyManager(listenURL string, nsClient resolver.Interface) (*PolicyManager, error) {
 
 	pmLog = vLog.WithContext("pkg", pkgName)
 	pm := &PolicyManager{nsClient: nsClient,
 		policyDb: memdb.NewMemdb()}
 
 	go pm.HandleEvents()
+	server, err := rpcserver.NewRPCServer(listenURL, pm.policyDb, statsCollectionInterval)
+	if err != nil {
+		pmLog.Fatalf("failed to create rpc server, %s", err)
+	}
+
+	pm.rpcServer = server
 	return pm, nil
 }
 
 // Stop shutdown policy watch
 func (pm *PolicyManager) Stop() {
+	pm.rpcServer.Stop()
 	pm.cancel()
 }
 
@@ -239,8 +252,8 @@ func (pm *PolicyManager) processFwlogPolicy(eventType kvstore.WatchEventType, po
 		return pm.policyDb.DeleteObject(policy)
 
 	default:
-		pmLog.Errorf("invalid stats event, type %s policy %+v", eventType, policy)
-		return fmt.Errorf("invalid event")
+		pmLog.Errorf("invalid fwlog event, type %s policy %+v", eventType, policy)
+		return fmt.Errorf("invalid fwlog event")
 	}
 }
 
@@ -259,8 +272,8 @@ func (pm *PolicyManager) processExportPolicy(eventType kvstore.WatchEventType, p
 		return pm.policyDb.DeleteObject(policy)
 
 	default:
-		pmLog.Errorf("invalid stats event, type %s policy %+v", eventType, policy)
-		return fmt.Errorf("invalid event")
+		pmLog.Errorf("invalid export event, type %s policy %+v", eventType, policy)
+		return fmt.Errorf("invalid export event")
 	}
 }
 

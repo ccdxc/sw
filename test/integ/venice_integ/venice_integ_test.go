@@ -69,6 +69,7 @@ const (
 	integTestNpmRESTURL = "localhost:9496"
 	integTestApisrvURL  = "localhost:8082"
 	integTestAPIGWURL   = "localhost:9092"
+	integTestTPMURL     = "localhost:9093"
 	vchTestURL          = "localhost:19003"
 	// TS Controller
 	integTestTsmURL     = "localhost:9500"
@@ -296,7 +297,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 
 	// create tpm
 	rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{resolverServer.GetListenURL()}})
-	tpm, err := tpm.NewPolicyManager(rs)
+	tpm, err := tpm.NewPolicyManager(integTestTPMURL, rs)
 	c.Assert(err, IsNil)
 	it.tpm = tpm
 

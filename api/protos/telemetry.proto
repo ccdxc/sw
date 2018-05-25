@@ -133,6 +133,7 @@ message FlowExportTarget {
     enum Formats {
         Ipfix = 0;
     }
+
     // Interval defines how often to push the records to an external or internal collector
     // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
     string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty"];
