@@ -27,6 +27,7 @@ const (
 	IPSecSADecryptID = "ipSecSADencryptID"
 	IPSecRuleID      = "ipSecRuleID"
 	SGPolicyID       = "securityGroupPolicyID"
+	TunnelID         = "tunnelID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -70,6 +71,7 @@ type NetAgent struct {
 	IPSecSAEncryptDB map[string]*netproto.IPSecSAEncrypt // IPSecSAEncrypt Object DB
 	IPSecSADecryptDB map[string]*netproto.IPSecSADecrypt // IPSecSADecrypt Object DB
 	SGPolicyDB       map[string]*netproto.SGPolicy       // Security group policy DB
+	TunnelDB         map[string]*netproto.Tunnel         // Tunnel object DB
 	IPSecPolicyLUT   map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
 	NatPoolLUT       map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	HwIfDB           map[string]*netproto.Interface      // Has all the Uplinks and Lifs
@@ -151,6 +153,11 @@ type CtrlerIntf interface {
 	ListSGPolicy() []*netproto.SGPolicy                                       // lists Security Group Policy
 	UpdateSGPolicy(rt *netproto.SGPolicy) error                               // updates an Security Group Policy
 	DeleteSGPolicy(rt *netproto.SGPolicy) error                               // deletes an Security Group Policy
+	CreateTunnel(tun *netproto.Tunnel) error                                  // creates an Tunnel
+	FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error)                 // finds an Tunnel
+	ListTunnel() []*netproto.Tunnel                                           // lists Tunnel
+	UpdateTunnel(tun *netproto.Tunnel) error                                  // updates an Tunnel
+	DeleteTunnel(tun *netproto.Tunnel) error                                  // deletes an Tunnel
 	GetHwInterfaces() error                                                   // Gets all the uplinks created on the hal by nic mgr
 }
 
@@ -206,6 +213,9 @@ type NetDatapathAPI interface {
 	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []uint64) error                                                                                   // creates a security group policy in the datapath
 	UpdateSGPolicy(sgp *netproto.SGPolicy, ns *netproto.Namespace) error                                                                                       // updates a security group policy in the datapath
 	DeleteSGPolicy(sgp *netproto.SGPolicy, ns *netproto.Namespace) error                                                                                       // deletes a security group policy in the datapath
+	CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                           // creates a tunnel in the datapath
+	UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                           // updates a tunnel in the datapath
+	DeleteTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                           // deletes a tunnel in the datapath
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

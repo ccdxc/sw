@@ -360,6 +360,27 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
+	tunnel := netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedTunnel",
+		},
+		Spec: netproto.TunnelSpec{
+			Type:        "VXLAN",
+			AdminStatus: "UP",
+			Src:         "10.1.1.1",
+			Dst:         "192.168.1.1",
+		},
+	}
+
+	err = nagent.CreateTunnel(&tunnel)
+	if err != nil {
+		log.Errorf("Failed to create tunnel. {%v}", tunnel)
+		return
+	}
+
 	lif := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{

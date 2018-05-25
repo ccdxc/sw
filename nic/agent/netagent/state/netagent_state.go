@@ -168,5 +168,6 @@ func (na *Nagent) init(emdb emstore.Emstore, nodeUUID string, dp types.NetDatapa
 	na.IPSecSADecryptDB = make(map[string]*netproto.IPSecSADecrypt)
 	na.IPSecPolicyLUT = make(map[string]*types.IPSecRuleRef)
 	na.SGPolicyDB = make(map[string]*netproto.SGPolicy)
+	na.TunnelDB = make(map[string]*netproto.Tunnel)
 
 }

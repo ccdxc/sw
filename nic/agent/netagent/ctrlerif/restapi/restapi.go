@@ -67,6 +67,7 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, l
 		"/api/ipsec/decryption/":  addIPSecSADecryptAPIRoutes,
 		"/api/security/policies/": addSGPolicyAPIRoutes,
 		"/api/mirror/sessions/":   addMirrorSessionAPIRoutes,
+		"/api/tunnels/":           addTunnelAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

@@ -417,6 +417,31 @@ func (ag *fakeAgent) DeleteSGPolicy(np *netproto.SGPolicy) error {
 	return nil
 }
 
+// CreateTunnel creates a tunnel. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateTunnel(np *netproto.Tunnel) error {
+	return nil
+}
+
+// FindTunnel finds a tunnel. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error) {
+	return nil, nil
+}
+
+// ListTunnel lists a tunnel. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListTunnel() []*netproto.Tunnel {
+	return nil
+}
+
+// UpdateTunnel updates a tunnel. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateTunnel(np *netproto.Tunnel) error {
+	return nil
+}
+
+// DeleteTunnel deletes a tunnel. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteTunnel(np *netproto.Tunnel) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network
