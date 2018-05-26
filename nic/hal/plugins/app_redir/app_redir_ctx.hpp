@@ -493,6 +493,15 @@ app_to_appid(std::string app, uint32_t& appid)
     return HAL_RET_ERR;
 }
 
+inline const char *
+appid_to_app (uint32_t app_id)
+{
+    if (app_id < 1 || app_id >= HAL_APPID_MAX) {
+        return NULL;
+    }
+    return hal_app_names[app_id];
+}
+
 }
 }
 

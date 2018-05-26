@@ -1189,10 +1189,111 @@ end:
     return ret;
 }
 
-hal_ret_t
-securitypolicy_get(nwsec::SecurityPolicyGetRequest&         req,
-                    nwsec::SecurityPolicyGetResponseMsg     *res)
+static hal_ret_t
+security_policy_rule_spec_build (nwsec_rule_t *rule,
+                                 nwsec::SecurityRule *spec)
 {
+    hal_ret_t               ret = HAL_RET_OK;
+    dllist_ctxt_t           *entry = NULL;
+    nwsec_policy_appid_t    *nwsec_plcy_appid = NULL;
+
+    spec->set_rule_id(rule->rule_id);
+    spec->mutable_action()->set_sec_action(rule->fw_rule_action.sec_action);
+    spec->mutable_action()->set_log_action(rule->fw_rule_action.log_action);
+
+    ret = rule_match_spec_build(&rule->fw_rule_match, spec->mutable_match());
+    if ( ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    dllist_for_each(entry, &rule->appid_list_head) {
+        nwsec_plcy_appid = dllist_entry(entry, nwsec_policy_appid_t, lentry);
+        spec->add_appid(hal::app_redir::appid_to_app(nwsec_plcy_appid->appid));
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+security_policy_spec_build (nwsec_policy_t *policy,
+                            nwsec::SecurityPolicySpec *spec)
+{
+    nwsec_rule_t            *nwsec_rule;
+    nwsec::SecurityRule     *spec_rule;
+    hal_ret_t               ret = HAL_RET_OK;
+
+    spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(policy->key.policy_id);
+    spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(policy->key.vrf_id);
+
+    for (uint32_t i = 0; i < policy->rule_len; i ++) {
+        nwsec_rule = policy->dense_rules[i];
+        if (nwsec_rule == NULL) {
+            continue;
+        }
+        spec_rule = spec->add_rule();
+        if (spec_rule == NULL) {
+            return HAL_RET_OOM;
+        }
+        ret = security_policy_rule_spec_build(nwsec_rule, spec_rule);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
+    }
+
+    HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_SUCCESS);
+
+    return ret;
+}
+
+static inline bool
+security_policy_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    nwsec_policy_t *policy;
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    nwsec::SecurityPolicyGetResponseMsg *rsp = (nwsec::SecurityPolicyGetResponseMsg *)ctxt;
+    nwsec::SecurityPolicyGetResponse *response = rsp->add_response();
+    hal_ret_t ret = HAL_RET_OK;
+
+    policy = (nwsec_policy_t *)hal_handle_get_obj(entry->handle_id);
+    
+    ret = security_policy_spec_build(policy, response->mutable_spec());
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Policy HT get ok");
+        response->set_api_status(types::API_STATUS_OK);
+    }
+
+    // return false here, so that we don't terminate the walk
+    return false;
+}
+
+hal_ret_t
+securitypolicy_get (nwsec::SecurityPolicyGetRequest& req,
+                    nwsec::SecurityPolicyGetResponseMsg *rsp)
+{
+    nwsec_policy_t  *policy;
+    hal_ret_t       ret = HAL_RET_OK;
+
+    // walk all policies as no key is specified
+    if (!req.has_key_or_handle()) {
+        g_hal_state->nwsec_policy_ht()->walk(security_policy_get_ht_cb, rsp);
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_SUCCESS);
+        return HAL_RET_OK;
+    }
+
+    auto kh = req.key_or_handle();
+    auto response = rsp->add_response();
+    if ((policy = security_policy_lookup_key_or_handle(kh)) == NULL) {
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_FAIL);
+        return HAL_RET_SECURITY_POLICY_NOT_FOUND;
+    }
+
+    ret = security_policy_spec_build(policy, response->mutable_spec());
+    if (ret == HAL_RET_OK) {
+        response->set_api_status(types::API_STATUS_OK);
+        return ret;
+    }
+
     return HAL_RET_OK;
 }
 

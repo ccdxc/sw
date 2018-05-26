@@ -62,6 +62,10 @@ using nwsec::SecurityGroupResponseMsg;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileRequestMsg;
 using nwsec::SecurityProfileResponseMsg;
+using nwsec::SecurityRule;
+using nwsec::SecurityPolicySpec;
+using nwsec::SecurityPolicyRequestMsg;
+using nwsec::SecurityPolicyResponseMsg;
 using kh::SecurityGroupKeyHandle;
 
 using session::Session;
@@ -603,6 +607,58 @@ public:
             }
         }
 
+        return 0;
+    }
+
+    uint64_t security_policy_create(uint64_t policy_id, uint64_t vrf_id) {
+        SecurityPolicySpec              *spec;
+        SecurityPolicyRequestMsg        req_msg;
+        SecurityPolicyResponseMsg       rsp_msg;
+        ClientContext                   context;
+        Status                          status;
+        SecurityRule                    *rule_spec;
+
+        spec = req_msg.add_request();
+
+        spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(policy_id);
+        spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(vrf_id);
+
+        rule_spec = spec->add_rule();
+
+        // Create nwsec
+        rule_spec->set_rule_id(1);
+        rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+
+        types::RuleMatch *match = rule_spec->mutable_match();
+        types::IPAddressObj *dst_addr = match->add_dst_address();
+        dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0xAABBCC00);
+
+        types::IPAddressObj *src_addr = match->add_src_address();
+        src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11223300);
+
+        types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+        types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
+        port_range->set_port_low(1000);
+        port_range->set_port_high(2000);
+        
+        types::L4PortRange *src_port_range = app->mutable_port_info()->add_src_port_range();
+        src_port_range->set_port_low(100);
+        src_port_range->set_port_high(200);
+
+        status = sg_stub_->SecurityPolicyCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert((rsp_msg.response(0).api_status() == types::API_STATUS_OK) ||
+                   (rsp_msg.response(0).api_status() == types::API_STATUS_EXISTS_ALREADY));
+            std::cout << "Security Policy create succeeded, handle = "
+                      << rsp_msg.response(0).policy_status().security_policy_handle()
+                      << std::endl;
+            return rsp_msg.response(0).policy_status().security_policy_handle();
+        }
+        std::cout << "Security Policy create failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
         return 0;
     }
 
@@ -2105,7 +2161,7 @@ main (int argc, char** argv)
 {
     uint64_t     vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
     uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
-    uint64_t     lif_handle, enic_if_handle, sec_prof_handle;
+    uint64_t     lif_handle, enic_if_handle, sec_prof_handle, sec_policy_handle;
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint64_t     lif_id = 100;
     uint64_t     enic_if_id = 200;
@@ -2325,6 +2381,10 @@ main (int argc, char** argv)
     // recreate the vrf
     vrf_handle = hclient.vrf_create(vrf_id);
     assert(vrf_handle != 0);
+
+    // create a security policy
+    sec_policy_handle = hclient.security_policy_create(1, vrf_id);
+    assert(sec_policy_handle != 0);
 
     // create a security group
     sg_handle = hclient.sg_create(sg_id);
