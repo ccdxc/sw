@@ -57,6 +57,7 @@ public:
     void AppendAppRespFailStr (string str);
     bool GetAppRespFail(void);
     void SetAppRespFail(void);
+    void ResetAppResp(void);
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
 

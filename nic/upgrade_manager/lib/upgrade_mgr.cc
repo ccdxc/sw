@@ -36,7 +36,6 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
             nextReqType = DataplaneDowntimeStart;
             break;
         case DataplaneDowntimeStart:
-            //TODO set UpgSuccess/UpgFailed
             nextReqType = UpgSuccess;
             break;
         case Cleanup:
@@ -201,6 +200,10 @@ bool UpgradeMgr::GetAppRespFail(void) {
     return this->appRespFail_;
 }
 
+void UpgradeMgr::ResetAppResp(void) {
+    this->appRespFail_ = false;
+}
+
 void UpgradeMgr::SetAppRespFail(void) {
     this->appRespFail_ = true;
 }
@@ -223,6 +226,10 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     if ((type == UpgSuccess) || (type == UpgFailed)) {
         //Notify Agent
         this->upgMgrResp_->UpgradeFinish(type == UpgSuccess, this->appRespFailStrList_);
+        if (this->appRespFailStrList_.empty()) {
+            LogInfo("Emptied all the responses from applications to agent");
+            this->ResetAppResp();
+        }
     }
     if (type != UpgStateTerminal)
         LogInfo("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));
