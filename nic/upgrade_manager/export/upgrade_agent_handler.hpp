@@ -4,6 +4,7 @@
 #define __UPGRAGE_AGENT_HANDLER_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "upgrade_handler.hpp"
 
 namespace upgrade {
 
@@ -13,14 +14,14 @@ class UpgAgentHandler {
 public:
     UpgAgentHandler() {}
 
-    virtual void UpgStatePreUpgCheckComplete(string status, string name);
-    virtual void UpgStateProcessQuiesceComplete(string status, string name);
-    virtual void UpgStatePostBinRestartComplete(string status, string name);
-    virtual void UpgStateDataplaceDowntimeComplete(string status, string name);
-    virtual void UpgStateCleanupComplete(string status, string name);
+    virtual void UpgStatePreUpgCheckComplete(HdlrResp &resp, string name);
+    virtual void UpgStateProcessQuiesceComplete(HdlrResp &resp, string name);
+    virtual void UpgStatePostBinRestartComplete(HdlrResp &resp, string name);
+    virtual void UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string name);
+    virtual void UpgStateCleanupComplete(HdlrResp &resp, string name);
 
     virtual void UpgSuccessful(void);
-    virtual void UpgFailed(void);
+    virtual void UpgFailed(vector<string> &errStrList);
 
 };
 typedef std::shared_ptr<UpgAgentHandler> UpgAgentHandlerPtr;

@@ -9,54 +9,64 @@ namespace upgrade {
 
 using namespace std;
 
-HdlrRespCode UpgHandler::UpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::UpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler UpgStateReqCreate not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::UpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::UpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler UpgStateReqDelete not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateUpgReqRcvd not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStatePreUpgState(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStatePreUpgState(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStatePreUpgState not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStatePostBinRestart(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStatePostBinRestart(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStatePostBinRestart not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateProcessesQuiesced not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateDataplaneDowntimeStart not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStateCleanup(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStateCleanup(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateCleanup not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateUpgSuccess not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
-HdlrRespCode UpgHandler::HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req) {
+HdlrResp UpgHandler::HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateUpgFailed not implemented by service");
-    return SUCCESS;
+    return resp;
 }
 
 } // namespace upgrade

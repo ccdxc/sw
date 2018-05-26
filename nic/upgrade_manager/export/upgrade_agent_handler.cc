@@ -9,38 +9,41 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgAgentHandler::UpgStatePreUpgCheckComplete(string status, string name) {
-    LogInfo("Pre Upgrade Check completed {} for service {}", status, name);
+void UpgAgentHandler::UpgStatePreUpgCheckComplete(HdlrResp &resp, string name) {
+    LogInfo("Pre Upgrade Check completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
     return;
 }
 
-void UpgAgentHandler::UpgStateProcessQuiesceComplete(string status, string name) {
-    LogInfo("Process quiesce completed {} for service {}", status, name);
+void UpgAgentHandler::UpgStateProcessQuiesceComplete(HdlrResp &resp, string name) {
+    LogInfo("Process quiesce completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
     return;
 }
 
-void UpgAgentHandler::UpgStatePostBinRestartComplete(string status, string name) {
-    LogInfo("Post Bin Restart completed {} for service {}", status, name);
+void UpgAgentHandler::UpgStatePostBinRestartComplete(HdlrResp &resp, string name) {
+    LogInfo("Post Bin Restart completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaceDowntimeComplete(string status, string name) {
-    LogInfo("Dataplane downtime completed {} for service {}", status, name);
+void UpgAgentHandler::UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string name) {
+    LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
     return;
 }
 
-void UpgAgentHandler::UpgStateCleanupComplete(string status, string name) {
-    LogInfo("Cleanup completed {} for service {}", status, name);
+void UpgAgentHandler::UpgStateCleanupComplete(HdlrResp &resp, string name) {
+    LogInfo("Cleanup completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
     return;
 }
 
 void UpgAgentHandler::UpgSuccessful(void) {
-    LogInfo("Upgrade completed successfully!!!!");
+    LogInfo("Upgrade completed with status successfully!!!!");
     return;
 }
 
-void UpgAgentHandler::UpgFailed(void) {
+void UpgAgentHandler::UpgFailed(vector<string> &errStrList) {
     LogInfo("Upgrade failed!!!!");
+    for (uint i=0; i<errStrList.size(); i++) {
+        LogInfo("Application failed response: {}", errStrList[i]);
+    }
     return;
 }
 

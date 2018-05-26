@@ -121,7 +121,7 @@ public:
     void OnMountComplete(void);
 
     void SendAppRespSuccess(void);
-    void SendAppRespFail(void);
+    void SendAppRespFail(string str);
 
     delphi::error StartUpgrade(void);
 };

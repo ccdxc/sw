@@ -60,6 +60,7 @@ message UpgResp {
     delphi.ObjectMeta          Meta            = 1;
     uint32                     Key             = 2;
     UpgRespType                UpgRespVal      = 3 [(delphi.event) = true];
+    repeated string            UpgRespFailStr  = 4;
 }
 
 // status part of the object
@@ -75,6 +76,6 @@ message UpgAppResp {
     delphi.ObjectMeta      Meta              = 1;
     string                 Key               = 2;
     UpgRespStateType       UpgAppRespVal     = 3 [(delphi.event) = true];
-    string                 AppRespString     = 4;
+    string                 UpgAppRespStr     = 4;
 }
 

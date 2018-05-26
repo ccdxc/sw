@@ -20,16 +20,18 @@ void UpgSdk::OnMountComplete(void) {
 
 void UpgSdk::SendAppRespSuccess(void) {
     LogInfo("Application returning success via UpgSdk");
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     this->upgAppRespPtr_->UpdateUpgAppResp(
           this->upgAppRespPtr_->GetUpgAppRespNextPass(
-                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()));
+                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()), resp);
 }
 
-void UpgSdk::SendAppRespFail(void) {
+void UpgSdk::SendAppRespFail(string str) {
     LogInfo("UpgSdk::SendAppRespFail");
+    HdlrResp resp = {.resp=SUCCESS, .errStr=str};
     this->upgAppRespPtr_->UpdateUpgAppResp(
           this->upgAppRespPtr_->GetUpgAppRespNextFail(
-                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()));
+                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()), resp);
 }
 
 delphi::error UpgSdk::IsRoleAgent (SvcRole role) {

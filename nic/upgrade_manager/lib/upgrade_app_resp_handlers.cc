@@ -14,7 +14,12 @@ using namespace std;
 // OnUpgAppRespCreate gets called when UpgAppResp object is created
 delphi::error UpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
     LogInfo("UpgAppResp got created for {}/{}", resp, resp->meta().ShortDebugString());
-
+    if (this->upgMgr_->IsRespTypeFail(resp->upgapprespval())) {
+        string appRespStr = "App " + resp->key() + " returned failure: " + resp->upgapprespstr();
+        this->upgMgr_->AppendAppRespFailStr(appRespStr);
+        this->upgMgr_->SetAppRespFail();
+        LogInfo("Adding string {} to list", appRespStr);
+    }
     if (this->upgMgr_->CanMoveStateMachine()) {
         return (this->upgMgr_->MoveStateMachine(this->upgMgr_->GetNextState()));
     } else {
@@ -73,6 +78,13 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr res
         LogInfo("\n\n\n========== Got Response {} from {} application ==========", UpgRespStateTypeToStr(resp->upgapprespval()), resp->key());
     //LogInfo("UpgAppRespHdlr OnUpgAppRespVal got called for {}/{}/{}", 
                          //resp, resp->meta().ShortDebugString(), resp->upgapprespval());
+
+    if (this->upgMgr_->IsRespTypeFail(resp->upgapprespval())) {
+        string appRespStr = "App " + resp->key() + " returned failure: " + resp->upgapprespstr();
+        this->upgMgr_->AppendAppRespFailStr(appRespStr);
+        this->upgMgr_->SetAppRespFail();
+        LogInfo("Adding string {} to list", appRespStr);
+    }
 
     if (this->upgMgr_->CanMoveStateMachine()) {
         return (this->upgMgr_->MoveStateMachine(this->upgMgr_->GetNextState()));

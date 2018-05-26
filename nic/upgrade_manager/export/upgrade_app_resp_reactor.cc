@@ -31,22 +31,38 @@ string UpgAppRespReact::GetAppRespStr(delphi::objects::UpgAppRespPtr resp) {
     }
 }
 
+void UpgAppRespReact::SetAppRespSuccess(HdlrResp &resp) {
+    resp.resp = SUCCESS;
+    resp.errStr = "";
+}
+
+void UpgAppRespReact::SetAppRespFail(HdlrResp &resp, string str) {
+    resp.resp = FAIL;
+    resp.errStr = str;
+}
+
 void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
+    HdlrResp hdlrResp;
     switch (resp->upgapprespval()) {
         case upgrade::PreUpgStatePass:
-            upgAgentHandler_->UpgStatePreUpgCheckComplete("pass", resp->key());
+            this->SetAppRespSuccess(hdlrResp);
+            upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
         case upgrade::ProcessesQuiescedPass:
-            upgAgentHandler_->UpgStatePreUpgCheckComplete("pass", resp->key());
+            this->SetAppRespSuccess(hdlrResp);
+            upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
         case upgrade::PostBinRestartPass:
-            upgAgentHandler_->UpgStatePostBinRestartComplete("pass", resp->key());
+            this->SetAppRespSuccess(hdlrResp);
+            upgAgentHandler_->UpgStatePostBinRestartComplete(hdlrResp, resp->key());
             break;
         case upgrade::DataplaneDowntimeStartPass:
-            upgAgentHandler_->UpgStateDataplaceDowntimeComplete("pass", resp->key());
+            this->SetAppRespSuccess(hdlrResp);
+            upgAgentHandler_->UpgStateDataplaceDowntimeComplete(hdlrResp, resp->key());
             break;
         case upgrade::CleanupPass:
-            upgAgentHandler_->UpgStateCleanupComplete("pass", resp->key());
+            this->SetAppRespSuccess(hdlrResp);
+            upgAgentHandler_->UpgStateCleanupComplete(hdlrResp, resp->key());
             break;
         default:
             break;

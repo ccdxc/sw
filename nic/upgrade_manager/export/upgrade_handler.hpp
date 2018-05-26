@@ -16,19 +16,24 @@ typedef enum {
     INPROGRESS
 } HdlrRespCode;
 
+typedef struct HdlrResp_ {
+    HdlrRespCode     resp;
+    string           errStr;
+} HdlrResp;
+
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual HdlrRespCode UpgStateReqCreate(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode UpgStateReqDelete(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStatePreUpgState(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStatePostBinRestart(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStateCleanup(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrRespCode HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp UpgStateReqCreate(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp UpgStateReqDelete(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStatePreUpgState(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStatePostBinRestart(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStateCleanup(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

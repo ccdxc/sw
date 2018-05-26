@@ -39,44 +39,53 @@ typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;
 class ExSvcHandler : public upgrade::UpgHandler {
 public:
     ExSvcHandler(){}
-    HdlrRespCode UpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp UpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler UpgStateReqCreate called for the SVC!!");
-        return SUCCESS;
+        return resp;
     }
 
-    HdlrRespCode UpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp UpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler UpgStateReqDelete called for the SVC!!");
-        return SUCCESS;
+        return resp;
     }
 
-    HdlrRespCode HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler HandleStateUpgReqRcvd called for the SVC!!");
-        return SUCCESS;
+        return resp;
     }
 
-    HdlrRespCode HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
         LogInfo("UpgHandler HandleStateProcessesQuiesced called for the SVC!!");
-        return INPROGRESS;
+        return resp;
     }
 
-    HdlrRespCode HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+        //HdlrResp resp = {.resp=FAIL, .errStr="Example could not do HandleStateDataplaneDowntimeStart"};
         LogInfo("UpgHandler HandleStateDataplaneDowntimeStart called for the SVC!!");
-        return SUCCESS;
+        return resp;
     }
 
-    HdlrRespCode HandleStateCleanup(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateCleanup(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler HandleStateCleanup called for the SVC!!");
-        return SUCCESS;
+        return resp;
     }
 
-    HdlrRespCode HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler HandleStateUpgSuccess called for the SVC!!");
-        return SUCCESS;
+        return resp;
     }
 
-    HdlrRespCode HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler HandleStateUpgFailed called for the SVC!!");
-        return SUCCESS;
+        return resp;
     }
 };
 

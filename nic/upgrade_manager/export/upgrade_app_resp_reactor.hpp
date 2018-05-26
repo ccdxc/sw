@@ -6,6 +6,7 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
 #include "upgrade_agent_handler.hpp"
+#include "upgrade_handler.hpp"
 
 namespace upgrade {
 
@@ -29,6 +30,10 @@ public:
 
     string GetAppRespStr(delphi::objects::UpgAppRespPtr resp);
     void InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp);
+
+    void SetAppRespSuccess(HdlrResp &resp);
+    void SetAppRespFail(HdlrResp &resp, string str);
+
 };
 typedef std::shared_ptr<UpgAppRespReact> UpgAppRespReactPtr;
 

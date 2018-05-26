@@ -13,6 +13,10 @@ using namespace std;
 
 UpgReqStateType UpgradeMgr::GetNextState(void) {
     UpgReqStateType  reqType, nextReqType;
+    if (this->GetAppRespFail()) {
+        LogInfo("Some application(s) responded with failure");
+        return UpgFailed;
+    }
     vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
     for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
         reqType = (*reqStatus)->upgreqstate();
@@ -49,6 +53,24 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
             break;
     }
     return nextReqType;
+}
+
+bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
+    bool ret = false;
+    switch (type) {
+        case UpgReqRcvdFail:
+        case PreUpgStateFail:
+        case ProcessesQuiescedFail:
+        case PostBinRestartFail:
+        case DataplaneDowntimeStartFail:
+        case CleanupFail:
+        case UpgSuccessFail:
+        case UpgFailedFail:
+            ret = true;
+        default:
+            break;
+    }
+    return ret;
 }
 
 UpgRespStateType UpgradeMgr::GetFailRespType(UpgReqStateType type) {
@@ -147,7 +169,7 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
         }
     }
     if (ret) {
-        LogInfo("Got pass response from all applications. Can move state machine.");
+        LogInfo("Got pass/fail response from all applications. Can move state machine.");
     }
     return ret;
 }
@@ -175,6 +197,18 @@ string UpgradeMgr::UpgReqStateTypeToStr(UpgReqStateType type) {
     }
 }
 
+bool UpgradeMgr::GetAppRespFail(void) {
+    return this->appRespFail_;
+}
+
+void UpgradeMgr::SetAppRespFail(void) {
+    this->appRespFail_ = true;
+}
+
+void UpgradeMgr::AppendAppRespFailStr (string str) {
+    this->appRespFailStrList_.push_back(str);
+}
+
 delphi::error UpgradeMgr::DeleteUpgMgrResp (void) {
     return this->upgMgrResp_->DeleteUpgMgrResp();
 }
@@ -188,7 +222,7 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     }
     if ((type == UpgSuccess) || (type == UpgFailed)) {
         //Notify Agent
-        this->upgMgrResp_->UpgradeFinish(type == UpgSuccess);
+        this->upgMgrResp_->UpgradeFinish(type == UpgSuccess, this->appRespFailStrList_);
     }
     if (type != UpgStateTerminal)
         LogInfo("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));

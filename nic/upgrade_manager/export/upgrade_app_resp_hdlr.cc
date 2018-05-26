@@ -74,7 +74,7 @@ string UpgAppRespHdlr::UpgAppRespValToStr(UpgRespStateType type) {
     }
 }
 
-delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type) {
+delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type, HdlrResp appHdlrResp) {
     //LogInfo("UpgAppRespHdlr::UpdateUpgAppResp called for {} with type {}", this->appName_, type);
     auto upgAppResp = this->findUpgAppResp(this->appName_);
     if (upgAppResp == NULL) {
@@ -84,6 +84,9 @@ delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type) {
     if (this->UpgAppRespValToStr(type) != "")
         LogInfo("{}", UpgAppRespValToStr(type));
     upgAppResp->set_upgapprespval(type);
+    if (appHdlrResp.resp == FAIL) {
+        upgAppResp->set_upgapprespstr(appHdlrResp.errStr);
+    }
     this->sdk_->SetObject(upgAppResp);
     return delphi::error::OK();
 }

@@ -5,6 +5,7 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
+#include "upgrade_handler.hpp"
 
 namespace upgrade {
 
@@ -30,7 +31,7 @@ public:
     UpgRespStateType GetUpgAppRespNext(UpgReqStateType reqType, bool isReqSuccess);
 
     //CreateOrUpdateUpgAppResp creates the response for upgrade_manager
-    delphi::error UpdateUpgAppResp(UpgRespStateType type);
+    delphi::error UpdateUpgAppResp(UpgRespStateType type, HdlrResp appHdlrResp);
 
     //findUpgAppResp returns the UpgAppResp object for this application
     delphi::objects::UpgAppRespPtr findUpgAppResp(string name);

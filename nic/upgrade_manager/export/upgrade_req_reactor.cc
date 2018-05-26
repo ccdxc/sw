@@ -15,10 +15,10 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
     //create the object
     upgAppRespPtr_->CreateUpgAppResp();
     if (this->upgHdlrPtr_) {
-        HdlrRespCode hdlrRespCode;
-        hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
-        if (hdlrRespCode != INPROGRESS) {
-            this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+        HdlrResp hdlrResp;
+        hdlrResp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
+        if (hdlrResp.resp != INPROGRESS) {
+            this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
         }
     }
     return delphi::error::OK();
@@ -29,12 +29,12 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
     LogInfo("UpgReqReactor UpgStateReq got deleted");
     //delete the object
     upgAppRespPtr_->DeleteUpgAppResp();
-    HdlrRespCode hdlrRespCode;
+    HdlrResp hdlrResp;
     if (this->upgHdlrPtr_) {
-        hdlrRespCode = this->upgHdlrPtr_->UpgStateReqDelete(req);
-        (void)hdlrRespCode;
-        //if (hdlrRespCode != INPROGRESS) {
-          //  this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+        hdlrResp = this->upgHdlrPtr_->UpgStateReqDelete(req);
+        (void)hdlrResp;
+        //if (hdlrResp != INPROGRESS) {
+          //  this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp==SUCCESS)));
         //}
     }
     return delphi::error::OK();
@@ -42,7 +42,7 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
 
 // OnUpgReqState gets called when UpgReqState attribute changes
 delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
-    HdlrRespCode hdlrRespCode;
+    HdlrResp hdlrResp;
     if (!this->upgHdlrPtr_) {
         LogInfo("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
@@ -52,44 +52,44 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
     switch (req->upgreqstate()) {
         case UpgReqRcvd:
             LogInfo("Upgrade: Request Received");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
             break;
         case PreUpgState:
             LogInfo("Upgrade: Pre-upgrade check");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStatePreUpgState(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStatePreUpgState(req);
             break;
         case PostBinRestart:
             LogInfo("Upgrade: Post-binary restart");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStatePostBinRestart(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStatePostBinRestart(req);
             break;
         case ProcessesQuiesced:
             LogInfo("Upgrade: Processes Quiesced");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStateProcessesQuiesced(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateProcessesQuiesced(req);
             break;
         case DataplaneDowntimeStart:
             LogInfo("Upgrade: Dataplane Downtime Start");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStateDataplaneDowntimeStart(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateDataplaneDowntimeStart(req);
             break;
         case Cleanup:
             LogInfo("Upgrade: Cleanup Request Received");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStateCleanup(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateCleanup(req);
             break;
         case UpgSuccess:
             LogInfo("Upgrade: Succeeded");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgSuccess(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateUpgSuccess(req);
             break;
         case UpgFailed:
             LogInfo("Upgrade: Failed");
-            hdlrRespCode = this->upgHdlrPtr_->HandleStateUpgFailed(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateUpgFailed(req);
             break;
         default:
             LogInfo("Upgrade: Default state");
             break; 
     }
-    if (hdlrRespCode != INPROGRESS) {
+    if (hdlrResp.resp != INPROGRESS) {
         if (req->upgreqstate() != UpgStateTerminal)
-            LogInfo("Application returned {}", (hdlrRespCode==SUCCESS)?"success":"fail");
-        this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrRespCode==SUCCESS)));
+            LogInfo("Application returned {}", (hdlrResp.resp==SUCCESS)?"success":"fail");
+        this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
     } else {
         LogInfo("Application still processing"); 
     }

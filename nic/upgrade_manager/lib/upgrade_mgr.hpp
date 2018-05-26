@@ -15,9 +15,13 @@ using namespace std;
 class UpgradeMgr : public delphi::objects::UpgReqReactor {
     delphi::SdkPtr    sdk_;
     UpgMgrRespPtr     upgMgrResp_;
+
+    vector<string>    appRespFailStrList_;
+    bool              appRespFail_;
 public:
     UpgradeMgr(delphi::SdkPtr sk) {
         this->sdk_ = sk;
+        this->appRespFail_ = false;
         this->upgMgrResp_ = make_shared<UpgMgrResp>(sk);
     }
 
@@ -37,6 +41,7 @@ public:
     delphi::objects::UpgStateReqPtr findUpgStateReq(uint32_t id);
 
     UpgReqStateType GetNextState(void);
+    bool IsRespTypeFail(UpgRespStateType type);
 
     string UpgReqStateTypeToStr(UpgReqStateType type);
 
@@ -48,6 +53,10 @@ public:
     UpgRespStateType GetPassRespType(UpgReqStateType);
 
     delphi::error DeleteUpgMgrResp (void);
+
+    void AppendAppRespFailStr (string str);
+    bool GetAppRespFail(void);
+    void SetAppRespFail(void);
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
 

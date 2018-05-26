@@ -34,12 +34,16 @@ delphi::error UpgMgrAgentRespReact::DeleteUpgReqSpec(void) {
 }
 
 void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
+    vector<string> errStrList;
     switch (resp->upgrespval()) {
         case upgrade::UpgPass:
             upgAgentHandler_->UpgSuccessful();
             break;
         case upgrade::UpgFail:
-            upgAgentHandler_->UpgFailed();
+            for (int i=0; i<resp->upgrespfailstr_size(); i++) {
+                errStrList.push_back(resp->upgrespfailstr(i));
+            }
+            upgAgentHandler_->UpgFailed(errStrList);
             break;
         default:
             break;
