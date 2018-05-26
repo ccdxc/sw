@@ -7,6 +7,12 @@ struct phv_ p;
 struct cpu_tx_initial_action_k k;
 struct cpu_tx_initial_action_d d;
 
+/*
+ * register usage
+ */
+
+#define r_asq_addr      r5
+
 %%
     .param cpu_tx_read_asq_ci_start
     .align
@@ -26,11 +32,14 @@ cpu_tx_stage0_start:
     phvwr   p.common_phv_flags, d.u.cpu_tx_initial_action_d.flags
 
 table_read_asq_cindex:
-    add     r3, d.{u.cpu_tx_initial_action_d.asq_base}.dx, d.{u.cpu_tx_initial_action_d.ci_0}.hx, NIC_ASQ_ENTRY_SIZE_SHIFT 
-    phvwr   p.to_s1_asq_ci_addr, r3
+    add     r_asq_addr, r0, d.{u.cpu_tx_initial_action_d.ci_0}.hx
+    andi    r_asq_addr, r_asq_addr, ((1 << CPU_ASQ_TABLE_SHIFT) - 1)
+    add     r_asq_addr, d.{u.cpu_tx_initial_action_d.asq_base}.dx, r_asq_addr, CPU_ASQ_ENTRY_SIZE_SHIFT
+    //add     r3, d.{u.cpu_tx_initial_action_d.asq_base}.dx, d.{u.cpu_tx_initial_action_d.ci_0}.hx, NIC_ASQ_ENTRY_SIZE_SHIFT 
+    phvwr   p.to_s1_asq_ci_addr, r_asq_addr
     tbladd  d.{u.cpu_tx_initial_action_d.ci_0}.hx, 1
 
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, cpu_tx_read_asq_ci_start, r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, cpu_tx_read_asq_ci_start, r_asq_addr, TABLE_SIZE_64_BITS)
 
     seq     c1, d.{u.cpu_tx_initial_action_d.ci_0}.hx, d.{u.cpu_tx_initial_action_d.pi_0}.hx
     b.!c1   cpu_tx_initial_action_done

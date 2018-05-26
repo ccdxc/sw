@@ -22,6 +22,11 @@
 
 #define CPU_VALID_BIT_SHIFT                 63
 
+#define CPU_ASQ_TABLE_SIZE                  1024
+#define CPU_ASQ_TABLE_SHIFT                 10
+#define CPU_ASQ_ENTRY_SIZE                  8
+#define CPU_ASQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
+
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_END CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
 
