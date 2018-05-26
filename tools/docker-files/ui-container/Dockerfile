@@ -1,7 +1,13 @@
 FROM node:9.11.1
 MAINTAINER "Ravi Gadde" <ravi@pensando.io>
+
+RUN echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list
+RUN wget https://dl-ssl.google.com/linux/linux_signing_key.pub
+RUN apt-key add linux_signing_key.pub
 RUN apt-get update
-RUN apt-get install curl sudo -y
+RUN apt-get install curl sudo google-chrome-stable  -y
+RUN ln /usr/bin/google-chrome-stable /usr/bin/chrome
+RUN chmod 755 /usr/bin/chrome
 
 RUN curl -SsLO https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && chmod +x jq-linux64 && mv jq-linux64 /usr/local/bin ;
 

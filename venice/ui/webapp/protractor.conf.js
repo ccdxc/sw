@@ -3,16 +3,21 @@
 
 const { SpecReporter } = require('jasmine-spec-reporter');
 
+const E2E_BASE_URL = process.env['E2E_BASE_URL'] || 'http://192.168.69.189:10001/';
 exports.config = {
   allScriptsTimeout: 11000,
   specs: [
-    './e2e/**/*.e2e-spec.ts'
+    './e2e/**/*.spec.ts'
   ],
   capabilities: {
-    'browserName': 'chrome'
+    browserName: 'chrome',
+  
+    chromeOptions: {
+       args: [ "--headless", "--disable-gpu", "--window-size=800,600" ]
+     }
   },
   directConnect: true,
-  baseUrl: 'http://localhost:4200/',
+  baseUrl: E2E_BASE_URL,
   framework: 'jasmine',
   jasmineNodeOpts: {
     showColors: true,
