@@ -49,10 +49,10 @@ enum pnso_crypto_type {
 };
 
 /* Algorithms for compression/decompression */
-enum pnso_compressor_type {
-	PNSO_COMPRESSOR_TYPE_NONE = 0,
-	PNSO_COMPRESSOR_TYPE_LZRW1A = 1,
-	PNSO_COMPRESSOR_TYPE_MAX
+enum pnso_compression_type {
+	PNSO_COMPRESSION_TYPE_NONE = 0,
+	PNSO_COMPRESSION_TYPE_LZRW1A = 1,
+	PNSO_COMPRESSION_TYPE_MAX
 };
 
 /* Algorithms for deduplication hash */
@@ -86,6 +86,8 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_CPDC_DATA_TOO_LONG		20005
 #define PNSO_ERR_CPDC_CHECKSUM_FAILED		20006
 #define PNSO_ERR_CPDC_SGL_DESC_ERROR		20007
+#define PNSO_ERR_CPDC_HDR_IDX_INVALID		20008
+#define PNSO_ERR_CPDC_ALGO_INVALID		20009
 
 /* Error codes for encryption/decryption */
 #define PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG	30001
@@ -146,11 +148,27 @@ enum pnso_header_field_type {
 	PNSO_HDR_FIELD_TYPE_MAX
 };
 
+/*
+ * Following header field flags describe actions on decompression:
+ *
+ *	PNSO_HDR_FIELD_FLAG_CHECK_ALGO - the field is used as input to check,
+ *	if the data is compressed by algorithm supported by Pensando
+ *	accelerator.
+ *
+ *	PNSO_HDR_FIELD_FLAG_OUTDATA_CHKSUM_IF_NONZERO - the field is used as
+ *	input to conditionally compute checksum on output data.
+ *
+ */
+#define	PNSO_HDR_FIELD_FLAG_CHECK_ALGO			(1 << 0)
+#define PNSO_HDR_FIELD_FLAG_OUTDATA_CHKSUM_IF_NONZERO	(1 << 1)
+
 /**
  * struct pnso_header_field - defines the value for each field in the
  * compression header.
  * @type: specifies the source for the header fields. Refer to 'enum
  * pnso_header_field_type' section for more details on the type.
+ * @flags: specifies the header field operations on decompression
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @offset: specifies the offset of the value from the beginning of the header.
  * @length: specifies the length of the value.
  * @value: specifies the value.
@@ -158,6 +176,8 @@ enum pnso_header_field_type {
  */
 struct pnso_header_field {
 	enum pnso_header_field_type type;
+	uint16_t flags;
+	uint16_t rsvd;
 	uint32_t offset;
 	uint32_t length;
 	uint32_t value;
@@ -178,18 +198,13 @@ struct pnso_compression_header_format {
 /**
  * struct pnso_init_params - represents the initialization parameters for
  * Pensando accelerators.
- * @cp_hdr_version: specifies the version of the compression algorithm that to
- * be populated in compression header.
  * @per_core_qdepth: specifies the maximum number of parallel requests per core.
  * @block_size: specifies the size of a block in bytes.
- * @cp_hdr_fmt: specifies the set of fields for compression header.
  *
  */
 struct pnso_init_params {
-	uint16_t cp_hdr_version;
 	uint16_t per_core_qdepth;
 	uint32_t block_size;
-	struct pnso_compression_header_format *cp_hdr_fmt;
 };
 
 /**
@@ -215,7 +230,6 @@ pnso_error_t pnso_init(struct pnso_init_params *init_params);
  * (i.e. pnso_crypto_type).
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @key_desc_idx: specifies the key index in the descriptor table.
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @iv_addr: specifies the physical address of the initialization vector.
  *
  */
@@ -253,14 +267,15 @@ struct pnso_crypto_desc {
  * This is to instruct the compression operation, upon its completion, to
  * compress the buffer to a length that must be less than or equal to
  * 'threshold_len'.
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
+ * @hdr_fmt_idx: specifies the index for the header format in the header format
+ * array.
  *
  */
 struct pnso_compression_desc {
 	uint16_t algo_type;
 	uint16_t flags;
 	uint16_t threshold_len;
-	uint16_t rsvd;
+	uint16_t hdr_fmt_idx;
 };
 
 /* decompression descriptor flag(s) */
@@ -275,12 +290,16 @@ struct pnso_compression_desc {
  * descriptor.
  *	PNSO_DC_DFLAG_HEADER_PRESENT - indicates the compression header is
  *	present.
+ * @hdr_fmt_idx: specifies the index for the header format in the header format
+ * array.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_decompression_desc {
 	uint16_t algo_type;
 	uint16_t flags;
+	uint16_t hdr_fmt_idx;
+	uint16_t rsvd;
 };
 
 /* hash descriptor flag(s) */
@@ -614,6 +633,44 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
 pnso_error_t pnso_set_key_desc_idx(const void *key1,
 				   const void *key2,
 				   uint32_t key_size, uint32_t key_idx);
+
+/**
+ * pnso_register_compression_header_format - Register a new header format.
+ * Needs to be done once during initialization.
+ * @cp_hdr_fmt:		[in]	specified the header format to be embedded at
+ *				beginning of compressed data.
+ * @hdr_fmt_idx:	[in]	Non-zero index to uniquely identify the header
+ *				format.
+ *
+ * Caller is responsible for managing the hdr_fmt_idx space and
+ * allocation/deallocation of memory for input parameters
+ *
+ * Return:
+ *	PNSO_OK - on success
+ *	-EINVAL - on invalid input parameters
+ *
+ */
+pnso_error_t pnso_register_compression_header_format(
+		struct pnso_compression_header_format *cp_hdr_fmt,
+		uint32_t hdr_fmt_idx);
+
+/**
+ * pnso_add_compression_algo_mapping - Creates a mapping of Pensando compression
+ * algorithm number to algorithm number in compression header.  Need to be done
+ * once during initialization.
+ * @pnso_algo:		[in]	specifies the Pensando compression algorithm
+ *				number.
+ * @header_algo:	[in]	specifies the compression header algorithm
+ *				number.
+ *
+ * Return:
+ *	PNSO_OK - on success
+ *	-EINVAL - on invalid input parameters
+ *
+ */
+pnso_error_t pnso_add_compression_algo_mapping(
+		enum pnso_compression_type pnso_algo,
+		uint32_t header_algo);
 
 #ifdef __cplusplus
 }
