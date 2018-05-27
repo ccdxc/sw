@@ -8,6 +8,7 @@
 namespace tests {
 
 void compression_init();
+int compression_resync();
 int compress_flat_64K_buf();
 int seq_compress_flat_64K_buf();
 int compress_same_src_and_dst();

@@ -257,6 +257,7 @@ public:
 
 
 int xts_init(void);
+int xts_resync();
 int xts_multi_blk();
 int xts_in_place();
 int xts_netapp_data();

@@ -159,6 +159,9 @@ std::vector<tests::TestEntry> local_e2e_tests = {
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
+
+  // Last in series
+  {&tests::xts_resync, "XTS rings resync", false},
 };
 
 std::vector<tests::TestEntry> comp_tests = {
@@ -181,6 +184,10 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::decompress_clear_header_present, "Decompress without 'header_present' bit set (HBM->HBM flat 64K buf)", false},
   // Enable when model is fixed.
   //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
+
+  // Last in series
+  {&tests::compression_resync, "Compression rings resync", false},
+  {&tests::xts_resync, "XTS rings resync", false},
 };
 
 std::vector<tests::TestEntry> comp_seq_tests = {
@@ -205,6 +212,10 @@ std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_chksum_decompress_last_app_blk, "Sequencer Checksum-decompress chaining: app test block size", false},
   {&tests::seq_compress_output_hash_app_nominal_size, "Sequencer Compress->hash chaining: app nominal block size", false},
   {&tests::seq_chksum_decompress_last_app_blk, "Sequencer Checksum-decompress chaining: app nominal block size", false},
+
+  // Last in series
+  {&tests::compression_resync, "Compression rings resync", false},
+  {&tests::xts_resync, "XTS rings resync", false},
 };
 
 std::vector<tests::TestEntry> comp_perf_tests = {
@@ -213,6 +224,18 @@ std::vector<tests::TestEntry> comp_perf_tests = {
   {&tests::max_data_rate, "Test max data rate", false},
   {&tests::seq_max_data_rate, "Sequencer Test max data rate", false},
   {&tests::seq_compress_output_through_sequencer, "Sequencer Compress and pull data from HBM through sequencer", false},
+
+  // Last in series
+  {&tests::compression_resync, "Compression rings resync", false},
+  {&tests::xts_resync, "XTS rings resync", false},
+};
+
+std::vector<tests::TestEntry> acc_scale_tests = {
+    {&tests::acc_scale_tests_push, "Accelerator chaining scale tests", false},
+
+    // Last in series
+    {&tests::compression_resync, "Compression rings resync", false},
+    {&tests::xts_resync, "XTS rings resync", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
@@ -227,6 +250,9 @@ std::vector<tests::TestEntry> rdma_lif_override_tests = {
 std::vector<tests::TestEntry> rdma_xts_tests = {
   {&tests::test_run_rdma_e2e_xts_write1, "E2E write over RDMA with XTS", false},
   {&tests::test_run_rdma_e2e_xts_read1, "E2E read over RDMA with XTS", false},
+
+  // Last in series
+  {&tests::xts_resync, "XTS rings resync", false},
 };
 
 std::vector<tests::TestEntry> pdma_tests = {
@@ -238,6 +264,9 @@ std::vector<tests::TestEntry> noc_perf_tests = {
   {&tests::xts_multi_blk_noc_stress_from_host_hw_chain, "NOC Perf with buffers on host HW chain", false},
   //{&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
   //{&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
+
+  // Last in series
+  {&tests::xts_resync, "XTS rings resync", false},
 };
 
 std::vector<tests::TestEntry> rdma_perf_tests = {
@@ -673,8 +702,9 @@ int main(int argc, char**argv) {
 
   // Add accelerator scale tests
   if (run_acc_scale_tests_map) {
-    test_suite.push_back({&tests::acc_scale_tests_push,
-                          "Accelerator chaining scale tests", false});
+    for (size_t i = 0; i < acc_scale_tests.size(); i++) {
+      test_suite.push_back(acc_scale_tests[i]);
+    }
     printf("Added accelerator chaining scale tests \n");
   }
 
