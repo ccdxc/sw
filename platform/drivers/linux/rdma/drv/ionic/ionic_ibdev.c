@@ -55,7 +55,7 @@ MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 
 static bool ionic_sqhbm_inline = true;
 module_param_named(sqhbm_inline, ionic_sqhbm_inline, bool, 0644);
-MODULE_PARM_DESC(sqhbm_size, "Only alloc sq hbm for inline data capability.");
+MODULE_PARM_DESC(sqhbm_inline, "Only alloc sq hbm for inline data capability.");
 
 static int ionic_sqhbm_order = 0; /* XXX needs tuning */
 module_param_named(sqhbm_order, ionic_sqhbm_order, int, 0644);
