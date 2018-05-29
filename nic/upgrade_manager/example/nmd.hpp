@@ -40,25 +40,25 @@ class NMDSvcHandler : public upgrade::UpgHandler {
 public:
     NMDSvcHandler() {}
 
-    HdlrResp UpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp UpgStateReqCreate(UpgCtx& upgCtx) {
         HdlrResp resp={.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler UpgStateReqCreate called for the NMD");
         return resp;
     }
 
-    HdlrResp UpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp UpgStateReqDelete(UpgCtx& upgCtx) {
         HdlrResp resp={.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler UpgStateReqDelete called for the NMD");
         return resp;
     }
 
-    HdlrResp HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateUpgReqRcvd(UpgCtx& upgCtx) {
         HdlrResp resp={.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler HandleStateUpgReqRcvd called for the NMD");
         return resp;
     }
 
-    HdlrResp HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req) {
+    HdlrResp HandleStateDataplaneDowntimeStart(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         //HdlrResp resp = {.resp=FAIL, .errStr="NMD could not do HandleStateDataplaneDowntimeStart"};
         LogInfo("UpgHandler HandleStateDataplaneDowntimeStart called for the SVC!!");

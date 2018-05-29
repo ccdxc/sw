@@ -6,6 +6,7 @@
 #include "upgrade.hpp"
 #include "upgrade_mgr.hpp"
 #include "upgrade_app_resp_handlers.hpp"
+#include "nic/upgrade_manager/include/upgrade_state_machine.hpp"
 
 namespace upgrade {
 
@@ -36,6 +37,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     delphi::objects::UpgReq::Watch(sdk_, upgMgr_);
     delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespHdlr_);
 
+    InitStateMachineVector();
     LogInfo("Upgrade service constructor got called");
 }
 

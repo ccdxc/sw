@@ -11,6 +11,7 @@
 #include "upgrade_app_resp_reactor.hpp"
 #include "upgrade_req_reactor.hpp"
 #include "upgrade_mgr_agent_resp_reactor.hpp"
+#include "nic/upgrade_manager/include/upgrade_state_machine.hpp"
  
 namespace upgrade {
 
@@ -54,6 +55,7 @@ public:
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
             delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
         }
+        InitStateMachineVector();
     }
 
     UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah) {
@@ -74,6 +76,7 @@ public:
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
             delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
         }
+        InitStateMachineVector();
     }
 
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent) {
@@ -95,6 +98,7 @@ public:
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
             delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
         }
+        InitStateMachineVector();
     }
 
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah) {
@@ -115,6 +119,7 @@ public:
             upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
             delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
         }
+        InitStateMachineVector();
     }
 
     // OnMountComplete gets called when all the objects are mounted

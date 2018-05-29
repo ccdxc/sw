@@ -14,5 +14,6 @@ cc_library(
     deps = [
         "//nic/delphi/sdk",
         "//nic/upgrade_manager/proto:upgrade_gen",
+        "//nic/upgrade_manager/include:upgrade_common_includes",
     ],
 )

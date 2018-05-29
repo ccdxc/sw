@@ -5,35 +5,25 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
+#include "nic/upgrade_manager/include/upgrade_state_machine.hpp"
 
 namespace upgrade {
 
 using namespace std;
 
-typedef enum {
-    SUCCESS,
-    FAIL,
-    INPROGRESS
-} HdlrRespCode;
-
-typedef struct HdlrResp_ {
-    HdlrRespCode     resp;
-    string           errStr;
-} HdlrResp;
-
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual HdlrResp UpgStateReqCreate(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp UpgStateReqDelete(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStateUpgReqRcvd(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStatePreUpgState(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStatePostBinRestart(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStateProcessesQuiesced(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStateDataplaneDowntimeStart(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStateCleanup(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStateUpgSuccess(delphi::objects::UpgStateReqPtr req);
-    virtual HdlrResp HandleStateUpgFailed(delphi::objects::UpgStateReqPtr req);
+    virtual HdlrResp UpgStateReqCreate(UpgCtx& upgCtx);
+    virtual HdlrResp UpgStateReqDelete(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateUpgReqRcvd(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStatePreUpgState(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStatePostBinRestart(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateDataplaneDowntimeStart(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateCleanup(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateUpgSuccess(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateUpgFailed(UpgCtx& upgCtx);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

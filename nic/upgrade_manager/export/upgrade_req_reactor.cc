@@ -11,12 +11,13 @@ using namespace std;
 
 // OnUpgStateReqCreate gets called when UpgStateReq object is created
 delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+    UpgCtx ctx;
     LogInfo("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
     upgAppRespPtr_->CreateUpgAppResp();
     if (this->upgHdlrPtr_) {
         HdlrResp hdlrResp;
-        hdlrResp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
+        hdlrResp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(ctx);
         if (hdlrResp.resp != INPROGRESS) {
             this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
         }
@@ -26,12 +27,13 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
 
 // OnUpgStateReqDelete gets called when UpgStateReq object is deleted
 delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+    UpgCtx   ctx;
     LogInfo("UpgReqReactor UpgStateReq got deleted");
     //delete the object
     upgAppRespPtr_->DeleteUpgAppResp();
     HdlrResp hdlrResp;
     if (this->upgHdlrPtr_) {
-        hdlrResp = this->upgHdlrPtr_->UpgStateReqDelete(req);
+        hdlrResp = this->upgHdlrPtr_->UpgStateReqDelete(ctx);
         (void)hdlrResp;
         //if (hdlrResp != INPROGRESS) {
           //  this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp==SUCCESS)));
@@ -43,6 +45,7 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
 // OnUpgReqState gets called when UpgReqState attribute changes
 delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     HdlrResp hdlrResp;
+    UpgCtx   ctx;
     if (!this->upgHdlrPtr_) {
         LogInfo("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
@@ -52,35 +55,35 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
     switch (req->upgreqstate()) {
         case UpgReqRcvd:
             LogInfo("Upgrade: Request Received");
-            hdlrResp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateUpgReqRcvd(ctx);
             break;
         case PreUpgState:
             LogInfo("Upgrade: Pre-upgrade check");
-            hdlrResp = this->upgHdlrPtr_->HandleStatePreUpgState(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStatePreUpgState(ctx);
             break;
         case PostBinRestart:
             LogInfo("Upgrade: Post-binary restart");
-            hdlrResp = this->upgHdlrPtr_->HandleStatePostBinRestart(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStatePostBinRestart(ctx);
             break;
         case ProcessesQuiesced:
             LogInfo("Upgrade: Processes Quiesced");
-            hdlrResp = this->upgHdlrPtr_->HandleStateProcessesQuiesced(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateProcessesQuiesced(ctx);
             break;
         case DataplaneDowntimeStart:
             LogInfo("Upgrade: Dataplane Downtime Start");
-            hdlrResp = this->upgHdlrPtr_->HandleStateDataplaneDowntimeStart(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateDataplaneDowntimeStart(ctx);
             break;
         case Cleanup:
             LogInfo("Upgrade: Cleanup Request Received");
-            hdlrResp = this->upgHdlrPtr_->HandleStateCleanup(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateCleanup(ctx);
             break;
         case UpgSuccess:
             LogInfo("Upgrade: Succeeded");
-            hdlrResp = this->upgHdlrPtr_->HandleStateUpgSuccess(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateUpgSuccess(ctx);
             break;
         case UpgFailed:
             LogInfo("Upgrade: Failed");
-            hdlrResp = this->upgHdlrPtr_->HandleStateUpgFailed(req);
+            hdlrResp = this->upgHdlrPtr_->HandleStateUpgFailed(ctx);
             break;
         default:
             LogInfo("Upgrade: Default state");

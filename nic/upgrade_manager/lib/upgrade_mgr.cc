@@ -6,13 +6,14 @@
 #include "upgrade.hpp"
 #include "upgrade_mgr.hpp"
 #include "upgrade_app_resp_handlers.hpp"
+#include "nic/upgrade_manager/include/upgrade_state_machine.hpp"
 
 namespace upgrade {
 
 using namespace std;
 
 UpgReqStateType UpgradeMgr::GetNextState(void) {
-    UpgReqStateType  reqType, nextReqType;
+    UpgReqStateType  reqType;
     if (this->GetAppRespFail()) {
         LogInfo("Some application(s) responded with failure");
         return UpgFailed;
@@ -22,36 +23,7 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
         reqType = (*reqStatus)->upgreqstate();
         break;
     }
-    switch (reqType) {
-        case UpgReqRcvd:
-            nextReqType = PreUpgState;
-            break;
-        case PreUpgState:
-            nextReqType = ProcessesQuiesced;
-            break;
-        case ProcessesQuiesced:
-            nextReqType = PostBinRestart;
-            break;
-        case PostBinRestart:
-            nextReqType = DataplaneDowntimeStart;
-            break;
-        case DataplaneDowntimeStart:
-            nextReqType = UpgSuccess;
-            break;
-        case Cleanup:
-            nextReqType = UpgStateTerminal;
-            break;
-        case UpgSuccess:
-            nextReqType = Cleanup;
-            break;
-        case UpgFailed:
-            nextReqType = Cleanup;
-            break;
-        default:
-            nextReqType = UpgStateTerminal;
-            break;
-    }
-    return nextReqType;
+    return StateMachine[reqType].stateNext;
 }
 
 bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
@@ -73,71 +45,11 @@ bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
 }
 
 UpgRespStateType UpgradeMgr::GetFailRespType(UpgReqStateType type) {
-    UpgRespStateType ret;
-    switch(type) {
-        case UpgReqRcvd:
-            ret = UpgReqRcvdFail;
-            break;
-        case PreUpgState:
-            ret = PreUpgStateFail;
-            break;
-        case ProcessesQuiesced:
-            ret = ProcessesQuiescedFail;
-            break;
-        case PostBinRestart:
-            ret = PostBinRestartFail;
-            break;
-        case DataplaneDowntimeStart:
-            ret = DataplaneDowntimeStartFail;
-            break;
-        case Cleanup:
-            ret = CleanupFail;
-            break;
-        case UpgSuccess:
-            ret = UpgSuccessFail;
-            break;
-        case UpgFailed:
-            ret = UpgFailedFail;
-            break;
-        default:
-            ret = UpgSuccessFail;
-            break;
-    }
-    return ret;
+    return StateMachine[type].stateFailResp;
 }
 
 UpgRespStateType UpgradeMgr::GetPassRespType(UpgReqStateType type) {
-    UpgRespStateType ret;
-    switch(type) {
-        case UpgReqRcvd:
-            ret = UpgReqRcvdPass;
-            break;
-        case PreUpgState:
-            ret = PreUpgStatePass;
-            break;
-        case ProcessesQuiesced:
-            ret = ProcessesQuiescedPass;
-            break;
-        case PostBinRestart:
-            ret = PostBinRestartPass;
-            break;
-        case DataplaneDowntimeStart:
-            ret = DataplaneDowntimeStartPass;
-            break;
-        case Cleanup:
-            ret = CleanupPass;
-            break;
-        case UpgSuccess:
-            ret = UpgSuccessPass;
-            break;
-        case UpgFailed:
-            ret = UpgFailedPass;
-            break;
-        default:
-            ret = UpgSuccessPass;
-            break;
-    }
-    return ret;
+    return StateMachine[type].statePassResp;
 }
 
 bool UpgradeMgr::CanMoveStateMachine(void) {
@@ -174,26 +86,7 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
 }
 
 string UpgradeMgr::UpgReqStateTypeToStr(UpgReqStateType type) {
-    switch (type) {
-        case UpgReqRcvd:
-            return "Upgrade Request Received";
-        case PreUpgState:
-            return "Perform Compat Check";
-        case ProcessesQuiesced:
-            return "Quiesce Processes Pre-Restart";
-        case PostBinRestart:
-            return "Post Process Restart";
-        case DataplaneDowntimeStart:
-            return "Dataplane Downtime Start";
-        case Cleanup:
-            return "Cleanup State";
-        case UpgSuccess:
-            return "Upgrade Success";
-        case UpgFailed:
-            return "Upgrade Fail";
-        default:
-            return "";
-    }
+    return StateMachine[type].upgReqStateTypeToStr;
 }
 
 bool UpgradeMgr::GetAppRespFail(void) {

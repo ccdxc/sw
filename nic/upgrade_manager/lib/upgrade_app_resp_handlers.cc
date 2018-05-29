@@ -6,6 +6,7 @@
 #include "upgrade.hpp"
 #include "upgrade_mgr.hpp"
 #include "upgrade_app_resp_handlers.hpp"
+#include "nic/upgrade_manager/include/upgrade_state_machine.hpp"
 
 namespace upgrade {
 
@@ -43,34 +44,7 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr 
 }
 
 string UpgAppRespHdlr::UpgRespStateTypeToStr(UpgRespStateType type) {
-    switch (type) {
-        case UpgReqRcvdPass:
-            return ".Upgrade Request Received Pass.";
-        case UpgReqRcvdFail:
-            return ".Upgrade Request Received Fail.";
-        case PreUpgStatePass:
-            return "Compat check passed";
-        case PreUpgStateFail:
-            return "Compat check failed";
-        case ProcessesQuiescedPass:
-            return "Process Quiesce Pass";
-        case ProcessesQuiescedFail:
-            return "Process Quiesce Fail";
-        case PostBinRestartPass:
-            return "Post Process Restart Pass";
-        case PostBinRestartFail:
-            return "Post Process Restart Fail";
-        case DataplaneDowntimeStartPass:
-            return "Dataplane Downtime Success";
-        case DataplaneDowntimeStartFail:
-            return "Dataplane Downtime Fail";
-        case CleanupPass:
-            return "Cleanup Pass";
-        case CleanupFail:
-            return "Cleanup Fail";
-        default:
-            return "";
-    }
+    return ((type%2==0)?StateMachine[type/2].upgRespStateTypeToStrPass:StateMachine[type/2].upgRespStateTypeToStrFail);
 }
 
 delphi::error UpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {
