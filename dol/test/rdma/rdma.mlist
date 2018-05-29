@@ -429,11 +429,27 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RESP_RX_READ_ONLY_PAD
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_only_pad
+        spec    : resp_rx_read_only_pad.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RESP_RX_READ_FIRST_MID_LAST
         enable  : True
         package : test.rdma
         module  : resp_rx_read_first_mid_last
         spec    : resp_rx_read_first_mid_last.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RESP_RX_READ_FIRST_MID_LAST_PAD
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_first_mid_last_pad
+        spec    : resp_rx_read_first_mid_last_pad.testspec
         ignore  : False
 
     - module:

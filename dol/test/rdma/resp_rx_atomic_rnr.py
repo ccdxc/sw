@@ -54,6 +54,7 @@ def TestCaseStepVerify(tc, step):
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
+    ring1_mask = (rs.lqp.num_rsq_wqes - 1)
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     rs.lqp.ReadAtomicResData()
@@ -86,7 +87,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that rsq_pindex is NOT incremented
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rsq_pindex', 0):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rsq_pindex', ring1_mask, 0):
             return False
 
         rs.lqp.ReadAtomicResData()
@@ -122,7 +123,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that rsq_pindex is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rsq_pindex', 1):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rsq_pindex', ring1_mask, 1):
             return False
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate

@@ -355,3 +355,10 @@ def GetPktPayloadDataWithPad(testcase, packet, args):
         payload.append(0x0)
     return payload
 
+def GetPktPayloadDataWithPadFragment(testcase, packet, args):
+    if args == None:
+        return None
+    payload = GetPktPayloadDataWithPad(testcase, packet, args)
+    offset = getattr(args, 'offset')
+    size = getattr(args, 'size')
+    return payload[offset:offset+size]
