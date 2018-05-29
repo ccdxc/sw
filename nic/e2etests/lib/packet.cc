@@ -24,6 +24,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include "nic/include/pkt_hdrs.hpp"
 #include "nic/e2etests/lib/helpers.hpp"
 #include "nic/e2etests/lib/packet.hpp"
 
@@ -53,7 +54,7 @@ long checksum(unsigned short *addr, unsigned int count) {
   return ~sum;
 }
 
-long get_tcp_checksumv6(struct ipv6_header_t * myip, struct tcp_header_t * mytcp)
+long get_tcp_checksumv6(ipv6_header_t * myip, tcp_header_t * mytcp)
 {
   uint16_t total_len = htons(myip->payload_len);
   uint16_t cksum = 0;
@@ -61,24 +62,24 @@ long get_tcp_checksumv6(struct ipv6_header_t * myip, struct tcp_header_t * mytcp
   int tcpopt_len = mytcp->doff*4 - 20;
   int tcpdatalen = total_len - (mytcp->doff*4);
 
-  memcpy(pseudoheadv6.saddr.in6_u.u6_addr8, myip->saddr.in6_u.u6_addr8, sizeof(struct in6_addr));
-  memcpy(pseudoheadv6.daddr.in6_u.u6_addr8, myip->daddr.in6_u.u6_addr8, sizeof(struct in6_addr));
+  memcpy(pseudoheadv6.saddr.in6_u.u6_addr8, myip->saddr, sizeof(struct in6_addr));
+  memcpy(pseudoheadv6.daddr.in6_u.u6_addr8, myip->daddr, sizeof(struct in6_addr));
   pseudoheadv6.protocol=htonl(IPPROTO_TCP);
-  pseudoheadv6.len=htonl(sizeof(struct tcp_header_t) + tcpopt_len + tcpdatalen);
+  pseudoheadv6.len=htonl(sizeof(tcp_header_t) + tcpopt_len + tcpdatalen);
 
-  int totaltcp_len = sizeof(struct tcp6_pseudohdr) + sizeof(struct tcp_header_t) + tcpopt_len + tcpdatalen;
+  int totaltcp_len = sizeof(struct tcp6_pseudohdr) + sizeof(tcp_header_t) + tcpopt_len + tcpdatalen;
   unsigned short * tcp = (unsigned short*) malloc(sizeof(unsigned short) * (totaltcp_len));
   memcpy((unsigned char *)tcp,&pseudoheadv6,sizeof(struct tcp6_pseudohdr));
-  memcpy((unsigned char *)tcp+sizeof(struct tcp6_pseudohdr),(unsigned char *)mytcp,sizeof(struct tcp_header_t));
-  memcpy((unsigned char *)tcp+sizeof(struct tcp6_pseudohdr)+sizeof(struct tcp_header_t), (unsigned char *)myip+(40)+(sizeof(struct tcp_header_t)), tcpopt_len);
-  memcpy((unsigned char *)tcp+sizeof(struct tcp6_pseudohdr)+sizeof(struct tcp_header_t)+tcpopt_len, (unsigned char *)mytcp+(mytcp->doff*4), tcpdatalen);
+  memcpy((unsigned char *)tcp+sizeof(struct tcp6_pseudohdr),(unsigned char *)mytcp,sizeof(tcp_header_t));
+  memcpy((unsigned char *)tcp+sizeof(struct tcp6_pseudohdr)+sizeof(tcp_header_t), (unsigned char *)myip+(40)+(sizeof(tcp_header_t)), tcpopt_len);
+  memcpy((unsigned char *)tcp+sizeof(struct tcp6_pseudohdr)+sizeof(tcp_header_t)+tcpopt_len, (unsigned char *)mytcp+(mytcp->doff*4), tcpdatalen);
 
   cksum = (uint16_t)(checksum(tcp,totaltcp_len));
   //free(tcp);
   return cksum;
 }
 
-long get_tcp_checksum(struct ipv4_header_t * myip, struct tcp_header_t * mytcp) {
+long get_tcp_checksum(ipv4_header_t * myip, tcp_header_t * mytcp) {
 
   uint16_t total_len = ntohs(myip->tot_len);
   struct tcp_pseudo pseudohead = { 0 };
@@ -90,16 +91,16 @@ long get_tcp_checksum(struct ipv4_header_t * myip, struct tcp_header_t * mytcp) 
   pseudohead.dst_addr=myip->daddr;
   pseudohead.zero=0;
   pseudohead.proto=IPPROTO_TCP;
-  pseudohead.length=htons(sizeof(struct tcp_header_t) + tcpopt_len + tcpdatalen);
+  pseudohead.length=htons(sizeof(tcp_header_t) + tcpopt_len + tcpdatalen);
 
-  int totaltcp_len = sizeof(struct tcp_pseudo) + sizeof(struct tcp_header_t) + tcpopt_len + tcpdatalen;
+  int totaltcp_len = sizeof(struct tcp_pseudo) + sizeof(tcp_header_t) + tcpopt_len + tcpdatalen;
   unsigned short * tcp = new unsigned short[totaltcp_len];
 
 
   memcpy((unsigned char *)tcp,&pseudohead,sizeof(struct tcp_pseudo));
-  memcpy((unsigned char *)tcp+sizeof(struct tcp_pseudo),(unsigned char *)mytcp,sizeof(struct tcp_header_t));
-  memcpy((unsigned char *)tcp+sizeof(struct tcp_pseudo)+sizeof(struct tcp_header_t), (unsigned char *)myip+(myip->ihl*4)+(sizeof(struct tcp_header_t)), tcpopt_len);
-  memcpy((unsigned char *)tcp+sizeof(struct tcp_pseudo)+sizeof(struct tcp_header_t)+tcpopt_len, (unsigned char *)mytcp+(mytcp->doff*4), tcpdatalen);
+  memcpy((unsigned char *)tcp+sizeof(struct tcp_pseudo),(unsigned char *)mytcp,sizeof(tcp_header_t));
+  memcpy((unsigned char *)tcp+sizeof(struct tcp_pseudo)+sizeof(tcp_header_t), (unsigned char *)myip+(myip->ihl*4)+(sizeof(tcp_header_t)), tcpopt_len);
+  memcpy((unsigned char *)tcp+sizeof(struct tcp_pseudo)+sizeof(tcp_header_t)+tcpopt_len, (unsigned char *)mytcp+(mytcp->doff*4), tcpdatalen);
 
 
   return checksum(tcp,totaltcp_len);
@@ -118,14 +119,14 @@ dump_pkt(char *pkt, int len, uint32_t hntap_port)
   }
   printf("\n");
 
-  struct ether_header_t *eth;
-  struct vlan_header_t *vlan;
-  struct ipv4_header_t *ip;
-  struct tcp_header_t *tcp;
+  ether_header_t *eth;
+  vlan_header_t *vlan;
+  ipv4_header_t *ip;
+  tcp_header_t *tcp;
   uint16_t etype;
-  eth = (struct ether_header_t *)pkt;
+  eth = (ether_header_t *)pkt;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
-    vlan = (struct vlan_header_t*)pkt;
+    vlan = (vlan_header_t*)pkt;
     TLOG(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
            vlan->dmac[0], vlan->dmac[1], vlan->dmac[2], vlan->dmac[3], vlan->dmac[4], vlan->dmac[5],
            vlan->smac[0], vlan->smac[1], vlan->smac[2], vlan->smac[3], vlan->smac[4], vlan->smac[5],
@@ -149,7 +150,7 @@ dump_pkt(char *pkt, int len, uint32_t hntap_port)
             ip->ttl, ip->protocol, ntohs(ip->check), ntohl(ip->saddr), ntohl(ip->daddr));
 
     if (ip->protocol == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
       TLOG(" TCP: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
@@ -174,6 +175,83 @@ dump_pkt(char *pkt, int len, uint32_t hntap_port)
   return 0;
 }
 
+uint16_t 
+get_udp_checksum (const void *buff, size_t len, uint32_t src_addr, uint32_t dest_addr)
+{
+    const uint16_t *buf= (const uint16_t *)buff;
+    uint16_t *ip_src=(uint16_t *)&src_addr, *ip_dst=(uint16_t *)&dest_addr;
+    uint32_t sum;
+    size_t length=len;
+
+    // Calculate the sum                                            //
+    sum = 0;
+    while (len > 1)
+    {
+        sum += *buf++;
+        if (sum & 0x80000000)
+            sum = (sum & 0xFFFF) + (sum >> 16);
+        len -= 2;
+    }
+
+    if ( len & 1 )
+        // Add the padding if the packet lenght is odd          //
+        sum += *((uint8_t *)buf);
+
+    // Add the pseudo-header                                        //
+    sum += *(ip_src++);
+    sum += *ip_src;
+
+    sum += *(ip_dst++);
+    sum += *ip_dst;
+
+    sum += htons(IPPROTO_UDP);
+    sum += htons(length);
+
+    // Add the carries                                              //
+    while (sum >> 16)
+        sum = (sum & 0xFFFF) + (sum >> 16);
+
+    // Return the one's complement of sum                           //
+    return ((uint16_t)(~sum));
+}
+
+uint16_t get_tcp_checksum(const void *buff, size_t len, uint32_t src_addr, uint32_t dest_addr)
+{
+    const uint16_t *buf=(const uint16_t *)buff;
+    uint16_t *ip_src=(uint16_t *)&src_addr, *ip_dst=(uint16_t *)&dest_addr;
+    uint32_t sum;
+    size_t length=len;
+ 
+    // Calculate the sum                                            //
+    sum = 0;
+    while (len > 1)
+    {
+        sum += *buf++;
+        if (sum & 0x80000000)
+            sum = (sum & 0xFFFF) + (sum >> 16);
+        len -= 2;
+    }
+ 
+     if ( len & 1 )
+         // Add the padding if the packet lenght is odd          //
+         sum += *((uint8_t *)buf);
+
+     // Add the pseudo-header                                        //
+     sum += *(ip_src++);
+     sum += *ip_src;
+     sum += *(ip_dst++);
+     sum += *ip_dst;
+     sum += htons(IPPROTO_TCP);
+     sum += htons(length);
+ 
+     // Add the carries                                              //
+     while (sum >> 16)
+         sum = (sum & 0xFFFF) + (sum >> 16);
+
+     // Return the one's complement of sum                           //
+     return ((uint16_t)(~sum));
+}
+
 static char buf[64];
 static char* print_v6_addr(void* addr)
 {
@@ -193,14 +271,14 @@ dump_pkt6(char *pkt, int len, uint32_t hntap_port)
   }
   printf("\n");
 
-  struct ether_header_t *eth;
-  struct vlan_header_t *vlan;
-  struct ipv6_header_t *ip;
-  struct tcp_header_t *tcp;
+  ether_header_t *eth;
+  vlan_header_t *vlan;
+  ipv6_header_t *ip;
+  tcp_header_t *tcp;
   uint16_t etype;
-  eth = (struct ether_header_t *)pkt;
+  eth = (ether_header_t *)pkt;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
-    vlan = (struct vlan_header_t*)pkt;
+    vlan = (vlan_header_t*)pkt;
     TLOG(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
            vlan->dmac[0], vlan->dmac[1], vlan->dmac[2], vlan->dmac[3], vlan->dmac[4], vlan->dmac[5],
            vlan->smac[0], vlan->smac[1], vlan->smac[2], vlan->smac[3], vlan->smac[4], vlan->smac[5],
@@ -220,11 +298,11 @@ dump_pkt6(char *pkt, int len, uint32_t hntap_port)
   if (etype == ETHERTYPE_IPV6) {
     TLOG(" IP: tot_len=%d protocol=%d",
             ntohs(ip->payload_len), ip->nexthdr);
-    TLOG(" saddr=%s", print_v6_addr(ip->saddr.s6_addr));
-    TLOG(" daddr=%s\n", print_v6_addr(ip->daddr.s6_addr));
+    TLOG(" saddr=%s", print_v6_addr(ip->saddr));
+    TLOG(" daddr=%s\n", print_v6_addr(ip->daddr));
 
     if (ip->nexthdr == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
       TLOG(" TCP: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
@@ -253,11 +331,11 @@ dump_pkt6(char *pkt, int len, uint32_t hntap_port)
 }
 
 uint16_t
-hntap_get_etype(struct ether_header_t *eth)
+hntap_get_etype(ether_header_t *eth)
 {
-  struct vlan_header_t *vlan;
+  vlan_header_t *vlan;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
-    vlan = (struct vlan_header_t *)eth;
+    vlan = (vlan_header_t *)eth;
     return ntohs(vlan->etype);
   }
   return ntohs(eth->etype);

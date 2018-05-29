@@ -29,7 +29,7 @@ cc_library(
 
 cc_test(
     name = "alg_ftp_test",
-    srcs = glob(["test/*.cc"]),
+    srcs = glob(["test/*.cc", "test/*.hpp"]),
     deps = [
            "//nic/hal/plugins/alg_utils:alg_utils",
            ":alg_ftp",

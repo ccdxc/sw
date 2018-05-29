@@ -26,7 +26,18 @@ cc_library(
 cc_library(
     name = "sfw_includes",
     hdrs = ["core.hpp"],
-)    
+)
+
+cc_library(
+    name = "sfw_pkt_utils",
+    srcs = glob(["sfw_pkt_utils.cc"]),
+    hdrs = glob(["sfw_pkt_utils.hpp"]),
+    deps = [
+        "//nic/fte",
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+    ],
+)
 
 cc_test(
     name = "sfw_test",

@@ -100,7 +100,7 @@ send_pkt_to_dev(dev_handle_t *dest_dev, uint8_t *recv_buf, uint16_t rsize)
          *  If incoming packet has it, then packet going to destination should not have it.
          * */
         offset = dest_dev->needs_vlan_tag ?
-                sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+                sizeof(vlan_header_t) : sizeof(ether_header_t);
         nwrite = write(dest_dev->fd, recv_buf + offset, rsize - offset);
     } else if (dest_dev->type == HNTAP_TAP) {
         nwrite = write(dest_dev->fd, recv_buf, rsize);
@@ -191,12 +191,12 @@ hntap_model_send_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt, opkt;
   uint8_t *send_buf = nullptr;
-  struct ether_header_t *eth_header;
+  ether_header_t *eth_header;
 
   TLOG("Host-Tx to Model: packet sent with %d bytes\n", size);
   if (size < (int) sizeof(struct ether_header)) return;
 
-  eth_header = (struct ether_header_t *) pktbuf;
+  eth_header = (ether_header_t *) pktbuf;
 
   if (hntap_get_etype(eth_header) == ETHERTYPE_IP ||
           (hntap_get_etype(eth_header) == ETHERTYPE_ARP)) {
@@ -219,7 +219,7 @@ hntap_model_send_process (dev_handle_t *dev_handle, char *pktbuf, int size)
       int nwrite;
       uint16_t offset = 0;
       if (dest_dev_handle->type == HNTAP_TUN) {
-          offset = dest_dev_handle->needs_vlan_tag ? sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+          offset = dest_dev_handle->needs_vlan_tag ? sizeof(vlan_header_t) : sizeof(ether_header_t);
       }
       nwrite = write(dest_dev_handle->fd, pkt + offset, size - offset);
       if (nwrite < 0) {
@@ -318,7 +318,7 @@ model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
              *  If incoming packet has it, then packet going to destination should not have it.
              * */
             offset = dest_dev->needs_vlan_tag ?
-                    sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+                    sizeof(vlan_header_t) : sizeof(ether_header_t);
             nwrite = write(dest_dev->fd, recv_buf + offset, rsize - offset);
         } else if (dest_dev->type == HNTAP_TAP) {
             nwrite = write(dest_dev->fd, recv_buf, rsize);
@@ -348,13 +348,13 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   uint8_t *recv_buf = nullptr;
   uint8_t *send_buf = nullptr;
   bool pkt_sent = false;
-  struct ether_header_t *eth_header;
+  ether_header_t *eth_header;
 
   TLOG("Host-Tx to Model: packet sent with %d bytes\n", size);
   if (size < (int) sizeof(struct ether_header)) return;
 
   dump_pkt(pktbuf, size);
-  eth_header = (struct ether_header_t *) pktbuf;
+  eth_header = (ether_header_t *) pktbuf;
 
   if (hntap_get_etype(eth_header) == ETHERTYPE_IP ||
           (hntap_get_etype(eth_header) == ETHERTYPE_ARP)) {
@@ -376,7 +376,7 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
       int nwrite;
       uint16_t offset = 0;
       if (dest_dev_handle->type == HNTAP_TUN) {
-          offset = dest_dev_handle->needs_vlan_tag ? sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+          offset = dest_dev_handle->needs_vlan_tag ? sizeof(vlan_header_t) : sizeof(ether_header_t);
       }
       nwrite = write(dest_dev_handle->fd, pkt + offset, size - offset);
       if (nwrite < 0) {
@@ -493,17 +493,17 @@ done:
 static int
 hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int len)
 {
-  struct ether_header_t *eth;
-  struct vlan_header_t *vlan;
-  struct ipv4_header_t *ip;
-  struct tcp_header_t *tcp;
+  ether_header_t *eth;
+  vlan_header_t *vlan;
+  ipv4_header_t *ip;
+  tcp_header_t *tcp;
   uint16_t etype;
 
   if (!hntap_drop_rexmit) return(0);
 
-  eth = (struct ether_header_t *)pkt;
+  eth = (ether_header_t *)pkt;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
-    vlan = (struct vlan_header_t*)pkt;
+    vlan = (vlan_header_t*)pkt;
     etype = ntohs(vlan->etype);
     ip = (ipv4_header_t *)(vlan+1);
   } else {
@@ -514,7 +514,7 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
   if (etype == ETHERTYPE_IP) {
 
     if (ip->protocol == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
 #if 0
       if (ntohl(tcp->seq) == *seqnum) {
           TLOG("Same sequence-number 0x%x\n", *seqnum);
@@ -526,7 +526,7 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
           return(1);	
       
       dev->seqnum[app_port_index] = ntohl(tcp->seq);
-      struct tcp_header_t *flowtcp = &dev->flowtcp[app_port_index];
+      tcp_header_t *flowtcp = &dev->flowtcp[app_port_index];
 
       if (tcp->seq == flowtcp->seq &&
           tcp->ack_seq == flowtcp->ack_seq &&
@@ -645,7 +645,7 @@ hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles, bool paralle
                 TLOG("Got stuff on type : %s\n", hntap_type(dev_handle->tap_ep));
                 uint16_t offset = 0;
                 if (dev_handle->type == HNTAP_TUN) {
-                    offset = dev_handle->needs_vlan_tag ? sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+                    offset = dev_handle->needs_vlan_tag ? sizeof(vlan_header_t) : sizeof(ether_header_t);
                 }
                 if ((nread = read(dev_handle->fd, p + offset, PKTBUF_LEN)) < 0) {
                   TLOG("Read from host-tap failed - %s\n", strerror(errno));

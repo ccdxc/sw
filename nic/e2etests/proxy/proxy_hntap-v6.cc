@@ -51,14 +51,14 @@ static char* print_v6_addr(void* addr)
 void
 hntap_nat_worker(char *pkt, int len, bool source_ip, const char *orig_addr, const char *to_addr)
 {
-  struct ether_header_t *eth;
-  struct vlan_header_t *vlan;
-  struct ipv6_header_t *ip;
-  struct tcp_header_t *tcp;
+  ether_header_t *eth;
+  vlan_header_t *vlan;
+  ipv6_header_t *ip;
+  tcp_header_t *tcp;
   uint16_t etype;
-  eth = (struct ether_header_t *)pkt;
+  eth = (ether_header_t *)pkt;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
-    vlan = (struct vlan_header_t*)pkt;
+    vlan = (vlan_header_t*)pkt;
     TLOG(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
            vlan->dmac[0], vlan->dmac[1], vlan->dmac[2], vlan->dmac[3], vlan->dmac[4], vlan->dmac[5],
            vlan->smac[0], vlan->smac[1], vlan->smac[2], vlan->smac[3], vlan->smac[4], vlan->smac[5],
@@ -78,11 +78,11 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, const char *orig_addr, cons
   if (etype == ETHERTYPE_IPV6) {
     TLOG(" IP BEFORE 1: tot_len=%d nexthdr=%d",
             ntohs(ip->payload_len), ip->nexthdr);
-    TLOG(" saddr=%s", print_v6_addr(ip->saddr.s6_addr));
-    TLOG(" daddr=%s\n", print_v6_addr(ip->daddr.s6_addr));
+    TLOG(" saddr=%s", print_v6_addr(ip->saddr));
+    TLOG(" daddr=%s\n", print_v6_addr(ip->daddr));
 
     if (ip->nexthdr == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
       TLOG(" TCP BEFORE1: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
@@ -100,7 +100,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, const char *orig_addr, cons
     }
 
     if (ip->nexthdr == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
       tcp->check = 0;
       tcp->check = get_tcp_checksumv6(ip, tcp);
 
@@ -126,21 +126,21 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, const char *orig_addr, cons
 
     if (source_ip) {
       TLOG("saddr cmp orig_addr_buf %s\n", print_v6_addr(orig_addr_buf));
-      if (!memcmp(ip->saddr.s6_addr, orig_addr_buf, 16)) {
+      if (!memcmp(ip->saddr, orig_addr_buf, 16)) {
         TLOG("NAT IPSA: %s -> ", print_v6_addr(orig_addr_buf));
         TLOG(" %s\n", print_v6_addr(to_addr_buf));
 
-        memcpy(ip->saddr.s6_addr, to_addr_buf, 16);
+        memcpy(ip->saddr, to_addr_buf, 16);
       } else {
         TLOG("No NAT\n");
       }
     } else {
       TLOG("daddr cmp orig_addr_buf %s\n", print_v6_addr(orig_addr_buf));
-      if (!memcmp(ip->daddr.s6_addr, orig_addr_buf, 16)) {
+      if (!memcmp(ip->daddr, orig_addr_buf, 16)) {
         TLOG("NAT IPDA: %s -> ", print_v6_addr(orig_addr_buf));
         TLOG(" %s\n", print_v6_addr(to_addr_buf));
 
-        memcpy(ip->daddr.s6_addr, to_addr_buf, 16);
+        memcpy(ip->daddr, to_addr_buf, 16);
 
       } else {
         TLOG("No NAT\n");
@@ -149,11 +149,11 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, const char *orig_addr, cons
 
     TLOG(" IP AFTER: tot_len=%d nexthdr=%d\n",
             ntohs(ip->payload_len), ip->nexthdr);
-    TLOG(" saddr=%s", print_v6_addr(ip->saddr.s6_addr));
-    TLOG(" daddr=%s\n", print_v6_addr(ip->daddr.s6_addr));
+    TLOG(" saddr=%s", print_v6_addr(ip->saddr));
+    TLOG(" daddr=%s\n", print_v6_addr(ip->daddr));
 
     if (ip->nexthdr == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
       tcp->check = 0;
       tcp->check = get_tcp_checksumv6(ip, tcp);
 
@@ -200,7 +200,7 @@ hntap_host_server_to_client_nat(char *pkt, int len)
 void
 hntap_net_ether_header_add(char *pkt)
 {
-  struct ether_header_t *eth = (struct ether_header_t *)pkt;
+  ether_header_t *eth = (ether_header_t *)pkt;
 
   eth->dmac[0] = 0x00;
   eth->dmac[1] = 0xEE;
@@ -222,7 +222,7 @@ hntap_net_ether_header_add(char *pkt)
 void
 hntap_host_ether_header_add(char *pkt)
 {
-  struct vlan_header_t *vlan = (struct vlan_header_t *)pkt;
+  vlan_header_t *vlan = (vlan_header_t *)pkt;
 
   vlan->dmac[0] = 0x00;
   vlan->dmac[1] = 0xEE;

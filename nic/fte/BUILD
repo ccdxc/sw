@@ -46,6 +46,8 @@ cc_test(
     srcs = glob(["test/*.cc", "test/*.hpp"]),
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     deps = [ "//nic/utils/agent_api:agent_api", 
+             "//nic/hal/plugins/sfw:sfw_pkt_utils",
+             "//nic/e2etests:e2etest-lib",
            ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
 )
@@ -55,6 +57,8 @@ cc_library(
     srcs = [ "test/fte_base_test.cc" ],
     hdrs = [ "test/fte_base_test.hpp" ],
     deps = [ "//nic/utils/agent_api:agent_api",
+             "//nic/hal/plugins/sfw:sfw_pkt_utils",
+             "//nic/e2etests:e2etest-lib",
            ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
     tags = ["gtests"],

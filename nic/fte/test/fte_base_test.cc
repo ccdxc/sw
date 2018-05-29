@@ -17,6 +17,8 @@
 #include "nic/gen/proto/hal/nat.pb.h"
 #include "nic/p4/iris/include/defines.h"
 
+using namespace hal::plugins::sfw;
+
 uint32_t fte_base_test::vrf_id_ = 0;
 uint32_t fte_base_test::l2seg_id_ = 0;
 uint32_t fte_base_test::intf_id_ = 0;
@@ -25,6 +27,8 @@ uint32_t fte_base_test::nh_id_ = 0;
 uint32_t fte_base_test::pool_id_ = 0;
 fte::ctx_t fte_base_test::ctx_ = {};
 bool  fte_base_test::ipc_logging_disable_ = false;
+std::vector<dev_handle_t> fte_base_test::handles;
+std::map<hal_handle_t, ep_info_t> fte_base_test::eps;
 
 hal_handle_t fte_base_test::add_vrf()
 {
@@ -107,11 +111,13 @@ hal_handle_t fte_base_test::add_uplink(uint8_t port_num)
 }
 
 hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh,
-                                         uint32_t ip, uint64_t mac, uint16_t useg_vlan)
+                                         uint32_t ip, uint64_t mac, uint16_t useg_vlan, 
+                                         bool enable_e2e)
 {
     hal_ret_t ret;
     endpoint::EndpointSpec spec;
     endpoint::EndpointResponse resp;
+    ep_info_t  ep;
 
     hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(l2segh);
     EXPECT_NE(l2seg, nullptr);
@@ -133,6 +139,15 @@ hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh
     ret = hal::endpoint_create(spec, &resp);
     hal::hal_cfg_db_close();
     EXPECT_EQ(ret, HAL_RET_OK);
+    if (enable_e2e) {
+        ep.ip = ip;
+        ep.mac = mac;
+        if (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q)
+            ep.vlan = l2seg->wire_encap.val;
+        else 
+            ep.vlan = 0;
+        eps.insert(std::pair<hal_handle_t, ep_info_t>(resp.endpoint_status().endpoint_handle(),ep));
+    }
 
     return resp.endpoint_status().endpoint_handle();
 }
@@ -392,4 +407,185 @@ fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
         l4pdu;
 
     return inject_eth_pkt(lifq, sep->if_handle, sep->l2seg_handle, eth);
+}
+
+static 
+int parse_v4_packet (uint8_t *pkt, int len, uint16_t *l3_offset,
+                     uint16_t *l4_offset, uint16_t *payload_offset, uint8_t *proto)
+{
+    ether_header_t *eth;
+    vlan_header_t *vlan;
+    ipv4_header_t *ip;
+    tcp_header_t  *tcp;
+    uint16_t etype;
+    eth = (ether_header_t *)pkt;
+    if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
+        vlan = (vlan_header_t*)pkt;
+        etype = ntohs(vlan->etype);
+        ip = (ipv4_header_t *)(vlan+1);
+        *l3_offset = sizeof(vlan_header_t);
+    } else {
+        etype = ntohs(eth->etype);
+        ip = (ipv4_header_t *)(eth+1);
+        *l3_offset = sizeof(ether_header_t);
+    }
+
+    // TBD: parse options
+    if (etype == ETHERTYPE_IP) {
+        *l4_offset = *l3_offset + sizeof(ipv4_header_t);
+        tcp = (tcp_header_t *)(ip+1);
+        if (ip->protocol == IPPROTO_TCP) {
+            *payload_offset = *l4_offset + (tcp->doff*4);
+            *proto = IPPROTO_TCP;
+        } else if (ip->protocol == IPPROTO_UDP) {
+            *payload_offset = *l4_offset + sizeof(udp_header_t);
+            *proto = IPPROTO_UDP;
+        }
+    } else {
+        return 1;
+    }
+
+    return 0;
+}
+
+static 
+void fix_checksum(uint8_t *pkt, int len)
+{
+    ether_header_t *eth;
+    vlan_header_t *vlan;
+    ipv4_header_t *ip;
+    tcp_header_t  *tcp;
+    udp_header_t  *udp;
+    uint16_t etype;
+    int offset=0;
+
+    eth = (ether_header_t *)pkt;
+    if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
+        vlan = (vlan_header_t*)pkt;
+        etype = ntohs(vlan->etype);
+        ip = (ipv4_header_t *)(vlan+1);
+        offset += sizeof(vlan_header_t);
+    } else {
+        etype = ntohs(eth->etype);
+        ip = (ipv4_header_t *)(eth+1);
+        offset += sizeof(ether_header_t);
+    }
+
+    // TBD: parse options
+    if (etype == ETHERTYPE_IP) {
+        ip->check = checksum((short unsigned int*)ip, sizeof(ipv4_header_t));
+        offset += sizeof(ipv4_header_t);
+        if (ip->protocol == IPPROTO_TCP) {
+            tcp = (tcp_header_t*)(ip+1);
+            tcp->check = get_tcp_checksum((void *)tcp, (len-offset), ip->saddr, ip->daddr);
+        } else if (ip->protocol == IPPROTO_UDP) {
+            udp = (udp_header_t*)(ip+1);
+            udp->check = get_udp_checksum((void *)udp, (len-offset), ip->saddr, ip->daddr);
+        }
+    }
+}
+
+void
+fte_base_test::process_e2e_packets (void)
+{
+    int       maxfd, ret;
+    uint16_t  nread, nwrite;
+    char      inpktbuf[PKTBUF_LEN];
+    char      *inp = inpktbuf;
+    char      outpktbuf[PKTBUF_LEN];
+    char      *outp = outpktbuf;
+    uint16_t  l3_offset=0, l4_offset=0, payload_offset=0;
+    fte::lifqid_t lifq = fte::FLOW_MISS_LIFQ;
+    hal_ret_t rc;
+    uint8_t   proto;
+    int       pkt_len;
+
+    while (1) {
+        fd_set rd_set;
+        FD_ZERO(&rd_set);
+        maxfd = -1;
+        for (uint32_t i = 0 ; i < handles.size(); i++) {
+           FD_SET(handles[i].fd, &rd_set);
+           if (handles[i].fd > maxfd) {
+               maxfd = handles[i].fd;
+           }
+        }
+
+        ret = select(maxfd + 1, &rd_set, NULL, NULL, NULL);
+        if (ret < 0 && errno == EINTR){
+            continue;
+        }
+
+        for (uint32_t i = 0 ; i < handles.size(); i++) {
+            if (FD_ISSET(handles[i].fd, &rd_set)) {
+                dev_handle_t hdl = handles[i];
+                if ((nread = read(hdl.fd, inp, PKTBUF_LEN)) < 0) {
+                    continue;
+                }
+
+                /*---------- FTE PROCESSING ---------*/
+                /*
+                 * Get the EP information to fill the cpu header
+                 * and parse the packet to get the offsets
+                 */
+                hal::ep_t *sep = hal::find_ep_by_handle(hdl.ep);
+                EXPECT_NE(sep, nullptr);
+                hal::if_t *sif = hal::find_if_by_handle(sep->if_handle);
+                EXPECT_NE(sif, nullptr);
+
+                hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
+                EXPECT_NE(l2seg, nullptr);
+                hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+                args.l2seg = l2seg;
+                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+                hal::pd::l2seg_hw_id_t hwid = args.hwid;
+
+                if (!parse_v4_packet((uint8_t *)inp, nread, &l3_offset, &l4_offset, &payload_offset, &proto)) {
+                    fte::cpu_rxhdr_t cpu_rxhdr = {};
+                    cpu_rxhdr.src_lif = sif->if_id;
+                    cpu_rxhdr.lif = lifq.lif;
+                    cpu_rxhdr.qtype = lifq.qtype;
+                    cpu_rxhdr.qid = lifq.qid;
+                    cpu_rxhdr.lkp_vrf = hwid;
+                    cpu_rxhdr.lkp_dir = sif->if_type == intf::IF_TYPE_ENIC ? FLOW_DIR_FROM_DMA :
+                                                     FLOW_DIR_FROM_UPLINK;
+                    cpu_rxhdr.lkp_inst = 0;
+                    cpu_rxhdr.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+                    cpu_rxhdr.l2_offset = 0;
+                    cpu_rxhdr.l3_offset = l3_offset;
+                    cpu_rxhdr.l4_offset = l4_offset;
+                    cpu_rxhdr.payload_offset = payload_offset;
+                    cpu_rxhdr.flags = 0;
+                    rc = inject_pkt(&cpu_rxhdr, (uint8_t *)inp, nread);
+                    EXPECT_EQ(rc, HAL_RET_OK);
+                    EXPECT_FALSE(ctx_.drop());
+
+                    fte::flow_t *iflow = ctx_.flow(hal::FLOW_ROLE_INITIATOR);
+                    if (proto == IPPROTO_TCP) {
+                        pkt_len = net_sfw_build_tcp_pkt(ctx_, (uint8_t *)outp, PKTBUF_LEN, iflow->header_rewrite_info(),
+                                                        iflow->header_push_info());
+                    } else {
+                        pkt_len = net_sfw_build_udp_pkt(ctx_, (uint8_t *)outp, PKTBUF_LEN, iflow->header_rewrite_info(),
+                                                        iflow->header_push_info());
+                    }
+                }
+
+                fix_checksum((uint8_t *)outp, pkt_len);
+                nwrite = write(handles[hdl.other_hdl].fd, outp, pkt_len);
+                if (nwrite < 0) {
+                    continue;
+                }
+            }
+        }
+    }
+}
+
+void
+fte_base_test::run_service(hal_handle_t ep_h, std::string service)
+{
+    int idx = std::distance(eps.begin(), eps.find(ep_h));
+    std::string prefix_cmd = "ip netns exec EP" + to_string(idx+1);
+
+    std::string cmd = prefix_cmd + " " + service;
+    std::system(cmd.c_str());
 }

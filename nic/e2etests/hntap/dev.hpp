@@ -42,7 +42,7 @@ typedef struct dev_handle_t {
     pkt_process_nat_cb   nat_cb;
     uint32_t             tap_ports[MAX_TAP_APP_PORTS];
     uint32_t             seqnum[MAX_TAP_APP_PORTS];
-    struct tcp_header_t  flowtcp[MAX_TAP_APP_PORTS];
+    tcp_header_t         flowtcp[MAX_TAP_APP_PORTS];
     uint8_t             *recv_buf[TX_RX_QUEUE_SIZE];
 
 } dev_handle_t;

@@ -54,14 +54,14 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
   printf("\n");
 #endif
 
-  struct ether_header_t *eth;
-  struct vlan_header_t *vlan;
-  struct ipv4_header_t *ip;
-  struct tcp_header_t *tcp;
+  ether_header_t *eth;
+  vlan_header_t *vlan;
+  ipv4_header_t *ip;
+  tcp_header_t *tcp;
   uint16_t etype;
-  eth = (struct ether_header_t *)pkt;
+  eth = (ether_header_t *)pkt;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
-    vlan = (struct vlan_header_t*)pkt;
+    vlan = (vlan_header_t*)pkt;
     TLOG(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
            vlan->dmac[0], vlan->dmac[1], vlan->dmac[2], vlan->dmac[3], vlan->dmac[4], vlan->dmac[5],
            vlan->smac[0], vlan->smac[1], vlan->smac[2], vlan->smac[3], vlan->smac[4], vlan->smac[5],
@@ -92,7 +92,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
             ip->ttl, ip->protocol, ntohs(ip->check), ntohl(ip->saddr), ntohl(ip->daddr));
 
     if (ip->protocol == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
       TLOG(" TCP BEFORE1: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
@@ -110,7 +110,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
     }
 
     if (ip->protocol == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
       tcp->check = 0;
       tcp->check = get_tcp_checksum(ip, tcp);
 
@@ -158,7 +158,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
             ip->ttl, ip->protocol, ntohs(ip->check), ntohl(ip->saddr), ntohl(ip->daddr));
 
     if (ip->protocol == IPPROTO_TCP) {
-      tcp = (struct tcp_header_t*)(ip+1);
+      tcp = (tcp_header_t*)(ip+1);
 #if 0
       TLOG("NAT DP: 80 -> 10080\n");
       tcp->dport = htons(10080);
@@ -219,7 +219,7 @@ hntap_ul2ul_host_server_to_client_nat(char *pkt, int len)
 void
 hntap_ul2ul_net_ether_header_add(char *pkt)
 {
-  struct ether_header_t *eth = (struct ether_header_t *)pkt;
+  ether_header_t *eth = (ether_header_t *)pkt;
 
   eth->dmac[0] = 0x00;
   eth->dmac[1] = 0xEE;
@@ -242,7 +242,7 @@ hntap_ul2ul_net_ether_header_add(char *pkt)
 void
 hntap_net_ether_header_add(char *pkt)
 {
-  struct ether_header_t *eth = (struct ether_header_t *)pkt;
+  ether_header_t *eth = (ether_header_t *)pkt;
 
   eth->dmac[0] = 0x00;
   eth->dmac[1] = 0xEE;
@@ -264,7 +264,7 @@ hntap_net_ether_header_add(char *pkt)
 void
 hntap_ul2ul_host_ether_header_add(char *pkt)
 {
-  struct ether_header_t *eth = (struct ether_header_t *)pkt;
+  ether_header_t *eth = (ether_header_t *)pkt;
 
   eth->dmac[0] = 0x00;
   eth->dmac[1] = 0xEE;
@@ -286,7 +286,7 @@ hntap_ul2ul_host_ether_header_add(char *pkt)
 void
 hntap_host_ether_header_add(char *pkt)
 {
-  struct vlan_header_t *vlan = (struct vlan_header_t *)pkt;
+  vlan_header_t *vlan = (vlan_header_t *)pkt;
 
   vlan->dmac[0] = 0x00;
   vlan->dmac[1] = 0xEE;

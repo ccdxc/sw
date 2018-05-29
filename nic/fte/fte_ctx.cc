@@ -285,8 +285,6 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
         swap_flow_objs();
     }
 
-
-
     // Init feature sepcific session state
     sdk::lib::dllist_ctxt_t   *entry;
     dllist_for_each(entry, &sess->feature_list_head) {
@@ -340,6 +338,10 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
     if (valid_rflow_) {
         rkey_ = rflow_[0]->key();
     }
+
+    // Set drop from the existing session
+    if (sess->iflow->pgm_attrs.drop) 
+        set_drop();
 }
 
 //------------------------------------------------------------------------------

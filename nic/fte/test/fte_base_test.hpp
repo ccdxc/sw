@@ -7,8 +7,33 @@
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/include/fte_ctx.hpp"
 #include <tins/tins.h>
+#include <map>
+#include <net/if.h>
+#include <linux/if_tun.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/plugins/sfw/sfw_pkt_utils.hpp"
+#include "nic/e2etests/lib/packet.hpp"
 
 #define FTE_ID 0
+#define PKTBUF_LEN  2000
+using namespace std;
+
+typedef struct dev_handle_ {
+    int                  sock;
+    int                  fd;
+    int                  other_hdl;
+    hal_handle_t         ep;
+    hal_handle_t         ep_pair;
+} dev_handle_t;
+
+typedef struct ep_info_ {
+    uint32_t   ip;
+    uint64_t   mac;
+    uint32_t   vlan;
+} ep_info_t;
 
 class fte_base_test : public hal_base_test {
 public:
@@ -18,7 +43,8 @@ public:
     static hal_handle_t add_l2segment(hal_handle_t nwh, uint16_t vlan_id);
     static hal_handle_t add_uplink(uint8_t port_num);
     static hal_handle_t add_endpoint(hal_handle_t l2segh, hal_handle_t intfh,
-                                     uint32_t ip, uint64_t mac, uint16_t useg_vlan);
+                                     uint32_t ip, uint64_t mac, uint16_t useg_vlan,
+                                     bool enable_e2e=false);
     static hal_handle_t add_route(hal_handle_t vrfh,
                                   uint32_t v4_addr, uint8_t prefix_len,
                                   hal_handle_t eph);
@@ -51,10 +77,15 @@ public:
     static hal_ret_t inject_ipv4_pkt(const fte::lifqid_t &lifq,
                                      hal_handle_t dep, hal_handle_t sep, Tins::PDU &l4pdu);
     static void set_logging_disable(bool val) { ipc_logging_disable_ = val; }
+ 
+    static void run_service(hal_handle_t ep_h, std::string cmd);
+
+    static void process_e2e_packets(void);
+
 protected:
     fte_base_test() {}
 
-    virtual ~fte_base_test() { }
+    virtual ~fte_base_test() {}
 
     // will be called immediately after the constructor before each test
     virtual void SetUp() { }
@@ -67,11 +98,141 @@ protected:
         hal_base_test::SetUpTestCase();
         ipc_logging_disable_ = false;
     }
+
+    static void hntap_create_tap_device (const char *dev, dev_handle_t *handle)
+    {
+        struct      ifreq ifr;
+        int         fd, err, sock;
+        const char *tapdev = "/dev/net/tun";
+
+        if ((fd = open(tapdev, O_RDWR)) < 0 ) {
+            abort();
+            return;
+        }
+
+        memset(&ifr, 0, sizeof(ifr));
+        ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
+        strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+        /* create the device */
+        if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
+            close(fd);
+            perror("2\n");
+            return;
+        }
+
+        sock = socket(AF_INET,SOCK_DGRAM,0);
+        if (sock < 0) {
+            close(fd);
+            perror("3\n");
+            return;
+        }
+
+        memset(&ifr, 0, sizeof(ifr));
+        ifr.ifr_flags = IFF_UP | IFF_RUNNING | IFF_PROMISC;
+        strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+        /* Set the device UP */
+        if ((err = ioctl(sock, SIOCSIFFLAGS, (void *) &ifr)) < 0 ) {
+            close(sock);
+            close(fd);
+            abort();
+            return;
+        }
+
+        handle->sock = sock;
+        handle->fd = fd;
+    }  
+    
+    static void SetUpE2ETestCase() {
+        string ep = "EP";
+        string cmd, prefix_cmd;
+        ofstream f;
+
+        f.open("cmd.sh");
+        std::map<hal_handle_t, ep_info_t>::iterator it;
+        uint32_t i = 0;
+        for (it=eps.begin(); it!=eps.end(); it++) {
+             ep_info_t  ep = it->second;
+             dev_handle_t handle;
+             string EP = "EP" + to_string(i+1);
+             hntap_create_tap_device(EP.c_str(), &handle);
+             handle.other_hdl = (i+1)%eps.size();
+             handle.ep = it->first;
+
+             // Set up EP Pair. Pair each EP to its next neighbor
+             // Last one points to first
+             if (i) handles[i-1].ep_pair = it->first;
+             handles.push_back(handle);
+             if ((i+1) == eps.size()) handles[i].ep_pair = (eps.begin())->first;
+
+             cmd = "ip netns add " +  EP;
+             f << cmd << "\n";
+             cmd = "ip link set dev " + EP + " netns " + EP;
+             f << cmd << "\n";
+             prefix_cmd = "ip netns exec " + EP;
+             cmd = prefix_cmd + " ifconfig " + EP + " up";
+             f << cmd << "\n";
+             std::stringstream mac, ip;
+             mac << std::hex << ep.mac;
+             ip << std::hex << ep.ip;
+             if (ep.vlan) {
+                 string vlan = to_string(ep.vlan);
+                 string vlan_intf = EP + "." + vlan;
+                 cmd = prefix_cmd + " ip link add link " + EP + " name " + vlan_intf + " type vlan id " + vlan;
+                 f << cmd << "\n";
+                 cmd = prefix_cmd + " ifconfig " + vlan_intf + " up";
+                 f << cmd << "\n";
+                 cmd = prefix_cmd + " ifconfig " + vlan_intf + " hw ether " + mac.str();
+                 f << cmd << "\n";
+                 cmd = prefix_cmd + " ifconfig " + vlan_intf + " 0x" + ip.str();
+                 f << cmd << "\n";
+             } else {
+                 cmd = cmd = prefix_cmd + " ip link set " + EP + " name " + EP;
+                 f << cmd << "\n";
+                 cmd = prefix_cmd + " ifconfig " + EP + " hw ether " + mac.str();
+                 f << cmd << "\n";
+                 cmd = prefix_cmd + " ifconfig " + EP + " 0x" + ip.str();
+                 f << cmd << "\n";                          
+             }
+             i++;
+        }
+        for (uint32_t i=0; i<handles.size(); i++) {
+            ep_info_t  ep = eps[handles[i].ep_pair];
+            string EP = "EP" + to_string(i+1);
+            std::stringstream mac, ip;
+            mac << std::hex << ep.mac;
+            ip << std::hex << ep.ip;
+            prefix_cmd = "ip netns exec ";
+            cmd = prefix_cmd + EP + " arp -s 0x" + ip.str() + " " + mac.str();
+            f << cmd << "\n";
+        }
+        f.close();
+        std::system("chmod +x cmd.sh && ./cmd.sh && rm cmd.sh");  
+    }
+
+    static void CleanUpE2ETestCase(void) {
+        string ep = "EP";
+        string cmd;
+        ofstream f;
+
+        f.open("cmd.sh");
+        std::map<hal_handle_t, ep_info_t>::iterator it;
+        for (uint32_t i=0; i<eps.size(); i++) {
+            string EP = "EP" + to_string(i+1);
+            cmd = "ip netns del " + EP;
+            f << cmd << "\n";
+        }
+        f.close();
+        std::system("chmod +x cmd.sh && ./cmd.sh && rm cmd.sh");
+    } 
+
     static fte::ctx_t ctx_;
 
 private:
     static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_, nh_id_, pool_id_;
     static bool ipc_logging_disable_;
+    static std::map<hal_handle_t, ep_info_t> eps;
+    static std::vector<dev_handle_t> handles;
 };
 
 #define CHECK_ALLOW_TCP(dep, sep, dst_port, src_port, msg) {                   \

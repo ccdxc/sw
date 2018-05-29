@@ -122,8 +122,8 @@ TEST_F(rtsp_test, rtsp_session)
     CHECK_ALLOW_UDP(client_eph, server_eph, 4588, 6256, "c:4588 <- s:6256");
     CHECK_ALLOW_UDP(client_eph, server_eph, 4589, 6257, "c:4589 <- s:6257");
 
-    CHECK_DENY_UDP(server_eph, client_eph, 6256, 4588, "c:4588 -> s:6256");
-    CHECK_DENY_UDP(server_eph, client_eph, 6257, 4589, "c:4589 -> s:6257");
+    CHECK_ALLOW_UDP(server_eph, client_eph, 6256, 4588, "c:4588 -> s:6256");
+    CHECK_ALLOW_UDP(server_eph, client_eph, 6257, 4589, "c:4589 -> s:6257");
 
     CHECK_DENY_UDP(client_eph, server_eph, 4589, 6256, "c:4589 <- s:6256");
     CHECK_DENY_UDP(client_eph, server_eph, 4588, 6257, "c:4588 <- s:6257");

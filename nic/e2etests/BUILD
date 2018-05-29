@@ -42,6 +42,10 @@ cc_library(
     srcs = [
              "lib/packet.cc",
            ],
+    deps = [
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+    ],
     hdrs = glob(["lib/*.hpp"]),
 )
 
