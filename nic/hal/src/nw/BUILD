@@ -41,9 +41,6 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",
         "//nic:spdlog",
-        "//nic/p4/iris/include:p4_iris_includes",   # TODO: session.cc including this !!
-        "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
     ],
     alwayslink = 1,
-    #copts = sdk_copts,
 )

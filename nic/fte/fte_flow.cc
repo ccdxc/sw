@@ -17,7 +17,7 @@ flow_t::merge_header_rewrite(header_rewrite_info_t &dst,
 
     if (!memcmp(&dst, &src, sizeof(header_rewrite_info_t))) {
         return HAL_RET_ENTRY_EXISTS;
-    } 
+    }
 
     // L2 header fields
     switch(src.valid_hdrs&FTE_L2_HEADERS) {
@@ -28,7 +28,7 @@ flow_t::merge_header_rewrite(header_rewrite_info_t &dst,
         HEADER_COPY_FLD(dst, src, ether, dot1p);
         break;
     }
-    
+
     // l3 header fields
     switch (src.valid_hdrs&FTE_L3_HEADERS) {
     case FTE_HEADER_ipv4:
@@ -44,7 +44,7 @@ flow_t::merge_header_rewrite(header_rewrite_info_t &dst,
         HEADER_COPY_FLD(dst, src, ipv6, dscp);
         break;
     }
-    
+
     // l4 header fields
     switch (src.valid_hdrs&FTE_L4_HEADERS) {
     case FTE_HEADER_tcp:
@@ -132,13 +132,13 @@ hal_ret_t flow_t::header_rewrite(const header_rewrite_info_t &header_rewrite)
     if (num_header_updates_ == 0) {
         // No previous entries, allocate new one
         entry = &header_updates_[num_header_updates_++];
-        entry->type = HEADER_REWRITE; 
+        entry->type = HEADER_REWRITE;
         entry->header_rewrite = header_rewrite;
         return HAL_RET_OK;
     }
 
 
-    // Check the previous header type and merge into it if possible
+    // check the previous header type and merge into it if possible
     entry = &header_updates_[num_header_updates_-1];
 
     switch (entry->type) {
@@ -165,7 +165,6 @@ hal_ret_t flow_t::header_rewrite(const header_rewrite_info_t &header_rewrite)
 
     return ret;
 }
-
 
 hal::rewrite_actions_enum
 flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
@@ -206,7 +205,7 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
     case session::NAT_TYPE_DNAT:
         return dnat_actions[af][proto];
     default:
-        return hal::REWRITE_REWRITE_ID;        
+        return hal::REWRITE_REWRITE_ID;
     }
 }
 
@@ -406,7 +405,7 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
     return HAL_RET_OK;
 }
 
-hal_ret_t flow_t::get_rewrite_config(const hal::flow_cfg_t &config, 
+hal_ret_t flow_t::get_rewrite_config(const hal::flow_cfg_t &config,
                                      const hal::flow_pgm_attrs_t  &attrs,
                                      header_rewrite_info_t *rewrite)
 {
@@ -426,7 +425,7 @@ hal_ret_t flow_t::get_rewrite_config(const hal::flow_cfg_t &config,
     // vlan
     if (attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
         HEADER_SET_FLD(*rewrite, ether, vlan_id, attrs.tnnl_vnid)
-    } 
+    }
 
     // sip
     if (!ip_addr_is_zero(&config.nat_sip)) {
@@ -494,7 +493,7 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
                 ret = HAL_RET_INVALID_OP;
                 goto end;
             }
-  
+
             if (mcast_info_.proxy_mcast_ptr)
                 attrs.is_proxy_mcast = 1;
 
@@ -565,7 +564,7 @@ end:
     return ret;
 }
 
-hal_ret_t flow_t::merge_flow(const flow_t &flow) 
+hal_ret_t flow_t::merge_flow(const flow_t &flow)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -609,7 +608,8 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
     return ret;
 }
 
-void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_attrs_t  &attrs)
+void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
+                         const hal::flow_pgm_attrs_t  &attrs)
 {
     header_update_t *entry;
 
@@ -622,7 +622,7 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_at
     is_proxy_enabled_ = attrs.is_proxy_en;
 
     action_ = (session::FlowAction)flow_cfg.action;
-    
+
     if (attrs.mcast_en) {
         if (attrs.is_proxy_mcast)
             mcast_info_.proxy_mcast_ptr = attrs.mcast_ptr;
@@ -634,7 +634,7 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_at
     if (attrs.expected_src_lif_en) {
         ingress_info_.hw_lif_id = attrs.expected_src_lif;
     }
-    
+
     if (attrs.qos_class_en) {
         qos_info_.qos_class_en = attrs.qos_class_en;
         qos_info_.qos_class_id = attrs.qos_class_id;
@@ -664,4 +664,4 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_at
     get_rewrite_config(flow_cfg, attrs, &entry->header_rewrite);
 }
 
-} // namespace fte
+}    // namespace fte

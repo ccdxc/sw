@@ -66,7 +66,7 @@ ctx_t::extract_flow_key()
         l2seg = (hal::l2seg_t *)obj;
         key_.svrf_id = key_.dvrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
     } else if (obj_id == hal::HAL_OBJ_ID_VRF)  {
-        HAL_ASSERT_RETURN(cpu_rxhdr_->lkp_type != FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
+        HAL_ASSERT_RETURN(cpu_rxhdr_->lkp_type != hal::FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
         key_.svrf_id = key_.dvrf_id  = ((hal::vrf_t *)obj)->vrf_id;
     } else {
         HAL_TRACE_ERR("fte: Invalid obj id: {}", obj_id);
@@ -75,7 +75,7 @@ ctx_t::extract_flow_key()
 
     // extract src/dst/proto
     switch (cpu_rxhdr_->lkp_type) {
-    case FLOW_KEY_LOOKUP_TYPE_MAC:
+    case hal::FLOW_KEY_LOOKUP_TYPE_MAC:
         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
         key_.flow_type = hal::FLOW_TYPE_L2;
         key_.l2seg_id = l2seg->seg_id;
@@ -85,7 +85,7 @@ ctx_t::extract_flow_key()
             ntohs(((vlan_header_t*)ethhdr)->etype): ntohs(ethhdr->etype);
         break;
 
-    case FLOW_KEY_LOOKUP_TYPE_IPV4:
+    case hal::FLOW_KEY_LOOKUP_TYPE_IPV4:
         iphdr = (ipv4_header_t*)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V4;
         key_.sip.v4_addr = ntohl(iphdr->saddr);
@@ -93,7 +93,7 @@ ctx_t::extract_flow_key()
         key_.proto = (types::IPProtocol) iphdr->protocol;
         break;
 
-    case FLOW_KEY_LOOKUP_TYPE_IPV6:
+    case hal::FLOW_KEY_LOOKUP_TYPE_IPV6:
         iphdr6 = (ipv6_header_t *)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V6;
         memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
@@ -175,8 +175,8 @@ ctx_t::lookup_flow_objs()
 
     if (sep_) {
         if (protobuf_request()) {
-            key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL)? FLOW_DIR_FROM_DMA :
-                FLOW_DIR_FROM_UPLINK;
+            key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL) ? hal::FLOW_DIR_FROM_DMA :
+                hal::FLOW_DIR_FROM_UPLINK;
         }
         sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
         HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
@@ -221,7 +221,7 @@ ctx_t::lookup_flow_objs()
 
     if ((key_.sip.v4_addr == (0x0a010001)) && (key_.proto == IPPROTO_ESP)) {
         HAL_TRACE_ERR("Ramesh : overwriting direction 1");
-        key_.dir = FLOW_DIR_FROM_DMA;
+        key_.dir = hal::FLOW_DIR_FROM_DMA;
     }
     return HAL_RET_OK;
 }
@@ -446,7 +446,7 @@ ctx_t::create_session()
 
     if (valid_rflow_) {
         rkey_.dir = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
-            FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
+            hal::FLOW_DIR_FROM_DMA : hal::FLOW_DIR_FROM_UPLINK;
         for (int i = 0; i < MAX_STAGES; i++) {
             rflow_[i]->set_key(rkey_);
         }
@@ -786,7 +786,7 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
                 rkey_.svrf_id = key_.dvrf_id;
         }
         rkey_.dir = (dep_ && dep_->ep_flags & EP_FLAGS_LOCAL) ?
-            FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
+            hal::FLOW_DIR_FROM_DMA : hal::FLOW_DIR_FROM_UPLINK;
 
         // update rflow key
         for (int i = 0; i < MAX_STAGES; i++) {
@@ -1235,7 +1235,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     } else {
         pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
         // change lif/vlan for uplink pkts
-        if (key_.dir == FLOW_DIR_FROM_UPLINK) {
+        if (key_.dir == hal::FLOW_DIR_FROM_UPLINK) {
      	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = hal::SERVICE_LIF_CPU;
             args.l2seg = sl2seg_;
@@ -1306,7 +1306,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         }
 
 
-        pkt_info->p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
+        pkt_info->p4plus_header.p4plus_app_id = hal::P4PLUS_APPTYPE_CPU;
 
         hal::pd::pd_cpupkt_send_args_t args;
         args.ctxt = arm_ctx;
@@ -1453,7 +1453,7 @@ ctx_t::is_proxy_flow()
 
     // In the case of pkts from uplink, stage 0 flow is proxy flow and
     // in the case of pkts from host, stage 1 flow is the proxy flow
-    return (flow[stage()]->key().dir == FLOW_DIR_FROM_UPLINK) ?
+    return (flow[stage()]->key().dir == hal::FLOW_DIR_FROM_UPLINK) ?
                                 stage() == 0 : stage() != 0;
 }
 

@@ -4,7 +4,6 @@
 
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
-#include "nic/p4/iris/include/defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "app_redir_plugin.hpp"
@@ -265,7 +264,7 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
     if (ctx.pkt() && (ctx.role() ==  hal::FLOW_ROLE_INITIATOR)) {
         const flow_key_t& flow_key = ctx.key();
 
-        if (flow_key.dir == FLOW_DIR_FROM_ENIC) {
+        if (flow_key.dir == hal::FLOW_DIR_FROM_DMA) {
 
             /*
              * initiator host-to-network: SYN, ACK

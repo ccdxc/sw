@@ -4,7 +4,6 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
-#include "nic/p4/iris/include/defines.h"
 
 extern "C" {
 #include "lkl.h"
@@ -59,11 +58,11 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
         return NULL;
     }
     HAL_TRACE_DEBUG("Allocating SKBUFF direction {} host_dev {} net_dev {}\n",
-                           (direction==hal::FLOW_DIR_FROM_ENIC)?"from host":"from net", host_dev, net_dev);
+                           (direction==hal::FLOW_DIR_FROM_DMA)?"from host":"from net", host_dev, net_dev);
     void *dev = NULL;
     bool is_pkt_src_uplink = FALSE;
     uint32_t pktlen, tpt_offset, nw_offset;
-    if (direction == hal::FLOW_DIR_FROM_ENIC) {
+    if (direction == hal::FLOW_DIR_FROM_DMA) {
         dev = host_dev;
     } else {
         dev = net_dev;

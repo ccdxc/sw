@@ -506,7 +506,7 @@
 #define CPU_PACKET_TYPE_IPV6           2
 
 /*****************************************************************************/
-/* CPU LKP Flags                                                                 */
+/* CPU LKP Flags                                                             */
 /*****************************************************************************/
 #define CPU_LKP_FLAGS_LKP_TYPE_POS     0
 #define CPU_LKP_FLAGS_LKP_INST         4

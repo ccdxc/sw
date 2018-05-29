@@ -15,8 +15,6 @@
 #include "nic/hal/src/aclqos/qos.hpp"
 #include "sdk/timestamp.hpp"
 #include "nic/include/fte.hpp"
-#include "nic/p4/iris/include/defines.h"
-#include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
@@ -44,33 +42,8 @@ thread_local void *g_session_timer;
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
 
-#if 0
 void *
-session_get_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((session_t *)entry)->config.session_id);
-}
-
-uint32_t
-session_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(session_id_t)) % ht_size;
-}
-
-bool
-session_compare_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(session_id_t *)key1 == *(session_id_t *)key2) {
-        return true;
-    }
-    return false;
-}
-#endif
-
-void *
-session_get_handle_key_func(void *entry)
+session_get_handle_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->hal_handle);
@@ -93,7 +66,7 @@ session_compare_handle_key_func (void *key1, void *key2)
 }
 
 void *
-session_get_iflow_key_func(void *entry)
+session_get_iflow_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->iflow->config.key);
@@ -116,7 +89,7 @@ session_compare_iflow_key_func (void *key1, void *key2)
 }
 
 void *
-session_get_rflow_key_func(void *entry)
+session_get_rflow_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->rflow->config.key);
@@ -167,14 +140,6 @@ find_session_by_handle (hal_handle_t handle)
     return (session_t *)g_hal_state->session_hal_handle_ht()->lookup(&handle);
 }
 
-#if 0
-session_t *
-find_session_by_id (session_id_t session_id)
-{
-    return (session_t *)g_hal_state->session_id_ht()->lookup(&session_id);
-}
-#endif
-
 //------------------------------------------------------------------------------
 // thread safe helper to stringify flow_key_t
 //------------------------------------------------------------------------------
@@ -202,10 +167,12 @@ flowkey2str (const flow_key_t& key)
                   key.l2seg_id, macaddr2str(key.smac),
                   macaddr2str(key.dmac), key.ether_type);
         break;
+
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
         if (key.flow_type == FLOW_TYPE_V4) {
-            out.write("sip={}, dip={}, ", ipv4addr2str(key.sip.v4_addr), ipv4addr2str(key.dip.v4_addr));
+            out.write("sip={}, dip={}, ", ipv4addr2str(key.sip.v4_addr),
+                      ipv4addr2str(key.dip.v4_addr));
         } else {
             out.write("sip={}, dip={}, ", key.sip.v6_addr, key.dip.v6_addr);
         }
@@ -229,6 +196,7 @@ flowkey2str (const flow_key_t& key)
             out.write("proto={}", key.proto);
         }
         break;
+
     default:
         out.write("flow-type=unknown(%d)", key.flow_type);
     }
@@ -249,6 +217,7 @@ extract_mirror_sessions (const FlowSpec& spec, uint8_t *ingress, uint8_t *egress
     *ingress = 0;
     *egress = 0;
     FlowInfo flinfo = spec.flow_data().flow_info();
+
     for (i = 0; i < flinfo.ing_mirror_sessions_size(); ++i) {
         uint32_t id = flinfo.ing_mirror_sessions(i).mirrorsession_id();
         if (id > 7) {
@@ -267,7 +236,6 @@ extract_mirror_sessions (const FlowSpec& spec, uint8_t *ingress, uint8_t *egress
     }
     return HAL_RET_OK;
 }
-
 
 //------------------------------------------------------------------------------
 // release all the resources and allocated ids etc. associated with a session
@@ -288,9 +256,8 @@ session_cleanup (session_t *session)
 }
 
 hal_ret_t
-extract_flow_key_from_spec(vrf_id_t tid,
-                           flow_key_t *key,
-                           const FlowKey& flow_spec_key)
+extract_flow_key_from_spec (vrf_id_t tid, flow_key_t *key,
+                            const FlowKey& flow_spec_key)
 {
     key->svrf_id = key->dvrf_id = tid;
 
@@ -412,8 +379,8 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
     if (session->rflow) {
         session->hal_rflow_ht_ctxt.reset();
         g_hal_state->session_hal_rflow_ht()->insert_with_key(
-                                     (void *)std::addressof(session->rflow->config.key),
-                                     session, &session->hal_rflow_ht_ctxt);
+                         (void *)std::addressof(session->rflow->config.key),
+                         session, &session->hal_rflow_ht_ctxt);
     }
 
     if (sep) {
@@ -438,17 +405,6 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
         HAL_SPINLOCK_UNLOCK(&dif->slock);
     }
 
-#if 0
-    // session list is changed to block list
-    sdk::lib::dllist_reset(&session->vrf_session_lentry);
-    if (vrf) {
-        HAL_SPINLOCK_LOCK(&vrf->slock);
-        sdk::lib::dllist_add(&vrf->session_list_head,
-                          &session->vrf_session_lentry);
-        HAL_SPINLOCK_UNLOCK(&vrf->slock);
-    }
-#endif
-
     return HAL_RET_OK;
 }
 
@@ -459,14 +415,6 @@ static inline void
 del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
 {
     HAL_TRACE_DEBUG("Entering DEL session from DB:{}", session->hal_handle);
-
-    // All the sessions are supposed to have session id
-    // Need to remove this check once the session id allocation
-    // happens for flow-miss
-    //if (session->config.session_id)
-        //g_hal_state->session_id_ht()->remove_entry(session,
-                                         //&session->session_id_ht_ctxt);
-
     g_hal_state->session_hal_handle_ht()->remove_entry(session,
                                                  &session->hal_handle_ht_ctxt);
 
@@ -512,11 +460,6 @@ flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
     ip_addr_to_spec(flow_info->mutable_nat_dip(), &flow->config.nat_dip);
     flow_info->set_nat_sport(flow->config.nat_sport);
     flow_info->set_nat_dport(flow->config.nat_dport);
-
-    /* TODO: Connection Tracking Info framework has to be done still.
-    conn_track_to_conn_track_spec(flow,
-            flow_data->mutable_conn_track_info());
-            */
 }
 
 static void
@@ -567,13 +510,15 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
 
     response->mutable_status()->set_session_handle(session->hal_handle);
     response->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
-    //response->mutable_spec()->set_session_id(session->config.session_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
 
-    flow_to_flow_spec(session->iflow, response->mutable_spec()->mutable_initiator_flow());
-    if (session->rflow) 
-        flow_to_flow_spec(session->rflow, response->mutable_spec()->mutable_responder_flow());
+    flow_to_flow_spec(session->iflow,
+                      response->mutable_spec()->mutable_initiator_flow());
+    if (session->rflow) {
+        flow_to_flow_spec(session->rflow,
+                          response->mutable_spec()->mutable_responder_flow());
+    }
 }
 
 static void
@@ -642,16 +587,15 @@ session_get (SessionGetRequest& req, SessionGetResponse *response)
     return system_get_fill_rsp(session, response);
 }
 
-
 //-----------------------------------------------------------------------------
-// Flow Create FTE
+// flow create FTE
 //-----------------------------------------------------------------------------
 static flow_t *
-flow_create_fte(const flow_cfg_t *cfg,
-                const flow_cfg_t *cfg_assoc,
-                const flow_pgm_attrs_t *attrs,
-                const flow_pgm_attrs_t *attrs_assoc,
-                session_t *session)
+flow_create_fte (const flow_cfg_t *cfg,
+                 const flow_cfg_t *cfg_assoc,
+                 const flow_pgm_attrs_t *attrs,
+                 const flow_pgm_attrs_t *attrs_assoc,
+                 session_t *session)
 {
     flow_t      *assoc_flow = NULL;
 
@@ -674,7 +618,7 @@ flow_create_fte(const flow_cfg_t *cfg,
 
     flow->session = session;
 
-    // Check if we have to create associated flow
+    // check if we have to create associated flow
     if (cfg_assoc) {
         assoc_flow = (flow_t *)g_hal_state->flow_slab()->alloc();
         if (!assoc_flow) {
@@ -701,8 +645,8 @@ flow_create_fte(const flow_cfg_t *cfg,
 }
 
 hal_ret_t
-session_create(const session_args_t *args, hal_handle_t *session_handle,
-               session_t **session_p)
+session_create (const session_args_t *args, hal_handle_t *session_handle,
+                session_t **session_p)
 {
     hal_ret_t ret;
     nwsec_profile_t              *nwsec_prof;

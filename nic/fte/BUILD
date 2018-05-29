@@ -1,3 +1,5 @@
+# {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
@@ -22,6 +24,7 @@ cc_library(
         "//nic:spdlog",
         "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/utils/agent_api:agent_api",
+        "//nic/p4/iris/include:p4_iris_includes",
     ],
     alwayslink = 1,
 )

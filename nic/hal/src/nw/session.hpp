@@ -92,9 +92,51 @@ enum flow_type_t {
 
 // flow direction tells whether flow is from or to the workload
 enum flow_direction_t {
-    FLOW_DIR_FROM_ENIC   = 0,
+    FLOW_DIR_FROM_DMA    = 0,
     FLOW_DIR_FROM_UPLINK = 1,
 };
+
+enum {
+    FLOW_KEY_LOOKUP_TYPE_NONE           = 0,
+    FLOW_KEY_LOOKUP_TYPE_MAC            = 1,
+    FLOW_KEY_LOOKUP_TYPE_IPV4           = 2,
+    FLOW_KEY_LOOKUP_TYPE_IPV6           = 3,
+    FLOW_KEY_LOOKUP_TYPE_FROM_VM_BOUNCE = 4,
+    FLOW_KEY_LOOKUP_TYPE_TO_VM_BOUNCE   = 5
+};
+
+enum {
+    P4PLUS_APPTYPE_DEFAULT,
+    P4PLUS_APPTYPE_MIN = P4PLUS_APPTYPE_DEFAULT,
+    P4PLUS_APPTYPE_CLASSIC_NIC,
+    P4PLUS_APPTYPE_RDMA,
+    P4PLUS_APPTYPE_TCPTLS,
+    P4PLUS_APPTYPE_IPSEC,
+    P4PLUS_APPTYPE_STORAGE,
+    P4PLUS_APPTYPE_TELEMETRY,
+    P4PLUS_APPTYPE_CPU,
+    P4PLUS_APPTYPE_RAW_REDIR,
+    P4PLUS_APPTYPE_P4PT,
+    P4PLUS_APPTYPE_MAX = P4PLUS_APPTYPE_P4PT
+};
+
+#define CPU_TO_P4PLUS_FLAGS_UPD_VLAN        0x0001
+#define CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR  0x0002
+
+#define CPU_FLAGS_VLAN_VALID           0x01
+#define CPU_FLAGS_IPV4_VALID           0x02
+#define CPU_FLAGS_IPV6_VALID           0x04
+#define CPU_FLAGS_IP_OPTIONS_PRESENT   0x08
+#define CPU_FLAGS_TCP_OPTIONS_PRESENT  0x10
+
+#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID             0x01
+#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN            0x02
+#define P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO        0x04
+#define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN           0x08
+#define P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG          0x10
+#define P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM          0x20
+#define P4PLUS_TO_P4_FLAGS_COMPUTE_INNER_L4_CSUM    0x40
+#define P4PLUS_TO_P4_FLAGS_LKP_INST                 0x80
 
 #define FLOW_ROLES(ENTRY)                                           \
     ENTRY(FLOW_ROLE_INITIATOR,      0, "iflow")                     \

@@ -9,7 +9,6 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/include/app_redir_shared.h"
-#include "nic/p4/iris/include/defines.h"
 
 namespace hal {
 namespace app_redir {

@@ -466,7 +466,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
         key.vlan_tag_valid = 0;
         key.vlan_tag_vid   = 0;
-        inp_prop.dir       = FLOW_DIR_FROM_ENIC;
+        inp_prop.dir       = FLOW_DIR_FROM_DMA;
     } else {
         key.vlan_tag_valid = 1;
         key.vlan_tag_vid   = l2seg_pd->cpu_l2seg_id;

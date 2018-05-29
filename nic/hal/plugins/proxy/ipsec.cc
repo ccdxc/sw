@@ -27,7 +27,7 @@ update_host_flow_fwding_info2(fte::ctx_t&ctx)
         HAL_TRACE_DEBUG("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
         ret = HAL_RET_ERR;
         goto lookup_fail;
-    }   
+    }
     acl_key.proto = ctx.get_key().proto;
     acl_key.ip_src = ctx.get_key().sip.v4_addr;
     acl_key.ip_dst = ctx.get_key().dip.v4_addr;
@@ -87,11 +87,11 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
     HAL_TRACE_DEBUG("IPSec Host flow forwarding role: {} direction: {}", ctx.role(), ctx.direction());
     if (
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
-           (ctx.direction() == FLOW_DIR_FROM_ENIC)) ||
+           (ctx.direction() == hal::FLOW_DIR_FROM_DMA)) ||
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
-           (ctx.direction() == FLOW_DIR_FROM_UPLINK)) ||   //temporary - only
+           (ctx.direction() == hal::FLOW_DIR_FROM_UPLINK)) ||   //temporary - only
           ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) &&
-           (ctx.direction() == FLOW_DIR_FROM_UPLINK))
+           (ctx.direction() == hal::FLOW_DIR_FROM_UPLINK))
         ) {
 
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
@@ -113,7 +113,7 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         //ret = ctx.update_flow(flowupd);
         //if (ret != HAL_RET_OK) {
         //    ctx.set_feature_status(ret);
-        //    return fte::PIPELINE_END; 
+        //    return fte::PIPELINE_END;
         //}
     }
 
@@ -127,9 +127,9 @@ update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
     HAL_TRACE_DEBUG("IPSec ESP flow forwarding role: {}  direction: {}", ctx.role(), ctx.direction());
     if (
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
-           (ctx.direction() == FLOW_DIR_FROM_UPLINK)) ||
+           (ctx.direction() == hal::FLOW_DIR_FROM_UPLINK)) ||
           ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) &&
-           (ctx.direction() == FLOW_DIR_FROM_ENIC))
+           (ctx.direction() == hal::FLOW_DIR_FROM_DMA))
         ) {
 
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
