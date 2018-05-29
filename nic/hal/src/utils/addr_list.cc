@@ -280,6 +280,7 @@ addr_list_elem_ipaddressobj_spec_extract (const types::IPAddressObj& addr,
                 addr.address(), addr_lelem)) != HAL_RET_OK)
             return ret;
     }
+    addr_lelem->num_addrs = 1;  // for now adding TODO add exact num_addrs
 
     addr_lelem->negate = addr.negate();
     return HAL_RET_OK;

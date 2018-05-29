@@ -217,6 +217,7 @@
             "inbound_features": [
                 "pensando.io/dol:test",
                 "pensando.io/network:ingress-checks",
+                "pensando.io/sfw:sfw",
                 "pensando.io/eplearn:eplearn",
                 "pensando.io/nat:nat",
                 "pensando.io/lb:lb",

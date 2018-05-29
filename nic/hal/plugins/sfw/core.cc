@@ -133,6 +133,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     dep = ctx.dep();
 
     if (((!sep) || (!dep)) || (sep && dep && sep->sgs.sg_id_cnt == 0 && dep->sgs.sg_id_cnt == 0)) {
+        HAL_TRACE_DEBUG("Classify the packet");
         ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
         if (ret != HAL_RET_OK) {
             goto end_match;

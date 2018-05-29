@@ -405,65 +405,50 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
                        IPProtocol proto, uint16_t ethertype)
 {
     ipv4_rule_t     *rule = NULL;
-    bool            alloc = false;
 
     rule  = rule_lib_alloc();
     if (sa_entry->num_addrs) {
         rule->field[IP_SRC].value.u32 = sa_entry->ip_range.vx_range[0].v4_range.ip_lo;
         rule->field[IP_SRC].mask_range.u32 = sa_entry->ip_range.vx_range[0].v4_range.ip_hi;
-        alloc = true;
     }
     if (da_entry->num_addrs) {
         rule->field[IP_DST].value.u32 = da_entry->ip_range.vx_range[0].v4_range.ip_lo;
         rule->field[IP_DST].mask_range.u32 = da_entry->ip_range.vx_range[0].v4_range.ip_hi;
-        alloc = true;
     }
     if (sp_entry->port_range.port_lo || sp_entry->port_range.port_hi) {
         rule->field[PORT_SRC].value.u32 = sp_entry->port_range.port_lo;
         rule->field[PORT_SRC].mask_range.u32 = sp_entry->port_range.port_hi;
-        alloc = true;
     }
     if (dp_entry->port_range.port_lo || dp_entry->port_range.port_hi) {
         rule->field[PORT_DST].value.u32 = dp_entry->port_range.port_lo;
         rule->field[PORT_DST].mask_range.u32 = dp_entry->port_range.port_hi;
-        alloc = true;
     }
     if (proto != types::IPPROTO_NONE) {
         rule->field[PROTO].value.u8 = proto;
         rule->field[PROTO].mask_range.u8 = 0xFF;
-        alloc = true;
     }
     if (mac_sa_entry->addr != 0) {
         rule->field[MAC_SRC].value.u32 = mac_sa_entry->addr;
         rule->field[MAC_SRC].mask_range.u32 = 0xFFFFFFFF;
-        alloc = true;
     }
     if (dst_sg_entry->sg_id != 0) {
         rule->field[DST_SG].value.u32 = dst_sg_entry->sg_id;
         rule->field[DST_SG].mask_range.u32 = 0xFFFFFFFF;
-        alloc = true;
     }
 
     if (src_sg_entry->sg_id != 0) {
         rule->field[SRC_SG].value.u32 = src_sg_entry->sg_id;
         rule->field[SRC_SG].mask_range.u32 = 0xFFFFFFFF;
-        alloc = true;
     }
 
     if (mac_da_entry->addr != 0) {
         rule->field[MAC_DST].value.u32 = mac_da_entry->addr;
         rule->field[MAC_DST].mask_range.u32 = 0xFFFFFFFF;
-        alloc = true;
     }
 
     if (ethertype != 0) {
         rule->field[ETHERTYPE].value.u16 = ethertype;
         rule->field[ETHERTYPE].mask_range.u16 = 0xFFFF;
-        alloc = true;
-    }
-    if (!alloc) {
-        rule_lib_deref(rule);
-        rule = NULL;
     }
     return rule;
 }
@@ -550,7 +535,10 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                                             dst_port, src_sg, dst_sg, match->proto,
                                                             match->ethertype);
                                     if (!rule) {
+                                        HAL_TRACE_DEBUG("rule allocation failed");
                                         continue;
+                                    } else {
+                                        PRINT_RULE_FIELDS(rule);
                                     }
                                     rule->data.priority = rule_prio;
                                     rule->data.userdata = (void *)data;

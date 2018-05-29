@@ -372,6 +372,26 @@
                 "description": ""
             },
             "response": []
+        },
+        { 
+            "name": "kg1policyinkg2",
+            "request": {
+                "url": "{{node2}}/api/security/policies/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"SGPolicy\",\"meta\":{\"name\":\"kg1_policy_in_kg2\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"attach-tenant\":true,\"policy-rules\":[{\"destination\":{\"address\":\"10.0.2.15 - 10.0.2.15\"},\"action\":[\"PERMIT\"]},{\"action\":[\"DENY\"]}]}}"
+                },
+                "description": ""
+            },
+            "response": []
         }
 	]
 }

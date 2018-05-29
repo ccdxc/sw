@@ -88,6 +88,20 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 #define RULE_MATCH_GET_SG(sg_entry)  \
     dllist_entry(sg_entry, sg_list_elem_t, list_ctxt)
 
+
+#define PRINT_RULE_FIELDS(rule)  \
+            HAL_TRACE_DEBUG("Added rule with keys: src {}, src_range {}, dst {}, dst_range {}, mac_src {}, mac_src_range {}, mac_dst {}, mac_dst_range {}, port_src {}, port_src_mask {}, port_dst {}, port_dst_mask {}, src_sg {}, src_sg_mask {}, dst_sg {}, dst_sg_mask {} proto {}, proto_mask {}, ethertype {} ethertype_mask {}", \
+                        rule->field[IP_SRC].value.u32,rule->field[IP_SRC].mask_range.u32,                                            \
+                        rule->field[IP_DST].value.u32,rule->field[IP_DST].mask_range.u32,                                            \
+                        rule->field[MAC_SRC].value.u32,rule->field[MAC_SRC].mask_range.u32,                                          \
+                        rule->field[MAC_DST].value.u32,rule->field[MAC_DST].mask_range.u32,                                          \
+                        rule->field[PORT_SRC].value.u32,rule->field[PORT_SRC].mask_range.u32,                                        \
+                        rule->field[PORT_DST].value.u32,rule->field[PORT_DST].mask_range.u32,                                        \
+                        rule->field[SRC_SG].value.u32,rule->field[SRC_SG].mask_range.u32,                                            \
+                        rule->field[DST_SG].value.u32,rule->field[DST_SG].mask_range.u32,                                            \
+                        rule->field[PROTO].value.u8,rule->field[PROTO].mask_range.u8,                                                \
+                        rule->field[ETHERTYPE].value.u16, rule->field[ETHERTYPE].value.u16)
+
 // ----------------------------------------------------------------------------
 // Function prototype
 // ----------------------------------------------------------------------------
