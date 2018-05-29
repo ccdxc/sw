@@ -835,8 +835,13 @@ static void ionic_lif_rss_teardown(struct lif *lif)
 	struct device *dev = lif->ionic->dev;
 	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
 
+	if (!lif->rss_ind_tbl)
+		return;
+
 	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl,
 			  lif->rss_ind_tbl_pa);
+
+	lif->rss_ind_tbl = NULL;
 }
 
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
@@ -929,6 +934,119 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	}
 
 	qcq->flags |= QCQ_F_INITED;
+
+	return 0;
+}
+
+static int ionic_get_features(struct lif *lif)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.features = {
+			.opcode = CMD_OPCODE_FEATURES,
+			.set = FEATURE_SET_ETH_HW_FEATURES,
+			.wanted = ETH_HW_VLAN_TX_TAG
+				| ETH_HW_VLAN_RX_STRIP
+				| ETH_HW_VLAN_RX_FILTER
+				| ETH_HW_RX_HASH
+				| ETH_HW_TX_SG
+				| ETH_HW_TX_CSUM
+				| ETH_HW_RX_CSUM,
+		},
+	};
+	int err;
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err)
+		return err;
+
+	lif->hw_features = ctx.cmd.features.wanted &
+			   ctx.comp.features.supported;
+
+	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
+		netdev_info(lif->netdev, "feature ETH_HW_VLAN_TX_TAG\n");
+	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
+		netdev_info(lif->netdev, "feature ETH_HW_VLAN_RX_STRIP\n");
+	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
+		netdev_info(lif->netdev, "feature ETH_HW_VLAN_RX_FILTER\n");
+	if (lif->hw_features & ETH_HW_RX_HASH)
+		netdev_info(lif->netdev, "feature ETH_HW_RX_HASH\n");
+	if (lif->hw_features & ETH_HW_TX_SG)
+		netdev_info(lif->netdev, "feature ETH_HW_TX_SG\n");
+	if (lif->hw_features & ETH_HW_TX_CSUM)
+		netdev_info(lif->netdev, "feature ETH_HW_TX_CSUM\n");
+	if (lif->hw_features & ETH_HW_RX_CSUM)
+		netdev_info(lif->netdev, "feature ETH_HW_RX_CSUM\n");
+	if (lif->hw_features & ETH_HW_TSO)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO\n");
+	if (lif->hw_features & ETH_HW_TSO_IPV6)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPV6\n");
+	if (lif->hw_features & ETH_HW_TSO_ECN)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_ECN\n");
+	if (lif->hw_features & ETH_HW_TSO_GRE)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_GRE\n");
+	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_GRE_CSUM\n");
+	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPXIP4\n");
+	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPXIP6\n");
+	if (lif->hw_features & ETH_HW_TSO_UDP)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP\n");
+	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
+		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP_CSUM\n");
+
+	return 0;
+}
+
+static int ionic_set_features(struct lif *lif)
+{
+	struct net_device *netdev = lif->netdev;
+	int err;
+
+	err = ionic_get_features(lif);
+	if (err)
+		return err;
+
+	netdev->features |= NETIF_F_HIGHDMA;
+
+	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
+	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
+	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
+	if (lif->hw_features & ETH_HW_RX_HASH)
+		netdev->hw_features |= NETIF_F_RXHASH;
+	if (lif->hw_features & ETH_HW_TX_SG)
+		netdev->hw_features |= NETIF_F_SG;
+
+	if (lif->hw_features & ETH_HW_TX_CSUM)
+		netdev->hw_enc_features |= NETIF_F_HW_CSUM;
+	if (lif->hw_features & ETH_HW_RX_CSUM)
+		netdev->hw_enc_features |= NETIF_F_RXCSUM;
+	if (lif->hw_features & ETH_HW_TSO)
+		netdev->hw_enc_features |= NETIF_F_TSO;
+	if (lif->hw_features & ETH_HW_TSO_IPV6)
+		netdev->hw_enc_features |= NETIF_F_TSO6;
+	if (lif->hw_features & ETH_HW_TSO_ECN)
+		netdev->hw_enc_features |= NETIF_F_TSO_ECN;
+	if (lif->hw_features & ETH_HW_TSO_GRE)
+		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
+	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
+		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
+	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
+		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
+	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
+		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
+	if (lif->hw_features & ETH_HW_TSO_UDP)
+		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
+	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
+		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
+
+	netdev->hw_features |= netdev->hw_enc_features;
+	netdev->features |= netdev->hw_features;
+	netdev->vlan_features |= netdev->features;
 
 	return 0;
 }
@@ -1116,6 +1234,10 @@ static int ionic_lif_init(struct lif *lif)
 	/* Enabling interrupts on adminq from here on... */
 	ionic_intr_mask(&lif->adminqcq->intr, false);
 
+	err = ionic_set_features(lif);
+	if (err)
+		goto err_out_mask_adminq;
+
 	err = ionic_lif_txqs_init(lif);
 	if (err)
 		goto err_out_mask_adminq;
@@ -1128,9 +1250,11 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_rxqs_deinit;
 
-	err = ionic_lif_rss_setup(lif);
-	if (err)
-		goto err_out_rxqs_deinit;
+	if (lif->netdev->features & NETIF_F_RXHASH) {
+		err = ionic_lif_rss_setup(lif);
+		if (err)
+			goto err_out_rxqs_deinit;
+	}
 
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
@@ -1170,127 +1294,10 @@ int ionic_lifs_init(struct ionic *ionic)
 	return 0;
 }
 
-static int ionic_get_features(struct lif *lif)
-{
-	struct ionic_admin_ctx ctx = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.features = {
-			.opcode = CMD_OPCODE_FEATURES,
-			.set = FEATURE_SET_ETH_HW_FEATURES,
-			.wanted = ETH_HW_VLAN_TX_TAG
-				| ETH_HW_VLAN_RX_STRIP
-				| ETH_HW_VLAN_RX_FILTER
-				| ETH_HW_RX_HASH
-				| ETH_HW_TX_SG
-				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM,
-		},
-	};
-	int err;
-
-	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err)
-		return err;
-
-	lif->hw_features = ctx.cmd.features.wanted &
-			   ctx.comp.features.supported;
-
-	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
-		netdev_info(lif->netdev, "feature ETH_HW_VLAN_TX_TAG\n");
-	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
-		netdev_info(lif->netdev, "feature ETH_HW_VLAN_RX_STRIP\n");
-	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
-		netdev_info(lif->netdev, "feature ETH_HW_VLAN_RX_FILTER\n");
-	if (lif->hw_features & ETH_HW_RX_HASH)
-		netdev_info(lif->netdev, "feature ETH_HW_RX_HASH\n");
-	if (lif->hw_features & ETH_HW_TX_SG)
-		netdev_info(lif->netdev, "feature ETH_HW_TX_SG\n");
-	if (lif->hw_features & ETH_HW_TX_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_TX_CSUM\n");
-	if (lif->hw_features & ETH_HW_RX_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_RX_CSUM\n");
-	if (lif->hw_features & ETH_HW_TSO)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO\n");
-	if (lif->hw_features & ETH_HW_TSO_IPV6)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPV6\n");
-	if (lif->hw_features & ETH_HW_TSO_ECN)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_ECN\n");
-	if (lif->hw_features & ETH_HW_TSO_GRE)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_GRE\n");
-	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_GRE_CSUM\n");
-	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPXIP4\n");
-	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPXIP6\n");
-	if (lif->hw_features & ETH_HW_TSO_UDP)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP\n");
-	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP_CSUM\n");
-
-	return 0;
-}
-
-static int ionic_set_features(struct lif *lif)
-{
-	struct net_device *netdev = lif->netdev;
-	int err;
-
-	err = ionic_get_features(lif);
-	if (err)
-		return err;
-
-	netdev->features |= NETIF_F_HIGHDMA;
-
-	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
-	if (lif->hw_features & ETH_HW_RX_HASH)
-		netdev->hw_features |= NETIF_F_RXHASH;
-	if (lif->hw_features & ETH_HW_TX_SG)
-		netdev->hw_features |= NETIF_F_SG;
-
-	if (lif->hw_features & ETH_HW_TX_CSUM)
-		netdev->hw_enc_features |= NETIF_F_HW_CSUM;
-	if (lif->hw_features & ETH_HW_RX_CSUM)
-		netdev->hw_enc_features |= NETIF_F_RXCSUM;
-	if (lif->hw_features & ETH_HW_TSO)
-		netdev->hw_enc_features |= NETIF_F_TSO;
-	if (lif->hw_features & ETH_HW_TSO_IPV6)
-		netdev->hw_enc_features |= NETIF_F_TSO6;
-	if (lif->hw_features & ETH_HW_TSO_ECN)
-		netdev->hw_enc_features |= NETIF_F_TSO_ECN;
-	if (lif->hw_features & ETH_HW_TSO_GRE)
-		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
-	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
-		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
-	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
-		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
-	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
-		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
-	if (lif->hw_features & ETH_HW_TSO_UDP)
-		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
-	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
-		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
-
-	netdev->hw_features |= netdev->hw_enc_features;
-	netdev->features |= netdev->hw_features;
-	netdev->vlan_features |= netdev->features;
-
-	return 0;
-}
-
 int ionic_lif_register(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 	int err;
-
-	err = ionic_set_features(lif);
-	if (err)
-		return err;
 
 	err = ionic_debugfs_add_lif(lif);
 	if (err)
