@@ -13,6 +13,8 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/ops"
+	"github.com/pensando/sw/venice/cmd/services"
+	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	// Import utils/debug pkg to publish runtime stats as part of its pkg init
 	_ "github.com/pensando/sw/venice/utils/debug"
@@ -39,6 +41,7 @@ func NewRESTServer() *martini.ClassicMartini {
 	m.Post(uRLPrefix+clusterURL, ClusterCreateHandler)
 	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
 	m.Get(uRLPrefix+servicesURL, ServiceListHandler)
+	m.Get(uRLPrefix+"/debugUpgrade", DebugUpgradeHandler) // TODO: Remove after upgrade development is complete
 	m.Get(debugPrefix+expvarURL, expvar.Handler())
 
 	m.Group("/debug/pprof", func(r martini.Router) {
@@ -121,4 +124,12 @@ func ServiceListHandler(w http.ResponseWriter, req *http.Request) {
 	if err := encoder.Encode(env.ResolverService.List()); err != nil {
 		log.Errorf("Failed to encode with error: %v", err)
 	}
+}
+
+// DebugUpgradeHandler is a debug handler during development of upgrade
+func DebugUpgradeHandler(w http.ResponseWriter, req *http.Request) {
+	// read the file for the updated list of services
+	services.ContainerInfoMap = utils.GetContainerInfo()
+	err := env.K8sService.UpgradeServices(utils.GetUpgradeOrder())
+	log.Debugf("UpgradeServices returned %s", err)
 }

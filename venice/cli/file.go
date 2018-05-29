@@ -147,7 +147,6 @@ func processRecs(ctx *context, inp, kind string) error {
 	if isJSON(inp) {
 		depth := 0
 		recBegin := 0
-		recEnd := 0
 		for ii := 0; ii < len(inp); ii++ {
 			if inp[ii] == '{' {
 				if depth == 0 {
@@ -158,8 +157,7 @@ func processRecs(ctx *context, inp, kind string) error {
 			if inp[ii] == '}' {
 				depth--
 				if depth == 0 {
-					recEnd = ii
-					if err := processRec(ctx, inp[recBegin:recEnd+1], kind); err != nil {
+					if err := processRec(ctx, inp[recBegin:ii+1], kind); err != nil {
 						return err
 					}
 				}

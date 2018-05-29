@@ -304,16 +304,16 @@ func labelCmd(c *cli.Context) {
 	}
 	if len(ctx.names) == 1 {
 		url := getURL(ctx, ctx.names[0])
-		err := restGet(url, ctx.tenant, obj)
+		err = restGet(url, ctx.tenant, obj)
 		if err != nil {
 			log.Printf("Error getting %s '%s': %s", ctx.subcmd, ctx.names[0], err)
 		} else {
 			log.Debugf("Updating labels to the following object(s):\n")
 			dumpStructStdout(ctx, obj)
-			if err := updateLabel(obj, newLabels); err != nil {
+			if err = updateLabel(obj, newLabels); err != nil {
 				log.Printf("Error updating labels, obj %v, labels %s: %s\n", obj, newLabels, err)
 			}
-			if err := putObj(ctx, obj); err != nil {
+			if err = putObj(ctx, obj); err != nil {
 				log.Printf("%s", err)
 			}
 		}
@@ -914,7 +914,7 @@ func postObj(ctx *context, obj interface{}) error {
 		return fmt.Errorf("Unable to find header in object (marshal): %+v", obj)
 	}
 	hdr := api.ObjectHeader{}
-	if err := json.Unmarshal(hdrBytes, &hdr); err != nil {
+	if err = json.Unmarshal(hdrBytes, &hdr); err != nil {
 		return fmt.Errorf("Unable to find header in object (unmarshal): '%s'", string(hdrBytes))
 	}
 
@@ -944,7 +944,7 @@ func putObj(ctx *context, obj interface{}) error {
 		return fmt.Errorf("Unable to find header in object (marshal): %+v", obj)
 	}
 	hdr := api.ObjectHeader{}
-	if err := json.Unmarshal(hdrBytes, &hdr); err != nil {
+	if err = json.Unmarshal(hdrBytes, &hdr); err != nil {
 		return fmt.Errorf("Unable to find header in object (unmarshal): '%s'", string(hdrBytes))
 	}
 

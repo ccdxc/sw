@@ -159,7 +159,7 @@ func (tgt *Target) getCoveragePercent(b []byte) error {
 		// The coverage percentage parsing should be > 0.0%
 		// Cases include packages which has a *test.go file but doesn't test the main binary.
 		// This will also ignore parsing coverage details for the integration tests themselves
-		re := regexp.MustCompile("[1-9]+.[0-9]%")
+		re := regexp.MustCompile("[1-9]+[0-9]*.[0-9]*%")
 		v := re.FindString(line)
 		if len(v) <= 0 {
 			tgt.Coverage = 100.0

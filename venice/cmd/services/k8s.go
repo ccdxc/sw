@@ -307,8 +307,7 @@ func makeContainers(module *protos.Module, volumeMounts []v1.VolumeMount) []v1.C
 	return containers
 }
 
-// createDaemonSet creates a DaemonSet object.
-func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
+func createDaemonSetObject(module *protos.Module) *clientTypes.DaemonSet {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 	dsConfig := &clientTypes.DaemonSet{
@@ -316,6 +315,9 @@ func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 			Name: module.Name,
 		},
 		Spec: clientTypes.DaemonSetSpec{
+			UpdateStrategy: clientTypes.DaemonSetUpdateStrategy{
+				Type: "RollingUpdate",
+			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -330,7 +332,12 @@ func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 			},
 		},
 	}
+	return dsConfig
+}
 
+// createDaemonSet creates a DaemonSet object.
+func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
+	dsConfig := createDaemonSetObject(module)
 	d, err := client.Extensions().DaemonSets(defaultNS).Create(dsConfig)
 	if err == nil {
 		log.Infof("Created DaemonSet %+v", d)
@@ -343,8 +350,7 @@ func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 	return err
 }
 
-// createDeployment creates a Deployment object.
-func createDeployment(client k8sclient.Interface, module *protos.Module) error {
+func createDeploymentObject(module *protos.Module) *clientTypes.Deployment {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
@@ -369,7 +375,12 @@ func createDeployment(client k8sclient.Interface, module *protos.Module) error {
 			},
 		},
 	}
+	return dConfig
+}
 
+// createDeployment creates a Deployment object.
+func createDeployment(client k8sclient.Interface, module *protos.Module) error {
+	dConfig := createDeploymentObject(module)
 	d, err := client.Extensions().Deployments(defaultNS).Create(dConfig)
 	if err == nil {
 		log.Infof("Created Deployment %+v", d)
@@ -481,5 +492,47 @@ func (k *k8sService) notify(e types.K8sPodEvent) error {
 			err = er
 		}
 	}
+	return err
+}
+
+func (k *k8sService) UpgradeServices(services []string) error {
+	for _, srv := range services {
+		module, ok := k8sModules[srv]
+		if !ok {
+			log.Infof("cant find module for service %s to upgrade", srv)
+			continue
+		}
+		switch module.Spec.Type {
+		case protos.ModuleSpec_DaemonSet:
+			upgradeDaemonSet(k.client, &module)
+		case protos.ModuleSpec_Deployment:
+			upgradeDeployment(k.client, &module)
+		}
+	}
+	log.Debugf("done upgrade services %#v", services)
+	return nil
+}
+
+func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
+	dsConfig := createDaemonSetObject(module)
+	d, err := client.Extensions().DaemonSets(defaultNS).Update(dsConfig)
+	if err == nil {
+		log.Infof("Updated DaemonSet %+v", d)
+	} else {
+		log.Errorf("Failed to Updated DaemonSet %+v with error: %v", dsConfig, err)
+	}
+
+	return err
+}
+
+func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error {
+	dConfig := createDeploymentObject(module)
+	d, err := client.Extensions().Deployments(defaultNS).Update(dConfig)
+	if err == nil {
+		log.Infof("Updated Deployment %+v", d)
+	} else {
+		log.Errorf("Failed to Updated Deployment %+v with error: %v", dConfig, err)
+	}
+
 	return err
 }

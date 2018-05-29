@@ -180,6 +180,12 @@ func TestK8sService(t *testing.T) {
 
 	verifyK8sServices(t, client)
 
+	k8sSvc.UpgradeServices([]string{"pen-ntp", "pen-npm"})
+	if err != nil {
+		log.Errorf("Upgrade services failed: %v", err)
+	}
+	verifyK8sServices(t, client)
+
 	k8sSvc.UnRegister(po)
 	k8sSvc.Stop()
 }

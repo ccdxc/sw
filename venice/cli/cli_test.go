@@ -172,12 +172,14 @@ func TestNodeCreate(t *testing.T) {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
 
+	veniceCLI("label node --update-label foo:bar vm233")
+
 	out = veniceCLI("read node vm233")
 	node := &cluster.Node{}
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cluster.NodeSpec_WORKLOAD.String() {
+	if node.Labels["foo"] != "bar" || node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cluster.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Create operation failed: %+v \n", node)
 	}
 
@@ -496,11 +498,11 @@ func TestLbPolicyUpdate(t *testing.T) {
 }
 
 func TestEndpointCreate(t *testing.T) {
-	out := veniceCLI("create endpoint --label dmz=yes --label dc=lab-22 --label tier:frontend vm23")
+	out := veniceCLI("create endpoint --label dc=lab-22 --label tier:frontend vm23")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create endpoint: garbled output '%s'", out)
 	}
-
+	veniceCLI("label endpoint --update-label dmz=yes vm23")
 	out = veniceCLI("read endpoint vm23")
 	ep := &workload.Endpoint{}
 	if err := json.Unmarshal([]byte(out), ep); err != nil {
@@ -510,7 +512,7 @@ func TestEndpointCreate(t *testing.T) {
 	lv1, ok1 := ep.Labels["dmz"]
 	lv2, ok2 := ep.Labels["dc"]
 	lv3, ok3 := ep.Labels["tier"]
-	if ep.ResourceVersion != "1" || len(ep.Labels) != 3 ||
+	if ep.ResourceVersion != "2" || len(ep.Labels) != 3 ||
 		!ok1 || lv1 != "yes" || !ok2 || lv2 != "lab-22" || !ok3 || lv3 != "frontend" {
 		t.Fatalf("Create endpoint failed: %+v \n", ep)
 	}
@@ -542,7 +544,7 @@ func TestEndpointUpdate(t *testing.T) {
 	lv1, ok1 := ep.Labels["dmz"]
 	lv2, ok2 := ep.Labels["dc"]
 	lv3, ok3 := ep.Labels["tier"]
-	if ep.ResourceVersion != "2" || len(ep.Labels) != 3 ||
+	if ep.ResourceVersion != "3" || len(ep.Labels) != 3 ||
 		!ok1 || lv1 != "no" || !ok2 || lv2 != "lab-22" || !ok3 || lv3 != "frontend" {
 		t.Fatalf("Update endpoint failed: %+v \n", ep)
 	}
@@ -1050,7 +1052,7 @@ spec:
 		t.Fatalf("Failed to error on invalid yaml to json conversion: %s", out)
 	}
 
-	out = veniceCLI("create network uploaded")
+	veniceCLI("create network uploaded")
 	url := "http://localhost:" + testServerPort + api.Objs["network"].URL + "/uploaded"
 	out = veniceCLI("create upload " + url)
 	if !fmtOutput && strings.TrimSpace(out) != "" {
@@ -1093,7 +1095,7 @@ func TestEditCommand(t *testing.T) {
 
 	out = veniceCLI("read securityGroup editsg")
 	sg = &security.SecurityGroup{}
-	if err := json.Unmarshal([]byte(out), sg); err != nil {
+	if err = json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
 	if sg.ResourceVersion != "3" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || sg.Spec.WorkloadSelector.Print() != "tier=frontend" ||
@@ -1106,7 +1108,7 @@ func TestEditCommand(t *testing.T) {
 	veniceCLI("edit user")
 	out = veniceCLI("read user joe")
 	user := &api.User{}
-	if err := json.Unmarshal([]byte(out), user); err != nil {
+	if err = json.Unmarshal([]byte(out), user); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
 	if user.Labels["dept"] != "eng" {
@@ -1337,7 +1339,7 @@ func TestSnapshot(t *testing.T) {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
 	tenant := &cluster.Tenant{}
-	if err := json.Unmarshal([]byte(b), tenant); err != nil {
+	if err = json.Unmarshal([]byte(b), tenant); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
 	if tenant.Spec.AdminUser != "snap-admin" {
@@ -1349,7 +1351,7 @@ func TestSnapshot(t *testing.T) {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
 	lbp := &network.LbPolicy{}
-	if err := json.Unmarshal([]byte(b), lbp); err != nil {
+	if err = json.Unmarshal([]byte(b), lbp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
 	if lbp.Spec.HealthCheck.ProbePortOrUrl != "/healthStatus" || lbp.Spec.HealthCheck.Interval != 5 ||
@@ -1362,7 +1364,7 @@ func TestSnapshot(t *testing.T) {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
 	node := &cluster.Node{}
-	if err := json.Unmarshal([]byte(b), node); err != nil {
+	if err = json.Unmarshal([]byte(b), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
 	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_WORKLOAD.String() {
@@ -1482,7 +1484,7 @@ func TestEndpointDelete(t *testing.T) {
 	lv1, ok1 := ep.Labels["dmz"]
 	lv2, ok2 := ep.Labels["dc"]
 	lv3, ok3 := ep.Labels["tier"]
-	if ep.ResourceVersion != "3" || len(ep.Labels) != 3 ||
+	if ep.ResourceVersion != "4" || len(ep.Labels) != 3 ||
 		!ok1 || lv1 != "no" || !ok2 || lv2 != "lab-22" || !ok3 || lv3 != "frontend" {
 		t.Fatalf("Update endpoint failed: %+v \n", ep)
 	}

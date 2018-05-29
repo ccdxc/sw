@@ -42,6 +42,8 @@ func TestCertSrvMockRPC(t *testing.T) {
 	AssertOk(t, err, "Error creating mock CertSrv instance")
 	defer certsrv.Stop()
 
+	Assert(t, certsrv.GetActiveConnCount() == 0, "Active connections should be 0 initially")
+
 	// Compare trust roots -- we know there is only 1 in the file
 	trustRootsResp, err := certsrv.GetTrustRoots(context.Background(), &certapi.Empty{})
 	AssertOk(t, err, "Error retrieving trust roots from CertSrv endpoint")

@@ -211,6 +211,9 @@ type K8sService interface {
 	// Delete a node from k8s cluster
 	DeleteNode(name string) error
 
+	// UpgradeServices upgrades all the deployments and daemonsets in the specified order
+	UpgradeServices(order []string) error
+
 	// Stop the k8s service.
 	Stop()
 }

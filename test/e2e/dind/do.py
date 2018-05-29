@@ -78,7 +78,7 @@ class Node:
 
     def doCluster(self):
         self.startNode()
-        self.runCmd("""sh -c 'for i in /import/src/github.com/pensando/sw/bin/tars/* ; do docker load -i  $i; done'""")
+        self.loadImage()
         self.startCluster()
     def stopCluster(self):
         penSrvs = ["pen-cmd", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch", "pen-vchub", "pen-npm" ]
@@ -91,8 +91,10 @@ class Node:
         self.runCmd("bash -c 'rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/' ")
         self.runCmd("bash -c 'ip addr flush label *pens' ")
         self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop -t 2 $(docker ps -qa); docker rm -f $(docker ps -qa); fi' """)
+    def loadImage(self):
+        self.runCmd("""sh -c 'for i in /import/src/github.com/pensando/sw/bin/tars/pen* ; do docker load -i  $i; done'""")
+        self.runCmd("""docker run --rm --name pen-install -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript""")
     def startCluster(self):
-        self.runCmd("""docker run --rm --name pen-cmd -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript""")
         self.runCmd("""systemctl daemon-reload""")
         self.runCmd("""systemctl enable pensando.target""")
         self.runCmd("""systemctl start pensando.target""")
@@ -100,7 +102,7 @@ class Node:
         self.runCmd("""systemctl start pen-cmd""")
     def restartCluster(self):
         self.stopCluster()
-        self.runCmd("""sh -c 'for i in /import/src/github.com/pensando/sw/bin/tars/pen* ; do docker load -i  $i; done'""")
+        self.loadImage()
         self.startCluster()
 class NaplesNode(Node):
     def __init__(self, name, ipaddress, containerIndex, testMode):
@@ -220,6 +222,7 @@ parser.add_argument("-configFile", default="tb_config.json", help="Configuration
 parser.add_argument("-restart", action='store_true',default=False, help="restart venice components in existing Cluster by loading new Pensando code")
 parser.add_argument("-delete", action='store_true',default=False, help="delete cluster by deleting containers")
 parser.add_argument("-stop", action='store_true',default=False, help="stop venice cluster but keep containers")
+parser.add_argument("-load_image_only", action='store_true',default=False, help="load and install new venice image (not restart)")
 args = parser.parse_args()
 
 if args.delete:
@@ -287,7 +290,11 @@ if args.init_cluster_only:
     initCluster(ipList[0], quorumNames, clustervip)
     os.system("stty sane")
     sys.exit(0)
-
+if args.load_image_only:
+    pool = ThreadPool(len(nodes))
+    pool.map(lambda x: x.loadImage(), nodes)
+    os.system("stty sane")
+    sys.exit(0)
 if args.stop:
     stopCluster(nodeList, nodes + naplesNodes, quorumNames, clustervip)
     os.system("stty sane")

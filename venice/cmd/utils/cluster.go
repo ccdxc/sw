@@ -84,29 +84,46 @@ type ContainerInfo struct {
 	ImageName string
 }
 
-// GetContainerInfo reads config file and returns a map of ContainerInfo indexed by name
-func GetContainerInfo() map[string]ContainerInfo {
-	info := map[string]ContainerInfo{}
-	defer log.Debugf("returning ContainerInfo : %#v \n", info)
+// ImageConfig is created by Installer containing info about various images and other dynamic info about image
+type ImageConfig struct {
+	ImageMap     map[string]string `json:"imageMap,omitempty"`
+	UpgradeOrder []string          `json:"upgradeOrder,omitempty"`
+}
 
+func readImageConfigFile(imageConfig *ImageConfig) error {
 	confFile := path.Join(env.Options.CommonConfigDir, env.Options.ContainerConfigFile)
 	if _, err := os.Stat(confFile); err != nil {
 		// Stat error is treated as not part of cluster.
-		log.Fatalf("unable to find confFile %s error: %v", confFile, err)
-		return info
+		log.Errorf("unable to find confFile %s error: %v", confFile, err)
+		return err
 	}
-	in, err := ioutil.ReadFile(confFile)
-	if err != nil {
-		log.Fatalf("unable to read confFile %s error: %v", confFile, err)
-		return info
+	var in []byte
+	var err error
+	if in, err = ioutil.ReadFile(confFile); err != nil {
+		log.Errorf("unable to read confFile %s error: %v", confFile, err)
+		return err
 	}
-	var fileData map[string]string
-	if err := json.Unmarshal(in, &fileData); err != nil {
-		log.Fatalf("unable to understand confFile %s error: %v", confFile, err)
-		return info
+	if err := json.Unmarshal(in, imageConfig); err != nil {
+		log.Errorf("unable to understand confFile %s error: %v", confFile, err)
+		return err
 	}
-	for k, v := range fileData {
+	return nil
+}
+
+// GetContainerInfo reads config file and returns a map of ContainerInfo indexed by name
+func GetContainerInfo() map[string]ContainerInfo {
+	info := make(map[string]ContainerInfo)
+	var imageConfig ImageConfig
+	readImageConfigFile(&imageConfig)
+	for k, v := range imageConfig.ImageMap {
 		info[k] = ContainerInfo{ImageName: v}
 	}
 	return info
+}
+
+// GetUpgradeOrder reads config file and returns the order of services to be upgraded
+func GetUpgradeOrder() []string {
+	var imageConfig ImageConfig
+	readImageConfigFile(&imageConfig)
+	return imageConfig.UpgradeOrder
 }

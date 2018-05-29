@@ -307,6 +307,11 @@ type K8sService struct {
 	observers []types.K8sPodEventObserver
 }
 
+// UpgradeServices is a mock
+func (m *K8sService) UpgradeServices(order []string) error {
+	return nil
+}
+
 // Start is a mock implementation of starting kubernetes service.
 func (m *K8sService) Start(client k8sclient.Interface, isLeader bool) {
 }
