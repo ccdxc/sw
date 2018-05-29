@@ -228,3 +228,13 @@ modules:
         rtl     : True 
         iterate :
             - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : DECRYPT_UPLINK_TCP_TO_HOST
+        enable  : False 
+        package : test.ipsec-proxy
+        module  : decrypt_uplink_tcp_to_host 
+        spec    : decrypt_uplink_tcp_to_host.testspec 
+        ignore  : False 
+        rtl     : True
+        iterate :
+            - flow: filter://type=IPV4
