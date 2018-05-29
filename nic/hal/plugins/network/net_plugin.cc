@@ -18,7 +18,7 @@ const std::string FTE_FEATURE_TUNNEL("pensando.io/network:tunnel");
 const std::string FTE_FEATURE_QOS("pensando.io/network:qos");
 const std::string FTE_FEATURE_INGRESS_CHECKS("pensando.io/network:ingress-checks");
 
-extern "C" hal_ret_t network_init() {
+extern "C" hal_ret_t network_init(hal_cfg_t *hal_cfg) {
     fte::register_feature(FTE_FEATURE_STAGE_MARKER,  stage_exec);
     fte::register_feature(FTE_FEATURE_FWDING, fwding_exec);
     fte::register_feature(FTE_FEATURE_FWDING_PRE_STAGE, fwding_pre_stage_exec);

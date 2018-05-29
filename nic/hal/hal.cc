@@ -666,10 +666,8 @@ hal_init (hal_cfg_t *hal_cfg)
 
     if (!getenv("DISABLE_FTE") &&
         !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)) {
-        
-        //Set the number of instances as read from config
+        // set the number of instances as read from config
         ipc_logger::set_ipc_instances(hal_cfg->num_data_threads);
-
         // start fte threads
         for (uint32_t i = 0; (i < hal_cfg->num_data_threads &&
                    hal_cfg->features != HAL_FEATURE_SET_GFT); i++) {

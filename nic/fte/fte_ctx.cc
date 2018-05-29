@@ -285,7 +285,7 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
         swap_flow_objs();
     }
 
-    
+
 
     // Init feature sepcific session state
     sdk::lib::dllist_ctxt_t   *entry;
@@ -369,7 +369,7 @@ static inline void swap_flow_key(const hal::flow_key_t &key, hal::flow_key_t *rk
     rkey->flow_type = key.flow_type;
     rkey->svrf_id = key.dvrf_id;
     rkey->dvrf_id = key.svrf_id;
-    
+
     if (key.flow_type == hal::FLOW_TYPE_L2) {
         memcpy(rkey->smac, key.dmac, sizeof(rkey->smac));
         memcpy(rkey->dmac, key.smac, sizeof(rkey->dmac));
@@ -461,7 +461,7 @@ ctx_t::create_session()
 // Add FTE Flow logging information in logging infra
 //------------------------------------------------------------------------------
 void
-ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl, 
+ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
                         fwlog::FWEvent *fwlog) {
     HAL_TRACE_DEBUG("FWEvent size: {}", fwlog->ByteSizeLong());
     fwlog->set_source_vrf(key.svrf_id);
@@ -469,16 +469,16 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     if (key.flow_type == hal::FLOW_TYPE_V4) {
         fwlog->set_sipv4(key.sip.v4_addr);
         fwlog->set_dipv4(key.dip.v4_addr);
-    } 
+    }
     fwlog->set_sport(key.sport);
     fwlog->set_dport(key.dport);
     fwlog->set_ipprot(key.proto);
     fwlog->set_direction(key.dir);
     if (pipeline_event() == FTE_SESSION_DELETE)
         fwlog->set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
-    fwlog->set_session_id(sess_hdl); 
+    fwlog->set_session_id(sess_hdl);
 
-    if (logger_ != NULL) 
+    if (logger_ != NULL)
         logger_->fw_log(*fwlog);
 }
 
@@ -715,7 +715,7 @@ ctx_t::update_flow_table()
     add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
     if (++rstage <= rstage_)
         add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
-        
+
     if (protobuf_request()) {
         sess_resp_->mutable_status()->set_session_handle(session_handle);
     }
@@ -780,7 +780,7 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_) {
         // update ctx rkey
         if (!this->protobuf_request()) {
-            if (header.valid_flds.dip) 
+            if (header.valid_flds.dip)
                 rkey_.sip = key_.dip;
             if (header.valid_flds.dvrf_id)
                 rkey_.svrf_id = key_.dvrf_id;
@@ -837,7 +837,7 @@ ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& heade
         // update ctx rkey
         if (header.valid_flds.sip)
             rkey_.dip = key_.sip;
-        if (header.valid_flds.svrf_id) 
+        if (header.valid_flds.svrf_id)
             rkey_.dvrf_id = key_.svrf_id;
 
         // update rflow key
@@ -918,7 +918,7 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
     if (num_features) {
         feature_state_init(feature_state_, num_features_);
     }
- 
+
     return HAL_RET_OK;
 }
 
@@ -1218,7 +1218,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                    hal::pd::p4plus_to_p4_header_t  *p4plus_header,
                    uint16_t dest_lif, uint8_t  qtype, uint32_t qid,
                    uint8_t  ring_number, types::WRingType wring_type,
-                   post_xmit_cb_t cb) 
+                   post_xmit_cb_t cb)
 {
     txpkt_info_t *pkt_info;
     hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
@@ -1338,7 +1338,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
             HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
         }
         // Issue a callback to free the packet
-        if (pkt_info->cb) 
+        if (pkt_info->cb)
             pkt_info->cb(pkt_info->pkt);
     }
 
@@ -1377,7 +1377,7 @@ ctx_t::process()
     if (!ipc_logging_disable() &&
         pipeline_event() != FTE_SESSION_GET)
         logger_  = get_current_ipc_logger_inst();
- 
+
     // execute the pipeline
     ret = execute_pipeline(*this);
     if (ret != HAL_RET_OK) {

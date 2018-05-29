@@ -7,8 +7,14 @@
             "init_func" : "classic_init",
             "exit_func" : "classic_exit",
             "auto_load" : "true",
-            "deps"      : [],
+            "deps"      : ["pensando.io/nw"],
             "features"  : ["fwding"]
+        },
+        {
+            "name"      : "nw",
+            "provider"  : "pensando.io",
+            "lib"       : "nw/libnw.so",
+            "auto_load" : "true"
         }
     ],
     "pipelines": [

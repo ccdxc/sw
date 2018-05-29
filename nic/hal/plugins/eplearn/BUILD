@@ -9,6 +9,7 @@ load("//nic/bazel:common_deps.bzl", "test_deps_list")
 
 common_deps = [
     "//nic/hal:hal_hdrs",
+    "//nic/hal/src/nw:nw_includes",
     "//nic/utils/fsm:fsm",
     "//nic/fte:fte_includes",
     "//nic/include:base_includes",
@@ -48,6 +49,7 @@ cc_library(
         "//nic/hal/pd:hal_pd_includes",
         "//nic:gen_proto_includes",
         "//nic/hal:hal_hdrs",
+        "//nic/hal/src/nw:nw_includes",
         "//nic/utils/fsm:fsm",
         "//nic/fte:fte_includes",
         "//nic/include:base_includes",

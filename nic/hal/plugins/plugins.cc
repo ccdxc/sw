@@ -11,7 +11,7 @@
 namespace hal {
 namespace plugins {
 
-typedef hal_ret_t (*init_handler_t)();
+typedef hal_ret_t (*init_handler_t)(hal_cfg_t *hal_cfg);
 typedef void (*exit_handler_t)();
 typedef void (*thread_handler_t)(int tid);
 
@@ -113,8 +113,8 @@ std::ostream& operator<<(std::ostream& os, const pipeline_t& val)
         os << " " << name;
     }
     os << " ]";
-    
-    return os << "}";                   
+
+    return os << "}";
 }
 
 static pipeline_t* pipeline_alloc()
@@ -165,8 +165,17 @@ bool plugin_manager_t::parse_plugin(const pt::ptree &tree, plugin_t *plugin,
         return false;
     }
 
-    plugin->init_func = tree.get<std::string>("init_func", "");
-    plugin->exit_func = tree.get<std::string>("exit_func", "");
+    if (auto init_func = tree.get_optional<std::string>("init_func")) {
+        plugin->init_func = *init_func;
+    } else {
+        plugin->init_func = "init";
+    }
+
+    if (auto exit_func = tree.get_optional<std::string>("exit_func")) {
+        plugin->exit_func = *exit_func;
+    } else {
+        plugin->exit_func = "exit";
+    }
     plugin->auto_load = tree.get<bool>("auto_load", false);
 
     if (auto func = tree.get_optional<std::string>("thread_init_func")) {
@@ -198,7 +207,7 @@ bool plugin_manager_t::parse_plugin(const pt::ptree &tree, plugin_t *plugin,
 }
 
 //------------------------------------------------------------------------------
-// Parse plugins 
+// Parse plugins
 //------------------------------------------------------------------------------
 void plugin_manager_t::parse_plugins(const pt::ptree &tree,
                                      const std::string& plugin_path)
@@ -265,7 +274,7 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
     if (outbound_features) {
         for (auto &node : *outbound_features) {
             pipeline->outbound_features.push_back(node.second.data());
-        }        
+        }
     }
 
 
@@ -395,7 +404,7 @@ bool plugin_manager_t::load_symbols(void *so, plugin_t *plugin)
 //------------------------------------------------------------------------------
 // Load plugin
 //------------------------------------------------------------------------------
-bool plugin_manager_t::load_plugin(plugin_t *plugin)
+bool plugin_manager_t::load_plugin(hal_cfg_t *hal_cfg, plugin_t *plugin)
 {
     hal_ret_t ret;
 
@@ -427,7 +436,7 @@ bool plugin_manager_t::load_plugin(plugin_t *plugin)
             return false;
         }
 
-        if (load_plugin(entry->second) == false) {
+        if (load_plugin(hal_cfg, entry->second) == false) {
             HAL_TRACE_ERR("plugins::load_plugin {} dependent plugin {} failed",
                           plugin->name, dep);
             plugin->state = PLUGIN_STATE_DEPS_FAILED;
@@ -436,7 +445,8 @@ bool plugin_manager_t::load_plugin(plugin_t *plugin)
     }
 
     // open so and load symbols
-    HAL_TRACE_INFO("plugins::load_plugin {} loading so {}", plugin->name, plugin->lib);
+    HAL_TRACE_INFO("plugins::load_plugin {} loading so {}",
+                   plugin->name, plugin->lib);
 
     void *so = dlopen(plugin->lib.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
     if (!so) {
@@ -455,7 +465,7 @@ bool plugin_manager_t::load_plugin(plugin_t *plugin)
     // init plugin
     if (plugin->init_handler) {
         HAL_TRACE_DEBUG("plugins::load_plugin {} initializing...", plugin->name);
-        ret = plugin->init_handler();
+        ret = plugin->init_handler(hal_cfg);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("plugins::load_plugin {} init failed ret={}",
                           plugin->name, ret);
@@ -547,7 +557,7 @@ void plugin_manager_t::parse(const std::string& json_path,
 //------------------------------------------------------------------------------
 //   load/init plugins and pipelines
 //------------------------------------------------------------------------------
-void plugin_manager_t::load()
+void plugin_manager_t::load(hal_cfg_t *hal_cfg)
 {
     // register plugins
     for (auto &kv : plugins_) {
@@ -564,7 +574,7 @@ void plugin_manager_t::load()
     for (auto &kv : plugins_) {
         plugin_t *plugin = kv.second;
         if (plugin->auto_load) {
-            load_plugin(plugin);
+            load_plugin(hal_cfg, plugin);
         }
     }
 }

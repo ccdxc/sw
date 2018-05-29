@@ -15,7 +15,7 @@ using namespace hal::plugins::alg_utils;
 
 alg_state_t *g_dns_state;
 
-extern "C" hal_ret_t alg_dns_init() {
+extern "C" hal_ret_t alg_dns_init(hal_cfg_t *hal_cfg) {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
     slab *dnsinfo_slab_ = NULL;
@@ -34,13 +34,14 @@ extern "C" hal_ret_t alg_dns_init() {
     HAL_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
 
     dnsinfo_slab_  = slab::factory("dns_alg_l4sess", HAL_SLAB_DNS_ALG_DNSINFO,
-                                     sizeof(dns_info_t), 64,
-                                    true, true, true);
+                                   sizeof(dns_info_t), 64,
+                                   true, true, true);
     HAL_ASSERT_RETURN((dnsinfo_slab_ != NULL), HAL_RET_OOM);
 
     g_dns_state = alg_state_t::factory(FTE_FEATURE_ALG_DNS.c_str(),
-                                  appsess_slab_, l4sess_slab_, dnsinfo_slab_, NULL,
-                                  dnsinfo_cleanup_hdlr);
+                                       appsess_slab_, l4sess_slab_,
+                                       dnsinfo_slab_, NULL,
+                                       dnsinfo_cleanup_hdlr);
 
     return HAL_RET_OK;
 }

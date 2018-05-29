@@ -30,7 +30,7 @@ ReplList::factory(uint32_t repl_tbl_index, Met *met,
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-ReplList::destroy(ReplList *re, uint32_t mtrack_id) 
+ReplList::destroy(ReplList *re, uint32_t mtrack_id)
 {
     if (re) {
         re->~ReplList();
@@ -54,7 +54,7 @@ ReplList::ReplList(uint32_t repl_tbl_index, Met *met)
 // ----------------------------------------------------------------------------
 // Destructor
 // ----------------------------------------------------------------------------
-ReplList::~ReplList() 
+ReplList::~ReplList()
 {
     // delete first_repl_tbl_entry_;
 }
@@ -131,7 +131,7 @@ ReplList::add_replication(void *data)
             __FUNCTION__, repl_tbl_index_);
 
     // repl_entry = new ReplEntry(data, met_->get_repl_entry_data_len());
-    repl_entry = ReplEntry::factory(data, 
+    repl_entry = ReplEntry::factory(data,
                                     met_->get_repl_entry_data_len());
 
 
@@ -202,7 +202,7 @@ end:
 // - First RTE
 //     - if next_rte:
 //         - Save next rte's index.
-//         - Change next rte's index to first rte's index 
+//         - Change next rte's index to first rte's index
 //         - Move next rte to first.
 //         - Set prev of new first rte to NULL.
 //         - Program first rte
@@ -281,8 +281,8 @@ ReplList::process_del_repl_tbl_entry(ReplTableEntry *rte)
     return ret;
 }
 
-hal_ret_t 
-ReplList::get_repl_table_entry(ReplTableEntry **rte) 
+hal_ret_t
+ReplList::get_repl_table_entry(ReplTableEntry **rte)
 {
     hal_ret_t rs = HAL_RET_OK;
     ReplTableEntry *tmp_rte;
@@ -300,9 +300,9 @@ ReplList::get_repl_table_entry(ReplTableEntry **rte)
         tmp_rte = tmp_rte->get_next();
     }
 
-    // new repl. table entry and first one is present. That means we 
+    // new repl. table entry and first one is present. That means we
     // have to create a new entry.
-    if (first_repl_tbl_entry_) { 
+    if (first_repl_tbl_entry_) {
         // Allocate an index
         rs = met_->alloc_repl_table_index(&repl_tbl_idx);
         if (rs != HAL_RET_OK) {
@@ -312,7 +312,7 @@ ReplList::get_repl_table_entry(ReplTableEntry **rte)
         repl_tbl_idx = repl_tbl_index_;
     }
 
-    HAL_TRACE_DEBUG("ReplList::{}: Create RTE: {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("ReplList::{}: Create RTE: {}", __FUNCTION__,
                     repl_tbl_idx);
     // Create a new replication table entry
     // tmp_rte = new ReplTableEntry(repl_tbl_idx, this);
@@ -340,7 +340,7 @@ ReplList::initialize_first_repl_table_entry()
     hal_ret_t       rs       = HAL_RET_OK;
     ReplTableEntry  *repl_te = NULL;
 
-    // Initialize the first replication table entry 
+    // Initialize the first replication table entry
     rs = get_repl_table_entry(&repl_te);
     if (rs != HAL_RET_OK) {
         goto end;
@@ -383,14 +383,12 @@ ReplList::trace_repl_list()
     hal_ret_t rs = HAL_RET_OK;
     ReplTableEntry *repl_te = NULL;
 
-    HAL_TRACE_DEBUG("Repl List: {} Num_of_Repl_Tbl_Entries: {}", 
+    HAL_TRACE_DEBUG("Repl List: {} Num_of_Repl_Tbl_Entries: {}",
                     repl_tbl_index_, num_repl_tbl_entries_);
 
     repl_te = first_repl_tbl_entry_;
     while (repl_te) {
-
         repl_te->trace_repl_tbl_entry();
-
         repl_te = repl_te->get_next();
     }
 

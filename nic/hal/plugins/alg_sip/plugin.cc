@@ -8,7 +8,7 @@ namespace hal {
 namespace plugins {
 namespace alg_sip {
 
-extern "C" hal_ret_t alg_sip_init() {
+extern "C" hal_ret_t alg_sip_init(hal_cfg_t *hal_cfg) {
     fte::register_feature(FTE_FEATURE_ALG_SIP, alg_sip_exec);
     return HAL_RET_OK;
 }

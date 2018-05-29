@@ -15,13 +15,13 @@ using namespace hal::plugins::alg_utils;
 
 alg_state_t *g_tftp_state;
 
-extern "C" hal_ret_t alg_tftp_init() {
+extern "C" hal_ret_t alg_tftp_init(hal_cfg_t *hal_cfg) {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
     slab *tftpinfo_slab_ = NULL;
     fte::feature_info_t info = {
         state_size:  0,
-        state_init_fn: NULL,        
+        state_init_fn: NULL,
         sess_del_cb: alg_tftp_session_delete_cb,
         sess_get_cb: alg_tftp_session_get_cb,
     };
@@ -39,14 +39,15 @@ extern "C" hal_ret_t alg_tftp_init() {
                                  true, true, true);
     HAL_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
 
-    tftpinfo_slab_  = slab::factory("tftp_alg_l4sess", HAL_SLAB_TFTP_ALG_TFTPINFO,
-                                     sizeof(tftp_info_t), 64,
+    tftpinfo_slab_  = slab::factory("tftp_alg_l4sess",
+                                    HAL_SLAB_TFTP_ALG_TFTPINFO,
+                                    sizeof(tftp_info_t), 64,
                                     true, true, true);
     HAL_ASSERT_RETURN((tftpinfo_slab_ != NULL), HAL_RET_OOM);
 
     g_tftp_state = alg_state_t::factory(FTE_FEATURE_ALG_TFTP.c_str(),
-                                  appsess_slab_, l4sess_slab_, tftpinfo_slab_, NULL,
-                                  tftpinfo_cleanup_hdlr);
+                                  appsess_slab_, l4sess_slab_, tftpinfo_slab_,
+                                  NULL, tftpinfo_cleanup_hdlr);
 
     return HAL_RET_OK;
 }

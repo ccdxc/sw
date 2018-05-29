@@ -9,5 +9,6 @@ cc_library(
     deps = [
         "@sdk//:sdk_headers",
         "//nic:boost",
+        "//nic:grpc_includes",
     ]
 )

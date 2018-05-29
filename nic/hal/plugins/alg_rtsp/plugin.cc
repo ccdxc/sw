@@ -13,7 +13,7 @@ namespace alg_rtsp {
 
 alg_utils::alg_state_t *g_rtsp_state;
 
-extern "C" hal_ret_t alg_rtsp_init() {
+extern "C" hal_ret_t alg_rtsp_init(hal_cfg_t *hal_cfg) {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
     slab *rtspinfo_slab_ = NULL;

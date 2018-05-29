@@ -8,7 +8,7 @@ namespace hal {
 namespace plugins {
 namespace alg_utils {
 
-extern "C" hal_ret_t alg_utils_init() {
+extern "C" hal_ret_t alg_utils_init(hal_cfg_t *hal_cfg) {
     return HAL_RET_OK;
 }
 

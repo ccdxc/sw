@@ -9,6 +9,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/../bazel-bin/nic/model_sim/:$SN
 export SNORT_LUA_PATH=$SNORT_EXPORT_DIR/lua/
 export LUA_PATH="$SNORT_EXPORT_DIR/lua/?.lua;;"
 export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
+export GRPC_TRACE=api
 
 #gdb --args $NIC_DIR/../bazel-bin/nic/hal/hal -c hal.json | tee $NIC_DIR/hal_gdb.log
 gdb --args $NIC_DIR/../bazel-bin/nic/hal/hal -c hal.json

@@ -12,6 +12,7 @@
 
 namespace hal {
 namespace plugins {
+
 struct feature_t;
 struct plugin_t;
 struct pipeline_t;
@@ -30,7 +31,7 @@ public:
     void parse(const std::string& config, const std::string& plugin_path);
 
     // Loads/exits plugins with auto-load enabled
-    void load();
+    void load(hal_cfg_t *hal_cfg);
     void exit();
 
     // Per-thread initialization and destruction
@@ -51,13 +52,13 @@ private:
     };
 
     static std::string plugin_name(std::string& vendor, std::string& name) {
-        return vendor + "/" + name; 
+        return vendor + "/" + name;
     }
 
     static std::string feature_name(std::string& vendor,
                                     std::string& plugin_name,
                                     std::string& feature_name) {
-        return vendor + "/" + plugin_name + ":" + feature_name; 
+        return vendor + "/" + plugin_name + ":" + feature_name;
     }
 
     bool parse_plugin(const pt::ptree &tree, plugin_t *plugin,
@@ -72,13 +73,13 @@ private:
 
     bool load_symbol(void *so, std::string name, void **symbol);
     bool load_symbols(void *so, plugin_t *plugin);
-    bool load_plugin(plugin_t *plugin);
+    bool load_plugin(hal_cfg_t *hal_cfg, plugin_t *plugin);
     void exit_plugin(plugin_t *plugin);
 
     void thread_init_plugin(plugin_t *plugin, int tid);
     void thread_exit_plugin(plugin_t *plugin, int tid);
 };
-} // namepsace plugins
+}    // namepsace plugins
 
 inline hal_ret_t init_plugins(hal_cfg_t *hal_cfg) {
     fte::init();
@@ -95,8 +96,8 @@ inline hal_ret_t init_plugins(hal_cfg_t *hal_cfg) {
 
     plugins::plugin_manager_t &pluginmgr = plugins::plugin_manager_t::get();
     pluginmgr.parse(plugin_file, plugin_path);
-    pluginmgr.load();
-    hal::proxy::proxy_plugin_init();
+    pluginmgr.load(hal_cfg);
+    hal::proxy::proxy_plugin_init(hal_cfg);
 
     return HAL_RET_OK;
 }
@@ -119,4 +120,4 @@ inline void thread_exit_plugins(int tid) {
     pluginmgr.thread_exit(tid);
 }
 
-} // namespace hal
+}    // namespace hal

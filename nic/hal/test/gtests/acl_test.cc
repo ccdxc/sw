@@ -77,7 +77,7 @@ TEST_F(acl_test, test2)
     AclSpec       spec;
     AclResponse   rsp;
 
-    AclSelector   *match; 
+    AclSelector   *match;
     AclActionInfo *action;
 
     for (int i = 100; i < 120; i++) {
@@ -110,7 +110,7 @@ TEST_F(acl_test, test3)
     AclDeleteRequest del_req;
     AclDeleteResponse del_rsp;
 
-    AclSelector   *match; 
+    AclSelector   *match;
     AclActionInfo *action;
 
     std::vector<hal_handle_t> entries;
@@ -162,7 +162,7 @@ TEST_F(acl_test, test4)
     AclDeleteRequest del_req;
     AclDeleteResponse del_rsp;
 
-    AclSelector   *match; 
+    AclSelector   *match;
     AclActionInfo *action;
     hal_handle_t acl_handle;
 

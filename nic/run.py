@@ -267,7 +267,7 @@ def run_hal(args):
     hal_log_dir = nic_dir
     if args.test_suf is not None:
         hal_log_dir = nic_dir + "/logs_%s/" % args.test_suf
-    
+
     os.environ["HAL_LOG_DIR"] = hal_log_dir
     hal_log = hal_log_dir + "/hal.log"
     os.system("rm -rf %s/hal.log.*" % hal_log_dir)
@@ -359,7 +359,7 @@ def check_for_completion(nw_dol_process, stg_dol_process,  model_process, hal_pr
         stg_dol_done = True
     while 1:
         if nw_dol_process and nw_dol_process.poll() is not None:
-            nw_dol_done = True            
+            nw_dol_done = True
         if stg_dol_process and stg_dol_process.poll() is not None:
             stg_dol_done = True
         if nw_dol_done and stg_dol_done:
@@ -668,17 +668,17 @@ def bringup_nic_container():
         while loop == 1:
             for line in log2.readlines():
                 if "listening on" in line:
-                    return line.split(":")[-1].strip()  
+                    return line.split(":")[-1].strip()
         log2.close()
         return
 
     if os.path.isfile(hal_log_file):
         os.remove(hal_log_file)
-    
+
     os.chdir(nic_container_image_dir)
     if not os.path.isfile(nic_container_image):
         print ("Nic Container image %s was not found", nic_container_image)
-        sys.exit(1) 
+        sys.exit(1)
     #Extract the container image
     print ("Extracting Container image")
     retcode = call(['tar', '-xzvf', nic_container_image])
@@ -698,7 +698,7 @@ def bringup_nic_container():
 
 def bringdown_nic_container():
     print ("Bringing down nic container")
-    try: 
+    try:
         os.chdir(nic_container_image_dir)
         retcode = call(["docker", "stop", nic_container_name])
     except:
@@ -706,10 +706,10 @@ def bringdown_nic_container():
     if retcode:
         print("Bringdown of Nic Container failed")
     os.chdir(nic_dir)
-    
+
 def print_nic_container_cores():
     print_core_script = "/naples/nic/tools/print-cores.sh"
-    try: 
+    try:
         retcode = call(["docker", "exec", "-it", nic_container_name, print_core_script])
     except:
         retcode = 0
@@ -729,7 +729,7 @@ def run_dol_test(args):
             status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec,
                                         niccontainer = nic_container_name if args.niccontainer else None)
     return status
-                
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--build", action="store_true", help="run build")

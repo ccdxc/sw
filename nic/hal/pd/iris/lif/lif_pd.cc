@@ -642,6 +642,12 @@ lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
                sizeof(RX_POLICER_ACTION(d_mask, tbkt)));
     }
 
+    HAL_TRACE_DEBUG("lif {} hw_lif_id {} rx_policer {}"
+                    "rate_tokens {} burst_tokens {} programmed",
+                    lif_get_lif_id(pi_lif),
+                    pd_lif->hw_lif_id,
+                    pi_lif->qos_info.rx_policer,
+                    rate_tokens, burst_tokens);
     if (update) {
         sdk_ret = rx_policer_tbl->update(pd_lif->hw_lif_id, &d, &d_mask);
     } else {
@@ -653,12 +659,7 @@ lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
                       lif_get_lif_id(pi_lif), ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("lif {} hw_lif_id {} rx_policer {}"
-                    "rate_tokens {} burst_tokens {} programmed",
-                    lif_get_lif_id(pi_lif),
-                    pd_lif->hw_lif_id,
-                    pi_lif->qos_info.rx_policer,
-                    rate_tokens, burst_tokens);
+
     return ret;
 }
 #undef RX_POLICER_ACTION

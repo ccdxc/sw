@@ -8,7 +8,7 @@ namespace eplearn {
 fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx);
 
 
-extern "C" hal_ret_t eplearn_init() {
+extern "C" hal_ret_t eplearn_init(hal_cfg_t *hal_cfg) {
     fte::feature_info_t info = {
         state_size: sizeof(eplearn_info_t),
     };

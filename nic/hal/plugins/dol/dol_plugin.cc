@@ -11,7 +11,7 @@ fte::pipeline_action_t dol_test_exec(fte::ctx_t &ctx);
 
 const std::string FTE_FEATURE_DOL_TEST("pensando.io/dol:test");
 
-extern "C" hal_ret_t dol_init() {
+extern "C" hal_ret_t dol_init(hal_cfg_t *hal_cfg) {
     fte::register_feature(FTE_FEATURE_DOL_TEST, dol_test_exec);
     return HAL_RET_OK;
 }

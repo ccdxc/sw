@@ -15,7 +15,7 @@ using namespace hal::plugins::alg_utils;
 
 alg_state_t *g_rpc_state;
 
-extern "C" hal_ret_t alg_rpc_init() {
+extern "C" hal_ret_t alg_rpc_init(hal_cfg_t *hal_cfg) {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
     slab *rpcinfo_slab_ = NULL;

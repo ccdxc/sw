@@ -3,6 +3,19 @@ licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
+    name = "hal_svc_includes",
+    srcs = glob(["*.hpp"]),
+    hdrs = glob(["*.hpp"]),
+    copts = sdk_copts,
+    deps = [
+        "//nic:gen_proto_includes",
+        "//nic/include:base_includes",
+        #"//nic:spdlog",
+        "//nic:grpc_includes",
+    ],
+)
+
+cc_library(
     name = "hal_svc",
     srcs = [
     ] + glob(["*.cc"]),

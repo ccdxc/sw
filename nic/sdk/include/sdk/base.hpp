@@ -62,8 +62,8 @@ do {                                                       \
 //
 // Example:
 //
-// #define SAMPLE_ENUM_ENTRIES(ENTRY)           
-//    ENTRY(OK, 0, "ok")                        
+// #define SAMPLE_ENUM_ENTRIES(ENTRY)
+//    ENTRY(OK, 0, "ok")
 //    ENTRY(ERR, 1, "err")
 //
 // SDK_DEFINE_ENUM(sample_enum_t, SAMPLE_ENUM_ENTRIES)

@@ -9,7 +9,7 @@
 namespace hal {
 namespace proxy {
 
-extern "C" hal_ret_t proxy_plugin_init();
+extern "C" hal_ret_t proxy_plugin_init(hal_cfg_t *hal_cfg);
 
 fte::pipeline_action_t tcp_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t tcp_exec_trigger_connection(fte::ctx_t &ctx);

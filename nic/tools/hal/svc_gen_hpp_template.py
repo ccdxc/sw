@@ -10,7 +10,7 @@
 #include "nic/include/base.h"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "grpc++/grpc++.h"
-#include "nic/gen/proto/hal/types.pb.h" 
+#include "nic/gen/proto/hal/types.pb.h"
 //:: if 'WS_TOP' not in os.environ:
 //::     # This should have been set, before invoking the template.
 //::     assert False

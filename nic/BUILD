@@ -346,6 +346,41 @@ cc_library(
 )
 
 cc_library(
+    name = "hal_svc_gen_includes",
+    srcs = glob(["gen/hal/svc/*.hpp"]),
+    hdrs = glob(["gen/hal/svc/*.hpp"]),
+    deps = [
+        "//nic:gen_proto_includes",
+        "//nic/include:base_includes",
+        "//nic:grpc_includes",
+    ],
+)
+
+cc_library(
+    name = "hal_svc_nw_gen",
+    srcs = glob(["gen/hal/svc/nw/*.cc", "gen/hal/svc/nw/*.hpp"]),
+    hdrs = glob(["gen/hal/svc/nw/*.hpp"]),
+    deps = [
+        "//nic:gen_proto_includes",
+        "//nic/hal:hal_src",
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+        "//nic:grpc_includes",
+    ],
+)
+
+cc_library(
+    name = "hal_svc_gen_nw_includes",
+    srcs = glob(["gen/hal/svc/nw/*.hpp"]),
+    hdrs = glob(["gen/hal/svc/nw/*.hpp"]),
+    deps = [
+        "//nic:gen_proto_includes",
+        "//nic/include:base_includes",
+        "//nic:grpc_includes",
+    ],
+)
+
+cc_library(
     name = "hal_gen_includes",
     srcs = glob(["gen/hal/include/*.hpp"]),
     hdrs = glob(["gen/hal/include/*.hpp"]),

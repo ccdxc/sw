@@ -6,8 +6,11 @@
 #include "nic/include/base.h"
 #include "sdk/list.hpp"
 #include "sdk/catalog.hpp"
+#include "nic/hal/third-party/grpc/include/grpc++/server_builder.h"
 
 using sdk::lib::dllist_ctxt_t;
+using grpc::ServerBuilder;
+
 namespace hal {
 
 enum {
@@ -46,6 +49,7 @@ typedef enum hal_forwarding_mode_s {
 } hal_forwarding_mode_t;
 
 typedef struct hal_cfg_s {
+    ServerBuilder            *server_builder;    // grpc server builder
     hal_platform_mode_t      platform_mode;
     char                     asic_name[HAL_MAX_NAME_STR];
     std::string              grpc_port;

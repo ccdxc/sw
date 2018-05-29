@@ -58,7 +58,7 @@ class UplinkObject(base.ConfigObjectBase):
 
     def GetRxQosDscp(self):
         return self.rxqos.dscp
-    
+
     def __copy__(self):
         uplink = UplinkObject()
         uplink.id = self.id
@@ -78,12 +78,12 @@ class UplinkObject(base.ConfigObjectBase):
             return False
         fields = ["id", "port", "type", "status", "ports", "native_segment",
                   "native_segment_id", "mode", "sriov"]
-        
+
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        
+
         return True
-    
+
     def Show(self):
         logger.info("Creating Uplink = %s Port=%d" %\
                        (self.GID(), self.port))
@@ -120,7 +120,7 @@ class UplinkObject(base.ConfigObjectBase):
         req_spec.if_uplink_info.port_num = self.port
         if self.native_segment:
             req_spec.if_uplink_info.native_l2segment_id = self.native_segment.id
-     
+
 #        # QOS stuff
 #        if self.txqos.cos is not None:
 #            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
@@ -128,7 +128,7 @@ class UplinkObject(base.ConfigObjectBase):
 #        if self.txqos.dscp is not None:
 #            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
 #            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
-   
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -148,7 +148,7 @@ class UplinkObject(base.ConfigObjectBase):
             self.id = get_resp.spec.key_or_handle.interface_id
         else:
             self.hal_handle = get_resp.spec.key_or_handle.if_handle
-            
+
         if get_resp.spec.type == haldefs.interface.IF_TYPE_UPLINK:
             self.status = get_resp.spec.admin_status
             self.port = get_resp.spec.if_uplink_info.port_num
@@ -157,10 +157,10 @@ class UplinkObject(base.ConfigObjectBase):
             self.status = None
             self.port = 0
             self.native_segment_id = 0
-        
+
     def Get(self):
         halapi.GetInterfaces([self])
-            
+
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
@@ -201,7 +201,7 @@ class UplinkObjectHelper:
     def __configure_all_segments_classic_nic(self):
         tens = Store.objects.GetAllByClass(tenant.TenantObject)
         for ten in tens:
-            intf = ten.GetPinIf() 
+            intf = ten.GetPinIf()
             segs = ten.GetSegments()
             for seg in segs:
                 if seg.native == False: continue

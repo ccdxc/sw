@@ -16,7 +16,7 @@ using namespace hal::plugins::alg_utils;
 
 alg_state_t *g_ftp_state;
 
-extern "C" hal_ret_t alg_ftp_init() {
+extern "C" hal_ret_t alg_ftp_init(hal_cfg_t *hal_cfg) {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
     slab *ftpinfo_slab_ = NULL;
@@ -40,12 +40,14 @@ extern "C" hal_ret_t alg_ftp_init() {
     HAL_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
 
     ftpinfo_slab_  = slab::factory("ftp_alg_ftpinfo", HAL_SLAB_FTP_ALG_FTPINFO,
-                                     sizeof(ftp_info_t), 64,
-                                    true, true, true);
+                                   sizeof(ftp_info_t), 64,
+                                   true, true, true);
     HAL_ASSERT_RETURN((ftpinfo_slab_ != NULL), HAL_RET_OOM);
 
-    g_ftp_state = alg_state_t::factory(FTE_FEATURE_ALG_FTP.c_str(), 
-                                  appsess_slab_, l4sess_slab_, ftpinfo_slab_, NULL, ftpinfo_cleanup_hdlr);
+    g_ftp_state = alg_state_t::factory(FTE_FEATURE_ALG_FTP.c_str(),
+                                       appsess_slab_, l4sess_slab_,
+                                       ftpinfo_slab_, NULL,
+                                       ftpinfo_cleanup_hdlr);
 
     return HAL_RET_OK;
 }

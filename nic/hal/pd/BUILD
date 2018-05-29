@@ -19,6 +19,7 @@ cc_library(
     ],
     deps = [
         "//nic/hal:hal_includes",
+        "//nic/hal/src/nw:nw_includes",
     ]
 )
 

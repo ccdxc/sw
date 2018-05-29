@@ -48,6 +48,12 @@ hal_alloc_handle (void)
     return hal_handle++;
 }
 
+thread *
+hal_get_current_thread (void)
+{
+    return t_curr_thread;
+}
+
 namespace pd {
 
 hal_ret_t

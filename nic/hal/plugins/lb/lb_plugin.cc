@@ -11,7 +11,7 @@ fte::pipeline_action_t lb_exec(fte::ctx_t &ctx);
 
 const std::string FTE_FEATURE_LB("pensando.io/lb:lb");
 
-extern "C" hal_ret_t lb_init() {
+extern "C" hal_ret_t lb_init(hal_cfg_t *hal_cfg) {
     fte::register_feature(FTE_FEATURE_LB, lb_exec);
     return HAL_RET_OK;
 }

@@ -11,7 +11,7 @@ namespace app_redir {
 
 extern "C" {
 
-void app_redir_plugin_init() {
+void app_redir_plugin_init(hal_cfg_t *hal_cfg) {
     fte::feature_info_t info = {
         state_size: sizeof(app_redir_ctx_t),
         state_init_fn: app_redir_ctx_t::init,

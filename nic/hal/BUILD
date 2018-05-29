@@ -63,7 +63,6 @@ cc_library(
         "hal_obj.cc",
         "hal_module.cc",
     ] + 
-    glob(["src/nw/*.cc"]) +
     glob(["src/aclqos/*.cc"]) +
     glob(["src/telemetry/*.cc"]) +
     glob(["src/stats/*.cc"]) +
@@ -82,7 +81,6 @@ cc_library(
         "hal.hpp",
         "hal_module.hpp",
     ] + 
-    glob(["src/nw/*.hpp"]) +
     glob(["src/aclqos/*.hpp"]) +
     glob(["src/telemetry/*.hpp"]) +
     glob(["src/stats/*.hpp"]) +
@@ -137,6 +135,7 @@ cc_library(
         "//nic:boost",
         "//nic/utils/nat:nat",
         "//nic:grpc_includes",
+        "//nic/hal/src/nw:nw",
     ],
     alwayslink = 1,
 )

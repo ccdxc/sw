@@ -173,6 +173,12 @@
                 "app-redir-fini",
                 "app-redir-appid"
             ]
+        },
+        {
+            "name"      : "nw",
+            "provider"  : "pensando.io",
+            "lib"       : "nw/libnw.so",
+            "auto_load" : "true"
         }
     ],
 

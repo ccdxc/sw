@@ -36,7 +36,7 @@ typedef struct nat_info_s {
  */
 
 // exec.cc
-fte::pipeline_action_t nat_exec (fte::ctx_t &ctx);
+fte::pipeline_action_t nat_exec(fte::ctx_t &ctx);
 
 }  // namespace nat
 }  // namespace plugins

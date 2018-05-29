@@ -221,7 +221,7 @@ Met::delete_repl_list_block(uint32_t repl_list_idx, uint32_t size)
     for (uint32_t i = 0; i < size; i++) {
         rs = delete_repl_list(repl_list_idx + i);
         if (rs != HAL_RET_OK) {
-            HAL_TRACE_ERR("Met: {}: failed to delete rep list {}!", __FUNCTION__,
+            HAL_TRACE_ERR("Met: failed to delete rep list {}!",
                           repl_list_idx + i);
             goto end;
         }

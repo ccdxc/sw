@@ -17,7 +17,7 @@ nat_mem_slab_init (void)
 }
 
 extern "C" hal_ret_t
-nat_init (void)
+nat_init (hal_cfg_t *hal_cfg)
 {
     hal_ret_t ret = HAL_RET_OK;
 
