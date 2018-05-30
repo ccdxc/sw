@@ -82,7 +82,7 @@ logfiles:
 warmd:
   target: [ "sh", "-c", "cd /sw/test/suites/e2etcptls && go run e2etcptls.go" ]
   create:
-    image: build-9
+    image: build-13
     count: 1
     resources:
       cpus: 4

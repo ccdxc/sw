@@ -23,7 +23,7 @@ e2e-sanity-build: build-runtime-image
 e2e-sanity-hal-bringup:
 	@bash -c '(./tools/start-model.sh &) && ./tools/start-hal.sh'
 
-e2e-sanity-tls-build: build-runtime-image
+e2e-sanity-tls-build: build-runtime-image-skip-box
 	mkdir -p ${SW_DIR}/bazel-cache;
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make pull-assets && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol ; ret=$? ; make sanity_logs ; exit $(ret)'
 
@@ -43,6 +43,11 @@ REGISTRY = registry.test.pensando.io:5000
 build-runtime-image: install_box
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.22; fi
 	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box -t pensando/nic nic/box.rb
+
+build-runtime-image-skip-box:
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.22; fi
+	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box -t pensando/nic nic/box.rb
+
 
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
