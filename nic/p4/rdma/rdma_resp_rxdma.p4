@@ -277,7 +277,7 @@ header_type resp_rx_cqcb_to_pt_info_t {
         rsvd1                            :    4;
         cqcb_addr                        :   34;
         rsvd2                            :    6;
-        pa_next_index                    :   16;
+        pt_next_pg_index                 :   16;
         pad                              :   24;
     }
 }
@@ -1474,7 +1474,7 @@ action resp_rx_cqpt_process () {
     modify_field(t2_s2s_cqcb_to_pt_info_scr.rsvd1, t2_s2s_cqcb_to_pt_info.rsvd1);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.cqcb_addr, t2_s2s_cqcb_to_pt_info.cqcb_addr);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.rsvd2, t2_s2s_cqcb_to_pt_info.rsvd2);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.pa_next_index, t2_s2s_cqcb_to_pt_info.pa_next_index);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.pt_next_pg_index, t2_s2s_cqcb_to_pt_info.pt_next_pg_index);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.pad, t2_s2s_cqcb_to_pt_info.pad);
 
 }

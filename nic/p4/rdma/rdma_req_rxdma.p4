@@ -138,7 +138,7 @@ header_type req_rx_cqcb_to_pt_info_t {
         no_dma                           :    1;
         rsvd                             :    1;
         cqcb_addr                        :   34;
-        pa_next_index                    :   16;
+        pt_next_pg_index                 :   16;
         pad                              :   30;
     }
 }
@@ -1046,7 +1046,7 @@ action req_rx_cqpt_process () {
     modify_field(t2_s2s_cqcb_to_pt_info_scr.no_dma, t2_s2s_cqcb_to_pt_info.no_dma);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.rsvd, t2_s2s_cqcb_to_pt_info.rsvd);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.cqcb_addr, t2_s2s_cqcb_to_pt_info.cqcb_addr);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.pa_next_index, t2_s2s_cqcb_to_pt_info.pa_next_index);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.pt_next_pg_index, t2_s2s_cqcb_to_pt_info.pt_next_pg_index);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.pad, t2_s2s_cqcb_to_pt_info.pad);
 
 }

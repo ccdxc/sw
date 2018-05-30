@@ -36,8 +36,8 @@ struct cqcb_t {
 
     pt_pa: 64;
     pt_next_pa: 64;
-    pt_pa_index: 16;
-    pt_next_pa_index: 16;
+    pt_pg_index: 16;
+    pt_next_pg_index: 16;
     pad: 96;  // as d-vector is loaded only 256 bits, need this to interpret it correctly
 };
 

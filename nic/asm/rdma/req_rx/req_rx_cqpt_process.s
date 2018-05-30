@@ -19,7 +19,7 @@ struct req_rx_s5_t2_k k;
 #define TMP r3
 
 #define K_PAGE_SEG_OFFSET CAPRI_KEY_FIELD(IN_P, page_seg_offset)
-#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pa_next_index_sbit0_ebit0, pa_next_index_sbit9_ebit15)
+#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit0, pt_next_pg_index_sbit9_ebit15)
 #define K_CQCB_ADDR       CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit2, cqcb_addr_sbit27_ebit33)
 #define K_PAGE_OFFSET     CAPRI_KEY_FIELD(IN_P, page_offset)
 #define K_EQ_ID           CAPRI_KEY_FIELD(IN_P, eq_id)
@@ -44,18 +44,18 @@ req_rx_cqpt_process:
     sub             PAGE_ADDR_P, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), K_PAGE_SEG_OFFSET
     sll             PAGE_ADDR_P, PAGE_ADDR_P, CAPRI_LOG_SIZEOF_U64_BITS
 
+    tblrdp.dx       PAGE_ADDR_P, PAGE_ADDR_P, 0, CAPRI_SIZEOF_U64_BITS
+    
     // Lets cache the translated page physical address
     // *cq_cb->pt_next_pa = page_addr_p
     add             CQCB_PA_ADDR, K_CQCB_ADDR, offsetof(struct cqcb_t, pt_next_pa) 
     memwr.d         CQCB_PA_ADDR, PAGE_ADDR_P
-    add             CQCB_PA_INDEX, K_CQCB_ADDR, offsetof(struct cqcb_t, pt_next_pa_index)
+    add             CQCB_PA_INDEX, K_CQCB_ADDR, offsetof(struct cqcb_t, pt_next_pg_index)
     memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 
     bcf             [c2], fire_eqcb
     DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
     
-    tblrdp.dx       r1, r1, 0, CAPRI_SIZEOF_U64_BITS
-
     // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
     add             r1, r1, K_PAGE_OFFSET
 

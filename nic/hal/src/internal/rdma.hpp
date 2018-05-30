@@ -1290,8 +1290,8 @@ typedef struct srqcb_s {
 
 typedef struct cqcb_s {
     uint8_t   rsvd5[12];
-    uint16_t  pt_next_pa_index;
-    uint16_t  pt_pa_index;
+    uint16_t  pt_next_pg_index;
+    uint16_t  pt_pg_index;
     uint64_t  pt_next_pa;
     uint64_t  pt_pa;
 

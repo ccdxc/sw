@@ -1355,12 +1355,13 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.wakeup_qid = spec.wakeup_qid();
     cqcb.wakeup_ring_id = spec.wakeup_ring_id();
 
+    int log_num_pages = cqcb.log_num_wqes + cqcb.log_wqe_size - cqcb.log_cq_page_size;
     rdma_pt_entry_read(lif, cq_pt_base, &cqcb.pt_pa);
     rdma_pt_entry_read(lif, cq_pt_base+1, &cqcb.pt_next_pa);
-    cqcb.pt_pa_index = 1 << (cqcb.log_cq_page_size - cqcb.log_wqe_size);
-    cqcb.pt_next_pa_index = 2 << (cqcb.log_cq_page_size - cqcb.log_wqe_size);
+    cqcb.pt_pg_index = 0;
+    cqcb.pt_next_pg_index = 1UL & (( 1 << log_num_pages) - 1) ;
 
-    HAL_TRACE_DEBUG("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}:", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pa_index, cqcb.pt_next_pa_index);
+    HAL_TRACE_DEBUG("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}: log_num_pages: {}", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pg_index, cqcb.pt_next_pg_index, log_num_pages);
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}",
