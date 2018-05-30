@@ -868,9 +868,6 @@ extract_match_spec (acl_match_spec_t *ms,
     acl_eth_match_spec_t *eth_mask;
     acl_ip_match_spec_t  *ip_key;
     acl_ip_match_spec_t  *ip_mask;
-#ifdef ACL_DOL_TEST_ONLY
-    int                  i;
-#endif
 
     eth_key = &ms->key.eth;
     eth_mask = &ms->mask.eth;
@@ -1014,12 +1011,8 @@ extract_match_spec (acl_match_spec_t *ms,
     ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
     ms->int_key.no_drop = sel.internal_key().no_drop();
     ms->int_mask.no_drop = sel.internal_mask().no_drop();
-    for (i = 0; i < sel.internal_key().drop_reason_size(); i++) {
-        ms->int_key.drop_reasons[sel.internal_key().drop_reason(i)] = true;
-    }
-    for (i = 0; i < sel.internal_mask().drop_reason_size(); i++) {
-        ms->int_mask.drop_reasons[sel.internal_mask().drop_reason(i)] = true;
-    }
+    drop_reason_spec_to_codes(sel.internal_key().drop_reasons(), &ms->int_key.drop_reasons);
+    drop_reason_spec_to_codes(sel.internal_mask().drop_reasons(), &ms->int_mask.drop_reasons);
     MAC_UINT64_TO_ADDR(ms->int_key.outer_mac_da, sel.internal_key().outer_dst_mac());
     MAC_UINT64_TO_ADDR(ms->int_mask.outer_mac_da, sel.internal_mask().outer_dst_mac());
 #endif

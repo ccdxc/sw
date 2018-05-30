@@ -12,6 +12,7 @@
 #include "nic/gen/proto/hal/acl.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
+#include "nic/hal/src/telemetry/telemetry.hpp"
 
 // Include key of internal fields for use only with DOL/testing infra
 // For production builds this needs to be removed
@@ -106,7 +107,7 @@ typedef struct acl_internal_match_spec_s {
     bool            ip_frag;
     bool            tunnel_terminate;
     bool            from_cpu;
-    bool            drop_reasons[acl::DropReason_ARRAYSIZE];
+    drop_reason_codes_t drop_reasons;
     bool            no_drop;
     mac_addr_t      outer_mac_da;
 } __PACK__ acl_internal_match_spec_t;

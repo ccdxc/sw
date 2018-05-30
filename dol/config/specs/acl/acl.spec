@@ -781,8 +781,8 @@ entries:
         id: ACL_DROPMASK_ACTION_MIRROR
         config_flow_miss: True
         match:
-            dropmask : 
-                - FLOW_MISS
+            dropreasons : 
+                - flow_miss
             type : ip
             l4:
                 type : udp 

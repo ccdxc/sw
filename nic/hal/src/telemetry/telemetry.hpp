@@ -142,6 +142,36 @@ typedef struct drop_reason_codes_s {
     bool    drop_hardware_error;
 } __PACK__ drop_reason_codes_t;
 
+static inline void
+drop_reason_spec_to_codes (const types::DropReasons &spec,
+                           drop_reason_codes_t *codes)
+{
+    codes->drop_input_mapping = spec.drop_input_mapping();
+    codes->drop_input_mapping_dejavu = spec.drop_input_mapping_dejavu();
+    codes->drop_flow_hit = spec.drop_flow_hit();
+    codes->drop_flow_miss = spec.drop_flow_miss();
+    codes->drop_ipsg = spec.drop_ipsg();
+    codes->drop_nacl = spec.drop_nacl();
+    codes->drop_malformed_pkt = spec.drop_malformed_pkt();
+    codes->drop_ip_normalization = spec.drop_ip_normalization();
+    codes->drop_tcp_normalization = spec.drop_tcp_normalization();
+    codes->drop_tcp_non_syn_first_pkt = spec.drop_tcp_non_syn_first_pkt();
+    codes->drop_icmp_normalization = spec.drop_icmp_normalization();
+    codes->drop_input_properties_miss = spec.drop_input_properties_miss();
+    codes->drop_tcp_out_of_window = spec.drop_tcp_out_of_window();
+    codes->drop_tcp_split_handshake = spec.drop_tcp_split_handshake();
+    codes->drop_tcp_win_zero_drop = spec.drop_tcp_win_zero_drop();
+    codes->drop_tcp_data_after_fin = spec.drop_tcp_data_after_fin();
+    codes->drop_tcp_non_rst_pkt_after_rst = spec.drop_tcp_non_rst_pkt_after_rst();
+    codes->drop_tcp_invalid_responder_first_pkt = spec.drop_tcp_invalid_responder_first_pkt();
+    codes->drop_tcp_unexpected_pkt = spec.drop_tcp_unexpected_pkt();
+    codes->drop_src_lif_mismatch = spec.drop_src_lif_mismatch();
+    codes->drop_parser_icrc_error = spec.drop_parser_icrc_error();
+    codes->drop_parse_len_error = spec.drop_parse_len_error();
+    codes->drop_hardware_error = spec.drop_hardware_error();
+    return;
+}
+
 typedef struct drop_monitor_rule_s {
     hal_spinlock_t slock;
     uint32_t rule_id;

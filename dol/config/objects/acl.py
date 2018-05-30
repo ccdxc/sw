@@ -87,9 +87,9 @@ class AclObject(base.ConfigObjectBase):
             else:
                 logger.info("  Tenant Not set")
 
-        if len(self.fields.match.dropmask):
-            logger.info("  DropMask: " )
-        for dm in self.fields.match.dropmask:
+        if len(self.fields.match.dropreasons):
+            logger.info("  Dropreasons : " )
+        for dm in self.fields.match.dropreasons:
             logger.info("    - %s" % dm)
 
         if self.MatchOnEth():
@@ -216,19 +216,14 @@ class AclObject(base.ConfigObjectBase):
         if self.ActionRedirect():
             # If the action is redirect, match only when drop is due to flow-miss
             # Set the mask for all drops except flow-miss
-            dropmask_ks = []
-            dropmask_ms = haldefs.acl.DropReason.keys()
-            dropmask_ms.remove("FLOW_MISS__DROP")
+            drop_reasons = [x.name for x in reqspec.match.internal_mask.drop_reasons.DESCRIPTOR.fields]
+            drop_reasons.remove("drop_flow_miss")
+            for r in drop_reasons:
+                setattr(reqspec.match.internal_mask.drop_reasons, r, True)
         else:
-            dropmask_ks = [x + "__DROP" for x in self.fields.match.dropmask]
-            dropmask_ms = dropmask_ks[:]
-
-        for dm in dropmask_ks:
-            en = haldefs.acl.DropReason.Value(dm.upper())
-            reqspec.match.internal_key.drop_reason.append(en)
-        for dm in dropmask_ms:
-            en = haldefs.acl.DropReason.Value(dm.upper())
-            reqspec.match.internal_mask.drop_reason.append(en)
+            for r in self.fields.match.dropreasons:
+                setattr(reqspec.match.internal_key.drop_reasons, 'drop_' + r, True)
+                setattr(reqspec.match.internal_mask.drop_reasons, 'drop_' + r, True)
 
         if self.MatchOnEth():
             reqspec.match.eth_selector.eth_type = self.fields.match.eth.ethertype.get()

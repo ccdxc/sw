@@ -20,7 +20,7 @@ fields:
         tenant        : None
         segment_match : False
         segment       : None
-        dropmask      : []
+        dropreasons   : []
         eth: 
             ethertype      : const/0
             ethertype_mask : const/0

@@ -124,56 +124,39 @@ populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
 #ifdef ACL_DOL_TEST_ONLY
 // Added for internal dol test use only to get the drop reason defines
 // TODO: REMOVE
+
 static uint64_t
-drop_reason_to_define (const acl::DropReason drop_reason)
+drop_reason_codes_to_bitmap (drop_reason_codes_t *codes)
 {
-    switch(drop_reason) {
-        case acl::INPUT_MAPPING__DROP:
-            return DROP_INPUT_MAPPING;
-        case acl::INPUT_MAPPING_DEJAVU__DROP:
-            return DROP_INPUT_MAPPING_DEJAVU;
-        case acl::FLOW_HIT__DROP:
-            return DROP_FLOW_HIT;
-        case acl::FLOW_MISS__DROP:
-            return DROP_FLOW_MISS;
-        case acl::IPSG__DROP:
-            return DROP_IPSG;
-        case acl::NACL__DROP:
-            return DROP_NACL;
-        case acl::MALFORMED_PKT__DROP:
-            return DROP_MALFORMED_PKT;
-        case acl::IP_NORMALIZATION__DROP:
-            return DROP_IP_NORMALIZATION;
-        case acl::TCP_NORMALIZATION__DROP:
-            return DROP_TCP_NORMALIZATION;
-        case acl::TCP_NON_SYN_FIRST_PKT__DROP:
-            return DROP_TCP_NON_SYN_FIRST_PKT;
-        case acl::ICMP_NORMALIZATION__DROP:
-            return DROP_ICMP_NORMALIZATION;
-        case acl::INPUT_PROPERTIES_MISS__DROP:
-            return DROP_INPUT_PROPERTIES_MISS;
-        case acl::TCP_OUT_OF_WINDOW__DROP:
-            return DROP_TCP_OUT_OF_WINDOW;
-        case acl::TCP_SPLIT_HANDSHAKE__DROP:
-            return DROP_TCP_SPLIT_HANDSHAKE;
-        case acl::TCP_WIN_ZERO_DROP__DROP:
-            return DROP_TCP_WIN_ZERO_DROP;
-        case acl::TCP_DATA_AFTER_FIN__DROP:
-            return DROP_TCP_DATA_AFTER_FIN;
-        case acl::TCP_NON_RST_PKT_AFTER_RST__DROP:
-            return DROP_TCP_NON_RST_PKT_AFTER_RST;
-        case acl::TCP_INVALID_RESPONDER_FIRST_PKT__DROP:
-            return DROP_TCP_INVALID_RESPONDER_FIRST_PKT;
-        case acl::TCP_UNEXPECTED_PKT__DROP:
-            return DROP_TCP_UNEXPECTED_PKT;
-        default:
-            return 0;
-    }
-    return 0;
+    uint64_t val = 0;
+    if (codes->drop_malformed_pkt) val |= 1ull << DROP_MALFORMED_PKT;
+    if (codes->drop_input_mapping) val |= 1ull << DROP_INPUT_MAPPING;
+    if (codes->drop_input_mapping_dejavu) val |= 1ull << DROP_INPUT_MAPPING_DEJAVU;
+    if (codes->drop_flow_hit) val |= 1ull << DROP_FLOW_HIT;
+    if (codes->drop_flow_miss) val |= 1ull << DROP_FLOW_MISS;
+    if (codes->drop_nacl) val |= 1ull << DROP_NACL;
+    if (codes->drop_ipsg) val |= 1ull << DROP_IPSG;
+    if (codes->drop_ip_normalization) val |= 1ull << DROP_IP_NORMALIZATION;
+    if (codes->drop_tcp_normalization) val |= 1ull << DROP_TCP_NORMALIZATION;
+    if (codes->drop_tcp_rst_with_invalid_ack_num) val |= 1ull << DROP_TCP_RST_WITH_INVALID_ACK_NUM;
+    if (codes->drop_tcp_non_syn_first_pkt) val |= 1ull << DROP_TCP_NON_SYN_FIRST_PKT;
+    if (codes->drop_icmp_normalization) val |= 1ull << DROP_ICMP_NORMALIZATION;
+    if (codes->drop_input_properties_miss) val |= 1ull << DROP_INPUT_PROPERTIES_MISS;
+    if (codes->drop_tcp_out_of_window) val |= 1ull << DROP_TCP_OUT_OF_WINDOW;
+    if (codes->drop_tcp_split_handshake) val |= 1ull << DROP_TCP_SPLIT_HANDSHAKE;
+    if (codes->drop_tcp_win_zero_drop) val |= 1ull << DROP_TCP_WIN_ZERO_DROP;
+    if (codes->drop_tcp_data_after_fin) val |= 1ull << DROP_TCP_DATA_AFTER_FIN;
+    if (codes->drop_tcp_non_rst_pkt_after_rst) val |= 1ull << DROP_TCP_NON_RST_PKT_AFTER_RST;
+    if (codes->drop_tcp_invalid_responder_first_pkt) val |= 1ull << DROP_TCP_INVALID_RESPONDER_FIRST_PKT;
+    if (codes->drop_tcp_unexpected_pkt) val |= 1ull << DROP_TCP_UNEXPECTED_PKT;
+    if (codes->drop_src_lif_mismatch) val |= 1ull << DROP_SRC_LIF_MISMATCH;
+    if (codes->drop_parser_icrc_error) val |= 1ull << DROP_PARSER_ICRC_ERR;
+    if (codes->drop_parse_len_error) val |= 1ull << DROP_PARSER_LEN_ERR;
+    if (codes->drop_hardware_error) val |= 1ull << DROP_HARDWARE_ERR;
+    return val;
 }
 
 #endif
-
 
 static hal_ret_t
 acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
@@ -482,16 +465,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
         drop_reason = 0;
         drop_reason_mask = ~0;
     } else {
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_key.drop_reasons); i++) {
-            if (ms->int_key.drop_reasons[i]) {
-                drop_reason |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
-            }
-        }
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_mask.drop_reasons); i++) {
-            if (ms->int_mask.drop_reasons[i]) {
-                drop_reason_mask |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
-            }
-        }
+        drop_reason = drop_reason_codes_to_bitmap(&ms->int_key.drop_reasons);
+        drop_reason_mask = drop_reason_codes_to_bitmap(&ms->int_mask.drop_reasons);
     }
     memcpy(key.control_metadata_drop_reason, &drop_reason,
            sizeof(key.control_metadata_drop_reason));

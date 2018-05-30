@@ -82,42 +82,6 @@ message IPSelector {
   }
 }
 
-// DropReason enums
-enum DropReason {
-
-  INPUT_MAPPING__DROP                   = 0;
-  INPUT_MAPPING_DEJAVU__DROP            = 1;
-  FLOW_HIT__DROP                        = 2;
-  FLOW_MISS__DROP                       = 3;
-  IPSG__DROP                            = 4;
-  INGRESS_POLICER__DROP                 = 5;
-  RX_POLICER__DROP                      = 6;
-  NACL__DROP                            = 7;
-  MALFORMED_PKT__DROP                   = 8;
-  PING_OF_DEATH__DROP                   = 9;
-  FRAGMENT_TOO_SMALL__DROP              = 10;
-  IP_NORMALIZATION__DROP                = 11;
-  TCP_NORMALIZATION__DROP               = 12;
-  TCP_XMAS_TREE_PKT__DROP               = 13;
-  TCP_NON_SYN_FIRST_PKT__DROP           = 14;
-  ICMP_NORMALIZATION__DROP              = 15;
-  ICMP_SRC_QUENCH_MSG__DROP             = 16;
-  ICMP_REDIRECT_MSG__DROP               = 17;
-  ICMP_INFO_REQ_MSG__DROP               = 18;
-  ICMP_ADDR_REQ_MSG__DROP               = 19;
-  ICMP_TRACEROUTE_MSG__DROP             = 20;
-  ICMP_RSVD_TYPE_MSG__DROP              = 21;
-  INPUT_PROPERTIES_MISS__DROP           = 22;
-  TCP_OUT_OF_WINDOW__DROP               = 23;
-  TCP_SPLIT_HANDSHAKE__DROP             = 24;
-  TCP_WIN_ZERO_DROP__DROP               = 25;
-  TCP_ACK_ERR__DROP                     = 26;
-  TCP_DATA_AFTER_FIN__DROP              = 27;
-  TCP_NON_RST_PKT_AFTER_RST__DROP       = 28;
-  TCP_INVALID_RESPONDER_FIRST_PKT__DROP = 29;
-  TCP_UNEXPECTED_PKT__DROP              = 30;
-}
-
 // AclInternalSelector has match criteria which are for internal use only with 
 // DOL/testing infra
 // For production builds this needs to be removed
@@ -127,7 +91,7 @@ message AclInternalSelector {
   uint64              outer_dst_mac    = 2 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // Outer MAC DA
   bool                ip_options       = 3;    // Match on IP options
   bool                ip_frag          = 4;    // IP fragmentation
-  repeated DropReason drop_reason      = 5;    // Drop reason
+  types.DropReasons   drop_reasons     = 5;    // Drop reasons
   bool                tunnel_terminate = 6;    // Tunnel terminate
   bool                direction        = 7;    // Flow direction
   bool                from_cpu         = 8;    // Match if from cpu
