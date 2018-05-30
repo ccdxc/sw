@@ -86,8 +86,16 @@ packets:
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data
 buffers:
-    - buffer:
-        id      : BUF1  # Expected Buffer
+     - buffer:
+        id      : BUF1  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 182
+            data: None
+
+     - buffer:
+        id      : BUF2  # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: False
@@ -102,8 +110,19 @@ descriptors:
             _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=BUF2
+            len           : ref://testcase/buffers/id=BUF2/size
 
 trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
+
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT2
@@ -112,5 +131,5 @@ trigger:
 expect:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
+            object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX

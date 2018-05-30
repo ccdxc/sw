@@ -84,14 +84,15 @@ static inline fte::pipeline_action_t
 update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
     hal_ret_t ret = HAL_RET_OK;
+    flow_key_t              flow_key = ctx.key();
     HAL_TRACE_DEBUG("IPSec Host flow forwarding role: {} direction: {}", ctx.role(), ctx.direction());
     if (
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
            (ctx.direction() == hal::FLOW_DIR_FROM_DMA)) ||
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
-           (ctx.direction() == hal::FLOW_DIR_FROM_UPLINK)) ||   //temporary - only
+           (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto != IPPROTO_ESP)) ||   //temporary - only
           ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) &&
-           (ctx.direction() == hal::FLOW_DIR_FROM_UPLINK))
+           (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto == IPPROTO_ESP))
         ) {
 
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
