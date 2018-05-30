@@ -2,7 +2,7 @@
     "kind": "AuthenticationPolicy",
     "api-version": "v1",
     "meta": {
-        "name": "AuthenticationPolicy",
+        "name": "AuthenticationPolicy"
     },
     "spec": {
         "authenticators": {

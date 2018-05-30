@@ -29,7 +29,7 @@ import { TestSearchboxComponent } from './test/test-searchbox/test-searchbox.com
     FormsModule,
     routing,
     BrowserModule,
-    WidgetsModule ,
+    WidgetsModule,
 
     MaterialModule,
     PrimengModule,

@@ -1,17 +1,17 @@
 {
   "/login": {
     "target": "http://192.168.69.189:10001/v1/login/",
-    "secure": false,
-    "pathRewrite": {
+      "secure": false,
+        "pathRewrite": {
       "^/login": ""
     },
     "changeOrigin": false,
-    "logLevel": "debug"
+      "logLevel": "debug"
   },
   "/endpoints": {
     "target": "http://192.168.69.189:10001/v1/workload/default",
-    "secure": false,
-    "changeOrigin": false,
-    "logLevel": "debug"
+      "secure": false,
+        "changeOrigin": false,
+          "logLevel": "debug"
   }
 }

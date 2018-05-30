@@ -8,7 +8,7 @@ import { Component, OnInit } from '@angular/core';
 export class TestSearchboxComponent implements OnInit {
 
   country: any;
-  conntries:any;
+  conntries: any;
   countriesJSON = [
     { 'name': 'Afghanistan', 'code': 'AF' },
     { 'name': 'Åland Islands', 'code': 'AX' },
@@ -273,70 +273,70 @@ export class TestSearchboxComponent implements OnInit {
   filterCountryMultiple(event) {
     let query = event.query;
     this.filteredCountriesMultiple = this.filterCountryComplex(query, this.countriesJSON);
-    
-}
 
-filterCountry(queryInput, countries: any[]): any[] {
-  // in a real application, make a request to a remote url with the query and return filtered results, for demo we filter at client side
-  let query = queryInput.trim();
-  const filtered: any[] = [];
-  for (let i = 0; i < countries.length; i++) {
-    const country = countries[i];
-    if (country.name.toLowerCase().indexOf(query.toLowerCase()) >= 0) {
-      filtered.push(country);
-    }
   }
-  if (filtered.length === 0) {
-      let queryLess = query.substring(0, query.length-1);
-      if (queryLess.length >0 ) {
-        return this.filterCountry(queryLess,countries );
+
+  filterCountry(queryInput, countries: any[]): any[] {
+    // in a real application, make a request to a remote url with the query and return filtered results, for demo we filter at client side
+    let query = queryInput.trim();
+    const filtered: any[] = [];
+    for (let i = 0; i < countries.length; i++) {
+      const country = countries[i];
+      if (country.name.toLowerCase().indexOf(query.toLowerCase()) >= 0) {
+        filtered.push(country);
+      }
+    }
+    if (filtered.length === 0) {
+      let queryLess = query.substring(0, query.length - 1);
+      if (queryLess.length > 0) {
+        return this.filterCountry(queryLess, countries);
       } else {
         return [];
       }
-  }
-  return filtered;
-}
-
-
-filterCountryComplex(query, countries: any[]): any[] {
-    // in a real application, make a request to a remote url with the query and return filtered results, for demo we filter at client side
-    let filtered: any[] = [];
-    let obj = { 
-      'indicator':'pensando',     
-      'query': query,
-      'code':query,
-     }
-    if (query ==="in") {
-      obj['name'] = 'Search By Category - ' +query;
-      obj['seachType'] = 'in';
-      obj['options'] = ['cluster','node','workload','naples'];
-      filtered.push(obj);
-    } else if (query ==="is") {
-      obj['name'] = 'Search By Type - ' +query;
-      obj['seachType'] = 'is';
-      obj['options'] = ['workload','alert','event','security'];
-      filtered.push(obj);
-    } else if (query ==="has") {
-      obj['name'] = 'Search By Content - ' +query;
-      obj['seachType'] = 'has';
-      obj['options'] = ['owner','label','meta','role'];
-      filtered.push(obj);
-    }else {
-      filtered = this.filterCountry(query, this.countriesJSON);
-       if ( filtered.length === 0){
-        const objMisc = { 
-          'indicator':'pensando',
-          'name': 'Free Form search - ' +query, 
-          'query': query,
-          'code':query,
-         } 
-         filtered.push(objMisc);
-       }
     }
     return filtered;
   }
 
-  onInvokeSearch(searchItems){
+
+  filterCountryComplex(query, countries: any[]): any[] {
+    // in a real application, make a request to a remote url with the query and return filtered results, for demo we filter at client side
+    let filtered: any[] = [];
+    let obj = {
+      'indicator': 'pensando',
+      'query': query,
+      'code': query,
+    }
+    if (query === "in") {
+      obj['name'] = 'Search By Category - ' + query;
+      obj['seachType'] = 'in';
+      obj['options'] = ['cluster', 'node', 'workload', 'naples'];
+      filtered.push(obj);
+    } else if (query === "is") {
+      obj['name'] = 'Search By Type - ' + query;
+      obj['seachType'] = 'is';
+      obj['options'] = ['workload', 'alert', 'event', 'security'];
+      filtered.push(obj);
+    } else if (query === "has") {
+      obj['name'] = 'Search By Content - ' + query;
+      obj['seachType'] = 'has';
+      obj['options'] = ['owner', 'label', 'meta', 'role'];
+      filtered.push(obj);
+    } else {
+      filtered = this.filterCountry(query, this.countriesJSON);
+      if (filtered.length === 0) {
+        const objMisc = {
+          'indicator': 'pensando',
+          'name': 'Free Form search - ' + query,
+          'query': query,
+          'code': query,
+        }
+        filtered.push(objMisc);
+      }
+    }
+    return filtered;
+  }
+
+  onInvokeSearch(searchItems) {
     console.log("TestSearchboxComponent.invokeSearch()", searchItems);
   }
 

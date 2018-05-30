@@ -8,10 +8,10 @@ describe('PlotlyimageComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PlotlyimageComponent, PlotlyComponent ]
+      declarations: [PlotlyimageComponent, PlotlyComponent]
 
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

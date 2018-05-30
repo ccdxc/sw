@@ -8,9 +8,9 @@ describe('RecursivelistComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RecursivelistComponent ]
+      declarations: [RecursivelistComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

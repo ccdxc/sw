@@ -9,7 +9,7 @@ export class TestbarchartComponent implements OnInit {
 
   private chartData: Array<any>;
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit() {
     // give everything a chance to get loaded before starting the animation to reduce choppiness

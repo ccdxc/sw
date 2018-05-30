@@ -59,7 +59,7 @@ export class PlotlyComponent implements OnInit, OnChanges {
       try {
 
         const self = this;
-        Plotly.newPlot(element, this.data, this.layout, this.options).then(function () {
+        Plotly.newPlot(element, this.data, this.layout, this.options).then(function() {
           if (self.callback != null) {
             self.callback(Plotly, element);
           }

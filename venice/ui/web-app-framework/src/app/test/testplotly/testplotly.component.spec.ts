@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TestplotlyComponent } from './testplotly.component';
-import {WidgetsModule} from '@modules/widgets/widgets.module';
+import { WidgetsModule } from '@modules/widgets/widgets.module';
 declare var Plotly: any;
 
 describe('TestplotlyComponent', () => {
@@ -10,7 +10,7 @@ describe('TestplotlyComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ TestplotlyComponent ],
+      declarations: [TestplotlyComponent],
       imports: [WidgetsModule]
     });
   }));

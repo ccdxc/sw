@@ -16,7 +16,7 @@ export const routes: Routes = [
     loadChildren: '@components/login/login.module#LoginModule',
     pathMatch: 'full'
    }, */
-   {
+  {
     path: '',
     redirectTo: '/plotly',
     pathMatch: 'full'
@@ -32,7 +32,7 @@ export const routes: Routes = [
   },
   {
     path: 'menu',
-    component:  TestRecursiveListComponent
+    component: TestRecursiveListComponent
   },
   {
     path: 'searchbox',

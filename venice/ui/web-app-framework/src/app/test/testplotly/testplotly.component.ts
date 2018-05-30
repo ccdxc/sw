@@ -197,12 +197,12 @@ export class TestplotlyComponent implements OnInit {
 
     this.plotlyOptionsToImage = { displayModeBar: false };
     const self = this;
-    this.plotlyCallbackToImage = function (Plotly, element) {
+    this.plotlyCallbackToImage = function(Plotly, element) {
       const d3 = Plotly.d3;
 
       const img_png = d3.select('#png-export');
       Plotly.toImage(element, { height: 60, width: 150 })
-        .then(function (url) {
+        .then(function(url) {
           self.plotlyToImageSrc = url;
           self.plotlyChartToImageShow = false;
         });
@@ -226,7 +226,7 @@ export class TestplotlyComponent implements OnInit {
 
     this.plotlyOptionsAnimation = defaultPlotlyConfiguration;
 
-    this.plotlyCallbackAnimation = function (Plotly, element) {
+    this.plotlyCallbackAnimation = function(Plotly, element) {
       console.log('plotlyCallbackAnimation called');
       Plotly.animate(element,
         [{ data: [{ 'line.dash': '7200px 0px' }] }],
@@ -286,9 +286,9 @@ export class TestplotlyComponent implements OnInit {
     });
 
     // TODO: animation fails (bar/pie) can not have animation yet.
-    this.plotlyCallbackFrame = function (Plotly, element) {
+    this.plotlyCallbackFrame = function(Plotly, element) {
       console.log('plotlyCallbackFrame called');
-      Plotly.addFrames(element, myFrames).then(function () {
+      Plotly.addFrames(element, myFrames).then(function() {
         Plotly.animate(element, null, { mode: 'next' });
         Plotly.animate(element, groupName, {
           transition: {

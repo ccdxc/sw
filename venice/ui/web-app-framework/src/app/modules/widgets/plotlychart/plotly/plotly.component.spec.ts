@@ -8,9 +8,9 @@ describe('PlotlyComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PlotlyComponent ]
+      declarations: [PlotlyComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

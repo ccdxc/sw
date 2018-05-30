@@ -1,5 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import {WidgetsModule} from '@modules/widgets/widgets.module';
+import { WidgetsModule } from '@modules/widgets/widgets.module';
 import { TestbarchartComponent } from './testbarchart.component';
 
 describe('TestbarchartComponent', () => {
@@ -8,10 +8,10 @@ describe('TestbarchartComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ TestbarchartComponent], // ,BarchartCoponent]
+      declarations: [TestbarchartComponent], // ,BarchartCoponent]
       imports: [WidgetsModule]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

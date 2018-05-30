@@ -129,11 +129,11 @@ export class PlotlyimageComponent implements OnInit, OnChanges {
 
     this.options_default = { displayModeBar: false };
     const self = this;
-    this.callbackToImage = function (Plotly, element) {
+    this.callbackToImage = function(Plotly, element) {
       const d3 = Plotly.d3;
       const img_png = d3.select('#' + this.id + '_pw-plotlychartimage-image-tag');
       Plotly.toImage(element, { height: self.imageHeight, width: self.imageWidth })
-        .then(function (url) {
+        .then(function(url) {
           self.imagesource = url;
           self.isImageReady = true;
         });

@@ -11,10 +11,10 @@ exports.config = {
   ],
   capabilities: {
     browserName: 'chrome',
-  
+
     chromeOptions: {
-       args: [ "--headless", "--disable-gpu", "--window-size=800,600" ]
-     }
+      args: ["--headless", "--disable-gpu", "--window-size=800,600"]
+    }
   },
   directConnect: true,
   baseUrl: E2E_BASE_URL,
@@ -22,7 +22,7 @@ exports.config = {
   jasmineNodeOpts: {
     showColors: true,
     defaultTimeoutInterval: 30000,
-    print: function() {}
+    print: function() { }
   },
   onPrepare() {
     require('ts-node').register({
@@ -36,7 +36,7 @@ exports.config = {
         console.log(`${stdout}`);
         console.log(`${stderr}`);
         if (error !== null) {
-            console.log(`exec error: ${error}`);
+          console.log(`exec error: ${error}`);
         }
       });
     jasmine.getEnv().addReporter(new SpecReporter({ spec: { displayStacktrace: true } }));

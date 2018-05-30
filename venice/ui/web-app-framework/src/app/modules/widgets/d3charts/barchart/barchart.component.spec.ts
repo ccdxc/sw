@@ -9,10 +9,10 @@ describe('BarchartComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [  BarchartComponent],
-     // imports:[WidgetsModule]
+      declarations: [BarchartComponent],
+      // imports:[WidgetsModule]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

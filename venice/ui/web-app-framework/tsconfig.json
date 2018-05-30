@@ -2,6 +2,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
+    "newLine": "lf",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
@@ -21,5 +22,5 @@
       "@modules/*": ["app/modules/*"],
       "@env/*": ["environments/*"]
     }
-  }
+  },
 }
