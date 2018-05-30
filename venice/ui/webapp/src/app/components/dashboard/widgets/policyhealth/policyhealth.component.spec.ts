@@ -1,5 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import {WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 import { PolicyhealthComponent } from './policyhealth.component';
@@ -12,21 +12,21 @@ describe('PolicyhealthComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PolicyhealthComponent, DsbdwidgetheaderComponent ],
+      declarations: [PolicyhealthComponent, DsbdwidgetheaderComponent],
       imports: [
         WidgetsModule,
         PrimengModule,
         MaterialdesignModule
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(PolicyhealthComponent);
     component = fixture.componentInstance;
     component.id = 'test_id';
-    component.background_img = {url: 'test.com'};
+    component.background_img = { url: 'test.com' };
     fixture.detectChanges();
   });
 

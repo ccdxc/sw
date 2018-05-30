@@ -11,7 +11,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 import { SettingsComponent } from './settings.component';
 
-@Component( {
+@Component({
   template: ''
 })
 class DummyComponent { }

@@ -74,11 +74,11 @@ export class ModalitemComponent implements OnInit, OnChanges, OnDestroy {
     status = status.toUpperCase();
     switch (status) {
       case ModalItemStatus.INVALID:
-        this.icon = {name: 'clear'};
+        this.icon = { name: 'clear' };
         this.iconStyle = '#DD3B09';
         break;
       case ModalItemStatus.VALID:
-        this.icon = {name: 'done'};
+        this.icon = { name: 'done' };
         this.iconStyle = '#77A746';
         break;
       default:

@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 import { PrimengModule } from '@app/lib/primeng.module';
-import {MaterialdesignModule} from '@lib/materialdesign.module';
+import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 import { SoftwareversionComponent } from './softwareversion.component';
 import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
@@ -12,14 +12,14 @@ describe('SoftwareversionComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SoftwareversionComponent, DsbdwidgetheaderComponent ],
+      declarations: [SoftwareversionComponent, DsbdwidgetheaderComponent],
       imports: [
         WidgetsModule,
         PrimengModule,
         MaterialdesignModule,
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

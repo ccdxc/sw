@@ -7,7 +7,7 @@ import { ClusterComponent } from './cluster.component';
 
 
 
-@Component( {
+@Component({
   template: ''
 })
 class DummyComponent { }
@@ -18,7 +18,7 @@ describe('ClusterComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ClusterComponent , DummyComponent],
+      declarations: [ClusterComponent, DummyComponent],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
@@ -29,7 +29,7 @@ describe('ClusterComponent', () => {
         MatIconRegistry,
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

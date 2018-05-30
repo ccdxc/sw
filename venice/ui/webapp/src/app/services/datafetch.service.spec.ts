@@ -26,8 +26,8 @@ describe('DatafetchService', () => {
     TestBed.configureTestingModule({
       providers: [DatafetchService, UnitTestDatafetchService],
       imports: [
-                HttpClientTestingModule,
-                RouterTestingModule]
+        HttpClientTestingModule,
+        RouterTestingModule]
     });
     injector = getTestBed();
     service = injector.get(UnitTestDatafetchService);

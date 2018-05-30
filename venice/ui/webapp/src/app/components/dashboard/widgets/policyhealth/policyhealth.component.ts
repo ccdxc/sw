@@ -96,14 +96,14 @@ export class PolicyhealthComponent implements OnInit, OnDestroy, OnChanges {
 
       plugins: {
         datalabels: {
-          backgroundColor: function (context) {
+          backgroundColor: function(context) {
             return context.dataset.backgroundColor;
           },
           borderColor: 'white',
           borderRadius: 25,
           borderWidth: 2,
           color: 'white',
-          display: function (context) {
+          display: function(context) {
             // print bad % only
             return context.dataIndex > 0;
           },
@@ -115,7 +115,7 @@ export class PolicyhealthComponent implements OnInit, OnDestroy, OnChanges {
         }
       },
       animation: {
-        onComplete: function () {
+        onComplete: function() {
           //
           // see. dashboard.component.html <ng-template #dashboardPolicyHealth . There is a <canvas id="policy_health_text"
           // we employ the chart.js onComplete() to draw "8%" to the center of donut chart

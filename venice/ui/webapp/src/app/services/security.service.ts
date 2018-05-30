@@ -7,7 +7,7 @@ import { Utility } from '../common/Utility';
 import { AbstractService } from './abstract.service';
 
 @Injectable()
-export class SecurityService  extends AbstractService {
+export class SecurityService extends AbstractService {
   constructor(private _http: HttpClient) {
     super();
   }
@@ -16,7 +16,7 @@ export class SecurityService  extends AbstractService {
    * Override super
   */
   protected callServer(url: string, payload: any) {
-    return this.invokeAJAXPutCall(url, payload,
+    return this.invokeAJAXPostCall(url, payload,
       this._http, { 'ajax': 'start', 'name': 'SecurityService-ajax', 'url': url });
   }
 
@@ -33,7 +33,7 @@ export class SecurityService  extends AbstractService {
   }
 
   getSGPoliciesURL(): string {
-    return environment.server_url + ':' + environment.server_port + environment.version_api_string + this.buildURLHelper(environment.venice_sgpolicy ); // 'sgpolicy';
+    return environment.server_url + ':' + environment.server_port + environment.version_api_string + this.buildURLHelper(environment.venice_sgpolicy); // 'sgpolicy';
   }
 
   isToUserRealData(): boolean {

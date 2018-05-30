@@ -5,7 +5,7 @@ import { LogService } from './services/logging/log.service';
 
 @Component({
   selector: 'app-common',
-    template: '<div></div>'
+  template: '<div></div>'
 })
 
 /**
@@ -14,36 +14,37 @@ import { LogService } from './services/logging/log.service';
  * Put shared data in this class.
  */
 export class CommonComponent implements OnInit {
-    protected successMessage = '';
-    protected errorMessage = '';
-    protected autosaveMessage = {'status': true, 'message': ''};
-    public isRESTServerReady = false;
+  protected subscriptions = {};
+  protected successMessage = '';
+  protected errorMessage = '';
+  protected autosaveMessage = { 'status': true, 'message': '' };
+  public isRESTServerReady = false;
 
-    protected logger: LogService;
+  protected logger: LogService;
 
-    constructor() {
-        this.isRESTServerReady = environment.isRESTAPIReady;
-        // Below line is needed
-        this.logger = Utility.getInstance().getLogService();
-    }
+  constructor() {
+    this.isRESTServerReady = environment.isRESTAPIReady;
+    // Below line is needed
+    this.logger = Utility.getInstance().getLogService();
+  }
 
-    ngOnInit() { }
+  ngOnInit() { }
 
-    /**
-     * Get the component class-name
-     */
-    getClassName(): string {
-        return '';
+  /**
+   * Get the component class-name
+   */
+  getClassName(): string {
+    return '';
 
-    }
+  }
 
   // *************************
   // Public methods
   // *************************
   debug(msg: string, ...optionalParams: any[]) {
     if (!this.logger) {
-        console.error('common.component.ts logger is null');
-        return;
+      console.error('common.component.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.debug(msg, caller, optionalParams);
@@ -51,8 +52,8 @@ export class CommonComponent implements OnInit {
 
   info(msg: string, ...optionalParams: any[]) {
     if (!this.logger) {
-        console.error('common.component.ts logger is null');
-        return;
+      console.error('common.component.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.info(msg, caller, optionalParams);
@@ -60,8 +61,8 @@ export class CommonComponent implements OnInit {
 
   warn(msg: string, ...optionalParams: any[]) {
     if (!this.logger) {
-        console.error('common.component.ts logger is null');
-        return;
+      console.error('common.component.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.warn(msg, caller, optionalParams);
@@ -69,8 +70,8 @@ export class CommonComponent implements OnInit {
 
   error(msg: string, ...optionalParams: any[]) {
     if (!this.logger) {
-        console.error('common.component.ts logger is null');
-        return;
+      console.error('common.component.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.error(msg, caller, optionalParams);
@@ -78,8 +79,8 @@ export class CommonComponent implements OnInit {
 
   fatal(msg: string, ...optionalParams: any[]) {
     if (!this.logger) {
-        console.error('common.component.ts logger is null');
-        return;
+      console.error('common.component.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.fatal(msg, caller, optionalParams);
@@ -87,8 +88,8 @@ export class CommonComponent implements OnInit {
 
   log(msg: string, ...optionalParams: any[]) {
     if (!this.logger) {
-        console.error('common.component.ts logger is null');
-        return;
+      console.error('common.component.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.log(msg, caller, optionalParams);
@@ -96,9 +97,17 @@ export class CommonComponent implements OnInit {
 
   clear(): void {
     if (!this.logger) {
-        console.error('common.component.ts logger is null');
-        return;
+      console.error('common.component.ts logger is null');
+      return;
     }
     this.logger.clear();
+  }
+
+  protected unsubscribeAll() {
+    Object.keys(this.subscriptions).forEach((item) => {
+      if (this.subscriptions[item]) {
+        this.subscriptions[item].unsubscribe();
+      }
+    });
   }
 }

@@ -3,6 +3,7 @@ import * as moment from 'moment';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
+import { environment } from '@env/environment';
 
 declare var $: any;
 
@@ -13,11 +14,16 @@ export class Utility {
 
   // Determines wheter to use on-line or off-line REST API
   public static isOffLine = true;
+  public static XSRF_NAME = 'Grpc-Metadata-Csrf-Token';
 
   myControllerService: ControllerService;
   myLogService: LogService;
 
   private constructor() { }
+
+  static getRESTAPIServerAndPort(): string {
+    return (environment.isRESTAPIReady && environment.production) ? window.location.protocol + '//' + window.location.hostname + ':' + window.location.port : environment.server_url + ':' + environment.server_port;
+  }
 
   static isIE(): boolean {
     // IF IE > 10
@@ -96,7 +102,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -218,7 +224,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function (match, dec) {
+    return str.replace(/&#(\d+);/g, function(match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -232,7 +238,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function (c) {
+    return s.replace(/[&"<>]/g, function(c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -296,7 +302,7 @@ export class Utility {
  *  ==
  *   A will be { "obj":{ "A2":"A2"}}  // property "key" is removed
  */
-  static _trimUnchangedAttributes(checkObj: any, tgtObj: any) {
+  public static _trimUnchangedAttributes(checkObj: any, tgtObj: any) {
     for (const attr in checkObj) {
       if (Utility.isLeafNode(checkObj[attr])) {
         const chkValue = checkObj[attr];
@@ -552,14 +558,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function (i) {
+      return str.replace(/({\d})/g, function(i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function (i) {
+          return str.replace(/({([^}]+)})/g, function(i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -605,6 +611,13 @@ export class Utility {
 
   getTenant(): string {
     return 'default';
+  }
+
+  getXSRFtoken(): string {
+    if (this.getControllerService() && this.getControllerService().LoginUserInfo) {
+      return this.getControllerService().LoginUserInfo[Utility.XSRF_NAME];
+    }
+    return '';
   }
 }
 

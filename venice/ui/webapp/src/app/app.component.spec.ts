@@ -7,8 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { OverlayContainer } from '@angular/cdk/overlay';
 
 
-import {HttpClientTestingModule} from '@angular/common/http/testing';
-import {WidgetsModule} from 'web-app-framework';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { WidgetsModule } from 'web-app-framework';
 
 import { Store } from '@ngrx/store';
 /* ---------------------------------------------------
@@ -28,8 +28,8 @@ import { ToolbarComponent } from './widgets/toolbar/toolbar.component';
 /* ---------------------------------------------------
     Third-party libraries
 ----------------------------------------------------- */
-import {PrimengModule} from './lib/primeng.module';
-import {MaterialdesignModule} from './lib/materialdesign.module';
+import { PrimengModule } from './lib/primeng.module';
+import { MaterialdesignModule } from './lib/materialdesign.module';
 import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 import { AlerttableService } from '@app/services/alerttable.service';
 
@@ -42,29 +42,29 @@ describe('AppComponent', () => {
         ToolbarComponent,
       ],
       imports: [
-                // Other modules...
-                HttpClientTestingModule,
-                RouterTestingModule,
-                FormsModule,
-                PrimengModule,
-                MaterialdesignModule,
-                WidgetsModule,
-                CoreModule,
-                AlertlistModule,
-                LoginModule,
-                NgIdleKeepaliveModule.forRoot()
+        // Other modules...
+        HttpClientTestingModule,
+        RouterTestingModule,
+        FormsModule,
+        PrimengModule,
+        MaterialdesignModule,
+        WidgetsModule,
+        CoreModule,
+        AlertlistModule,
+        LoginModule,
+        NgIdleKeepaliveModule.forRoot()
 
-            ],
+      ],
       providers: [
-            ControllerService,
-            DatafetchService,
-            AlerttableService,
-            AuthService,
-            LogService,
-            LogPublishersService,
-            Store,
-            OverlayContainer,
-        ],
+        ControllerService,
+        DatafetchService,
+        AlerttableService,
+        AuthService,
+        LogService,
+        LogPublishersService,
+        Store,
+        OverlayContainer,
+      ],
     });
 
     TestBed.compileComponents();

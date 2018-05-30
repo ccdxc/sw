@@ -13,7 +13,7 @@ describe('ControllerService', () => {
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,
-    ]
+      ]
     });
   });
 

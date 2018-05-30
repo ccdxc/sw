@@ -4,7 +4,7 @@ const APP_PREFIX = 'app-';
 
 @Injectable()
 export class LocalStorageService {
-  constructor() {}
+  constructor() { }
 
 
 

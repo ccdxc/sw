@@ -13,7 +13,7 @@ import { ControllerService } from '@app/services/controller.service';
 export class SecurityComponent extends BaseComponent implements OnInit, OnDestroy {
 
   constructor(protected _controllerService: ControllerService,
-    ) {
+  ) {
     super(_controllerService);
   }
 

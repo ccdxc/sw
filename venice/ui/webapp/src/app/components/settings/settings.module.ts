@@ -22,4 +22,4 @@ import { FormsModule } from '@angular/forms';
   ],
   declarations: [SettingsComponent]
 })
-export class SettingsModule {}
+export class SettingsModule { }

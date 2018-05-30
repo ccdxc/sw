@@ -122,6 +122,17 @@ $my-custom-theme-sidenav: (
   navheader: #a1bfe1,
 );
 
+$penuiColorPalette: (
+  primary: #97b8df,
+  primary_hover: #86a8d7,
+  secondary: #ffc430,
+  secondary_hover:#fcb710,
+  warning: #e57553,
+  warning_hover: #dd3b09,
+  neutral: #bebebe,
+  neutral_hover: #aeaeae,
+);
+
 
 @function create-custom-theme($primary, $accent, $warn: mat-palette($mat-red)) {
     @return (
@@ -132,6 +143,7 @@ $my-custom-theme-sidenav: (
       foreground: $my-custom-theme-foreground,
       background: $my-custom-theme-background,
       //added options
+      colors: $penuiColorPalette,
       sidenav: $my-custom-theme-sidenav
     );
   }

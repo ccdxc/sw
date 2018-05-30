@@ -16,7 +16,7 @@ const routes: Routes = [
     children: [
       { path: '', component: NaplesComponent }
     ]
-  } ,
+  },
 ];
 
 @NgModule({

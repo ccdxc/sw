@@ -18,11 +18,11 @@ import { SharedModule } from '@components/shared/shared.module';
 import { DashboardComponent } from './dashboard.component';
 import { SoftwareversionComponent } from './widgets/softwareversion/softwareversion.component';
 import { SystemcapacitywidgetComponent } from './widgets/systemcapacity/systemcapacity.component';
-import { NaplesComponent} from './widgets/naples/naples.component';
-import { PolicyhealthComponent} from './widgets/policyhealth/policyhealth.component';
-import { DsbdworkloadComponent} from './widgets/dsbdworkload/dsbdworkload.component';
+import { NaplesComponent } from './widgets/naples/naples.component';
+import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.component';
+import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.component';
 
-import {MatIconRegistry} from '@angular/material';
+import { MatIconRegistry } from '@angular/material';
 
 @Component({
   template: ''

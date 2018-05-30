@@ -11,9 +11,9 @@ describe('AuthService', () => {
     TestBed.configureTestingModule({
       providers: [AuthService, ControllerService, MatIconRegistry],
       imports: [
-                HttpClientTestingModule,
-                RouterTestingModule
-            ]
+        HttpClientTestingModule,
+        RouterTestingModule
+      ]
     });
   });
 

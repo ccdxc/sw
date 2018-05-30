@@ -32,7 +32,7 @@ export class ModalheaderComponent implements OnInit {
       this.id = 'dashboard-header-' + Utility.s4();
     }
     if (this.icon == null) {
-      this.icon = {margin: {}};
+      this.icon = { margin: {} };
     }
   }
 

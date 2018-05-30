@@ -9,12 +9,12 @@ describe('MonitoringComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ MonitoringComponent ],
+      declarations: [MonitoringComponent],
       imports: [
         RouterTestingModule
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

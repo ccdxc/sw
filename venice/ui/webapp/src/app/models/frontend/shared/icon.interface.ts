@@ -1,16 +1,16 @@
 interface Margin {
-    top?: string;
-    left?: string;
-    right?: string;
-    bottom?: string;
+  top?: string;
+  left?: string;
+  right?: string;
+  bottom?: string;
 }
 
 export interface Icon {
-    margin: Margin;
+  margin: Margin;
 
-    /* Name of the mat icon to load */
-    matIcon?: string;
+  /* Name of the mat icon to load */
+  matIcon?: string;
 
-    /* Name of the svgIcon to load */
-    svgIcon?: string;
+  /* Name of the svgIcon to load */
+  svgIcon?: string;
 }

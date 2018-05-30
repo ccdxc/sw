@@ -65,7 +65,6 @@
 
 #app-sidebar .sidebar-header {
   padding: 20px;
-  background: #353532;
 }
 
 #app-sidebar .sidebar-header strong {
@@ -134,12 +133,6 @@ a[aria-expanded="true"]::before {
   margin-bottom: 5px;
 }
 
-#app-sidebar a.article,
-a.article:hover {
-  background: #353532 !important;
-  color: #97b8df !important;
-}
-
 .app-l-side-nav-li{
   width:24px;
   height:24px;
@@ -153,6 +146,18 @@ a.article:hover {
   background: url("/assets/images/icons/icon-app-sidenav-cluster.svg") center center no-repeat;
 }
 
+.app-l-side-nav-cluster-detail {
+  background: url("/assets/images/icons/cluster/ico-cluster.svg") center center no-repeat;
+}
+
+.app-l-side-nav-cluster-nodes {
+  background: url("/assets/images/icons/cluster/ico-nodes.svg") center center no-repeat;
+}
+
+.app-l-side-nav-cluster-naples {
+  background: url("/assets/images/icons/cluster/ico-naples.svg") center center no-repeat;
+}
+
 .app-l-side-nav-workload{
   background: url("/assets/images/icons/icon-app-sidenav-workload.svg") center center no-repeat;
 }
@@ -161,25 +166,51 @@ a.article:hover {
   background: url("/assets/images/icons/icon-app-sidenav-security.svg") center center no-repeat;
 }
 
-.app-l-side-nav-network{
+.app-l-side-nav-network {
   background: url("/assets/images/icons/icon-app-sidenav-network.svg") center center no-repeat;
+}
+
+.app-l-side-nav-network-service {
+  background: url("/assets/images/icons/network/ico-service.svg") center center no-repeat;
+}
+
+.app-l-side-nav-network-loadbalance {
+  background: url("/assets/images/icons/network/ico-loadbalance-policy.svg") center center no-repeat;
+}
+
+.app-l-side-nav-network-qospolicy {
+  background: url("/assets/images/icons/network/ico-qo-s-policy.svg") center center no-repeat;
+}
+
+.app-l-side-nav-network-mirrorpolicy {
+  background: url("/assets/images/icons/network/ico-mirror-policy.svg") center center no-repeat;
 }
 
 .app-l-side-nav-monitoring{
   background: url("/assets/images/icons/icon-app-sidenav-monitoring.svg") center center no-repeat;
 }
 
-#app-sidebar  ul li.app-sidenav-selected a{
-  /* workload and dashboard change color */
-  color:#97b8df;
+.app-l-side-nav-monitoring-troubleshooting {
+  background: url("/assets/images/icons/monitoring/ico-monitoring.svg") center center no-repeat;
 }
 
+.app-l-side-nav-monitoring-alertevent {
+  background: url("/assets/images/icons/monitoring/ico-troubleshooting.svg") center center no-repeat;
+}
 
-#app-sidebar ul li :focus{
-  /* cluster (group header) change color */
-  color:#97b8df;
+.app-l-side-nav-security-securitygroup {
+  background: url("/assets/images/icons/security/ico-security-group.svg") center center no-repeat;
 }
-/* test */
-#app-sidebar  ul li ul:focus li a.app-sidenav-item{
-  color:#97b8df;
+
+.app-l-side-nav-security-securitypolicy {
+  background: url("/assets/images/icons/security/icon-security-policy.svg") center center no-repeat;
 }
+
+.app-l-side-nav-security-firewallpolicy {
+  background: url("/assets/images/icons/security/icon-firewall-policy.svg") center center no-repeat;
+}
+
+.app-l-side-nav-security-alg {
+  background: url("/assets/images/icons/security/ico-alg.svg") center center no-repeat;
+}
+

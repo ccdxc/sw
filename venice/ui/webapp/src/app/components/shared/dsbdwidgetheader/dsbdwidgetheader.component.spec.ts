@@ -1,8 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import {WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 
 import { DsbdwidgetheaderComponent } from './dsbdwidgetheader.component';
-import {MaterialdesignModule} from '@lib/materialdesign.module';
+import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 describe('DsbdwidgetheaderComponent', () => {
   let component: DsbdwidgetheaderComponent;
@@ -10,24 +10,24 @@ describe('DsbdwidgetheaderComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DsbdwidgetheaderComponent ],
+      declarations: [DsbdwidgetheaderComponent],
       imports: [
         WidgetsModule,
         MaterialdesignModule
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DsbdwidgetheaderComponent);
     component = fixture.componentInstance;
     component.icon = {
-        margin: {
-          top: '5px',
-          left: '5px',
-        },
-        svgIcon: 'test.com'
+      margin: {
+        top: '5px',
+        left: '5px',
+      },
+      svgIcon: 'test.com'
     };
     component.id = 'test_id';
     fixture.detectChanges();

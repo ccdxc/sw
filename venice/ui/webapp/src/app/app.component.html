@@ -11,26 +11,27 @@
                         <img id="app-header-logo" class="navbar-btn app-header-logo" src="../../../assets/images/headers/pensando-header-logo.svg"
                         />
                         <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
-                           <mat-icon svgIcon="menu-pin"></mat-icon>
+                            <mat-icon svgIcon="menu-pin"></mat-icon>
                         </button>
                         <button mat-icon-button (click)="onSidebarCollapseClick($event);" title="Expand Or Collapse Side Menu" [style.visibility]="sidenav.opened ? 'visible' : 'hidden'">
-                            <mat-icon svgIcon="menu-expand"  *ngIf="!isSideNavExpanded"></mat-icon>
+                            <mat-icon svgIcon="menu-expand" *ngIf="!isSideNavExpanded"></mat-icon>
                             <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
                         </button>
                     </div>
                     <div class="app-shell-header-search-div">
                         <pw-searchbox styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchVeniceApplicationsSuggestions"
                             (completeMethod)="filterVeniceApplicationSearchSuggestions($event)" [minLength]="1" placeholder="Search"
-                            field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}" [multiple]="true" dataKey="code" (invokeSearch)="onInvokeSearch($event)">
+                            field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}"
+                            [multiple]="true" dataKey="code" (invokeSearch)="onInvokeSearch($event)">
                             <ng-template let-item pTemplate="item">
                                 <div class="row ui-helper-clearfix app-search-autocomplete-suggestion-div" *ngIf="item.description">
                                     <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-name">{{item.name}}</div>
                                     <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-desc">{{item.description}}</div>
                                 </div>
                             </ng-template>
-                            <ng-template let-item pTemplate="selectedItem">                               
+                            <ng-template let-item pTemplate="selectedItem">
                                 <span style="font-size:14px; margin-right:18px">{{item.seachType? item.seachType + ":" + item.selectedOption : item.code + "-" + item.name}}</span>
-                             </ng-template>
+                            </ng-template>
                         </pw-searchbox>
                     </div>
 
@@ -77,19 +78,28 @@
                             </a>
                         </li>
                         <li>
-                            <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false" class="app-sidenav-group-header"  >
+                            <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false" class="app-sidenav-group-header">
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster"></i>
                                 <span class="app-l-side-nav-item-label">Cluster</span>
                             </a>
                             <ul class="collapse list-unstyled app-l-side-nav-ul-submenu" id="clusterSubmenu">
                                 <li>
-                                    <a class="app-sidenav-item" id="cluster">Cluster</a>
+                                    <a class="app-sidenav-item" id="cluster">
+                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-detail"></i>
+                                        <span class="app-l-side-nav-item-label">Cluster</span>
+                                    </a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item" id="nodes">Nodes</a>
+                                    <a class="app-sidenav-item" id="nodes">
+                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-nodes"></i>
+                                        <span class="app-l-side-nav-item-label">Nodes</span>
+                                    </a>
                                 </li>
                                 <li>
-                                    <a class="app-sidenav-item" id="naples">NAPLES</a>
+                                    <a class="app-sidenav-item" id="naples">
+                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-naples"></i>
+                                        <span class="app-l-side-nav-item-label">NAPLES</span>
+                                    </a>
                                 </li>
                                 <li>
                                     <a class="app-sidenav-item" id="updates">Updates</a>
@@ -103,13 +113,16 @@
                             </a>
                         </li>
                         <li>
-                            <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false" >
+                            <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false">
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-security"></i>
                                 <span class="app-l-side-nav-item-label">Security</span>
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="securitySubmenu">
                                 <li>
-                                    <a class="app-sidenav-item" id="sgpolicy">Security Policies</a>
+                                    <a class="app-sidenav-item" id="sgpolicy">
+                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-security-securitypolicy"></i>
+                                        <span class="app-l-side-nav-item-label">Security Policies</span>
+                                    </a>
                                 </li>
                                 <li>
                                     <a class="app-sidenav-item" id="app">Apps</a>
@@ -118,21 +131,23 @@
                         </li>
 
                         <li>
-                            <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false" >
-                                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
-                                    <span class="app-l-side-nav-item-label">Network</span>
+                            <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false">
+                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
+                                <span class="app-l-side-nav-item-label">Network</span>
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="networkSubmenu">
                                 <li>
-                                    <a class="app-sidenav-item" id="networks">Networks</a>
+                                    <a class="app-sidenav-item" id="networks">
+                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
+                                        <span class="app-l-side-nav-item-label">Networks</span>
+                                    </a>
                                 </li>
                             </ul>
                         </li>
                         <li>
-                            <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false" >
-                                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
-                                    <span class="app-l-side-nav-item-label">Monitoring</span>
-                                
+                            <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
+                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
+                                <span class="app-l-side-nav-item-label">Monitoring</span>
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="monitoringSubmenu">
                                 <li>
@@ -146,10 +161,10 @@
                                 </li>
                                 <li>
                                     <a class="app-sidenav-item" id="fwlogs">Firewall Logs</a>
-				</li>
+				                </li>
                                 <li>
                                     <a class="app-sidenav-item" id="flowexport">Flow Export</a>
-				</li>
+				                </li>
                                 <li>
                                     <a class="app-sidenav-item" id="troubleshooting">Troubleshooting</a>
                                 </li>
@@ -158,11 +173,11 @@
                     </ul>
                 </mat-sidenav>
                 <mat-sidenav-content>
-                    <app-toolbar #breadcrumbToolbar ></app-toolbar>
+                    <app-toolbar #breadcrumbToolbar></app-toolbar>
                     <div class="app-shell-router-outter-div">
-                       <router-outlet></router-outlet>
+                        <router-outlet></router-outlet>
                     </div>
-                    
+
                 </mat-sidenav-content>
             </mat-sidenav-container>
 
@@ -188,9 +203,9 @@
             POC build chart with code.
         </button>
         <button mat-icon-button routerLink="settings" class="hidden-sm-down" (click)="pocGetAlerts($event)">
-                <i class="material-icons">system_update_alt</i>  
-                POC Get Alerts
+            <i class="material-icons">system_update_alt</i>
+            POC Get Alerts
         </button>
-        
+
     </div>
 </ng-template>

@@ -15,12 +15,12 @@ import { startWith } from 'rxjs/operators/startWith';
  * Modified from https://material.angular.io/components/input/examples
  */
 class ObservableInstantErrorStateMatcher implements ErrorStateMatcher {
-  private observer = new BehaviorSubject<any>({status: ''});
+  private observer = new BehaviorSubject<any>({ status: '' });
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
     const isSubmitted = form && form.submitted;
     const val = !!(control && control.invalid && (control.touched || isSubmitted));
 
-    this.observer.next({status: this.computeStatus(val, control.status)});
+    this.observer.next({ status: this.computeStatus(val, control.status) });
     return val;
   }
 
@@ -40,103 +40,103 @@ class ObservableInstantErrorStateMatcher implements ErrorStateMatcher {
 }
 
 @Component({
-    selector: 'app-workloadmodal',
-    templateUrl: './workloadmodal.component.html',
-    styleUrls: ['./workloadmodal.component.scss'],
-    encapsulation: ViewEncapsulation.None
-  })
-  export class WorkloadModalComponent implements OnInit {
-    icon: any = {
-        url: 'security-policy'
-    };
+  selector: 'app-workloadmodal',
+  templateUrl: './workloadmodal.component.html',
+  styleUrls: ['./workloadmodal.component.scss'],
+  encapsulation: ViewEncapsulation.None
+})
+export class WorkloadModalComponent implements OnInit {
+  icon: any = {
+    url: 'security-policy'
+  };
 
-    // Error messages
-    emptyFieldErrorMessage = 'This field cannot be blank.';
-    notExistingSecurityGroupErrorMessage = 'Please choose an existing Security Group.';
+  // Error messages
+  emptyFieldErrorMessage = 'This field cannot be blank.';
+  notExistingSecurityGroupErrorMessage = 'Please choose an existing Security Group.';
 
-    labelSelectorValidationStatus = 'VALID'; // Default value is valid because its allowed to not have a label
+  labelSelectorValidationStatus = 'VALID'; // Default value is valid because its allowed to not have a label
 
-    newSecurityGroup = 'new';
-    errorStateMatcherName = new ObservableInstantErrorStateMatcher();
-    errorStateMatcherDescription = new ObservableInstantErrorStateMatcher();
-    errorStateMatcherExisting = new ObservableInstantErrorStateMatcher();
+  newSecurityGroup = 'new';
+  errorStateMatcherName = new ObservableInstantErrorStateMatcher();
+  errorStateMatcherDescription = new ObservableInstantErrorStateMatcher();
+  errorStateMatcherExisting = new ObservableInstantErrorStateMatcher();
 
-    newSecurityGroupFormControl: FormControl = new FormControl('', [
-      Validators.required,
-      this.checkExistingName(false)
-    ]);
+  newSecurityGroupFormControl: FormControl = new FormControl('', [
+    Validators.required,
+    this.checkExistingName(false)
+  ]);
 
-    notEmptyFormControl: FormControl = new FormControl('', [
-      Validators.required,
-    ]);
+  notEmptyFormControl: FormControl = new FormControl('', [
+    Validators.required,
+  ]);
 
-    existingSecurityGroupFormControl: FormControl = new FormControl('', [
-      Validators.required,
-      this.checkExistingName(true)
-    ]);
+  existingSecurityGroupFormControl: FormControl = new FormControl('', [
+    Validators.required,
+    this.checkExistingName(true)
+  ]);
 
-    filteredOptions: any;
+  filteredOptions: any;
 
-    constructor(
-      public dialogRef: MatDialogRef<WorkloadModalComponent>,
-      @Inject(MAT_DIALOG_DATA) public data: any) { }
+  constructor(
+    public dialogRef: MatDialogRef<WorkloadModalComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any) { }
 
-    ngOnInit() {
-      // filtering for the existing security group option
-      this.filteredOptions = this.existingSecurityGroupFormControl.valueChanges.pipe(
-        startWith(''),
-        map(val => this.filterSecurityGroups(val))
-      );
-    }
-
-    formValid() {
-      if (this.newSecurityGroup === 'new') {
-        return this.newSecurityGroupFormControl.valid
-                  && this.notEmptyFormControl.valid
-                  && this.labelSelectorValidationStatus === 'VALID';
-      } else if (this.newSecurityGroup === 'existing') {
-        return this.existingSecurityGroupFormControl.valid;
-      }
-      return false;
-    }
-
-    filterSecurityGroups(val: string): string[] {
-      return this.data.securityGroups.filter(option => option.toLowerCase().indexOf(val.toLowerCase()) === 0);
-    }
-
-    onNoClick(): void {
-      this.dialogRef.close();
-    }
-
-    submitClick(): void {
-      if (!this.formValid()) {
-        return;
-      }
-      if (this.newSecurityGroup === 'new') {
-        console.log('creating new group', this.newSecurityGroupFormControl.value, this.notEmptyFormControl.value);
-      } else {
-        console.log('joining existing group', this.existingSecurityGroupFormControl.value);
-      }
-      this.dialogRef.close();
-    }
-
-    checkExistingName(shouldExist: boolean): ValidatorFn {
-      const _ = Utility.getLodash();
-      return (control: AbstractControl): {[key: string]: any} => {
-        const contains = _.includes(this.data.securityGroups, control.value);
-        if (shouldExist) {
-          return (!contains) ? {'notExistingName': {value: control.value}} : null;
-        } else {
-          return contains ? {'takenName': {value: control.value}} : null;
-        }
-      };
-    }
-
-    setValidationObservable($event) {
-      $event.subscribe((data) => {
-        // Timeout is needed to prevent the tree from changing during the time
-        // angular is updating the model. Currently unable to create a better solution
-        setTimeout(() => {this.labelSelectorValidationStatus = data.status; }, 0);
-      });
-    }
+  ngOnInit() {
+    // filtering for the existing security group option
+    this.filteredOptions = this.existingSecurityGroupFormControl.valueChanges.pipe(
+      startWith(''),
+      map(val => this.filterSecurityGroups(val))
+    );
   }
+
+  formValid() {
+    if (this.newSecurityGroup === 'new') {
+      return this.newSecurityGroupFormControl.valid
+        && this.notEmptyFormControl.valid
+        && this.labelSelectorValidationStatus === 'VALID';
+    } else if (this.newSecurityGroup === 'existing') {
+      return this.existingSecurityGroupFormControl.valid;
+    }
+    return false;
+  }
+
+  filterSecurityGroups(val: string): string[] {
+    return this.data.securityGroups.filter(option => option.toLowerCase().indexOf(val.toLowerCase()) === 0);
+  }
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
+
+  submitClick(): void {
+    if (!this.formValid()) {
+      return;
+    }
+    if (this.newSecurityGroup === 'new') {
+      console.log('creating new group', this.newSecurityGroupFormControl.value, this.notEmptyFormControl.value);
+    } else {
+      console.log('joining existing group', this.existingSecurityGroupFormControl.value);
+    }
+    this.dialogRef.close();
+  }
+
+  checkExistingName(shouldExist: boolean): ValidatorFn {
+    const _ = Utility.getLodash();
+    return (control: AbstractControl): { [key: string]: any } => {
+      const contains = _.includes(this.data.securityGroups, control.value);
+      if (shouldExist) {
+        return (!contains) ? { 'notExistingName': { value: control.value } } : null;
+      } else {
+        return contains ? { 'takenName': { value: control.value } } : null;
+      }
+    };
+  }
+
+  setValidationObservable($event) {
+    $event.subscribe((data) => {
+      // Timeout is needed to prevent the tree from changing during the time
+      // angular is updating the model. Currently unable to create a better solution
+      setTimeout(() => { this.labelSelectorValidationStatus = data.status; }, 0);
+    });
+  }
+}

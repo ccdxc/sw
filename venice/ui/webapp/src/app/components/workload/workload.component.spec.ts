@@ -10,7 +10,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 /**-----
  VeniceUI Framework -  imports
  ------------------*/
-import {WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 
 /**-----
  Venice UI -  imports
@@ -20,20 +20,20 @@ import { WorkloadService } from '@app/services/workload.service';
 
 import { WorkloadComponent } from './workload.component';
 import { WorkloadwidgetComponent } from './workloadwidget/workloadwidget.component';
-import { SharedModule} from '@app/components/shared//shared.module';
+import { SharedModule } from '@app/components/shared//shared.module';
 import { MockDataUtil } from '@app/common/MockDataUtil';
 
 /**-----
  Third-parties imports
  ------------------*/
 import { MomentModule } from 'angular2-moment';
-import {MatIconRegistry} from '@angular/material';
+import { MatIconRegistry } from '@angular/material';
 
 
-import {PrimengModule} from '@lib/primeng.module';
+import { PrimengModule } from '@lib/primeng.module';
 import { Component } from '@angular/core';
-import {MaterialdesignModule} from '@lib/materialdesign.module';
-@Component( {
+import { MaterialdesignModule } from '@lib/materialdesign.module';
+@Component({
   template: ''
 })
 class DummyComponent { }
@@ -139,9 +139,9 @@ describe('WorkloadComponent', () => {
 
   // test-1
   it('Service injected via inject(...) and TestBed.get(...) should be the same instance',
-      inject([WorkloadService], (injectService: WorkloadService) => {
-        expect(injectService).toBe(testBedService);
-      })
+    inject([WorkloadService], (injectService: WorkloadService) => {
+      expect(injectService).toBe(testBedService);
+    })
   );
 
   // test-2

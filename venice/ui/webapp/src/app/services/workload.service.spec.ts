@@ -14,7 +14,7 @@ import { WorkloadService } from './workload.service';
 /**----
  Third Party imports
  ------------------*/
-import { MatIconRegistry} from '@angular/material';
+import { MatIconRegistry } from '@angular/material';
 
 /**
  * workload.service.spec.ts
@@ -32,12 +32,12 @@ describe('WorkloadService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [WorkloadService,
-                  ControllerService,
-                  MatIconRegistry
-                 ],
+        ControllerService,
+        MatIconRegistry
+      ],
       imports: [
-                HttpClientTestingModule,
-                RouterTestingModule]
+        HttpClientTestingModule,
+        RouterTestingModule]
     });
     injector = getTestBed();
     service = injector.get(WorkloadService);
@@ -62,9 +62,9 @@ describe('WorkloadService', () => {
     const url = service.getItemURL();
     let req = null;
     if (service.isToMockData()) {
-     // can't get it to work
-     // req = httpMock.expectOne('');
-     // req.flush(dummyRecords);
+      // can't get it to work
+      // req = httpMock.expectOne('');
+      // req.flush(dummyRecords);
     } else {
       req = httpMock.expectOne(url);
       expect(req.request.method).toBe('GET');

@@ -7,7 +7,7 @@ import { Subscription } from 'rxjs/Subscription';
 
 import { BaseComponent } from '../base/base.component';
 import { WorkloadModalComponent } from '@app/components/workload/workloadmodal/workloadmodal.component';
-import { MatDialog} from '@angular/material';
+import { MatDialog } from '@angular/material';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -31,9 +31,9 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   unprotectedworkloadsWidget: any;
   workloadalertsWidget: any;
   widgets: string[] = ['totalworkloads',
-                        'newworkloads',
-                        'unprotectedworkloads',
-                        'workloadalerts'];
+    'newworkloads',
+    'unprotectedworkloads',
+    'workloadalerts'];
   totalworkload: any;
   selectedWorkloadWidget: string;
   bodyicon: any = {
@@ -73,7 +73,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   // Modal vars
   dialogRef: any;
   securityGroups: string[] = ['SG1', 'SG2'];
-  labels: any = {'Loc': ['NL', 'AMS'], 'Env' : ['test', 'prod']};
+  labels: any = { 'Loc': ['NL', 'AMS'], 'Env': ['test', 'prod'] };
 
   constructor(
     private _workloadService: WorkloadService,
@@ -97,12 +97,12 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
           {
             cssClass: 'global-button-primary workload-button',
             text: 'NEW WORKLOAD',
-            callback: () => {this.buttoncallback('new workload'); }
+            callback: () => { this.buttoncallback('new workload'); }
           },
           {
             cssClass: 'global-button-primary workload-button workload-toolbar-button',
             text: 'COMMIT CHANGES',
-            callback: () => {this.buttoncallback('commit changes'); }
+            callback: () => { this.buttoncallback('commit changes'); }
           }],
         breadcrumb: [{ label: 'Workloads Overview', url: '' }]
       });
@@ -122,9 +122,11 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
       panelClass: 'workload-modal',
       width: '898px',
       hasBackdrop: true,
-      data: {securityGroups: this.securityGroups,
-             selectedWorkloads: this.selectedWorkloads,
-             labels: this.labels}
+      data: {
+        securityGroups: this.securityGroups,
+        selectedWorkloads: this.selectedWorkloads,
+        labels: this.labels
+      }
     });
   }
 

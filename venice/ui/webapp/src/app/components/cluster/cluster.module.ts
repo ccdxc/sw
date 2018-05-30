@@ -13,7 +13,7 @@ import { SharedModule } from '@app/components/shared//shared.module';
 /**-----
  Venice Framework UI -  imports
  ------------------*/
- import { WidgetsModule } from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 
 import { ClusterRoutingModule } from './cluster.route';
 

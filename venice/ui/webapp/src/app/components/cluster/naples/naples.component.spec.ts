@@ -8,9 +8,9 @@ describe('NaplesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NaplesComponent ]
+      declarations: [NaplesComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

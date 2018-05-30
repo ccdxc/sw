@@ -1,18 +1,19 @@
 {
-	"result": "success",
-	"response": {
-		"context": {
-			"requestId": "aa9246d9-abd8-e646-1169-96fa3b3b1251",
-			"initiatedBy": "PensandoLoginUI",
-			"timestamp": "2017-03-15T18:16Z",
-			"requestName": "PENSANDO_USERR_SIGNIN_REQUEST",
-			"servicedBy": "DataAccessPlatform,RESTService",
-			"responseName": "PENSANDO_USERR_SIGNIN_RESPONSE"
-		},
-		"data": {
-            "username":"Pensando",
-            "role":"Admin"
-		}
+	"kind": "User",
+	"api-version": "v1",
+	"meta": {
+		"name": "Liz",
+		"tenant": "default",
+		"resource-version": "10028",
+		"uuid": "fc103fd3-6ba6-4193-aeed-419419b1b4c3",
+		"creation-time": "2018-04-16T23:51:26.422201836Z",
+		"mod-time": "2018-04-16T23:51:26.422203465Z",
+		"self-link": "/v1/auth/default/users/Liz"
 	},
-	"message": null
+	"spec": {
+		"fullname": "Liz Claire",
+		"email": "vishaljain@pensando.io",
+		"type": "LOCAL"
+	},
+	"status": {}
 }

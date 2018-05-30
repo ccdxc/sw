@@ -8,7 +8,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 
 
-import { MatIconRegistry} from '@angular/material';
+import { MatIconRegistry } from '@angular/material';
 
 
 /**-----
@@ -22,7 +22,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { ControllerService } from '@app/services/controller.service';
 import { AlerttableService } from 'app/services/alerttable.service';
 import { AlerttableComponent } from './alerttable.component';
-@Component( {
+@Component({
   template: ''
 })
 class DummyComponent { }

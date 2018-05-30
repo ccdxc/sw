@@ -11,16 +11,16 @@ describe('LabelselectorComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ LabelselectorComponent ],
-      imports: [CommonModule,  MaterialdesignModule, ReactiveFormsModule]
+      declarations: [LabelselectorComponent],
+      imports: [CommonModule, MaterialdesignModule, ReactiveFormsModule]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(LabelselectorComponent);
     component = fixture.componentInstance;
-    component.labels = {a: ['1', '2'], b: ['3', '4'], abc: ['123', '122']};
+    component.labels = { a: ['1', '2'], b: ['3', '4'], abc: ['123', '122'] };
     fixture.detectChanges();
   });
 

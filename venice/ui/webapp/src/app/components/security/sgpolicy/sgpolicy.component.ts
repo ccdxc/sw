@@ -66,7 +66,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
 
         buttons: [
           {
-            cssClass: 'sgpolicy-toolbar-refresh-button',
+            cssClass: 'global-button-primary sgpolicy-toolbar-refresh-button',
             text: 'Refresh',
             callback: () => { this.getSGPolicies(); },
           }],
@@ -83,7 +83,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     }
 
     if (value === undefined || value === null || value.length === 0) {
-        return false;
+      return false;
     }
 
     const ip = filter[0];
@@ -91,7 +91,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     const protocol = extractedProtocolPort.protocol;
     const port = extractedProtocolPort.port;
 
-    return  IPUtility.filterRuleByIPv4(value, ip) && IPUtility.filterRuleByPort(value, protocol, port);
+    return IPUtility.filterRuleByIPv4(value, ip) && IPUtility.filterRuleByPort(value, protocol, port);
   }
 
   ngAfterViewInit() {
@@ -129,7 +129,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
         let count = 1;
         // Casting Rule type to any, so that we can set additional properties
         // that will be used in the table display
-        rules.forEach( (element: any) => {
+        rules.forEach((element: any) => {
           element.order = count++;
           element.data = {
             'sourceIP': element.sourceIP,

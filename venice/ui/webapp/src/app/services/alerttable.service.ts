@@ -17,7 +17,7 @@ export class AlerttableService extends AbstractService {
    * Override super
   */
   protected callServer(url: string, payload: any) {
-    return this.invokeAJAXPutCall(url, payload,
+    return this.invokeAJAXPostCall(url, payload,
       this._http, { 'ajax': 'start', 'name': 'AlerttableService-ajax', 'url': url });
   }
 
@@ -46,7 +46,7 @@ export class AlerttableService extends AbstractService {
   public getAlertList(payload: any): Observable<any> {
     const url = this.getAlertListURL();
     return this.invokeAJAXGetCall(url,
-      this._http, { 'ajax': 'start', 'name': 'DatafetchService-ajax', 'url': url });
+      this._http, { 'ajax': 'start', 'name': 'AlerttableService-ajax', 'url': url });
   }
 
 }

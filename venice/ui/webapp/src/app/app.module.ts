@@ -2,7 +2,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS, HttpClientXsrfModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { Location, LocationStrategy, HashLocationStrategy, DatePipe, DecimalPipe } from '@angular/common';
@@ -13,9 +13,9 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/observable/throw';
 
 // Venice Widget NPM Module
-import {WidgetsModule} from 'web-app-framework';
-import {MaterialdesignModule } from '@app/lib/materialdesign.module';
-import {PrimengModule} from '@app/lib/primeng.module';
+import { WidgetsModule } from 'web-app-framework';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { PrimengModule } from '@app/lib/primeng.module';
 
 // Third party NPM Module
 import { MomentModule } from 'angular2-moment';
@@ -25,12 +25,12 @@ import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 
 
 // Pensando UI services
-import { ControllerService} from '@app/services/controller.service';
+import { ControllerService } from '@app/services/controller.service';
 import { AbstractService } from '@app/services/abstract.service';
 import { AuthService } from '@app/services/auth.service';
 import { WorkloadService } from '@app/services/workload.service';
 import { DatafetchService } from '@app/services/datafetch.service';
-import { VeniceUIHttpInterceptor} from '@app/inteceptors/httpinterceptor.service';
+import { VeniceUIHttpInterceptor } from '@app/inteceptors/httpinterceptor.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AlerttableService } from '@app/services/alerttable.service';
@@ -48,7 +48,7 @@ import { CoreModule } from '@app/core';
 import { SettingsModule } from '@app/components/settings';
 import { DashboardModule } from '@app/components/dashboard';
 import { AlertlistModule } from '@app/components/alertlist';
-import { AlerttableModule} from '@app/components/alerttable';
+import { AlerttableModule } from '@app/components/alerttable';
 import { SecurityModule } from '@app/components/security';
 import { NetworkModule } from '@app/components/network';
 import { ClusterModule } from '@app/components/cluster';
@@ -88,8 +88,11 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     // angularJS
     BrowserModule,
     BrowserAnimationsModule,
-    BrowserModule,
     HttpClientModule,
+    HttpClientXsrfModule.withOptions({
+      cookieName: 'sid',
+      headerName: 'Grpc-Metadata-Csrf-Token',
+    }),
     FormsModule,
     NgIdleKeepaliveModule.forRoot(),
 
@@ -113,7 +116,6 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     MomentModule,
     GridsterModule,
     FlexLayoutModule,
-
   ],
   providers: [
     ControllerService,
@@ -127,7 +129,7 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     SecurityService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
-    { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true }  ,
+    { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },
   ],
   bootstrap: [AppComponent]
 })

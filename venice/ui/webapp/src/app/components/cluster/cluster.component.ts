@@ -13,23 +13,23 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
   constructor(protected _controllerService: ControllerService,
   ) {
-  super(_controllerService);
-}
-
-ngOnInit() {
-  if (!this._controllerService.isUserLogin()) {
-    this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-  } else {
-
+    super(_controllerService);
   }
-}
 
-/**
- * Component is about to exit
- */
-ngOnDestroy() {
-  // publish event that AppComponent is about to exist
-  this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'ClusterComponent', 'state': Eventtypes.COMPONENT_DESTROY });
-}
+  ngOnInit() {
+    if (!this._controllerService.isUserLogin()) {
+      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
+    } else {
+
+    }
+  }
+
+  /**
+   * Component is about to exit
+   */
+  ngOnDestroy() {
+    // publish event that AppComponent is about to exist
+    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'ClusterComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+  }
 
 }

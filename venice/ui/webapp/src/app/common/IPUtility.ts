@@ -25,7 +25,7 @@ export class IPUtility {
     if (isNaN(port)) {
       port = null;
     }
-    return {port: port, protocol: letters};
+    return { port: port, protocol: letters };
   }
 
   /**
@@ -97,7 +97,7 @@ export class IPUtility {
     const addr2Full = this.generateFullIP(addr2);
 
     const addr1FullParts = addr1Full.split('.'),
-          addr2FullParts = addr2Full.split('.');
+      addr2FullParts = addr2Full.split('.');
     let mask = 32;
     if (addr1Full.indexOf('/') >= 0) {
       mask = Math.min(addr1Full.split('/')[1], mask);
@@ -139,7 +139,7 @@ export class IPUtility {
       return false;
     }
     let isValid = true;
-    searchIP.split('.').forEach( (oct) => {
+    searchIP.split('.').forEach((oct) => {
       if (oct.length > 3) {
         isValid = false;
       }
@@ -154,7 +154,7 @@ export class IPUtility {
     }
     if (this.matchIPv4(ruleIPtgt, searchIP)) {
       return true;
-  }
+    }
     return false;
   }
 
@@ -167,7 +167,7 @@ export class IPUtility {
     }
     const mask = [];
     for (let i = 0; i < 4; i++) {
-      let n = Math.min(bitCount, 8);
+      const n = Math.min(bitCount, 8);
       mask.push(256 - Math.pow(2, 8 - n));
       bitCount -= n;
     }
@@ -221,7 +221,7 @@ export class IPUtility {
         }
         const octets = searchIP.split('.');
         const lastOct = octets[octets.length - 1];
-        for ( let j = 0; j < 3 - lastOct.length; j++) {
+        for (let j = 0; j < 3 - lastOct.length; j++) {
           searchIP += '0';
           if (this.compareIPAddress(lower, searchIP) <= 0 && this.compareIPAddress(upper, searchIP) >= 0) {
             return true;
@@ -265,29 +265,29 @@ export class IPUtility {
       const port = ports[i];
       const portsprotocol = port.protocol;
       // checking protocol
-      if (protocol == null ||  portsprotocol.startsWith(protocol)) {
+      if (protocol == null || portsprotocol.startsWith(protocol)) {
         // checking port
         if (portNumber == null) {
           return true;
         }
         // checking the rule if its port is in range format
         if (port.ranges) {
-            for (let j = 0; j < port.ranges.length; j++) {
-              const fromValue = port.ranges[j].start;
-              const toValue = port.ranges[j].end;
-              if (fromValue.toString().startsWith(portNumber.toString()) ||
-                  toValue.toString().startsWith(portNumber.toString())) {
+          for (let j = 0; j < port.ranges.length; j++) {
+            const fromValue = port.ranges[j].start;
+            const toValue = port.ranges[j].end;
+            if (fromValue.toString().startsWith(portNumber.toString()) ||
+              toValue.toString().startsWith(portNumber.toString())) {
+              return true;
+            }
+
+            for (let k = 0; k < possiblePortValues.length; k++) {
+              if (possiblePortValues[k] >= fromValue && possiblePortValues[k] <= toValue) {
                 return true;
               }
-
-              for (let k = 0; k < possiblePortValues.length; k++) {
-                if (possiblePortValues[k] >= fromValue && possiblePortValues[k] <= toValue) {
-                  return true;
-                }
-              }
             }
+          }
         } else {
-        // checking the rule if its port is in list format
+          // checking the rule if its port is in list format
           for (let k = 0; k < port.list.length; k++) {
             if (port.list[k].toString().startsWith(portNumber.toString())) {
               return true;
@@ -314,7 +314,7 @@ export class IPUtility {
           rList = rList + ',' + str;
         }
       }
-      output =  rList;
+      output = rList;
     } else {
       let myList = '';
       for (let i = 0; i < rule.list.length; i++) {
@@ -325,10 +325,10 @@ export class IPUtility {
           myList = myList + ', ' + ipString;
         }
       }
-      output =  myList;
+      output = myList;
     }
     return output;
-}
+  }
 
   public static portRulesToString(portRules: PortRule[]) {
     let output = '';
@@ -354,10 +354,10 @@ export class IPUtility {
         output = output + ' / ' + rList;
       } else {
         let list = '';
-        portRule.list.forEach( (rule) => {
+        portRule.list.forEach((rule) => {
           list += rule;
-          list += ', '
-        })
+          list += ', ';
+        });
         // subtract last comma and space
         list = list.substring(0, list.length - 2);
         output = output + ' / ' + list;

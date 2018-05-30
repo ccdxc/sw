@@ -147,7 +147,7 @@ export class MockDataUtil {
     const mockPlotlyX = this.generateRandomPlotlyMockData(lenPlotly);
     const mockPlotlyY = this.generateRandomPlotlyMockData(lenPlotly);
 
-    mockPlotlyX.sort(function (a, b) { return a - b; });
+    mockPlotlyX.sort(function(a, b) { return a - b; });
     const xyObj = {
       x: mockPlotlyX,
       y: mockPlotlyY
@@ -214,22 +214,23 @@ export class MockDataUtil {
 
   public static mockLogin() {
     return {
-      'result': 'success',
-      'response': {
-        'context': {
-          'requestId': 'aa9246d9-abd8-e646-1169-96fa3b3b1251',
-          'initiatedBy': 'PensandoLoginUI',
-          'timestamp': '2017-03-15T18:16Z',
-          'requestName': 'PENSANDO_USERR_SIGNIN_REQUEST',
-          'servicedBy': 'DataAccessPlatform,RESTService',
-          'responseName': 'PENSANDO_USERR_SIGNIN_RESPONSE'
-        },
-        'data': {
-          'username': 'Pensando',
-          'role': 'Admin'
-        }
+      'kind': 'User',
+      'api-version': 'v1',
+      'meta': {
+        'name': 'Liz',
+        'tenant': 'default',
+        'resource-version': '10028',
+        'uuid': 'fc103fd3-6ba6-4193-aeed-419419b1b4c3',
+        'creation-time': '2018-04-16T23:51:26.422201836Z',
+        'mod-time': '2018-04-16T23:51:26.422203465Z',
+        'self-link': '/v1/auth/default/users/Liz'
       },
-      'message': null
+      'spec': {
+        'fullname': 'Liz Claire',
+        'email': 'vishaljain@pensando.io',
+        'type': 'LOCAL'
+      },
+      'status': {}
     };
   }
 
@@ -305,7 +306,7 @@ export class MockDataUtil {
       portList = [];
       let len = Utility.getRandomInt(1, 10);
       if (protocol === 'ICMP') {
-        len = 0 ; // for ICMP to no port number
+        len = 0; // for ICMP to no port number
       }
       for (let i = 0; i < len; i++) {
         portList.push(Utility.getRandomInt(1, 1000));
@@ -321,11 +322,11 @@ export class MockDataUtil {
     return [portData];
   }
 
-  static getIP_oct1 (): number {
+  static getIP_oct1(): number {
     return (Math.floor(Math.random() * 255) + 1);
   }
 
-  static getIP_oct2 (): number {
+  static getIP_oct2(): number {
     return (Math.floor(Math.random() * 255) + 0);
   }
 
@@ -337,7 +338,7 @@ export class MockDataUtil {
     if (isOct3Wildcard) {
       ipStr += '.*';
     } else {
-      ipStr += '.' + this.getIP_oct2 ();
+      ipStr += '.' + this.getIP_oct2();
     }
     let isOct4Wildcard = isOct3Wildcard;
     if (!isOct3Wildcard) {
@@ -346,9 +347,9 @@ export class MockDataUtil {
     if (isOct4Wildcard) {
       ipStr += '.*';
     } else {
-      ipStr += '.' + this.getIP_oct2 ();
+      ipStr += '.' + this.getIP_oct2();
     }
-    const sub = (buildSub && !isOct3Wildcard && !isOct4Wildcard ) ? Utility.getRandomInt(1, 24).toString() : '';
+    const sub = (buildSub && !isOct3Wildcard && !isOct4Wildcard) ? Utility.getRandomInt(1, 24).toString() : '';
     ipStr += sub;
 
     return ipStr;
@@ -389,7 +390,7 @@ export class MockDataUtil {
     let ipList = null;
     let rangeList = null;
 
-    const isRanged =  this.getRandomItemFromList([true, false]);
+    const isRanged = this.getRandomItemFromList([true, false]);
     if (isRanged) {
       rangeList = [];
       // We don't allow submask for ranges currently
@@ -403,22 +404,22 @@ export class MockDataUtil {
       };
       rangeList.push(ip);
     } else {
-        ipList = [];
-        const len = Utility.getRandomInt(1, 5);
-        for (let i = 0; i < len; i++) {
-          const isSub = this.getRandomItemFromList([true, false]);
-          ipList.push(this.getIPv4Address(isSub));
-        }
-        ipList = ipList.sort();
+      ipList = [];
+      const len = Utility.getRandomInt(1, 5);
+      for (let i = 0; i < len; i++) {
+        const isSub = this.getRandomItemFromList([true, false]);
+        ipList.push(this.getIPv4Address(isSub));
+      }
+      ipList = ipList.sort();
     }
     const ipData: IPRule = {
-        'list': ipList,
-        'ranges': rangeList,
+      'list': ipList,
+      'ranges': rangeList,
     };
     return ipData;
   }
 
-  public static buildInRule(isPermit: boolean= true): Rule {
+  public static buildInRule(isPermit: boolean = true): Rule {
     const sourceIP: IPRule = this.buildIPData();
     const destIP: IPRule = this.buildIPData();
     const ret = {
@@ -547,13 +548,13 @@ export class MockDataUtil {
       };
       topViolatedPolicies.push(obj);
     }
-    topViolatedPolicies = Utility.getLodash().sortBy(topViolatedPolicies, [function (o) { return o.times; }]);
+    topViolatedPolicies = Utility.getLodash().sortBy(topViolatedPolicies, [function(o) { return o.times; }]);
     topViolatedPolicies = topViolatedPolicies.reverse();
     return topViolatedPolicies;
   }
 
   public static getMockRequestID(url: string, method: string, eventpayload: any): string {
-    if (url.indexOf('venice-signin-response.json') >= 0) {
+    if (url.indexOf('login') >= 0) {
       return 'login';
     } else if (url.indexOf('nodes') >= 0) {
       return 'globalsearch';
@@ -585,7 +586,7 @@ export class MockDataUtil {
 
   public static mockAlerttable(): any {
     const list = [];
-    const total = (environment.mockdata && environment.mockdata.alert_table_total !== undefined) ? environment.mockdata.alert_table_total : 10;
+    const total = 120;
     const len = Utility.getRandomInt(1, total);
     for (let i = 0; i < len; i++) {
       const date = Utility.getRandomDate(Utility.getRandomInt(0, 10), Utility.getRandomInt(0, 24), Utility.getRandomInt(0, 24));
@@ -612,7 +613,7 @@ export class MockDataUtil {
   }
 
   public static mockAlertlist(): any {
-    const total = (environment.mockdata && environment.mockdata.alert_list_total !== undefined) ? environment.mockdata.alert_list_total : 20;
+    const total = 20;
     const len = Utility.getRandomInt(1, total);
     const list = [];
     for (let i = 0; i < len; i++) {

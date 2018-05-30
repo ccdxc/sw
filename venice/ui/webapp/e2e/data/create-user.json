@@ -1,0 +1,15 @@
+{
+    "kind": "User",
+    "api-version": "v1",
+    "meta": {
+        "name": "Liz",
+        "tenant": "default"
+    },
+    "spec": {
+        "fullname": "Liz Claire",
+        "email": "vishaljain@pensando.io",
+        "password": "password",
+        "type": "LOCAL"
+    },
+    "status": {}
+}

@@ -39,11 +39,11 @@ export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
       this.id = 'dashboard-header-' + Utility.s4();
     }
     if (this.icon == null) {
-      this.icon = {margin: {}};
+      this.icon = { margin: {} };
     }
     this._iconStyles = this._setIconStyles();
     this.has_update_string = this.last_update != null &&
-                             this.last_update !== '';
+      this.last_update !== '';
   }
 
   _setIconStyles() {

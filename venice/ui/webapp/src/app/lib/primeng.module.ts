@@ -1,15 +1,7 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AccordionModule, AutoCompleteModule, BlockUIModule, BreadcrumbModule, CalendarModule, ChartModule, CheckboxModule, DataGridModule, DataTableModule, DropdownModule, FieldsetModule, GrowlModule, InputMaskModule, InputSwitchModule, InputTextareaModule, ListboxModule, MultiSelectModule, OverlayPanelModule, PanelModule, RadioButtonModule, SelectButtonModule, SharedModule, SliderModule, SplitButtonModule, StepsModule, ToolbarModule, TooltipModule } from 'primeng/primeng';
+import { TableModule } from 'primeng/table';
 
-import {
-  ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
-  BlockUIModule, DropdownModule, SelectItem, SliderModule,
-  ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
-  MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, Message, OverlayPanelModule,
-  SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule
-
-} from 'primeng/primeng';
-import {TableModule} from 'primeng/table';
 
 /**
  * This module control what primeNG widgets to use in our application.
@@ -19,14 +11,14 @@ import {TableModule} from 'primeng/table';
 @NgModule({
   imports: [
     ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
-    BlockUIModule, DropdownModule,  SliderModule,
+    BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
     SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule
   ],
   exports: [
     ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
-    BlockUIModule, DropdownModule,  SliderModule,
+    BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
     SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule

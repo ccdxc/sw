@@ -102,7 +102,7 @@ export class LogWebApi extends LogPublisher {
     return this.http.post(this.location, entry, options)
       .map(response => response.json())
       .catch(this.handleErrors); */
-      return this.http.post(this.location, entry).catch(this.handleErrors);
+    return this.http.post(this.location, entry).catch(this.handleErrors);
   }
 
   // Clear all log entries from local storage

@@ -1,5 +1,5 @@
 export enum Logintypes {
-    ADMINISTRATOR,
-    OPERATOR,
-    USER
+  ADMINISTRATOR,
+  OPERATOR,
+  USER
 }

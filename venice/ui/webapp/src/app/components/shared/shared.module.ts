@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PagebodyComponent} from './pagebody/pagebody.component';
+import { PagebodyComponent } from './pagebody/pagebody.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { DsbdwidgetheaderComponent } from './dsbdwidgetheader/dsbdwidgetheader.component';
@@ -20,23 +20,23 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 
   ],
   declarations: [PagebodyComponent,
-                 SpinnerComponent,
-                 DsbdwidgetheaderComponent,
-                 ModalheaderComponent,
-                 ModalbodyComponent,
-                 ModalitemComponent,
-                 ModalcontentComponent,
-                 ModalwidgetComponent
-                ],
+    SpinnerComponent,
+    DsbdwidgetheaderComponent,
+    ModalheaderComponent,
+    ModalbodyComponent,
+    ModalitemComponent,
+    ModalcontentComponent,
+    ModalwidgetComponent
+  ],
   exports: [
-      PagebodyComponent,
-      SpinnerComponent,
-      DsbdwidgetheaderComponent,
-      ModalheaderComponent,
-      ModalbodyComponent,
-      ModalitemComponent,
-      ModalcontentComponent,
-      ModalwidgetComponent
+    PagebodyComponent,
+    SpinnerComponent,
+    DsbdwidgetheaderComponent,
+    ModalheaderComponent,
+    ModalbodyComponent,
+    ModalitemComponent,
+    ModalcontentComponent,
+    ModalwidgetComponent
   ]
 })
 export class SharedModule { }

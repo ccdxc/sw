@@ -9,12 +9,12 @@ import { RouterTestingModule } from '@angular/router/testing';
 ----------------------------------------------------- */
 import { ToolbarComponent } from './toolbar.component';
 import { ControllerService } from '@app/services/controller.service';
-import {MatIconRegistry} from '@angular/material';
+import { MatIconRegistry } from '@angular/material';
 /* ---------------------------------------------------
     Third-party libraries
 ----------------------------------------------------- */
-import {PrimengModule} from '@lib/primeng.module';
-import {MaterialdesignModule} from '@lib/materialdesign.module';
+import { PrimengModule } from '@lib/primeng.module';
+import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 describe('ToolbarComponent', () => {
   let component: ToolbarComponent;
@@ -22,7 +22,7 @@ describe('ToolbarComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ToolbarComponent ],
+      declarations: [ToolbarComponent],
       imports: [
         PrimengModule,
         MaterialdesignModule,
@@ -33,7 +33,7 @@ describe('ToolbarComponent', () => {
         MatIconRegistry
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

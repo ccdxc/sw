@@ -1,0 +1,20 @@
+{
+    "kind": "AuthenticationPolicy",
+    "api-version": "v1",
+    "meta": {
+        "name": "AuthenticationPolicy",
+    },
+    "spec": {
+        "authenticators": {
+            "ldap": {},
+            "local": {
+                "enabled": true
+            },
+            "authenticator-order": [
+                "LOCAL"
+            ]
+        },
+        "secret": "aGVsbG8="
+    },
+    "status": {}
+}

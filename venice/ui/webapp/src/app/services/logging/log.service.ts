@@ -52,10 +52,10 @@ export class LogEntry {
   }
 
   buildLogString(): string {
-     if (environment.log_format === 'JSON') {
-       return this.buildLogToJSON();
-     }
-     return this.buildLogToString();
+    if (environment.log_format === 'JSON') {
+      return this.buildLogToJSON();
+    }
+    return this.buildLogToString();
   }
 
   buildLogToJSON(): string {
@@ -63,12 +63,12 @@ export class LogEntry {
     const outObj = {};
     const today = new Date();
     outObj['caller'] = this.caller;
-    outObj['mesage'] =  this.message;
+    outObj['mesage'] = this.message;
     if (this.extraInfo.length) {
       value += this.formatParams(this.extraInfo);
     }
     outObj['extrainfo'] = value;
-    outObj['time'] = today.toISOString() ;
+    outObj['time'] = today.toISOString();
     outObj['debuglevel'] = LogLevel[this.level];
     return JSON.stringify(outObj, null, 1);
   }
@@ -86,7 +86,7 @@ export class LogEntry {
       for (const item of params) {
         let stringifyOutput = '';
         try {
-          stringifyOutput = JSON.stringify(item) ;
+          stringifyOutput = JSON.stringify(item);
         } catch (err) {
           stringifyOutput = item.toString();
         }
@@ -125,23 +125,23 @@ export class LogService {
   }
 
   info(msg: string, caller?: string, ...optionalParams: any[]) {
-    this.writeToLog(msg, LogLevel.Info, caller,  optionalParams);
+    this.writeToLog(msg, LogLevel.Info, caller, optionalParams);
   }
 
   warn(msg: string, caller?: string, ...optionalParams: any[]) {
-    this.writeToLog(msg, LogLevel.Warn, caller,  optionalParams);
+    this.writeToLog(msg, LogLevel.Warn, caller, optionalParams);
   }
 
   error(msg: string, caller?: string, ...optionalParams: any[]) {
-    this.writeToLog(msg, LogLevel.Error, caller,  optionalParams);
+    this.writeToLog(msg, LogLevel.Error, caller, optionalParams);
   }
 
   fatal(msg: string, caller?: string, ...optionalParams: any[]) {
-    this.writeToLog(msg, LogLevel.Fatal,  caller, optionalParams);
+    this.writeToLog(msg, LogLevel.Fatal, caller, optionalParams);
   }
 
   log(msg: string, caller?: string, ...optionalParams: any[]) {
-    this.writeToLog(msg, LogLevel.All,  caller, optionalParams);
+    this.writeToLog(msg, LogLevel.All, caller, optionalParams);
   }
 
   clear(): void {
@@ -167,7 +167,7 @@ export class LogService {
     return ret;
   }
 
-  private writeToLog(msg: string, level: LogLevel,  caller: string , params: any[]) {
+  private writeToLog(msg: string, level: LogLevel, caller: string, params: any[]) {
     if (this.shouldLog(level)) {
       // Declare variables
       const entry: LogEntry = new LogEntry();

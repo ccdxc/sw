@@ -142,10 +142,10 @@ export class ControllerService {
    */
   private _subscribeToEvents() {
     this.subscriptions[Eventtypes.PIN_REQUEST] = this.subscribe(Eventtypes.PIN_REQUEST, (payload) => {
-        this.pinToDashboard(payload);
+      this.pinToDashboard(payload);
     });
     this.subscriptions[Eventtypes.UNPIN_REQUEST] = this.subscribe(Eventtypes.UNPIN_REQUEST, (payload) => {
-        this.unpinFromDashboard(payload);
+      this.unpinFromDashboard(payload);
     });
   }
 
@@ -166,7 +166,7 @@ export class ControllerService {
   public isUserLogin(): boolean {
 
     // TODO: refine this once user-management REST is available
-    return (this.LoginUserInfo && this.LoginUserInfo['username'] !== undefined);
+    return (this.LoginUserInfo && this.LoginUserInfo['kind'] !== undefined);
   }
 
   public directPageAsUserAlreadyLogin() {
@@ -321,7 +321,7 @@ export class ControllerService {
   set enableIdle(enableIdle: boolean) {
     if (enableIdle !== this._enableIdle) {
       this._enableIdle = enableIdle;
-      this.publish(Eventtypes.IDLE_CHANGE, {active: enableIdle});
+      this.publish(Eventtypes.IDLE_CHANGE, { active: enableIdle });
     }
   }
 }

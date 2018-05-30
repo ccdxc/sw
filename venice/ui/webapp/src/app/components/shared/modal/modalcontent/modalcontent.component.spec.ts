@@ -8,9 +8,9 @@ describe('ModalcontentComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ModalcontentComponent ],
+      declarations: [ModalcontentComponent],
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

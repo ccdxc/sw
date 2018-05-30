@@ -1,17 +1,16 @@
-import 'rxjs/add/observable/forkJoin';
-
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
-import { timer } from 'rxjs/observable/timer';
 import { Subscription } from 'rxjs/Subscription';
-
+import 'rxjs/add/observable/forkJoin';
 import { environment } from '../../environments/environment';
 import { Utility } from '../common/Utility';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { AbstractService } from './abstract.service';
+
+
 
 @Injectable()
 export class WorkloadService extends AbstractService {
@@ -26,12 +25,12 @@ export class WorkloadService extends AbstractService {
     totalworkloads: {
       title: 'Total Workloads',
       icon: {
-        margin : {
-          top : '6px',
+        margin: {
+          top: '6px',
           left: '10px',
-          right : '5px'
+          right: '5px'
         },
-        svgIcon : this.svgMap['totalworkloads']
+        svgIcon: this.svgMap['totalworkloads']
       },
       background_img: {
         url: 'assets/images/icons/workload/icon-workloads-total.svg'
@@ -40,12 +39,12 @@ export class WorkloadService extends AbstractService {
     newworkloads: {
       title: 'New Workloads',
       icon: {
-        margin : {
-          top : '5px',
+        margin: {
+          top: '5px',
           left: '10px',
-          right : '10px'
+          right: '10px'
         },
-        svgIcon : this.svgMap['newworkloads']
+        svgIcon: this.svgMap['newworkloads']
       },
       background_img: {
         url: 'assets/images/icons/workload/icon-workloads-new.svg'
@@ -54,12 +53,12 @@ export class WorkloadService extends AbstractService {
     unprotectedworkloads: {
       title: 'Unprotected Workloads',
       icon: {
-        margin : {
-          top : '6px',
+        margin: {
+          top: '6px',
           left: '10px',
-          right : '5px'
+          right: '5px'
         },
-        svgIcon : this.svgMap['unprotectedworkloads']
+        svgIcon: this.svgMap['unprotectedworkloads']
       },
       background_img: {
         url: 'assets/images/icons/workload/icon-workloads-unprotected.svg'
@@ -68,12 +67,12 @@ export class WorkloadService extends AbstractService {
     workloadalerts: {
       title: 'Workload Alerts',
       icon: {
-        margin : {
-          top : '2px',
+        margin: {
+          top: '2px',
           left: '10px',
-          right : '5px'
+          right: '5px'
         },
-        svgIcon : this.svgMap['workloadalerts']
+        svgIcon: this.svgMap['workloadalerts']
       },
       background_img: {
         url: 'assets/images/icons/workload/icon-workload-alerts.svg'
@@ -82,8 +81,6 @@ export class WorkloadService extends AbstractService {
   };
 
   /* Holders for fetched data */
-  timerSource: Observable<number>;
-  timerSubscription: Subscription;
   rawEndpointData: any;
   alertCount = 0;
   dsbdworkload: any = {
@@ -136,7 +133,7 @@ export class WorkloadService extends AbstractService {
    * Override super
   */
   protected callServer(url: string, payload: any) {
-    return this.invokeAJAXPutCall(url, payload,
+    return this.invokeAJAXPostCall(url, payload,
       this._http, { 'ajax': 'start', 'name': 'WorkloadService-ajax', 'url': url });
   }
 
@@ -153,7 +150,7 @@ export class WorkloadService extends AbstractService {
       // Lower numbers are good for these ids, so we invert the color
       styleIndex = styleIndex + 1;
     }
-    return {style: styleOptions[styleIndex % 2], arrow: arrowOptions[arrowIndex % 2]};
+    return { style: styleOptions[styleIndex % 2], arrow: arrowOptions[arrowIndex % 2] };
   }
 
 
@@ -201,8 +198,8 @@ export class WorkloadService extends AbstractService {
     const formatSecurityGroups = (securityGroups) => {
       let ret = '';
       securityGroups.forEach(element => {
-       ret = ret.concat(element);
-       ret = ret.concat(',');
+        ret = ret.concat(element);
+        ret = ret.concat(',');
       });
       // removing extra comma
       return ret.slice(0, -1);
@@ -214,8 +211,8 @@ export class WorkloadService extends AbstractService {
 
     data.forEach(elem => {
       const workload = {
-        name: elem.status['workload-name'],
-        labels: formatLabels(elem.meta.Labels),
+        name: elem.meta.name,
+        labels: formatLabels(elem.meta.labels),
         securityGroups: formatSecurityGroups(elem.status.SecurityGroups),
         // Fake data
         orchestration: 'ORCH-NAME',
@@ -278,7 +275,7 @@ export class WorkloadService extends AbstractService {
     // Since endpoint isn't ready yet, this function will always be using
     // fake data.
     const url = this.getWidgetURL();
-    const onSuccess = (data) =>  {
+    const onSuccess = (data) => {
       this._controllerService.publish(Eventtypes.AJAX_END, { 'ajax': 'end', 'name': 'WORKLOAD_GET_WIDGET_DATA' });
       this.widgetData = data;
       this.populateWorkloadwidgetData();
@@ -291,7 +288,7 @@ export class WorkloadService extends AbstractService {
 
   fetchDsbdWorkloadData(useRealData): void {
     const url = this.getDashboardWidgetURL();
-    const onSuccess = (data) =>  {
+    const onSuccess = (data) => {
       this._controllerService.publish(Eventtypes.AJAX_END, { 'ajax': 'end', 'name': 'WORKLOAD_GET_DSBDWIDGET_DATA' });
       this.dsbdworkload = data;
       this.dsbdworkloadHandler.next(data);
@@ -312,7 +309,12 @@ export class WorkloadService extends AbstractService {
   }
 
   public getItemURL(): string {
-    return environment.server_url + ':' + environment.server_port + environment.version_api_string + this.buildURLHelper(environment.venice_endpoints);
+    if (!environment.production) {
+      if (!this.isToMockData()) {
+        return '/endpoints';
+      }
+    }
+    return Utility.getRESTAPIServerAndPort() + environment.version_api_string + this.buildURLHelper(environment.venice_endpoints);;
   }
 
   public getWidgetURL(): string {
@@ -323,50 +325,29 @@ export class WorkloadService extends AbstractService {
     return 'dsbdworkloadwidget';
   }
 
-  private hasObservers(): boolean {
-    return  !(this.workloadItemsHandler.observers.length === 0 &&
-            this.totalworkloadsHandler.observers.length === 0 &&
-            this.unprotectedworkloadsHandler.observers.length === 0 &&
-            this.newworkloadsHandler.observers.length === 0 &&
-            this.workloadalertsHandler.observers.length === 0 &&
-            this.dsbdworkloadHandler.observers.length === 0);
+  protected pollingHasObservers(): boolean {
+    return !(this.workloadItemsHandler.observers.length === 0 &&
+      this.totalworkloadsHandler.observers.length === 0 &&
+      this.unprotectedworkloadsHandler.observers.length === 0 &&
+      this.newworkloadsHandler.observers.length === 0 &&
+      this.workloadalertsHandler.observers.length === 0 &&
+      this.dsbdworkloadHandler.observers.length === 0);
   }
 
-  public initatePolling(useRealData): void {
-    if (this.timerSource == null) {
-      this.timerSource = timer(1000, 5000);
-      this.timerSubscription = this.timerSource.subscribe(() => {
-        // Check if there are any subscribers to our subjects
-        // if not, we terminate this timer.
-        if (!this.hasObservers()) {
-          this.timerSubscription.unsubscribe();
-          this.timerSource = null;
-          this.timerSubscription = null;
-        }
-        if (useRealData) {
-          // Setting up data to be polled
-          this.fetchWorkloadData(useRealData);
-          this.fetchWidgetData(useRealData);
-          this.fetchDsbdWorkloadData(useRealData);
-        }
-      });
-      // Call fetch data once for fake data
-      if (!useRealData) {
-        this.fetchWorkloadData(useRealData);
-        this.fetchWidgetData(useRealData);
-        this.fetchDsbdWorkloadData(useRealData);
-      }
-    }
+  protected pollingFetchData(useRealData) {
+    this.fetchWorkloadData(useRealData);
+    this.fetchWidgetData(false);
+    this.fetchDsbdWorkloadData(false);
   }
 
   public getDsbdWidgetData(): Observable<any> {
     // TODO: Switch to true once real data is ready
-    this.initatePolling(false);
+    this.initiatePolling(false);
     return this.dsbdworkloadHandler;
   }
 
   public getItems(): Observable<any> {
-    this.initatePolling(this._controllerService.useRealData);
+    this.initiatePolling(this._controllerService.useRealData);
     return this.workloadItemsHandler;
   }
 
@@ -377,7 +358,7 @@ export class WorkloadService extends AbstractService {
       unprotectedworkloads: this.unprotectedworkloadsHandler,
       workloadalerts: this.workloadalertsHandler,
     };
-    this.initatePolling(this._controllerService.useRealData);
+    this.initiatePolling(this._controllerService.useRealData);
     return idMap[id];
   }
 

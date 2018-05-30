@@ -17,7 +17,7 @@ export class DatafetchService extends AbstractService {
    * Override super
   */
   protected callServer(url: string, payload: any) {
-    return this.invokeAJAXPutCall(url, payload,
+    return this.invokeAJAXPostCall(url, payload,
       this._http, { 'ajax': 'start', 'name': 'DatafetchService-ajax', 'url': url });
   }
 

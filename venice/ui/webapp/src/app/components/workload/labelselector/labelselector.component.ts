@@ -11,9 +11,9 @@ import { startWith } from 'rxjs/operators/startWith';
  * Modified from https://material.angular.io/components/input/examples
  */
 class ObservableErrorStateMatcher extends ErrorStateMatcher {
-  private observer = new BehaviorSubject<any>({errorState: false, controlState: 'PENDING'});
+  private observer = new BehaviorSubject<any>({ errorState: false, controlState: 'PENDING' });
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
-    const errorState =  super.isErrorState(control, form);
+    const errorState = super.isErrorState(control, form);
     this.observer.next(errorState);
     return errorState;
   }
@@ -46,7 +46,7 @@ export class LabelselectorComponent implements OnInit {
 
   @Output() selectedLabels: any;
   @Output() validationObservable: EventEmitter<any> = new EventEmitter(true);
-  private observable: BehaviorSubject<any> = new BehaviorSubject<any>({status: 'VALID'});
+  private observable: BehaviorSubject<any> = new BehaviorSubject<any>({ status: 'VALID' });
 
   constructor() { }
 
@@ -68,7 +68,7 @@ export class LabelselectorComponent implements OnInit {
     this.nextId++;
     const errorStateMatcher = new ObservableErrorStateMatcher();
     this.addErrorObserver(errorStateMatcher.errorStateObserver());
-    this.labelSelectorIds.push({formControl: formControl, filteredLabels: filteredLabels, id: id, errorStateMatcher: errorStateMatcher});
+    this.labelSelectorIds.push({ formControl: formControl, filteredLabels: filteredLabels, id: id, errorStateMatcher: errorStateMatcher });
   }
 
   addErrorObserver(observer: Observable<any>) {
@@ -82,17 +82,17 @@ export class LabelselectorComponent implements OnInit {
         }
         // Only send if its a new value
         if (this.observable.getValue().status !== status) {
-          this.observable.next({status: status});
+          this.observable.next({ status: status });
         }
       }
     );
   }
 
   checkValidLabel(): ValidatorFn {
-    return (control: AbstractControl): {[key: string]: any} => {
+    return (control: AbstractControl): { [key: string]: any } => {
       const inputs = control.value.split(':');
       const isValid = (inputs.length === 2 && inputs[0].trim() !== '' && inputs[1].trim() !== '') || control.value === '';
-      return (!isValid) ? {'invalidLabel': {value: control.value}} : null;
+      return (!isValid) ? { 'invalidLabel': { value: control.value } } : null;
     };
   }
 

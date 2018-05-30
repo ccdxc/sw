@@ -68,9 +68,10 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
       this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'DashboardComponent', 'state': Eventtypes.COMPONENT_INIT });
       this._controllerService.setToolbarData({
         buttons: [
-          {cssClass: 'dbsd-refresh-button',
-          text: 'Refresh',
-          callback: () => {this.getDefaultDashboardWidgets(); },
+          {
+            cssClass: 'global-button-primary dbsd-refresh-button',
+            text: 'Refresh',
+            callback: () => { this.getDefaultDashboardWidgets(); },
           }],
         breadcrumb: [{ label: 'Dashboard', url: '' }]
       });

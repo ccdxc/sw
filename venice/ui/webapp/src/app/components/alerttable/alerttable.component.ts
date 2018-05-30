@@ -56,9 +56,10 @@ export class AlerttableComponent extends BaseComponent implements OnInit, OnDest
       this._controllerService.setToolbarData({
 
         buttons: [
-          {cssClass: 'alerttable-toolbar-refresh-button',
-          text: 'Refresh',
-          callback: () => {this.buttoncallback(); },
+          {
+            cssClass: 'global-button-primary alerttable-toolbar-refresh-button',
+            text: 'Refresh',
+            callback: () => { this.buttoncallback(); },
           }],
         breadcrumb: [{ label: 'Alerts', url: '' }]
       });

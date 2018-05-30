@@ -50,7 +50,7 @@ export class WorkloadwidgetComponent extends BaseComponent implements OnInit, On
 
   @Output() workloadWidgetClick: EventEmitter<any> = new EventEmitter();
   constructor(private _workloadService: WorkloadService,
-              protected _controllerService: ControllerService) {
+    protected _controllerService: ControllerService) {
     super(_controllerService);
   }
 

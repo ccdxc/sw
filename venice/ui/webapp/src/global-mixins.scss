@@ -1,0 +1,48 @@
+@import '~@angular/material/theming';
+
+/*********  Font Mixins  *********/
+@mixin primary-font($size:14px, $color: #676763) {
+  font-family: "Fira Sans Condensed";
+  font-size: $size;
+  color: $color;
+} 
+
+@mixin secondary-font($size:14px, $color: #676763) {
+  font-family: "Roboto Condensed";
+  font-size: $size;
+  color: $color;
+} 
+
+/*********  Material design related overrides  *********/
+@mixin global-mat-toggle($toggleBar, $toggleThumb, $toggleBarChecked, $toggleThumbChecked) {
+  .mat-slide-toggle-content {
+      @include primary-font();
+  }
+
+  &.mat-slide-toggle.mat-accent .mat-slide-toggle-bar {
+    background-color: $toggleBar;
+  }
+  &.mat-slide-toggle.mat-accent .mat-slide-toggle-thumb {
+    background-color: $toggleThumb;
+  }
+  &.mat-slide-toggle.mat-accent.mat-checked .mat-slide-toggle-bar {
+    background-color: $toggleBarChecked;
+  }
+  &.mat-slide-toggle.mat-accent.mat-checked .mat-slide-toggle-thumb {
+    background-color: $toggleThumbChecked;
+  }
+}
+
+/**
+  * This is a mixin so that it will override Material's css rules
+  * when it is included in a css rule on that page 
+  */
+@mixin global-mat-form-field() {
+  @include primary-font(12px);
+  font-weight: 200;
+  margin-left: 8px;
+  margin-top: 7px;
+  .mat-form-field-underline {
+    background-color: rgb(221, 221, 221);
+  }
+}

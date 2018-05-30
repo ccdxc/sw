@@ -13,7 +13,7 @@ const routes: Routes = [
     path: 'troubleshooting',
     component: MonitoringComponent,
     children: [
-      { path: '', component: TroubleshootingComponent}
+      { path: '', component: TroubleshootingComponent }
     ]
   },
 ];

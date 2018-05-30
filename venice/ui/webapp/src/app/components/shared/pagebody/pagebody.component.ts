@@ -40,7 +40,7 @@ export class PagebodyComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges() {
-    if (!this.title ) {
+    if (!this.title) {
       this.title = 'Workloads header';
     }
   }

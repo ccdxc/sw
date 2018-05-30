@@ -8,14 +8,14 @@ import { RouterTestingModule } from '@angular/router/testing';
 ----------------------------------------------------- */
 import { WorkloadModalComponent } from './workloadmodal.component';
 import { ControllerService } from '@app/services/controller.service';
-import {MatIconRegistry} from '@angular/material';
+import { MatIconRegistry } from '@angular/material';
 /* ---------------------------------------------------
     Third-party libraries
 ----------------------------------------------------- */
-import {PrimengModule} from '@lib/primeng.module';
-import {MaterialdesignModule} from '@lib/materialdesign.module';
-import {MatDialog} from '@angular/material';
-import {NoopAnimationsModule} from '@angular/platform-browser/animations';
+import { PrimengModule } from '@lib/primeng.module';
+import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { MatDialog } from '@angular/material';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { NgModule } from '@angular/core';
 import { SharedModule } from '@app/components/shared//shared.module';
@@ -24,10 +24,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @NgModule({
-    declarations: [WorkloadModalComponent, LabelselectorComponent],
-    imports: [CommonModule, SharedModule, MaterialdesignModule, FormsModule, ReactiveFormsModule],
-    entryComponents: [WorkloadModalComponent, LabelselectorComponent],
-    exports: [WorkloadModalComponent, LabelselectorComponent],
+  declarations: [WorkloadModalComponent, LabelselectorComponent],
+  imports: [CommonModule, SharedModule, MaterialdesignModule, FormsModule, ReactiveFormsModule],
+  entryComponents: [WorkloadModalComponent, LabelselectorComponent],
+  exports: [WorkloadModalComponent, LabelselectorComponent],
 })
 class TestModule { }
 
@@ -51,18 +51,18 @@ describe('WorkloadModalComponent', () => {
         MatDialog
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
     const dialog = TestBed.get(MatDialog);
     const componentRef = dialog.open(WorkloadModalComponent, {
-        data: {
-          securityGroups: ['SG1', 'SG2'],
-          selectedWorkloads: [],
-          labels: {'Loc': ['NL', 'AMS'], 'Env' : ['test', 'prod']}
-        }
-      });
+      data: {
+        securityGroups: ['SG1', 'SG2'],
+        selectedWorkloads: [],
+        labels: { 'Loc': ['NL', 'AMS'], 'Env': ['test', 'prod'] }
+      }
+    });
     component = componentRef.componentInstance;
   });
 

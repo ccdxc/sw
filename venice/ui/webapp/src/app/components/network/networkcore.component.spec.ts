@@ -7,7 +7,7 @@ import { NetworkcoreComponent } from './networkcore.component';
 
 
 
-@Component( {
+@Component({
   template: ''
 })
 class DummyComponent { }
@@ -17,7 +17,7 @@ describe('NetworkcoreComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NetworkcoreComponent , DummyComponent],
+      declarations: [NetworkcoreComponent, DummyComponent],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
@@ -28,7 +28,7 @@ describe('NetworkcoreComponent', () => {
         MatIconRegistry,
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

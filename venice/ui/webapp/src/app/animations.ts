@@ -1,18 +1,20 @@
-import { trigger,
-    state,
-    style,
-    animate,
-    transition } from '@angular/animations';
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition
+} from '@angular/animations';
 
 export const Animations = [
   // spinner fading and content entering
   trigger('fade', [
     transition(':enter', [
-      style({opacity: 0}),
+      style({ opacity: 0 }),
       animate('200ms ease-in')
     ]),
     transition(':leave', [
-      animate('200ms ease-in', style({opacity: 0}))
+      animate('200ms ease-in', style({ opacity: 0 }))
     ])
   ]),
   // opacity of the widget when the spinner is there

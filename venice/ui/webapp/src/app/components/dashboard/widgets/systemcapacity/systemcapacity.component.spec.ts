@@ -1,5 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import {WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 import { SystemcapacitywidgetComponent } from './systemcapacity.component';
@@ -13,14 +13,14 @@ describe('SystemcapacitywidgetComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SystemcapacitywidgetComponent, DsbdwidgetheaderComponent ],
+      declarations: [SystemcapacitywidgetComponent, DsbdwidgetheaderComponent],
       imports: [
         WidgetsModule,
         PrimengModule,
         MaterialdesignModule
       ],
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

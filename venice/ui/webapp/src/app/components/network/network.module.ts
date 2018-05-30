@@ -12,7 +12,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { NetworkComponent } from './network/network.component';
 import { NetworkcoreComponent } from './networkcore.component';
 
-import {NetworkRoutingModule } from './network.route';
+import { NetworkRoutingModule } from './network.route';
 
 @NgModule({
   imports: [

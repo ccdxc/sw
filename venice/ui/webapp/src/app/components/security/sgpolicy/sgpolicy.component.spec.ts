@@ -23,7 +23,7 @@ import { SgpolicyComponent } from './sgpolicy.component';
 
 
 
-@Component( {
+@Component({
   template: ''
 })
 class DummyComponent { }
@@ -34,7 +34,7 @@ describe('SgpolicyComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SgpolicyComponent, DummyComponent ],
+      declarations: [SgpolicyComponent, DummyComponent],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
@@ -53,7 +53,7 @@ describe('SgpolicyComponent', () => {
         MatIconRegistry,
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
@@ -97,20 +97,6 @@ describe('SgpolicyComponent', () => {
       },
       destIP: {
         list: ['10.10.10.10/22']
-      },
-      ports: [{
-        protocol: 'TCP',
-        list: [8000]
-      }],
-      action: RuleAction.permit
-    };
-
-    const wildcardReference: Rule = {
-      sourceIP: {
-        list: ['192.*.10.4']
-      },
-      destIP: {
-        list: ['*.10.*.*']
       },
       ports: [{
         protocol: 'TCP',

@@ -12,7 +12,7 @@ export class SettingsEffects {
   constructor(
     private actions$: Actions<UIAction>,
     private localStorageService: LocalStorageService
-  ) {}
+  ) { }
 
   @Effect({ dispatch: false })
   persistThemeSettings(): Observable<UIAction> {

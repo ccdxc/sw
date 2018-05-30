@@ -38,9 +38,28 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
     return this.constructor.name;
   }
 
+  private isURLlogin(url: string): boolean {
+    return (url.indexOf('login') >= 0);
+  }
+
+  /**
+   * This api intercept all REST APIs.
+   * As mentioned in https://angular.io/guide/http#security-xsrf-protection, Angular httpClient does not use XSRF token in GET/HEAD method,
+   * it will add XSRFToken to http-request headers
+   *
+   * @param req
+   * @param next
+   */
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const started = Date.now();
     this.getLogger();
+    const headerName = Utility.XSRF_NAME;
+    const token = Utility.getInstance().getXSRFtoken();
+    if (!this.isURLlogin(req.url)) {
+      if (!req.headers.has(headerName)) {
+        req = req.clone({ headers: req.headers.set(headerName, token) });
+      }
+    }
     return next
       .handle(req)
       .do(event => {
@@ -59,7 +78,7 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
         }
         this.logger.error(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
         this.logger.error('VeniceUIHttpInterceptor log ' + errMsg, this.getClassName());
-        return _throw(errMsg);
+        return _throw(errorReponse);
       });
   }
 }

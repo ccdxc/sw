@@ -1,5 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import {WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 import { NaplesComponent } from './naples.component';
@@ -12,14 +12,14 @@ describe('NaplesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NaplesComponent, DsbdwidgetheaderComponent ],
+      declarations: [NaplesComponent, DsbdwidgetheaderComponent],
       imports: [
         WidgetsModule,
         PrimengModule,
         MaterialdesignModule
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

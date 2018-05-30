@@ -28,6 +28,17 @@ exports.config = {
     require('ts-node').register({
       project: 'e2e/tsconfig.e2e.json'
     });
+    require('child_process').exec(
+      'echo "Creating Auth policy and user" && curl -d "@e2e/data/auth-policy.json" -X POST '
+      + E2E_BASE_URL + '/v1/auth/authn-policy && curl -d "@e2e/data/create-user.json" -X POST '
+      + E2E_BASE_URL + '/v1/auth/default/users',
+      (error, stdout, stderr) => {
+        console.log(`${stdout}`);
+        console.log(`${stderr}`);
+        if (error !== null) {
+            console.log(`exec error: ${error}`);
+        }
+      });
     jasmine.getEnv().addReporter(new SpecReporter({ spec: { displayStacktrace: true } }));
   }
 };

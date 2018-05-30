@@ -9,7 +9,7 @@ import { Subscription } from 'rxjs/Subscription';
   templateUrl: './dsbdworkload.component.html',
   styleUrls: ['./dsbdworkload.component.scss']
 })
-export class DsbdworkloadComponent  implements OnInit, OnDestroy, OnChanges {
+export class DsbdworkloadComponent implements OnInit, OnDestroy, OnChanges {
   _background_img: any;
   id: string;
   title = 'Workloads';
@@ -119,10 +119,10 @@ export class DsbdworkloadComponent  implements OnInit, OnDestroy, OnChanges {
         datalabels: {
           color: '#61b3a0',
           align: 'after',
-          display: function (context) {
+          display: function(context) {
             return context.datasetIndex === 2;
           },
-          formatter: function (value, context) {
+          formatter: function(value, context) {
             return Math.round(100 - value) + '% UP';
           },
           font: {

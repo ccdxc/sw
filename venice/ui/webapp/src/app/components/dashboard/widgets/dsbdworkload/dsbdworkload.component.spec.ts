@@ -11,7 +11,7 @@ import { WidgetsModule } from 'web-app-framework';
 
 import { DsbdworkloadComponent } from './dsbdworkload.component';
 
-@Component( {
+@Component({
   template: ''
 })
 class DummyComponent { }
@@ -22,7 +22,7 @@ describe('DsbdworkloadComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DsbdworkloadComponent, DsbdwidgetheaderComponent, DummyComponent],
+      declarations: [DsbdworkloadComponent, DsbdwidgetheaderComponent, DummyComponent],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
@@ -37,7 +37,7 @@ describe('DsbdworkloadComponent', () => {
         WorkloadService
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

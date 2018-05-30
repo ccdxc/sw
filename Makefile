@@ -330,4 +330,4 @@ ui-framework:
 ui:
 	npm version;
 	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
-	cd venice/ui/webapp && ng build
+	cd venice/ui/webapp && ng build --e prod

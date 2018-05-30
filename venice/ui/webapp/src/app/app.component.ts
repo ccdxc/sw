@@ -36,11 +36,11 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   protected browsertype = '';
   protected browserversion = '';
 
-  private subscriptions = {};
+
   private _currentComponent: any;
 
   // is Left-hand-side item click function registered?
-  private _boolIniApp = false;
+  private _boolInitApp = false;
 
   protected isSideNavExpanded = true;
 
@@ -121,14 +121,10 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    * It publishes event that AppComponent is about to exit
   */
   ngOnDestroy() {
-    // this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { "component": "AppComponent", "state": Eventtypes.COMPONENT_DESTROY });
     this.unsubscribeStore$.next();
     this.unsubscribeStore$.complete();
-    Object.keys(this.subscriptions).forEach((item) => {
-      if (this.subscriptions[item]) {
-        this.subscriptions[item].unsubscribe();
-      }
-    });
+    this.unsubscribeAll();
+    this._boolInitApp = false;
   }
 
   /**
@@ -157,11 +153,11 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
 
     const jQ = Utility.getJQuery();
     const self = this;
-    jQ('.app-sidenav-item').on('click', function (event) {
+    jQ('.app-sidenav-item').on('click', function(event) {
       self._sideNavMenuItemClickHandler(event);
     });
 
-    jQ('a[aria-expanded]').on('click', function (event) {
+    jQ('a[aria-expanded]').on('click', function(event) {
       self._sideNavMenuGroupHeaderClickHandler(event);
     });
 
@@ -203,7 +199,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    * Removes previously highlighted item -- say 'workload' was highlighted, now user clicks 'security group'. 'workload' should be reset.
    */
   private _resetHighlightedItems(event: any) {
-    if (!event)  {
+    if (!event) {
       return;
     }
     const $ = Utility.getJQuery();
@@ -233,7 +229,8 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    * handles case when user login is successful.
    */
   private onLogin(payload: any) {
-    this._controllerService.LoginUserInfo = payload['data'];
+    this._controllerService.LoginUserInfo = (payload['body']) ? payload['body'] : payload;
+    this._controllerService.LoginUserInfo[Utility.XSRF_NAME] = (payload.headers) ? payload.headers.get(Utility.XSRF_NAME) : '';
     this._controllerService.directPageAsUserAlreadyLogin();
   }
 
@@ -250,6 +247,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    */
   private onLogout(payload: any) {
     this._controllerService.LoginUserInfo = null;
+    this._boolInitApp = false;
     this.navigate(['/login']);
   }
 
@@ -267,7 +265,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     } else if (payload['id'] === 'network') {
       this.navigate(['/network', 'network']);
     } else if (payload['id'] === 'troubleshooting') {
-        this.navigate(['/monitoring', 'troubleshooting']);
+      this.navigate(['/monitoring', 'troubleshooting']);
     } else if (payload['id'] === 'naples') {
       this.navigate(['/cluster', 'naples']);
     } else {
@@ -276,10 +274,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   }
 
   private _subscribeToEvents() {
-    // setting up route watching
-    this.subscriptions[Eventtypes.LOGIN_FAILURE] = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
 
-    });
 
     this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
       this.handleIdleChange(payload);
@@ -317,13 +312,13 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   }
 
   _initAppData() {
-    if (this._boolIniApp === true) {
+    if (this._boolInitApp === true) {
       return;
     } else {
       this._registerSidenavMenuItemClick();
       this.getAlerts();
     }
-    this._boolIniApp = true;
+    this._boolInitApp = true;
     this._setupIdle();
   }
 

@@ -8,7 +8,7 @@ import { AlertlistitemComponent } from './alertlistitem.component';
   imports: [
     CommonModule,
     FormsModule
-    ],
+  ],
   declarations: [AlertlistComponent, AlertlistitemComponent],
   exports: [AlertlistComponent, AlertlistitemComponent]
 })

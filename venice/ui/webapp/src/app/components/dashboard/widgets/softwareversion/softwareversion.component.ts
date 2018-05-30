@@ -6,7 +6,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
   templateUrl: './softwareversion.component.html',
   styleUrls: ['./softwareversion.component.scss']
 })
-export class SoftwareversionComponent  implements OnInit, OnDestroy, OnChanges {
+export class SoftwareversionComponent implements OnInit, OnDestroy, OnChanges {
   title = 'Software Version';
   content = 'Version 1.3.0';
   upgrademessage = 'UPDATE VER 1.3.3 AVAILABLE';

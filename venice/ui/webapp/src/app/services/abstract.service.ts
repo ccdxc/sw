@@ -11,9 +11,14 @@ import { MockDataUtil } from '../common/MockDataUtil';
 import { Utility } from '../common/Utility';
 import { LogService } from './logging/log.service';
 import { environment } from '../../environments/environment';
+import { Subscription } from 'rxjs/Subscription';
+import { timer } from 'rxjs/observable/timer';
 
 @Injectable()
 export class AbstractService {
+
+  protected pollingTimerSource: Observable<number>;
+  protected pollingTimerSubscription: Subscription;
 
   protected logger: LogService;
   constructor() {
@@ -39,8 +44,8 @@ export class AbstractService {
   debug(msg: string, ...optionalParams: any[]) {
     this.getLogger();
     if (!this.logger) {
-        console.error('abstract.service.ts logger is null');
-        return;
+      console.error('abstract.service.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.debug(msg, caller, optionalParams);
@@ -49,8 +54,8 @@ export class AbstractService {
   info(msg: string, ...optionalParams: any[]) {
     this.getLogger();
     if (!this.logger) {
-        console.error('abstract.service.ts logger is null');
-        return;
+      console.error('abstract.service.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.info(msg, caller, optionalParams);
@@ -59,8 +64,8 @@ export class AbstractService {
   warn(msg: string, ...optionalParams: any[]) {
     this.getLogger();
     if (!this.logger) {
-        console.error('abstract.service.ts logger is null');
-        return;
+      console.error('abstract.service.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.warn(msg, caller, optionalParams);
@@ -69,8 +74,8 @@ export class AbstractService {
   error(msg: string, ...optionalParams: any[]) {
     this.getLogger();
     if (!this.logger) {
-        console.error('abstract.service.ts logger is null');
-        return;
+      console.error('abstract.service.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.error(msg, caller, optionalParams);
@@ -79,8 +84,8 @@ export class AbstractService {
   fatal(msg: string, ...optionalParams: any[]) {
     this.getLogger();
     if (!this.logger) {
-        console.error('abstract.service.ts logger is null');
-        return;
+      console.error('abstract.service.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.fatal(msg, caller, optionalParams);
@@ -89,8 +94,8 @@ export class AbstractService {
   log(msg: string, ...optionalParams: any[]) {
     this.getLogger();
     if (!this.logger) {
-        console.error('abstract.service.ts logger is null');
-        return;
+      console.error('abstract.service.ts logger is null');
+      return;
     }
     const caller = this.getClassName();
     this.logger.log(msg, caller, optionalParams);
@@ -99,8 +104,8 @@ export class AbstractService {
   clear(): void {
     this.getLogger();
     if (!this.logger) {
-        console.error('abstract.service.ts logger is null');
-        return;
+      console.error('abstract.service.ts logger is null');
+      return;
     }
     this.logger.clear();
   }
@@ -108,7 +113,7 @@ export class AbstractService {
   /**
    * Handle any errors from the API
    */
-  protected handleError(err: HttpErrorResponse): string {
+  protected handleError(err: HttpErrorResponse): void {
     let errMsg: string;
     if (err.error instanceof Error) {
       // A client-side or network error occurred. Handle it accordingly.
@@ -120,7 +125,7 @@ export class AbstractService {
       console.error(`Backend returned code ${err.status}, body was: ${err.error}`);
       errMsg = `Backend returned code ${err.status}, message was: ${err.message}`;
     }
-    return errMsg;
+    _throw(errMsg);
   }
 
   isOffLine(): boolean {
@@ -137,12 +142,6 @@ export class AbstractService {
     return headers;
   }
 
-
-  // TODO:just for development when Venice REST API is not available
-  // private _isToUseGET(payload: any): Boolean {
-  //   return false;
-  // }
-
   protected publishAJAX(eventpayload: any) {
     const utility = Utility.getInstance();
     utility.publishAJAXStart(eventpayload);
@@ -151,11 +150,11 @@ export class AbstractService {
   /**
    * This is a fundational API of Pensando-UI-application to invoke server side REST API
    */
-  protected invokeAJAXPutCall(url: string, payload: any, http: HttpClient, eventpayload: any): Observable<any> {
+  protected invokeAJAXPostCall(url: string, payload: any, http: HttpClient, eventpayload: any): Observable<any> {
 
     this.publishAJAX(eventpayload);
 
-    if (this.isToMockData() ) {
+    if (this.isToMockData()) {
       const method = 'POST';
       return this.handleOfflineAJAX(url, method, eventpayload);
     } else {
@@ -195,9 +194,9 @@ export class AbstractService {
    * @param method
    * @param eventpayload
    */
-  protected handleOfflineAJAX(url: string, method: string,  eventpayload: any): Observable<any> {
-     const mockedData =  MockDataUtil.getMockedData(url, method, eventpayload);
-     const fakeObservable = Observable.create(obs => {
+  protected handleOfflineAJAX(url: string, method: string, eventpayload: any): Observable<any> {
+    const mockedData = MockDataUtil.getMockedData(url, method, eventpayload);
+    const fakeObservable = Observable.create(obs => {
       obs.next(mockedData);
       obs.complete();
     }).delay(1000);
@@ -231,11 +230,11 @@ export class AbstractService {
         const method = methodString;
         return this.handleOfflineAJAX(url, method, eventpayload);
       } else {
-          if (methodString === 'GET') {
-            obserable = http.get(url, payload);
-          } else if (methodString === 'POST') {
-            obserable = http.post(url, payload);
-          }
+        if (methodString === 'GET') {
+          obserable = http.get(url, payload);
+        } else if (methodString === 'POST') {
+          obserable = http.post(url, payload);
+        }
       }
       observables.push(obserable);
     }
@@ -255,12 +254,67 @@ export class AbstractService {
    * For example: given 'endpoints' , it will return endpoints/default/endpoints
    * @param token
    */
-  buildURLHelper (token: string): string {
-     return token + '/' + this.getTenant() + '/' + token;
+  buildURLHelper(token: string): string {
+    return token + '/' + this.getTenant() + '/' + token;
   }
 
   isToUserRealData(): boolean {
     const isUseRealData = Utility.getInstance().getControllerService().useRealData;
     return (isUseRealData) ? isUseRealData : environment.isRESTAPIReady;
+  }
+
+  /**
+   * Hook to be overridden in child class
+   * If this returns false, the polling will terminate
+   */
+  protected pollingHasObservers() {
+    return false;
+  }
+
+  /**
+   * Hook to be overridden in child class
+   * Called when the timer ticks to fetch data
+   * @param useRealData
+   */
+  protected pollingFetchData(useRealData): void {
+  }
+
+  /**
+   * Initates polling for data
+   * Will automatically terminate if pollingHasObservers returns false
+   * @param useRealData Currently here as not all of the data fetched is ready in the backend for workload service
+   */
+  public initiatePolling(useRealData, interval = 5000, initialDelay = 200): void {
+    if (this.pollingTimerSource == null) {
+      this.pollingTimerSource = timer(initialDelay, interval);
+      this.pollingTimerSubscription = this.pollingTimerSource.subscribe(() => {
+        // Check if there are any subscribers to our subjects
+        // if not, we terminate this timer.
+        if (!this.pollingHasObservers()) {
+          this.terminatePolling();
+          return;
+        }
+        if (useRealData) {
+          // Setting up data to be polled
+          this.pollingFetchData(useRealData);
+        }
+      });
+      // Call fetch data once for fake data
+      // This is because otherwise the data will keep dramatically fluctuating
+      if (!useRealData) {
+        this.pollingFetchData(useRealData);
+      }
+    }
+  }
+
+  /**
+   * terminates the polling timer
+   */
+  protected terminatePolling() {
+    if (this.pollingTimerSubscription != null) {
+      this.pollingTimerSubscription.unsubscribe();
+      this.pollingTimerSource = null;
+      this.pollingTimerSubscription = null;
+    }
   }
 }
