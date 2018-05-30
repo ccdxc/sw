@@ -31,7 +31,9 @@ public:
 
     // timer for creating a dummy object
     ev::timer          createTimer;
+    ev::timer          createTimerV2;
     void createTimerHandler(ev::timer &watcher, int revents);
+    void createTimerHandlerV2(ev::timer &watcher, int revents);
     void createTimerUpdHandler(ev::timer &watcher, int revents);
 };
 typedef std::shared_ptr<NMDService> NMDServicePtr;

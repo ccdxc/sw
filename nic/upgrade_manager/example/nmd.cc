@@ -24,6 +24,8 @@ int main(int argc, char **argv) {
     exupgsvc->createTimer.set<NMDService, &NMDService::createTimerHandler>(exupgsvc.get());
     exupgsvc->createTimer.start(2, 0);
 
+    exupgsvc->createTimerV2.set<NMDService, &NMDService::createTimerHandlerV2>(exupgsvc.get());
+    exupgsvc->createTimerV2.start(20, 0);
     // run the main loop
     return sdk->MainLoop();
 }
@@ -48,6 +50,15 @@ NMDService::NMDService(delphi::SdkPtr sk, string name) {
 void NMDService::createTimerHandler(ev::timer &watcher, int revents) {
     this->upgsdk_->StartUpgrade();
     LogInfo("NMD: called start upgrade");
+}
+
+void NMDService::createTimerHandlerV2(ev::timer &watcher, int revents) {
+    vector<string> checkHealth;
+    this->upgsdk_->GetUpgradeStatus(checkHealth);
+    for (uint i=0; i<checkHealth.size(); i++) {
+        LogInfo("{}", checkHealth[i]);
+    }
+    LogInfo("NMD: Reported Upgrade Manager health.");
 }
 
 void NMDService::OnMountComplete() {

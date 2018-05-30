@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
     // start a timer to create an object
     exupgsvc->createTimer.set<ExUpgSvc, &ExUpgSvc::createTimerHandler>(exupgsvc.get());
-    exupgsvc->createTimer.start(15, 0);
+    exupgsvc->createTimer.start(35, 0);
 
     // run the main loop
     return sdk->MainLoop();

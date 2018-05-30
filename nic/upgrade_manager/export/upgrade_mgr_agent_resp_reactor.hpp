@@ -32,6 +32,9 @@ public:
 
     string GetRespStr(delphi::objects::UpgRespPtr resp);
     void InvokeAgentHandler(delphi::objects::UpgRespPtr resp);
+
+    //FindUpgRespSpec returns UpgResp Object
+    delphi::objects::UpgRespPtr FindUpgRespSpec(void);
 };
 typedef std::shared_ptr<UpgMgrAgentRespReact> UpgMgrAgentRespReactPtr;
 

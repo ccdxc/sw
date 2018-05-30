@@ -67,4 +67,14 @@ resp) {
     return delphi::error::OK();
 }
 
+delphi::objects::UpgRespPtr UpgMgrAgentRespReact::FindUpgRespSpec(void) {
+    delphi::objects::UpgRespPtr req = make_shared<delphi::objects::UpgResp>();
+    req->set_key(10);
+
+    // find the object
+    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
+
+    return static_pointer_cast<delphi::objects::UpgResp>(obj);
+}
+
 };
