@@ -64,7 +64,7 @@ DEFINE_bool(with_rtl_skipverify, false,
             "Test being run under RTL with --skipverify in effect");
 
 // Number of iterations for NVME scale testing
-DEFINE_uint64(nvme_scale_iters, 62,
+DEFINE_uint64(nvme_scale_iters, 26,
               "Number of iterations for NVME scale testing (0 = infinite)");
 
 DEFINE_bool(combined, false,
@@ -102,6 +102,7 @@ std::vector<tests::TestEntry> nvme_dp_scale_tests = {
   {&tests::test_run_nvme_dp_write_scale, "NVME Datapath write scale", false},
   {&tests::test_run_nvme_dp_read_scale, "NVME Datapath read scale", false},
   {&tests::test_run_nvme_dp_e2e_scale, "NVME Datapath E2E scale", false},
+  {&tests::test_run_nvme_dp_write_perf, "NVME Datapath write performance", false},
 };
 
 std::vector<tests::TestEntry> unit_tests = {
@@ -749,7 +750,7 @@ int main(int argc, char**argv) {
   }
   fflush(stdout);
   if (rc != 0) return rc;
-  printf("exiting successfuully \n");
+  printf("exiting successfully \n");
   fflush(stdout);
   exit(0);
 }
