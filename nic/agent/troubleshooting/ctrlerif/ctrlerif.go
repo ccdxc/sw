@@ -111,7 +111,7 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 					case api.EventType_DeleteEvent:
 						client.tsagent.DeletePacketCaptureSession(&evt.MirrorSession)
 					default:
-						log.Errorf("Invalid mirror event type: {+v}", evt.EventType)
+						log.Errorf("Invalid mirror event type: {%+v}", evt.EventType)
 					}
 				}
 			}()
