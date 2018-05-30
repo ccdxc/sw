@@ -31,12 +31,19 @@ MODULE_AUTHOR("Scott Feldman <sfeldma@gmail.com>");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
-int ntxq_descs = 1024;
-int nrxq_descs = 1024;
+unsigned int ntxq_descs = 1024;
+unsigned int nrxq_descs = 1024;
 module_param(ntxq_descs, uint, 0);
 module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
 MODULE_PARM_DESC(nrxq_descs, "Descriptors per Rx queue, must be power of 2");
+
+unsigned int ntxqs = 0;
+unsigned int nrxqs = 0;
+module_param(ntxqs, uint, 0);
+module_param(nrxqs, uint, 0);
+MODULE_PARM_DESC(ntxqs, "Hard set the number of Tx queues per LIF");
+MODULE_PARM_DESC(nrxqs, "Hard set the number of Rx queues per LIF");
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 {

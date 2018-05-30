@@ -28,8 +28,10 @@
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
 #define DRV_VERSION		"0.1"
 
-extern int ntxq_descs;
-extern int nrxq_descs;
+extern unsigned int ntxq_descs;
+extern unsigned int nrxq_descs;
+extern unsigned int ntxqs;
+extern unsigned int nrxqs;
 
 struct ionic {
 	struct pci_dev *pdev;

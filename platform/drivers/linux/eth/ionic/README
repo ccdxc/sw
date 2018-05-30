@@ -123,5 +123,7 @@ settings.  Specify the parameters on the insmod command line:
 
 Available parameters:
 
-  ntxq_descs: set the number of Tx queue descriptors, must be a power of 2
-  nrxq_descs: set the number of Rx queue descriptors, must be a power of 2
+  ntxq_descs: Descriptors per Tx queue, must be power of 2 (uint)
+  nrxq_descs: Descriptors per Rx queue, must be power of 2 (uint)
+  ntxqs: Hard set the number of Tx queues per LIF
+  nrxqs: Hard set the number of Rx queues per LIF
