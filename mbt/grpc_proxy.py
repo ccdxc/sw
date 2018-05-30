@@ -10,9 +10,13 @@ paths = [
     '/mbt/'
 ]
 
-ws_top = os.path.dirname(sys.argv[0]) + '/..'
-ws_top = os.path.abspath(ws_top)
-os.environ['WS_TOP'] = ws_top
+if 'WS_TOP' in os.environ:
+    ws_top = os.environ['WS_TOP']
+else:
+    ws_top = os.path.dirname(sys.argv[0]) + '/..'
+    ws_top = os.path.abspath(ws_top)
+    os.environ['WS_TOP'] = ws_top
+
 for path in paths:
     fullpath = ws_top + path
     print("Adding Path: %s" % fullpath)
@@ -24,16 +28,14 @@ from tenjin_wrapper import *
 
 def genProxyServerMethods(proxy_handler, template, out_file, ws_dir=None):
     tenjin_prefix = "//::"
-    
-    
-    dic = { 
+
+    dic = {
             "proxy_handler" : proxy_handler,
             "ws_top" : ws_dir
           }
     with open(out_file, "w") as of:
         render_template(of, template, dic, './', prefix=tenjin_prefix)
         of.close()
-
 
 def initClient():
     HalChannel = grpc.insecure_channel('localhost:%s'%(port))

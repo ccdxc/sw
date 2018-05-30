@@ -1,5 +1,4 @@
 import types_pb2
-import pdb
 mcMacAddr = 1101088883717
 def PreCreateCb(data, req_spec, resp_spec):
     global mcMacAddr

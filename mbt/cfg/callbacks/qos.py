@@ -1,5 +1,6 @@
 import kh_pb2
 import random
+import utils
 import config_mgr
 
 key_choices = [kh_pb2.USER_DEFINED_1, kh_pb2.USER_DEFINED_2, kh_pb2.USER_DEFINED_3,
@@ -126,8 +127,11 @@ def PreUpdateCb(data, req_spec, resp_spec):
     ip_dscp_choice = random.choice(ip_dscp)
     ip_dscp.remove(ip_dscp_choice)
 
-    config_object = config_mgr.GetConfigObjectFromKey(req_spec.request[0].key_or_handle)
-    cache_create_msg = config_object._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
+    if (utils.mbt_v2()):
+        cache_create_msg = utils.get_create_req_msg_from_kh(req_spec.request[0].key_or_handle)
+    else:
+        config_object = config_mgr.GetConfigObjectFromKey(req_spec.request[0].key_or_handle)
+        cache_create_msg = config_object._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
 
     mtu = random.randint(1500, 9216)
 

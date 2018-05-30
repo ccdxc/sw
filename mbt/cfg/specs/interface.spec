@@ -44,6 +44,8 @@ objects:
             - op : Update
             - op : Delete
             - op : Create
+        ignore_v2:
+            - op : Update
         create:
             api      : LifCreate
             request  : LifRequestMsg

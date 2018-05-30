@@ -2,10 +2,13 @@ import json
 import re
 import string
 import random
-import pdb
 import os
 
 from google.protobuf.descriptor import FieldDescriptor
+
+# key:   field full name
+# value: current value for the field
+int_dict = {}
 
 def set_random_seed():
     assert('MBT_RANDOM_SEED' in os.environ)
@@ -32,7 +35,7 @@ def _tag_checker_helper(field, option_checker):
         for sub_field, value in options.ListFields():
             if option_checker(sub_field.full_name, value):
                 return True
-    
+
 def is_key_field(field):
     return _tag_checker_helper(field, _tag_checker_map["key_field"])
 
@@ -51,6 +54,9 @@ def is_mandatory_field(field):
 def is_immutable_field(field):
     return _tag_checker_helper(field, _tag_checker_map["immutable_field"])
 
+def is_unique_field(field):
+    return _tag_checker_helper(field, _tag_checker_map["unique_field"])
+
 def get_constraints(field):
     options = field.GetOptions().__str__()
     if 'constraint' in options:
@@ -63,8 +69,15 @@ def get_constraints(field):
 
 def generate_float(field, negative_test=False):
     return random.uniform(0.0, 99999.99)
-    
+
 def generate_int(field, negative_test=False):
+    if is_unique_field(field):
+        if field.full_name in int_dict:
+            int_dict[field.full_name] += 1
+        else:
+            int_dict[field.full_name] = 100
+        return int_dict[field.full_name]
+
     if is_range_field(field):
         regex_range = re.compile(r".*range:(\d+)-(\d+)")
         expr = field.GetOptions().__str__()

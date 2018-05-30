@@ -34,6 +34,7 @@ objects:
     - object:
         name : Copp
         key_handle : CoppKeyHandle
+        max_objects : 3
         ignore:
             - op : Get
             - op : Update

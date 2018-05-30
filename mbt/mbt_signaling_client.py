@@ -2,7 +2,6 @@
 import zmq
 import os
 import sys
-import pdb
 
 class SignalingClientHelper():
     def Connect(self, ):

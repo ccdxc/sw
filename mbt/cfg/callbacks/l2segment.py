@@ -1,5 +1,4 @@
 import types_pb2
-import config_mgr
 import random
 
 import cfg.callbacks.vrf as vrf

@@ -7,6 +7,8 @@ objects:
         name : NatPool
         key_handle : NatPoolKeyHandle
         ignore:
+        ignore_v2:
+            - op : Update
         create:
             api      : NatPoolCreate
             request  : NatPoolRequestMsg
@@ -35,6 +37,8 @@ objects:
         name : NatMapping
         key_handle : NatMappingKeyHandle
         ignore:
+        ignore_v2:
+            - op : Update
         create:
             api      : NatMappingCreate
             request  : NatMappingRequestMsg

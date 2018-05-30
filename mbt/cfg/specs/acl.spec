@@ -6,6 +6,7 @@ objects:
     - object:
         name : Acl
         key_handle : AclKeyHandle
+        max_objects : 100
         ignore:
         create:
             api      : AclCreate

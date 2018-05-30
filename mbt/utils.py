@@ -1,8 +1,12 @@
 import json
+import importlib
+import os
 import binascii
 from collections import OrderedDict
 import google.protobuf
 from google.protobuf import json_format
+import mbt_obj_store
+import msg
 
 class FieldCompareResult():
     def __init__(self):
@@ -12,7 +16,7 @@ class FieldCompareResult():
 
     def not_empty(self):
         return self.expected or self.actual
-    
+
 class ObjectCompareResult(object):
     def __init__(self):
         super().__init__()
@@ -66,7 +70,7 @@ def ObjectCompare(actual, expected, partial_match=None):
                 result.mismatch_fields[field] = field_result
 
     return result
-    
+
 
 def convert_object_to_dict(obj, maintain_odict_order=True, ignore_keys=None,
                            ignore_private_members=True, ignore_empty=True):
@@ -96,7 +100,7 @@ def convert_object_to_dict(obj, maintain_odict_order=True, ignore_keys=None,
             return obj
 
     return __convert_object_to_dict(obj)
-    
+
 class DictToObj(object):
     def __init__(self, d):
         for a, b in d.items():
@@ -104,11 +108,11 @@ class DictToObj(object):
                 setattr(self, a, [DictToObj(x) if isinstance(x, dict) else x for x in b])
             else:
                 setattr(self, a, DictToObj(b) if isinstance(b, dict) else b) 
-    
+
 def CompareJsonStrings(expected, actual):
     expected = json.loads(expected)
     actual = json.loads(actual)
-   
+
     result = ObjectCompare(DictToObj(actual), DictToObj(expected))
     return not result.not_empty()
 
@@ -136,4 +140,102 @@ def TopologicalSort(graph_unsorted):
         if not acyclic:
             raise RuntimeError("A cyclic dependency occurred")
 
-    return graph_sorted         
+    return graph_sorted
+
+# utility method to load a module
+def load_module(module_name):
+    return importlib.import_module(module_name)
+
+mbt_handle = 0
+# allocate a unique mbt handle
+def alloc_handle():
+    global mbt_handle
+    mbt_handle += 1
+    return mbt_handle
+
+# __DEPRECATED__
+def create_config_from_kh(kh_str):
+    assert False
+    cfg_spec_obj = mbt_obj_store.cfg_spec_obj_store_kh(kh_str)
+
+    (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(None)
+
+    if mbt_obj_store.config_objects(mbt_handle) is not None:
+        (service_name, key_or_handle, ext_refs, immutable_objs, create_req_msg) = mbt_obj_store.config_objects(mbt_handle)
+        return key_or_handle
+
+def create_config_from_kh(kh_str, constraints, ext_refs):
+    expected_api_status = 'API_STATUS_OK'
+
+    cfg_spec_obj = mbt_obj_store.cfg_spec_obj_store_kh(kh_str)
+
+    enums_list   = []
+    field_values = {}
+
+    # TODO which key_or_handle to return if multiple constaints?
+    if constraints is not None:
+        for constraint in constraints:
+            (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(constraint, ext_refs, enums_list, field_values, mbt_obj_store.default_max_retires())
+
+            if mbt_status == mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED:
+                api_status = 'API_STATUS_OK'
+                mbt_handle = cfg_spec_obj.get_config_object(0)
+
+            if expected_api_status != api_status:
+                msg.err_print ("Expected: " + expected_api_status + ", Got: " + api_status)
+                assert False
+    else:
+        (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(None, ext_refs, enums_list, field_values, mbt_obj_store.default_max_retires())
+
+        if mbt_status == mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED:
+            api_status = 'API_STATUS_OK'
+            mbt_handle = cfg_spec_obj.get_config_object(0)
+
+        if expected_api_status != api_status:
+            msg.err_print ("Expected: " + expected_api_status + ", Got: " + api_status)
+            assert False
+
+    if mbt_obj_store.config_objects(mbt_handle) is not None:
+        (_service_name, _key_or_handle, _ext_refs, _immutable_objs, _create_req_msg) = mbt_obj_store.config_objects(mbt_handle)
+        return _key_or_handle
+
+    return None
+
+# __DEPRECATED__
+def get_ext_ref_obj_from_kh(kh_inst):
+    assert False
+    cfg_spec_obj = mbt_obj_store.cfg_spec_obj_store_kh(type(kh_obj).__name__)
+    for mbt_handle in cfg_spec_obj.ext_ref_obj_list():
+        if mbt_obj_store.config_objects(mbt_handle) is not None:
+            (service_name, key_or_handle, ext_refs, immutable_objs, create_req_msg) = mbt_obj_store.config_objects(mbt_handle)
+            if key_or_handle == kh_obj:
+                return create_req_msg
+    return None
+
+def get_create_req_msg_from_kh(kh_inst):
+    key = str(type(kh_inst)) + str(kh_inst.SerializeToString())
+    if mbt_obj_store.config_objects_kh(key, 'create') is not None:
+        mbt_handle = mbt_obj_store.config_objects_kh(key, 'create')
+        if mbt_obj_store.config_objects(mbt_handle) is not None:
+            (service_name, key_or_handle, ext_refs, immutable_objs, create_req_msg) = mbt_obj_store.config_objects(mbt_handle)
+            return create_req_msg
+    return None
+
+# search in global reference store
+def get_ext_ref_kh_from_global_store(key_or_handle_str, constraints):
+    for (ref_obj_spec, mbt_handle) in mbt_obj_store.get_ref_obj_list():
+        if(ref_obj_spec.key_handle == key_or_handle_str):
+            if constraints:
+                ref_obj_spec_constraints = msg.GrpcReqRspMsg.extract_constraints(ref_obj_spec.constraints)[0]
+                msg.debug_print ("Expected constraits: " + str(constraints) + ", found: " + str(ref_obj_spec_constraints))
+                if constraints != ref_obj_spec_constraints:
+                    continue
+            if mbt_obj_store.config_objects(mbt_handle) is not None:
+                (_service_name, _key_or_handle, _ext_refs, _immutable_objs, _create_req_msg) = mbt_obj_store.config_objects(mbt_handle)
+                return _key_or_handle
+    return None
+
+def mbt_v2():
+    if 'MBT_V2' in os.environ:
+        return True
+    return False

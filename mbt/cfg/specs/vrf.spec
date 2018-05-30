@@ -6,6 +6,7 @@ objects:
     - object :
         name : Vrf
         key_handle : VrfKeyHandle
+        max_objects : 255
         ignore:
         create:
             api      : VrfCreate

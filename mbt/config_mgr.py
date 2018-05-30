@@ -1,4 +1,3 @@
-import pdb
 import json
 import importlib
 from google.protobuf import json_format
@@ -8,7 +7,7 @@ import sys
 import os
 
 import utils
-from grpc_meta.msg import GrpcReqRspMsg 
+from grpc_meta.msg import *
 from grpc_meta.utils import ApiStatus
 
 def exit_error():
@@ -471,6 +470,7 @@ def ReplayConfigFromDol():
         object_helper.reinit_grpc(hal_channel)
 
         if not 'Create' in request_method_name and not 'Update' in request_method_name:
+            import pdb
             pdb.set_trace()
         else:
             op_type = ConfigObjectMeta.CREATE

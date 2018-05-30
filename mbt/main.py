@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 import os,sys
-import pdb
 import grpc
 from base64 import test
 import zmq
@@ -12,6 +11,7 @@ paths = [
     '/nic/',
     '/dol/',
     '/dol/third_party/',
+    '/mbt/mbt_v2/',
 ]
 
 ws_top = os.path.dirname(sys.argv[0]) + '/..'
@@ -100,6 +100,7 @@ print("Building Config dependency information")
 
 def handle_pdb(sig, frame):
     print ('Signal handler called with signal', sig)
+    import pdb
     pdb.set_trace()
     config_mgr.ReplayConfigFromDol()
     print ("DONE SIGNAL")

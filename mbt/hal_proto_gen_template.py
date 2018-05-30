@@ -1,11 +1,10 @@
-//:: import os, pdb, sys
+//:: import os, sys
 //:: import importlib
 import importlib
 import grpc
 import os
 import sys
 from concurrent import futures
-import pdb
 from infra.common.logging import logger
 import ${proxy_handler}
 
@@ -32,9 +31,14 @@ proxyServer = grpc_server_start()
 //:: sys.path.insert(0, fullpath)
 //:: fullpath = ws_top + '/nic/gen/proto/hal/'
 //:: sys.path.insert(0, fullpath)
-ws_top = os.path.dirname(sys.argv[0]) + '/..'
-ws_top = os.path.abspath(ws_top)
-os.environ['WS_TOP'] = ws_top
+
+if 'WS_TOP' in os.environ:
+    ws_top = os.environ['WS_TOP']
+else:
+    ws_top = os.path.dirname(sys.argv[0]) + '/..'
+    ws_top = os.path.abspath(ws_top)
+    os.environ['WS_TOP'] = ws_top
+
 fullpath = ws_top + '/nic/gen/proto/hal/'
 sys.path.insert(0, fullpath)
 

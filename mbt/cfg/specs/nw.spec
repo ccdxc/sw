@@ -35,6 +35,8 @@ objects:
         name : Nexthop
         key_handle : NexthopKeyHandle
         ignore:
+        ignore_v2:
+            - op : Update
         create:
             api      : NexthopCreate
             request  : NexthopRequestMsg
@@ -63,6 +65,8 @@ objects:
         name : Route
         key_handle : RouteKeyHandle
         ignore:
+        ignore_v2:
+            - op : Update
         create:
             api      : RouteCreate
             request  : RouteRequestMsg

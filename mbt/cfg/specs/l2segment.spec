@@ -7,6 +7,8 @@ objects:
         name : L2Segment
         key_handle : L2SegmentKeyHandle
         ignore:
+        ignore_v2:
+            - op : Delete
         create:
             api      : L2SegmentCreate
             request  : L2SegmentRequestMsg

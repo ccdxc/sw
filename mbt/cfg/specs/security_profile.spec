@@ -6,6 +6,7 @@ objects:
     - object : 
         name : SecurityProfile
         key_handle : SecurityProfileKeyHandle
+        max_objects : 255
         ignore:
             - op : GetAll
         create:
@@ -40,6 +41,8 @@ objects:
             - op : Update
             - op : Delete
             - op : Create
+            - op : GetAll
+        ignore_v2:
             - op : GetAll
         create:
             api      : SecurityGroupCreate

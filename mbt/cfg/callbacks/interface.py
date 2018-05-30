@@ -1,11 +1,16 @@
 import interface_pb2
 import random
 import math
-from grpc_meta.msg import GrpcReqRspMsg
 import os
 import types_pb2
-import config_mgr
 import kh_pb2
+import utils
+import config_mgr
+
+if (utils.mbt_v2()):
+    from mbt_v2.msg import GrpcReqRspMsg
+else:
+    from grpc_meta.msg import GrpcReqRspMsg
 
 cpu_if_type_max = 1
 cpu_if_type_seen = 0
@@ -14,6 +19,14 @@ num_uplink_ifs = 0
 max_uplink_ifs = 31
 
 def PreCreateCb(data, req_spec, resp_spec):
+
+    if (utils.mbt_v2()):
+        ext_refs = {}
+
+        # Ignore NONE type
+        if req_spec.request[0].type == interface_pb2.IF_TYPE_NONE:
+            return False
+
     if req_spec.request[0].HasField("if_enic_info"):
         req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
     elif req_spec.request[0].HasField("if_uplink_info"):
@@ -29,11 +42,19 @@ def PreCreateCb(data, req_spec, resp_spec):
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_CPU:
         req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
-        GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
+
+        if (utils.mbt_v2()):
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info, ext_refs=ext_refs)
+        else:
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
         req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
-        GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
+
+        if (utils.mbt_v2()):
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info, ext_refs=ext_refs)
+        else:
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK_PC or \
        req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK:
@@ -42,7 +63,11 @@ def PreCreateCb(data, req_spec, resp_spec):
         num_uplink_ifs += 1
         if num_uplink_ifs > max_uplink_ifs:
             req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
-            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
+
+            if (utils.mbt_v2()):
+                GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info, ext_refs=ext_refs)
+            else:
+                GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK:
         global port_num
@@ -55,6 +80,11 @@ def PreCreateCb(data, req_spec, resp_spec):
         req_spec.request[0].if_uplink_pc_info.native_l2segment_id = 0
     elif req_spec.request[0].type == interface_pb2.IF_TYPE_ENIC:
         if req_spec.request[0].if_enic_info.HasField("classic_enic_info"):
+
+            if (utils.mbt_v2()):
+                # TODO Ignore classic ENIC
+                return False
+
             req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_handle = 0
             # Classic Enic's with the same L2Segments are not allowed.
             # So create a new object.
@@ -66,6 +96,9 @@ def PreCreateCb(data, req_spec, resp_spec):
             req_spec.request[0].if_enic_info.enic_type = random.choice([interface_pb2.IF_ENIC_TYPE_USEG, \
            interface_pb2.IF_ENIC_TYPE_PVLAN, interface_pb2.IF_ENIC_TYPE_DIRECT])
 
+    if (utils.mbt_v2()):
+        return True
+
 def PostCreateCb(data, req_spec, resp_spec):
     data.exp_data.spec = req_spec.request[0]
     data.exp_data.spec.ClearField("meta")
@@ -74,11 +107,18 @@ def PostGetCb(data, req_spec, resp_spec):
     data.actual_data.spec = resp_spec.response[0].spec
 
 def create_and_get_l2seg_key():
-    l2seg_key_type = getattr(kh_pb2, 'L2SegmentKeyHandle')
-    return config_mgr.CreateConfigFromKeyType(l2seg_key_type)
-    
+    if (utils.mbt_v2()):
+        constraints = None
+        ext_refs = {}
+        return utils.create_config_from_kh('L2SegmentKeyHandle', constraints, ext_refs)
+    else:
+        l2seg_key_type = getattr(kh_pb2, 'L2SegmentKeyHandle')
+        return config_mgr.CreateConfigFromKeyType(l2seg_key_type)
 
 def PreUpdateCb(data, req_spec, resp_spec):
+    if (utils.mbt_v2()):
+        ext_refs = {}
+
     if req_spec.request[0].HasField("if_enic_info"):
         req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
     elif req_spec.request[0].HasField("if_uplink_info"):
@@ -99,11 +139,17 @@ def PreUpdateCb(data, req_spec, resp_spec):
             cpu_if_type_seen += 1
         else:
             req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
-            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
+            if (utils.mbt_v2()):
+                GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info, ext_refs=ext_refs)
+            else:
+                GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
         req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
-        GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
+        if (utils.mbt_v2()):
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info, ext_refs=ext_refs)
+        else:
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK:
         global port_num

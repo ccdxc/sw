@@ -1,5 +1,6 @@
 import types_pb2
 from grpc_meta.msg import GrpcReqRspMsg
+import utils
 import config_mgr
 
 def PreCreateCb(data, req_spec, resp_spec):
@@ -26,8 +27,12 @@ def PrefixLentoNetmask(prefix_len):
         return (((1 << prefix_len) - 1) << (32 - prefix_len))
 
 def MappingPreCreateCb(data, req_spec, resp_spec):
-    nat_pool_obj = config_mgr.GetExtRefObjectFromKey(req_spec.request[0].nat_pool)
-    cache_create_msg = nat_pool_obj._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
+    if (utils.mbt_v2()):
+        cache_create_msg = utils.get_create_req_msg_from_kh(req_spec.request[0].nat_pool)
+    else:
+        nat_pool_obj = config_mgr.GetExtRefObjectFromKey(req_spec.request[0].nat_pool)
+        cache_create_msg = nat_pool_obj._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
+
     ip_low = 0
     ip_hi = 0
     if cache_create_msg.request[0].address[0].HasField("range"):
