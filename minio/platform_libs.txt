@@ -1,0 +1,3 @@
+platform/src/third-party/lib/gmp/*
+platform/src/third-party/lib/ncurses/*
+platform/src/third-party/lib/edit/*

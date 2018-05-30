@@ -3,10 +3,13 @@
 #
 
 SUBDIRS = \
+	capmon \
+	capview \
+	cpmem \
+	example \
 	pciemgrd \
 	pcieutil \
-	capmon \
-	example \
+	regio \
 	$(NULL)
 
 TOPDIR = ../..
