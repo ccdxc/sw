@@ -226,7 +226,7 @@ start_model_rdma() {
 }
 
 start_model() {
-    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0004000:0xc0004040:0xc0004080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0045000:0xc0045040:0xc0045080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
 }
 
 start_hal() {
