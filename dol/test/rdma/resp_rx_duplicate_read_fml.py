@@ -22,12 +22,6 @@ def TestCaseSetup(tc):
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
 
-    tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()  
-    tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())                           
-
-    tc.pvtdata.slab_2 = rs.lqp.pd.ep.GetNewSlab()
-    tc.pvtdata.mr_slab_2 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_2.GID())
-
     return
 
 def TestCaseTrigger(tc):
@@ -55,10 +49,10 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
 
     if step.step_id == 0:
-        # after receiving atomic request
+        # after receiving read request
 
-        # verify that e_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 1):
+        # verify that e_psn is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
             return False
 
         # verify that proxy_cindex is incremented by 0
@@ -80,6 +74,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask, 1):
             return False
 
+    
         # verify that read_rsp_lock is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock', 0):
             return False
@@ -123,7 +118,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 2:
-        # after receiving duplicate atomic request
+        # after receiving duplicate read request
 
         # verify that e_psn is NOT incremented
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):

@@ -717,11 +717,51 @@ modules:
         ignore  : False
     
     - module:
+        name    : RDMA_RX_DUPLICATE_READ_FML
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_read_fml
+        spec    : resp_rx_duplicate_read_fml.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_READ_FML_SUBSET
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_read_fml_subset
+        spec    : resp_rx_duplicate_read_fml_subset.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_READ_ONLY_PSN_MISMATCH
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_read_only_psn_mismatch
+        spec    : resp_rx_duplicate_read_only_psn_mismatch.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_READ_ONLY_VA_MISMATCH
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_read_only_va_mismatch
+        spec    : resp_rx_duplicate_read_only_va_mismatch.testspec
+        ignore  : False
+    
+    - module:
         name    : RDMA_RX_DUPLICATE_ATOMIC
         enable  : True
         package : test.rdma
         module  : resp_rx_duplicate_atomic
         spec    : resp_rx_duplicate_atomic.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_ATOMIC_RKEY_MISMATCH
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_atomic_rkey_mismatch
+        spec    : resp_rx_duplicate_atomic_rkey_mismatch.testspec
         ignore  : False
     
     - module:

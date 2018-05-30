@@ -265,7 +265,8 @@ bt_end_subset_entry_found:
                 0x5E, \
                 CAPRI_PHV_FIELD(WB_INFO_P, rsq_cindex), \
                 K_SEARCH_INDEX
-    CAPRI_SET_FIELD2(WB_INFO_P, bt_cindex, K_BT_CINDEX)
+    phvwrpair   CAPRI_PHV_FIELD(WB_INFO_P, curr_read_rsp_psn), K_SEARCH_PSN, \
+                CAPRI_PHV_FIELD(WB_INFO_P, bt_cindex), K_BT_CINDEX
 
     RQCB0_ADDR_GET(RQCB0_P)
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb0_bt_write_back_process, RQCB0_P)
