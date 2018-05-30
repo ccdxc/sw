@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "upgrade_app_resp_reactor.hpp"
+#include "nic/upgrade_manager/include/upgrade_state_machine.hpp"
 
 namespace upgrade {
 
@@ -15,20 +16,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr
 }
 
 string UpgAppRespReact::GetAppRespStr(delphi::objects::UpgAppRespPtr resp) {
-    switch (resp->upgapprespval()) {
-        case upgrade::PreUpgStatePass:
-            return ("Pre upgrade checks passed");
-        case upgrade::ProcessesQuiescedPass:
-            return ("Processes Quiesce end");
-        case upgrade::PostBinRestartPass:
-            return ("Binaries Restarted");
-        case upgrade::DataplaneDowntimeStartPass:
-            return ("Dataplane downtime end");
-        case upgrade::CleanupPass:
-            return ("Cleanup finished");
-        default:
-            return ("");
-    }
+    return ((resp->upgapprespval() % 2 == 0)?StateMachine[resp->upgapprespval()/2].upgRespStateTypeToStrPass:StateMachine[resp->upgapprespval()/2].upgRespStateTypeToStrFail);
 }
 
 void UpgAppRespReact::SetAppRespSuccess(HdlrResp &resp) {

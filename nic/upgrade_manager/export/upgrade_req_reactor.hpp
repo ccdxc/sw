@@ -39,6 +39,8 @@ public:
 
     // OnUpgReqState gets called when UpgReqState attribute changes
     virtual delphi::error OnUpgReqState(delphi::objects::UpgStateReqPtr req);
+
+    void InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp);
 };
 typedef std::shared_ptr<UpgReqReactor> UpgReqReactorPtr;
 

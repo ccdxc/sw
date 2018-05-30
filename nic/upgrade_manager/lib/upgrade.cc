@@ -48,7 +48,22 @@ void UpgradeService::OnMountComplete() {
     // walk all upgrade request objects and reconcile them
     vector<delphi::objects::UpgReqPtr> upgReqlist = delphi::objects::UpgReq::List(sdk_);
     for (vector<delphi::objects::UpgReqPtr>::iterator req=upgReqlist.begin(); req!=upgReqlist.end(); ++req) {
-        upgMgr_->OnUpgReqCreate(*req);
+        LogInfo("UpgReq found for {}/{}/{}", (*req), (*req)->key(), (*req)->meta().ShortDebugString());
+        auto upgStateReq = upgMgr_->findUpgStateReq(10);//(*req)->key());
+        if (upgStateReq == NULL) {
+            LogInfo("Reconciling outstanding upgrade request with key: {}", (*req)->key());
+            upgMgr_->OnUpgReqCreate(*req);
+        } else {
+            LogInfo("Update request in progress. Check if State Machine can be moved.");
+            if (upgMgr_->CanMoveStateMachine()) {
+                LogInfo("Can move state machine. Moving it forward.");
+                upgMgr_->MoveStateMachine(upgMgr_->GetNextState());
+                return;
+            } else {
+                LogInfo("Cannot move state machine yet");
+                return;
+            }
+        }
     }
 
     LogInfo("============== UpgradeService Finished Reconciliation ==================\n");

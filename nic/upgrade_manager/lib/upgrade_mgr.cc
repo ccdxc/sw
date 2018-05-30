@@ -74,7 +74,7 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
             LogInfo("Application {} still processing {}", (*appResp)->key(), UpgReqStateTypeToStr(reqType));
             ret = false;
         } else if ((*appResp)->upgapprespval() == passType) {
-            LogInfo("Got pass from application {}", (*appResp)->key());
+            LogInfo("Got pass from application {}/{}", (*appResp)->key(), ((*appResp))->meta().ShortDebugString());
         } else {
             LogInfo("Got fail from application {}", (*appResp)->key());
         }
