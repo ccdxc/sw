@@ -80,17 +80,24 @@ lookup_fail:
     return  fte::PIPELINE_CONTINUE;
 }
 
+static bool
+is_dst_local_ep(hal::if_t *intf) {
+    return (intf != NULL && intf->if_type == intf::IF_TYPE_ENIC);
+}
+
 static inline fte::pipeline_action_t
 update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
     hal_ret_t ret = HAL_RET_OK;
     flow_key_t              flow_key = ctx.key();
+    bool is_local_dest = is_dst_local_ep(ctx.dif());
+
     HAL_TRACE_DEBUG("IPSec Host flow forwarding role: {} direction: {}", ctx.role(), ctx.direction());
     if (
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
            (ctx.direction() == hal::FLOW_DIR_FROM_DMA)) ||
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
-           (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto != IPPROTO_ESP)) ||   //temporary - only
+           (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto != IPPROTO_ESP) && !is_local_dest ) ||   //temporary - only
           ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) &&
            (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto == IPPROTO_ESP))
         ) {
@@ -102,8 +109,7 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
         flowupd.fwding.qid_en = true;
         flowupd.fwding.qtype = 0;
-        //flowupd.fwding.qid = pfi->qid1;
-        flowupd.fwding.qid = 0;
+        flowupd.fwding.qid = pfi->qid1;
         ret = ctx.update_flow(flowupd);
         ctx.set_feature_status(ret);
         return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
