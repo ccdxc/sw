@@ -27,7 +27,6 @@ const (
 	IPSecSADecryptID = "ipSecSADencryptID"
 	IPSecRuleID      = "ipSecRuleID"
 	SGPolicyID       = "securityGroupPolicyID"
-	TunnelID         = "tunnelID"
 )
 
 // IntfInfo has the interface names to be plumbed into container

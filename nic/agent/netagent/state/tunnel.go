@@ -38,11 +38,13 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 		return err
 	}
 
-	tun.Status.TunnelID, err = na.Store.GetNextID(types.TunnelID)
+	// Tunnel IDs and Interface IDs must be unique in the datapath as tunnel is modeled as an interface in HAL.
+	tunnelID, err := na.Store.GetNextID(types.InterfaceID)
 	if err != nil {
 		log.Errorf("Could not allocate tunnel id. {%+v}", err)
 		return err
 	}
+	tun.Status.TunnelID = tunnelID + maxNumUplinks
 
 	// create it in datapath
 	err = na.Datapath.CreateTunnel(tun, ns)
