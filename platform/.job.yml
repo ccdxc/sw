@@ -1,6 +1,7 @@
 ---
 targets:
-  test: [ "make", "all", "test" ]
+  build_x86-64: [ "make", "all", "test" ]
+  build_aarch64: [ "make", "BUILD_ARCHES=aarch64", "all", "test" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

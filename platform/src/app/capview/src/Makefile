@@ -22,10 +22,15 @@ SOURCES = \
 
 LCXXFLAGS = \
 	-I ../include \
+	$(NULL)
+
+ifeq ("$(BUILD_ARCH)", "aarch64")
+LCXXFLAGS += \
 	-I $(TOPDIR)/src/third-party/lib/gmp/include \
 	-I $(TOPDIR)/src/third-party/lib/edit/include \
 	-I $(TOPDIR)/src/third-party/lib/ncurses/include \
 	$(NULL)
+endif
 
 LLDFLAGS = \
 	-L$(TOPDIR)/src/third-party/lib/gmp/$(BUILD_ARCH) \
