@@ -56,7 +56,7 @@ func main() {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}
 
-	logger.Debug("events proxy server started")
+	logger.Infof("%s is running {%+v}", globals.EvtsProxy, *eps)
 
 	// channel to receive signal
 	gracefulStop := make(chan os.Signal, 1)

@@ -24,6 +24,9 @@ const (
 	// ConfigIndexPrefix is the elastic index prefix for config/policies
 	ConfigIndexPrefix = "venice.external.configs.*"
 
+	// LogIndexPrefix is the elastic index prefix for config/policies
+	LogIndexPrefix = "venice.internal.default.systemlogs.*"
+
 	// TenantAggKey is the Aggregation key to group by Tenant
 	TenantAggKey = "tenant_agg"
 
@@ -95,7 +98,7 @@ func GetDocType(dtype globals.DataType) string {
 	case globals.AuditLogs:
 		return "auditlogs"
 	case globals.DebugLogs:
-		return "debuglogs"
+		return "systemlogs"
 	case globals.Stats:
 		return "N/A"
 	}

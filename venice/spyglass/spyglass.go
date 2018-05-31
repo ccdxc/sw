@@ -29,7 +29,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "spyglass",
+		Module:      globals.Spyglass,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
@@ -85,6 +85,7 @@ func main() {
 		log.Fatalf("Failed to start indexer, err: %v", err)
 	}
 
+	log.Infof("%s is running {%+v} {%v}", globals.Spyglass, fdr, idxer)
 	// wait forever
 	<-waitCh
 }

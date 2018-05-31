@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/startup"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/systemd"
@@ -17,19 +18,20 @@ import (
 
 func main() {
 	var (
-		debugflag   = flag.Bool("debug", false, "Enable debug mode")
-		logToFile   = flag.String("logtofile", "/var/log/pensando/cmd.log", "Redirect logs to file")
-		registryURL = flag.String("registry-url", "registry.test.pensando.io:5000", "URL to docker registry")
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToFile       = flag.String("logtofile", "/var/log/pensando/cmd.log", "Redirect logs to file")
+		registryURL     = flag.String("registry-url", "registry.test.pensando.io:5000", "URL to docker registry")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 	)
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "CMD",
+		Module:      globals.Cmd,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
-		LogToStdout: true,
+		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,
@@ -41,7 +43,6 @@ func main() {
 
 	// Initialize logger config
 	env.Logger = log.SetConfig(logConfig)
-
 	env.RegistryURL = *registryURL
 	env.Scheme = runtime.NewScheme()
 	env.Scheme.AddKnownTypes(&cmd.Cluster{}, &cmd.Node{})
@@ -60,6 +61,7 @@ func main() {
 
 	startup.OnStart()
 
-	log.Debugln("Launching server")
+	env.Logger.Debugln("Launching server")
 	server.Run(env.Options)
+	env.Logger.Infof("%s is running", globals.Cmd)
 }

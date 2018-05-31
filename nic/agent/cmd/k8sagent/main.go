@@ -35,7 +35,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "K8sAgent",
+		Module:      globals.Netagent,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
@@ -88,14 +88,14 @@ func main() {
 	}
 	restServer, err := restapi.NewRestServer(ag.NetworkAgent, nil, ":"+globals.AgentRESTPort)
 	ag.RestServer = restServer
-	log.Printf("NetAgent {%+v} is running", ag)
+	log.Printf("%s {%+v} is running", globals.Netagent, ag)
 
 	// create a CNI server
 	cniServer, err := cni.NewCniServer(cni.CniServerListenURL, ag.NetworkAgent)
 	if err != nil {
 		log.Fatalf("Error creating CNI server. Err: %v", err)
 	}
-	log.Printf("CNI server {%+v} is running", cniServer)
+	log.Infof("CNI server is running {%+v}", cniServer)
 
 	// wait forever
 	<-waitCh

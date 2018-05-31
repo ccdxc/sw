@@ -29,7 +29,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "NPM",
+		Module:      globals.Npm,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
@@ -56,6 +56,8 @@ func main() {
 	if err != nil || ctrler == nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}
+
+	log.Infof("%s is running {%+v}", globals.Npm, ctrler)
 
 	// wait forever
 	<-waitCh

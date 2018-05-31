@@ -234,7 +234,7 @@ func (s *RPCServer) UpdateNode(nic *cluster.SmartNIC) (*cluster.Node, error) {
 
 		// Update the Nics list in Node status
 		refObj.Status.Nics = append(refObj.Status.Nics, nic.ObjectMeta.Name)
-		log.Debugf("++++ Updating Node: %+v", refObj)
+		log.Debugf("Updating Node: %+v", refObj)
 		nodeObj, err = cl.Node().Update(context.Background(), refObj)
 	}
 
@@ -296,7 +296,7 @@ func (s *RPCServer) UpdateSmartNIC(obj *cluster.SmartNIC) (*cluster.SmartNIC, er
 		nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
 	}
 
-	log.Debugf("++++ UpdateSmartNIC nic: %+v", nicObj)
+	log.Debugf("UpdateSmartNIC nic: %+v", nicObj)
 	return nicObj, err
 }
 
@@ -496,7 +496,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 // health updates in over 120secs, CMD would mark the status as unknown.
 func (s *RPCServer) MonitorHealth() {
 
-	log.Info("+++++ Launching Monitor Health")
+	log.Info("Launching Monitor Health")
 	for {
 		select {
 

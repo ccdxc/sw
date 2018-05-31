@@ -28,6 +28,7 @@ type cliOpts struct {
 	storeType       string
 	storeURL        string
 	vcenterList     []*url.URL
+	logToFile       string
 	logToStdoutFlag bool
 }
 
@@ -59,9 +60,13 @@ func parseOpts(opts *cliOpts) error {
 		":"+globals.CMDResolverPort,
 		"Comma separated list of resolver URLs of the form 'ip:port'")
 	flagSet.BoolVar(&opts.logToStdoutFlag,
-		"logtostdout",
+		"log-to-stdout",
 		false,
 		"Enable logging to stdout")
+	flagSet.StringVar(&opts.logToFile,
+		"log-to-file",
+		"/var/log/pensando/vchub.log",
+		"Redirect logs to file")
 
 	err := flagSet.Parse(os.Args[1:])
 
@@ -154,7 +159,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "vchub",
+		Module:      globals.VCHub,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
@@ -162,7 +167,7 @@ func main() {
 		LogToFile:   true,
 		CtxSelector: log.ContextAll,
 		FileCfg: log.FileConfig{
-			Filename:   "/tmp/vchub.log",
+			Filename:   opts.logToFile,
 			MaxSize:    10,
 			MaxBackups: 3,
 			MaxAge:     7,
@@ -173,5 +178,6 @@ func main() {
 	log.SetConfig(logConfig)
 
 	launchVCHub(&opts)
+	log.Infof("%s is running", globals.VCHub)
 	waitForever()
 }

@@ -19,8 +19,6 @@ import (
 	trace "github.com/pensando/sw/venice/utils/trace"
 )
 
-const srvName = "ApiServer"
-
 func main() {
 	var (
 		grpcaddr        = flag.String("grpc-server-port", ":"+globals.APIServerPort, "GRPC Port to listen on")
@@ -44,7 +42,7 @@ func main() {
 		}
 
 		logConfig := &log.Config{
-			Module:      srvName,
+			Module:      globals.APIServer,
 			Format:      log.JSONFmt,
 			Filter:      log.AllowInfoFilter,
 			Debug:       *debugflag,
@@ -79,7 +77,7 @@ func main() {
 			config.BypassCache = true
 		}
 	}
-	trace.Init("ApiServer")
+	trace.Init(globals.APIServer)
 	if *devmode {
 		trace.DisableOpenTrace()
 	}
@@ -93,5 +91,6 @@ func main() {
 	go http.Serve(dbgsock, nil)
 
 	srv := apisrvpkg.MustGetAPIServer()
+	pl.Infof("%s is running {%+v}", globals.APIServer, srv)
 	srv.Run(config)
 }

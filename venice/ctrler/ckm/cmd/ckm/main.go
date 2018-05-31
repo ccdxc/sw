@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/ckm"
 	"github.com/pensando/sw/venice/ctrler/ckm/rpcserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -23,7 +24,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "CKM",
+		Module:      globals.Ckm,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
@@ -51,10 +52,12 @@ func main() {
 	}
 
 	// create the controller
-	_, err = ckm.NewCKMctrler(rpcserver.CKMctrlerURL, keyStoreDir)
+	ctrlr, err := ckm.NewCKMctrler(rpcserver.CKMctrlerURL, keyStoreDir)
 	if err != nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}
+
+	log.Info("%s is running {%+v}", globals.Ckm, ctrlr)
 
 	// wait forever
 	<-waitCh

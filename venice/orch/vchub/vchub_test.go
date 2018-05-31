@@ -40,7 +40,7 @@ func TestVCHub(t *testing.T) {
 
 	time.Sleep(50 * time.Millisecond)
 
-	os.Args = []string{"vchub", "-listen-url", ":9898", "-store-url", "memkv:", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk"}
+	os.Args = []string{"vchub", "-listen-url", ":9898", "-store-url", "memkv:", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk", "-log-to-file", "/tmp/vchub.log"}
 	err = parseOpts(&opts)
 	if err != nil {
 		t.Errorf("parseOpts returned %v", err)
@@ -75,7 +75,7 @@ func TestVCHub(t *testing.T) {
 		return true, nil
 	}, "Default SmartNICs", "100ms", "20s")
 
-	os.Args = []string{"vchub", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk"}
+	os.Args = []string{"vchub", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk", "-log-to-file", "/tmp/vchub.log"}
 	err = parseOpts(&opts)
 	go main()
 	time.Sleep(100 * time.Millisecond)

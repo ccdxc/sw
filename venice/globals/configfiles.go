@@ -5,8 +5,12 @@ const (
 	// RegistryConfigFile is used to store the docker registry
 	RegistryConfigFile = "/etc/pensando/shared/common/registry.conf"
 
-	// FilebeatConfigFile is used by Filebeat
+	// FilebeatConfigFile is used by Filebeat and it contains config params
 	FilebeatConfigFile = "/etc/pensando/filebeat/filebeat.yml"
+
+	// FilebeatFieldsFile is used by Filebeat and it contains logging fields
+	// mapping for elasticsearch indexing.
+	FilebeatFieldsFile = "/etc/pensando/filebeat/logging_fields.yml"
 
 	// ElasticDiscoveryConfigFile is used by Elastic for Node discovery
 	ElasticDiscoveryConfigFile = "/etc/pensando/elastic/elastic-discovery/unicast_hosts.txt"

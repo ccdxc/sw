@@ -44,7 +44,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "NaplesNetAgent",
+		Module:      globals.Netagent,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
@@ -143,7 +143,7 @@ func main() {
 		log.Errorf("Error creating the rest API server. Err: %v", err)
 	}
 	ag.RestServer = restServer
-	log.Printf("Naples NetAgent {%+v} is running", ag)
+	log.Infof("%s is running {%+v}", globals.Netagent, ag)
 
 	// wait forever
 	<-waitCh

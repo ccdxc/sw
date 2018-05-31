@@ -18,8 +18,8 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
-var pkgName = "tpm"
 var dbgSock = "/var/run/pensando/tpm.sock"
+var pkgName = globals.Tpm
 
 // main function of the Telemetry Policy Manager
 func main() {
@@ -37,7 +37,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      strings.ToUpper(pkgName),
+		Module:      pkgName,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugFlag,
@@ -76,6 +76,8 @@ func main() {
 	}
 	defer l.Close()
 	go log.Fatal(http.Serve(l, router))
+
+	log.Infof("%s is running {%+v}", globals.Tpm, pm)
 
 	select {}
 }

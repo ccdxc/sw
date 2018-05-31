@@ -11,6 +11,7 @@ import (
 	cni "github.com/containernetworking/cni/pkg/skel"
 
 	cniServer "github.com/pensando/sw/nic/agent/plugins/k8s/cni"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -22,7 +23,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "K8sAgent",
+		Module:      globals.K8sAgent,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
@@ -44,4 +45,6 @@ func main() {
 
 	n := NewCNIPlugin(cniServer.CniServerListenURL)
 	cni.PluginMain(n.CmdAdd, n.CmdDel, versionInfo)
+	log.Infof("%s is running {%+v}", globals.K8sAgent, n)
+
 }

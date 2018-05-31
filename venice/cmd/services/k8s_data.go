@@ -95,6 +95,12 @@ var k8sModules = map[string]protos.Module{
 					HostPath:  globals.FilebeatConfigFile,
 					MountPath: "/usr/share/filebeat/filebeat.yml",
 				},
+				// Volume definition for Filebeat fields config.
+				{
+					Name:      "fields",
+					HostPath:  globals.FilebeatFieldsFile,
+					MountPath: "/usr/share/filebeat/logging_fields.yml",
+				},
 				&logVolume,
 			},
 		},

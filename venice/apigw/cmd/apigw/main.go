@@ -16,8 +16,6 @@ import (
 	trace "github.com/pensando/sw/venice/utils/trace"
 )
 
-const srvName = "ApiGw"
-
 // makeOverrideMap creates a map from a string. examples for input strings
 //   "pen-apiserver=localhost:5000" -> map[pen-apiserver:localhost:5000]
 //   "pen-apiserver=localhost:5000,pen-search=localhost:5005" ->
@@ -64,7 +62,7 @@ func main() {
 			logtoFileFlag = false
 		}
 		logConfig := &log.Config{
-			Module:      srvName,
+			Module:      globals.APIGw,
 			Format:      log.JSONFmt,
 			Filter:      log.AllowAllFilter,
 			Debug:       *debugflag,
@@ -99,9 +97,11 @@ func main() {
 			config.SkipBackends = strings.Split(*skip, ",")
 		}
 	}
-	trace.Init("ApiGateway")
+	trace.Init(globals.APIGw)
 	pl.Log("msg", "Starting Run")
+
 	gw := apigwpkg.MustGetAPIGateway()
 	grpclog.SetLogger(pl)
+	pl.Infof("%s is running {%+v}", globals.APIGw, gw)
 	gw.Run(config)
 }

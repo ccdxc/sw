@@ -47,8 +47,8 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "collector",
-		Format:      log.LogFmt,
+		Module:      globals.Collector,
+		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
 		LogToStdout: opts.logToStdoutFlag,
@@ -81,6 +81,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
+	log.Infof("%s is running {%+v}", globals.Collector, c)
 	<-srv.ErrOut() // exit when the server does
 	os.Exit(-1)
 }

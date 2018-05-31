@@ -5,6 +5,7 @@ const (
 	APIGw                 = "pen-apigw"
 	APIServer             = "pen-apiserver"
 	Cmd                   = "pen-cmd"
+	Ckm                   = "pen-ckm"
 	Filebeat              = "pen-filebeat"
 	Ntp                   = "pen-ntp"
 	VCHub                 = "pen-vchub"
@@ -20,4 +21,7 @@ const (
 	KubeControllerManager = "pen-kube-controller-manager"
 	Tpm                   = "pen-tpm"
 	Tsm                   = "pen-tsm"
+	Nmd                   = "pen-nmd"
+	Netagent              = "pen-netagent"
+	K8sAgent              = "pen-k8sagent"
 )

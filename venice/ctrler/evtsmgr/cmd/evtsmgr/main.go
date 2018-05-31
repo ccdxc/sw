@@ -82,10 +82,10 @@ func main() {
 		log.Fatalf("error creating events manager instance: %v", err)
 	}
 
-	log.Debug("events manager server started")
+	logger.Infof("%s is running {%+v}", globals.EvtsMgr, *emgr)
 
 	// wait till the server stops
 	<-emgr.RPCServer.Done()
-	log.Debug("server stopped serving, exiting")
+	logger.Debug("server stopped serving, exiting")
 	os.Exit(0)
 }

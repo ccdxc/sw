@@ -35,7 +35,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "NMD",
+		Module:      globals.Nmd,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
@@ -90,7 +90,7 @@ func main() {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
 
-	log.Printf("NMD {%+v} is running", nm)
+	log.Infof("%s is running {%+v}", globals.Nmd, nm)
 
 	// wait forever
 	<-waitCh
