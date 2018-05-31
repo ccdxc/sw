@@ -42,7 +42,7 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateVrf(tn.Status.TenantID)
+	err = na.Datapath.CreateVrf(tn.Status.TenantID, tn.Spec.TenantType)
 	if err != nil {
 		log.Errorf("Error creating tenant in datapath. Tenant {%+v}. Err: %v", tn, err)
 		return err

@@ -40,7 +40,7 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateVrf(ns.Status.NamespaceID)
+	err = na.Datapath.CreateVrf(ns.Status.NamespaceID, "")
 	if err != nil {
 		log.Errorf("Error creating namespace in datapath. Namespace {%+v}. Err: %v", ns, err)
 		return err

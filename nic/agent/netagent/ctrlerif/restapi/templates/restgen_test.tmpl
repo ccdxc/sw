@@ -710,9 +710,7 @@ import (
                             {{else if strEq $crudObject "Tenant"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                		                               Meta: &api.ObjectMeta{
-                                                                                       Namespace:"testNamespace",
-                                                                                   },
+                                		                               TenantType: "CUSTOMER",
                                 		                            }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
                                     TypeMeta: api.TypeMeta{Kind: "Tenant"},

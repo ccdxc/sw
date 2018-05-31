@@ -106,9 +106,7 @@ func TestTenantUpdate(t *testing.T) {
 
 	var actualTenantSpec netproto.TenantSpec
 	updatedTenantSpec := netproto.TenantSpec{
-		Meta: &api.ObjectMeta{
-			Namespace: "testNamespace",
-		},
+		TenantType: "CUSTOMER",
 	}
 	putData := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},

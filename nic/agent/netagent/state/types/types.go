@@ -181,7 +181,7 @@ type NetDatapathAPI interface {
 	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                      // creates a security group
 	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                      // updates a security group
 	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                      // deletes a security group
-	CreateVrf(vrfID uint64) error                                                                                                                              // creates a vrf
+	CreateVrf(vrfID uint64, vrfType string) error                                                                                                              // creates a vrf
 	DeleteVrf(vrfID uint64) error                                                                                                                              // deletes a vrf
 	UpdateVrf(vrfID uint64) error                                                                                                                              // updates a vrf
 	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, ns *netproto.Namespace) error                                                           // creates an interface

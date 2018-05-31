@@ -3,12 +3,21 @@ package datapath
 import (
 	"context"
 
+	"strings"
+
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateVrf creates a vrf
-func (hd *Datapath) CreateVrf(vrfID uint64) error {
+func (hd *Datapath) CreateVrf(vrfID uint64, vrfType string) error {
+	var vrf halproto.VrfType
+	if strings.ToLower(vrfType) == "infra" {
+		vrf = halproto.VrfType_VRF_TYPE_INFRA
+	} else {
+		vrf = halproto.VrfType_VRF_TYPE_CUSTOMER
+	}
+
 	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
 			VrfId: vrfID,
@@ -19,7 +28,7 @@ func (hd *Datapath) CreateVrf(vrfID uint64) error {
 			},
 		},
 		// All tenant creates are currently customer type as we don't intend to expose infra vrf creates to the user.
-		VrfType: halproto.VrfType_VRF_TYPE_CUSTOMER,
+		VrfType: vrf,
 	}
 	vrfReqMsg := halproto.VrfRequestMsg{
 		Request: []*halproto.VrfSpec{&vrfSpec},
