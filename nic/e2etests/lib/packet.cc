@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <net/if.h>
 #include <linux/if_tun.h>
-#include <linux/ipv6.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -62,8 +61,8 @@ long get_tcp_checksumv6(ipv6_header_t * myip, tcp_header_t * mytcp)
   int tcpopt_len = mytcp->doff*4 - 20;
   int tcpdatalen = total_len - (mytcp->doff*4);
 
-  memcpy(pseudoheadv6.saddr.in6_u.u6_addr8, myip->saddr, sizeof(struct in6_addr));
-  memcpy(pseudoheadv6.daddr.in6_u.u6_addr8, myip->daddr, sizeof(struct in6_addr));
+  memcpy(pseudoheadv6.saddr.s6_addr, myip->saddr, sizeof(struct in6_addr));
+  memcpy(pseudoheadv6.daddr.s6_addr, myip->daddr, sizeof(struct in6_addr));
   pseudoheadv6.protocol=htonl(IPPROTO_TCP);
   pseudoheadv6.len=htonl(sizeof(tcp_header_t) + tcpopt_len + tcpdatalen);
 

@@ -162,7 +162,7 @@ public:
 
 
 private:
-    slab_ptr_t    slabs_[HAL_SLAB_PI_MAX - HAL_SLAB_PI_MIN];
+    slab_ptr_t    slabs_[HAL_SLAB_PI_MAX - HAL_SLAB_PI_MIN + 1];
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;

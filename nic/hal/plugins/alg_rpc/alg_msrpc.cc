@@ -71,7 +71,7 @@ std::ostream& operator<<(std::ostream& os, const msrpc_dg_common_hdr_t& val) {
     os << " ,ptype=" << (int)val.ptype;
     os << " ,flags1=" << (int)val.flags1;
     os << " ,flags2=" << (int)val.flags2;
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<3; i++) {
         os << "drep " << i;
         os << "=" << (int)val.drep[i];
     }

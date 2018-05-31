@@ -112,7 +112,7 @@ private:
     ~hal_state_pd();
 
 private:
-    slab                    *slabs_[HAL_SLAB_PD_MAX - HAL_SLAB_PD_MIN];
+    slab                    *slabs_[HAL_SLAB_PD_MAX - HAL_SLAB_PD_MIN + 1];
     directmap               **dm_tables_;
     sdk_hash                **hash_tcam_tables_;
     tcam                    **tcam_tables_;

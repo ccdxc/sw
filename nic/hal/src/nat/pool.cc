@@ -21,7 +21,7 @@ nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
     hal_ret_t           ret;
     dllist_ctxt_t       *curr;
-    addr_list_elem_t    *addr_range;
+    addr_list_elem_t    *addr_range = NULL;
     uint32_t            free_idx;
 
     // if all address in this NAT pool are in use, fail allocation
@@ -94,7 +94,7 @@ nat_pool_address_free (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
     hal_ret_t           ret;
     dllist_ctxt_t       *curr;
-    addr_list_elem_t    *addr_range;
+    addr_list_elem_t    *addr_range = NULL;
     uint32_t            num_addrs, offset;
 
     dllist_for_each(curr, &pool->addr_ranges) {
