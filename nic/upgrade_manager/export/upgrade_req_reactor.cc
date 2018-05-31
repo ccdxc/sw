@@ -60,6 +60,8 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
         InvokeAppHdlr(req->upgreqstate(), hdlrResp);
         if (hdlrResp.resp != INPROGRESS) {
             this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
+        } else {
+            LogInfo("Application still processing");
         }
     }
     return delphi::error::OK();
