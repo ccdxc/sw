@@ -139,6 +139,7 @@ table rx_flow_tcam1 {
         flow_lkp_metadata.ip_dst_1           : ternary;
         flow_lkp_metadata.ip_dscp_1          : ternary;
         flow_lkp_metadata.ip_proto_1         : ternary;
+        flow_lkp_metadata.ip_ttl_1           : ternary;
         flow_lkp_metadata.l4_sport_1         : ternary;
         flow_lkp_metadata.l4_dport_1         : ternary;
         flow_lkp_metadata.tcp_flags_1        : ternary;
@@ -163,6 +164,7 @@ table rx_flow_tcam2 {
         flow_lkp_metadata.ip_dst_2           : ternary;
         flow_lkp_metadata.ip_dscp_2          : ternary;
         flow_lkp_metadata.ip_proto_2         : ternary;
+        flow_lkp_metadata.ip_ttl_2           : ternary;
         flow_lkp_metadata.l4_sport_2         : ternary;
         flow_lkp_metadata.l4_dport_2         : ternary;
         flow_lkp_metadata.tcp_flags_2        : ternary;
@@ -314,6 +316,7 @@ table tx_flow_tcam {
         flow_lkp_metadata.ip_dst_1           : ternary;
         flow_lkp_metadata.ip_dscp_1          : ternary;
         flow_lkp_metadata.ip_proto_1         : ternary;
+        flow_lkp_metadata.ip_ttl_1           : ternary;
         flow_lkp_metadata.l4_sport_1         : ternary;
         flow_lkp_metadata.l4_dport_1         : ternary;
         flow_lkp_metadata.tcp_flags_1        : ternary;
