@@ -121,7 +121,11 @@ public:
 
         // mount and watch test objects
         objMgr = make_shared<testObjMgr>();
-        TestObject::Mount(cl, ReadWriteMode);
+        if (clid == 0) {
+            TestObject::Mount(cl, ReadWriteMode);
+        } else {
+            TestObject::Mount(cl, ReadMode);
+        }
         TestObject::Watch(cl, objMgr);
 
     }
@@ -214,6 +218,7 @@ public:
         // kill the event loop thread
         LogInfo("Stopping event loop");
         loop.break_loop(ev::ALL);
+        usleep(1000 * 10);
         pthread_cancel(ev_thread_id);
         pthread_join(ev_thread_id, NULL);
         usleep(1000);
@@ -221,7 +226,7 @@ public:
 };
 
 TEST_F(DelphiHubTest, BasicServerTest) {
-    usleep(1000);
+    usleep(1000 * 100);
 
     // verify all the clients are inited
     for (int i = 0; i < NUM_CLIENTS; i++) {
@@ -245,6 +250,25 @@ TEST_F(DelphiHubTest, BasicServerTest) {
             ASSERT_EQ(tobj->testdata1(), "Test Data") << "client has invalid objects";
         }
     }
+
+    // create a new client that mounts the tree
+    DelphiClientPtr new_client = make_shared<DelphiClient>();
+    TestServicePtr new_service = make_shared<TestService>(NUM_CLIENTS+1, new_client);
+    new_client->RegisterService(new_service);
+    new_client->Connect();
+    usleep(1000 * 100);
+
+    // verify new client got all the objects
+    vector<BaseObjectPtr> db = new_client->ListKind("TestObject");
+    ASSERT_EQ(db.size(), NUM_CLIENTS) << "new client does not have all the objects";
+    for (vector<BaseObjectPtr>::iterator iter=db.begin(); iter!=db.end(); ++iter) {
+        TestObjectPtr tobj = static_pointer_cast<TestObject>(*iter);
+        ASSERT_EQ(tobj->testdata1(), "Test Data") << "client has invalid objects";
+    }
+
+    // close new client
+    new_client->Close();
+    new_service->stop();
 
     // delete the object and make sure it goes away
     for (int i = 0; i < NUM_CLIENTS; i++) {

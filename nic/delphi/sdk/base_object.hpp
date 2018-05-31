@@ -63,8 +63,14 @@ public:
 // BaseReactor is the base class for all reactors
 class BaseReactor {
 public:
+    // OnMountComplete callback per reactor
+    virtual void OnMountComplete() { return; }
 };
 
+// getPath returns full path from kind, key
+static inline string getPath(string kind, string key) {
+    return kind + "|" + key;
+}
 } // namespace delphi
 
 #endif // _DELPHI_BASE_OBJECTS_H_

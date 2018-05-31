@@ -21,8 +21,14 @@ public:
     // MountKind mounts all objects of a specific kind
     error MountKind(string kind, MountMode mode);
 
+    // MountKey mounts a specific object of kind, key 
+    error MountKey(string kind, string key, MountMode mode);
+
     // WatchKind watches all objects of a kind
     error WatchKind(string kind, BaseReactorPtr rctr);
+
+    // WatchMountComplete registers a reactor for mount complete callback
+    error WatchMountComplete(BaseReactorPtr rctr);
 
     // SetObject updates an object in db (needs to be called inside the event loop)
     error SetObject(BaseObjectPtr objinfo);

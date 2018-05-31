@@ -223,7 +223,7 @@ TEST_F(MessangerTest, ChangeReqTest) {
 
 TEST_F(MessangerTest, BidirMsgBenchmark) {
     int numIter = 200;
-    int batchSize = 1000;
+    int batchSize = 5000;
     for (int i = 0; i < numIter; i++) {
         vector<MountDataPtr>mnts;
         for (int j = 0; j < batchSize; j++) {

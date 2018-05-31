@@ -67,6 +67,21 @@ error DelphiClient::MountKind(string kind, MountMode mode) {
     return error::OK();
 }
 
+// MountKey requests a specific key to be mounted
+error DelphiClient::MountKey(string kind, string key, MountMode mode) {
+    // all mounts have to be requested before we connect to the server
+    assert(isConnected == false);
+
+    // add to the list
+    MountDataPtr mnt(make_shared<MountData>());
+    mnt->set_kind(kind);
+    mnt->set_key(key);
+    mnt->set_mode(mode);
+    mounts.push_back(mnt);
+
+    return error::OK();
+}
+
 // WatchKind watches a kind of object
 error DelphiClient::WatchKind(string kind, BaseReactorPtr rctr) {
     map<string, ReactorListPtr>::iterator it;
@@ -98,6 +113,12 @@ ReactorListPtr DelphiClient::GetReactorList(string kind) {
 error DelphiClient::RegisterService(ServicePtr svc) {
     assert(this->service == NULL);
     this->service = svc;
+    return error::OK();
+}
+
+// WatchMountComplete registers a reactor for a mount complete callback
+error DelphiClient::WatchMountComplete(BaseReactorPtr rctr) {
+    this->mountWatchers.push_back(rctr);
     return error::OK();
 }
 
@@ -214,6 +235,11 @@ error DelphiClient::HandleMountResp(uint16_t svcID, string status, vector<Object
     // trigger  mount complete callback
     this->service->OnMountComplete();
 
+    // walk all the reactors and make On mount complete callbacks
+    for (vector<BaseReactorPtr>::iterator rc = mountWatchers.begin(); rc != mountWatchers.end(); ++rc) {
+        (*rc)->OnMountComplete();
+    }
+
     return error::OK();
 }
 
@@ -221,10 +247,11 @@ error DelphiClient::HandleMountResp(uint16_t svcID, string status, vector<Object
 error DelphiClient::SetObject(BaseObjectPtr objinfo) {
     map<string, BaseObjectPtr>::iterator it;
     string key = objinfo->GetKey();
+    string kind = objinfo->GetMeta()->kind();
 
     // make sure mount is complete
     if (!this->isMountComplete) {
-        LogError("Error creating object {}/{}. Mount is not complete", objinfo->GetMeta()->kind(), key);
+        LogError("Error creating object {}/{}. Mount is not complete", kind, key);
         return error::New("Can not create objects before mount complete");
     }
 
@@ -236,9 +263,10 @@ error DelphiClient::SetObject(BaseObjectPtr objinfo) {
 
     // set key in the meta
     objinfo->GetMeta()->set_key(key);
+    objinfo->GetMeta()->set_path(getPath(kind, key));
 
     // get the subtree
-    ObjSubtreePtr subtree = this->getSubtree(objinfo->GetMeta()->kind());
+    ObjSubtreePtr subtree = this->getSubtree(kind);
 
     // find the old object
     BaseObjectPtr oldObj;
@@ -382,23 +410,25 @@ BaseObjectPtr DelphiClient::FindObject(BaseObjectPtr objinfo) {
 error DelphiClient::DeleteObject(BaseObjectPtr objinfo) {
     map<string, BaseObjectPtr>::iterator it;
     string key = objinfo->GetKey();
+    string kind = objinfo->GetMeta()->kind();
 
     // make sure mount is complete
     if (!this->isMountComplete) {
-        LogError("Error deleting object {}/{}. Mount is not complete", objinfo->GetMeta()->kind(), key);
+        LogError("Error deleting object {}/{}. Mount is not complete", kind, key);
         return error::New("Can not create objects before mount complete");
     }
 
     // set key in the meta
     objinfo->GetMeta()->set_key(key);
+    objinfo->GetMeta()->set_path(getPath(kind, key));
 
     // get the subtree
-    ObjSubtreePtr subtree = this->getSubtree(objinfo->GetMeta()->kind());
+    ObjSubtreePtr subtree = this->getSubtree(kind);
 
     // find the old object
     it = subtree->objects.find(key);
     if (it == subtree->objects.end()) {
-        LogError("Failed deleting Object. {}/{} not found", objinfo->GetMeta()->kind(), key);
+        LogError("Failed deleting Object. {}/{} not found", kind, key);
         return error::New("Object not found");
     }
 
@@ -555,6 +585,7 @@ void DelphiClient::msgqTimerHandler(ev::timer &watcher, int revents) {
 
         // set key in the meta
         objinfo->GetMeta()->set_key(key);
+        objinfo->GetMeta()->set_path(getPath(kind, key));
 
         // get the subtree
         ObjSubtreePtr subtree = this->getSubtree(kind);

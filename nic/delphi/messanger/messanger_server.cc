@@ -96,7 +96,7 @@ error MessangerServer::handleMountReq(int sockCtx, MessagePtr req, MessagePtr re
     assert(req->objects_size() == 1);
     const ObjectData& obj = req->objects(0);
     mountReq->ParseFromString(obj.data());
-    LogDebug("Got mount data: {}", mountReq->DebugString().c_str());
+    LogDebug("Got mount Req: {}", mountReq->DebugString().c_str());
 
     // prepare response
     resp->set_type(MountResp);
@@ -110,6 +110,8 @@ error MessangerServer::handleMountReq(int sockCtx, MessagePtr req, MessagePtr re
         return err;
     }
 
+    LogDebug("Sent Mount Resp: {}", mountResp->DebugString().c_str());
+
     // encode the response
     string out_str;
     mountResp->SerializeToString(&out_str);
@@ -122,6 +124,8 @@ error MessangerServer::handleMountReq(int sockCtx, MessagePtr req, MessagePtr re
 error MessangerServer::handleChangeReq(int sockCtx, MessagePtr req, MessagePtr resp) {
     vector<ObjectData *> objReq;
     vector<ObjectData *> objResp;
+
+    LogDebug("Got change Req: {}", req->DebugString().c_str());
 
     // setup the response
     resp->set_type(StatusResp);
@@ -169,6 +173,8 @@ error MessangerServer::SendNotify(int sockCtx, vector<ObjectData *> objlist) {
         LogError("Error sending message to sock {}. Err: {}", sockCtx, err);
         return err;
     }
+
+    LogDebug("Sent notify to sock {}: {}", sockCtx, msg->DebugString().c_str());
 
     return error::OK();
 }

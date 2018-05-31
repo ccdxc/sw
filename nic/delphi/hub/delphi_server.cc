@@ -48,8 +48,9 @@ error DelphiServer::addObject(string kind, string key, ObjectData *obj) {
     std::map<string, ObjectData *>::iterator it;
 
     // some error checking on the objects
-    if ((kind == "") || (key == "") || (obj->meta().handle() == 0)) {
-        LogError("Invalid object metadata {}/{}:{}", kind, key, obj->meta().handle());
+    if ((kind == "") || (key == "") || (obj->meta().path() == "" ) || (obj->meta().handle() == 0)) {
+        LogError("Invalid object metadata {}/{}, {}:{}",
+                kind, key, obj->meta().path(), obj->meta().handle());
         return error::New("Invalid object metadata");
     }
 
@@ -177,28 +178,28 @@ vector<ServiceInfoPtr> DelphiServer::ListService() {
     return svcs;
 }
 
-// addMountPoint adds a point point for a kind
-MountPointPtr DelphiServer::addMountPoint(string kind) {
+// addMountPoint adds a mount point for a path
+MountPointPtr DelphiServer::addMountPoint(string mountPath) {
     // check if the mount point already exists
-    MountPointPtr mountPoint = this->findMountPoint(kind);
+    MountPointPtr mountPoint = this->findMountPoint(mountPath);
     if (mountPoint != NULL) {
         return mountPoint;
     }
 
     // add the mount point
     mountPoint = make_shared<MountPoint>();
-    mountPoint->Kind = kind;
-    this->mountPoints[kind] = mountPoint;
+    mountPoint->MountPath = mountPath;
+    this->mountPoints[mountPath] = mountPoint;
 
     return mountPoint;
 }
 
-// findMountPoint finds a mount point for an object kind
-MountPointPtr DelphiServer::findMountPoint(string kind) {
+// findMountPoint finds a mount point for a mount path
+MountPointPtr DelphiServer::findMountPoint(string mountPath) {
     std::map<string, MountPointPtr>::iterator it;
 
     // find in the map
-    it = this->mountPoints.find(kind);
+    it = this->mountPoints.find(mountPath);
     if (it != this->mountPoints.end()) {
         return it->second;
     }
@@ -207,12 +208,12 @@ MountPointPtr DelphiServer::findMountPoint(string kind) {
 }
 
 // deleteMountPoint deletes a mount point
-error DelphiServer::deleteMountPoint(string kind) {
+error DelphiServer::deleteMountPoint(string mountPath) {
     std::map<string, MountPointPtr>::iterator it;
 
     // delete the mount point
-    this->mountPoints.erase(kind);
-    it = this->mountPoints.find(kind);
+    this->mountPoints.erase(mountPath);
+    it = this->mountPoints.find(mountPath);
     if (it != this->mountPoints.end()) {
         assert(it->second->Services.size() == 0);
         this->mountPoints.erase(it);
@@ -222,9 +223,9 @@ error DelphiServer::deleteMountPoint(string kind) {
 }
 
 // requestMount requests a kind to be mounted for a service
-error DelphiServer::requestMount(string kind, string svcName, MountMode mode) {
+error DelphiServer::requestMount(string kind, string key, string svcName, MountMode mode) {
     // first add the mount point
-    MountPointPtr mntPt = this->addMountPoint(kind);
+    MountPointPtr mntPt = this->addMountPoint(getMountPath(kind, key));
 
     // find the service
     ServiceInfoPtr svc = this->findServiceName(svcName);
@@ -232,10 +233,32 @@ error DelphiServer::requestMount(string kind, string svcName, MountMode mode) {
         return error::New("Service not found while mounting");
     }
 
+    // check if two services are mounting this mount point in read-write mode
+    if (mode == ReadWriteMode) {
+        for (map<string, MountInfo>::iterator iter=mntPt->Services.begin(); iter!=mntPt->Services.end(); ++iter) {
+            if ((iter->second.Mode == ReadWriteMode) && (iter->first != svcName)) {
+                LogError("Service {} is mounting {} as RW while service {} has mounted it RW",
+                        svcName, getMountPath(kind, key), iter->first);
+                return error::New("Multiple services mounting in read-write mode");
+            }
+        }
+
+        // if this is mounting a kind, key, verify no one has mounted the kind as RW
+        if (key != "") {
+            MountPointPtr parentMnt = this->addMountPoint(getMountPath(kind, ""));
+            for (map<string, MountInfo>::iterator iter=parentMnt->Services.begin(); iter!=parentMnt->Services.end(); ++iter) {
+                if ((iter->second.Mode == ReadWriteMode) && (iter->first != svcName)) {
+                    LogError("Service {} is mounting {} as RW while service {} has mounted it RW",
+                            svcName, getMountPath(kind, key), iter->first);
+                    return error::New("Multiple services mounting in read-write mode");
+                }
+            }
+        }
+    }
+
     // add mount data
-    // FIXME: check if two services are mounting this mount point in read-write mode
     MountInfo mnt;
-    mnt.Kind = kind;
+    mnt.MountPath = getMountPath(kind, key);
     mnt.ServiceName = svcName;
     mnt.Mode = mode;
     mntPt->Services[svcName] = mnt;
@@ -245,25 +268,25 @@ error DelphiServer::requestMount(string kind, string svcName, MountMode mode) {
 }
 
 // releaseMount release a service from mount point
-error DelphiServer::releaseMount(string kind, string svcName) {
+error DelphiServer::releaseMount(string mountPath, string svcName) {
     std::map<string, MountInfo>::iterator it;
 
     // find the mount point
-    MountPointPtr mntPt = this->findMountPoint(kind);
+    MountPointPtr mntPt = this->findMountPoint(mountPath);
     if (mntPt == NULL) {
-        LogError("Could not find the mount point for kind {}", kind);
+        LogError("Could not find the mount point for kind {}", mountPath);
         return error::New("Mount point not found");
     }
 
     // delete the service
-    it = mntPt->Services.find(kind);
+    it = mntPt->Services.find(svcName);
     if (it != mntPt->Services.end()) {
         mntPt->Services.erase(it);
     }
 
     // if mount point is empty, delete it
     if (mntPt->Services.size() == 0) {
-        this->deleteMountPoint(kind);
+        this->deleteMountPoint(mountPath);
     }
 
     return error::OK();
@@ -294,9 +317,10 @@ error DelphiServer::HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsg
     for (int i = 0; i < req->mounts().size(); i++) {
         const MountData &mnt = req->mounts(i);
         string kind = mnt.kind();
+        string key = mnt.key();
 
         // request mount point
-        error err = requestMount(kind, req->servicename(), mnt.mode());
+        error err = requestMount(kind, key, req->servicename(), mnt.mode());
         if (err.IsNotOK()) {
             return err;
         }
@@ -309,15 +333,12 @@ error DelphiServer::HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsg
 
         // walk all objects for this kind and send them
         for (map<string, ObjectData *>::iterator iter=subtree->objects.begin(); iter!=subtree->objects.end(); ++iter) {
-            string out_str;
-
             ObjectData *obj = iter->second;
             ObjectData *od = resp->add_objects();
-            obj->SerializeToString(&out_str);
             ObjectMeta *ometa = od->mutable_meta();
             ometa->CopyFrom(obj->meta());
             od->set_op(SetOp);
-            od->set_data(out_str);
+            od->set_data(obj->data());
         }
     }
 
@@ -336,11 +357,11 @@ error DelphiServer::HandleSocketClosed(int sockCtx) {
 
     // release all mount points
     for (vector<MountInfo>::iterator iter=svc->Mounts.begin(); iter!=svc->Mounts.end(); ++iter) {
-        error err = this->releaseMount(iter->Kind, svc->ServiceName);
+        error err = this->releaseMount(iter->MountPath, svc->ServiceName);
         if (err.IsNotOK()){
-            LogError("Error releasing mount {} for service {}. Err: {}", iter->Kind, svc->ServiceName, err);
+            LogError("Error releasing mount {} for service {}. Err: {}", iter->MountPath, svc->ServiceName, err);
         } else {
-            LogInfo("Unmounting {} from service {}", iter->Kind, svc->ServiceName);
+            LogInfo("Unmounting {} from service {}", iter->MountPath, svc->ServiceName);
         }
     }
 
@@ -423,7 +444,6 @@ void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
             // add it to object list to be sent to clients
             objlist.push_back(newObj);
         }
-
 
         // send the object list to the client
         msgServer->SendNotify(iter->first, objlist);

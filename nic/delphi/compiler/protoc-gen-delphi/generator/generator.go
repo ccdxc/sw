@@ -97,7 +97,7 @@ func (g *generator) Generate(tmplStr string, fileSuffix string) error {
 	var files []*plugin.CodeGeneratorResponse_File
 	for _, file := range g.targets {
 		glog.V(1).Infof("Processing %s", file.GetName())
-		code, err := applyTemplate(file, fileSuffix, tmplStr)
+		code, err := ApplyTemplate(file, fileSuffix, tmplStr)
 		if err == errNoTargetService {
 			glog.V(1).Infof("%s: %v", file.GetName(), err)
 			continue
@@ -130,18 +130,20 @@ func (g *generator) Generate(tmplStr string, fileSuffix string) error {
 
 // parseReq parse protoc plugin input
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
-	glog.V(1).Info("Parsing code generator request")
+	glog.V(2).Info("Parsing code generator request")
 	input, err := ioutil.ReadAll(r)
 	if err != nil {
 		glog.Errorf("Failed to read code generator request: %v", err)
 		return nil, err
 	}
+
 	req := new(plugin.CodeGeneratorRequest)
 	if err = proto.Unmarshal(input, req); err != nil {
 		glog.Errorf("Failed to unmarshal code generator request: %v", err)
 		return nil, err
 	}
-	glog.V(1).Info("Parsed code generator request")
+	glog.V(2).Info("Parsed code generator request")
+
 	return req, nil
 }
 
@@ -190,7 +192,8 @@ var funcMap = template.FuncMap{
 	"IsTrue":     isTrue,
 }
 
-func applyTemplate(file *descriptor.File, tmplName, tmplStr string) (string, error) {
+// ApplyTemplate applies template on a proto file
+func ApplyTemplate(file *descriptor.File, tmplName, tmplStr string) (string, error) {
 	w := bytes.NewBuffer(nil)
 
 	// parse the template string

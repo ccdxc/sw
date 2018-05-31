@@ -42,6 +42,10 @@ extend google.protobuf.MessageOptions {
     // in addition to field level events. object level update is disabled by
     // default.
     bool update_event = 70000;
+
+    // singleton: if set to true, object is a singleton (i.e has no key field)
+    // only one object of this kind can exist.
+    bool singleton = 70001;
 }
 
 // Delphi options applied at the field level

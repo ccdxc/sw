@@ -26,6 +26,9 @@ public:
 
 TEST_F(DelphiServerTest, MountTest) {
     MountReqMsgPtr mountReq = make_shared<MountReqMsg>();
+    MountReqMsgPtr mountReq2 = make_shared<MountReqMsg>();
+    MountReqMsgPtr mountReq3 = make_shared<MountReqMsg>();
+    MountReqMsgPtr mountReq4 = make_shared<MountReqMsg>();
     MountRespMsgPtr mountResp = make_shared<MountRespMsg>();
 
     // mount with a service name
@@ -65,9 +68,12 @@ TEST_F(DelphiServerTest, MountTest) {
     err = server->HandleMountReq(1, mountReq, mountResp);
     ASSERT_EQ(err, error::OK()) << "remounting failed";
 
-    // verify connecting another service on different socket suceeds
-    mountReq->set_servicename("TestService");
-    err = server->HandleMountReq(2, mountReq, mountResp);
+    // verify connecting same service on different socket suceeds
+    mountReq2->set_servicename("TestService");
+    mnt = mountReq2->add_mounts();
+    mnt->set_kind("TestObject2");
+    mnt->set_mode(delphi::ReadMode);
+    err = server->HandleMountReq(2, mountReq2, mountResp);
     ASSERT_EQ(err, error::OK()) << "remounting failed";
 
     // get a list of all services
@@ -76,6 +82,32 @@ TEST_F(DelphiServerTest, MountTest) {
     for (vector<ServiceInfoPtr>::iterator iter=svcs.begin(); iter!=svcs.end(); ++iter) {
         ASSERT_EQ((*iter)->Mounts.size(), 1) << "Incorrect number of mounts on service";
     }
+
+    // verify two services can not mount same kind in RW mode
+    mountReq->set_servicename("TestService3");
+    err = server->HandleMountReq(3, mountReq, mountResp);
+    ASSERT_NE(err, error::OK()) << "duplicate RW mount suceeded";
+
+    // verify a service can mount a key in RW mode while parent is mounted in RO
+    mountReq3->set_servicename("TestService4");
+    mnt = mountReq3->add_mounts();
+    mnt->set_kind("TestObject2");
+    mnt->set_mode(delphi::ReadWriteMode);
+    mnt = mountReq3->add_mounts();
+    mnt->set_kind("TestObject2");
+    mnt->set_key("TestKey2");
+    mnt->set_mode(delphi::ReadWriteMode);
+    err = server->HandleMountReq(4, mountReq3, mountResp);
+    ASSERT_EQ(err, error::OK()) << "remounting failed";
+
+    // verify a child can not mount RW mode while parent ismounted RW
+    mountReq4->set_servicename("TestService5");
+    mnt = mountReq4->add_mounts();
+    mnt->set_kind("TestObject");
+    mnt->set_key("TestKey");
+    mnt->set_mode(delphi::ReadWriteMode);
+    err = server->HandleMountReq(5, mountReq4, mountResp);
+    ASSERT_NE(err, error::OK()) << "duplicate parent/child RW mount suceeded";
 }
 
 TEST_F(DelphiServerTest, BasicObjectTest) {
@@ -94,6 +126,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
         ObjectMeta *meta = obj.mutable_meta();
         meta->set_kind("TestObject");
         meta->set_key(key);
+        meta->set_path(getPath("TestObject", key));
         meta->set_handle(i+1);
         obj.set_op(delphi::SetOp);
         objReq.push_back(&obj);
@@ -121,6 +154,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
     ObjectMeta *meta2 = obj2.mutable_meta();
     meta2->set_kind("TestObject");
     meta2->set_key("TestKey-0");
+    meta2->set_path(getPath("TestObject", "TestKey-0"));
     meta2->set_handle(2);
     obj2.set_op(delphi::SetOp);
     objReq2.push_back(&obj2);
@@ -132,15 +166,23 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
 
     // verify object with empty kind, key, handle is not accepted
     meta2->set_kind("");
+    meta2->set_key("TestKey-0");
+    meta2->set_handle(2);
+    meta2->set_path(getPath("TestObject", "TestKey-0"));
     err = server->HandleChangeReq(1, objReq2, &objResp);
     ASSERT_NE(err, error::OK()) << "object add with no kind suceeded";
     meta2->set_kind("TestObject");
     meta2->set_key("");
+    err = server->HandleChangeReq(1, objReq2, &objResp);
     ASSERT_NE(err, error::OK()) << "object add with no key suceeded";
     meta2->set_key("TestKey-0");
     meta2->set_handle(0);
+    err = server->HandleChangeReq(1, objReq2, &objResp);
     ASSERT_NE(err, error::OK()) << "object add with no handle suceeded";
     meta2->set_handle(2);
+    meta2->set_path("");
+    err = server->HandleChangeReq(1, objReq2, &objResp);
+    ASSERT_NE(err, error::OK()) << "object add with no path suceeded";
 
     // test deleting the object
     for (int i = 0; i < num_objects; i++) {
@@ -149,6 +191,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
         ObjectMeta *meta = obj.mutable_meta();
         meta->set_kind("TestObject");
         meta->set_key(key);
+        meta->set_path(getPath("TestObject", key));
         meta->set_handle(i+1);
         obj.set_op(delphi::DeleteOp);
         objDelReq.push_back(&obj);

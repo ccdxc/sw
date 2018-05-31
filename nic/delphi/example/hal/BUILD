@@ -9,6 +9,8 @@ cc_library(
     deps = [
         "//nic/delphi/sdk",
         "//nic/delphi/example/hal/proto:hal_svc_gen",
+        "@third_party//:libev",
+        "@third_party//:libev_includes",
     ],
 )
 

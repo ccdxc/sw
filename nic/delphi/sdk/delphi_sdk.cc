@@ -34,8 +34,16 @@ error Sdk::MountKind(string kind, MountMode mode) {
     return client_->MountKind(kind, mode);
 }
 
+error Sdk::MountKey(string kind, string key, MountMode mode) {
+    return client_->MountKey(kind, key, mode);
+}
+
 error Sdk::WatchKind(string kind, BaseReactorPtr rctr) {
     return client_->WatchKind(kind, rctr);
+}
+
+error Sdk::WatchMountComplete(BaseReactorPtr rctr) {
+    return client_->WatchMountComplete(rctr);
 }
 
 BaseObjectPtr Sdk::FindObject(BaseObjectPtr objinfo) {

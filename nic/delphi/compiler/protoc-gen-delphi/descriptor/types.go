@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	gogen "github.com/golang/protobuf/protoc-gen-go/generator"
+	// import delphi proto file to get extensions
 	_ "github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 

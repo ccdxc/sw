@@ -26,9 +26,9 @@ typedef std::shared_ptr<DbSubtree> DbSubtreePtr;
 // MountInfo contains info about each service for a mount point
 class MountInfo {
 public:
-    string       Kind;
-    string       ServiceName;
-    MountMode    Mode;
+    string       MountPath;    // path being mounted
+    string       ServiceName;  // service mounting the path
+    MountMode    Mode;         // mount mode (read-only or read-write)
 };
 
 // ServiceInfo is information about a service
@@ -45,7 +45,7 @@ typedef std::shared_ptr<ServiceInfo> ServiceInfoPtr;
 // MountPoint contains list of services mounting each object kind
 class MountPoint {
 public:
-    string                   Kind;        // object kind
+    string                   MountPath;   // mount path (kind + key)
     map<string, MountInfo>   Services;    // list of services
 };
 typedef std::shared_ptr<MountPoint> MountPointPtr;
@@ -76,8 +76,8 @@ private:
     MountPointPtr  addMountPoint(string kind);
     MountPointPtr  findMountPoint(string kind);
     error          deleteMountPoint(string kind);
-    error          requestMount(string kind, string svcName, MountMode mode);
-    error          releaseMount(string kind, string svcName);
+    error          requestMount(string kind, string key, string svcName, MountMode mode);
+    error          releaseMount(string mountPath, string svcName);
 
     MessangerServerPtr             msgServer;      // messanger server
     map<string, DbSubtreePtr>      subtrees;       // subtree per object kind
@@ -92,6 +92,11 @@ protected:
     void syncTimerHandler(ev::timer &watcher, int revents);
 };
 typedef std::shared_ptr<DelphiServer> DelphiServerPtr;
+
+// internal functions
+static inline string getMountPath(string kind, string key) {
+    return kind + "|" + key;
+}
 
 } // namespace delphi
 

@@ -14,7 +14,16 @@ var (
 namespace delphi {
 namespace objects {
 
-{{$fileName := .GetName}} {{$pkgName := .Package}} {{$msgs := .Messages}}{{range $msgs}}{{if .HasFieldType ".delphi.ObjectMeta" }} {{if not (.HasField "Key") }} {{ ThrowError "does not have Key field" $fileName .GetName }}{{end}}
+{{$fileName := .GetName}}
+{{$pkgName := .Package}}
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{if .HasFieldType ".delphi.ObjectMeta" }}
+    {{if .HasField "Key" }} {{if or (.HasField "key_or_handle") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
+	{{else if .HasField "key_or_handle"}} {{if or (.HasField "Key") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
+	{{else if .HasExtOption "delphi.singleton" }} {{if or (.HasField "key_or_handle") (.HasField "key_or_handle")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
+	{{else}} {{ ThrowError "does not have Key field" $fileName .GetName }}
+    {{end}}
 
 class {{.GetName}};
 typedef std::shared_ptr<{{.GetName}}> {{.GetName}}Ptr;
@@ -40,7 +49,12 @@ public:
     virtual delphi::ObjectMeta *GetMeta() {
         return this->mutable_meta();
     };
-    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }} {{ if .TypeIsMessage }}
+	{{if .HasExtOption "delphi.singleton" }}
+	virtual string GetKey() {
+        return "default";
+    }
+	{{end}}
+    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }} {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }} {{end}}{{ if .TypeIsMessage }}
     virtual string GetKey() {
         return this->key().ShortDebugString();
     } {{else}}
@@ -50,7 +64,14 @@ public:
         google::protobuf::TextFormat::PrintFieldValueToString(*this, fld, -1, &out_str);
         return out_str;
     }
-    {{end}} {{end}} {{end}}
+    {{end}} {{end}}
+	  {{if (eq .GetName "key_or_handle") }} {{ if .TypeIsMessage }}
+	  virtual string GetKey() {
+          return this->key_or_handle().ShortDebugString();
+      }
+	  {{else}} {{ ThrowError "does not have Key field" $fileName $msgName .GetName }}
+	  {{end}} {{end}}
+	{{end}}
 
     virtual ::google::protobuf::Message *GetMessage() {
         return this;

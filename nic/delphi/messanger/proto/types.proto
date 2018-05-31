@@ -13,7 +13,8 @@ message ObjectData {
 // mount data
 message MountData {
     string        Kind         = 1;    // object kind within the category to mount (could be empty)
-    MountMode     Mode         = 2;    // mount read-only or read-write
+    string        Key          = 2;    // specific object key to mount
+    MountMode     Mode         = 3;    // mount read-only or read-write
 }
 
 // mount request

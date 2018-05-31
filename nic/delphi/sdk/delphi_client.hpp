@@ -62,7 +62,8 @@ public:
     error Connect();                                          // Connect to hub
     error Close();                                            // disconnect from delphi hub
     error MockConnect(uint16_t mySvcId);                      // to be used for testing purposes to fake a delphi hub connection
-    error MountKind(string kind, MountMode mode);  // Mount a kind of objects
+    error MountKind(string kind, MountMode mode);             // Mount a kind of objects
+    error MountKey(string kind, string key, MountMode mode);  // Mount a specific key
     error WatchKind(string kind, BaseReactorPtr rctr);        // watch a kind of objects
     error RegisterService(ServicePtr svc);                    // register a service
     error SetObject(BaseObjectPtr objinfo);                   // update an object
@@ -73,6 +74,7 @@ public:
     vector<BaseObjectPtr> ListKind(string kind);              // list all objects of a kind
     map<string, BaseObjectPtr> GetSubtree(string kind);       // reyurn a map of objects of a kind
     ReactorListPtr GetReactorList(string kind);               // get reactors for a kind
+    error WatchMountComplete(BaseReactorPtr rctr);            // register a reactor for mount complete callback
 
     // required by messanger::ClientHandler
     error HandleNotify(vector<ObjectData *> objlist);
@@ -104,7 +106,7 @@ private:
     ev::timer                      eventTimer;     // timer to trigger pending events
     ev::timer                      msgqTimer;      // timer to handle message queue updates
     uint64_t                       currObjectID;   // running counter of object handle
-
+    vector<BaseReactorPtr>         mountWatchers; // reactors watching mount complete
 };
 typedef std::shared_ptr<DelphiClient> DelphiClientPtr;
 
