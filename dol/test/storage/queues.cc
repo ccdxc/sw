@@ -42,7 +42,7 @@ const static uint32_t	kSeqNumR2nSQs		 = 3;
       static uint32_t	kSeqNumXtsStatusSQs	 = 4; //    "    "
       static uint32_t	kSeqNumCompSQs		 = 4; // acc_scale test may modify at run time
       static uint32_t	kSeqNumCompStatusSQs = 4; //    "    "
-const static uint32_t	kSeqNumRoceSQs		 = 3;
+const static uint32_t	kSeqNumRoceSQs		 = 5;
 
 
       static uint32_t	ArmNumQs;                    // log2(Sum total of all ARM Qs)
@@ -825,7 +825,7 @@ pvm_queues_setup() {
       nvme_e2e_ssd->GetWorkingParams(&params);
       pi_pa = params.subq_pi_pa;
       ssd_cndx_addr[j] = params.compq_ci_pa;
-      printf("j %d ci_pa %lx cndx_addr %lx \n", j, params.compq_ci_pa, ssd_cndx_addr[j]);
+      printf("j %d ci_pa %lx cndx_addr %lx pi_pa %lx \n", j, params.compq_ci_pa, ssd_cndx_addr[j], params.subq_pi_pa);
 
       // Initialize the doorbell of the CQ
       uint64_t db_addr;
