@@ -64,7 +64,7 @@ DEFINE_bool(with_rtl_skipverify, false,
             "Test being run under RTL with --skipverify in effect");
 
 // Number of iterations for NVME scale testing
-DEFINE_uint64(nvme_scale_iters, 26,
+DEFINE_uint64(nvme_scale_iters, 64,
               "Number of iterations for NVME scale testing (0 = infinite)");
 
 DEFINE_bool(combined, false,
