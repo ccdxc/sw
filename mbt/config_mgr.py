@@ -15,6 +15,22 @@ def exit_error():
 
 dol_message_request_cache = []
 
+def get_api_stub(object_name, method_type):
+    api          = None
+    req_msg_type = None
+
+    for cfg_spec in GetOrderedConfigSpecs():
+        if not cfg_spec._spec.enabled:
+            continue
+
+        if cfg_spec._service_object.name == object_name:
+            req_resp_obj = cfg_spec._cfg_meta.OperHandler(method_type)
+            api          = req_resp_obj._api
+            req_msg_type = req_resp_obj._req_msg
+            break
+
+    return (api, req_msg_type)
+
 class ConfigMetaMapper():
     
     def __init__(self):

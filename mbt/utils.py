@@ -5,8 +5,15 @@ import binascii
 from collections import OrderedDict
 import google.protobuf
 from google.protobuf import json_format
-import mbt_obj_store
-import msg
+
+def mbt_v2():
+    if 'MBT_V2' in os.environ:
+        return True
+    return False
+
+if mbt_v2():
+    import msg
+    import mbt_obj_store
 
 class FieldCompareResult():
     def __init__(self):
@@ -235,7 +242,3 @@ def get_ext_ref_kh_from_global_store(key_or_handle_str, constraints):
                 return _key_or_handle
     return None
 
-def mbt_v2():
-    if 'MBT_V2' in os.environ:
-        return True
-    return False

@@ -11,7 +11,6 @@ paths = [
     '/nic/',
     '/dol/',
     '/dol/third_party/',
-    '/mbt/mbt_v2/',
 ]
 
 ws_top = os.path.dirname(sys.argv[0]) + '/..'
@@ -23,7 +22,6 @@ for path in paths:
     sys.path.insert(0, fullpath)
 
 import infra.common.parser  as parser
-import infra.common.utils  as utils
 import infra.common.objects as objects
 import threading
 from infra.common.glopts import GlobalOptions
@@ -55,6 +53,8 @@ def get_hal_channel():
 # This ordering is needed because the random seed is set by the below 2 imports
 import grpc_proxy
 import config_mgr
+import init
+
 out_file = ws_top + '/mbt/hal_proto_gen.py'
 template = ws_top + '/mbt/hal_proto_gen_template.py'
 grpc_proxy.genProxyServerMethods('config_mgr', template, out_file, ws_top)
@@ -109,6 +109,11 @@ import signal
 print ('Registering signal handler')
 signal.signal(signal.SIGUSR1, handle_pdb)
 
+# create initial HAL objects
+def mbt_hal_init():
+    (api, req_msg_type) = config_mgr.get_api_stub('Vrf', config_mgr.ConfigObjectMeta.CREATE)
+    init.vrf_init(api, req_msg_type)
+
 if GlobalOptions.mbt:
     # This is blocking.
     grpc_proxy.serve(hal_proto_gen.proxyServer)
@@ -117,6 +122,8 @@ reference_spec = parser.ParseFile("../mbt/cfg/references", "references.spec")
 for object in reference_spec.objects:
     print("Reference object being created is " + object.object.service + " Name is " + object.object.name)
     config_mgr.CreateReferenceObject(object.object)
+
+mbt_hal_init()
 
 test_specs = parser.ParseDirectory("../mbt/mbt_test/specs", "*.spec")
 for test_spec in test_specs:
