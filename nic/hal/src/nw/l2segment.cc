@@ -95,6 +95,9 @@ l2seg_init (l2seg_t *l2seg)
     l2seg->if_list = block_list::factory(sizeof(hal_handle_t),
                                          BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
                                          hal_mmgr());
+    l2seg->mbrif_list = block_list::factory(sizeof(hal_handle_t),
+                                            BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
+                                            hal_mmgr());
     l2seg->nw_list = block_list::factory(sizeof(hal_handle_t),
                                          BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
                                          hal_mmgr());
@@ -166,17 +169,20 @@ static inline hal_ret_t
 l2seg_cleanup (l2seg_t *l2seg)
 {
     if (l2seg->nw_list) {
-        block_list::destroy(l2seg->nw_list);
+        hal_cleanup_handle_block_list(&l2seg->nw_list);
     }
     if (l2seg->if_list) {
-        block_list::destroy(l2seg->if_list);
+        hal_cleanup_handle_block_list(&l2seg->if_list);
+    }
+    if (l2seg->mbrif_list) {
+        hal_cleanup_handle_block_list(&l2seg->mbrif_list);
     }
     if (l2seg->acl_list) {
-        block_list::destroy(l2seg->acl_list);
+        hal_cleanup_handle_block_list(&l2seg->acl_list);
     }
 
     if (l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list) {
-        block_list::destroy(l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list);
+        hal_cleanup_handle_block_list(&l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list);
     }
     l2seg_free(l2seg);
     return HAL_RET_OK;
@@ -495,7 +501,85 @@ l2seg_update_network_relation (block_list *nw_list, l2seg_t *l2seg, bool add)
     }
 
 end:
+    return ret;
+}
 
+//----------------------------------------------------------------------------
+// Add/Del relation if -> l2seg for all IFs in the list
+//----------------------------------------------------------------------------
+hal_ret_t
+l2seg_update_if_relation (block_list *if_list, l2seg_t *l2seg, bool add)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+
+    if (!if_list) goto end;
+
+    for (const void *ptr : *if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl_id);
+        if (!hal_if) {
+            HAL_TRACE_ERR("Unable to find IF with handle : {}",
+                          *p_hdl_id);
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto end;
+        }
+        if (add) {
+            ret = if_add_l2seg(hal_if, l2seg);
+        } else {
+            ret = if_del_l2seg(hal_if, l2seg);
+        }
+    }
+
+end:
+    return ret;
+}
+
+//----------------------------------------------------------------------------
+// Update Mcast oiflist of L2seg
+//----------------------------------------------------------------------------
+hal_ret_t
+l2seg_update_oiflist (block_list *if_list, l2seg_t *l2seg, bool add)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+    oif_t           oif;
+
+    if (!if_list) goto end;
+
+    for (const void *ptr : *if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl_id);
+        if (!hal_if) {
+            HAL_TRACE_ERR("Unable to find IF with handle : {}",
+                          *p_hdl_id);
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto end;
+        }
+
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
+
+        if (add) {
+            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Add IF to bcast oiflist Failed. ret : {}",
+                              ret);
+                goto end;
+            }
+        } else {
+            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Del IF to bcast oiflist"
+                              " Failed. ret : {}", ret);
+                goto end;
+            }
+        }
+    }
+
+end:
     return ret;
 }
 
@@ -528,6 +612,22 @@ l2seg_add_to_db_and_refs (l2seg_t *l2seg, hal_handle_t hal_handle,
         goto end;
     }
 
+    // Add l2seg to IF's l2seg list
+    ret = l2seg_update_if_relation(l2seg->mbrif_list, l2seg, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add IF -> l2seg "
+                      "relation ret : {}", ret);
+        goto end;
+    }
+
+    if (is_forwarding_mode_smart_nic()) {
+        ret = l2seg_update_oiflist(l2seg->if_list, l2seg, true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add to form bcast oiflist "
+                          "ret : {}", ret);
+            goto end;
+        }
+    }
 end:
     return ret;
 
@@ -705,24 +805,63 @@ l2seg_read_networks (l2seg_t *l2seg, const L2SegmentSpec& spec)
     }
     HAL_TRACE_DEBUG("networks added:");
     hal_print_handles_block_list(l2seg->nw_list);
-#if 0
-    sdk::lib::dllist_reset(&l2seg->nw_list_head);
-    for (i = 0; i < num_nws; i++) {
-        nw_key_handle = spec.network_key_handle(i);
-        nw = network_lookup_key_or_handle(nw_key_handle);
-        if (nw == NULL) {
-            ret = HAL_RET_NETWORK_NOT_FOUND;
-            goto end;
-        }
-        HAL_TRACE_DEBUG("adding network: {} with handl : {}",
-                        ippfx2str(&nw->nw_key.ip_pfx), nw->hal_handle);
+end:
+    return ret;
+}
 
-        // add nw to list
-        hal_add_to_handle_list(&l2seg->nw_list_head, nw->hal_handle);
+uint32_t
+l2seg_if_list_size (const void *spec)
+{
+    L2SegmentSpec *l2seg_spec = (L2SegmentSpec *)spec;
+    return l2seg_spec->if_key_handle_size();
+}
+
+hal_handle_t
+l2seg_if_list_get_hdl (const void *spec, uint32_t idx)
+{
+    L2SegmentSpec *l2seg_spec = (L2SegmentSpec *)spec;
+    if_t *hal_if = NULL;
+
+    auto if_key_hdl = l2seg_spec->if_key_handle(idx);
+    hal_if = if_lookup_key_or_handle(if_key_hdl);
+    return hal_if ? hal_if->hal_handle : 0;
+}
+
+
+hal_ret_t
+l2seg_read_ifs (l2seg_t *l2seg, const L2SegmentSpec& spec)
+{
+    hal_ret_t       ret         = HAL_RET_OK;
+    // hal_handle_t    *p_hdl      = NULL;
+    // if_t            *hal_if     = NULL;
+    bool            has_changed = false;
+
+    ret = hal_find_changed_lists(l2seg->mbrif_list,
+                                 &spec,
+                                 l2seg_if_list_size,
+                                 l2seg_if_list_get_hdl,
+                                 NULL,
+                                 NULL,
+                                 &l2seg->mbrif_list,
+                                 &has_changed);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to find changed IF list. err:{}", ret);
+        if (ret == HAL_RET_ENTRY_NOT_FOUND) ret = HAL_RET_IF_NOT_FOUND;
+        goto end;
     }
 
-    HAL_TRACE_DEBUG("networks added:");
-    hal_print_handles_list(&l2seg->nw_list_head);
+    HAL_TRACE_DEBUG("New IFs: ");
+    hal_print_handles_block_list(l2seg->mbrif_list);
+#if 0
+    for (const void *ptr : *l2seg->mbrif_list) {
+        p_hdl = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl);
+        if (!hal_if) {
+            HAL_TRACE_ERR("Failed to find IF(hdl): {}", *p_hdl);
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto end;
+        }
+    }
 #endif
 
 end:
@@ -857,6 +996,14 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
         goto end;
     }
 
+    ret = l2seg_read_ifs(l2seg, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in reading IFs, err {}", ret);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+
     l2seg_ep_learning_update(l2seg, spec);
     l2seg->proxy_arp_enabled = spec.proxy_arp_enabled();
 
@@ -895,7 +1042,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg_t                     *existing_l2seg = NULL;
     bool                        is_same   = false;
 
-    HAL_TRACE_DEBUG("L2seg create with id : {}",
+    HAL_TRACE_DEBUG("L2seg create of : {}",
                     spec.key_or_handle().segment_id());
     l2segment_dump(spec);
 
@@ -1045,7 +1192,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_l2seg_update_args_t  pd_l2seg_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    l2seg_t                    *l2seg = NULL;
+    l2seg_t                    *l2seg = NULL, *l2seg_clone = NULL;
     l2seg_update_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
@@ -1059,13 +1206,17 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     app_ctxt = (l2seg_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     l2seg = (l2seg_t *)dhl_entry->obj;
+    l2seg_clone = (l2seg_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("update upd cb {}",
                     l2seg->seg_id);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_update_args_init(&pd_l2seg_args);
-    pd_l2seg_args.l2seg = l2seg;
+    pd_l2seg_args.l2seg = l2seg_clone;
+    pd_l2seg_args.iflist_change = app_ctxt->iflist_change;
+    pd_l2seg_args.add_iflist = app_ctxt->add_iflist;
+    pd_l2seg_args.del_iflist = app_ctxt->del_iflist;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_UPDATE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update l2seg pd, err : {}", ret);
@@ -1119,7 +1270,7 @@ l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
 //      - Free original
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_update_pi_with_nw_list (l2seg_t *l2seg, l2seg_update_app_ctxt_t *app_ctxt)
+l2seg_update_pi_with_new_lists (l2seg_t *l2seg, l2seg_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
 
@@ -1129,31 +1280,24 @@ l2seg_update_pi_with_nw_list (l2seg_t *l2seg, l2seg_update_app_ctxt_t *app_ctxt)
 
     // Destroy clone's list which is original's list as well
     hal_cleanup_handle_block_list(&l2seg->nw_list);
+    hal_cleanup_handle_block_list(&l2seg->mbrif_list);
     // Assign aggr list to clone's list
     l2seg->nw_list = app_ctxt->aggr_nwlist;
+    l2seg->mbrif_list = app_ctxt->agg_iflist;
 
-    // add/del relations from member ports.
-    ret = l2seg_update_network_relation(app_ctxt->add_nwlist,
-                                        l2seg, true);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add uplinkif -> uplinkpc "
-                "relation ret : {}", ret);
-        goto end;
-    }
+    // add/del relations from nws.
+    ret = l2seg_update_network_relation(app_ctxt->add_nwlist, l2seg, true);
+    ret = l2seg_update_network_relation(app_ctxt->del_nwlist, l2seg, false);
 
-    ret = l2seg_update_network_relation(app_ctxt->del_nwlist,
-                                        l2seg, false);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to del uplinkif -/-> uplinkpc "
-                "relation ret : {}", ret);
-        goto end;
-    }
-
-end:
+    // add/del relations from IFs.
+    ret = l2seg_update_if_relation(app_ctxt->add_iflist, l2seg, true);
+    ret = l2seg_update_if_relation(app_ctxt->del_iflist, l2seg, false);
 
     // Free add & del list
     hal_cleanup_handle_block_list(&app_ctxt->add_nwlist);
     hal_cleanup_handle_block_list(&app_ctxt->del_nwlist);
+    hal_cleanup_handle_block_list(&app_ctxt->add_iflist);
+    hal_cleanup_handle_block_list(&app_ctxt->del_iflist);
 
     // Unlock if
     l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);
@@ -1208,12 +1352,16 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 #endif
 
+    // Bcast oiflist update
+    ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, true);
+    ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, false);
+
     //  - Update Success:
     //      - Destroy Add and Delete lists in app ctxt
     //      - Destroy clone's list which is original's list as well
     //      - Assign aggr list to clone's list
     //      - Free original
-    ret = l2seg_update_pi_with_nw_list(l2seg_clone, app_ctxt);
+    ret = l2seg_update_pi_with_new_lists(l2seg_clone, app_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update pi with nwlists, ret : {}", ret);
         goto end;
@@ -1413,8 +1561,36 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
         goto end;
     }
 
+    // check if mbr ifs change
+    ret = hal_find_changed_lists(l2seg->mbrif_list,
+                                 &spec,
+                                 l2seg_if_list_size,
+                                 l2seg_if_list_get_hdl,
+                                 &app_ctxt->add_iflist,
+                                 &app_ctxt->del_iflist,
+                                 &app_ctxt->agg_iflist,
+                                 &app_ctxt->iflist_change);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to check if list change. ret : {}", ret);
+        goto end;
+    }
+
+    if (app_ctxt->iflist_change) {
+        HAL_TRACE_DEBUG("New IFs: ");
+        hal_print_handles_block_list(app_ctxt->agg_iflist);
+        HAL_TRACE_DEBUG("Added IFs: ");
+        hal_print_handles_block_list(app_ctxt->add_iflist);
+        HAL_TRACE_DEBUG("Deleted IFs: ");
+        hal_print_handles_block_list(app_ctxt->del_iflist);
+    } else {
+        HAL_TRACE_DEBUG("New IFs: ");
+        hal_print_handles_block_list(app_ctxt->agg_iflist);
+    }
+
+
     if (app_ctxt->mcast_fwd_policy_change ||
-        app_ctxt->bcast_fwd_policy_change || app_ctxt->nwlist_change) {
+        app_ctxt->bcast_fwd_policy_change || app_ctxt->nwlist_change ||
+        app_ctxt->iflist_change) {
         app_ctxt->l2seg_change = true;
     }
 
@@ -1498,6 +1674,10 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const L2SegmentKeyHandle    &kh = spec.key_or_handle();
     l2seg_update_app_ctxt_t     app_ctxt = { 0 };
+
+    HAL_TRACE_DEBUG("L2seg Update of : {}",
+                    l2seg_spec_keyhandle_to_str(spec.key_or_handle()));
+    l2segment_dump(spec);
 
     // validate the request message
     ret = validate_l2seg_update(spec, rsp);
@@ -1762,6 +1942,14 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    // remove back refs from IFs
+    ret = l2seg_update_if_relation (l2seg->mbrif_list, l2seg, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to detach from IFs, "
+                      "ret : {}", ret);
+        goto end;
+    }
+
     // a. Remove from l2seg id hash table
     ret = l2seg_del_from_db(l2seg);
     if (ret != HAL_RET_OK) {
@@ -1898,10 +2086,20 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     rsp->mutable_spec()->mutable_tunnel_encap()->set_encap_type(l2seg->tunnel_encap.type);
     rsp->mutable_spec()->mutable_tunnel_encap()->set_encap_value(l2seg->tunnel_encap.val);
 
-    for (const void *ptr : *l2seg->nw_list) {
-        p_hdl_id = (hal_handle_t *)ptr;
-        nkh = rsp->mutable_spec()->add_network_key_handle();
-        nkh->set_nw_handle(*p_hdl_id);
+    if (l2seg->nw_list) {
+        for (const void *ptr : *l2seg->nw_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            nkh = rsp->mutable_spec()->add_network_key_handle();
+            nkh->set_nw_handle(*p_hdl_id);
+        }
+    }
+
+    if (l2seg->mbrif_list) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            auto ifkh = rsp->mutable_spec()->add_if_key_handle();
+            ifkh->set_if_handle(*p_hdl_id);
+        }
     }
 #if 0
     lnode = l2seg->nw_list_head.next;
@@ -2016,7 +2214,7 @@ l2seg_add_if (l2seg_t *l2seg, if_t *hal_if)
     }
 
     l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
-    ret = l2seg->if_list->insert(&hal_if->hal_handle);
+    ret = l2seg->mbrif_list->insert(&hal_if->hal_handle);
     l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -2030,6 +2228,58 @@ end:
 //-----------------------------------------------------------------------------
 hal_ret_t
 l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (l2seg == NULL || hal_if == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
+    ret = l2seg->mbrif_list->remove(&hal_if->hal_handle);
+    l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove from l2seg's if list. ret : {}",
+                      ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("del l2seg =/=> if ,{} =/=> {}, ret : {}",
+                   l2seg->seg_id, hal_if->if_id, ret);
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Adds back ref If into l2seg list
+//-----------------------------------------------------------------------------
+hal_ret_t
+l2seg_add_back_if (l2seg_t *l2seg, if_t *hal_if)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (l2seg == NULL || hal_if == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
+    ret = l2seg->if_list->insert(&hal_if->hal_handle);
+    l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
+
+end:
+    HAL_TRACE_DEBUG("add l2seg => if ,{} => {}, ret : {}",
+                    l2seg->seg_id, hal_if->if_id, ret);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove If from l2seg list
+//-----------------------------------------------------------------------------
+hal_ret_t
+l2seg_del_back_if (l2seg_t *l2seg, if_t *hal_if)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -2122,6 +2372,9 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
 
     HAL_TRACE_DEBUG("Handling nwsec update seg_id: {}",
                     l2seg->seg_id);
+
+    // We have to check if we have to walk through uplinks in mbrifs
+
     // Walk through Ifs and call respective functions
     for (const void *ptr : *l2seg->if_list) {
         p_hdl_id = (hal_handle_t *)ptr;

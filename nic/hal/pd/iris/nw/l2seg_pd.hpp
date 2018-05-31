@@ -107,6 +107,9 @@ extern bool flow_lkupid_compare_hw_key_func(void *key1, void *key2);
 hal_ret_t pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                                     if_t *prom_enic_if,
                                     bool inc, bool skip_hw_pgm);
+hal_ret_t l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg,
+                                bool is_upgrade);
+hal_ret_t l2seg_pd_depgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg);
 }   // namespace pd
 }   // namespace hal
 

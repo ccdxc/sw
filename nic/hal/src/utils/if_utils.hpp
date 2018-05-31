@@ -36,6 +36,8 @@ hal_ret_t l2seg_handle_nwsec_update(l2seg_t *l2seg,
                                     nwsec_profile_t *nwsec_prof);
 hal_ret_t l2seg_add_if(l2seg_t *l2seg, if_t *hal_if);
 hal_ret_t l2seg_del_if(l2seg_t *l2seg, if_t *hal_if);
+hal_ret_t l2seg_add_back_if(l2seg_t *l2seg, if_t *hal_if);
+hal_ret_t l2seg_del_back_if(l2seg_t *l2seg, if_t *hal_if);
 hal_ret_t l2seg_add_acl(l2seg_t *l2seg, acl_t *acl);
 hal_ret_t l2seg_del_acl(l2seg_t *l2seg, acl_t *acl);
 

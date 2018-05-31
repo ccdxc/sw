@@ -448,6 +448,153 @@ TEST_F(uplinkif_test, test5)
     // ASSERT_TRUE(is_mleak == false);
 }
 
+// ----------------------------------------------------------------------------
+// Test 6:
+// - Create NwSEC
+// - Create Vrf
+// - Create network
+// - Create l2seg
+// - Create Uplink
+// - Add l2seg on uplink
+// - Delete uplink - expect failure
+// ----------------------------------------------------------------------------
+TEST_F(uplinkif_test, test6)
+{
+    hal_ret_t                       ret;
+    InterfaceSpec                   if_spec;
+    InterfaceResponse               if_rsp;
+    L2SegmentSpec                   l2seg_spec;
+    L2SegmentResponse               l2seg_rsp;
+    VrfSpec                         ten_spec;
+    VrfResponse                     ten_rsp;
+    InterfaceDeleteRequest          del_req;
+    InterfaceDeleteResponse         del_rsp;
+    L2SegmentDeleteRequest          l2seg_del_req;
+    L2SegmentDeleteResponse         l2seg_del_rsp;
+    SecurityProfileSpec             sp_spec;
+    SecurityProfileResponse         sp_rsp;
+    NetworkSpec                     nw_spec;
+    NetworkResponse                 nw_rsp;
+    NetworkKeyHandle                *nkh = NULL;
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(6);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(6);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(6);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    // Create Uplink If
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(61);
+    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(62);
+    if_spec.mutable_if_uplink_info()->set_port_num(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create l2segment
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(6);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(61);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Add IF1 to l2seg
+    auto ifkh = l2seg_spec.add_if_key_handle();
+    ifkh->set_interface_id(61);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_update(l2seg_spec, &l2seg_rsp);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Try to delete uplink
+    del_req.mutable_key_or_handle()->set_interface_id(61);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+
+    // Add one more uplink. Results in sending two IFs
+    auto ifkh2 = l2seg_spec.add_if_key_handle();
+    ifkh2->set_interface_id(62);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_update(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Add only one uplink. Should result in delete of another
+    l2seg_spec.clear_if_key_handle();
+    auto ifkh3 = l2seg_spec.add_if_key_handle();
+    ifkh3->set_interface_id(62);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_update(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Add no uplinks. Should result in delete of one uplink
+    l2seg_spec.clear_if_key_handle();
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_update(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Add two uplinks
+    auto ifkh4 = l2seg_spec.add_if_key_handle();
+    ifkh4->set_interface_id(61);
+    auto ifkh5 = l2seg_spec.add_if_key_handle();
+    ifkh5->set_interface_id(62);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_update(l2seg_spec, &l2seg_rsp);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete l2seg
+    l2seg_del_req.mutable_vrf_key_handle()->set_vrf_id(6);
+    l2seg_del_req.mutable_key_or_handle()->set_segment_id(61);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

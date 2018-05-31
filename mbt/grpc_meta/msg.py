@@ -33,10 +33,10 @@ Ipv6SubnetAllocator = objects.TemplateFieldObject("ipv6step/2000::0:0/0::1:0:0")
 KeyIdAllocator      = objects.TemplateFieldObject("range/1/65535")
 
 class GrpcReqRspMsg:
-    
+
     def __init__(self, message):
         self._message_type = type(message)
- 
+
     @staticmethod
     def split_repeated_messages(message):
         requests = getattr(message, 'request')
@@ -52,7 +52,7 @@ class GrpcReqRspMsg:
         response = getattr(curr_message, 'response')
         resp_message.response.extend(response)
         return resp_message
-    
+
     @staticmethod
     def GetObjectHelper(message, object_checker, matched_objs = []):
          for field in message.ListFields():
@@ -76,13 +76,13 @@ class GrpcReqRspMsg:
                 else:
                     if object_checker(field[0]):
                         matched_objs.append(getattr(message, field[0].name))
-    
+
     @staticmethod
     def GetImmutableObjects(message):
         matched_objs = defaultdict(list)
         GrpcReqRspMsg.GetDictObjectsHelper(message, grpc_meta_types.is_immutable_field, matched_objs)
         return matched_objs
-        
+
     @staticmethod
     def GetKeyObject(message):
         matched_objs = []
@@ -90,7 +90,7 @@ class GrpcReqRspMsg:
         # Should have only one key
         assert len(matched_objs) == 1
         return matched_objs[0]
-        
+
     @staticmethod
     def GetApiStatusObject(message):
         matched_objs = []
@@ -106,7 +106,7 @@ class GrpcReqRspMsg:
         matched_objs = defaultdict(list)
         GrpcReqRspMsg.GetDictObjectsHelper(message, grpc_meta_types.is_ext_ref_field, matched_objs)
         return matched_objs
-    
+
     @staticmethod
     def GetDictObjectsHelper(message, checker, dict_object):
         for field in message.ListFields():
@@ -129,7 +129,7 @@ class GrpcReqRspMsg:
                 if field[0].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                     sub_message = getattr(message, field[0].name)
                     GrpcReqRspMsg.GetDictObjectsHelper(sub_message, checker, dict_object)
-    
+
     def __repr__(self):
         return str(self._meta_obj)
 
@@ -252,7 +252,7 @@ class GrpcReqRspMsg:
                         val.pop()
             elif field[0].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                 if grpc_meta_types.is_ext_ref_field(field[0]):
-                    # We want to generate invalid values for this field. Store the original message, 
+                    # We want to generate invalid values for this field. Store the original message,
                     # and then add a bad value for this field.
                     sub_message = getattr(message, field[0].name)
                     orig_sub_message = type(sub_message)()
@@ -325,6 +325,11 @@ class GrpcReqRspMsg:
                                   immutable_objects={},
                                   repeated=False):
 
+        if repeated:
+            orig_message = message
+            message = message.add()
+
+
         if type(message).__name__ == 'IPPrefix':
             GrpcReqRspMsg.generate_ip_prefix(message)
         elif type(message).__name__ == 'IPAddress':
@@ -336,23 +341,20 @@ class GrpcReqRspMsg:
                 # The convention followed is that the first field is the key.
                 GrpcReqRspMsg.generate_key_field(message, key, ext_refs, external_constraints)
         elif grpc_meta_types.is_ext_ref_field(field_in_parent):
-            # If there is an ext_ref already, for this field, then use it. 
+            # If there is an ext_ref already, for this field, then use it.
             # Else, create the appropriate object and use that.
             if (field_in_parent.name, type(message)) in ext_refs:
                 val = ext_refs[(field_in_parent.name), type(message)]
-                if repeated:
-                    message.extend(val)
-                else:
-                    try:
-                       message.CopyFrom(val)
-                    except:
-                        pass
-            else:
+                if type(val) == list:
+                    val = val[0]
+                try:
+                   message.CopyFrom(val)
+                except:
+                    pass
+            elif config_mgr.ref_create_enable() == True:
                 constraints, constraints_type = GrpcReqRspMsg.get_constraints(field_in_parent)
                 if constraints_type and constraints_type == Constraints.Equality:
                     constraints = None
-                if repeated:
-                    message = message.add()
                 ref = config_mgr.GetReferenceObject(type(message), ext_refs,
                                                          external_constraints=constraints)
                 if repeated:
@@ -360,9 +362,11 @@ class GrpcReqRspMsg:
                 else:
                     ext_refs[(field_in_parent.name, type(message))] = ref
                 message.CopyFrom(ref)
+            else:
+                if repeated:
+                   for val in orig_message:
+                        orig_message.remove(val)
         else:
-            if repeated:
-                message = message.add()
             GrpcReqRspMsg.static_generate_message(message, key, ext_refs, external_constraints,
                                                   immutable_objects)
 
@@ -373,7 +377,7 @@ class GrpcReqRspMsg:
             # If this oneof has already been set, continue
             if message.WhichOneof(oneof.name):
                 continue
-            
+
             # Check to see if there are constraints which have been forced by the
             # external constraints or immutable objects
             chosen_oneof_field = random.choice(oneof.fields)
@@ -387,14 +391,14 @@ class GrpcReqRspMsg:
                 GrpcReqRspMsg.generate_scalar_field(message, chosen_oneof_field)
 
     @staticmethod
-    # Ext_refs is keyed by field_name and parent_message_type, and the value is either a 
+    # Ext_refs is keyed by field_name and parent_message_type, and the value is either a
     # single external reference, or a list of ext references.
     def static_generate_message(message, key=None, ext_refs={}, external_constraints=None,
                                 immutable_objects={}):
         # Apply external constraints and immutable constraints
         GrpcReqRspMsg.apply_pre_constraints(message, key, ext_refs,
                                         external_constraints, immutable_objects)
-           
+
         GrpcReqRspMsg.generate_oneof_fields(message, key, ext_refs, external_constraints,
                                             immutable_objects)
 
@@ -414,7 +418,7 @@ class GrpcReqRspMsg:
                     if message.HasField(field.name):
                         continue
                 GrpcReqRspMsg.generate_non_scalar_field(field, sub_message, key, ext_refs,
-                                                        external_constraints, 
+                                                        external_constraints,
                                                         immutable_objects=immutable_objects,
                                                         repeated=repeated)
             else:

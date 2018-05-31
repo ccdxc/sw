@@ -359,6 +359,8 @@ hal_print_handles_block_list (block_list *bl)
 {
     hal_handle_t    *p_hdl_id = NULL;
 
+    if (!bl) return;
+
     for (const void *ptr : *bl) {
         p_hdl_id = (hal_handle_t *)ptr;
         HAL_TRACE_DEBUG("handle: {}", *p_hdl_id);
@@ -563,6 +565,8 @@ hal_cleanup_handle_block_list (block_list **bl)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
+    if (bl == NULL) return ret;
+
     if (*bl == NULL) {
         HAL_TRACE_ERR("invalid args. bl:{:#x}", (uint64_t)bl);
         ret = HAL_RET_INVALID_ARG;
@@ -623,5 +627,110 @@ hal_copy_block_lists (block_list *dst, block_list *src)
 
     return HAL_RET_OK;
 }
+
+
+
+//-----------------------------------------------------------------------------
+// if n : len of existing list
+//    m : len of new list
+//
+//Efficiency:
+//    O(m log m + n log m + m) - Assuming set insert and find is log
+//
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_find_changed_lists (block_list *exist_list,                         // _IN
+                        const void *spec,                               // _IN
+                        hal_changed_list_size_cb size_cb,               // _IN
+                        hal_changed_list_get_handle hdl_cb,             // _IN
+                        block_list **add_list,                          // _OUT
+                        block_list **del_list,                          // _OUT
+                        block_list **new_list,                          // _OUT
+                        bool *has_changed)                              // _OUT
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    uint32_t                    new_list_size = 0;
+    hal_handle_t                hdl = 0, *p_hdl = NULL;
+    hal_handle_set_t            new_hdls;
+    hal_handle_set_t::iterator  it;
+    std::pair<hal_handle_set_t::iterator,bool> pair;
+
+    // assume its changed
+    *has_changed = true;
+
+    if (!*new_list) {
+        *new_list = block_list::factory(sizeof(hal_handle_t));
+    }
+    new_list_size = size_cb(spec);
+
+
+    for (uint32_t i = 0; i < new_list_size; i++) {
+        hdl = hdl_cb(spec, i);
+        if (!hdl) {
+            HAL_TRACE_ERR("hdl at idx:{} not found", i);
+            ret = HAL_RET_ENTRY_NOT_FOUND;
+            goto end;
+        }
+        hal_add_to_handle_block_list(*new_list, hdl);
+        pair = new_hdls.insert(hdl);
+        HAL_ASSERT(pair.second);     // false: if elem. already exists
+    }
+
+
+    // Find incremental only if needed
+    if (add_list && del_list) {
+        *add_list = block_list::factory(sizeof(hal_handle_t));
+        *del_list = block_list::factory(sizeof(hal_handle_t));
+        for (const void *ptr : *exist_list) {
+            p_hdl = (hal_handle_t *)ptr;
+            it = new_hdls.find(*p_hdl);
+            if (it == new_hdls.end()) {
+                // elem. deleted in new list
+                hal_add_to_handle_block_list(*del_list, *p_hdl);
+            } else {
+                // elem. exists in new list
+                new_hdls.erase(it);
+            }
+        }
+
+        for (it = new_hdls.begin(); it != new_hdls.end(); it++) {
+            hal_add_to_handle_block_list(*add_list, *it);
+        }
+
+        if (!(*add_list)->num_elems() &&
+            !(*del_list)->num_elems()) {
+            *has_changed = false;
+            // free up allocated lists. New list will always have
+            // new IFs even if there is no change
+            // hal_cleanup_handle_block_list(new_list);
+            hal_cleanup_handle_block_list(add_list);
+            hal_cleanup_handle_block_list(del_list);
+        }
+    }
+
+    HAL_TRACE_DEBUG("Existing List: ");
+    hal_print_handles_block_list(exist_list);
+    HAL_TRACE_DEBUG("New List: ");
+    hal_print_handles_block_list(*new_list);
+    if (add_list) {
+        HAL_TRACE_DEBUG("Add List:");
+        hal_print_handles_block_list(*add_list);
+    }
+    if (del_list) {
+        HAL_TRACE_DEBUG("Del List: ");
+        hal_print_handles_block_list(*del_list);
+    }
+
+end:
+    if (ret != HAL_RET_OK) {
+        // Free up all three lists
+        hal_cleanup_handle_block_list(new_list);
+        hal_cleanup_handle_block_list(add_list);
+        hal_cleanup_handle_block_list(del_list);
+    }
+
+    return ret;
+}
+
 
 }    // namespace hal

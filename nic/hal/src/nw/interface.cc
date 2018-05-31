@@ -611,7 +611,7 @@ if_add_to_db_and_refs (if_t *hal_if)
         } else if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
             l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
             // add to l2seg
-            ret = l2seg_add_if(l2seg, hal_if);
+            ret = l2seg_add_back_if(l2seg, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
 
             // add to lif
@@ -643,7 +643,7 @@ if_add_to_db_and_refs (if_t *hal_if)
                     ret = HAL_RET_INVALID_ARG;
                     goto end;
                 }
-                ret = l2seg_add_if(nat_l2seg, hal_if);
+                ret = l2seg_add_back_if(nat_l2seg, hal_if);
                 HAL_ASSERT(ret == HAL_RET_OK);
             }
 
@@ -1470,7 +1470,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
                           &entry->lentry);
 
         // Add the back reference in l2seg
-        ret = l2seg_add_if(l2seg, hal_if);
+        ret = l2seg_add_back_if(l2seg, hal_if);
         HAL_ASSERT(ret == HAL_RET_OK);
     }
 
@@ -1487,7 +1487,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
             sdk::lib::dllist_del(&del_l2seg_entry->lentry);
 
             // Del the back reference from l2seg
-            ret = l2seg_del_if(l2seg, hal_if);
+            ret = l2seg_del_back_if(l2seg, hal_if);
             HAL_ASSERT(ret == HAL_RET_OK);
 
             // free entry from temp list
@@ -1720,14 +1720,14 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     old_nat_l2seg = l2seg_lookup_by_handle(intf->native_l2seg_clsc);
                     HAL_ASSERT(old_nat_l2seg != NULL);
                     // Remove from older nat l2seg
-                    ret = l2seg_del_if(old_nat_l2seg, intf);
+                    ret = l2seg_del_back_if(old_nat_l2seg, intf);
                     HAL_ASSERT(ret == HAL_RET_OK);
                 }
                 // Add to new nat l2seg
                 if (app_ctxt->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
                     new_nat_l2seg = l2seg_lookup_by_handle(app_ctxt->new_native_l2seg_clsc);
                     HAL_ASSERT(new_nat_l2seg != NULL);
-                    ret = l2seg_add_if(new_nat_l2seg, intf);
+                    ret = l2seg_add_back_if(new_nat_l2seg, intf);
                     HAL_ASSERT(ret == HAL_RET_OK);
                 }
             }
@@ -2237,7 +2237,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     }
 
     // Add Uplink in l2seg
-    ret = l2seg_add_if(l2seg, hal_if);
+    ret = l2seg_add_back_if(l2seg, hal_if);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to add if to "
                       "l2seg's if list. ret : {}",
@@ -2327,7 +2327,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     }
 
     // Del Uplink in l2seg
-    ret = l2seg_del_if(l2seg, hal_if);
+    ret = l2seg_del_back_if(l2seg, hal_if);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to del if to "
                       "l2seg's if list. ret : {}",
@@ -3188,7 +3188,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         if (intf->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
             // Remove from l2seg
             l2seg = l2seg_lookup_by_handle(intf->l2seg_handle);
-            ret = l2seg_del_if(l2seg, intf);
+            ret = l2seg_del_back_if(l2seg, intf);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Unable to remove if from l2seg");
                 goto end;
@@ -3230,7 +3230,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     goto end;
                 }
 
-                ret = l2seg_del_if(nat_l2seg, intf);
+                ret = l2seg_del_back_if(nat_l2seg, intf);
                 HAL_ASSERT(ret == HAL_RET_OK);
             }
 
@@ -3891,9 +3891,9 @@ enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, if_t *hal_if, bool ad
             goto end;
         }
         if (add) {
-            ret = l2seg_add_if(l2seg, hal_if);
+            ret = l2seg_add_back_if(l2seg, hal_if);
         } else {
-            ret = l2seg_del_if(l2seg, hal_if);
+            ret = l2seg_del_back_if(l2seg, hal_if);
         }
     }
 

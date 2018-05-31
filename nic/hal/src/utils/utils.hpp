@@ -60,6 +60,20 @@ hal_ret_t hal_add_block_lists(block_list *dst, block_list *src);
 hal_ret_t hal_del_block_lists(block_list *dst, block_list *src);
 hal_ret_t hal_copy_block_lists(block_list *dst, block_list *src);
 
+typedef uint32_t (*hal_changed_list_size_cb)(const void *spec);
+typedef hal_handle_t (*hal_changed_list_get_handle)(const void *spec, uint32_t idx);
+typedef std::set<hal_handle_t> hal_handle_set_t;
+hal_ret_t
+hal_find_changed_lists (block_list *exist_list,                         // _IN
+                        const void *spec,                               // _IN
+                        hal_changed_list_size_cb size_cb,               // _IN
+                        hal_changed_list_get_handle hdl_cb,             // _IN
+                        block_list **add_list,                          // _OUT
+                        block_list **del_list,                          // _OUT
+                        block_list **new_list,                          // _OUT
+                        bool *has_changed);                              // _OUT
+
+
 }    // namespace hal
 
 #endif    // __UTILS_HPP__

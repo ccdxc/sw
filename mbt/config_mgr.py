@@ -31,15 +31,25 @@ def get_api_stub(object_name, method_type):
 
     return (api, req_msg_type)
 
+_ref_create_enable = True
+
+def ref_create_enable():
+    global _ref_create_enable
+    return _ref_create_enable
+
+def set_ref_create_enable(enable):
+    global _ref_create_enable
+    _ref_create_enable = enable
+
 class ConfigMetaMapper():
-    
+
     def __init__(self):
         self.key_type_to_config = {}
         self.config_to_key_type = {}
         self.dol_message_map = {}
         self.config_objects = []
         self.kh_proto = importlib.import_module("kh_pb2")
-    
+
     def Add(self, key_type, service_object, config_object):
         assert key_type is not None
         curr_config = self.key_type_to_config.get(key_type, None)
@@ -60,13 +70,13 @@ class ReferenceObjectHolder():
         self.reference_objects = []
 
 reference_object_holder = ReferenceObjectHolder()
-    
+
 class Object(object):
     pass
 
 # This class holds all the meta information required to create a config object.
 class ConfigObjectMeta():
-    
+
     class CREATE:
         pass
     class GET:
@@ -82,7 +92,7 @@ class ConfigObjectMeta():
         def __init__(self, pb2, stub, spec, service_object):
             if spec.api == None:
                 self._api = None
-                return 
+                return
             self._api = getattr(stub, spec.api)
             self._req_msg = getattr(pb2, spec.request)
             self._req_meta_obj = GrpcReqRspMsg(self._req_msg())
@@ -90,7 +100,7 @@ class ConfigObjectMeta():
             self._resp_meta_obj = GrpcReqRspMsg(self._resp_msg())
             self._pre_cb  = spec.pre_cb
             self._post_cb = spec.post_cb
-            
+
     def __init__(self, pb2, stub, spec, service_object):
         self._spec   = spec
         self._create = ConfigObjectMeta.ReqRespObject(pb2, stub, service_object.create, service_object)
@@ -100,7 +110,7 @@ class ConfigObjectMeta():
 
     def __repr__(self):
         return  self._spec.Service
-    
+
     def OperHandler(self, op_type):
         op_map =  { ConfigObjectMeta.CREATE  :  self._create,
                     ConfigObjectMeta.GET     :  self._get,
@@ -114,7 +124,7 @@ class ConfigData():
         self.exp_data = Object()
         self.actual_data = Object()
 
-# A ConfigObject maps to each config created. Once a config object is created, 
+# A ConfigObject maps to each config created. Once a config object is created,
 # it can be used as an external reference for other config objects.
 # For example the network config object will refer to the tenant config object.
 class ConfigObject():
@@ -232,16 +242,16 @@ class ConfigObject():
             req_message = self.generate(op_type, ext_refs=ext_refs, external_constraints=external_constraints)
         else:
             req_message = self._msg_cache[op_type]
-        
+
         should_call_callback = not (op_type == ConfigObjectMeta.CREATE and redo)
 
-        return self.send_message(op_type, req_message, should_call_callback)      
+        return self.send_message(op_type, req_message, should_call_callback)
 
 # Top level manager for a given config spec. Catering to one service, can have multiple
 # objects with CRUD operations within a service.
 class ConfigObjectHelper(object):
-    
-    __op_map = { 
+
+    __op_map = {
                  "Delete" : ConfigObjectMeta.DELETE,
                  "Create" : ConfigObjectMeta.CREATE,
                  "Update" : ConfigObjectMeta.UPDATE,
@@ -257,7 +267,7 @@ class ConfigObjectHelper(object):
         self._service_object = service_object
         self.key_type = None
         self.sorted_ext_refs = []
-        # These are the objects for which CRUD operations will be done in HAL. 
+        # These are the objects for which CRUD operations will be done in HAL.
         self._config_objects = []
         # These are ref objects created
         self._ext_ref_objects = []
@@ -309,7 +319,7 @@ class ConfigObjectHelper(object):
                 # Setting the err return to True ensures that this message is just forwarded
                 # to HAL.
                 return None, True
-                
+
         config_object = ConfigObject(self._cfg_meta, self, is_dol_created=True)
         config_object.is_dol_created = True
         ret_status, _ = config_object.dol_process(ConfigObjectMeta.CREATE, message)
@@ -317,15 +327,22 @@ class ConfigObjectHelper(object):
         config_object._status = ConfigObject._CREATED
         assert ret_status == ApiStatus.API_STATUS_OK
 
+        ref_create_en = ref_create_enable()
+
+        # Disable new ref creation for DOL updates
+        set_ref_create_enable(False)
+
         ret_status, _ = config_object.dol_process(ConfigObjectMeta.UPDATE)
         assert ret_status == ApiStatus.API_STATUS_OK
+
+        set_ref_create_enable(ref_create_en)
 
         ret_status, _ = config_object.dol_process(ConfigObjectMeta.DELETE)
         assert ret_status == ApiStatus.API_STATUS_OK
 
         ret_status, resp_message = config_object.dol_process(ConfigObjectMeta.CREATE, redo=True)
         assert ret_status == ApiStatus.API_STATUS_OK
-        
+
         config_object.is_dol_config_modified = True
 
         return resp_message, False
@@ -335,7 +352,7 @@ class ConfigObjectHelper(object):
         ret_status, _ = config_object.process(ConfigObjectMeta.GETALL)
 
         if ret_status != status:
-            logger.critical("Status code does not match expected : %s," 
+            logger.critical("Status code does not match expected : %s,"
                         "actual : %s" % (status, ret_status) )
             if ConfigObjectMeta.GETALL not in self._ignore_ops:
                 return False
@@ -345,7 +362,7 @@ class ConfigObjectHelper(object):
         config_object = ConfigObject(self._cfg_meta, self)
         ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, ext_refs=ext_refs, external_constraints=external_constraints)
         if ret_status != status:
-            logger.critical("Status code does not match expected : %s," 
+            logger.critical("Status code does not match expected : %s,"
                         "actual : %s" % (status, ret_status) )
             config_object._status = ConfigObject._DELETED
             if ConfigObjectMeta.CREATE not in self._ignore_ops:
@@ -385,7 +402,7 @@ class ConfigObjectHelper(object):
                 continue
             ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, redo=True)
             if ret_status != status:
-                logger.critical("Status code does not match expected : %s," 
+                logger.critical("Status code does not match expected : %s,"
                             "actual : %s" % (status, ret_status) )
                 if config_object.is_dol_created or ConfigObjectMeta.CREATE not in self._ignore_ops:
                     config_object._status = ConfigObject._DELETED
@@ -394,7 +411,7 @@ class ConfigObjectHelper(object):
                 config_object._status = ConfigObject._CREATED
             self.num_create_ops += 1
         return True
-                 
+
     def VerifyConfigs(self, count, status):
         print("Verifying configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
@@ -406,25 +423,25 @@ class ConfigObjectHelper(object):
                     return False
                 else:
                     return True
-                logger.critical("Status code does not match expected : %s," 
+                logger.critical("Status code does not match expected : %s,"
                             "actual : %s" % (status, ret_status) )
                 return
             self.num_read_ops += 1
         return True
-    
+
     def UpdateConfigs(self, count, status):
         print("Updating configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
-            ret_status, _ = config_object.process(ConfigObjectMeta.UPDATE, ext_refs={})    
+            ret_status, _ = config_object.process(ConfigObjectMeta.UPDATE, ext_refs={})
             if ret_status != status:
-                logger.critical("Status code does not match expected : %s," 
+                logger.critical("Status code does not match expected : %s,"
                             "actual : %s" % (status, ret_status) )
                 if ConfigObjectMeta.UPDATE not in self._ignore_ops:
-                    return False 
+                    return False
             config_object._status = ConfigObject._CREATED
             self.num_update_ops += 1
         return True
-    
+
     def DeleteConfigs(self, count, status):
         print("Deleting configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
@@ -434,14 +451,14 @@ class ConfigObjectHelper(object):
                 continue
             ret_status, _ = config_object.process(ConfigObjectMeta.DELETE)
             if ret_status and ret_status != status:
-                logger.critical("Status code does not match expected : %s," 
+                logger.critical("Status code does not match expected : %s,"
                             "actual : %s" % (status, ret_status) )
                 if config_object.is_dol_created or ConfigObjectMeta.DELETE not in self._ignore_ops:
                     return False
             config_object._status = ConfigObject._DELETED
             self.num_delete_ops += 1
         return True
-    
+
 def AddConfigSpec(config_spec, hal_channel):
     for sub_service in config_spec.objects:
        print("Adding config spec for service : ", config_spec.Service, sub_service.object.name)
@@ -477,7 +494,7 @@ def ReplayConfigFromDol():
 
         # If this object has not been enabled for DOL yet, skip over it.
         # We handle one request as a config object for which the CRUD operations can be performed.
-        # The message sent by DOL contains several requests, so split them here. 
+        # The message sent by DOL contains several requests, so split them here.
         messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
         #if not object_helper._spec.dolEnabled:
         #    print("Dol Disabled. Not reading config from DOL for %s" %(type(incoming_message)))
@@ -508,7 +525,7 @@ def ReplayConfigFromDol():
     print ('config done')
 
 
-# This function has 2 return values. The second field indicates whether an error was encountered in 
+# This function has 2 return values. The second field indicates whether an error was encountered in
 # processing, in which case the message will be sent as is to HAL.
 def CreateConfigFromDol(incoming_message, request_method_name):
 
@@ -523,7 +540,7 @@ def CreateConfigFromDol(incoming_message, request_method_name):
 
     # If this object has not been enabled for DOL yet, skip over it.
     # We handle one request as a config object for which the CRUD operations can be performed.
-    # The message sent by DOL contains several requests, so split them here. 
+    # The message sent by DOL contains several requests, so split them here.
     messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
     if not object_helper._spec.dolEnabled:
         print("Not reading config from DOL for %s" %(type(incoming_message)))
@@ -545,7 +562,7 @@ def CreateConfigFromDol(incoming_message, request_method_name):
                                                                        resp_message)
     return resp_message, err
 
-# This is used to obtain objects from the pool of reference objects which have been 
+# This is used to obtain objects from the pool of reference objects which have been
 # pre-created.
 def GetReferenceObject(key_type, ext_refs, external_constraints=None):
     for ref_object_spec, ref_object in reference_object_holder.reference_objects:
@@ -559,7 +576,7 @@ def GetReferenceObject(key_type, ext_refs, external_constraints=None):
 
     return CreateConfigFromKeyType(key_type, ext_refs, external_constraints)
 
-# This is used to get the object being referred to from the key. Used in the context 
+# This is used to get the object being referred to from the key. Used in the context
 # of callbacks, to check whether an object being referred to has some specific
 # attributes set.
 def GetRefObjectFromKey(key):
@@ -574,7 +591,7 @@ def GetRefObjectFromKey(key):
             return ref_object
     return None
 
-# This is used to get the config object being referred to from the key. Used in the context 
+# This is used to get the config object being referred to from the key. Used in the context
 # of callbacks, to retrieve a config object
 def GetConfigObjectFromKey(key):
     object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
@@ -583,7 +600,7 @@ def GetConfigObjectFromKey(key):
             return config_object
     return None
 
-# This is used to get the external reference object being referred to from the key. Used in the context 
+# This is used to get the external reference object being referred to from the key. Used in the context
 # of callbacks, to retrieve an external reference object
 def GetExtRefObjectFromKey(key):
     object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
@@ -641,42 +658,42 @@ def ConfigObjectNegativeTest():
                 for neg_message in GrpcReqRspMsg.negative_test_generator(create_message):
                     print("The original message is " + str(create_message))
                     print("The negative test message is " + str(neg_message))
-                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, neg_message, False) 
+                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, neg_message, False)
                     if ret_status == ApiStatus.API_STATUS_OK:
                         print("Expected an error in API Return Status, but API_STATUS_OK was returned")
                     else:
                         print("API Status returned as error correctly")
-                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that 
+                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that
                     # the next test case will be correctly executed
-                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False)
 
                 for neg_message in GrpcReqRspMsg.negative_test_generator(create_message):
                     print("The original message is " + str(create_message))
                     print("The negative test message is " + str(neg_message))
-                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, neg_message, False) 
+                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, neg_message, False)
                     if ret_status == ApiStatus.API_STATUS_OK:
                         print("Expected an error in API Return Status, but API_STATUS_OK was returned")
                     else:
                         print("API Status returned as error correctly")
-                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that 
+                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that
                     # the next test case will be correctly executed
-                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False)
 
                 for neg_message in GrpcReqRspMsg.negative_test_generator(update_message):
                     ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, create_message, False)
                     print("The original message is " + str(update_message))
                     print("The negative test message is " + str(neg_message))
-                    ret_status, _ = config_object.send_message(ConfigObjectMeta.UPDATE, neg_message, False) 
+                    ret_status, _ = config_object.send_message(ConfigObjectMeta.UPDATE, neg_message, False)
                     if ret_status == ApiStatus.API_STATUS_OK:
                         print("Expected an error in API Return Status, but API_STATUS_OK was returned")
                     else:
                         print("API Status returned as error correctly")
-                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that 
+                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that
                     # the next test case will be correctly executed
-                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False)
 
                 if ret_status == ApiStatus.API_STATUS_OK:
-                    # Now ReCreate the message, and try deleting all the reference objects. We should 
+                    # Now ReCreate the message, and try deleting all the reference objects. We should
                     # get an API_STATUS_OBJ_IN_USE in response.
                     for key in config_object.ext_ref_objects.values():
                         if isinstance(key, list):
@@ -693,6 +710,6 @@ def ConfigObjectNegativeTest():
                         else:
                             print("Api Status returned as API_STATUS_OBJECT_IN_USE correctly")
                         ret_status, _ = ref_object.process(ConfigObjectMeta.CREATE, redo=True)
-                config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+                config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False)
             except KeyError:
                 continue

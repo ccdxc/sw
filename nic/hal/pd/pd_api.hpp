@@ -162,8 +162,10 @@ typedef struct pd_l2seg_delete_args_s {
 } __PACK__ pd_l2seg_delete_args_t;
 
 typedef struct pd_l2seg_update_args_s {
-    vrf_t       *vrf;
     l2seg_t     *l2seg;
+    bool        iflist_change;
+    block_list  *add_iflist;
+    block_list  *del_iflist;
 } __PACK__ pd_l2seg_update_args_t;
 
 typedef struct pd_l2seg_mem_free_args_s {
@@ -208,7 +210,6 @@ pd_l2seg_delete_args_init (pd_l2seg_delete_args_t *args)
 static inline void
 pd_l2seg_update_args_init (pd_l2seg_update_args_t *args)
 {
-    args->vrf = NULL;
     args->l2seg = NULL;
     return;
 }

@@ -78,9 +78,10 @@ typedef struct l2seg_s {
     uint32_t              num_ep;                  // no. of endpoints
     // forward references
     block_list            *nw_list;                // network list
+    block_list            *mbrif_list;                // interface list
     // back references
-    block_list            *if_list;                // interface list
     block_list            *acl_list;               // acl list
+    block_list            *if_list;                // back_iflist
 
     // Looks like sessions need only if, ep, network
     // dllist_ctxt_t         ep_list_head;            // endpoint list
@@ -106,6 +107,7 @@ typedef struct l2seg_update_app_ctxt_s {
     bool                mcast_fwd_policy_change;
     bool                bcast_fwd_policy_change;
     bool                nwlist_change;
+    bool                iflist_change;
 
     MulticastFwdPolicy  new_mcast_fwd_policy;
     BroadcastFwdPolicy  new_bcast_fwd_policy;
@@ -113,6 +115,11 @@ typedef struct l2seg_update_app_ctxt_s {
     block_list          *add_nwlist;
     block_list          *del_nwlist;
     block_list          *aggr_nwlist;
+    // mbr ifs change
+    block_list          *add_iflist;
+    block_list          *del_iflist;
+    block_list          *agg_iflist;
+
 } __PACK__ l2seg_update_app_ctxt_t;
 
 // max. number of L2 segments supported  (TODO: we can take this from cfg file)
