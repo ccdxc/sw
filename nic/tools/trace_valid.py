@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
+#------------------------------------------------------------------------------
 # {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+#------------------------------------------------------------------------------
 from __future__ import with_statement
 
 import re
@@ -16,6 +18,8 @@ excluded_files = ["capri_tm_rw.template.cc",
                   "core.hpp"]
 
 return_status = 0
+enable_pattern_check = False        # Checks for invalid patterns in trace strings
+invalid_patterns = ["{\d+:x}"]      # Invalid patterns in trace strings
 
 #------------------------------------------------------------------------------
 # validate all traces
@@ -53,20 +57,54 @@ def validate_trace(filename, data, trace_func):
         for fmt_str in fmt_strs:
             trace_args = trace_args.replace(fmt_str,'')
         fmt = ''.join(fmt_strs)
+        #print "Checking trace: " + trace
+        #print "Checking trace_args: " + trace_args
+        #print "Checking fmt: " + fmt
+
+        # HAL_TRACE_DEBUG("PROXYRCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr)
+        # trace: "PROXYRCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr
+        # fmt: PROXYRCB Programming stage0 at hw_addr: 0x{0:x}
+        # trace_args: , hw_addr
 
         matched, num_pairs = do_parentheses_match(fmt)
         num_args = get_num_args(trace_args, trace_func)
+        has_unwanted_pattern, pattern = has_unwanted_patterns(fmt)
         #num_args = get_num_args(trace_args, "HAL_TRACE_DEBUG")
         # Debugs
         #print "Checking full_trace: " + full_trace
         #print "Checking trace: " + trace
         #print "Location: " + str(match.start())
-        if matched is False or num_pairs != num_args:
+        if matched is False or num_pairs != num_args or has_unwanted_pattern is True:
             return_status = 1
             f_before = data[0:match.start()]
             #f_before = data[0:data.find(trace)]
-            print "Invalid trace at: " + filename + ": "+ str(f_before.count("$%*#") + 1) + ": "+ full_trace + \
-                  " :: match: " + str(matched) + ", num_parantheses: " + str(num_pairs) + ", num_args: " + str(num_args)
+            error_reason = "Has"
+            if has_unwanted_pattern:
+                error_reason += " un-wanted pattern " + pattern
+            if matched is False:
+                error_reason += " un-matched parans"
+            if num_pairs != num_args:
+                error_reason += " un-matched args (#parans: " + str(num_pairs) + " #args: " + str(num_args)
+
+            # line num: str(f_before.count("$%*#") + 1)
+            print error_reason + " at: " + filename + ": "+ str(f_before.count("$%*#") + 1) + ": "+ full_trace
+            #print "Invalid trace at: " + filename + ": "+ str(f_before.count("$%*#") + 1) + ": "+ full_trace + \
+            #      " :: match: " + str(matched) + ", num_parantheses: " + str(num_pairs) + ", num_args: " + str(num_args)
+
+#------------------------------------------------------------------------------
+# Filter out fmts having unwanted patterns like {:x}, {1:x} etc.
+#------------------------------------------------------------------------------
+def has_unwanted_patterns(fmt):
+    global enable_pattern_check,invalid_patterns
+    has_unwanted_pattern = False
+    if enable_pattern_check:
+        for pattern in invalid_patterns:
+            regexp = re.compile(r"%s" % pattern)
+            if regexp.search(fmt):
+                has_unwanted_pattern = True
+                return has_unwanted_pattern, pattern
+    return has_unwanted_pattern, ""
+
 
 #------------------------------------------------------------------------------
 # prune out if there is no semicolon at the end. to handle LOG_FLOW_UPDATE in
