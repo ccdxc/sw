@@ -5,7 +5,6 @@
 #include "core.hpp"
 #include "utils.hpp"
 #include "sdk/slab.hpp"
-#include "nic/hal/plugins/alg_utils/core.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {

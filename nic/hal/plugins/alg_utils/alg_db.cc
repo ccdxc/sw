@@ -18,13 +18,13 @@ static void * expected_flow_get_key_func(void *entry)
 static uint32_t expected_flow_compute_hash_func(void *key, uint32_t ht_size)
 {
     return (sdk::lib::hash_algo::fnv_hash(key,
-                                            sizeof(hal::flow_key_t)) % ht_size);
+                                            sizeof(exp_flow_key_t)) % ht_size);
 }
 
 static bool expected_flow_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    return (memcmp(key1, key2, sizeof(hal::flow_key_t)) == 0);
+    return (memcmp(key1, key2, sizeof(exp_flow_key_t)) == 0);
 }
 
 //------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ insert_expected_flow(expected_flow_t *entry)
 // Remove an expected flow entry
 //------------------------------------------------------------------------------
 expected_flow_t *
-remove_expected_flow(const hal::flow_key_t &key)
+remove_expected_flow(const exp_flow_key_t &key)
 {
     HAL_TRACE_DEBUG("ALG::remove_expected_flow  key={}", key);
     return (expected_flow_t *)expected_flow_ht()->remove((void *)&key);
@@ -92,6 +92,15 @@ start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
 }
 
 //------------------------------------------------------------------------------
+// delete expected flow timer - Some ALGs such as SUNRPC, MSRPC need it
+//------------------------------------------------------------------------------
+void*
+delete_expected_flow_timer(expected_flow_t *entry)
+{
+    return (hal::periodic::timer_delete(entry->timer));
+}
+
+//------------------------------------------------------------------------------
 // Lookup a expected_flow entry
 // This will do the following lookupos
 //  1. Exact match
@@ -103,64 +112,54 @@ expected_flow_t *
 lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
 {
     expected_flow_t *entry = NULL;
+    exp_flow_key_t key, lookup_key;
 
-    hal::flow_key_t key = ikey;
+    key = lookup_key = {};
+
+    SET_EXP_FLOW_KEY(key, ikey);
 
     // Exact match
-    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow exact match key={}", key);
-        goto end;
-    }
-
     if (exact_match) {
-        return NULL;
+       if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
+           HAL_TRACE_DEBUG("ALG::lookup_expected_flow exact match key={}", key);
+           goto end;
+       }
+       return NULL;
     }
 
     // wildcard matches are supported for tcp/udp only
-    if ((key.flow_type != hal::FLOW_TYPE_V4 && key.flow_type != hal::FLOW_TYPE_V6) ||
-        (key.proto != IPPROTO_TCP && key.proto != IPPROTO_UDP)) {
+    if ((ikey.flow_type != hal::FLOW_TYPE_V4 && ikey.flow_type != hal::FLOW_TYPE_V6) ||
+        (ikey.proto != IPPROTO_TCP && ikey.proto != IPPROTO_UDP)) {
         return NULL;
     }
 
-    // Reverse lookup for Exact match
-    key.sport = ikey.dport;
-    key.dport = ikey.sport;
-    key.sip = ikey.dip;
-    key.dip = ikey.sip;
-    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow reverse exact match key={}", key);
-        goto end;
-    }
-
-    key = ikey;
-
     // Mask SPORT and do lookup (tftp)
-    key.sport = 0;
-    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow widcard sport key={}", key);
+    lookup_key = key;
+    lookup_key.sport = 0;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&lookup_key))) {
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow widcard sport key={}", lookup_key);
         goto end;
     }
 
-    //Mask DIR and do lookup (Active FTP)
-    key.dir = 0;
-    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", key);
+    //Mask DIR, SPORT and do lookup (Active FTP)
+    lookup_key.dir = 0;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&lookup_key))) {
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", lookup_key);
         goto end;
     }
 
     // Mask SIP, DIR, SPORT and do lookup (RPC/Passive FTP)
-    key.sip = {};
-    key.sport = 0;
-    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport/dir key={}", key);
+    lookup_key.sip = 0;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&lookup_key))) {
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport/dir key={}", lookup_key);
         goto end;
     }
 
     // Mask DIR only and do lookup (RTSP)
-    key = ikey;
-    key.dir = 0;
-    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", key);
+    lookup_key = key;
+    lookup_key.dir = 0;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&lookup_key))) {
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", lookup_key);
         goto end;
     }
 
@@ -174,6 +173,18 @@ end:
     }
 
     return entry;
+}
+
+std::ostream& operator<<(std::ostream& os, const exp_flow_key_t val) {
+    os << "{dir=" << val.dir;
+    os << " ,svrf_id=" << val.svrf_id;
+    os << " ,dvrf_id=" << val.dvrf_id;
+    os << " ,sip=" << ipv4addr2str(val.sip);
+    os << " ,dip=" << ipv4addr2str(val.dip);
+    os << " ,proto=" << val.proto;
+    os << " ,sport=" << val.sport;
+    os << " ,dport=" << val.dport;
+    return os << " }";
 }
 
 } // namespace alg_utils

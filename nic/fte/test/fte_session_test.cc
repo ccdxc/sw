@@ -55,7 +55,6 @@ void* send_flow_miss(void *ptr)
     fte_session_test *test = (fte_session_test *)ptr;
 
     for (int i=0; i<10; i++) {
-        sleep(1);
         test->fte_session_create();
     }
 
@@ -66,12 +65,10 @@ void* send_delete_all(void *ptr)
 {
     SessionDeleteResponseMsg delrsp;
 
-    sleep(1);
     for (int i=0; i<10; i++) {
          hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
          hal::session_delete_all(&delrsp);
          hal::hal_cfg_db_close();
-         sleep(1);
     }
  
     return NULL;
@@ -85,7 +82,6 @@ void* send_get_all(void *ptr)
          hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
          hal::session_get_all(&getrsp);
          hal::hal_cfg_db_close();
-         sleep(1);
     }
 
     return NULL;

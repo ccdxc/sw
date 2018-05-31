@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include "core.hpp"
 #include "nic/include/fte.hpp"
-#include "nic/hal/plugins/alg_utils/core.hpp"
 
 namespace hal {
 namespace plugins {

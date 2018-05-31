@@ -241,7 +241,7 @@ public:
                                         hal::flow_key_t key,
                                         l4_alg_status_t **alg_status,
                                         bool enable_timer=false,
-                                        uint32_t time_intvl=0);
+                                        uint32_t time_intvl=0, bool find_existing=false);
     hal_ret_t alloc_and_insert_l4_sess(app_session_t *app_sess,
                                        l4_alg_status_t **alg_status);
     hal_ret_t alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_sess);

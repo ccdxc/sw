@@ -326,9 +326,39 @@ cleanup:
 
 hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                       hal::flow_key_t key, l4_alg_status_t **expected_flow,
-                      bool enable_timer, uint32_t time_intvl) {
+                      bool enable_timer, uint32_t time_intvl, 
+                      bool find_existing) {
     exp_flow_timer_cb_t   *timer_ctxt = NULL;
     l4_alg_status_t       *exp_flow = NULL;
+
+    /*
+     * In some cases, we need to look for existing
+     * expected flows before inserting a new one
+     */
+    if (find_existing) {
+        expected_flow_t *entry = lookup_expected_flow(key, true);
+        exp_flow  = (l4_alg_status_t *)entry;
+        if (exp_flow && !exp_flow->entry.deleting) {
+            if (enable_timer) {
+                if (entry->timer) {
+                    timer_ctxt = (exp_flow_timer_cb_t *)\
+                                             delete_expected_flow_timer(entry);
+                } else {
+                    HAL_TRACE_DEBUG("Starting timer for expected flow with key: {}", key);
+                    timer_ctxt = (exp_flow_timer_cb_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
+                                       sizeof(exp_flow_timer_cb_t));
+                    timer_ctxt->exp_flow = exp_flow;
+                    timer_ctxt->alg_state = this;
+                }
+                start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID,
+                                  time_intvl, exp_flow_timeout_cb,
+                                  (void *)timer_ctxt);
+            }
+            *expected_flow = exp_flow;
+            return HAL_RET_OK;
+        } 
+        // Flow through to create a new entry if old one is getting deleted
+    }
 
     exp_flow = (l4_alg_status_t *)l4_sess_slab()->alloc();
     if (exp_flow == NULL) {
@@ -337,7 +367,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
 
     HAL_SPINLOCK_LOCK(&app_sess->slock);
     exp_flow->app_session = app_sess;
-    memcpy(&exp_flow->entry.key, &key, sizeof(hal::flow_key_t));
+    SET_EXP_FLOW_KEY(exp_flow->entry.key, key);
     insert_expected_flow(&exp_flow->entry);
     dllist_reset(&exp_flow->exp_flow_lentry);
     dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);

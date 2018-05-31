@@ -157,20 +157,35 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
     g_rpc_state->alloc_and_init_app_sess(app_sess_key, &app_sess);
 
     exp_flow_key = app_sess_key;
+    exp_flow_key.svrf_id = 1;
+    exp_flow_key.dvrf_id = 1;
+    exp_flow_key.proto = types::IPPROTO_TCP;
     exp_flow_key.dport = 22345;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
-                                         &exp_flow, true, 8);
+                                         &exp_flow, true, 8, true);
     sleep(10);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 
     exp_flow_key.dport = 22346;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
-                                         &exp_flow, true, 5);
+                                         &exp_flow, true, 5, true);
     exp_flow->entry.ref_count.count++;
     sleep(5);
     ASSERT_EQ(exp_flow->entry.deleting, true);
     exp_flow->entry.ref_count.count--;
     sleep(15);
+    ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
+
+    l4_alg_status_t *exp_flow_old = NULL, *exp_flow_new = NULL;
+    exp_flow_key.dport = 22347;
+    g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
+                                         &exp_flow_old, true, 5, true);
+    ASSERT_EQ(exp_flow_old->entry.deleting, false);
+    g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
+                                         &exp_flow_new, true, 5, true);
+    ASSERT_EQ(exp_flow_old, exp_flow_new);
+    ASSERT_EQ(exp_flow_new->entry.deleting, false); 
+    sleep(3);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 }
 
