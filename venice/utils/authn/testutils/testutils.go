@@ -91,7 +91,7 @@ func CreateSecret(len int) []byte {
 // CreateTestUser creates a test user
 func CreateTestUser(apicl apiclient.Services, username, password, tenant string) *auth.User {
 	// user object
-	user := auth.User{
+	user := &auth.User{
 		TypeMeta: api.TypeMeta{Kind: "User"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: tenant,
@@ -106,11 +106,19 @@ func CreateTestUser(apicl apiclient.Services, username, password, tenant string)
 	}
 
 	// create the user object in api server
-	_, err := apicl.AuthV1().User().Create(context.Background(), &user)
-	if err != nil {
+	var err error
+	var createdUser *auth.User
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		createdUser, err = apicl.AuthV1().User().Create(context.Background(), user)
+		if err == nil {
+			return true, nil
+		}
+		log.Errorf("Error creating user: %v", err)
+		return false, nil
+	}, "10ms", "20s") {
 		panic(fmt.Sprintf("Error creating user: %v", err))
 	}
-	return &user
+	return createdUser
 }
 
 // DeleteUser deletes an user
@@ -127,7 +135,7 @@ func CreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, lda
 // CreateAuthenticationPolicyWithOrder creates an authentication policy
 func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string, secret []byte) *auth.AuthenticationPolicy {
 	// authn policy object
-	policy := auth.AuthenticationPolicy{
+	policy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "AuthenticationPolicy",
@@ -144,11 +152,19 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 	}
 
 	// create authentication policy object in api server
-	_, err := apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), &policy)
-	if err != nil {
+	var err error
+	var createdPolicy *auth.AuthenticationPolicy
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		createdPolicy, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), policy)
+		if err == nil {
+			return true, nil
+		}
+		log.Errorf("Error creating authentication policy, Err: %v", err)
+		return false, nil
+	}, "10ms", "20s") {
 		panic(fmt.Sprintf("Error creating authentication policy, Err: %v", err))
 	}
-	return &policy
+	return createdPolicy
 }
 
 // DeleteAuthenticationPolicy deletes an authentication policy
