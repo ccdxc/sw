@@ -16,10 +16,6 @@ cpu_tx_read_l2_vlan_hdr_start:
     CAPRI_OPERAND_DEBUG(d.u.read_l2_vlan_hdr_d.dei)
     CAPRI_OPERAND_DEBUG(d.u.read_l2_vlan_hdr_d.vid)
 
-    sne     c1, k.common_phv_write_vlan_tag, r0
-    bcf     [!c1], cpu_tx_read_l2_vlan_hdr_done
-    nop
-    
     seq     c2, d.u.read_l2_vlan_hdr_d.etherType, 0x8100
     bcf     [!c2], cpu_tx_read_l2_vlan_hdr_done
     nop

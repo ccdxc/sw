@@ -1,5 +1,6 @@
 #define CPU_TO_P4PLUS_FLAGS_UPD_VLAN        0x0001
 #define CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR  0x0002
+#define CPU_TO_P4PLUS_FLAGS_REM_VLAN        0x0004
 
 #define L2HDR_DOT1Q_OFFSET              12
 

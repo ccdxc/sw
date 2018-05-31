@@ -27,6 +27,7 @@
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.qid, common_phv.qid); \
     modify_field(common_global_scratch.write_vlan_tag, common_phv.write_vlan_tag); \
+    modify_field(common_global_scratch.rem_vlan_tag, common_phv.rem_vlan_tag); \
     modify_field(common_global_scratch.flags, common_phv.flags); \
     modify_field(common_global_scratch.cpu_hdr_flags, common_phv.cpu_hdr_flags); \
    
@@ -78,6 +79,7 @@ header_type common_global_phv_t {
         qstate_addr             : CPU_HBM_ADDRESS_WIDTH;
         qid                     : 24;
         write_vlan_tag          : 1;
+        rem_vlan_tag            : 1;
         flags                   : 8;
         cpu_hdr_flags           : 16;
     }
