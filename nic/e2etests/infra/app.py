@@ -274,11 +274,17 @@ class Container(NS):
             sys.stdout.buffer.write(cmd_out.output)
         return cmd_out.exit_code
 
+    def RemoveImage(self):
+        try:
+            print ("Removing image ", self._image)
+            retcode = subprocess.call(["docker", "rmi", self._image])
+        except:
+            pass
+ 
     def Stop(self):
         self.DetachInterfaces()
         print ("Stopping container %s please wait....." % self._container_name)
-        self._container_obj.stop()
-        time.sleep(2)
+        self._container_obj.stop(timeout=30)
         if self._pid:
             run("rm -f /var/run/netns/" + self._pid)
 

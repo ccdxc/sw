@@ -48,6 +48,7 @@ nic_container_image_dir = nic_dir + "/obj/images"
 #This should be changed to pick up the current version automatically.
 nic_container_image = "naples-release-v1.tgz"
 nic_container_name = "naples-v1"
+nic_container_image_name = "pensando/naples:v1"
 
 #Naples start script
 nic_container_startup_script = nic_dir + "/sim/naples/start-naples-docker.sh"
@@ -701,6 +702,9 @@ def bringdown_nic_container():
     try:
         os.chdir(nic_container_image_dir)
         retcode = call(["docker", "stop", nic_container_name])
+        print ("Stopped nic container")
+        retcode = call(["docker", "rmi", "-f", nic_container_image_name])
+        print ("Removed nic container image")
     except:
         retcode = 0
     if retcode:

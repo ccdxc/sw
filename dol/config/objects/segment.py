@@ -367,6 +367,7 @@ class SegmentObject(base.ConfigObjectBase):
             req_spec.wire_encap.encap_value   = self.vlan_id
         req_spec.mcast_fwd_policy = self.multicast_policy
         req_spec.bcast_fwd_policy = self.broadcast_policy
+        req_spec.proxy_arp_enabled = getattr(self, "proxy_arp_enabled", False)
 
         if self.eplearn:
             if self.eplearn.arp_entry_timeout:

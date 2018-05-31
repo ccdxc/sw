@@ -1,0 +1,44 @@
+# Test Spec
+type: ref://factory/templates/id=E2E_TESTCASE
+package  : test.e2e_learn.arp
+selectors:
+    root            : ref://store/templates/id=E2E
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+    src_endpoints :
+         type    : filter://remote=True
+         max        : 1
+    dst_endpoints :
+         type    : filter://remote=True
+         max        : 1
+
+session:
+    - step: #Do clean up and release IP address
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : ping
+                    args        :
+                         - arg   : "-c 1  -d -i 10"
+                         - arg   : ref://testcase/config/dst_endpoints/0/ipaddrs/0
+        expect:                       
+    - step:
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : ping
+                    args        :
+                         - arg   : "-c 1  -d -i 10"
+                         - arg   : ref://testcase/config/src_endpoints/0/ipaddrs/0
+        expect:
+    - step:
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : sleep
+                    args        :
+                        - arg   : "140"
+        expect:        

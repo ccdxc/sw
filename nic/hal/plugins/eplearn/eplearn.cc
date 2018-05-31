@@ -110,19 +110,17 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
                  */
                 return fte::PIPELINE_END;
             }
-    } else if (is_arp_flow(&ctx.key()) && is_arp_learning_required(ctx)) {
-        HAL_TRACE_INFO("EP_LEARN : ARP packet processing...");
-        ret = arp_process_packet(ctx);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error in processing ARP packet.");
-            ctx.set_feature_status(ret);
-            ctx.update_flow(flowupd, FLOW_ROLE_INITIATOR);
+    } else if (is_arp_flow(&ctx.key())) {
+        if (is_arp_learning_required(ctx)) {
+            HAL_TRACE_INFO("EP_LEARN : ARP packet processing...");
+            ret = arp_process_packet(ctx);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error in processing ARP packet.");
+                ctx.set_feature_status(ret);
+                ctx.update_flow(flowupd, FLOW_ROLE_INITIATOR);
+            }
         }
         ctx.set_valid_rflow(false);
-        if (is_broadcast(ctx)) {
-            ctx.set_ignore_session_create(true);
-            return fte::PIPELINE_END;
-        }
     } else if (is_neighbor_discovery_flow(&ctx.key()) &&
             is_arp_learning_required(ctx)) {
         HAL_TRACE_INFO("EP_LEARN : NDP packet processing...");
@@ -131,11 +129,6 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
             HAL_TRACE_ERR("Error in processing NDP packet.");
             ctx.set_feature_status(ret);
             ctx.update_flow(flowupd, FLOW_ROLE_INITIATOR);
-        }
-        ctx.set_valid_rflow(false);
-        if (is_broadcast(ctx)) {
-            ctx.set_ignore_session_create(true);
-            return fte::PIPELINE_END;
         }
     }
 

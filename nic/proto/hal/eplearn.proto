@@ -20,7 +20,7 @@ message EplearnDhcpCfg {
 
 // Arp/Ndp Cfg
 message EplearnArpCfg {
-    uint32  entry_timeout  = 1;  // how long arp entry is valid.
+    uint32  entry_timeout        = 1;  // how long arp entry is valid.
 }
 
 message EplearnCfg {

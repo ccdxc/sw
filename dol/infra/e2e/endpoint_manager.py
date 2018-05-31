@@ -80,11 +80,13 @@ class EndpointManager(object):
                 self._ep_map[ep_name].AddArpEntry(ep_name, ep_cfg["ipaddr"], 
                                                     ep_cfg["macaddr"])
     
-    def ConfigureEndpoints(self):
+    def ConfigureEndpoints(self, add_arp=True):
         print ("Configuring endpoints...")
         for ep_cfg, ep in zip(self._spec, self._eps):
             self.__configure_endpoint(ep_cfg, ep)
-        self.__setup_arp_entries()
+        if add_arp:
+            print ("Adding ARP entries")
+            self.__setup_arp_entries()
     
     def TearDownEndpoints(self):
         print ("Tearing down endpoints...")

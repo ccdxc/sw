@@ -9,6 +9,8 @@ import time
 import atexit
 import signal
 import pdb
+import json
+import subprocess
 from infra.e2e_test import E2eTest, E2eEnv
 
 e2e_test = None
@@ -77,6 +79,15 @@ def signal_handler(signal, frame):
     cleanup()
     sys.exit(1)
 
+def clean_up_app_containers(config_file=consts.E2E_APP_CONFIG_FILE):
+    data = json.load(open(config_file))
+    image = data["App"]["registry"] + data["App"]["image"]
+    try:
+        print ("Removing image ", image)
+        retcode = subprocess.call(["docker", "rmi", image])
+    except:
+        pass    
+    
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--e2e-mode', dest='test_mode', default="auto",
@@ -102,6 +113,7 @@ def main():
     elif args.test_mode == "setup":
         setup_cfg_env(args.e2e_cfg, args.nomodel)
         
+    clean_up_app_containers()
     return 
 
 

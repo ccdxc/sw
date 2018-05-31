@@ -11,8 +11,8 @@ load("//nic/bazel:common_deps.bzl", "test_deps_list")
 
 cc_library(
     name = "fte",
-    srcs = glob(["*.cc", "acl/*.cc"]),
-    hdrs = glob(["*.hpp", "acl/*.hpp"]),
+    srcs = glob(["*.cc", "acl/*.cc", "utils/*.cc"]),
+    hdrs = glob(["*.hpp", "acl/*.hpp", "utils/*.hpp"]),
     copts = sdk_copts,
     deps = [
         "//nic:gen_proto_includes",
@@ -35,7 +35,8 @@ cc_library(
         "fte.hpp",
         "fte_ctx.hpp",
         "acl/acl.hpp",
-        "acl/ref.hpp"
+        "acl/ref.hpp",
+        "utils/packet_utils.hpp"
     ],
     deps = [ "//nic/utils/agent_api:agent_api",
            ],

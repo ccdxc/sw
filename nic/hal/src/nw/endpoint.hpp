@@ -208,6 +208,12 @@ ep_t *find_ep_by_l3_key(ep_l3_key_t *ep_l3_key);
 ep_t *find_ep_by_v4_key(vrf_id_t tid, uint32_t v4_addr);
 // find EP from v6 key
 ep_t *find_ep_by_v6_key(vrf_id_t tid, const ip_addr_t *ip_addr);
+// find EP from v4 key in segment
+ep_t* find_ep_by_v4_key_in_l2segment(uint32_t v4_addr,
+        const hal::l2seg_t *l2seg);
+// find EP from v6 key in segment
+ep_t* find_ep_by_v6_key_in_l2segment(const ip_addr_t *ip_addr,
+        const hal::l2seg_t *l2seg);
 hal_ret_t find_ep(EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status);
 
 // Debug APIs

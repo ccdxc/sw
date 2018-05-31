@@ -333,7 +333,7 @@ hal_ret_t arp_packet_send(hal_handle_t ep_handle,
     if (dst_ep_handle) {
         dst_ep = find_ep_by_handle(dst_ep_handle);
     }
-    fte::cpu_rxhdr_t cpu_rxhdr;
+    fte::cpu_rxhdr_t cpu_rxhdr = { 0 };
     cpu_rxhdr.flags = 0;
     cpu_rxhdr.l2_offset = 0;
     cpu_rxhdr.lkp_vrf = get_l2seg_hw_id(dummy_l2seg_hdl);
@@ -368,7 +368,7 @@ hal_ret_t arp_ipv6_packet_send(hal_handle_t ep_handle,
     if (dst_ep_handle) {
         dst_ep = find_ep_by_handle(dst_ep_handle);
     }
-    fte::cpu_rxhdr_t cpu_rxhdr;
+    fte::cpu_rxhdr_t cpu_rxhdr = { 0 };
     cpu_rxhdr.l4_offset = L2_ETH_HDR_LEN + sizeof(ipv6_header_t);
     cpu_rxhdr.l3_offset = L2_ETH_HDR_LEN;
     cpu_rxhdr.flags = 0;

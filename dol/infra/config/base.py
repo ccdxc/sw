@@ -10,6 +10,24 @@ import infra.common.utils       as utils
 from infra.common.glopts   import GlobalOptions as GlobalOptions
 from infra.common.logging  import logger as logger
 
+def ToJsonCovereter(obj):
+    dict = {}
+    for key, value in inspect.getmembers(obj):
+        if  key.startswith("_") or inspect.ismethod(value) or inspect.isfunction(value):
+            continue
+        if  (type(value) is int or type(value) is str or type(value) is bool):
+            dict[key] = value
+        elif (type(value).__str__ is not object.__str__):
+            dict[key] = str(value)
+        elif (type(value) in [list,set]):
+            items = []
+            for item in value:
+                items.append(str(item))
+            dict[key] = items
+        else:
+            dict[key] = ToJsonCovereter(value)
+    return dict
+    
 class ConfigObjectBase(objects.FrameworkObject):
     def __init__(self):
         super().__init__()
@@ -18,23 +36,13 @@ class ConfigObjectBase(objects.FrameworkObject):
     def __str__(self):
         return str(self.ID())
 
+    
     def ToJson(self):
+        return ToJsonCovereter(self)
         #Ignoring private attributes and complex objects for now.
         #Function has to be enhanced to support deeper coversions.
-        dict = {}
-        for key, value in inspect.getmembers(self):
-            if  key.startswith("_"):
-                continue
-            if  (type(value) is int or type(value) is str or type(value) is bool):
-                dict[key] = value
-            elif (type(value).__str__ is not object.__str__):
-                dict[key] = str(value)
-            elif (type(value) in [list,set]):
-                items = []
-                for item in value:
-                    items.append(str(item))
-                dict[key] = items
-        return dict
+        #dict = {}
+        #for key, value in inspect.getmembers(self):
 
     def IsFilterMatch(self, filters):
         logger.verbose("IsFilterMatch(): Object %s" % self.GID())

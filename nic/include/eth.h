@@ -15,6 +15,8 @@
 #define ARPOP_REVREQUEST                               3
 #define ARPOP_REVREPLY                                 4
 
+#define ARP_HARDWARE_TYPE                              1 //Ethernet
+
 #define ETH_TYPE_IPV4                                  0x0800
 #define ETH_TYPE_ARP                                   0x0806
 #define ETH_TYPE_RARP                                  0x8035

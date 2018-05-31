@@ -1,10 +1,10 @@
 # Feature Test Modules List
 feature:
     id       : e2e_learn
-    sub      : e2e_dhcp
-    package  : test.e2e_learn.dhcp
-    module   : dhcp_ignore
-    runorder : 2
+    sub      : e2e_arp
+    package  : test.e2e_learn.arp
+    module   : arp
+    runorder : 0
     enable   : True
     ignore   : False
     rtl      : False
@@ -12,22 +12,22 @@ feature:
 
 modules:
     - module:
-        name    : DHCP_BASIC_REMOTE_LOCAL
-        spec    : dhcp_ignore.testspec
+        name    : ARP_PING_LOCAL_REMOTE
+        spec    : arp_ping.testspec
         selectors :
               src_endpoints :
                     type : filter://remote=False
                     max  : 1
               dst_endpoints : 
                     type : filter://remote=True
-                    max  : 1        
+                    max  : 1            
     - module:
-        name    : DHCP_BASIC_REMOTE_REMOTE
-        spec    : dhcp_ignore.testspec
+        name    : ARP_PING_LOCAL_LOCAL
+        spec    : arp_ping.testspec
         selectors :
               src_endpoints :
-                    type : filter://remote=True
+                    type : filter://remote=False
                     max  : 1
               dst_endpoints : 
-                    type : filter://remote=True
-                    max  : 1                                                               
+                    type : filter://remote=False
+                    max  : 1                                                                       

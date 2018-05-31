@@ -858,6 +858,7 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
     }
 
     l2seg_ep_learning_update(l2seg, spec);
+    l2seg->proxy_arp_enabled = spec.proxy_arp_enabled();
 
 end:
 

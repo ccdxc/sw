@@ -15,6 +15,23 @@ namespace hal {
 namespace plugins {
 namespace network {
 
+
+static inline bool
+is_broadcast(fte::ctx_t &ctx) {
+    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
+
+    if (!cpu_hdr || !ctx.pkt()) {
+        return false;
+    }
+    ether_header_t *eth_hdr = (ether_header_t*)(ctx.pkt() + cpu_hdr->l2_offset);
+    for (int i = 0; i < ETHER_ADDR_LEN; i++) {
+        if (eth_hdr->dmac[i] != 0xff) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static inline hal_ret_t
 update_rewrite_info(fte::ctx_t&ctx)
 {
@@ -147,6 +164,12 @@ static inline hal_ret_t
 update_flow(fte::ctx_t&ctx)
 {
     hal_ret_t ret;
+
+    if (is_broadcast(ctx)) {
+        ctx.set_ignore_session_create(true);
+        ret = HAL_RET_OK;
+        return ret;
+    }
 
     ret = update_fwding_info(ctx);
     if (ret != HAL_RET_OK) {

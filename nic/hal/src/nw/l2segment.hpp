@@ -88,6 +88,7 @@ typedef struct l2seg_s {
 
     // PD state
     void                  *pd;                     // all PD specific state
+    bool                   proxy_arp_enabled;
 
 } __PACK__ l2seg_t;
 

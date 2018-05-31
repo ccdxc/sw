@@ -242,6 +242,36 @@ find_ep_by_v6_key (vrf_id_t tid, const ip_addr_t *ip_addr)
     return find_ep_by_l3_key(&l3_key);
 }
 
+
+// find EP from v4 key in segment.
+ep_t*
+find_ep_by_v4_key_in_l2segment (uint32_t v4_addr,
+        const hal::l2seg_t *l2seg)
+{
+    ip_addr_t ip_addr = { 0 };
+    ip_addr.addr.v4_addr = v4_addr;
+    return find_ep_by_v6_key_in_l2segment(&ip_addr, l2seg);
+}
+
+// find EP from v6 key in segment.
+ep_t*
+find_ep_by_v6_key_in_l2segment (const ip_addr_t *ip_addr,
+        const hal::l2seg_t *l2seg)
+{
+    ep_t *dep = nullptr;
+    vrf_t *vrf;
+
+    vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+    if (vrf == nullptr) {
+        HAL_TRACE_INFO("Vrf not found.");
+        goto out;
+    }
+
+    dep = find_ep_by_v6_key(vrf->vrf_id, ip_addr);
+out:
+    return dep;
+}
+
 //------------------------------------------------------------------------------
 // insert an ep to l2 db
 //------------------------------------------------------------------------------
@@ -298,6 +328,7 @@ ep_del_from_l2_db (ep_t *ep)
 
     return HAL_RET_OK;
 }
+
 
 //------------------------------------------------------------------------------
 // insert an ep to l3 db

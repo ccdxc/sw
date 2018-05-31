@@ -48,7 +48,11 @@ def Start(dol_cfg_file):
     global EpMgr
     EpMgr = EndpointManager(ep_cfgs)
     EpMgr.BringUpEndpoints()
-    EpMgr.ConfigureEndpoints()
+    #This is hack for now as all the Endpoints are in same segment
+    #If learning is enabled, then no need to install ARP entries.
+    data = json.load(open(dol_cfg_file))
+    segment = data["EndpointObject"][ep_cfgs[0]["name"]]["segment"]
+    EpMgr.ConfigureEndpoints(add_arp=not data["SegmentObject"][segment]["eplearn"])
     
 def Stop():
     EpMgr.TearDownEndpoints()

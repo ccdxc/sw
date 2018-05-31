@@ -95,8 +95,10 @@ class E2eTest(object):
         self._dst_ep.Init()
             
         #Add Arp entries for now.
-        self._src_ep._app.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
-        self._dst_ep._app.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
+        segment = data["EndpointObject"][src_name]["segment"]
+        if not data["SegmentObject"][segment]["eplearn"]:
+            self._src_ep._app.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
+            self._dst_ep._app.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
         
     def __clean_up_endpoints(self):
         print ("Cleaning up endpoints...")

@@ -55,6 +55,7 @@ message L2SegmentSpec {
   types.IPAddress        gipo                       = 10 [(gogoproto.moretags) = "venice:immutable"];   // gipo for mcast vxlan traffic
   eplearn.EplearnCfg     eplearn_cfg                = 11;                                               // ep learning config
   fixed64                pinned_uplink_if_handle    = 12;                                               // The pinned uplink
+  bool                   proxy_arp_enabled          = 13; // proxy arp response enabled.
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request

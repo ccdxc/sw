@@ -98,4 +98,21 @@ ep_get_pd_ep (ep_t *pi_ep)
     return pi_ep->pd;
 }
 
+//------------------------------------------------------------------------------
+// Check whether EP is remote.
+//------------------------------------------------------------------------------
+bool
+is_ep_remote (const ep_t* dep)
+{
+    if_t *sif;
+
+    sif = hal::find_if_by_handle(dep->if_handle);
+    if (!sif || sif->if_type != intf::IF_TYPE_UPLINK) {
+        HAL_TRACE_INFO("Source endpoint interface is not of type Uplink for proxy arp.");
+        return false;
+    }
+
+    return true;
+}
+
 }    // namespace hal

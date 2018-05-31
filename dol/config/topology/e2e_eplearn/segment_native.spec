@@ -8,9 +8,10 @@ native      : True
 broadcast   : flood
 multicast   : flood
 l4lb        : False
+proxy_arp_enabled : True
 eplearn :
     remote            : False
-    arp_entry_timeout : 20
+    arp_entry_timeout : 120
     dhcp              : True
 endpoints   :
     sgenable: True

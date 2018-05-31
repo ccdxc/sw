@@ -15,6 +15,8 @@ hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     this->cpu_rxhdr_ = cpu_rxhdr;
     this->sep_ = temp_ep;
     this->dep_ = temp_dep;
+    this->sl2seg_ = nullptr;
+    this->dl2seg_ = nullptr;
     this->sep_handle_ = temp_ep->hal_handle;
     this->dep_handle_ = temp_dep ? temp_dep->hal_handle : HAL_HANDLE_INVALID;
     this->svrf_ = this->dvrf_ = temp_ten;
