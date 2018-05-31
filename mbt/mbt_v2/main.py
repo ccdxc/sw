@@ -1,10 +1,11 @@
 #! /usr/bin/python3
-import os,sys
+import os
+import sys
 import grpc
-from base64 import test
+from   base64 import test
 import zmq
 import random
-from subprocess import call
+from   subprocess import call
 
 paths = [
     '/mbt/',
@@ -18,16 +19,18 @@ paths = [
 ws_top = os.path.dirname(sys.argv[0]) + '/../..'
 ws_top = os.path.abspath(ws_top)
 os.environ['WS_TOP'] = ws_top
+
+# set the MBT_V2 for new infra
+os.environ['MBT_V2'] = '1'
+
 for path in paths:
     fullpath = ws_top + path
-    print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
 import infra.common.parser  as parser
-import infra.common.utils  as utils
 import infra.common.objects as objects
 import threading
-from infra.common.glopts import GlobalOptions
+from   infra.common.glopts import GlobalOptions
 import mbt_obj_store
 
 # If the random seed is set as a command line argument, set it into the 
@@ -38,10 +41,12 @@ else:
     os.environ['MBT_RANDOM_SEED'] = str(random.randint(1,10000000))
 
 print("The random seed(MBT_RANDOM_SEED) being used for this test is %s" %(str(os.environ['MBT_RANDOM_SEED'])))
-import grpc_meta.types as grpc_meta_types
-grpc_meta_types.set_random_seed()
 
-from msg import *
+import grpc_meta.types as grpc_meta_types
+from   msg import *
+import config_object
+
+grpc_meta_types.set_random_seed()
 
 def get_hal_channel():
     if 'HAL_GRPC_PORT' in os.environ:
@@ -56,27 +61,15 @@ def get_hal_channel():
     print("Connected to HAL!")
     return hal_channel
 
-# This ordering is needed because the random seed is set by the below 2 imports
-import grpc_proxy
-import config_object
-import config_mgr
-
-out_file = ws_top + '/mbt/hal_proto_gen.py'
-template = ws_top + '/mbt/hal_proto_gen_template.py'
-grpc_proxy.genProxyServerMethods('config_mgr', template, out_file, ws_top)
-import hal_proto_gen
-hal_proto_gen.set_grpc_forward_channel(get_hal_channel())
 
 objects.CallbackField.SetPackagePath("cfg.callbacks")
 
 op_map = {
         "Create"   : "create",
-        "ReCreate" : "recreate",
         "Get"      : "get",
-        "GetAll"   : "getall",
         "Update"   : "update",
         "Delete"   : "delete"
-    }
+}
 
 hal_channel = get_hal_channel()
 
@@ -103,10 +96,6 @@ def handle_pdb(sig, frame):
 import signal
 print ('Registering signal handler')
 signal.signal(signal.SIGUSR1, handle_pdb)
-
-if GlobalOptions.mbt:
-    # This is blocking.
-    grpc_proxy.serve(hal_proto_gen.proxyServer)
 
 def create_reference_object(ref_object_spec):
     expected_api_status = 'API_STATUS_OK'
@@ -224,8 +213,6 @@ for test_spec in test_specs:
                                 if expected_status != api_status:
                                     print("Step %s failed for Config %s" % (step.step.op, cfg_spec_obj.name()))
                                     print("Expected: " + step.step.status + ", Got: " + api_status)
-                                    import pdb
-                                    pdb.set_trace()
                                     assert False
 
                                 count += 1

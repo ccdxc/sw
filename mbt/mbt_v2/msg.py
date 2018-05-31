@@ -4,6 +4,7 @@ import grpc_meta.types as grpc_meta_types
 import infra.common.objects as objects
 from collections import defaultdict
 import importlib
+from random import shuffle
 import types_pb2
 import re
 from enum import Enum
@@ -586,6 +587,9 @@ class GrpcReqRspMsg:
                 else:
                     # extract all the enum values
                     enum_values_list = list(message.DESCRIPTOR.fields_by_name[field.name].enum_type.values)
+
+                    # shuffle the enum values list
+                    shuffle(enum_values_list)
 
                     # pop the enum value to be chosen now
                     enum_descriptor = enum_values_list.pop()
