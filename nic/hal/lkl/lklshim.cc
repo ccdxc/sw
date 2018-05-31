@@ -284,9 +284,11 @@ lklshim_release_client_syn(uint16_t qid)
     if (flow->hostns.skbuff != NULL) {
         HAL_TRACE_DEBUG("lklshim: Using host skbuff");
         pkt_skb = flow->hostns.skbuff;
+        flow->hostns.skbuff = NULL;
     } else if (flow->netns.skbuff != NULL ) {
         HAL_TRACE_DEBUG("lklshim: Using net skbuff");
         pkt_skb = flow->netns.skbuff;
+        flow->netns.skbuff = NULL;
     } else {
         HAL_TRACE_DEBUG("lklshim skbuff not found. Skipping client syn release");
         return true;
