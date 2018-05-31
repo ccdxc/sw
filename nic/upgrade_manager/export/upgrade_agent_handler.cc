@@ -9,28 +9,28 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgAgentHandler::UpgStatePreUpgCheckComplete(HdlrResp &resp, string name) {
-    LogInfo("Pre Upgrade Check completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
+void UpgAgentHandler::UpgStatePreUpgCheckComplete(HdlrResp &resp, string svcName) {
+    LogInfo("Pre Upgrade Check completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateProcessQuiesceComplete(HdlrResp &resp, string name) {
-    LogInfo("Process quiesce completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
+void UpgAgentHandler::UpgStateProcessQuiesceComplete(HdlrResp &resp, string svcName) {
+    LogInfo("Process quiesce completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStatePostBinRestartComplete(HdlrResp &resp, string name) {
-    LogInfo("Post Bin Restart completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
+void UpgAgentHandler::UpgStatePostBinRestartComplete(HdlrResp &resp, string svcName) {
+    LogInfo("Post Bin Restart completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string name) {
-    LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
+void UpgAgentHandler::UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string svcName) {
+    LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateCleanupComplete(HdlrResp &resp, string name) {
-    LogInfo("Cleanup completed with status {} error {} for service {}", resp.resp, resp.errStr, name);
+void UpgAgentHandler::UpgStateCleanupComplete(HdlrResp &resp, string svcName) {
+    LogInfo("Cleanup completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 

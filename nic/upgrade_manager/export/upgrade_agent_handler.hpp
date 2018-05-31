@@ -14,11 +14,11 @@ class UpgAgentHandler {
 public:
     UpgAgentHandler() {}
 
-    virtual void UpgStatePreUpgCheckComplete(HdlrResp &resp, string name);
-    virtual void UpgStateProcessQuiesceComplete(HdlrResp &resp, string name);
-    virtual void UpgStatePostBinRestartComplete(HdlrResp &resp, string name);
-    virtual void UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string name);
-    virtual void UpgStateCleanupComplete(HdlrResp &resp, string name);
+    virtual void UpgStatePreUpgCheckComplete(HdlrResp &resp, string svcName);
+    virtual void UpgStateProcessQuiesceComplete(HdlrResp &resp, string svcName);
+    virtual void UpgStatePostBinRestartComplete(HdlrResp &resp, string svcName);
+    virtual void UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string svcName);
+    virtual void UpgStateCleanupComplete(HdlrResp &resp, string svcName);
 
     virtual void UpgSuccessful(void);
     virtual void UpgFailed(vector<string> &errStrList);

@@ -16,7 +16,6 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
     this->sdk_ = sk;
     this->svcName_ = name;
 
-    // create upgrade request status manager event handler
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<ExSvcHandler>(), name, NON_AGENT);
 
     LogInfo("Example upgrade service constructor got called");
