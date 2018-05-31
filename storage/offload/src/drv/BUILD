@@ -7,7 +7,6 @@ licenses(["notice"])  # MIT license
 cc_library(
     name = "pnso_drv",
     srcs = [
-        "pnso_cp.c",
         "pnso_dc.c",
         "pnso_chksum.c",
         "pnso_hash.c",
