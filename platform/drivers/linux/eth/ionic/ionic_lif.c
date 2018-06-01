@@ -915,7 +915,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	int err;
 
 	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
-	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
 		return err;
 
@@ -1223,7 +1223,7 @@ static int ionic_lif_init(struct lif *lif)
 	int err;
 
 	ionic_dev_cmd_lif_init(idev, lif->index);
-	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
 		return err;
 

@@ -32,6 +32,7 @@ extern unsigned int ntxq_descs;
 extern unsigned int nrxq_descs;
 extern unsigned int ntxqs;
 extern unsigned int nrxqs;
+extern unsigned int devcmd_timeout;
 
 struct ionic {
 	struct pci_dev *pdev;

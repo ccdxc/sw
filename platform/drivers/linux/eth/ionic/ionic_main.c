@@ -45,6 +45,12 @@ module_param(nrxqs, uint, 0);
 MODULE_PARM_DESC(ntxqs, "Hard set the number of Tx queues per LIF");
 MODULE_PARM_DESC(nrxqs, "Hard set the number of Rx queues per LIF");
 
+unsigned int devcmd_timeout = 30;
+#ifdef HAPS
+module_param(devcmd_timeout, uint, 0);
+MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
+#endif
+
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	struct net_device *netdev = lif->netdev;
@@ -117,6 +123,7 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 {
 	unsigned long time;
+	signed long wait;
 	int done;
 
 	WARN_ON(in_interrupt());
@@ -136,7 +143,9 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		if (done)
 			return 0;
 
-		schedule_timeout_uninterruptible(HZ / 10);
+		wait = schedule_timeout_interruptible(HZ / 10);
+		if (wait > 0)
+			return -EINTR;
 
 	} while (time_after(time, jiffies));
 
@@ -238,7 +247,7 @@ int ionic_identify(struct ionic *ionic)
 
 	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
 
-	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
 		goto err_out_unmap;
 
@@ -272,7 +281,7 @@ int ionic_reset(struct ionic *ionic)
 	struct ionic_dev *idev = &ionic->idev;
 
 	ionic_dev_cmd_reset(idev);
-	return ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	return ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 }
 
 static int __init ionic_init_module(void)

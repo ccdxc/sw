@@ -277,7 +277,7 @@ err_out:
 	ionic_dev_cmd_go(idev, (void *)&ctx->cmd);
 
 	/* sleep while holding spinlock... this is just temporary */
-	err = ionic_dev_cmd_wait_check(idev, HZ * 10);
+	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
 		goto err_out;
 

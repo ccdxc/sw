@@ -24,12 +24,6 @@
 #define IONIC_MIN_MTU		ETH_MIN_MTU
 #define IONIC_MAX_MTU		9200
 
-#ifdef HAPS
-#define IONIC_DEVCMD_TIMEOUT	(HZ * 10)
-#else
-#define IONIC_DEVCMD_TIMEOUT	(HZ * 2)
-#endif
-
 #pragma pack(push, 1)
 
 union dev_cmd {
