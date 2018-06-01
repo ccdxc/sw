@@ -133,11 +133,9 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&nat_svc);
         server_builder->RegisterService(&tlscb_svc);
         server_builder->RegisterService(&tcpcb_svc);
-        server_builder->RegisterService(&qos_svc);
         server_builder->RegisterService(&descraol_svc);
         server_builder->RegisterService(&wring_svc);
         server_builder->RegisterService(&proxy_svc);
-        server_builder->RegisterService(&acl_svc);
         server_builder->RegisterService(&telemetry_svc);
         server_builder->RegisterService(&ipseccb_svc);
         server_builder->RegisterService(&ipsec_svc);
@@ -158,8 +156,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&rdma_svc);
         server_builder->RegisterService(&gft_svc);
         server_builder->RegisterService(&system_svc);
-        // Revisit. DOL was not able to create Lif without qos class
-        server_builder->RegisterService(&qos_svc);
         // Revisit. DOL was not able to create Tenant with security profile.
         server_builder->RegisterService(&nwsec_svc);
         server_builder->RegisterService(&dos_svc);

@@ -1,6 +1,7 @@
 gl_deps_list = [
         "//nic/hal:hal_src",
         "//nic/hal/src/nw:nw_includes",
+        "//nic/hal/src/aclqos:aclqos_includes",
         # PI
         "//nic/fte:fte",
         "//nic/hal/periodic",

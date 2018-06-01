@@ -179,6 +179,14 @@
             "provider"  : "pensando.io",
             "lib"       : "nw/libnw.so",
             "auto_load" : "true"
+        },
+        {
+            "name"      : "aclqos",
+            "provider"  : "pensando.io",
+            "lib"       : "aclqos/libaclqos.so",
+            "init_func" : "aclqos_init",
+            "exit_func" : "aclqos_exit",
+            "auto_load" : "true"
         }
     ],
 
