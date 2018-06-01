@@ -523,11 +523,10 @@ nwsec_rule_init (nwsec_rule_t *rule)
     rule->ht_ctxt.reset();
     ref_init(&rule->ref_count, [] (const ref_t * ref) {
         nwsec_rule_t * rule = container_of(ref, nwsec_rule_t, ref_count);
+        HAL_TRACE_DEBUG("Calling rule free");
         g_hal_state->nwsec_rule_slab()->free(rule);
     });
     ref_inc(&rule->ref_count);
-
-
     rule_match_init(&rule->fw_rule_match);
     dllist_reset(&rule->dlentry);
     dllist_reset(&rule->appid_list_head);

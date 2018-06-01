@@ -614,6 +614,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
 void 
 nwsec_rule_free(void *rule)
 {
+    ref_dec(&((nwsec_rule_t *)rule)->ref_count);
     return;
 }
 
@@ -634,6 +635,7 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
         rule_data->userdata = rule;
         rule_data->data_free     = nwsec_rule_free; 
         ret = rule_match_rule_add(acl_ctx, &rule->fw_rule_match, rule->priority, rule_data);
+        ref_dec(&rule_data->ref_count);
     }
     return ret;
 }

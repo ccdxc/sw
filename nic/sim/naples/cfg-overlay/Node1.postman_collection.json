@@ -1,0 +1,149 @@
+{
+	"info": {
+		"_postman_id": "6566ca17-ac88-4941-b168-947108e6f506",
+		"name": "Node1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "tenant/infra",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Tenant\",\"meta\":{\"name\":\"infra_tenant\",\"tenant\":\"infra_tenant\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/tenants/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"tenants",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "namespace/infra",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"infra_ns\",\"tenant\":\"infra_tenant\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/namespaces/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"namespaces",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/infra",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"infra_nw\",\"tenant\":\"infra_tenant\",\"namespace\":\"infra_ns\"}, \"spec\":{\"ipv4-subnet\": \"192.168.10.0/24\", \"ipv4-gateway\":\"192.168.10.100\", \"vlan-id\":200}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/networks/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/remote-tep",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"infra_tenant\",\"namespace\":\"infra_ns\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tunnels/overlay_tunnel",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Tunnel\",\"meta\":{\"name\":\"testTunnel\",\"tenant\":\"infra_tenant\",\"namespace\":\"infra_ns\"},\"spec\":{\"type\":\"VXLAN\",\"admin-status\":\"UP\",\"source\":\"192.168.10.11\",\"destination\":\"192.168.10.12\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/tunnels/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"tunnels",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

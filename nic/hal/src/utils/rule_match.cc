@@ -353,9 +353,9 @@ rule_data_alloc_init()
 {
     rule_data_t *data = (rule_data_t *)g_hal_state->rule_data_slab()->alloc();
     ref_init(&data->ref_count, [] (const ref_t * ref_count) {
-        rule_data_t *rule  = (rule_data_t *)acl_rule_from_ref(ref_count);
+        rule_data_t *rule  = rule_data_from_ref(ref_count);
         rule->data_free(rule->userdata);
-        g_hal_state->rule_data_slab()->free((void *)acl_rule_from_ref(ref_count));
+        g_hal_state->rule_data_slab()->free((void *)rule);
     });
     return data;
 }
@@ -390,7 +390,7 @@ rule_lib_alloc()
     ref_init(&rule->ref_count, [] (const ref_t * ref_count) {
 
         ipv4_rule_t *rule  = (ipv4_rule_t *)acl_rule_from_ref(ref_count);
-        ref_dec(&((ipv4_rule_t *)rule->data.userdata)->ref_count);
+        ref_dec(&((rule_data_t *)rule->data.userdata)->ref_count);
         g_hal_state->ipv4_rule_slab()->free((void *)acl_rule_from_ref(ref_count));
     });
     return rule;

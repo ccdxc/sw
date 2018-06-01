@@ -88,7 +88,6 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 #define RULE_MATCH_GET_SG(sg_entry)  \
     dllist_entry(sg_entry, sg_list_elem_t, list_ctxt)
 
-
 #define PRINT_RULE_FIELDS(rule)  \
             HAL_TRACE_DEBUG("Added rule with keys: src {}, src_range {}, dst {}, dst_range {}, mac_src {}, mac_src_range {}, mac_dst {}, mac_dst_range {}, port_src {}, port_src_mask {}, port_dst {}, port_dst_mask {}, src_sg {}, src_sg_mask {}, dst_sg {}, dst_sg_mask {} proto {}, proto_mask {}, ethertype {} ethertype_mask {}", \
                         rule->field[IP_SRC].value.u32,rule->field[IP_SRC].mask_range.u32,                                            \
@@ -102,6 +101,10 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
                         rule->field[PROTO].value.u8,rule->field[PROTO].mask_range.u8,                                                \
                         rule->field[ETHERTYPE].value.u16, rule->field[ETHERTYPE].value.u16)
 
+static inline rule_data_t *
+rule_data_from_ref(const ref_t *ref_count) {
+    return container_of(ref_count, rule_data_t, ref_count);
+}
 // ----------------------------------------------------------------------------
 // Function prototype
 // ----------------------------------------------------------------------------
