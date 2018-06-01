@@ -173,7 +173,16 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmdInfo, error) {
 		resolverClient = resolver.New(resolverCfg)
 	}
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, "", restURL, *mode, resolverClient)
+	ag, err := nmd.NewAgent(pa,
+		dbPath,
+		nodeID,
+		*cmdURL,
+		"",
+		restURL,
+		*mode,
+		globals.NicRegIntvl*time.Second,
+		globals.NicUpdIntvl*time.Second,
+		resolverClient)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err

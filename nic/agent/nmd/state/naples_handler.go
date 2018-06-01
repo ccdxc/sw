@@ -18,7 +18,7 @@ const (
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
 	// at 30min.
-	nicRegMaxInterval = (30 * 60)
+	nicRegMaxInterval = (30 * 60 * time.Second)
 )
 
 // UpdateNaplesConfig updates a local Naples Config object
@@ -84,7 +84,7 @@ func (n *NMD) StartManagedMode() error {
 			return nil
 
 		// Register NIC
-		case <-time.After(n.nicRegInterval * time.Second):
+		case <-time.After(n.nicRegInterval):
 
 			// For the NIC in Naples Config, start the registration
 			mac := n.config.Spec.PrimaryMac
@@ -208,7 +208,7 @@ func (n *NMD) SendNICUpdates() error {
 			return nil
 
 		// NIC update timer callback
-		case <-time.After(n.nicUpdInterval * time.Second):
+		case <-time.After(n.nicUpdInterval):
 
 			nicObj := n.nic
 

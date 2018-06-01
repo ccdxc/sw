@@ -28,7 +28,7 @@ type NMD struct {
 	nic    *cmd.SmartNIC // SmartNIC object
 
 	stopNICReg     chan bool     // channel to stop NIC registration
-	nicRegInterval time.Duration // time interval between nic registration in milliseconds
+	nicRegInterval time.Duration // time interval between nic registration in seconds
 	isRegOngoing   bool          // status of ongoing nic registration task
 
 	stopNICUpd     chan bool     // channel to stop NIC update

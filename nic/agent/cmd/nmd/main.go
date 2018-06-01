@@ -6,6 +6,7 @@ import (
 	"context"
 	"flag"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
@@ -25,6 +26,8 @@ func main() {
 		nmdDbPath          = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
 		cmdRegistrationURL = flag.String("cmdregistration", ":"+globals.CMDSmartNICRegistrationAPIPort, "NIC Registration API server URL(s)")
 		cmdUpdatesURL      = flag.String("cmdupdates", ":"+globals.CMDSmartNICUpdatesPort, "NIC Updates server URL(s)")
+		regInterval        = flag.Int64("reginterval", globals.NicRegIntvl, "NIC registration interval in seconds")
+		updInterval        = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
 		res                = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
 		mode               = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
 		debugflag          = flag.Bool("debug", false, "Enable debug mode")
@@ -85,7 +88,16 @@ func main() {
 	}
 
 	// create the new NMD
-	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdRegistrationURL, *cmdUpdatesURL, ":"+globals.NmdRESTPort, *mode, resolverClient)
+	nm, err := nmd.NewAgent(pa,
+		*nmdDbPath,
+		macAddr.String(),
+		*cmdRegistrationURL,
+		*cmdUpdatesURL,
+		":"+globals.NmdRESTPort,
+		*mode,
+		time.Duration(*regInterval)*time.Second,
+		time.Duration(*updInterval)*time.Second,
+		resolverClient)
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}

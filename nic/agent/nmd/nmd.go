@@ -3,6 +3,8 @@
 package nmd
 
 import (
+	"time"
+
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/utils/log"
@@ -24,10 +26,13 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdRegURL, cmdUpdURL, nmdListenURL string, mode string, resolverClient resolver.Interface) (*Agent, error) {
+func NewAgent(platform state.PlatformAPI,
+	nmdDbPath, nodeUUID, cmdRegURL, cmdUpdURL, nmdListenURL, mode string,
+	regInterval, updInterval time.Duration,
+	resolverClient resolver.Interface) (*Agent, error) {
 
 	// create new NMD instance
-	nm, err := state.NewNMD(platform, nmdDbPath, nodeUUID, nmdListenURL, mode)
+	nm, err := state.NewNMD(platform, nmdDbPath, nodeUUID, nmdListenURL, mode, regInterval, updInterval)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err

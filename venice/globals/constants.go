@@ -60,6 +60,10 @@ const (
 
 	// NMD
 	NmdRESTPort = "9008"
+	// Nic registration interval in seconds
+	NicRegIntvl = 1
+	// Nic update interval in seconds
+	NicUpdIntvl = 30
 
 	// KVStore
 	KVStorePeerPort   = "5001"

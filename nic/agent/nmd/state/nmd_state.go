@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -20,7 +21,9 @@ import (
 )
 
 // NewNMD returns a new NMD instance
-func NewNMD(platform PlatformAPI, dbPath, nodeUUID, listenURL, mode string) (*NMD, error) {
+func NewNMD(platform PlatformAPI,
+	dbPath, nodeUUID, listenURL, mode string,
+	regInterval, updInterval time.Duration) (*NMD, error) {
 
 	var emdb emstore.Emstore
 	var err error
@@ -89,9 +92,9 @@ func NewNMD(platform PlatformAPI, dbPath, nodeUUID, listenURL, mode string) (*NM
 		nodeUUID:         nodeUUID,
 		platform:         platform,
 		nic:              nil,
-		nicRegInterval:   1, // TODO: make it configurable
+		nicRegInterval:   regInterval,
 		isRegOngoing:     false,
-		nicUpdInterval:   30, // TODO: make it configurable
+		nicUpdInterval:   updInterval,
 		isUpdOngoing:     false,
 		isRestSrvRunning: false,
 		listenURL:        listenURL,

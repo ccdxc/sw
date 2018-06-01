@@ -6,11 +6,13 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -111,7 +113,13 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 	}
 
 	// create new NMD
-	nm, err := NewNMD(ag, dbPath, nodeID, "localhost:0", mode)
+	nm, err := NewNMD(ag,
+		dbPath,
+		nodeID,
+		"localhost:0",
+		mode,
+		globals.NicRegIntvl*time.Second,
+		globals.NicUpdIntvl*time.Second)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, nil, nil
