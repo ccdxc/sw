@@ -243,40 +243,49 @@ func (m *AppUserStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *App) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppUser) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppUser) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppUserGrp) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppUserGrp) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppUserGrpSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppUserGrpSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppUserGrpStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppUserGrpStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppUserSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppUserSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AppUserStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppUserStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

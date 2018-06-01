@@ -110,7 +110,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -118,7 +120,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -127,10 +132,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -160,20 +169,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.ApplyDiscountReq{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.ApplyDiscountReq{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.ApplyDiscountReq)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.ApplyDiscountReq)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.AutoMsgBookWatchHelper":      apisrvpkg.NewMessage("bookstore.AutoMsgBookWatchHelper"),
@@ -200,7 +215,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -220,8 +237,11 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -230,10 +250,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -263,20 +287,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Book{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Book{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.Book)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.Book)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.BookEdition": apisrvpkg.NewMessage("bookstore.BookEdition"),
@@ -288,6 +318,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -319,7 +350,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -327,7 +360,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -336,10 +372,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -369,20 +409,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Coupon{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Coupon{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.Coupon)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.Coupon)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.CouponList": apisrvpkg.NewMessage("bookstore.CouponList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -393,6 +439,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -421,7 +468,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -441,8 +490,11 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -451,10 +503,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -484,20 +540,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Customer{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Customer{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.Customer)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.Customer)
+			return r.Validate(ver, "", ignoreStatus)
 		}).WithStorageTransformer(&bookstore.StorageCustomerTransformer),
 
 		"bookstore.CustomerList": apisrvpkg.NewMessage("bookstore.CustomerList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -508,6 +570,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			err = into.ApplyStorageTransformer(ctx, false)
@@ -543,7 +606,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -563,8 +628,11 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -573,10 +641,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -606,20 +678,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Order{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Order{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.Order)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.Order)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.OrderItem": apisrvpkg.NewMessage("bookstore.OrderItem"),
@@ -631,6 +709,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -661,7 +740,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -669,7 +750,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -678,10 +762,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -711,20 +799,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.OutageRequest{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.OutageRequest{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.OutageRequest)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.OutageRequest)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.Publisher": apisrvpkg.NewMessage("bookstore.Publisher").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -745,7 +839,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -753,7 +849,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -762,10 +861,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -795,20 +898,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Publisher{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Publisher{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.Publisher)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.Publisher)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.PublisherList": apisrvpkg.NewMessage("bookstore.PublisherList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -819,6 +928,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -848,7 +958,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -856,7 +968,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -865,10 +980,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -898,20 +1017,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.RestockRequest{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.RestockRequest{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.RestockRequest)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.RestockRequest)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.RestockResponse": apisrvpkg.NewMessage("bookstore.RestockResponse").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -932,7 +1057,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -940,7 +1067,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -949,10 +1079,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -982,20 +1116,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.RestockResponse{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.RestockResponse{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.RestockResponse)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.RestockResponse)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.Store": apisrvpkg.NewMessage("bookstore.Store").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -1016,7 +1156,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -1036,8 +1178,11 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -1046,10 +1191,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -1079,20 +1228,26 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Store{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Store{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(bookstore.Store)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(bookstore.Store)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"bookstore.StoreList": apisrvpkg.NewMessage("bookstore.StoreList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -1103,6 +1258,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil

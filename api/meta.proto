@@ -82,11 +82,11 @@ message StatusResult {
 message Status {
   TypeMeta T          = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];
   // Result contains the status of the operation, success or failure.
-  StatusResult Result = 2 [(gogoproto.jsontag) = "result,omitempty"];
+  StatusResult Result = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "result,omitempty"];
   // Message contains human readable form of the error.
-  string Message      = 3 [(gogoproto.jsontag) = "message,omitempty"];
+  repeated string Message      = 3 [(gogoproto.jsontag) = "message,omitempty"];
   // Code is the HTTP status code.
-  int32 Code          = 4 [(gogoproto.jsontag) = "labels,omitempty"];
+  int32 Code          = 4 [(gogoproto.jsontag) = "code,omitempty"];
   // Reference to the object (optional) for which this status is being sent.
   ObjectRef Ref       = 5 [(gogoproto.jsontag) = "object-ref,omitempty"];
 }

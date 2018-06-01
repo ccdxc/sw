@@ -7,6 +7,7 @@ Input file: alerts.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapAlerts = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapAlerts = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Alert) MakeKey(prefix string) string {
@@ -489,198 +490,286 @@ func (m *SNMPTrapServer) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Alert) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	if !ignoreStatus {
-		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AlertDestination) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *AlertDestinationSpec) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.SNMPTrapServers {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.SNMPTrapServers {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sSNMPTrapServers[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AlertDestinationStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AlertDestinationStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AlertPolicy) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *AlertPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Requirements {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Requirements {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sRequirements[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	if vs, ok := validatorMapAlerts["AlertPolicySpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["AlertPolicySpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AlertPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AlertPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AlertReason) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.MatchedRequirements {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AlertReason) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.MatchedRequirements {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sMatchedRequirements[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AlertSource) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AlertSource) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AlertSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *AlertSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapAlerts["AlertSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["AlertSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AlertStatus) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Reason.Validate(ver, ignoreStatus) {
-		return false
+func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Reason"
+	if errs := m.Reason.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	if vs, ok := validatorMapAlerts["AlertStatus"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["AlertStatus"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AuditInfo) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AuditInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AuthConfig) Validate(ver string, ignoreStatus bool) bool {
+func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapAlerts["AuthConfig"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["AuthConfig"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *MatchedRequirement) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Requirement.Validate(ver, ignoreStatus) {
-		return false
+func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Requirement"
+	if errs := m.Requirement.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *PrivacyConfig) Validate(ver string, ignoreStatus bool) bool {
+func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapAlerts["PrivacyConfig"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["PrivacyConfig"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *Requirement) Validate(ver string, ignoreStatus bool) bool {
+func (m *Requirement) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapAlerts["Requirement"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["Requirement"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *SNMPTrapServer) Validate(ver string, ignoreStatus bool) bool {
+func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.AuthConfig != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "AuthConfig"
+		if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	if m.PrivacyConfig != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "PrivacyConfig"
+		if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapAlerts["SNMPTrapServer"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["SNMPTrapServer"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
 func init() {
@@ -691,76 +780,76 @@ func init() {
 		&AlertPolicy{},
 	)
 
-	validatorMapAlerts = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapAlerts = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapAlerts["AlertPolicySpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapAlerts["AlertPolicySpec"]["all"] = append(validatorMapAlerts["AlertPolicySpec"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["AlertPolicySpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["AlertPolicySpec"]["all"] = append(validatorMapAlerts["AlertPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertPolicySpec)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
-			return false
+			return errors.New("AlertPolicySpec.Severity did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAlerts["AlertSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapAlerts["AlertSpec"]["all"] = append(validatorMapAlerts["AlertSpec"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["AlertSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["AlertSpec"]["all"] = append(validatorMapAlerts["AlertSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertSpec)
 
 		if _, ok := AlertSpec_AlertState_value[m.State]; !ok {
-			return false
+			return errors.New("AlertSpec.State did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAlerts["AlertStatus"] = make(map[string][]func(interface{}) bool)
-	validatorMapAlerts["AlertStatus"]["all"] = append(validatorMapAlerts["AlertStatus"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["AlertStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["AlertStatus"]["all"] = append(validatorMapAlerts["AlertStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertStatus)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
-			return false
+			return errors.New("AlertStatus.Severity did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAlerts["AuthConfig"] = make(map[string][]func(interface{}) bool)
-	validatorMapAlerts["AuthConfig"]["all"] = append(validatorMapAlerts["AuthConfig"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["AuthConfig"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["AuthConfig"]["all"] = append(validatorMapAlerts["AuthConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*AuthConfig)
 
 		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
-			return false
+			return errors.New("AuthConfig.Algo did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAlerts["PrivacyConfig"] = make(map[string][]func(interface{}) bool)
-	validatorMapAlerts["PrivacyConfig"]["all"] = append(validatorMapAlerts["PrivacyConfig"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["PrivacyConfig"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["PrivacyConfig"]["all"] = append(validatorMapAlerts["PrivacyConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*PrivacyConfig)
 
 		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
-			return false
+			return errors.New("PrivacyConfig.Algo did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAlerts["Requirement"] = make(map[string][]func(interface{}) bool)
-	validatorMapAlerts["Requirement"]["all"] = append(validatorMapAlerts["Requirement"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["Requirement"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["Requirement"]["all"] = append(validatorMapAlerts["Requirement"]["all"], func(path string, i interface{}) error {
 		m := i.(*Requirement)
 
 		if _, ok := Requirement_AllowedOperators_value[m.Operator]; !ok {
-			return false
+			return errors.New("Requirement.Operator did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAlerts["SNMPTrapServer"] = make(map[string][]func(interface{}) bool)
-	validatorMapAlerts["SNMPTrapServer"]["all"] = append(validatorMapAlerts["SNMPTrapServer"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["SNMPTrapServer"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["SNMPTrapServer"]["all"] = append(validatorMapAlerts["SNMPTrapServer"]["all"], func(path string, i interface{}) error {
 		m := i.(*SNMPTrapServer)
 
 		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {
-			return false
+			return errors.New("SNMPTrapServer.Version did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
 }

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -60,7 +59,9 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -80,8 +81,11 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -90,10 +94,14 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -123,20 +131,26 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.App{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.App{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(security.App)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(security.App)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"security.AppSpec":   apisrvpkg.NewMessage("security.AppSpec"),
@@ -159,7 +173,9 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -179,8 +195,11 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -189,10 +208,14 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -222,20 +245,26 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.AppUser{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.AppUser{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(security.AppUser)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(security.AppUser)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"security.AppUserGrp": apisrvpkg.NewMessage("security.AppUserGrp").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -256,7 +285,9 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -276,8 +307,11 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -286,10 +320,14 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -319,20 +357,26 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.AppUserGrp{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.AppUserGrp{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(security.AppUserGrp)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(security.AppUserGrp)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"security.AppUserGrpSpec":   apisrvpkg.NewMessage("security.AppUserGrpSpec"),

@@ -7,6 +7,7 @@ Input file: x509.proto
 package security
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapX509 = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapX509 = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Certificate) MakeKey(prefix string) string {
@@ -119,50 +120,65 @@ func (m *CertificateStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Certificate) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Certificate) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	if !ignoreStatus {
-		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *CertificateSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *CertificateSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapX509["CertificateSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapX509["CertificateSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *CertificateStatus) Validate(ver string, ignoreStatus bool) bool {
+func (m *CertificateStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapX509["CertificateStatus"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapX509["CertificateStatus"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
 func init() {
@@ -171,28 +187,28 @@ func init() {
 		&Certificate{},
 	)
 
-	validatorMapX509 = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapX509 = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapX509["CertificateSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapX509["CertificateSpec"]["all"] = append(validatorMapX509["CertificateSpec"]["all"], func(i interface{}) bool {
+	validatorMapX509["CertificateSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapX509["CertificateSpec"]["all"] = append(validatorMapX509["CertificateSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*CertificateSpec)
 
-		for _, v := range m.Usages {
+		for k, v := range m.Usages {
 			if _, ok := CertificateSpec_UsageValues_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Usages", k)
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapX509["CertificateStatus"] = make(map[string][]func(interface{}) bool)
-	validatorMapX509["CertificateStatus"]["all"] = append(validatorMapX509["CertificateStatus"]["all"], func(i interface{}) bool {
+	validatorMapX509["CertificateStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapX509["CertificateStatus"]["all"] = append(validatorMapX509["CertificateStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*CertificateStatus)
 
 		if _, ok := CertificateStatus_ValidityValues_value[m.Validity]; !ok {
-			return false
+			return errors.New("CertificateStatus.Validity did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
 }

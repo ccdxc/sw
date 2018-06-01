@@ -7,6 +7,7 @@ Input file: events.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapEvents = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapEvents = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Event) MakeKey(prefix string) string {
@@ -245,81 +246,118 @@ func (m *EventsList) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Event) Validate(ver string, ignoreStatus bool) bool {
-	if !m.EventAttributes.Validate(ver, ignoreStatus) {
-		return false
+func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "EventAttributes"
+	if errs := m.EventAttributes.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *EventAttributes) Validate(ver string, ignoreStatus bool) bool {
+func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapEvents["EventAttributes"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapEvents["EventAttributes"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *EventExport) Validate(ver string, ignoreStatus bool) bool {
-	if m.Selector != nil && !m.Selector.Validate(ver, ignoreStatus) {
-		return false
+func (m *EventExport) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Selector != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Selector"
+		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if vs, ok := validatorMapEvents["EventExport"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapEvents["EventExport"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *EventPolicy) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *EventPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Exports {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Exports {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sExports[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *EventPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *EventPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *EventSource) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *EventSource) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *EventsList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Events {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *EventsList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
 func init() {
@@ -329,26 +367,26 @@ func init() {
 		&EventPolicy{},
 	)
 
-	validatorMapEvents = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapEvents = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapEvents["EventAttributes"] = make(map[string][]func(interface{}) bool)
-	validatorMapEvents["EventAttributes"]["all"] = append(validatorMapEvents["EventAttributes"]["all"], func(i interface{}) bool {
+	validatorMapEvents["EventAttributes"] = make(map[string][]func(string, interface{}) error)
+	validatorMapEvents["EventAttributes"]["all"] = append(validatorMapEvents["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
-			return false
+			return errors.New("EventAttributes.Severity did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapEvents["EventExport"] = make(map[string][]func(interface{}) bool)
-	validatorMapEvents["EventExport"]["all"] = append(validatorMapEvents["EventExport"]["all"], func(i interface{}) bool {
+	validatorMapEvents["EventExport"] = make(map[string][]func(string, interface{}) error)
+	validatorMapEvents["EventExport"]["all"] = append(validatorMapEvents["EventExport"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventExport)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return false
+			return errors.New("EventExport.Format did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
 }

@@ -121,7 +121,7 @@ type DefaulterFunc func(i interface{}) interface{}
 
 // ValidateFunc is a function the validates the message. returns nil on success and error
 //  when validation fails.
-type ValidateFunc func(i interface{}, ver string, ignoreStatus bool) error
+type ValidateFunc func(i interface{}, ver string, ignoreStatus bool) []error
 
 // PreCommitFunc is the registered function that is desired to be invoked before commit
 // (the KV store operation). Multiple precommitFuncs could be registered. All registered funcs
@@ -272,7 +272,7 @@ type MessageAction interface {
 	// Default applies the custom defaulter if registered.
 	Default(i interface{}) interface{}
 	// Validate validates the message by invoking the custom validation function registered.
-	Validate(i interface{}, ver string, ignoreStatus bool) error
+	Validate(i interface{}, ver string, ignoreStatus bool) []error
 	// CreateUUID creates uuid when the object is first created
 	CreateUUID(i interface{}) (interface{}, error)
 	// WriteCreationTime writes the creation time of the object to now

@@ -23,7 +23,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapSearch = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapSearch = make(map[string]map[string][]func(string, interface{}) error)
 
 // Clone clones the object into into or creates one of into is nil
 func (m *Category) Clone(into interface{}) (interface{}, error) {
@@ -305,125 +305,163 @@ func (m *TextRequirement) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Category) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Category) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *CategoryAggregation) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Entry) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Entry) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *EntryList) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *EntryList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Error) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Error) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Kind) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Kind) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *KindAggregation) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *KindAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *SearchQuery) Validate(ver string, ignoreStatus bool) bool {
-	if m.Fields != nil && !m.Fields.Validate(ver, ignoreStatus) {
-		return false
+func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Fields != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Fields"
+		if errs := m.Fields.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
-	if m.Labels != nil && !m.Labels.Validate(ver, ignoreStatus) {
-		return false
+	if m.Labels != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Labels"
+		if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
-	for _, v := range m.Texts {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+	for k, v := range m.Texts {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sTexts[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	if vs, ok := validatorMapSearch["SearchQuery"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapSearch["SearchQuery"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *SearchRequest) Validate(ver string, ignoreStatus bool) bool {
-	if m.Query != nil && !m.Query.Validate(ver, ignoreStatus) {
-		return false
+func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Query != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Query"
+		if errs := m.Query.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if vs, ok := validatorMapSearch["SearchRequest"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapSearch["SearchRequest"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *SearchResponse) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *SearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TenantAggregation) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TenantAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TextRequirement) Validate(ver string, ignoreStatus bool) bool {
+func (m *TextRequirement) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapSearch["TextRequirement"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapSearch["TextRequirement"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes()
 
-	validatorMapSearch = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapSearch = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapSearch["SearchQuery"] = make(map[string][]func(interface{}) bool)
-	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchQuery"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchQuery)
 
-		for _, v := range m.Categories {
+		for k, v := range m.Categories {
 			if _, ok := Category_Type_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Categories", k)
 			}
 		}
-		return true
+		return nil
 	})
-	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchQuery)
 		args := make([]string, 0)
 		args = append(args, "0")
@@ -431,23 +469,23 @@ func init() {
 
 		for _, v := range m.Categories {
 			if !validators.StrLen(v, args) {
-				return false
+				return fmt.Errorf("%v failed validation", path+"."+"Categories")
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchQuery)
 
-		for _, v := range m.Kinds {
+		for k, v := range m.Kinds {
 			if _, ok := Kind_Type_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Kinds", k)
 			}
 		}
-		return true
+		return nil
 	})
-	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchQuery)
 		args := make([]string, 0)
 		args = append(args, "0")
@@ -455,63 +493,63 @@ func init() {
 
 		for _, v := range m.Kinds {
 			if !validators.StrLen(v, args) {
-				return false
+				return fmt.Errorf("%v failed validation", path+"."+"Kinds")
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapSearch["SearchRequest"] = make(map[string][]func(interface{}) bool)
-	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchRequest"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchRequest)
 		args := make([]string, 0)
 		args = append(args, "0")
 		args = append(args, "1023")
 
 		if !validators.IntRange(m.From, args) {
-			return false
+			return fmt.Errorf("%v failed validation", path+"."+"From")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchRequest)
 		args := make([]string, 0)
 		args = append(args, "0")
 		args = append(args, "8192")
 
 		if !validators.IntRange(m.MaxResults, args) {
-			return false
+			return fmt.Errorf("%v failed validation", path+"."+"MaxResults")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchRequest)
 		args := make([]string, 0)
 		args = append(args, "0")
 		args = append(args, "256")
 
 		if !validators.StrLen(m.QueryString, args) {
-			return false
+			return fmt.Errorf("%v failed validation", path+"."+"QueryString")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(i interface{}) bool {
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchRequest)
 		args := make([]string, 0)
 		args = append(args, "0")
 		args = append(args, "256")
 
 		if !validators.StrLen(m.SortBy, args) {
-			return false
+			return fmt.Errorf("%v failed validation", path+"."+"SortBy")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapSearch["TextRequirement"] = make(map[string][]func(interface{}) bool)
-	validatorMapSearch["TextRequirement"]["all"] = append(validatorMapSearch["TextRequirement"]["all"], func(i interface{}) bool {
+	validatorMapSearch["TextRequirement"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSearch["TextRequirement"]["all"] = append(validatorMapSearch["TextRequirement"]["all"], func(path string, i interface{}) error {
 		m := i.(*TextRequirement)
 		args := make([]string, 0)
 		args = append(args, "0")
@@ -519,10 +557,10 @@ func init() {
 
 		for _, v := range m.Text {
 			if !validators.StrLen(v, args) {
-				return false
+				return fmt.Errorf("%v failed validation", path+"."+"Text")
 			}
 		}
-		return true
+		return nil
 	})
 
 }

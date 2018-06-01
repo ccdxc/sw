@@ -259,53 +259,79 @@ func (m *ServiceList) Defaults(ver string) bool {
 
 // Validators
 
-func (m *AutoMsgLbPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AutoMsgLbPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AutoMsgNetworkWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AutoMsgNetworkWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AutoMsgNetworkWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AutoMsgNetworkWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AutoMsgServiceWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Events {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AutoMsgServiceWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AutoMsgServiceWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *LbPolicyList) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *NetworkList) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *ServiceList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AutoMsgServiceWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
+}
+
+func (m *LbPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *NetworkList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *ServiceList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
 }
 
 func init() {

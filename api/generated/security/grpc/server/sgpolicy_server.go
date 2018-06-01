@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -61,7 +60,9 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -81,8 +82,11 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					} else {
 						err = kvs.Update(ctx, key, &r)
 					}
-					err = errors.Wrap(err, "KV update failed")
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -91,10 +95,14 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -124,20 +132,26 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.Sgpolicy{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := security.Sgpolicy{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(security.Sgpolicy)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(security.Sgpolicy)
+			return r.Validate(ver, "", ignoreStatus)
 		}),
 
 		"security.SgpolicySpec":   apisrvpkg.NewMessage("security.SgpolicySpec"),

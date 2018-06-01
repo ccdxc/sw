@@ -7,6 +7,7 @@ Input file: mirror.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapMirror = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapMirror = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *MirrorSession) MakeKey(prefix string) string {
@@ -275,96 +276,123 @@ func (m *SmartNICMirrorSessionStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *AppProtoSelector) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *MatchRule) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *MatchSelector) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *MatchSelector) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *MirrorCollector) Validate(ver string, ignoreStatus bool) bool {
+func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapMirror["MirrorCollector"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapMirror["MirrorCollector"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *MirrorSession) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	if !ignoreStatus {
-		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *MirrorSessionSpec) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Collectors {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Collectors {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sCollectors[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	if vs, ok := validatorMapMirror["MirrorSessionSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapMirror["MirrorSessionSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *MirrorSessionStatus) Validate(ver string, ignoreStatus bool) bool {
+func (m *MirrorSessionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapMirror["MirrorSessionStatus"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapMirror["MirrorSessionStatus"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *MirrorStartConditions) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *MirrorStartConditions) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *MirrorStopConditions) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *SmartNICMirrorSessionStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *SmartNICMirrorSessionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {
@@ -373,38 +401,38 @@ func init() {
 		&MirrorSession{},
 	)
 
-	validatorMapMirror = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapMirror = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapMirror["MirrorCollector"] = make(map[string][]func(interface{}) bool)
-	validatorMapMirror["MirrorCollector"]["all"] = append(validatorMapMirror["MirrorCollector"]["all"], func(i interface{}) bool {
+	validatorMapMirror["MirrorCollector"] = make(map[string][]func(string, interface{}) error)
+	validatorMapMirror["MirrorCollector"]["all"] = append(validatorMapMirror["MirrorCollector"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorCollector)
 
 		if _, ok := PacketCollectorType_value[m.Type]; !ok {
-			return false
+			return errors.New("MirrorCollector.Type did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapMirror["MirrorSessionSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapMirror["MirrorSessionSpec"]["all"] = append(validatorMapMirror["MirrorSessionSpec"]["all"], func(i interface{}) bool {
+	validatorMapMirror["MirrorSessionSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapMirror["MirrorSessionSpec"]["all"] = append(validatorMapMirror["MirrorSessionSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorSessionSpec)
 
-		for _, v := range m.PacketFilters {
+		for k, v := range m.PacketFilters {
 			if _, ok := MirrorSessionSpec_MirrorPacketFilter_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"PacketFilters", k)
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapMirror["MirrorSessionStatus"] = make(map[string][]func(interface{}) bool)
-	validatorMapMirror["MirrorSessionStatus"]["all"] = append(validatorMapMirror["MirrorSessionStatus"]["all"], func(i interface{}) bool {
+	validatorMapMirror["MirrorSessionStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapMirror["MirrorSessionStatus"]["all"] = append(validatorMapMirror["MirrorSessionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorSessionStatus)
 
 		if _, ok := MirrorSessionState_value[m.State]; !ok {
-			return false
+			return errors.New("MirrorSessionStatus.State did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
 }

@@ -7,6 +7,7 @@ Input file: cmd.proto
 package cluster
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapCmd = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapCmd = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
@@ -422,174 +423,232 @@ func (m *SmartNICStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Cluster) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *ClusterSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *ClusterStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Node) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	if !ignoreStatus {
-		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *NodeCondition) Validate(ver string, ignoreStatus bool) bool {
+func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapCmd["NodeCondition"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapCmd["NodeCondition"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *NodeSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *NodeSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapCmd["NodeSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapCmd["NodeSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *NodeStatus) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Conditions {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Conditions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sConditions[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	if vs, ok := validatorMapCmd["NodeStatus"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapCmd["NodeStatus"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *PortCondition) Validate(ver string, ignoreStatus bool) bool {
+func (m *PortCondition) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapCmd["PortCondition"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapCmd["PortCondition"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *PortSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *PortSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *PortStatus) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Conditions {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *PortStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Conditions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sConditions[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *SmartNIC) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	if !ignoreStatus {
-		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *SmartNICCondition) Validate(ver string, ignoreStatus bool) bool {
+func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapCmd["SmartNICCondition"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapCmd["SmartNICCondition"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *SmartNICSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapCmd["SmartNICSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapCmd["SmartNICSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *SmartNICStatus) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Conditions {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Conditions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sConditions[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	for _, v := range m.Ports {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+	for k, v := range m.Ports {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sPorts[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
 func init() {
@@ -600,104 +659,104 @@ func init() {
 		&SmartNIC{},
 	)
 
-	validatorMapCmd = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapCmd = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapCmd["NodeCondition"] = make(map[string][]func(interface{}) bool)
-	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["NodeCondition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return false
+			return errors.New("NodeCondition.Status did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeCondition)
 
 		if _, ok := NodeCondition_ConditionType_value[m.Type]; !ok {
-			return false
+			return errors.New("NodeCondition.Type did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["NodeSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapCmd["NodeSpec"]["all"] = append(validatorMapCmd["NodeSpec"]["all"], func(i interface{}) bool {
+	validatorMapCmd["NodeSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCmd["NodeSpec"]["all"] = append(validatorMapCmd["NodeSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeSpec)
 
-		for _, v := range m.Roles {
+		for k, v := range m.Roles {
 			if _, ok := NodeSpec_NodeRole_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Roles", k)
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["NodeStatus"] = make(map[string][]func(interface{}) bool)
-	validatorMapCmd["NodeStatus"]["all"] = append(validatorMapCmd["NodeStatus"]["all"], func(i interface{}) bool {
+	validatorMapCmd["NodeStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCmd["NodeStatus"]["all"] = append(validatorMapCmd["NodeStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeStatus)
 
 		if _, ok := NodeStatus_NodePhase_value[m.Phase]; !ok {
-			return false
+			return errors.New("NodeStatus.Phase did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["PortCondition"] = make(map[string][]func(interface{}) bool)
-	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["PortCondition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*PortCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return false
+			return errors.New("PortCondition.Status did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*PortCondition)
 
 		if _, ok := PortCondition_ConditionType_value[m.Type]; !ok {
-			return false
+			return errors.New("PortCondition.Type did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["SmartNICCondition"] = make(map[string][]func(interface{}) bool)
-	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICCondition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return false
+			return errors.New("SmartNICCondition.Status did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICCondition)
 
 		if _, ok := SmartNICCondition_ConditionType_value[m.Type]; !ok {
-			return false
+			return errors.New("SmartNICCondition.Type did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["SmartNICSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapCmd["SmartNICSpec"] = make(map[string][]func(string, interface{}) error)
 
-	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICSpec)
 		if !validators.HostAddr(m.MgmtIp) {
-			return false
+			return fmt.Errorf("%v validation failed", path+"."+"MgmtIp")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICSpec)
 
 		if _, ok := SmartNICSpec_SmartNICPhase_value[m.Phase]; !ok {
-			return false
+			return errors.New("SmartNICSpec.Phase did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
 }

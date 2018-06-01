@@ -7,6 +7,7 @@ Input file: service.proto
 package network
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapService = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapService = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Service) MakeKey(prefix string) string {
@@ -156,43 +157,61 @@ func (m *TLSServerPolicySpec) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Service) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Service) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
-}
-
-func (m *ServiceSpec) Validate(ver string, ignoreStatus bool) bool {
-	if m.TLSServerPolicy != nil && !m.TLSServerPolicy.Validate(ver, ignoreStatus) {
-		return false
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
-	return true
+	return ret
 }
 
-func (m *ServiceStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *ServiceSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.TLSServerPolicy != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "TLSServerPolicy"
+		if errs := m.TLSServerPolicy.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
 }
 
-func (m *TLSClientPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *ServiceStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TLSServerPolicySpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *TLSClientPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *TLSServerPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapService["TLSServerPolicySpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapService["TLSServerPolicySpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
 func init() {
@@ -201,16 +220,16 @@ func init() {
 		&Service{},
 	)
 
-	validatorMapService = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapService = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapService["TLSServerPolicySpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapService["TLSServerPolicySpec"]["all"] = append(validatorMapService["TLSServerPolicySpec"]["all"], func(i interface{}) bool {
+	validatorMapService["TLSServerPolicySpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapService["TLSServerPolicySpec"]["all"] = append(validatorMapService["TLSServerPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*TLSServerPolicySpec)
 
 		if _, ok := TLSServerPolicySpec_ClientAuthTypes_value[m.ClientAuthentication]; !ok {
-			return false
+			return errors.New("TLSServerPolicySpec.ClientAuthentication did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
 }

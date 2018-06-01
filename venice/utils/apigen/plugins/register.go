@@ -849,7 +849,7 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 					if _, ok := ret.Map[*msg.Name]; !ok {
 						ret.Map[msgname] = validateMsg{Fields: make(map[string]validateFields)}
 					}
-					if _, ok := ret.Map[*fld.Name]; !ok {
+					if _, ok := ret.Map[*fld.TypeName]; !ok {
 						repeated := false
 						pointer := true
 						if *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {

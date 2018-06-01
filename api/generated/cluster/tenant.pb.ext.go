@@ -97,16 +97,19 @@ func (m *TenantStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Tenant) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TenantSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TenantSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TenantStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TenantStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

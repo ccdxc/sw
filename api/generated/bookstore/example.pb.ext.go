@@ -8,6 +8,7 @@ package bookstore
 
 import (
 	"context"
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -26,7 +27,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapExample = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapExample = make(map[string]map[string][]func(string, interface{}) error)
 
 var storageTransformersMapExample = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
 
@@ -1191,307 +1192,484 @@ func (m *StoreStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *ApplyDiscountReq) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *ApplyDiscountReq) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AutoMsgBookWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Events {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *AutoMsgCouponWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *AutoMsgCustomerWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Events {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
+func (m *AutoMsgCouponWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AutoMsgOrderWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Events {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *AutoMsgPublisherWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Events {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *AutoMsgStoreWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *Book) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *BookEdition) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *BookList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *BookReview) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
 }
 
-func (m *BookSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgStoreWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
+}
+
+func (m *BookEdition) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapExample["BookEdition"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapExample["BookEdition"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *BookList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *BookReview) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *BookSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Editions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEditions[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapExample["BookSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapExample["BookSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *BookStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *BookStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Coupon) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Coupon) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *CouponList) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *CouponList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Customer) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *CustomerList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *CustomerList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *CustomerPersonalInfo) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *CustomerPersonalInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *CustomerSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapExample["CustomerSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapExample["CustomerSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *CustomerStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *CustomerStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Order) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	if !ignoreStatus {
-		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *OrderItem) Validate(ver string, ignoreStatus bool) bool {
+func (m *OrderItem) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapExample["OrderItem"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapExample["OrderItem"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *OrderList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *OrderList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *OrderSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Order {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sOrder[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
 }
 
-func (m *OrderStatus) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Filled {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Filled {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sFilled[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	if vs, ok := validatorMapExample["OrderStatus"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapExample["OrderStatus"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *OutageRequest) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *OutageRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Publisher) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *PublisherList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *PublisherList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *PublisherSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapExample["PublisherSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapExample["PublisherSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *RestockRequest) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *RestockRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *RestockResponse) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *RestockResponse) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Store) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *StoreList) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *StoreList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *StoreSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *StoreSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *StoreStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *StoreStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 // Transformers
@@ -1599,20 +1777,33 @@ func init() {
 		&Store{},
 	)
 
-	validatorMapExample = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapExample = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapExample["BookSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapExample["BookSpec"]["all"] = append(validatorMapExample["BookSpec"]["all"], func(i interface{}) bool {
+	validatorMapExample["BookEdition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["BookEdition"]["all"] = append(validatorMapExample["BookEdition"]["all"], func(path string, i interface{}) error {
+		m := i.(*BookEdition)
+		args := make([]string, 0)
+		args = append(args, "4")
+		args = append(args, "4")
+
+		if !validators.StrLen(m.Year, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Year")
+		}
+		return nil
+	})
+
+	validatorMapExample["BookSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["BookSpec"]["all"] = append(validatorMapExample["BookSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*BookSpec)
 
 		if _, ok := BookSpec_BookCategories_value[m.Category]; !ok {
-			return false
+			return errors.New("BookSpec.Category did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapExample["CustomerSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapExample["CustomerSpec"]["all"] = append(validatorMapExample["CustomerSpec"]["all"], func(i interface{}) bool {
+	validatorMapExample["CustomerSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["CustomerSpec"]["all"] = append(validatorMapExample["CustomerSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*CustomerSpec)
 		args := make([]string, 0)
 		args = append(args, "3")
@@ -1620,66 +1811,66 @@ func init() {
 
 		for _, v := range m.CreditCardNumbers {
 			if !validators.StrLen(v, args) {
-				return false
+				return fmt.Errorf("%v failed validation", path+"."+"CreditCardNumbers")
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapExample["OrderItem"] = make(map[string][]func(interface{}) bool)
-	validatorMapExample["OrderItem"]["all"] = append(validatorMapExample["OrderItem"]["all"], func(i interface{}) bool {
+	validatorMapExample["OrderItem"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["OrderItem"]["all"] = append(validatorMapExample["OrderItem"]["all"], func(path string, i interface{}) error {
 		m := i.(*OrderItem)
 		args := make([]string, 0)
 		args = append(args, "3")
 		args = append(args, "10")
 
 		if !validators.StrLen(m.ISBNId, args) {
-			return false
+			return fmt.Errorf("%v failed validation", path+"."+"ISBNId")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapExample["OrderItem"]["all"] = append(validatorMapExample["OrderItem"]["all"], func(i interface{}) bool {
+	validatorMapExample["OrderItem"]["all"] = append(validatorMapExample["OrderItem"]["all"], func(path string, i interface{}) error {
 		m := i.(*OrderItem)
 		args := make([]string, 0)
-		args = append(args, "2")
+		args = append(args, "1")
 		args = append(args, "30")
 
 		if !validators.IntRange(m.Quantity, args) {
-			return false
+			return fmt.Errorf("%v failed validation", path+"."+"Quantity")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapExample["OrderStatus"] = make(map[string][]func(interface{}) bool)
-	validatorMapExample["OrderStatus"]["all"] = append(validatorMapExample["OrderStatus"]["all"], func(i interface{}) bool {
+	validatorMapExample["OrderStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["OrderStatus"]["all"] = append(validatorMapExample["OrderStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*OrderStatus)
 
 		if _, ok := OrderStatus_OrderStatus_value[m.Status]; !ok {
-			return false
+			return errors.New("OrderStatus.Status did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapExample["PublisherSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapExample["PublisherSpec"] = make(map[string][]func(string, interface{}) error)
 
-	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
+	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*PublisherSpec)
 		if !validators.URI(m.WebAddr) {
-			return false
+			return fmt.Errorf("%v validation failed", path+"."+"WebAddr")
 		}
-		return true
+		return nil
 	})
-	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
+	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*PublisherSpec)
 		args := make([]string, 0)
 		args = append(args, "6")
 		args = append(args, "256")
 
 		if !validators.StrLen(m.WebAddr, args) {
-			return false
+			return fmt.Errorf("%v failed validation", path+"."+"WebAddr")
 		}
-		return true
+		return nil
 	})
 
 	{

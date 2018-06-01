@@ -97,16 +97,19 @@ func (m *EndpointStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Endpoint) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Endpoint) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *EndpointSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *EndpointSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *EndpointStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

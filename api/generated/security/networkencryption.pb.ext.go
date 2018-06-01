@@ -139,24 +139,29 @@ func (m *TrafficEncryptionPolicyStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *IPsecProtocolSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *IPsecProtocolSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TLSProtocolSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TLSProtocolSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TrafficEncryptionPolicy) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TrafficEncryptionPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TrafficEncryptionPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TrafficEncryptionPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TrafficEncryptionPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TrafficEncryptionPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

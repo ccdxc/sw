@@ -112,6 +112,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -130,6 +131,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -148,6 +150,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -175,6 +178,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -193,6 +197,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -211,6 +216,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -229,6 +235,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -247,6 +254,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -265,6 +273,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil

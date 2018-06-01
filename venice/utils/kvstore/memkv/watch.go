@@ -200,8 +200,8 @@ func (w *watcher) sendEvent(evType kvstore.WatchEventType, key string, value []b
 // sendError sends out the status object for the given error.
 func (w *watcher) sendError(err error) {
 	status := &api.Status{
-		Result:  &api.StatusResultInternalError,
-		Message: err.Error(),
+		Result:  api.StatusResultInternalError,
+		Message: []string{err.Error()},
 		Code:    http.StatusInternalServerError,
 	}
 

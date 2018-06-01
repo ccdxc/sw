@@ -259,7 +259,10 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		a.nextKvMutex.Lock()
 		a.kvPool = append(a.kvPool, a.apiCache)
 		a.nextKvMutex.Unlock()
-		a.apiCache.Start()
+		err := a.apiCache.Start()
+		if err != nil {
+			panic(fmt.Sprintf("failed to start cache (%s)", err))
+		}
 	} else {
 		// Connect to the KV Store
 		for i := 0; i < poolSize; i++ {

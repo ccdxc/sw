@@ -7,6 +7,7 @@ Input file: auth.proto
 package auth
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapAuth = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicy) MakeKey(prefix string) string {
@@ -524,140 +525,189 @@ func (m *UserStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *AuthenticationPolicy) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
-}
-
-func (m *AuthenticationPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Authenticators.Validate(ver, ignoreStatus) {
-		return false
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
-	return true
+	return ret
 }
 
-func (m *AuthenticationPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Authenticators"
+	if errs := m.Authenticators.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *Authenticators) Validate(ver string, ignoreStatus bool) bool {
+func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *Authenticators) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapAuth["Authenticators"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAuth["Authenticators"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *Ldap) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Ldap) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *LdapAttributeMapping) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *LdapAttributeMapping) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Local) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Local) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *PasswordCredential) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *PasswordCredential) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Permission) Validate(ver string, ignoreStatus bool) bool {
+func (m *Permission) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapAuth["Permission"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAuth["Permission"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *Radius) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Radius) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Role) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *RoleBinding) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *RoleBindingSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *RoleBindingSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *RoleBindingStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *RoleBindingStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *RoleSpec) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Permissions {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Permissions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sPermissions[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *RoleStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *RoleStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *TLSOptions) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *TLSOptions) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *User) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *UserSpec) Validate(ver string, ignoreStatus bool) bool {
+func (m *UserSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapAuth["UserSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapAuth["UserSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *UserStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {
@@ -669,49 +719,49 @@ func init() {
 		&User{},
 	)
 
-	validatorMapAuth = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapAuth["Authenticators"] = make(map[string][]func(interface{}) bool)
-	validatorMapAuth["Authenticators"]["all"] = append(validatorMapAuth["Authenticators"]["all"], func(i interface{}) bool {
+	validatorMapAuth["Authenticators"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["Authenticators"]["all"] = append(validatorMapAuth["Authenticators"]["all"], func(path string, i interface{}) error {
 		m := i.(*Authenticators)
 
-		for _, v := range m.AuthenticatorOrder {
+		for k, v := range m.AuthenticatorOrder {
 			if _, ok := Authenticators_AuthenticatorType_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"AuthenticatorOrder", k)
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAuth["Permission"] = make(map[string][]func(interface{}) bool)
-	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(i interface{}) bool {
+	validatorMapAuth["Permission"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(path string, i interface{}) error {
 		m := i.(*Permission)
 
-		for _, v := range m.Actions {
+		for k, v := range m.Actions {
 			if _, ok := Permission_ActionType_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Actions", k)
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(i interface{}) bool {
+	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(path string, i interface{}) error {
 		m := i.(*Permission)
 
 		if _, ok := Permission_ResrcKind_value[m.ResourceKind]; !ok {
-			return false
+			return errors.New("Permission.ResourceKind did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapAuth["UserSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapAuth["UserSpec"]["all"] = append(validatorMapAuth["UserSpec"]["all"], func(i interface{}) bool {
+	validatorMapAuth["UserSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["UserSpec"]["all"] = append(validatorMapAuth["UserSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*UserSpec)
 
 		if _, ok := UserSpec_UserType_value[m.Type]; !ok {
-			return false
+			return errors.New("UserSpec.Type did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
 }

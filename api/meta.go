@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+
+	golangproto "github.com/golang/protobuf/proto"
 )
 
 // GetObjectKind returns the kind of an object.
@@ -45,4 +47,10 @@ func (m *Status) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+func init() {
+	// Register this with regular golang proto so it is accessible for grpc code
+	golangproto.RegisterType((*StatusResult)(nil), "api.StatusResult")
+	golangproto.RegisterType((*Status)(nil), "api.Status")
 }

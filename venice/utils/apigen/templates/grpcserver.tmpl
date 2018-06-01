@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
@@ -73,7 +74,9 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
 			} else { {{if isSpecStatusMessage .}}
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
@@ -93,8 +96,11 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed"){{if isSpecStatusMessage .}}
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}{{if isSpecStatusMessage .}}
 				} {{end}}
+
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -103,10 +109,14 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 			var err error
 			if create {
 				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
 			} else {
 				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
@@ -136,20 +146,26 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}){{$msgname := .Name}}{{with (index $validators.Map (derefStr .Name))}}.WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.({{$pkgname}}.{{$msgname}})
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
-			return nil
+			return err
+		}){{$msgname := .Name}}{{with (index $validators.Map (derefStr .Name))}}.WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.({{$pkgname}}.{{$msgname}})
+			return r.Validate(ver, "", ignoreStatus)
 		}){{end}}{{$msgname := .Name}}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}.WithStorageTransformer(&{{$pkgname}}.Storage{{$msgname}}Transformer){{end}}{{end}},
 		{{else}}{{if isListHelper .}}.WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 			{{$objname := getListType . true}}
@@ -159,6 +175,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}
 			err = into.ApplyStorageTransformer(ctx, false)

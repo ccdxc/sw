@@ -7,6 +7,7 @@ Input file: telemetry.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -25,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapTelemetry = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *FlowExportPolicy) MakeKey(prefix string) string {
@@ -326,103 +327,136 @@ func (m *StatsStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *FlowExportPolicy) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *FlowExportSpec) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Targets {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *FlowExportSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Targets {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sTargets[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *FlowExportStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *FlowExportStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *FlowExportTarget) Validate(ver string, ignoreStatus bool) bool {
+func (m *FlowExportTarget) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapTelemetry["FlowExportTarget"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapTelemetry["FlowExportTarget"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *FwlogExport) Validate(ver string, ignoreStatus bool) bool {
+func (m *FwlogExport) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	if vs, ok := validatorMapTelemetry["FwlogExport"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapTelemetry["FwlogExport"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *FwlogPolicy) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *FwlogSpec) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Exports {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *FwlogSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Exports {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sExports[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	if vs, ok := validatorMapTelemetry["FwlogSpec"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMapTelemetry["FwlogSpec"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	}
-	return true
+	return ret
 }
 
-func (m *FwlogStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *FwlogStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *StatsPolicy) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *StatsSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *StatsSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *StatsStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *StatsStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {
@@ -433,49 +467,49 @@ func init() {
 		&StatsPolicy{},
 	)
 
-	validatorMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
+	validatorMapTelemetry = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapTelemetry["FlowExportTarget"] = make(map[string][]func(interface{}) bool)
-	validatorMapTelemetry["FlowExportTarget"]["all"] = append(validatorMapTelemetry["FlowExportTarget"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry["FlowExportTarget"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry["FlowExportTarget"]["all"] = append(validatorMapTelemetry["FlowExportTarget"]["all"], func(path string, i interface{}) error {
 		m := i.(*FlowExportTarget)
 
 		if _, ok := FlowExportTarget_Formats_value[m.Format]; !ok {
-			return false
+			return errors.New("FlowExportTarget.Format did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapTelemetry["FwlogExport"] = make(map[string][]func(interface{}) bool)
-	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry["FwlogExport"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogExport)
 
-		for _, v := range m.Filter {
+		for k, v := range m.Filter {
 			if _, ok := FwlogFilter_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Filter", k)
 			}
 		}
-		return true
+		return nil
 	})
 
-	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogExport)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return false
+			return errors.New("FwlogExport.Format did not match allowed strings")
 		}
-		return true
+		return nil
 	})
 
-	validatorMapTelemetry["FwlogSpec"] = make(map[string][]func(interface{}) bool)
-	validatorMapTelemetry["FwlogSpec"]["all"] = append(validatorMapTelemetry["FwlogSpec"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry["FwlogSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry["FwlogSpec"]["all"] = append(validatorMapTelemetry["FwlogSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogSpec)
 
-		for _, v := range m.Filter {
+		for k, v := range m.Filter {
 			if _, ok := FwlogFilter_value[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Filter", k)
 			}
 		}
-		return true
+		return nil
 	})
 
 }

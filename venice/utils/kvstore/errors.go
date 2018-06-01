@@ -35,6 +35,14 @@ func (k *KVError) Error() string {
 	return fmt.Sprintf("KVError: %v, key: %v, version: %d", k.Message, k.Key, k.ResourceVersion)
 }
 
+// ErrorDesc returns the error message of the error
+func ErrorDesc(err error) string {
+	if ke, ok := err.(*KVError); ok {
+		return ke.Message
+	}
+	return "unknown error"
+}
+
 func isErrorCode(err error, code int) bool {
 	if err == nil {
 		return false

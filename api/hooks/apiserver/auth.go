@@ -64,35 +64,36 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 }
 
 //This hook is to validate that authenticators specified in AuthenticatorOrder are defined
-func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus bool) error {
+func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus bool) []error {
+	var ret = []error{ErrAuthenticatorConfig}
 	r := i.(auth.AuthenticationPolicy)
 
 	// check if authenticators specified in AuthenticatorOrder are defined
 	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
 	if authenticatorOrder == nil {
 		s.logger.ErrorLog("msg", "Authenticator order config not defined")
-		return ErrAuthenticatorConfig
+		return ret
 	}
 	for _, authenticatorType := range authenticatorOrder {
 		switch authenticatorType {
 		case auth.Authenticators_LOCAL.String():
 			if r.Spec.Authenticators.GetLocal() == nil {
 				s.logger.ErrorLog("msg", "Local authenticator config not defined")
-				return ErrAuthenticatorConfig
+				return ret
 			}
 		case auth.Authenticators_LDAP.String():
 			if r.Spec.Authenticators.GetLdap() == nil {
 				s.logger.ErrorLog("msg", "Ldap authenticator config not defined")
-				return ErrAuthenticatorConfig
+				return ret
 			}
 		case auth.Authenticators_RADIUS.String():
 			if r.Spec.Authenticators.GetRadius() == nil {
 				s.logger.ErrorLog("msg", "Radius authenticator config not defined")
-				return ErrAuthenticatorConfig
+				return ret
 			}
 		default:
 			s.logger.ErrorLog("msg", "Unknown authenticator type", "authenticator", authenticatorType)
-			return ErrAuthenticatorConfig
+			return ret
 		}
 	}
 	return nil

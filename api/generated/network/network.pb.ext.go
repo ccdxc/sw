@@ -97,16 +97,19 @@ func (m *NetworkStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *Network) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Network) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *NetworkSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *NetworkSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *NetworkStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *NetworkStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

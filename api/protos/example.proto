@@ -74,7 +74,7 @@ message BookSpec {
 
 message BookEdition {
   string Errata = 1[(venice.default) = "None", (gogoproto.jsontag) = "errata"];
-  string Year = 2 [(gogoproto.jsontag) = "year"];
+  string Year = 2 [(gogoproto.jsontag) = "year", (venice.check) = "StrLen(4,4)"];
   map<string, BookReview> Reviews = 3[(gogoproto.jsontag) = "reviews"];
 }
 
@@ -105,7 +105,7 @@ message OrderSpec {
 
 message OrderItem {
   string ISBNId = 1 [(venice.check) = "StrLen(3,10)"];
-  uint32 Quantity = 2 [(venice.check) = "IntRange(2,30)"];
+  uint32 Quantity = 2 [(venice.check) = "IntRange(1,30)"];
 }
 
 message OrderStatus {

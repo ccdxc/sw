@@ -118,20 +118,24 @@ func (m *SgpolicyStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *SGRule) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *SGRule) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *Sgpolicy) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *Sgpolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *SgpolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *SgpolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *SgpolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *SgpolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

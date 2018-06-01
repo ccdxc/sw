@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/grpc-gateway/runtime"
+	gwruntime "github.com/pensando/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/pensando/grpc-gateway/runtime"
 
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
@@ -326,6 +326,22 @@ func TestRunApiGw(t *testing.T) {
 		// Good
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Timeout waiting on lock")
+	}
+}
+
+func TestErrorHandlers(t *testing.T) {
+	marshaller := &gwruntime.JSONBuiltin{}
+	ctx := context.Background()
+	respWr := httptest.NewRecorder()
+	err := errors.New("test error")
+	gw := MustGetAPIGateway().(*apiGw)
+	gw.HTTPErrorHandler(ctx, marshaller, respWr, nil, err)
+	if respWr.Header().Get("Content-Type") != "application/json" {
+		t.Errorf("wrong header")
+	}
+	gw.HTTPOtherErrorHandler(respWr, nil, "test Message", 404)
+	if respWr.Header().Get("Content-Type") != "application/json" {
+		t.Errorf("wrong header")
 	}
 }
 

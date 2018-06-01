@@ -118,20 +118,24 @@ func (m *LbPolicyStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *HealthCheckSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *HealthCheckSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *LbPolicy) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *LbPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *LbPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *LbPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *LbPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *LbPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

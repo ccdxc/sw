@@ -2,22 +2,28 @@ package apigwpkg
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"net/textproto"
 	"strings"
 	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	otext "github.com/opentracing/opentracing-go/ext"
+	gwruntime "github.com/pensando/grpc-gateway/runtime"
 
 	"github.com/pensando/grpc-gateway/runtime"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
@@ -190,6 +196,71 @@ func (a *apiGw) checkCORS(h http.Handler) http.Handler {
 	})
 }
 
+// Following metadata handlers are borrowed from gRPC gateway implementation
+
+func handleForwardResponseServerMetadata(w http.ResponseWriter, md gwruntime.ServerMetadata) {
+	for k, vs := range md.HeaderMD {
+		hKey := fmt.Sprintf("%s%s", gwruntime.MetadataHeaderPrefix, k)
+		for i := range vs {
+			w.Header().Add(hKey, vs[i])
+		}
+	}
+}
+
+func handleForwardResponseTrailerHeader(w http.ResponseWriter, md gwruntime.ServerMetadata) {
+	for k := range md.TrailerMD {
+		tKey := textproto.CanonicalMIMEHeaderKey(fmt.Sprintf("%s%s", gwruntime.MetadataTrailerPrefix, k))
+		w.Header().Add("Trailer", tKey)
+	}
+}
+
+func handleForwardResponseTrailer(w http.ResponseWriter, md gwruntime.ServerMetadata) {
+	for k, vs := range md.TrailerMD {
+		tKey := fmt.Sprintf("%s%s", gwruntime.MetadataTrailerPrefix, k)
+		for i := range vs {
+			w.Header().Add(tKey, vs[i])
+		}
+	}
+}
+
+// Custom implementation of HTTP error handlers for API gw
+
+// HTTPErrorHandler handles regular error returned after routing the call
+func (a *apiGw) HTTPErrorHandler(ctx context.Context, marshaler gwruntime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
+	w.Header().Del("Trailer")
+	w.Header().Set("Content-Type", marshaler.ContentType())
+
+	status := apierrors.FromError(err)
+	buf, merr := marshaler.Marshal(status)
+	if merr != nil {
+		a.logger.Errorf("failed to marshal status (%s)", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	md, _ := gwruntime.ServerMetadataFromContext(ctx)
+	handleForwardResponseServerMetadata(w, md)
+	handleForwardResponseTrailerHeader(w, md)
+	w.WriteHeader(int(status.Code))
+	w.Write(buf)
+	handleForwardResponseTrailer(w, md)
+}
+
+// HTTPOtherErrorHandler handles all other errors
+func (a *apiGw) HTTPOtherErrorHandler(w http.ResponseWriter, _ *http.Request, msg string, code int) {
+	status := api.Status{
+		Message: []string{"request error: " + msg},
+		Code:    int32(code),
+		Result:  api.StatusResult{Str: http.StatusText(code)},
+	}
+	// Assume JSON encoding here.
+	buf, err := json.MarshalIndent(&status, "", "  ")
+	if err != nil {
+		http.Error(w, msg, code)
+		return
+	}
+	w.WriteHeader(code)
+	w.Write(buf)
+}
+
 // Run starts the "eventloop" for the gateway. Completes registration for all the services registered
 // and then starts servicing requests.
 func (a *apiGw) Run(config apigw.Config) {
@@ -249,6 +320,10 @@ func (a *apiGw) Run(config apigw.Config) {
 		// Will dump stacktrace for all go routines
 		log.SetTraceDebug()
 	}
+	// Set the Error Handler to custom error Handler
+	gwruntime.HTTPError = a.HTTPErrorHandler
+	gwruntime.OtherErrorHandler = a.HTTPOtherErrorHandler
+
 	wg.Add(1)
 	go func() {
 		wg.Done()
@@ -353,6 +428,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	var err error
 	i = in
 	nctx := ctx
+
 	// Call all PreAuthZHooks, if any of them return err then abort
 	pnHooks := prof.PreAuthNHooks()
 	skipAuth := false
@@ -361,7 +437,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		nctx, i, skip, err = h(nctx, i)
 		skipAuth = skipAuth || skip
 		if err != nil {
-			return nil, err
+			return nil, apierrors.ToGrpcError(err, []string{"Authentication failed"}, int32(codes.Unauthenticated), "", nil)
 		}
 	}
 
@@ -369,13 +445,13 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	if !skipAuth {
 		_, ok := a.isRequestAuthenticated(nctx)
 		if !ok {
-			return nil, vErrors.NewUnauthorized("")
+			return nil, apierrors.ToGrpcError(errors.New("Not authenticated"), []string{"Authentication failed"}, int32(codes.Unauthenticated), "", nil)
 		}
 		pzHooks := prof.PreAuthZHooks()
 		for _, h := range pzHooks {
 			nctx, i, err = h(nctx, i)
 			if err != nil {
-				return nil, err
+				return nil, apierrors.ToGrpcError(err, []string{"Authorization failed"}, int32(codes.Unauthenticated), "", nil)
 			}
 		}
 
@@ -393,7 +469,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	for _, h := range precall {
 		nctx, i, skip, err = h(nctx, i)
 		if err != nil {
-			return nil, err
+			return nil, apierrors.ToGrpcError(err, []string{"Pre condition failed"}, int32(codes.Aborted), "", nil)
 		}
 		skipCall = skip || skipCall
 	}
@@ -405,7 +481,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	for _, h := range postCall {
 		nctx, out, err = h(nctx, out)
 		if err != nil {
-			return nil, err
+			return nil, apierrors.ToGrpcError(err, []string{"Pre condition failed"}, int32(codes.Aborted), "", nil)
 		}
 	}
 

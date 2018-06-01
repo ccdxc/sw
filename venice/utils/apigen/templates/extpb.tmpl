@@ -24,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 {{if $validators.Fmap}}
 var _ validators.DummyVar
-var validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool)
+var validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(string, interface{})error)
 {{end}}
 {{if $storageTransformers.Fmap}}
 var storageTransformersMap{{getFileName .Name}} = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error) {{end}}
@@ -106,40 +106,68 @@ func (m *{{getStr 0}}) Defaults(ver string) bool { {{with index $defaults.Map (g
 } {{end}}{{end}}
 {{end}}
 // Validators
-{{range .Messages}}{{if isMapEntry .}}{{else}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}{{$msg := .}}{{$msgname := (getStr 0)}}
-func (m *{{$msgname}}) Validate(ver string, ignoreStatus bool) bool { {{with (index $validators.Map $msgname)}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{if $fldv.Repeated}}
-	for _, v := range m.{{$fldk}} {
-		 if !v.Validate(ver, ignoreStatus) {
-			 return false
-		 }
-	} {{else}}{{if isSpecStatusMessage $msg}}{{if strEq $fldk "Status"}}
-	if !ignoreStatus {
-		if {{if $fldv.Pointer}} m.{{$fldk}} != nil && {{end}}!m.{{$fldk}}.Validate(ver, ignoreStatus) {
-			return false
+{{range .Messages}}{{/*<0-1>*/}}{{if isMapEntry .}}{{/*<0>*/}}{{else}}{{/*<0>*/}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{/*<x>*/}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}{{/*<x>*/}}{{$msg := .}}{{$msgname := (getStr 0)}}
+func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error {{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
+	for k, v := range m.{{$fldk}} {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
 		}
-	}{{else}}
-	if {{if $fldv.Pointer}} m.{{$fldk}} != nil && {{end}}!m.{{$fldk}}.Validate(ver, ignoreStatus) {
-		return false
-	}{{end}}{{else}}
-	if {{if $fldv.Pointer}} m.{{$fldk}} != nil && {{end}}!m.{{$fldk}}.Validate(ver, ignoreStatus) {
-		return false
-	}{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
+		npath := fmt.Sprintf("%s%s{{$fldk}}[%d]", path, dlmtr, k)
+		 if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			 ret = append(ret, errs...)
+		 }
+	} {{else}}{{/*<4>*/}}{{if isSpecStatusMessage $msg}}{{/*<5>*/}}{{if strEq $fldk "Status"}}{{/*<6>*/}}
+	if !ignoreStatus {
+		{{if $fldv.Pointer}}{{/*<7>*/}}if  m.{{$fldk}} != nil {
+				{{end}}{{/*<7>*/}}
+				dlmtr := "."
+				if path == "" {
+					dlmtr = ""
+				}
+				npath := path + dlmtr + "{{$fldk}}"
+				if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}{{if $fldv.Pointer}}{{/*<8>*/}}
+		}{{end}}{{/*<8>*/}}
+	}{{else}}{{/*<7>*/}}
+	{{if $fldv.Pointer}}{{/*<9>*/}}if m.{{$fldk}} != nil { {{end}}{{/*<9>*/}}
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "{{$fldk}}"
+		if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}{{if $fldv.Pointer}}{{/*<10>*/}}
+	}{{end}}{{/*<10>*/}}{{end}}{{/*<6>*/}}{{else}}{{/*<5>*/}}
+	{{if $fldv.Pointer}}{{/*<11>*/}}if  m.{{$fldk}} != nil { {{end}}{{/*<11>*/}}
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "{{$fldk}}"
+			if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}{{if $fldv.Pointer}}{{/*<12>*/}}
+	}{{end}}{{/*<12>*/}}{{end}}{{/*<5>*/}}{{end}}{{/*<4>*/}}{{else}}{{/*<3>*/}}{{$_:= (saveBool true 0)}}{{end}}{{/*<3>*/}}{{end}}{{/*<2>*/}}{{if getBool 0}}{{/*<13>*/}}
 	if vs, ok := validatorMap{{getFileName $file.Name}}["{{$msgname}}"][ver]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
 	} else if vs, ok := validatorMap{{getFileName $file.Name}}["{{$msgname}}"]["all"]; ok {
 		for _, v := range vs {
-			if !v(m) {
-				return false
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
 			}
 		}
-	} {{end}}{{end}}
-	return true
+	} {{end}}{{/*<13>*/}}{{end}}{{/*<1>*/}}
+	return ret
 }
-{{end}}{{end}}
+{{end}}{{/*<0>*/}}{{end}}{{/*<0-1>*/}}
 
 {{if $storageTransformers.Fmap}}
 // Transformers
@@ -201,49 +229,49 @@ func init() {
 	scheme.AddKnownTypes({{range  .Messages}}{{if (len (getDbKey .)) ne 0}}
 		&{{.Name}}{},{{end}}{{end}}
 	)
-{{if $validators.Fmap}}
-	validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
-	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}{{if getBool 1}}
-	validatorMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool){{$_ := saveBool false 1}}{{end}}{{end}}{{end}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
-	{{range $fldv.Validators}}{{if eq 0 (len .Args)}}{{$fnname := .Fn}}
-	validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
-		m := i.(*{{$msgName}}){{if $fldv.Repeated}}
-		for _, v := range m.{{$fldk}} {
+{{if $validators.Fmap}}{{/*<1>*/}}
+	validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(string, interface{})error){{range .Messages}}{{/*<2>*/}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}{{/*<3>*/}}
+	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{/*<4>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<5>*/}}{{else}}{{/*<5>*/}}{{if getBool 1}}{{/*<6>*/}}
+	validatorMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(string, interface{})error){{$_ := saveBool false 1}}{{end}}{{/*<6>*/}}{{end}}{{/*<5>*/}}{{end}}{{/*<4>*/}}{{range $fldk, $fldv := .Fields}}{{/*<7>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<8>*/}}{{else}}{{/*<8>*/}}
+	{{range $fldv.Validators}}{{/*<9>*/}}{{if eq 0 (len .Args)}}{{/*<10>*/}}{{$fnname := .Fn}}
+	validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(path string, i interface{}) error {
+		m := i.(*{{$msgName}}){{if $fldv.Repeated}}{{/*<9.1>*/}}
+		for k, v := range m.{{$fldk}} {
 			if !validators.{{$fnname}}(v) {
-				return false
+				return fmt.Errorf("%v[%v] validation failed", path + "." + "{{$fldk}}", k)
 			}
 		}
-		{{else}}
+		{{else}}{{/*<9.1>*/}}
 		if !validators.{{.Fn}}(m.{{$fldk}}) {
-			return false
-		}{{end}}
-		return true
+			return fmt.Errorf("%v validation failed", path + "." + "{{$fldk}}")
+		}{{end}}{{/*<9.1>*/}}
+		return nil
 	})
-		{{else}} validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
+		{{else}}{{/*<10>*/}} validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(path string, i interface{}) error {
 		m := i.(*{{$msgName}})
-		{{if (strEq .Fn "StrEnum")}}{{$enummap := (getEnumStrMap $file .Args)}}{{if $fldv.Repeated}}
-		for _, v := range m.{{$fldk}} {
+		{{if (strEq .Fn "StrEnum")}}{{/*<11>*/}}{{$enummap := (getEnumStrMap $file .Args)}}{{if $fldv.Repeated}}{{/*<12>*/}}
+		for k, v := range m.{{$fldk}} {
 			if _, ok := {{$enummap}}[v]; !ok {
-				return false
+				return fmt.Errorf("%v[%v] did not match allowed strings", path + "." + "{{$fldk}}", k)
 			}
-		}{{else}}
+		}{{else}}{{/*<12>*/}}
 		if _, ok := {{$enummap}}[m.{{$fldk}}]; !ok {
-			return false
-		}{{end}}{{else}}args := make([]string, 0) {{$fnname := .Fn}}
-		{{range .Args}}args = append(args, "{{.}}")
-		{{end}}{{if $fldv.Repeated}}
+			return errors.New("{{$msgName}}.{{$fldk}} did not match allowed strings")
+		}{{end}}{{/*<12>*/}}{{else}}{{/*<11>*/}}args := make([]string, 0) {{$fnname := .Fn}}
+		{{range .Args}}{{/*<13>*/}}args = append(args, "{{.}}")
+		{{end}}{{/*<13>*/}}{{if $fldv.Repeated}}{{/*<14>*/}}
 		for _, v := range m.{{$fldk}} {
 			if !validators.{{$fnname}}(v, args) {
-				return false
+				return fmt.Errorf("%v failed validation", path + "." + "{{$fldk}}")
 			}
-		}{{else}}
+		}{{else}}{{/*<14>*/}}
 		if !validators.{{$fnname}}(m.{{$fldk}}, args) {
-			return false
-		}{{end}}{{end}}
-		return true
+			return fmt.Errorf("%v failed validation", path + "." + "{{$fldk}}")
+		}{{end}}{{/*<14>*/}}{{end}}{{/*<11>*/}}
+		return nil
 	})
-	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
-{{end}}
+	{{end}}{{/*<10>*/}}{{end}}{{/*<9>*/}}{{end}}{{/*<8>*/}}{{end}}{{/*<7>*/}}{{end}}{{/*<3>*/}}{{end}}{{/*<2>*/}}
+{{end}}{{/*<1>*/}}
 
 {{if $storageTransformers.Fmap}}
 	{{range .Messages}}{{$msgName := .Name}}{{with (index $storageTransformers.Map (derefStr .Name))}}

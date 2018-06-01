@@ -266,13 +266,14 @@ func (m *MessageHdlr) Default(i interface{}) interface{} {
 }
 
 // Validate is a wrapper around the validater function registered.
-func (m *MessageHdlr) Validate(i interface{}, ver string, ignoreStatus bool) error {
+func (m *MessageHdlr) Validate(i interface{}, ver string, ignoreStatus bool) []error {
+	var ret []error
 	for _, fn := range m.validater {
-		if err := fn(i, ver, ignoreStatus); err != nil {
-			return err
+		if errs := fn(i, ver, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
-	return nil
+	return ret
 }
 
 // WriteObjVersion updates the version in the object meta.
@@ -328,14 +329,14 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			l.ErrorLog("msg", "unable to get metadata from context")
-			return errRequestInfo.makeError("metadata")
+			return errRequestInfo.makeError(nil, []string{"metadata"}, "")
 		}
 
 		if v, ok := md[apisrv.RequestParamVersion]; ok {
 			ver = v[0]
 		} else {
 			l.ErrorLog("msg", "unable to get request version from context")
-			return errRequestInfo.makeError("unable to determine version")
+			return errRequestInfo.makeError(nil, []string{"Unable to determine version"}, "")
 		}
 		var span opentracing.Span
 		span = opentracing.SpanFromContext(ctx)
@@ -352,7 +353,7 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 		defer singletonAPISrv.removeWatcher(handle)
 		return m.kvWatchFunc(l, options, kv, stream, m.PrepareMsg, ver, svcprefix)
 	}
-	return errNotImplemented
+	return errUnknownOperation.makeError(nil, []string{}, "")
 }
 
 // TransformToStorage applies storage transformers before writing to storage

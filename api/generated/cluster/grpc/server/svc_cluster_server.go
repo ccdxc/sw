@@ -86,6 +86,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -104,6 +105,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -122,6 +124,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil
@@ -140,6 +143,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			key := r.MakeKey(prefix)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
 			return into, nil

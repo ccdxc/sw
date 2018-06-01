@@ -325,11 +325,11 @@ func (m *FakeMessage) Default(i interface{}) interface{} {
 }
 
 // Validate is a mock method for testing
-func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) error {
+func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) []error {
 	if m.ValidateRslt {
 		return nil
 	}
-	return errors.New("Setup to fail validation")
+	return []error{errors.New("Setup to fail validation")}
 }
 
 //UpdateSelfLink update the object with the self link provided
@@ -354,7 +354,7 @@ func (m *FakeMessage) TransformCb(from, to string, i interface{}) interface{} {
 }
 
 // ValidateFunc is a mock method for testing
-func (m *FakeMessage) ValidateFunc(i interface{}, ver string, ignstatus bool) error {
+func (m *FakeMessage) ValidateFunc(i interface{}, ver string, ignstatus bool) []error {
 	m.ValidateCalled++
 	return nil
 }

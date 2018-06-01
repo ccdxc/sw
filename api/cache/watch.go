@@ -355,8 +355,8 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 		if fromver != 0 && obj.version > fromver {
 			// fromver was specified and we do not have enough history, error out.
 			errmsg := api.Status{
-				Result:  &api.StatusResultExpired,
-				Message: fmt.Sprintf("version too old"),
+				Result:  api.StatusResultExpired,
+				Message: []string{fmt.Sprintf("version too old")},
 				Code:    http.StatusGone,
 			}
 			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up")

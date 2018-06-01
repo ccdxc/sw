@@ -97,22 +97,38 @@ func (m *SecurityGroupStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *SecurityGroup) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
+func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
-	return true
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
 }
 
-func (m *SecurityGroupSpec) Validate(ver string, ignoreStatus bool) bool {
-	if m.WorkloadSelector != nil && !m.WorkloadSelector.Validate(ver, ignoreStatus) {
-		return false
+func (m *SecurityGroupSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.WorkloadSelector != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "WorkloadSelector"
+		if errs := m.WorkloadSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
-	return true
+	return ret
 }
 
-func (m *SecurityGroupStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *SecurityGroupStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

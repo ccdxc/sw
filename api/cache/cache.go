@@ -32,6 +32,7 @@ var (
 	watchEvents, watchers, watchErrors expvar.Int
 	createOps, updateOps, getOps       expvar.Int
 	deleteOps, listOps                 expvar.Int
+	maxStartRetryInterval              = time.Second * 15
 	markSweepInterval                  = time.Second * 10
 	kvWatcherRetryInterval             = time.Millisecond * 500
 	delayedDelPurgeQuanta              = 100
@@ -358,13 +359,20 @@ func CreateNewCache(config Config) (Interface, error) {
 func (c *cache) Start() error {
 	defer c.Unlock()
 	c.Lock()
+	end := time.Now().Add(maxStartRetryInterval)
 	for i := 0; i < c.config.NumKvClients; i++ {
 		k, err := kvs.New(c.config.Config)
 		if err != nil {
-			errors.Wrap(err, "could not create KV conn pool")
+			if time.Now().Before(end) {
+				// Still in grace period, retry connecting to KV store
+				i = i - 1
+				continue
+			}
+			// Exceed max retry time, error out
 			for {
 				conn := c.pool.GetFromPool()
 				if conn == nil {
+					err = errors.Wrap(err, "could not create KV conn pool")
 					return err
 				}
 				k := conn.(kvstore.Interface)
@@ -385,6 +393,7 @@ func (c *cache) Start() error {
 	// have sharded watches one per object type using different connections.
 	c.argus.NewPrefixWatcher(c.ctx, globals.RootPrefix)
 	c.active = true
+	c.logger.InfoLog("msg", "Started cache. Set to active")
 	return nil
 }
 
@@ -418,8 +427,7 @@ func (c *cache) Create(ctx context.Context, key string, obj runtime.Object) erro
 	kvtime := time.Now()
 	err := k.Create(ctx, key, obj)
 	if err != nil {
-		errors.Wrap(err, "kvstore Create Failed")
-		return err
+		return fmt.Errorf("Object create failed: %s", kvstore.ErrorDesc(err))
 	}
 	hdr.Record("kvstore.Create", time.Since(kvtime))
 	_, v := mustGetObjectMetaVersion(obj)
@@ -451,6 +459,8 @@ func (c *cache) Delete(ctx context.Context, key string, into runtime.Object, cs 
 			_, v = mustGetObjectMetaVersion(into)
 		}
 		c.store.Delete(key, v, c.getCbFunc(kvstore.Deleted))
+	} else {
+		err = fmt.Errorf("Object delete failed: %s", kvstore.ErrorDesc(err))
 	}
 	hdr.Record("cache.Delete", time.Since(start))
 	deleteOps.Add(1)
@@ -467,7 +477,11 @@ func (c *cache) PrefixDelete(ctx context.Context, prefix string) error {
 	}
 	c.logger.DebugLog("oper", "prefixdelete", "msg", "called")
 	k := c.pool.GetFromPool().(kvstore.Interface)
-	return k.PrefixDelete(ctx, prefix)
+	err := k.PrefixDelete(ctx, prefix)
+	if err != nil {
+		return fmt.Errorf("Object delete failed: %s", kvstore.ErrorDesc(err))
+	}
+	return nil
 }
 
 // Update updates an object in the backend KVStore if it already exists. If the operation is successful
@@ -485,8 +499,7 @@ func (c *cache) Update(ctx context.Context, key string, obj runtime.Object, cs .
 	kvtime := time.Now()
 	err := k.Update(ctx, key, obj, cs...)
 	if err != nil {
-		errors.Wrap(err, "kvstore update Failed")
-		return err
+		return fmt.Errorf("Object update failed: %s", kvstore.ErrorDesc(err))
 	}
 	hdr.Record("kvstore.Update", time.Since(kvtime))
 	_, v := mustGetObjectMetaVersion(obj)
@@ -509,8 +522,7 @@ func (c *cache) ConsistentUpdate(ctx context.Context, key string, into runtime.O
 	k := c.pool.GetFromPool().(kvstore.Interface)
 	err := k.ConsistentUpdate(ctx, key, into, updateFunc)
 	if err != nil {
-		errors.Wrap(err, "kvstore update Failed")
-		return err
+		return fmt.Errorf("Object update failed: %s", kvstore.ErrorDesc(err))
 	}
 	_, v := mustGetObjectMetaVersion(into)
 	c.logger.DebugLog("oper", "consistenupdate", "msg", "kvstore success, updating cache")
@@ -529,7 +541,7 @@ func (c *cache) Get(ctx context.Context, key string, into runtime.Object) error 
 	c.logger.DebugLog("oper", "get", "msg", "called")
 	obj, err := c.store.Get(key)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Get Failed for %s", key))
+		return fmt.Errorf("Object get failed: %s", err.Error())
 	}
 	c.logger.DebugLog("oper", "get", "msg", "cache hit")
 	obj.Clone(into)
@@ -549,7 +561,7 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 	c.logger.DebugLog("oper", "listfiltered", "msg", "called")
 	v, err := helper.ValidListObjForDecode(into)
 	if err != nil {
-		return err
+		return fmt.Errorf("Object list failed: %s", err.Error())
 	}
 	ptr := false
 	elem := v.Type().Elem()
@@ -558,7 +570,7 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 	}
 	items, err := c.store.List(prefix, opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("Object list failed: %s", err.Error())
 	}
 	for _, kvo := range items {
 		if ptr {
@@ -599,8 +611,7 @@ func (c *cache) listBackend(ctx context.Context, prefix string, into runtime.Obj
 	}
 	err := k.List(ctx, prefix, into)
 	if err != nil {
-		errors.Wrap(err, "kvstore list Failed")
-		return err
+		return fmt.Errorf("object list Failed: %s", kvstore.ErrorDesc(err))
 	}
 	hdr.Record("cache.listBackend", time.Since(start))
 	return nil
@@ -616,7 +627,7 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	c.logger.DebugLog("oper", "watchfiltered", "msg", "called")
 	filters, err := getFilters(opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Establishing watch failed: %s", err.Error())
 	}
 	nctx, cancel := context.WithCancel(ctx)
 	ret := newWatchServer(cancel)

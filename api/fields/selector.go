@@ -188,8 +188,8 @@ func (s *Selector) Print() string {
 
 // Validate validates the selector.
 // Dummy function to help compile .ext.go files that include Selector.
-func (s *Selector) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (s *Selector) Validate(ver, path string, ignoreStatus bool) []error {
+	return nil
 }
 
 // Token represents constant definition for lexer token

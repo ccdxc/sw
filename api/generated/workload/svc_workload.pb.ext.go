@@ -101,16 +101,19 @@ func (m *EndpointList) Defaults(ver string) bool {
 
 // Validators
 
-func (m *AutoMsgEndpointWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
-func (m *EndpointList) Validate(ver string, ignoreStatus bool) bool {
-	return true
+func (m *EndpointList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
 }
 
 func init() {

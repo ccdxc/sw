@@ -241,11 +241,11 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 	for testtype, policy := range erraneousAuthenticatorsConfig() {
 		err := r.validateAuthenticatorConfig(*policy, "", false)
 		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned for mis-configured Authenticators", testtype))
-		Assert(t, err == ErrAuthenticatorConfig, fmt.Sprintf("[%v] Unexpected error returned for mis-configured Authenticators: Err: %v", testtype, err))
+		Assert(t, err[0] == ErrAuthenticatorConfig, fmt.Sprintf("[%v] Unexpected error returned for mis-configured Authenticators: Err: %v", testtype, err))
 	}
 
 	// test for correctly configured  authentication policy
 	policy := validAuthenticationPolicyData()
-	err := r.validateAuthenticatorConfig(*policy, "", false)
-	AssertOk(t, err, "Validation hook failed for correctly configured authenticators")
+	errs := r.validateAuthenticatorConfig(*policy, "", false)
+	Assert(t, len(errs) == 0, "Validation hook failed for correctly configured authenticators")
 }

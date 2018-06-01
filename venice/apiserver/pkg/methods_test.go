@@ -77,6 +77,9 @@ func TestMethodWiths(t *testing.T) {
 	if msg1 != resp {
 		t.Errorf("retrieved wrong response type")
 	}
+	if m.GetPrefix() != "testm" {
+		t.Errorf("wrong prefix")
+	}
 }
 
 // TestMethodKvWrite
@@ -199,6 +202,9 @@ func testTxnPreCommithook(ctx context.Context,
 	return i, true, nil
 }
 
+func TestDisabledMethod(t *testing.T) {
+
+}
 func TestTxn(t *testing.T) {
 	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
 	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
@@ -252,10 +258,23 @@ func TestTransforms(t *testing.T) {
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := TestType1{}
 
+	// Disable method and invoke.
+	m.Disable()
+	ctx := context.Background()
+	_, err := m.HandleInvocation(ctx, reqmsg)
+	if err == nil {
+		t.Fatal("should have failed but succeeded")
+	}
+	m.Enable()
+	// Without any MetadataHeaderPrefix
+	_, err = m.HandleInvocation(ctx, reqmsg)
+	if err == nil {
+		t.Fatal("should have failed but succeeded")
+	}
 	// Set the same version as the apiServer
 	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
 		apisrv.RequestParamMethod, "GET")
-	ctx := metadata.NewIncomingContext(context.Background(), md)
+	ctx = metadata.NewIncomingContext(ctx, md)
 	m.HandleInvocation(ctx, reqmsg)
 	if len(req.CalledTxfms) != 1 || len(resp.CalledTxfms) != 1 {
 		t.Fatalf("transforms not called req[%v] resp[%v]", req.CalledTxfms, resp.CalledTxfms)
