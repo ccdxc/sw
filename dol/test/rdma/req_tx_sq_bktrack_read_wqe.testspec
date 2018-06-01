@@ -482,9 +482,9 @@ packets:
                  data    : None
 
     - packet:
-         id          : REXMIT_READ_RESP_FIRST      # Receive packet 
+         id          : READ_RESP_MID2      # Receive packet
          payloadsize : 1024
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
          icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
@@ -508,17 +508,14 @@ packets:
                  sport   : ref://testcase/config/rdmasession/session/iflow/sport
                  dport   : ref://testcase/config/rdmasession/session/iflow/dport
              bth:
-                 opcode  : 13
+                 opcode  : 14
                  destqp  : ref://testcase/config/rdmasession/lqp/id
                  psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=2
-             aeth:
-                syndrome : 14 #  (credits)
-                msn      : callback://rdma/rdma/GetPktMsn/ack_num=2
              payload:
                  data    : ref://testcase/packets/id=READ_RESP_MID2_PYLD/rawbytes
 
     - packet:
-         id          : REXMIT_READ_RESP_LAST     # Receive packet 
+         id          : READ_RESP_LAST     # Receive packet
          payloadsize : 1023
          template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
@@ -825,11 +822,11 @@ session:
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=REXMIT_READ_RESP_FIRST
+                    object  : ref://testcase/packets/id=READ_RESP_MID2
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
                 - packet:
-                    object  : ref://testcase/packets/id=REXMIT_READ_RESP_LAST
+                    object  : ref://testcase/packets/id=READ_RESP_LAST
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
         expect:

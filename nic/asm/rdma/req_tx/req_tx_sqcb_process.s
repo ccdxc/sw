@@ -145,15 +145,8 @@ poll_for_work:
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, r2)
         
-        seq            c1, d.poll_in_progress, 0x1
+        seq.e            c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
-        // Revert speculative cindex if its far apart from actual cindex
-        sub            r1, SPEC_SQ_C_INDEX, SQ_C_INDEX
-        mincr          r1, d.log_num_wqes, 0
-        blti           r1, SPEC_LEN, end1
-        add            r1, SQ_C_INDEX, r0
-        mincr.e        r1, d.log_num_wqes, 1
-        tblwr          SPEC_SQ_C_INDEX, r1
 
 pt_process:
         // log_num_wqe_per_page = (log_sq_page_size - log_wqe_size)
@@ -191,15 +184,8 @@ pt_process:
 
         phvwrpair CAPRI_PHV_FIELD(TO_S4_P, spec_cindex), SPEC_SQ_C_INDEX, CAPRI_PHV_FIELD(TO_S5_P, spec_cindex), SPEC_SQ_C_INDEX
         
-        seq            c1, d.poll_in_progress, 0x1
+        seq.e            c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
-        // Revert speculative cindex if its far apart from actual cindex
-        sub            r1, SPEC_SQ_C_INDEX, SQ_C_INDEX
-        mincr          r1, d.log_num_wqes, 0
-        blti           r1, SPEC_LEN, end1
-        add            r1, SQ_C_INDEX, r0
-        mincr.e        r1, d.log_num_wqes, 1
-        tblwr          SPEC_SQ_C_INDEX, r1
 
 in_progress:
         // do not speculate for in_progress processing
@@ -397,9 +383,11 @@ process_recirc:
     seq            c1, CAPRI_APP_DATA_RECIRC_REASON, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
     bcf            [c1], process_sge_recirc
     phvwr          p.common.p4_intr_recirc, 0 // Branch Delay Slot
-    
-    nop.e
-    nop
+
+    // Revert spec_cindex to next sq_cindex upon recirc of the current one
+    add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+    mincr.e        r1, d.log_num_wqes, 1
+    tblwr          SPEC_SQ_C_INDEX, r1
 
 process_sge_recirc:
     // nothing to be done here, table 3 is programmed to execute req_tx_sqsge_process

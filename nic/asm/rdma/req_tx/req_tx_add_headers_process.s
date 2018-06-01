@@ -341,9 +341,6 @@ op_type_end:
     // phv_p->bth.pkey = 0xffff
     phvwr          BTH_PKEY, 0xffff  
 
-    // Store cur tx_psn as exp_rsp_psn, if rsp is expected for this psn
-    add            r7, d.tx_psn, r0
-
     // store wqe_start_psn for backtrack from middle of multi-packet msg
     tblwr.c2       d.wqe_start_psn, d.tx_psn
 
@@ -365,6 +362,10 @@ op_type_end:
     sle.c6         c6, r3, r0
 
 inc_psn:
+    // exp_rsp_psn is the psn for which ack_req bit is set or psn of last read
+    // rsp packet of read_req or psn of rsp packet of atomic_req
+    add            r7, d.tx_psn, r0
+
     // sqcb1_p->tx_psn++
     tblmincri.!c6  d.tx_psn, 24, 1
 
