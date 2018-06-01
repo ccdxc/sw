@@ -20,7 +20,8 @@ public:
     virtual HdlrResp HandleStatePreUpgState(UpgCtx& upgCtx);
     virtual HdlrResp HandleStatePostBinRestart(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateDataplaneDowntimeStart(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx);
+    virtual HdlrResp HandleStateDataplaneDowntimePhase2Start(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateCleanup(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateUpgSuccess(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateUpgFailed(UpgCtx& upgCtx);

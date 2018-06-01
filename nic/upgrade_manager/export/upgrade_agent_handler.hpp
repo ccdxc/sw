@@ -17,7 +17,8 @@ public:
     virtual void UpgStatePreUpgCheckComplete(HdlrResp &resp, string svcName);
     virtual void UpgStateProcessQuiesceComplete(HdlrResp &resp, string svcName);
     virtual void UpgStatePostBinRestartComplete(HdlrResp &resp, string svcName);
-    virtual void UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string svcName);
+    virtual void UpgStateDataplaneDowntimePhase1Complete(HdlrResp &resp, string svcName);
+    virtual void UpgStateDataplaneDowntimePhase2Complete(HdlrResp &resp, string svcName);
     virtual void UpgStateCleanupComplete(HdlrResp &resp, string svcName);
 
     virtual void UpgSuccessful(void);

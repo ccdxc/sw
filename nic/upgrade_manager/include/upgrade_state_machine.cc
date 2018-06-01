@@ -50,7 +50,7 @@ void InitStateMachineVector(void) {
     StateMachine[PostBinRestart] = 
                {
                 PostBinRestart, 
-                DataplaneDowntimeStart, 
+                DataplaneDowntimePhase1Start, 
                 PostBinRestartPass, 
                 PostBinRestartFail, 
                 "Sending pass to upg-mgr for Post-Binary Restart message", 
@@ -59,17 +59,29 @@ void InitStateMachineVector(void) {
                 "Post Process Restart Pass", 
                 "Post Process Restart Fail"
                };
-    StateMachine[DataplaneDowntimeStart] = 
+    StateMachine[DataplaneDowntimePhase1Start] = 
                {
-                DataplaneDowntimeStart, 
-                UpgSuccess, 
-                DataplaneDowntimeStartPass, 
-                DataplaneDowntimeStartFail, 
-                "Sending pass to upg-mgr for Dataplane Downtime Start message", 
-                "Sending fail to upg-mgr for Dataplane Downtime Start message", 
-                "Dataplane Downtime Start", 
-                "Dataplane Downtime Success", 
-                "Dataplane Downtime Fail"
+                DataplaneDowntimePhase1Start, 
+                DataplaneDowntimePhase2Start, 
+                DataplaneDowntimePhase1StartPass, 
+                DataplaneDowntimePhase1StartFail, 
+                "Sending pass to upg-mgr for Dataplane Downtime Phase1 Start message", 
+                "Sending fail to upg-mgr for Dataplane Downtime Phase1 Start message", 
+                "Dataplane Downtime Phase1 Start", 
+                "Dataplane Downtime Phase1 Success", 
+                "Dataplane Downtime Phase1 Fail"
+               };
+    StateMachine[DataplaneDowntimePhase2Start] =
+               {
+                DataplaneDowntimePhase2Start,
+                UpgSuccess,
+                DataplaneDowntimePhase2StartPass,
+                DataplaneDowntimePhase2StartFail,
+                "Sending pass to upg-mgr for Dataplane Downtime Phase2 Start message",
+                "Sending fail to upg-mgr for Dataplane Downtime Phase2 Start message",
+                "Dataplane Downtime Phase2 Start",
+                "Dataplane Downtime Phase2 Success",
+                "Dataplane Downtime Phase2 Fail"
                };
     StateMachine[UpgSuccess] = 
                {

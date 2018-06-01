@@ -33,7 +33,8 @@ bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
         case PreUpgStateFail:
         case ProcessesQuiescedFail:
         case PostBinRestartFail:
-        case DataplaneDowntimeStartFail:
+        case DataplaneDowntimePhase1StartFail:
+        case DataplaneDowntimePhase2StartFail:
         case CleanupFail:
         case UpgSuccessFail:
         case UpgFailedFail:

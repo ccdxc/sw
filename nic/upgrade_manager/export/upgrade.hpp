@@ -50,8 +50,9 @@ public:
     void SendAppRespFail(string str);
 
     delphi::error StartUpgrade(void);
-
     delphi::error GetUpgradeStatus(vector<string>& retStr);
+
+    bool IsUpgradeInProgress(void);
 };
 typedef std::shared_ptr<UpgSdk> UpgSdkPtr;
 

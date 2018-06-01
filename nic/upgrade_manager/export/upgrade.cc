@@ -83,6 +83,19 @@ delphi::error UpgSdk::StartUpgrade(void) {
     return err; 
 }
 
+bool UpgSdk::IsUpgradeInProgress(void) {
+    LogInfo("UpgSdk::IsUpgradeInProgress");
+
+    delphi::objects::UpgReqPtr upgReq = this->FindUpgReqSpec();
+    if (upgReq && upgReq->upgreqcmd() == UpgStart) {
+        LogInfo("Upgrade in progress");
+        return true;
+    }
+    LogInfo("Upgrade not in progress");
+    return false;
+    
+}
+
 delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
     LogInfo("UpgSdk::GetUpgradeStatus");
     RETURN_IF_FAILED(this->IsRoleAgent(this->svcRole_, "Cannot get upgrade status because service is not of role Agent"));

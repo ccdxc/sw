@@ -45,9 +45,15 @@ HdlrResp UpgHandler::HandleStateProcessesQuiesced(UpgCtx& upgCtx) {
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateDataplaneDowntimeStart(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateDataplaneDowntimeStart not implemented by service");
+    LogInfo("UpgHandler HandleStateDataplaneDowntimePhase1Start not implemented by service");
+    return resp;
+}
+
+HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase2Start(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    LogInfo("UpgHandler HandleStateDataplaneDowntimePhase2Start not implemented by service");
     return resp;
 }
 

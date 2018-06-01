@@ -24,7 +24,12 @@ void UpgAgentHandler::UpgStatePostBinRestartComplete(HdlrResp &resp, string svcN
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaceDowntimeComplete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateDataplaneDowntimePhase1Complete(HdlrResp &resp, string svcName) {
+    LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+    return;
+}
+
+void UpgAgentHandler::UpgStateDataplaneDowntimePhase2Complete(HdlrResp &resp, string svcName) {
     LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }

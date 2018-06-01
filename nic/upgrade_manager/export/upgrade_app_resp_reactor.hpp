@@ -33,6 +33,7 @@ public:
 
     void SetAppRespSuccess(HdlrResp &resp);
     void SetAppRespFail(HdlrResp &resp, string str);
+    void GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &hdlrResp);
 
 };
 typedef std::shared_ptr<UpgAppRespReact> UpgAppRespReactPtr;
