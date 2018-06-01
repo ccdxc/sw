@@ -23,6 +23,7 @@ typedef struct HdlrResp_ {
 typedef struct UpgCtx_ {
     string                fromVer;
     string                toVer;
+    UpgType               upgType;
 } UpgCtx;
 
 typedef struct UpgStateMachine_ {

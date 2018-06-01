@@ -180,6 +180,8 @@ delphi::error UpgradeMgr::createUpgStateReq(uint32_t id, upgrade::UpgReqStateTyp
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_key(id);
     req->set_upgreqstate(status);
+    //TODO figure out UpgTypeDisruptive vs UpgTypeNonDisruptive
+    req->set_upgreqtype(UpgTypeDisruptive);
 
     // add it to database
     sdk_->SetObject(req);

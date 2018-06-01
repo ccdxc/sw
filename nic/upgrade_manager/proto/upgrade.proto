@@ -47,6 +47,11 @@ enum UpgRespStateType {
     UpgFailedFail                = 15;
 }
 
+enum UpgType {
+    UpgTypeDisruptive            = 0;
+    UpgTypeNonDisruptive         = 1;
+}
+
 // spec part of the object
 message UpgReq {
     option (delphi.update_event) = true;
@@ -69,6 +74,7 @@ message UpgStateReq {
     delphi.ObjectMeta      Meta              = 1;
     uint32                 Key               = 2;
     UpgReqStateType        UpgReqState       = 3 [(delphi.event) = true];
+    UpgType                UpgReqType        = 4 [(delphi.event) = true];
 }
 
 message UpgAppResp {

@@ -9,8 +9,7 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
-    UpgCtx ctx;
+void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgCtx &ctx) {
     switch (type) {
         case UpgReqRcvd:
             LogInfo("Upgrade: Request Received");
@@ -50,6 +49,10 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
     }
 }
 
+void UpgReqReactor::GetUpgCtx(UpgCtx &ctx, delphi::objects::UpgStateReqPtr req) {
+    ctx.upgType = req->upgreqtype(); 
+}
+
 // OnUpgStateReqCreate gets called when UpgStateReq object is created
 delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
     LogInfo("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
@@ -57,7 +60,9 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
     upgAppRespPtr_->CreateUpgAppResp();
     if (this->upgHdlrPtr_) {
         HdlrResp hdlrResp;
-        InvokeAppHdlr(req->upgreqstate(), hdlrResp);
+        UpgCtx ctx;
+        UpgReqReactor::GetUpgCtx(ctx, req);
+        InvokeAppHdlr(req->upgreqstate(), hdlrResp, ctx);
         if (hdlrResp.resp != INPROGRESS) {
             this->upgAppRespPtr_->UpdateUpgAppResp(this->upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
         } else {
@@ -72,6 +77,7 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
     UpgCtx   ctx;
     LogInfo("UpgReqReactor UpgStateReq got deleted");
     //delete the object
+    UpgReqReactor::GetUpgCtx(ctx, req);
     upgAppRespPtr_->DeleteUpgAppResp();
     if (this->upgHdlrPtr_) {
         this->upgHdlrPtr_->UpgStateReqDelete(ctx);
@@ -82,13 +88,16 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
 // OnUpgReqState gets called when UpgReqState attribute changes
 delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     HdlrResp hdlrResp;
+    UpgCtx ctx;
     if (!this->upgHdlrPtr_) {
         LogInfo("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
     }
     if (req->upgreqstate() != UpgStateTerminal)
         LogInfo("\n\n\n===== Incoming Message =====");
-    InvokeAppHdlr(req->upgreqstate(), hdlrResp);
+
+    UpgReqReactor::GetUpgCtx(ctx, req);
+    InvokeAppHdlr(req->upgreqstate(), hdlrResp, ctx);
     if (hdlrResp.resp != INPROGRESS) {
         if (req->upgreqstate() != UpgStateTerminal)
             LogInfo("Application returned {}", (hdlrResp.resp==SUCCESS)?"success":"fail");
