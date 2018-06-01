@@ -20,8 +20,8 @@ struct phv_ p;
 storage_seq_xts_status_desc1_handler:
 
     CLEAR_TABLE1
-    phvwrpair   p.{seq_kivec5xts_data_len...seq_kivec5xts_blk_len_shift}, \
-                d.{data_len...blk_len_shift}, \
+    phvwrpair   p.{seq_kivec5xts_data_len...seq_kivec5xts_blk_boundary_shift}, \
+                d.{data_len...blk_boundary_shift}, \
                 p.{seq_kivec5xts_stop_chain_on_error...seq_kivec5xts_desc_vec_push_en}, \
                 d.{stop_chain_on_error...desc_vec_push_en}
     phvwrpair.e	p.seq_kivec2xts_sgl_pdma_dst_addr, d.sgl_pdma_dst_addr, \

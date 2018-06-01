@@ -531,7 +531,7 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
   seq_status_desc->write_bit_fields(512 + 64, 64, chain_params.sgl_pdma_dst_addr);
   seq_status_desc->write_bit_fields(512 + 128, 64, chain_params.decr_buf_addr);
   seq_status_desc->write_bit_fields(512 + 192, 16, chain_params.data_len);
-  seq_status_desc->write_bit_fields(512 + 208, 5, chain_params.blk_len_shift);
+  seq_status_desc->write_bit_fields(512 + 208, 5, chain_params.blk_boundary_shift);
   seq_status_desc->write_bit_fields(512 + 213, 1, chain_params.stop_chain_on_error);
   seq_status_desc->write_bit_fields(512 + 214, 1, chain_params.comp_len_update_en);
   seq_status_desc->write_bit_fields(512 + 215, 1, chain_params.comp_sgl_src_en);

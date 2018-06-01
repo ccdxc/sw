@@ -14,7 +14,6 @@ struct phv_ p;
 /*
  * Registers usage
  */
-#define r_next_dma_cmd_ptr          r1  // next DMA command pointer
 #define r_src_len                   r2  // length of data source
 #define r_xfer_len                  r3  // current transfer length
 #define r_src_addr                  r4  // source address
@@ -42,39 +41,38 @@ storage_seq_xts_sgl_pdma_xfer:
    //     the current xfer is to be done.
    //
    /*
-    * VERY IMPORTANT NOTE: mem2mem descriptors work in adjacent pair and must not
-    * cross flit boundary. P4+ code sets up PHV space which guarantees that a valid
-    * mem2mem pair always starts with an even numbered ID.
+    * VERY IMPORTANT NOTE: mem2mem descriptors work in adjacent pair and the
+    * pair must not cross flit boundary. P4+ code sets up PHV space which 
+    * guarantees that a valid mem2mem pair always starts with an even numbered ID.
     *
     * For example: dma_m2m_2/dma_m2m_3 would be a valid pair, 
     *              but dma_m2m_7/dma_m2m_8 would not necessarily be adjacent.
     *
-    * When a phv2mem doorbell ring follows a mem2mem of a descriptor,
-    * the phv2mem must also be in the same flit as the mem2mem.
-    *
-    * Currently it is known that dma_m2m_0/dma_m2m_0 are in one flit, and
+    * Currently it is known that dma_m2m_0/dma_m2m_1 are in one flit, and
     * all the subsequent mem2mem quads are in succeeding flits.
     */
  
    // Can process the entire PDMA SGL here which holds 4 addr/len pairs,
    // plus padding
    
-   COMP_SGL_DMA(dma_m2m_6, dma_m2m_7, 0,
-                d.addr0, d.len0, exit)
-   COMP_SGL_DMA(dma_m2m_8, dma_m2m_9, 0,
-                d.addr1, d.len1, exit)
-   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11, 0,
-                d.addr2, d.len2, exit)
-   COMP_SGL_DMA(dma_m2m_12, dma_m2m_13, 0,
-                d.addr3, d.len3, exit)
+   CHAIN_SGL_PDMA(dma_m2m_6, dma_m2m_7,
+                  d.addr0, d.len0, exit, pdma_xfer_error)
+   CHAIN_SGL_PDMA(dma_m2m_8, dma_m2m_9,
+                  d.addr1, d.len1, exit, pdma_xfer_error)
+   CHAIN_SGL_PDMA(dma_m2m_10, dma_m2m_11,
+                  d.addr2, d.len2, exit, pdma_xfer_error)
+   CHAIN_SGL_PDMA(dma_m2m_12, dma_m2m_13,
+                  d.addr3, d.len3, exit, pdma_xfer_error)
 
    // Catch any driver errors here for debugging, i.e., driver did not 
    // provision the SGL correctly relative to comp output data length.
-   beq          r_src_len, r0, exit
+   bne          r_src_len, r0, pdma_xfer_error
    nop
-   SEQ_COMP_SGL_PDMA_XFER_ERROR_TRAP()
    
 exit:
    CLEAR_TABLE1_e
 
-
+pdma_xfer_error:
+   SEQ_COMP_SGL_PDMA_XFER_ERROR_TRAP()
+   b            exit
+   nop

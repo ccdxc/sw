@@ -217,11 +217,11 @@ chain_sgl_pdma_packed_fill(dp_mem_t *seq_sgl_pdma,
 
     seq_sgl_pdma->clear();
     sgl_pdma_entry = (chain_sgl_pdma_t *)seq_sgl_pdma->read();
-    for (uint32_t i = 0; i < ARRAYSIZE(sgl_pdma_entry->addr); i++) {
+    for (uint32_t i = 0; i < ARRAYSIZE(sgl_pdma_entry->tuple); i++) {
         pdma_size = dst_buf_size > kMaxMem2MemSize ? 
                     kMaxMem2MemSize : dst_buf_size;
-        sgl_pdma_entry->addr[i] = dst_buf_addr;
-        sgl_pdma_entry->len[i] = pdma_size;
+        sgl_pdma_entry->tuple[i].addr = dst_buf_addr;
+        sgl_pdma_entry->tuple[i].len = pdma_size;
 
         dst_buf_addr += pdma_size;
         dst_buf_size -= pdma_size;
@@ -419,7 +419,7 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
     seq_status_desc->write_bit_fields(512 + 256, 64, chain_params.sgl_vec_addr);
     seq_status_desc->write_bit_fields(512 + 320, 64, chain_params.pad_buf_addr);
     seq_status_desc->write_bit_fields(512 + 384, 16, chain_params.data_len);
-    seq_status_desc->write_bit_fields(512 + 400, 5, chain_params.pad_len_shift);
+    seq_status_desc->write_bit_fields(512 + 400, 5, chain_params.pad_boundary_shift);
     seq_status_desc->write_bit_fields(512 + 405, 1, chain_params.stop_chain_on_error);
     seq_status_desc->write_bit_fields(512 + 406, 1, chain_params.data_len_from_desc);
     seq_status_desc->write_bit_fields(512 + 407, 1, chain_params.aol_pad_en);
@@ -1106,14 +1106,18 @@ int _compress_output_through_sequencer(acc_ring_push_t push_type,
   seq_sgl->clear();
   chain_sgl_pdma_t *ssgl = (chain_sgl_pdma_t *)seq_sgl->read();
 
-  ssgl->addr[0] = compressed_host_buf->pa();
-  ssgl->len[0] = 199;
-  ssgl->addr[1] = compressed_host_buf->pa() + 199;
-  ssgl->len[1] = 537;
-  ssgl->addr[2] = compressed_host_buf->pa() + 199 + 537;
-  ssgl->len[2] = 1123;
-  ssgl->addr[3] = compressed_host_buf->pa() + 199 + 537 + 1123;
-  ssgl->len[3] = kCompressedBufSize - (199 + 537 + 1123);
+  ssgl->tuple[0].addr = compressed_host_buf->pa();
+  ssgl->tuple[0].len = 13199;
+  ssgl->tuple[1].addr = compressed_host_buf->pa() + 
+                        ssgl->tuple[0].len;
+  ssgl->tuple[1].len = 9537;
+  ssgl->tuple[2].addr = compressed_host_buf->pa() + 
+                        ssgl->tuple[0].len + ssgl->tuple[1].len;
+  ssgl->tuple[2].len = 10123;
+  ssgl->tuple[3].addr = compressed_host_buf->pa() +
+                        ssgl->tuple[0].len + ssgl->tuple[1].len + 
+                        ssgl->tuple[2].len;
+  ssgl->tuple[3].len = kMaxMem2MemSize;
   seq_sgl->write_thru();
 
   chain_params_comp_t chain_params = {0};

@@ -76,7 +76,7 @@ typedef struct {
     uint16_t status_len;		// Length of the status header
     uint16_t data_len;		    // Remaining data length of compression buffer
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
-    uint8_t  pad_len_shift;     // log2(max padding length)
+    uint8_t  pad_boundary_shift;// log2(pad block length)
     uint16_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
              status_dma_en        :1,	// enable DMA of status to status_hbm_pa
     // NOTE: intr_en and next_doorbell_en can be enabled together.
@@ -120,7 +120,7 @@ typedef struct {
     uint16_t status_len;		// Length of the status header
     uint16_t data_len;		    // valid PDMA data length if sgl_pdma_len_from_desc is set
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
-    uint8_t  blk_len_shift;     // log2(block length)
+    uint8_t  blk_boundary_shift;// log2(block size)
     uint16_t status_dma_en        :1,	// enable DMA of status to status_hbm_pa
     // NOTE: intr_en and next_doorbell_en can be enabled together.
     // When XTS succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.
@@ -141,10 +141,14 @@ typedef struct {
  * SGL PDMA pamameters
  */
 typedef struct {
-    uint64_t addr[4];		    // Destination Address in the SGL for chaining PDMA
-    uint16_t len[4];		    // Length of the SGL element for chaining PDMA
-    uint64_t pad[3];
-} chain_sgl_pdma_t;
+    uint64_t addr;		    // Destination Address in the SGL for chaining PDMA
+    uint32_t len;		    // Length of the SGL element for chaining PDMA
+} __attribute__((packed)) chain_sgl_pdma_tuple_t;
+
+typedef struct {
+    chain_sgl_pdma_tuple_t  tuple[4];
+    uint64_t                pad[2];
+} __attribute__((packed)) chain_sgl_pdma_t;
 
 
 }  // namespace tests

@@ -108,7 +108,7 @@ header_type seq_comp_status_desc1_t {
     sgl_vec_addr    : 64;   // SGL vector for padding operation
     pad_buf_addr    : 64;   // pad buffer address
     data_len        : 16;   // Length of the compression data
-    pad_len_shift   : 5;    // Padding length (power of 2)
+    pad_boundary_shift  : 5;// log2(padding boundray)
     stop_chain_on_error : 1; // 1 => don't ring next DB on error
     data_len_from_desc  : 1; // 1 => Use data_len in the descriptor, 
                              // 0 => Use the comp_output_data_len
@@ -125,13 +125,13 @@ header_type seq_comp_status_desc1_t {
 header_type chain_sgl_pdma_t {
   fields {
     addr0           : 64;   // SGL data buffer 0 address
+    len0            : 32;   // SGL data buffer 0 length
     addr1           : 64;   // SGL data buffer 1 address
+    len1            : 32;   // SGL data buffer 1 length
     addr2           : 64;   // SGL data buffer 2 address
+    len2            : 32;   // SGL data buffer 2 length
     addr3           : 64;   // SGL data buffer 3 address
-    len0            : 16;   // SGL data buffer 0 length
-    len1            : 16;   // SGL data buffer 1 length
-    len2            : 16;   // SGL data buffer 2 length
-    len3            : 16;   // SGL data buffer 3 length
+    len3            : 32;   // SGL data buffer 3 length
   }
 }
 
@@ -187,7 +187,7 @@ header_type seq_xts_status_desc1_t {
     sgl_pdma_dst_addr   : 64;// points to chain_sgl_pdma_t when sgl_pdma_en is set
     decr_buf_addr       : 64;// decrypt buffer address
     data_len            : 16;// valid PDMA data length if sgl_pdma_len_from_desc is set
-    blk_len_shift       : 5; // log2(blk_len)
+    blk_boundary_shift  : 5; // log2(block boundary)
     stop_chain_on_error : 1; // 1 => don't ring next DB on error
     comp_len_update_en  : 1; // 1 => read length from cp_hdr and update comp desc/SGL
     comp_sgl_src_en     : 1; // 1 => comp_sgl_src_addr is valid
@@ -202,6 +202,24 @@ header_type seq_xts_status_desc1_t {
 header_type seq_xts_status_t {
   fields {
     err             : 64;   // Error status (0: success: >0: failure)
+  }
+}
+
+// Compression/decompression descriptor
+header_type cp_desc_t {
+  fields {
+    src             : 64;
+    dst             : 64;
+    cmd             : 16;
+    datain_len      : 16;
+    extended_len    : 16;
+    threshold_len   : 16;
+    status_addr     : 64;
+    doorbell_addr   : 64;
+    doorbell_data   : 64;
+    opaque_tag_addr : 64;
+    opaque_tag_data : 32;
+    status_data     : 32;
   }
 }
 
@@ -299,10 +317,10 @@ header_type seq_kivec2xts_t {
 // kivec3: header union with to_stage_3 (128 bits max)
 header_type seq_kivec3_t {
   fields {
-    comp_buf_addr    : 64;
-    pad_buf_addr     : 34;   // pad buffer in HBM
-    pad_len          : 16;
-    num_blks         : 5;
+    comp_buf_addr       : 64;
+    pad_len             : 16;
+    num_blks            : 5;
+    pad_boundary_shift  : 5;
   }
 }
 
@@ -324,6 +342,7 @@ header_type seq_kivec4_t {
     barco_pndx_size         : 3;
     barco_ring_size         : 5;
     barco_num_descs         : 6;
+    pad_boundary_shift      : 5;
   }
 }
 
@@ -331,9 +350,9 @@ header_type seq_kivec4_t {
 header_type seq_kivec5_t {
   fields {
     intr_addr           : 64;
+    pad_buf_addr        : 34;   // pad buffer in HBM
     data_len            : 16;   // Length of compression data (either from descriptor or 
                                 // from the compression status)
-    pad_len_shift       : 5;
     status_dma_en       : 1;    // 1 => DMA status, 0 => don't DMA status
     next_db_en          : 1;
     intr_en             : 1;
@@ -356,7 +375,7 @@ header_type seq_kivec5xts_t {
   fields {
     intr_addr           : 64;
     data_len            : 16;
-    blk_len_shift       : 5;
+    blk_boundary_shift  : 5;
     status_dma_en       : 1;
     next_db_en          : 1;
     intr_en             : 1;
@@ -385,6 +404,22 @@ header_type seq_kivec7xts_t {
   fields {
       comp_desc_addr   : 64;
       comp_sgl_src_addr: 64;
+  }
+}
+
+// kivec8: header union with to_stage_4 (128 bits max)
+header_type seq_kivec8_t {
+  fields {
+    pad_len             : 16;
+    last_blk_len        : 16;
+  }
+}
+
+// kivec8: header union with to_stage_4 (128 bits max)
+// used by XTS status handler
+header_type seq_kivec8xts_t {
+  fields {
+    datain_len          : 16;
   }
 }
 
@@ -442,9 +477,9 @@ header_type seq_kivec7xts_t {
 
 #define SEQ_KIVEC3_USE(scratch, kivec)                                  \
   modify_field(scratch.comp_buf_addr, kivec.comp_buf_addr);             \
-  modify_field(scratch.pad_buf_addr, kivec.pad_buf_addr);               \
   modify_field(scratch.pad_len, kivec.pad_len);                         \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
+  modify_field(scratch.pad_boundary_shift, kivec.pad_boundary_shift);   \
 
 #define SEQ_KIVEC3XTS_USE(scratch, kivec)                               \
   modify_field(scratch.decr_buf_addr, kivec.decr_buf_addr);             \
@@ -457,11 +492,12 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.barco_ring_size, kivec.barco_ring_size);         \
   modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);         \
   modify_field(scratch.barco_num_descs, kivec.barco_num_descs);         \
+  modify_field(scratch.pad_boundary_shift, kivec.pad_boundary_shift);   \
 
 #define SEQ_KIVEC5_USE(scratch, kivec)                                  \
   modify_field(scratch.intr_addr, kivec.intr_addr);                     \
+  modify_field(scratch.pad_buf_addr, kivec.pad_buf_addr);               \
   modify_field(scratch.data_len, kivec.data_len);                       \
-  modify_field(scratch.pad_len_shift, kivec.pad_len_shift);             \
   modify_field(scratch.status_dma_en, kivec.status_dma_en);             \
   modify_field(scratch.next_db_en, kivec.next_db_en);                   \
   modify_field(scratch.intr_en, kivec.intr_en);                         \
@@ -478,7 +514,7 @@ header_type seq_kivec7xts_t {
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.intr_addr, kivec.intr_addr);                     \
   modify_field(scratch.data_len, kivec.data_len);                       \
-  modify_field(scratch.blk_len_shift, kivec.blk_len_shift);             \
+  modify_field(scratch.blk_boundary_shift, kivec.blk_boundary_shift);   \
   modify_field(scratch.status_dma_en, kivec.status_dma_en);             \
   modify_field(scratch.next_db_en, kivec.next_db_en);                   \
   modify_field(scratch.intr_en, kivec.intr_en);                         \
@@ -499,6 +535,13 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.comp_desc_addr, kivec.comp_desc_addr);           \
   modify_field(scratch.comp_sgl_src_addr, kivec.comp_sgl_src_addr);     \
 
+#define SEQ_KIVEC8_USE(scratch, kivec)                                  \
+  modify_field(scratch.pad_len, kivec.pad_len);                         \
+  modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
+
+#define SEQ_KIVEC8XTS_USE(scratch, kivec)                               \
+  modify_field(scratch.datain_len, kivec.datain_len);                   \
+
 // Macros for ASM param addresses (hardcoded in P4)
 #define seq_barco_chain_action_start	    0x82000000
 #define seq_comp_status_handler_start       0x82010000
@@ -506,6 +549,8 @@ header_type seq_kivec7xts_t {
 #define seq_xts_status_handler_start        0x82030000
 #define seq_barco_ring_pndx_pre_read0_start 0x82040000
 #define seq_barco_ring_pndx_read_start      0x82050000
+#define seq_comp_aol_src_pad_start          0x82060000
+#define seq_comp_aol_dst_pad_start          0x82070000
 
 
 #endif     // STORAGE_SEQ_P4_HDR_H

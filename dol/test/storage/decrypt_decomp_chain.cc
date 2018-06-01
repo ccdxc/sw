@@ -199,7 +199,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
          * appropriate correction based on the cp_hdr it reads.
          */
         chain_params.comp_len_update_en = 1;
-        chain_params.blk_len_shift = (uint8_t)log2(app_enc_size);
+        chain_params.blk_boundary_shift = (uint8_t)log2(app_enc_size);
         cp_desc.datain_len = xts_decrypt_buf1->line_size_get();
 
         if (params.decrypt_decomp_len_update_ != DECRYPT_DECOMP_LEN_UPDATE_FLAT) {

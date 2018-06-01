@@ -277,7 +277,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     chain_params.pad_buf_addr = caller_comp_pad_buf->pa();
     chain_params.stop_chain_on_error = 1;
     chain_params.aol_pad_en = 1;
-    chain_params.pad_len_shift =
+    chain_params.pad_boundary_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
 
     // Enable interrupt in case compression fails

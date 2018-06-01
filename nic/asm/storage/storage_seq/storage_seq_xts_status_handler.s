@@ -11,6 +11,11 @@ struct s2_tbl_k k;
 struct s2_tbl_seq_xts_status_handler_d d;
 struct phv_ p;
 
+/*
+ * Registers usage:
+ * CAUTION: r1 is also implicitly used by LOAD_TABLE1_FOR_ADDR_PC_IMM()
+ */
+ 
 %%
    .param storage_seq_barco_ring_pndx_read
    .param storage_seq_xts_comp_len_update
