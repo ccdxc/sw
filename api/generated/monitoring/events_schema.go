@@ -34,10 +34,6 @@ var typesMapEvents = map[string]*runtime.Struct{
 			"Source": runtime.Field{Name: "Source", JSONTag: "source", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventSource"},
 
 			"Count": runtime.Field{Name: "Count", JSONTag: "count", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
-
-			"FirstTimestamp": runtime.Field{Name: "FirstTimestamp", JSONTag: "first-timestamp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"LastTimestamp": runtime.Field{Name: "LastTimestamp", JSONTag: "last-timestamp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.EventExport": &runtime.Struct{

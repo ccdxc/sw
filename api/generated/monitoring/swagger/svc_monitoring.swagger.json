@@ -1790,18 +1790,6 @@
             "required": false,
             "type": "integer",
             "format": "int64"
-          },
-          {
-            "name": "Attributes.FirstTimestamp",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Attributes.LastTimestamp",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -3356,12 +3344,6 @@
         "Count": {
           "type": "integer",
           "format": "int64"
-        },
-        "FirstTimestamp": {
-          "type": "string"
-        },
-        "LastTimestamp": {
-          "type": "string"
         }
       }
     },

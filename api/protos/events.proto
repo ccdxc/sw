@@ -120,12 +120,6 @@ message EventAttributes {
 
     // Number of occurrence of this event in the active interval
     uint32 Count            = 6 [(gogoproto.jsontag) = "count,omitempty"];
-
-    // Timestamp of the first occurrence of this event in the active interval
-    string FirstTimestamp   = 7 [(gogoproto.jsontag) = "first-timestamp,omitempty"];
-
-    // Timestamp of the last occurrence of this event in the active interval
-    string LastTimestamp    = 8 [(gogoproto.jsontag) = "last-timestamp,omitempty"];
 }
 
 
