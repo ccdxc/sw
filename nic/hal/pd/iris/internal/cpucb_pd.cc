@@ -88,7 +88,6 @@ p4pd_add_or_del_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         data.u.cpu_rxdma_initial_action_d.flags = cpucb_pd->cpucb->cfg_flags;
         HAL_TRACE_DEBUG("CPUCB: flags: {:#x}", data.u.cpu_rxdma_initial_action_d.flags);
     }
-    HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for CPUCB");
@@ -201,7 +200,6 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         HAL_TRACE_DEBUG("cpucb: tx: flags: {}", data.u.cpu_tx_initial_action_d.flags);
     }
 
-    HAL_TRACE_DEBUG("Programming tx stage0 at hw-id: 0x{0:x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for CPUCB");
@@ -302,7 +300,6 @@ pd_cpucb_get_base_hw_index(pd_cpucb_t* cpucb_pd)
     // Get the base address of CPU CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_CPU, 0, 0);
-    HAL_TRACE_DEBUG("received offset 0x{0:x}", offset);
     return offset + \
         (cpucb_pd->cpucb->cb_id * P4PD_HBM_CPU_CB_ENTRY_SIZE);
 }
@@ -470,12 +467,12 @@ pd_cpucb_get (pd_cpucb_get_args_t *args)
 
     // get hw-id for this CPUCB
     cpucb_pd.hw_id = pd_cpucb_get_base_hw_index(&cpucb_pd);
-    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", cpucb_pd.hw_id);
+    HAL_TRACE_DEBUG("Received hw-id {:#x}", cpucb_pd.hw_id);
 
     // get hw cpucb entry
     ret = p4pd_get_cpucb_entry(&cpucb_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", cpucb_pd.cpucb->cb_id);
+        HAL_TRACE_ERR("Get request failed for id {}", cpucb_pd.cpucb->cb_id);
     }
     return ret;
 }

@@ -64,7 +64,7 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qtype, int qid, uint64_t ring_base,
         data.u.initial_action_d.ring_base = ring_base;
     }
 
-    HAL_TRACE_DEBUG("Programming gc tx qtype {0} qid {1} stage0 at addr: 0x{2:x}",
+    HAL_TRACE_DEBUG("Programming gc tx qtype {} qid {} stage0 at addr: {:#x}",
             qtype, qid, addr);
     if(!p4plus_hbm_write(addr,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){

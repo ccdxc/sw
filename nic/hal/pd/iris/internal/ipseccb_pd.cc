@@ -107,7 +107,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
    
         ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * (64*IPSEC_CB_RING_ENTRY_SIZE)));
-        HAL_TRACE_DEBUG("Ring base {0:#x} CB Ring Addr {0:#x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
+        HAL_TRACE_DEBUG("Ring base {:#x} CB Ring Addr {:#x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
 
         data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr = htonl((uint32_t)(ipsec_cb_ring_addr & 0xFFFFFFFF));
         data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex = 0;
@@ -115,7 +115,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
          
         ipsec_barco_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB_BARCO);
         ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipseccb_pd->ipseccb->cb_id * (64*IPSEC_BARCO_RING_ENTRY_SIZE)));
-        HAL_TRACE_DEBUG("Ring base {0:#x} Barco Ring Addr {0:#x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
+        HAL_TRACE_DEBUG("Ring base {:#x} Barco Ring Addr {:#x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
         ipsec_barco_ring_addr = htonl(ipsec_barco_ring_addr);
 
         data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = ipsec_barco_ring_addr;
@@ -147,7 +147,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         HAL_TRACE_DEBUG("is_v6 {} is_nat_t {} is_random {} extra_pad {}", ipseccb_pd->ipseccb->is_v6, 
                         ipseccb_pd->ipseccb->is_nat_t, ipseccb_pd->ipseccb->is_random, ipseccb_pd->ipseccb->extra_pad);
     }
-    HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {0:#x}", hwid); 
+    HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
@@ -201,7 +201,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
             HAL_TRACE_DEBUG("Adding IPV6 header"); 
         }
     }
-    HAL_TRACE_DEBUG("Programming stage0 at hw-id: {0:#x}", hwid); 
+    HAL_TRACE_DEBUG("Programming stage0 at hw-id: {:#x}", hwid); 
     if (ipseccb_pd->ipseccb->is_v6 == 0) {
         if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip_hdr, sizeof(eth_ip_hdr),
                     P4PLUS_CACHE_INVALIDATE_BOTH)){
@@ -360,7 +360,7 @@ pd_ipseccb_get_base_hw_index(pd_ipseccb_encrypt_t* ipseccb_pd)
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset. 
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 0, 0);
-    HAL_TRACE_DEBUG("received offset {0:#x}", offset);
+    HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset + \
         (ipseccb_pd->ipseccb->cb_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
 }
@@ -513,12 +513,12 @@ pd_ipseccb_get (pd_ipseccb_get_args_t *args)
     
     // get hw-id for this IPSECCB
     ipseccb_pd.hw_id = pd_ipseccb_get_base_hw_index(&ipseccb_pd);
-    HAL_TRACE_DEBUG("Received hw-id {0:#x}", ipseccb_pd.hw_id);
+    HAL_TRACE_DEBUG("Received hw-id {:#x}", ipseccb_pd.hw_id);
 
     // get hw ipseccb entry
     ret = p4pd_get_ipseccb_entry(&ipseccb_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: {0:#x}", ipseccb_pd.ipseccb->cb_id);
+        HAL_TRACE_ERR("Get request failed for id: {:#x}", ipseccb_pd.ipseccb->cb_id);
     }
     return ret;
 }

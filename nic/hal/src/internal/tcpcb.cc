@@ -184,7 +184,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     }
 
     pd::pd_tcpcb_update_args_init(&pd_tcpcb_args);
-    HAL_TRACE_DEBUG("rcv_nxt: 0x{0:x}", spec.rcv_nxt());
+    HAL_TRACE_DEBUG("rcv_nxt: {:#x}", spec.rcv_nxt());
     tcpcb->rcv_nxt = spec.rcv_nxt();
     tcpcb->snd_nxt = spec.snd_nxt();
     tcpcb->snd_una = spec.snd_una();
@@ -255,7 +255,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
         return HAL_RET_HW_FAIL;
     }
 
-    HAL_TRACE_DEBUG("cb_id: 0x{0:x}, rcv_nxt: 0x{0:x}", rtcpcb.cb_id, rtcpcb.rcv_nxt);
+    HAL_TRACE_DEBUG("cb_id: {:#x}, rcv_nxt: {:#x}", rtcpcb.cb_id, rtcpcb.rcv_nxt);
 
     // fill config spec of this TCP CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_tcpcb_id(rtcpcb.cb_id);

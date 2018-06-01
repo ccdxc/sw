@@ -416,7 +416,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     if (tcp != NULL) {
 
       spec->set_rcv_nxt(ntohl(tcp->seq)+1);
-      HAL_TRACE_DEBUG("lkl_trigger_ack_send: rcv_nxt=0x{0:x}", ntohl(tcp->seq));
+      HAL_TRACE_DEBUG("lkl_trigger_ack_send: rcv_nxt={:#x}", ntohl(tcp->seq));
     } else {
       spec->set_rcv_nxt(get_rsp.mutable_spec()->rcv_nxt());
     }

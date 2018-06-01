@@ -260,7 +260,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
                     CAPRI_SEM_RAW_IS_PI_CI(meta->alloc_semaphore_addr)) {
         // Set CI = ring size
         uint32_t val32 = meta->num_slots;
-        HAL_TRACE_DEBUG("writing {0} to semaphore 0x{1:x}\n",
+        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
                                 val32, meta->alloc_semaphore_addr +
                                 CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
         p4plus_reg_write(
@@ -273,7 +273,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         // FP.PI = AP.CI = meta->num_slots
         uint32_t val32 = meta->num_slots;
         p4plus_reg_write(meta->free_semaphore_addr, val32);
-        HAL_TRACE_DEBUG("writing {0} to semaphore 0x{1:x}\n",
+        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
                                 val32, meta->free_semaphore_addr);
 
         // FP.CI = FP.PI + 1 (this queue is initially full, until one object is
@@ -284,7 +284,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         val32++;
         p4plus_reg_write(meta->free_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                                         val32);
-        HAL_TRACE_DEBUG("writing {0} to semaphore 0x{1:x}\n",
+        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
                                 val32, meta->free_semaphore_addr +
                                 CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
     }
@@ -421,7 +421,7 @@ barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
         HAL_TRACE_ERR("Failed to read the Barco PIDX value from hw)");
     }
     else {
-        HAL_TRACE_DEBUG("Barco GCM0 PIDX 0x{0:x}", value);
+        HAL_TRACE_DEBUG("Barco GCM0 PIDX {:#x}", value);
         wring_pd->wring->pi = value;
     }
 
@@ -430,7 +430,7 @@ barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
         HAL_TRACE_ERR("Failed to read the Barco CIDX value from hw)");
     }
     else {
-        HAL_TRACE_DEBUG("Barco GCM0 CIDX 0x{0:x}", value);
+        HAL_TRACE_DEBUG("Barco GCM0 CIDX {:#x}", value);
         wring_pd->wring->ci = value;
     }
     return ret;
@@ -467,7 +467,7 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
 		return HAL_RET_HW_FAIL;
     }
 #endif
-    HAL_TRACE_DEBUG("ARQRX id: {} pi addr 0x{0:x}, value: {}", 
+    HAL_TRACE_DEBUG("ARQRX id: {} pi addr {:#x}, value: {}", 
                         wring_pd->wring->wring_id,
                         addr,
                         pindex);
@@ -493,7 +493,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
         return ret;    
     }
 
-    HAL_TRACE_DEBUG("Reading pi from the addr: 0x{0:x}", sem_addr);
+    HAL_TRACE_DEBUG("Reading pi from the addr: {:#x}", sem_addr);
 
     uint32_t value;
     if(!p4plus_reg_read(sem_addr,
@@ -504,7 +504,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     wring->pi = value;
 
     sem_addr += 4;
-    HAL_TRACE_DEBUG("Reading ci from the addr: 0x{0:x}", sem_addr);
+    HAL_TRACE_DEBUG("Reading ci from the addr: {:#x}", sem_addr);
 
     if(!p4plus_reg_read(sem_addr,
                         value)) {
@@ -528,7 +528,7 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     	return meta->get_hw_meta_fn(wring_pd);
     }
 
-    HAL_TRACE_DEBUG("Writing pi {0} to addr: 0x{1:x}",
+    HAL_TRACE_DEBUG("Writing pi {} to addr: {:#x}",
             wring->pi, sem_addr);
 
     if(!p4plus_reg_write(sem_addr,
@@ -537,7 +537,7 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     }
 
     sem_addr += 4;
-    HAL_TRACE_DEBUG("Writing ci {0} to addr: 0x{1:x}",
+    HAL_TRACE_DEBUG("Writing ci {} to addr: {:#x}",
             wring->ci, sem_addr);
 
     if(!p4plus_reg_write(sem_addr,

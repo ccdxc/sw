@@ -204,7 +204,7 @@ p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
         data.u.start_d.rawccb_activate = RAWCCB_ACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("RAWCCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr); 
+    HAL_TRACE_DEBUG("RAWCCB Programming stage0 at hw_addr: {:#x}", hw_addr); 
     if (!p4plus_hbm_write(hw_addr, data_p, data_len,
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for RAWCCB");
@@ -325,7 +325,7 @@ pd_rawccb_get_base_hw_addr(pd_rawccb_t* rawccb_pd)
     // Set qtype and qid as 0 to get the start offset. 
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_RAWC_QTYPE, 0);
-    HAL_TRACE_DEBUG("RAWCCB received offset 0x{0:x}", offset);
+    HAL_TRACE_DEBUG("RAWCCB received offset {:#x}", offset);
     return offset + \
         (rawccb_pd->hw_id * P4PD_HBM_RAWCCB_ENTRY_SIZE);
 }
@@ -434,7 +434,7 @@ pd_rawccb_deactivate (pd_rawccb_update_args_t *args)
     curr_rawccb_pd.rawccb = &curr_rawccb;
 
     curr_rawccb_pd.hw_addr = pd_rawccb_get_base_hw_addr(&curr_rawccb_pd);
-    HAL_TRACE_DEBUG("RAWCCB pd deactivate for id: {} hw_addr 0x{0:x}",
+    HAL_TRACE_DEBUG("RAWCCB pd deactivate for id: {} hw_addr {:#x}",
                     rawccb->cb_id,  curr_rawccb_pd.hw_addr);
     ret = pd_rawccb_get(&curr_args);
     if (ret == HAL_RET_OK) {
@@ -524,12 +524,12 @@ pd_rawccb_get (pd_rawccb_get_args_t *args)
     rawccb_pd.rawccb = args->rawccb;
     
     rawccb_pd.hw_addr = pd_rawccb_get_base_hw_addr(&rawccb_pd);
-    HAL_TRACE_DEBUG("Received hw_addr 0x{0:x}", rawccb_pd.hw_addr);
+    HAL_TRACE_DEBUG("Received hw_addr {:#x}", rawccb_pd.hw_addr);
 
     // get hw rawccb entry
     ret = p4pd_get_rawccb_entry(&rawccb_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", hw_id);
+        HAL_TRACE_ERR("Get request failed for id: {:#x}", hw_id);
     }
     return ret;
 }

@@ -124,7 +124,7 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->pre_debug_stage0_7_thread = 
       (ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage4_7_thread) << 16) |
       ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage0_3_thread);
-    HAL_TRACE_DEBUG("hwid : 0x{0:x}", hwid);    
+    HAL_TRACE_DEBUG("hwid : {:#x}", hwid);    
     HAL_TRACE_DEBUG("Received tnmdr alloc: 0x{:x}", tlscb_pd->tlscb->tnmdr_alloc);
     HAL_TRACE_DEBUG("Received tnmpr alloc: 0x{:x}", tlscb_pd->tlscb->tnmpr_alloc);
     HAL_TRACE_DEBUG("Received enc requests: 0x{:x}", tlscb_pd->tlscb->enc_requests);
@@ -233,7 +233,7 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
             HAL_TRACE_ERR("Failed to get pc address");
             ret = HAL_RET_HW_FAIL;
         }
-        HAL_TRACE_DEBUG("TLS TXDMA Stage0 Received pc address 0x{0:x}", pc_offset);
+        HAL_TRACE_DEBUG("TLS TXDMA Stage0 Received pc address {:#x}", pc_offset);
 
         data.action_id = pc_offset;
         data.u.read_tls_stg0_d.total = 3;

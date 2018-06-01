@@ -87,8 +87,8 @@ capri_verify_config(char *config_dir)
             for (int i = 0; i < nelems; i++) {
                 hal::pd::asic_reg_read(buff[i].addr, &data);
                 if (data != buff[i].data) {
-                    HAL_TRACE_DEBUG("Reg config does not match addr 0x{0:x} "
-                                    "data 0x{1:x} expected 0x{2:x}",
+                    HAL_TRACE_DEBUG("Reg config does not match addr {:#x} "
+                                    "data {:#x} expected {:#x}",
                                     buff[i].addr, data, buff[i].data);
                 }
             }

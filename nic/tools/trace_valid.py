@@ -18,8 +18,8 @@ excluded_files = ["capri_tm_rw.template.cc",
                   "core.hpp"]
 
 return_status = 0
-enable_pattern_check = False        # Checks for invalid patterns in trace strings
-invalid_patterns = ["{\d+:x}"]      # Invalid patterns in trace strings
+enable_pattern_check = True         # Checks for invalid patterns in trace strings
+invalid_patterns = ["{\d+"]         # Invalid patterns in trace strings
 
 #------------------------------------------------------------------------------
 # validate all traces
@@ -37,10 +37,10 @@ def trace_valid():
                 continue
             with open(fullpath, 'r') as f:
                 data = f.read().replace('\n', '$%*#')
-                validate_trace(filename, data, "HAL_TRACE_DEBUG")
-                validate_trace(filename, data, "HAL_TRACE_ERR")
-                validate_trace(filename, data, "HAL_TRACE_WARN")
-                validate_trace(filename, data, "HAL_TRACE_INFO")
+                validate_trace(fullpath, data, "HAL_TRACE_DEBUG")
+                validate_trace(fullpath, data, "HAL_TRACE_ERR")
+                validate_trace(fullpath, data, "HAL_TRACE_WARN")
+                validate_trace(fullpath, data, "HAL_TRACE_INFO")
 
 
 #------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ capri_txs_timer_init_hsh_depth(uint32_t key_lines)
     timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
 
     txs_csr->cfg_timer_static.read();
-    HAL_TRACE_DEBUG("hbm_base 0x{0:x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    HAL_TRACE_DEBUG("hbm_base {:#x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
     HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
     HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);

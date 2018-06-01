@@ -247,7 +247,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_bsq_pi(rtlscb.bsq_pi);
     rsp->mutable_spec()->set_bsq_ci(rtlscb.bsq_ci);
 
-    HAL_TRACE_DEBUG("tnmdr_alloc : 0x{0:x}, tnmpr_alloc : 0x{0:x}, enc_requests : 0x{0:x}",
+    HAL_TRACE_DEBUG("tnmdr_alloc : {:#x}, tnmpr_alloc : {:#x}, enc_requests : {:#x}",
                     rtlscb.tnmdr_alloc, rtlscb.tnmpr_alloc, rtlscb.enc_requests);
     rsp->mutable_spec()->set_tnmdr_alloc(rtlscb.tnmdr_alloc);
     rsp->mutable_spec()->set_tnmpr_alloc(rtlscb.tnmpr_alloc);

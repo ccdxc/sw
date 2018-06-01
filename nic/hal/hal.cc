@@ -524,16 +524,16 @@ hal_cores_validate (uint64_t sys_core,
                     uint64_t data_core)
 {
     if ((control_core & data_core) != 0) {
-        HAL_TRACE_ERR("control core mask 0x{0:x} overlaps with"
-                      " data core mask 0x{1:x}",
+        HAL_TRACE_ERR("control core mask {:#x} overlaps with"
+                      " data core mask {:#x}",
                       control_core, data_core);
         return HAL_RET_ERR;
     }
 
     if ((sys_core & (control_core | data_core)) !=
                     (control_core | data_core)) {
-        HAL_TRACE_ERR("control core mask 0x{0:x} and data core mask 0x{1:x}"
-                      " does not match or exceeds system core mask 0x{2:x}",
+        HAL_TRACE_ERR("control core mask {:#x} and data core mask {:#x}"
+                      " does not match or exceeds system core mask {:#x}",
                       control_core, data_core, sys_core);
         return HAL_RET_ERR;
     }

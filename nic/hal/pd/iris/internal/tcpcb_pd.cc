@@ -101,26 +101,26 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_ERR("Failed to get pc address");
             ret = HAL_RET_HW_FAIL;
         }
-        HAL_TRACE_DEBUG("Received pc address 0x{0:x}", pc_offset);
+        HAL_TRACE_DEBUG("Received pc address {:#x}", pc_offset);
         data.action_id = pc_offset;
         data.u.read_tx2rx_d.debug_dol = (uint8_t)tcpcb_pd->tcpcb->debug_dol;
         data.u.read_tx2rx_d.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
         data.u.read_tx2rx_d.prr_out = 0xFEEDBABA;
         data.u.read_tx2rx_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_tx2rx_d.l7_proxy_type = tcpcb_pd->tcpcb->l7_proxy_type;
-        HAL_TRACE_DEBUG("TCPCB snd_nxt: 0x{0:x}", data.u.read_tx2rx_d.snd_nxt);
-        HAL_TRACE_DEBUG("TCPCB rcv_wup: 0x{0:x}", data.u.read_tx2rx_d.rcv_wup);
+        HAL_TRACE_DEBUG("TCPCB snd_nxt: {:#x}", data.u.read_tx2rx_d.snd_nxt);
+        HAL_TRACE_DEBUG("TCPCB rcv_wup: {:#x}", data.u.read_tx2rx_d.rcv_wup);
         HAL_TRACE_DEBUG("TCPCB l7_proxy_type: {:#x}", data.u.read_tx2rx_d.l7_proxy_type);
-        HAL_TRACE_DEBUG("TCPCB _debug_dol: 0x{0:x}", data.u.read_tx2rx_d.debug_dol);
+        HAL_TRACE_DEBUG("TCPCB _debug_dol: {:#x}", data.u.read_tx2rx_d.debug_dol);
 
         tls_stage0_addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
                     tcpcb_pd->tcpcb->cb_id);
         data.u.read_tx2rx_d.tls_stage0_ring0_addr = htonl(tls_stage0_addr + 8);
         //data.u.read_tx2rx_d.tls_stage0_ring0_addr = htonl(pd_tlscb_serq_ci_offset_get());
-        HAL_TRACE_DEBUG("TCPCB tls base = 0x{0:x}, 0x{1:x}",
+        HAL_TRACE_DEBUG("TCPCB tls base = {:#x}, {:#x}",
                     tls_stage0_addr, data.u.read_tx2rx_d.tls_stage0_ring0_addr);
     }
-    HAL_TRACE_DEBUG("Programming tx2rx at hw-id: 0x{0:x}", hwid); 
+    HAL_TRACE_DEBUG("Programming tx2rx at hw-id: {:#x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for TCP CB");
@@ -160,18 +160,18 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
                 data.u.tcp_rx_d.parsed_state &= ~TCP_PARSED_STATE_HANDLE_IN_CPU;
         }
 
-        HAL_TRACE_DEBUG("TCPCB rcv_nxt: 0x{0:x}", data.u.tcp_rx_d.rcv_nxt);
-        HAL_TRACE_DEBUG("TCPCB snd_una: 0x{0:x}", data.u.tcp_rx_d.snd_una);
-        HAL_TRACE_DEBUG("TCPCB ts_recent: 0x{0:x}", data.u.tcp_rx_d.ts_recent);
-        HAL_TRACE_DEBUG("TCPCB snd_wnd: 0x{0:x}", data.u.tcp_rx_d.snd_wnd);
-        HAL_TRACE_DEBUG("TCPCB rcv_mss: 0x{0:x}", data.u.tcp_rx_d.rcv_mss);
-        HAL_TRACE_DEBUG("TCPCB serq_pi: 0x{0:x}", data.u.tcp_rx_d.serq_pidx);
-        HAL_TRACE_DEBUG("TCPCB state: 0x{0:x}", data.u.tcp_rx_d.state);
-        HAL_TRACE_DEBUG("TCPCB pred_flags: 0x{0:x}", data.u.tcp_rx_d.pred_flags);
+        HAL_TRACE_DEBUG("TCPCB rcv_nxt: {:#x}", data.u.tcp_rx_d.rcv_nxt);
+        HAL_TRACE_DEBUG("TCPCB snd_una: {:#x}", data.u.tcp_rx_d.snd_una);
+        HAL_TRACE_DEBUG("TCPCB ts_recent: {:#x}", data.u.tcp_rx_d.ts_recent);
+        HAL_TRACE_DEBUG("TCPCB snd_wnd: {:#x}", data.u.tcp_rx_d.snd_wnd);
+        HAL_TRACE_DEBUG("TCPCB rcv_mss: {:#x}", data.u.tcp_rx_d.rcv_mss);
+        HAL_TRACE_DEBUG("TCPCB serq_pi: {:#x}", data.u.tcp_rx_d.serq_pidx);
+        HAL_TRACE_DEBUG("TCPCB state: {:#x}", data.u.tcp_rx_d.state);
+        HAL_TRACE_DEBUG("TCPCB pred_flags: {:#x}", data.u.tcp_rx_d.pred_flags);
     }
     int size = sizeof(s2_t0_tcp_rx_d);
-    HAL_TRACE_DEBUG("Programming tcp_rx at hw-id: 0x{0:x}", hwid);
-    HAL_TRACE_DEBUG("Programming tcp_rx at size: 0x{0:x}", size);
+    HAL_TRACE_DEBUG("Programming tcp_rx at hw-id: {:#x}", hwid);
+    HAL_TRACE_DEBUG("Programming tcp_rx at size: {:#x}", size);
     
     if(!p4plus_hbm_write(hwid, (uint8_t *)&data, size,
             P4PLUS_CACHE_INVALIDATE_BOTH)) {
@@ -254,7 +254,7 @@ p4pd_add_or_del_tcpcb_write_serq(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_ERR("Failed to receive serq base for tcp cb: {}", 
                         tcpcb_pd->tcpcb->cb_id);
         } else {
-            HAL_TRACE_DEBUG("Serq base: 0x{0:x}", serq_base);
+            HAL_TRACE_DEBUG("Serq base: {:#x}", serq_base);
             write_serq_d.serq_base = htonl(serq_base);    
         }
     }
@@ -357,7 +357,7 @@ p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->snd_nxt = ntohl(data.u.read_tx2rx_d.snd_nxt);
     tcpcb_pd->tcpcb->l7_proxy_type = types::AppRedirType(data.u.read_tx2rx_d.l7_proxy_type);
 
-    HAL_TRACE_DEBUG("Received snd_nxt: 0x{0:x}", tcpcb_pd->tcpcb->snd_nxt);
+    HAL_TRACE_DEBUG("Received snd_nxt: {:#x}", tcpcb_pd->tcpcb->snd_nxt);
 
     return HAL_RET_OK;
 }
@@ -384,13 +384,13 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->state = data.u.tcp_rx_d.state;
     tcpcb_pd->tcpcb->pred_flags = ntohl(data.u.tcp_rx_d.pred_flags);
 
-    HAL_TRACE_DEBUG("Received rcv_nxt: 0x{0:x}", tcpcb_pd->tcpcb->rcv_nxt);
-    HAL_TRACE_DEBUG("Received snd_una: 0x{0:x}", tcpcb_pd->tcpcb->snd_una);
-    HAL_TRACE_DEBUG("Received snd_wnd: 0x{0:x}", tcpcb_pd->tcpcb->snd_wnd);
-    HAL_TRACE_DEBUG("Received ts_recent: 0x{0:x}", tcpcb_pd->tcpcb->ts_recent);
-    HAL_TRACE_DEBUG("Received debug_dol: 0x{0:x}", tcpcb_pd->tcpcb->debug_dol);
-    HAL_TRACE_DEBUG("Received state: 0x{0:x}", tcpcb_pd->tcpcb->state);
-    HAL_TRACE_DEBUG("Received pred_flags: 0x{0:x}", tcpcb_pd->tcpcb->pred_flags);
+    HAL_TRACE_DEBUG("Received rcv_nxt: {:#x}", tcpcb_pd->tcpcb->rcv_nxt);
+    HAL_TRACE_DEBUG("Received snd_una: {:#x}", tcpcb_pd->tcpcb->snd_una);
+    HAL_TRACE_DEBUG("Received snd_wnd: {:#x}", tcpcb_pd->tcpcb->snd_wnd);
+    HAL_TRACE_DEBUG("Received ts_recent: {:#x}", tcpcb_pd->tcpcb->ts_recent);
+    HAL_TRACE_DEBUG("Received debug_dol: {:#x}", tcpcb_pd->tcpcb->debug_dol);
+    HAL_TRACE_DEBUG("Received state: {:#x}", tcpcb_pd->tcpcb->state);
+    HAL_TRACE_DEBUG("Received pred_flags: {:#x}", tcpcb_pd->tcpcb->pred_flags);
 
     return HAL_RET_OK;
 }
@@ -427,7 +427,7 @@ p4pd_get_tcp_rx_write_serq_entry(pd_tcpcb_t* tcpcb_pd)
     }
 
     tcpcb_pd->tcpcb->serq_base = ntohl(data.u.write_serq_d.serq_base);
-    HAL_TRACE_DEBUG("Received serq_base: 0x{0:x}", tcpcb_pd->tcpcb->serq_base);
+    HAL_TRACE_DEBUG("Received serq_base: {:#x}", tcpcb_pd->tcpcb->serq_base);
 
     return HAL_RET_OK;
 }
@@ -650,7 +650,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_ERR("Failed to get pc address");
             // ret = HAL_RET_HW_FAIL;
         }
-        HAL_TRACE_DEBUG("Received pc address 0x{0:x}", pc_offset);
+        HAL_TRACE_DEBUG("Received pc address {:#x}", pc_offset);
         data.action_id = pc_offset;
         data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
         data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FT;
@@ -672,9 +672,9 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
         // TODO : fix this hardcoding
         data.u.read_rx2tx_d.rto = htons(100);
-        HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: 0x{0:x}", data.u.read_rx2tx_d.snd_wnd);
-        HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: 0x{0:x}", data.u.read_rx2tx_d.debug_dol_tx);
-        HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: 0x{0:x}", 
+        HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: {:#x}", data.u.read_rx2tx_d.snd_wnd);
+        HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: {:#x}", data.u.read_rx2tx_d.debug_dol_tx);
+        HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: {:#x}", 
                     data.u.read_rx2tx_d.pending_ack_send);
 
         // get sesq address
@@ -686,8 +686,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_ERR("Failed to receive sesq base for tcp cb: {}", 
                         tcpcb_pd->tcpcb->cb_id);
         } else {
-            HAL_TRACE_DEBUG("Sesq id: 0x{0:x}", tcpcb_pd->tcpcb->cb_id);
-            HAL_TRACE_DEBUG("Sesq base: 0x{0:x}", sesq_base);
+            HAL_TRACE_DEBUG("Sesq id: {:#x}", tcpcb_pd->tcpcb->cb_id);
+            HAL_TRACE_DEBUG("Sesq base: {:#x}", sesq_base);
             data.u.read_rx2tx_d.sesq_base = sesq_base;
         }
         // get asesq address
@@ -699,8 +699,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_ERR("Failed to receive asesq base for tcp cb: {}", 
                         tcpcb_pd->tcpcb->cb_id);
         } else {
-            HAL_TRACE_DEBUG("ASesq id: 0x{0:x}", tcpcb_pd->tcpcb->cb_id);
-            HAL_TRACE_DEBUG("ASesq base: 0x{0:x}", asesq_base);
+            HAL_TRACE_DEBUG("ASesq id: {:#x}", tcpcb_pd->tcpcb->cb_id);
+            HAL_TRACE_DEBUG("ASesq base: {:#x}", asesq_base);
             data.u.read_rx2tx_d.asesq_base = asesq_base;
         }
 
@@ -727,7 +727,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_extra_d.rcv_mss = htons((uint16_t)tcpcb_pd->tcpcb->rcv_mss);
 
     }
-    HAL_TRACE_DEBUG("TCPCB rx2tx shared rcv_mss: 0x{0:x}", data.u.read_rx2tx_extra_d.rcv_mss);
+    HAL_TRACE_DEBUG("TCPCB rx2tx shared rcv_mss: {:#x}", data.u.read_rx2tx_extra_d.rcv_mss);
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET,
             P4PLUS_CACHE_INVALIDATE_BOTH)) {
@@ -782,8 +782,8 @@ p4pd_add_or_del_tcp_tx_cc_and_fra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.snd_cwnd_clamp = htons(0x7fff);
         data.max_packets_out = 0x07;
         data.last_max_cwnd = 0x16;
-        HAL_TRACE_DEBUG("TCPCB snd_cwnd: 0x{0:x}", data.snd_cwnd);
-        HAL_TRACE_DEBUG("TCPCB snd_cwnd_cnt: 0x{0:x}", data.snd_cwnd_cnt);
+        HAL_TRACE_DEBUG("TCPCB snd_cwnd: {:#x}", data.snd_cwnd);
+        HAL_TRACE_DEBUG("TCPCB snd_cwnd_cnt: {:#x}", data.snd_cwnd_cnt);
     }
     
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -838,8 +838,8 @@ p4pd_add_or_del_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         } else {
             HAL_TRACE_DEBUG("Skipping header template len update");
         }
-        HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x}", data.source_lif);
-        HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
+        HAL_TRACE_DEBUG("TCPCB source lif: {:#x}", data.source_lif);
+        HAL_TRACE_DEBUG("TCPCB source port: {:#x} dest port {:#x}",
             data.source_port, data.dest_port);
         HAL_TRACE_DEBUG("TCPCB header len: {}", data.header_len);
     }
@@ -866,7 +866,7 @@ p4pd_add_or_del_tcp_tx_header_template_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     
     if(!del) {
         memcpy(data, tcpcb_pd->tcpcb->header_template, sizeof(data));
-        HAL_TRACE_DEBUG("TCPCB header template addr 0x{0:x}", hwid);
+        HAL_TRACE_DEBUG("TCPCB header template addr {:#x}", hwid);
         HAL_TRACE_DEBUG("TCPCB header template={}", hex_dump((uint8_t*)data, sizeof(data)));
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET,
@@ -961,15 +961,15 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
 
-    HAL_TRACE_DEBUG("Received sesq_base: 0x{0:x}", tcpcb_pd->tcpcb->sesq_base);
-    HAL_TRACE_DEBUG("Received sesq_pi: 0x{0:x}", tcpcb_pd->tcpcb->sesq_pi);
-    HAL_TRACE_DEBUG("Received sesq_ci: 0x{0:x}", tcpcb_pd->tcpcb->sesq_ci);
-    HAL_TRACE_DEBUG("Received asesq_base: 0x{0:x}", tcpcb_pd->tcpcb->asesq_base);
-    HAL_TRACE_DEBUG("Received asesq_pi: 0x{0:x}", tcpcb_pd->tcpcb->asesq_pi);
-    HAL_TRACE_DEBUG("Received asesq_ci: 0x{0:x}", tcpcb_pd->tcpcb->asesq_ci);
-    HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: 0x{0:x}", 
+    HAL_TRACE_DEBUG("Received sesq_base: {:#x}", tcpcb_pd->tcpcb->sesq_base);
+    HAL_TRACE_DEBUG("Received sesq_pi: {:#x}", tcpcb_pd->tcpcb->sesq_pi);
+    HAL_TRACE_DEBUG("Received sesq_ci: {:#x}", tcpcb_pd->tcpcb->sesq_ci);
+    HAL_TRACE_DEBUG("Received asesq_base: {:#x}", tcpcb_pd->tcpcb->asesq_base);
+    HAL_TRACE_DEBUG("Received asesq_pi: {:#x}", tcpcb_pd->tcpcb->asesq_pi);
+    HAL_TRACE_DEBUG("Received asesq_ci: {:#x}", tcpcb_pd->tcpcb->asesq_ci);
+    HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: {:#x}", 
                     tcpcb_pd->tcpcb->pending_ack_send);
-    HAL_TRACE_DEBUG("Received tblsetaddr: 0x{0:x}",
+    HAL_TRACE_DEBUG("Received tblsetaddr: {:#x}",
                     tcpcb_pd->tcpcb->debug_dol_tblsetaddr);
 
     return HAL_RET_OK;
@@ -991,7 +991,7 @@ p4pd_get_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->rcv_mss = ntohs(data.u.read_rx2tx_extra_d.rcv_mss);
 
-    HAL_TRACE_DEBUG("TCPCB rx2tx shared rcv_mss: 0x{0:x}", tcpcb_pd->tcpcb->rcv_mss);
+    HAL_TRACE_DEBUG("TCPCB rx2tx shared rcv_mss: {:#x}", tcpcb_pd->tcpcb->rcv_mss);
     return HAL_RET_OK;
 
 }
@@ -1032,8 +1032,8 @@ p4pd_get_tcp_tx_cc_and_fra_entry(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->snd_cwnd = ntohs(data.snd_cwnd);
     tcpcb_pd->tcpcb->snd_cwnd_cnt = ntohs(data.snd_cwnd_cnt);
-    HAL_TRACE_DEBUG("TCPCB snd_cwnd: 0x{0:x}", tcpcb_pd->tcpcb->snd_cwnd);
-    HAL_TRACE_DEBUG("TCPCB snd_cwnd_cnt: 0x{0:x}", tcpcb_pd->tcpcb->snd_cwnd_cnt);
+    HAL_TRACE_DEBUG("TCPCB snd_cwnd: {:#x}", tcpcb_pd->tcpcb->snd_cwnd);
+    HAL_TRACE_DEBUG("TCPCB snd_cwnd_cnt: {:#x}", tcpcb_pd->tcpcb->snd_cwnd_cnt);
 
     return HAL_RET_OK;
 
@@ -1075,8 +1075,8 @@ p4pd_get_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->source_port = ntohs(data.source_port);
     tcpcb_pd->tcpcb->dest_port = ntohs(data.dest_port);
     tcpcb_pd->tcpcb->header_len = ntohs(data.header_len);
-    HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x}", tcpcb_pd->tcpcb->source_lif);
-    HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
+    HAL_TRACE_DEBUG("TCPCB source lif: {:#x}", tcpcb_pd->tcpcb->source_lif);
+    HAL_TRACE_DEBUG("TCPCB source port: {:#x} dest port {:#x}",
                     tcpcb_pd->tcpcb->source_port, tcpcb_pd->tcpcb->dest_port);
     HAL_TRACE_DEBUG("TCPCB header len: {}", tcpcb_pd->tcpcb->header_len);
 
@@ -1153,7 +1153,7 @@ pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd)
     // Set qtype and qid as 0 to get the start offset. 
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
                     tcpcb_pd->tcpcb->cb_id);
-    HAL_TRACE_DEBUG("received offset 0x{0:x}", offset);
+    HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset;
 }
 
@@ -1311,12 +1311,12 @@ pd_tcpcb_get (pd_tcpcb_get_args_t *args)
     
     // get hw-id for this TCPCB
     tcpcb_pd.hw_id = pd_tcpcb_get_base_hw_index(&tcpcb_pd);
-    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", tcpcb_pd.hw_id);
+    HAL_TRACE_DEBUG("Received hw-id {:#x}", tcpcb_pd.hw_id);
 
     // get hw tcpcb entry
     ret = p4pd_get_tcpcb_entry(&tcpcb_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", tcpcb_pd.tcpcb->cb_id);
+        HAL_TRACE_ERR("Get request failed for id: {:#x}", tcpcb_pd.tcpcb->cb_id);
     }
     return ret;
 }

@@ -234,7 +234,7 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
         data.u.start_d.proxyccb_activate = PROXYCCB_ACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("PROXYCCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr); 
+    HAL_TRACE_DEBUG("PROXYCCB Programming stage0 at hw_addr: {:#x}", hw_addr); 
     if(!p4plus_hbm_write(hw_addr, data_p, data_len,
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for PROXYCCB");
@@ -356,7 +356,7 @@ pd_proxyccb_get_base_hw_addr(pd_proxyccb_t* proxyccb_pd)
     // Set qtype and qid as 0 to get the start offset. 
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_PROXYC_QTYPE, 0);
-    HAL_TRACE_DEBUG("PROXYCCB received offset 0x{0:x}", offset);
+    HAL_TRACE_DEBUG("PROXYCCB received offset {:#x}", offset);
     return offset + \
         (proxyccb_pd->hw_id * P4PD_HBM_PROXYCCB_ENTRY_SIZE);
 }
@@ -465,7 +465,7 @@ pd_proxyccb_deactivate (pd_proxyccb_update_args_t *args)
     curr_proxyccb_pd.proxyccb = &curr_proxyccb;
 
     curr_proxyccb_pd.hw_addr = pd_proxyccb_get_base_hw_addr(&curr_proxyccb_pd);
-    HAL_TRACE_DEBUG("PROXYCCB pd deactivate for id: {} hw_addr 0x{0:x}",
+    HAL_TRACE_DEBUG("PROXYCCB pd deactivate for id: {} hw_addr {:#x}",
                     proxyccb->cb_id,  curr_proxyccb_pd.hw_addr);
     ret = pd_proxyccb_get(&curr_args);
     if (ret == HAL_RET_OK) {
@@ -560,12 +560,12 @@ pd_proxyccb_get (pd_proxyccb_get_args_t *args)
     proxyccb_pd.proxyccb = args->proxyccb;
     
     proxyccb_pd.hw_addr = pd_proxyccb_get_base_hw_addr(&proxyccb_pd);
-    HAL_TRACE_DEBUG("Received hw_addr 0x{0:x}", proxyccb_pd.hw_addr);
+    HAL_TRACE_DEBUG("Received hw_addr {:#x}", proxyccb_pd.hw_addr);
 
     // get hw proxyccb entry
     ret = p4pd_get_proxyccb_entry(&proxyccb_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", hw_id);
+        HAL_TRACE_ERR("Get request failed for id: {:#x}", hw_id);
     }
     return ret;
 }

@@ -2307,6 +2307,7 @@ protected:
         if (next_arg_index_ > 0)
         {
             error = "cannot switch from automatic to manual argument indexing";
+            assert(0);
             return false;
         }
         next_arg_index_ = -1;

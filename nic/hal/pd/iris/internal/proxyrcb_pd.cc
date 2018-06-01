@@ -243,7 +243,7 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
         data.u.start_d.proxyrcb_deactivate = (uint8_t)~PROXYRCB_DEACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("PROXYRCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr); 
+    HAL_TRACE_DEBUG("PROXYRCB Programming stage0 at hw_addr: {:#x}", hw_addr); 
     if (!p4plus_hbm_write(hw_addr, data_p, data_len,
             P4PLUS_CACHE_INVALIDATE_BOTH)) {
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for PROXYRCB");
@@ -290,7 +290,7 @@ p4pd_add_or_del_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd,
         data.u.flow_key_post_read_d.proxyrcb_activate = PROXYRCB_ACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("PROXYRCB Programming flow_key at hw_addr: 0x{0:x}", hw_addr); 
+    HAL_TRACE_DEBUG("PROXYRCB Programming flow_key at hw_addr: {:#x}", hw_addr); 
     if (!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)) {
         HAL_TRACE_ERR("Failed to create flow_key entry for PROXYRCB");
@@ -445,7 +445,7 @@ pd_proxyrcb_get_base_hw_addr(pd_proxyrcb_t* proxyrcb_pd)
     // Set qtype and qid as 0 to get the start offset. 
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_PROXYR_QTYPE, 0);
-    HAL_TRACE_DEBUG("PROXYRCB received offset 0x{0:x}", offset);
+    HAL_TRACE_DEBUG("PROXYRCB received offset {:#x}", offset);
     return offset + \
            (proxyrcb_pd->hw_id * P4PD_HBM_PROXYRCB_ENTRY_SIZE);
 }
@@ -558,7 +558,7 @@ pd_proxyrcb_deactivate (pd_proxyrcb_update_args_t *args)
     curr_proxyrcb_pd.proxyrcb = &curr_proxyrcb;
 
     curr_proxyrcb_pd.hw_addr = pd_proxyrcb_get_base_hw_addr(&curr_proxyrcb_pd);
-    HAL_TRACE_DEBUG("PROXYRCB pd deactivate for id: {} hw_addr 0x{0:x}",
+    HAL_TRACE_DEBUG("PROXYRCB pd deactivate for id: {} hw_addr {:#x}",
                     proxyrcb->cb_id,  curr_proxyrcb_pd.hw_addr);
     ret = pd_proxyrcb_get(&curr_args);
     if (ret == HAL_RET_OK) {
@@ -652,12 +652,12 @@ pd_proxyrcb_get (pd_proxyrcb_get_args_t *args)
     proxyrcb_pd.proxyrcb = args->proxyrcb;
     
     proxyrcb_pd.hw_addr = pd_proxyrcb_get_base_hw_addr(&proxyrcb_pd);
-    HAL_TRACE_DEBUG("Received hw_addr 0x{0:x}", proxyrcb_pd.hw_addr);
+    HAL_TRACE_DEBUG("Received hw_addr {:#x}", proxyrcb_pd.hw_addr);
 
     // get hw proxyrcb entry
     ret = p4pd_get_proxyrcb_entry(&proxyrcb_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", hw_id);
+        HAL_TRACE_ERR("Get request failed for id: {:#x}", hw_id);
     }
     return ret;
 }

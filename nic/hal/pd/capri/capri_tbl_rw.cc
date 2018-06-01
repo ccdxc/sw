@@ -1712,9 +1712,7 @@ hal::pd::asic_csr_dump (char *csr_str)
         capri_debug_hbm_reset();
     } else {
         val = csr_read(std::string(csr_str));
-        uint64_t offset = csr_get_offset(std::string(csr_str));
-        HAL_TRACE_DEBUG("{0:s}, csr: {1:s}, offset: 0x{2:x}, value: {3:s}",
-                        __FUNCTION__, csr_str, offset, val);
+        //uint64_t offset = csr_get_offset(std::string(csr_str));
         csr_show(std::string(csr_str), -1);
     }
     return val;
