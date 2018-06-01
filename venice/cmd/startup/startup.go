@@ -121,12 +121,13 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	log.Debugf("Starting Quorum services on startup")
 
 	qConfig := &quorum.Config{
-		Type:       store.KVStoreTypeEtcd,
-		ID:         c.UUID,
-		DataDir:    env.Options.KVStore.DataDir,
-		CfgFile:    env.Options.KVStore.ConfigFile,
-		MemberName: hostname,
-		Existing:   true,
+		Type:            store.KVStoreTypeEtcd,
+		ID:              c.UUID,
+		DataDir:         env.Options.KVStore.DataDir,
+		CfgFile:         env.Options.KVStore.ConfigFile,
+		MemberName:      hostname,
+		Existing:        true,
+		PeerAuthEnabled: true,
 	}
 	qConfig.Members = append(qConfig.Members, quorum.Member{
 		Name:       hostname,

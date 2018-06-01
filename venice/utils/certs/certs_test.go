@@ -80,6 +80,31 @@ func testSaveAndReadCertificate(privateKey crypto.PrivateKey, t *testing.T) {
 	Assert(t, cert.Equal(readOneCert), "read cert is not same as expected cert")
 }
 
+func testSaveAndReadCertificates(privateKey crypto.PrivateKey, t *testing.T) {
+	var err error
+	tmpfile, err := ioutil.TempFile("", "cert_test")
+	AssertOk(t, err, "Error generating temp file")
+	tmpfileName := tmpfile.Name()
+	defer os.Remove(tmpfileName)
+
+	certNames := []string{"cert1", "cert2", "cert3"}
+	certs := make([]*x509.Certificate, len(certNames))
+
+	for i, n := range certNames {
+		certs[i], err = SelfSign(n, privateKey, WithValidityDays(days))
+		AssertOk(t, err, fmt.Sprintf("Error creating self-signed certificate %d: %v", i, err))
+	}
+
+	err = SaveCertificates(tmpfileName, certs)
+	AssertOk(t, err, "Error saving certificates")
+
+	readCerts, err := ReadCertificates(tmpfileName)
+	AssertOk(t, err, "ReadCertificate fail")
+	for i, c := range readCerts {
+		Assert(t, c.Equal(certs[i]), fmt.Sprintf("read cert is not same as expected cert.\nHave: %+v\nWant: %+v\n", c, certs[i]))
+	}
+}
+
 func TestSaveAndReadRsaCertificate(t *testing.T) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
 	if err != nil {

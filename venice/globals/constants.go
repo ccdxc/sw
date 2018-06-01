@@ -13,11 +13,11 @@ const (
 
 	// Config directories
 	ConfigDir           = "/etc/pensando"
-	CmdConfigDir        = ConfigDir + "/cmd"
+	CmdConfigDir        = ConfigDir + "/" + Cmd
 	CommonConfigDir     = ConfigDir + "/shared/common"
-	EtcdConfigDir       = ConfigDir + "/etcd"
+	EtcdConfigDir       = ConfigDir + "/" + Etcd
 	KubernetesConfigDir = ConfigDir + "/kubernetes"
-	NtpConfigDir        = ConfigDir + "/ntp"
+	NtpConfigDir        = ConfigDir + "/" + Ntp
 
 	EtcdServiceFile = "pen-etcd.service"
 

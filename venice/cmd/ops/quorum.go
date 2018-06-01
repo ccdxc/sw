@@ -19,7 +19,7 @@ func makeQuorumConfig(uuid string, nodes []string) (*grpc.QuorumConfig, error) {
 		}
 		quorumMembers = append(quorumMembers, &grpc.QuorumMember{
 			Name:       nodes[ii],
-			PeerUrls:   []string{fmt.Sprintf("http://%s:%s", addrs[0], env.Options.KVStore.PeerPort)},
+			PeerUrls:   []string{fmt.Sprintf("https://%s:%s", addrs[0], env.Options.KVStore.PeerPort)},
 			ClientUrls: []string{fmt.Sprintf("http://%s:%s", addrs[0], env.Options.KVStore.ClientPort)},
 		})
 	}

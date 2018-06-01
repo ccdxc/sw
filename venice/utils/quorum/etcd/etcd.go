@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
 
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/globals"
@@ -29,27 +31,41 @@ const (
 	defaultUnitFile = globals.EtcdServiceFile
 	timeout         = time.Second * 5
 
+	// Fixed parameters
+	peerAuthDirName           = "peer-auth"
+	peerCertFileName          = "cert.crt"
+	peerPrivKeyFileName       = "peer.key"
+	peerCATrustBundleFileName = "peer-ca.crt"
+
 	// Environment variables
-	nameVar          = "NAME"
-	advPeerURLsVar   = "ADV_PEER_URLS"
-	lisPeerURLsVar   = "LIS_PEER_URLS"
-	advClientURLsVar = "ADV_CLIENT_URLS"
-	lisClientURLsVar = "LIS_CLIENT_URLS"
-	clusterTokenVar  = "INIT_CLUSTER_TOKEN"
-	clusterVar       = "INIT_CLUSTER"
-	clusterStateVar  = "INIT_CLUSTER_STATE"
-	dataDirVar       = "DATA_DIR"
+	nameVar               = "NAME"
+	advPeerURLsVar        = "ADV_PEER_URLS"
+	lisPeerURLsVar        = "LIS_PEER_URLS"
+	advClientURLsVar      = "ADV_CLIENT_URLS"
+	lisClientURLsVar      = "LIS_CLIENT_URLS"
+	clusterTokenVar       = "INIT_CLUSTER_TOKEN"
+	clusterVar            = "INIT_CLUSTER"
+	clusterStateVar       = "INIT_CLUSTER_STATE"
+	dataDirVar            = "DATA_DIR"
+	peerCertFileVar       = "ETCD_CERT_FILE"
+	peerPrivKeyFileVar    = "ETCD_KEY_FILE"
+	peerClientCertReqdVar = "ETCD_CLIENT_CERT_AUTH"
+	peerCATrustBundleVar  = "ETCD_TRUSTED_CA_FILE"
 
 	// Parameters
-	nameParam          = "--name"
-	advPeerURLsParam   = "--initial-advertise-peer-urls"
-	lisPeerURLsParam   = "--listen-peer-urls"
-	advClientURLsParam = "--advertise-client-urls"
-	lisClientURLsParam = "--listen-client-urls"
-	clusterTokenParam  = "--initial-cluster-token"
-	clusterParam       = "--initial-cluster"
-	clusterStateParam  = "--initial-cluster-state"
-	dataDirParam       = "--data-dir"
+	nameParam               = "--name"
+	advPeerURLsParam        = "--initial-advertise-peer-urls"
+	lisPeerURLsParam        = "--listen-peer-urls"
+	advClientURLsParam      = "--advertise-client-urls"
+	lisClientURLsParam      = "--listen-client-urls"
+	clusterTokenParam       = "--initial-cluster-token"
+	clusterParam            = "--initial-cluster"
+	clusterStateParam       = "--initial-cluster-state"
+	dataDirParam            = "--data-dir"
+	peerCertFileParam       = "--peer-cert-file"        // File containing the client/server certificate used for TLS connections between peers
+	peerPrivKeyFileParam    = "--peer-key-file"         // File containing the private key for TLS between peers
+	peerClientCertReqdParam = "--peer-client-cert-auth" // Flag specifying if peer client certificates are required
+	peerCATrustBundleParam  = "--peer-trusted-ca-file"  // File containing the CA bundle used to verify peer client certificates
 )
 
 // memberIndex returns -1 if member is cant be found
@@ -63,6 +79,19 @@ func memberIndex(c *quorum.Config) int {
 	}
 	return idx
 }
+
+func getPeerAuthDir() string {
+	return path.Join(globals.EtcdConfigDir, peerAuthDirName)
+}
+
+func getPeerAuthFilePaths(c *quorum.Config) (certFilePath, keyFilePath, caBundleFilePath string) {
+	authDir := getPeerAuthDir()
+	certFilePath = path.Join(authDir, peerCertFileName)
+	keyFilePath = path.Join(authDir, peerPrivKeyFileName)
+	caBundleFilePath = path.Join(authDir, peerCATrustBundleFileName)
+	return
+}
+
 func createConfigFile(c *quorum.Config) error {
 	idx := memberIndex(c)
 
@@ -99,6 +128,15 @@ func createConfigFile(c *quorum.Config) error {
 	}
 	cfgMap[clusterStateVar] = fmt.Sprintf("%s %s", clusterStateParam, state)
 
+	// Parameters for mTLS between peers
+	if c.PeerAuthEnabled {
+		certFilePath, keyFilePath, caBundleFilePath := getPeerAuthFilePaths(c)
+		cfgMap[peerCertFileVar] = fmt.Sprintf("%s %s", peerCertFileParam, certFilePath)
+		cfgMap[peerPrivKeyFileVar] = fmt.Sprintf("%s %s", peerPrivKeyFileParam, keyFilePath)
+		cfgMap[peerClientCertReqdVar] = fmt.Sprintf("%s", peerClientCertReqdParam)
+		cfgMap[peerCATrustBundleVar] = fmt.Sprintf("%s %s", peerCATrustBundleParam, caBundleFilePath)
+	}
+
 	// Generate the config file.
 	cfgFile, err := os.Create(c.CfgFile)
 	if err != nil {
@@ -113,6 +151,41 @@ func createConfigFile(c *quorum.Config) error {
 		}
 	}
 	cfgFile.Sync()
+	return nil
+}
+
+func createPeerAuthFiles(c *quorum.Config) error {
+	var err error
+	authDir := getPeerAuthDir()
+
+	// wipe out old files if there and recreate
+	err = os.RemoveAll(authDir)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(authDir, 0777)
+	if err != nil {
+		return err
+	}
+	defer func(err error) {
+		if err != nil {
+			os.RemoveAll(authDir)
+		}
+	}(err)
+
+	certFilePath, keyFilePath, caBundleFilePath := getPeerAuthFilePaths(c)
+	err = certs.SaveCertificate(certFilePath, c.PeerCert)
+	if err != nil {
+		return err
+	}
+	err = certs.SaveCertificates(caBundleFilePath, c.PeerCATrustBundle)
+	if err != nil {
+		return err
+	}
+	err = certs.SavePrivateKey(keyFilePath, c.PeerPrivateKey)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -144,6 +217,14 @@ func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
 		err := createConfigFile(c)
 		if err != nil {
 			return nil, err
+		}
+
+		if c.PeerAuthEnabled {
+			err := createPeerAuthFiles(c)
+			if err != nil {
+				log.Errorf("Error creating peer auth files: %v. AuthDir %s", err, getPeerAuthDir())
+				return nil, err
+			}
 		}
 	}
 

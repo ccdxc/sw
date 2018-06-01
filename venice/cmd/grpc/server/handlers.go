@@ -13,6 +13,7 @@ import (
 	context "golang.org/x/net/context"
 
 	"github.com/pensando/sw/venice/cmd/cache"
+	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
@@ -162,6 +163,12 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			MemberName: hostname,
 			Existing:   false,
 			Members:    members,
+		}
+
+		err := credentials.SetQuorumPeerAuth(qConfig)
+		if err != nil {
+			log.Errorf("Failed to obtain peer auth credentials for quorum with error: %v", err)
+			return nil, err
 		}
 
 		quorumIntf, err := store.New(qConfig)

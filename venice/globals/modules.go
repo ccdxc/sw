@@ -6,6 +6,7 @@ const (
 	APIServer             = "pen-apiserver"
 	Cmd                   = "pen-cmd"
 	Ckm                   = "pen-ckm"
+	Etcd                  = "pen-etcd"
 	Filebeat              = "pen-filebeat"
 	Ntp                   = "pen-ntp"
 	VCHub                 = "pen-vchub"

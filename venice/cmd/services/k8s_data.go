@@ -121,7 +121,7 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				getComponentConfigVolume("ntp"),
+				getComponentConfigVolume(globals.Ntp),
 			},
 		},
 	},
@@ -150,7 +150,7 @@ var k8sModules = map[string]protos.Module{
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				getComponentConfigVolume("apiserver"),
+				getComponentConfigVolume(globals.APIServer),
 				&logVolume,
 			},
 		},
@@ -235,12 +235,12 @@ var k8sModules = map[string]protos.Module{
 						},
 					},
 					Args: []string{
-						"-config", "/etc/pensando/influxdb/influxdb.conf",
+						"-config", "/etc/pensando/" + globals.Influx + "/influxdb.conf",
 					},
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				getComponentConfigVolume("influxdb"),
+				getComponentConfigVolume(globals.Influx),
 				&logVolume,
 			},
 		},
@@ -310,7 +310,7 @@ var k8sModules = map[string]protos.Module{
 				// Volume definition for Elastic Discovery.
 				{
 					Name:      "discovery",
-					HostPath:  "/etc/pensando/elastic/elastic-discovery",
+					HostPath:  "/etc/pensando/" + globals.ElasticSearch + "/elastic-discovery",
 					MountPath: "/usr/share/elasticsearch/config/discovery-file",
 				},
 				// Volume definition for sourcing env variables

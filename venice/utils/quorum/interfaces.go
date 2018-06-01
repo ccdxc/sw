@@ -1,5 +1,10 @@
 package quorum
 
+import (
+	"crypto"
+	"crypto/x509"
+)
+
 // Config contains configuration to create a KV store with quorum.
 type Config struct {
 	// Type of KV storage backend, e.g. "etcd"
@@ -18,6 +23,16 @@ type Config struct {
 	Existing bool
 	// Members is the list of quorum members.
 	Members []Member
+	// Peer mTLS auth: if true, all Peer* parameters below need to be set
+	PeerAuthEnabled bool
+	// Certificate used both for client and server TLS
+	// Needs to have both clientAuth and serverAuth in extendedKeyUsage
+	PeerCert *x509.Certificate
+	// Key used for client/server TLS connections
+	// Must match the public key in PeerCert
+	PeerPrivateKey crypto.PrivateKey
+	// Trust bundle used to verify peer's certificate
+	PeerCATrustBundle []*x509.Certificate
 }
 
 // Member contains information about a quorum member.

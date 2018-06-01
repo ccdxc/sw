@@ -205,18 +205,30 @@ func ReadPrivateKey(caKeyFile string) (crypto.PrivateKey, error) {
 	}
 }
 
-// SaveCertificate to a file
-func SaveCertificate(certFile string, cert *x509.Certificate) error {
-	pemfile, err := os.Create(certFile)
+// SaveCertificates to a file
+func SaveCertificates(certFile string, certs []*x509.Certificate) error {
+	pemFile, err := os.Create(certFile)
 	if err != nil {
 		return errors.Wrap(err, "Unable to create file during SaveCertificate")
 	}
-	defer pemfile.Close()
+	defer pemFile.Close()
 
-	pemkey := &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: cert.Raw}
-	return pem.Encode(pemfile, pemkey)
+	for _, cert := range certs {
+		pemBlock := &pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: cert.Raw,
+		}
+		err := pem.Encode(pemFile, pemBlock)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SaveCertificate to a file
+func SaveCertificate(certFile string, cert *x509.Certificate) error {
+	return SaveCertificates(certFile, []*x509.Certificate{cert})
 }
 
 // ReadCertificates from a file

@@ -8,19 +8,20 @@
 mv -f /target/usr/bin/systemd-docker /host/usr/pensando/bin/systemd-docker
 mv -f /target/usr/bin/kubelet /host/usr/pensando/bin/kubelet
 mv -f /target/usr/lib/systemd/system/* /host/usr/lib/systemd/system/
-# Each component gets an individual subdir under /etc/pensando if needed
+# Each component gets an individual subdir under /etc/pensando if needed.
+# The subdir name for each component must match the definitions in venice/globals/modules.go.
 # Subdir is created here so that it already exists when the container start and it needs to be mounted.
 # No component should mount /etc/pensando except CMD.
 # /etc/pensando/shared/common is shared across all components.
 mkdir -p /host/etc/pensando/shared/common
 mv -f /target/etc/pensando/shared/common/venice.json /host/etc/pensando/shared/common/venice.json
 mv -f /target/etc/pensando/shared/common/venice.conf /host/etc/pensando/shared/common/venice.conf
-mkdir -p /host/etc/pensando/influxdb
-mv -f /target/etc/pensando/influxdb/influxdb.conf /host/etc/pensando/influxdb/influxdb.conf
-mkdir -p /host/etc/pensando/apiserver
-mkdir -p /host/etc/pensando/cmd
-mkdir -p /host/etc/pensando/elastic
-mkdir -p /host/etc/pensando/filebeat
-mkdir -p /host/etc/pensando/etcd
+mkdir -p /host/etc/pensando/pen-influx
+mv -f /target/etc/pensando/pen-influx/influxdb.conf /host/etc/pensando/pen-influx/influxdb.conf
+mkdir -p /host/etc/pensando/pen-apiserver
+mkdir -p /host/etc/pensando/pen-cmd
+mkdir -p /host/etc/pensando/pen-elastic
+mkdir -p /host/etc/pensando/pen-filebeat
+mkdir -p /host/etc/pensando/pen-etcd
 mkdir -p /host/etc/pensando/kubernetes
-mkdir -p /host/etc/pensando/ntp
+mkdir -p /host/etc/pensando/pen-ntp
