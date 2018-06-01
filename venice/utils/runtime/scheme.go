@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 )
 
 var (
@@ -121,4 +123,13 @@ func (n *Struct) FindFieldByJSONTag(in string) (Field, bool) {
 	}
 	f, ok := n.Fields[name]
 	return f, ok
+}
+
+// IsScalar returns if the provided type is a scalar.
+func IsScalar(in string) bool {
+	if in == "TYPE_GROUP" || in == "TYPE_MESSAGE" {
+		return false
+	}
+	_, ok := descriptor.FieldDescriptorProto_Type_value[in]
+	return ok
 }

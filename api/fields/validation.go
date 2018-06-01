@@ -3,6 +3,7 @@ package fields
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 )
 
 // Field Selector validation. A field selector has the below requirements.
@@ -29,10 +30,10 @@ import (
 
 // Key related validations.
 var (
-	startFmt           = "[A-Za-z]+"                   // Start with alphabets
-	varFmt             = "\\.[A-Za-z]+"                // . separated variable
-	subscriptedStarFmt = varFmt + "\\[\\*\\]"          // subscript [*] for maps
-	subscriptedVarFmt  = varFmt + "\\[[A-Za-z0-9]+\\]" // subscript [key] for maps
+	startFmt           = "[A-Za-z]([A-Za-z\\-]*[A-Za-z])*"    // Start with alphabets
+	varFmt             = "\\.[A-Za-z]([A-Za-z\\-]*[A-Za-z])*" // . separated variable
+	subscriptedStarFmt = varFmt + "\\[\\*\\]"                 // subscript [*] for maps
+	subscriptedVarFmt  = varFmt + "\\[[A-Za-z0-9]+\\]"        // subscript [key] for maps
 
 	// middleFmt is list of "." separated variables, optionally subscripted by "*"
 	// for slices or maps, "key" for maps.
@@ -118,4 +119,46 @@ func validateSelector(sel string) error {
 		return fmt.Errorf("%v is not valid, %v", sel, selErrMsg)
 	}
 	return nil
+}
+
+// checkVal checks if the value can be parsed in to the string.
+func checkVal(kind string, value string) bool {
+	size := 0
+	unsigned := false
+	switch kind {
+	case "TYPE_STRING":
+		return true
+	case "TYPE_BOOL":
+		if value != "true" && value != "false" {
+			return false
+		}
+		return true
+	case "TYPE_FLOAT":
+		if _, err := strconv.ParseFloat(value, 64); err != nil {
+			return false
+		}
+		return true
+	case "TYPE_INT64":
+		size = 64
+	case "TYPE_UINT64":
+		size = 64
+		unsigned = true
+	case "TYPE_INT32":
+		size = 32
+	case "TYPE_UINT32":
+		size = 32
+		unsigned = true
+	default:
+		return false
+	}
+	if unsigned {
+		if _, err := strconv.ParseUint(value, 10, size); err != nil {
+			return false
+		}
+		return true
+	}
+	if _, err := strconv.ParseInt(value, 10, size); err != nil {
+		return false
+	}
+	return true
 }
