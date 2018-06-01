@@ -7,6 +7,11 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -43,27 +48,395 @@ func (x DeviceMode) String() string {
 func (DeviceMode) EnumDescriptor() ([]byte, []int) { return fileDescriptorNic, []int{0} }
 
 // Global config object for NIC
-type Device struct {
+type DeviceSpec struct {
 	DeviceMode DeviceMode `protobuf:"varint,1,opt,name=device_mode,json=deviceMode,proto3,enum=device.DeviceMode" json:"device_mode,omitempty"`
 }
 
-func (m *Device) Reset()                    { *m = Device{} }
-func (m *Device) String() string            { return proto.CompactTextString(m) }
-func (*Device) ProtoMessage()               {}
-func (*Device) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{0} }
+func (m *DeviceSpec) Reset()                    { *m = DeviceSpec{} }
+func (m *DeviceSpec) String() string            { return proto.CompactTextString(m) }
+func (*DeviceSpec) ProtoMessage()               {}
+func (*DeviceSpec) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{0} }
 
-func (m *Device) GetDeviceMode() DeviceMode {
+func (m *DeviceSpec) GetDeviceMode() DeviceMode {
 	if m != nil {
 		return m.DeviceMode
 	}
 	return DeviceMode_DEVICE_MODE_NONE
 }
 
+type DeviceRequest struct {
+	Device *DeviceSpec `protobuf:"bytes,1,opt,name=device" json:"device,omitempty"`
+}
+
+func (m *DeviceRequest) Reset()                    { *m = DeviceRequest{} }
+func (m *DeviceRequest) String() string            { return proto.CompactTextString(m) }
+func (*DeviceRequest) ProtoMessage()               {}
+func (*DeviceRequest) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{1} }
+
+func (m *DeviceRequest) GetDevice() *DeviceSpec {
+	if m != nil {
+		return m.Device
+	}
+	return nil
+}
+
+type DeviceRequestMsg struct {
+	Request *DeviceRequest `protobuf:"bytes,1,opt,name=request" json:"request,omitempty"`
+}
+
+func (m *DeviceRequestMsg) Reset()                    { *m = DeviceRequestMsg{} }
+func (m *DeviceRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*DeviceRequestMsg) ProtoMessage()               {}
+func (*DeviceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{2} }
+
+func (m *DeviceRequestMsg) GetRequest() *DeviceRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type DeviceResponse struct {
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+}
+
+func (m *DeviceResponse) Reset()                    { *m = DeviceResponse{} }
+func (m *DeviceResponse) String() string            { return proto.CompactTextString(m) }
+func (*DeviceResponse) ProtoMessage()               {}
+func (*DeviceResponse) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{3} }
+
+func (m *DeviceResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+type DeviceResponseMsg struct {
+	Response *DeviceResponse `protobuf:"bytes,1,opt,name=response" json:"response,omitempty"`
+}
+
+func (m *DeviceResponseMsg) Reset()                    { *m = DeviceResponseMsg{} }
+func (m *DeviceResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*DeviceResponseMsg) ProtoMessage()               {}
+func (*DeviceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{4} }
+
+func (m *DeviceResponseMsg) GetResponse() *DeviceResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+type DeviceGetRequest struct {
+	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+}
+
+func (m *DeviceGetRequest) Reset()                    { *m = DeviceGetRequest{} }
+func (m *DeviceGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*DeviceGetRequest) ProtoMessage()               {}
+func (*DeviceGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{5} }
+
+func (m *DeviceGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+type DeviceGetRequestMsg struct {
+	Request *DeviceGetRequest `protobuf:"bytes,1,opt,name=request" json:"request,omitempty"`
+}
+
+func (m *DeviceGetRequestMsg) Reset()                    { *m = DeviceGetRequestMsg{} }
+func (m *DeviceGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*DeviceGetRequestMsg) ProtoMessage()               {}
+func (*DeviceGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{6} }
+
+func (m *DeviceGetRequestMsg) GetRequest() *DeviceGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type DeviceGetResponse struct {
+	ApiStatus ApiStatus   `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Device    *DeviceSpec `protobuf:"bytes,2,opt,name=device" json:"device,omitempty"`
+}
+
+func (m *DeviceGetResponse) Reset()                    { *m = DeviceGetResponse{} }
+func (m *DeviceGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*DeviceGetResponse) ProtoMessage()               {}
+func (*DeviceGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{7} }
+
+func (m *DeviceGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *DeviceGetResponse) GetDevice() *DeviceSpec {
+	if m != nil {
+		return m.Device
+	}
+	return nil
+}
+
+type DeviceGetResponseMsg struct {
+	Response *DeviceGetResponse `protobuf:"bytes,1,opt,name=response" json:"response,omitempty"`
+}
+
+func (m *DeviceGetResponseMsg) Reset()                    { *m = DeviceGetResponseMsg{} }
+func (m *DeviceGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*DeviceGetResponseMsg) ProtoMessage()               {}
+func (*DeviceGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{8} }
+
+func (m *DeviceGetResponseMsg) GetResponse() *DeviceGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+type DeviceDeleteRequest struct {
+}
+
+func (m *DeviceDeleteRequest) Reset()                    { *m = DeviceDeleteRequest{} }
+func (m *DeviceDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*DeviceDeleteRequest) ProtoMessage()               {}
+func (*DeviceDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{9} }
+
+type DeviceDeleteRequestMsg struct {
+	Request *DeviceDeleteRequest `protobuf:"bytes,1,opt,name=request" json:"request,omitempty"`
+}
+
+func (m *DeviceDeleteRequestMsg) Reset()                    { *m = DeviceDeleteRequestMsg{} }
+func (m *DeviceDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*DeviceDeleteRequestMsg) ProtoMessage()               {}
+func (*DeviceDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{10} }
+
+func (m *DeviceDeleteRequestMsg) GetRequest() *DeviceDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type DeviceDeleteResponse struct {
+}
+
+func (m *DeviceDeleteResponse) Reset()                    { *m = DeviceDeleteResponse{} }
+func (m *DeviceDeleteResponse) String() string            { return proto.CompactTextString(m) }
+func (*DeviceDeleteResponse) ProtoMessage()               {}
+func (*DeviceDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{11} }
+
+type DeviceDeleteResponseMsg struct {
+	Response *DeviceDeleteResponse `protobuf:"bytes,1,opt,name=response" json:"response,omitempty"`
+}
+
+func (m *DeviceDeleteResponseMsg) Reset()                    { *m = DeviceDeleteResponseMsg{} }
+func (m *DeviceDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*DeviceDeleteResponseMsg) ProtoMessage()               {}
+func (*DeviceDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNic, []int{12} }
+
+func (m *DeviceDeleteResponseMsg) GetResponse() *DeviceDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 func init() {
-	proto.RegisterType((*Device)(nil), "device.Device")
+	proto.RegisterType((*DeviceSpec)(nil), "device.DeviceSpec")
+	proto.RegisterType((*DeviceRequest)(nil), "device.DeviceRequest")
+	proto.RegisterType((*DeviceRequestMsg)(nil), "device.DeviceRequestMsg")
+	proto.RegisterType((*DeviceResponse)(nil), "device.DeviceResponse")
+	proto.RegisterType((*DeviceResponseMsg)(nil), "device.DeviceResponseMsg")
+	proto.RegisterType((*DeviceGetRequest)(nil), "device.DeviceGetRequest")
+	proto.RegisterType((*DeviceGetRequestMsg)(nil), "device.DeviceGetRequestMsg")
+	proto.RegisterType((*DeviceGetResponse)(nil), "device.DeviceGetResponse")
+	proto.RegisterType((*DeviceGetResponseMsg)(nil), "device.DeviceGetResponseMsg")
+	proto.RegisterType((*DeviceDeleteRequest)(nil), "device.DeviceDeleteRequest")
+	proto.RegisterType((*DeviceDeleteRequestMsg)(nil), "device.DeviceDeleteRequestMsg")
+	proto.RegisterType((*DeviceDeleteResponse)(nil), "device.DeviceDeleteResponse")
+	proto.RegisterType((*DeviceDeleteResponseMsg)(nil), "device.DeviceDeleteResponseMsg")
 	proto.RegisterEnum("device.DeviceMode", DeviceMode_name, DeviceMode_value)
 }
-func (m *Device) Marshal() (dAtA []byte, err error) {
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// Client API for Nic service
+
+type NicClient interface {
+	DeviceCreate(ctx context.Context, in *DeviceRequestMsg, opts ...grpc.CallOption) (*DeviceResponseMsg, error)
+	DeviceUpdate(ctx context.Context, in *DeviceRequestMsg, opts ...grpc.CallOption) (*DeviceResponseMsg, error)
+	DeviceDelete(ctx context.Context, in *DeviceDeleteRequestMsg, opts ...grpc.CallOption) (*DeviceDeleteResponseMsg, error)
+	DeviceGet(ctx context.Context, in *DeviceGetRequestMsg, opts ...grpc.CallOption) (*DeviceGetResponseMsg, error)
+}
+
+type nicClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewNicClient(cc *grpc.ClientConn) NicClient {
+	return &nicClient{cc}
+}
+
+func (c *nicClient) DeviceCreate(ctx context.Context, in *DeviceRequestMsg, opts ...grpc.CallOption) (*DeviceResponseMsg, error) {
+	out := new(DeviceResponseMsg)
+	err := grpc.Invoke(ctx, "/device.Nic/DeviceCreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nicClient) DeviceUpdate(ctx context.Context, in *DeviceRequestMsg, opts ...grpc.CallOption) (*DeviceResponseMsg, error) {
+	out := new(DeviceResponseMsg)
+	err := grpc.Invoke(ctx, "/device.Nic/DeviceUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nicClient) DeviceDelete(ctx context.Context, in *DeviceDeleteRequestMsg, opts ...grpc.CallOption) (*DeviceDeleteResponseMsg, error) {
+	out := new(DeviceDeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/device.Nic/DeviceDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nicClient) DeviceGet(ctx context.Context, in *DeviceGetRequestMsg, opts ...grpc.CallOption) (*DeviceGetResponseMsg, error) {
+	out := new(DeviceGetResponseMsg)
+	err := grpc.Invoke(ctx, "/device.Nic/DeviceGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Nic service
+
+type NicServer interface {
+	DeviceCreate(context.Context, *DeviceRequestMsg) (*DeviceResponseMsg, error)
+	DeviceUpdate(context.Context, *DeviceRequestMsg) (*DeviceResponseMsg, error)
+	DeviceDelete(context.Context, *DeviceDeleteRequestMsg) (*DeviceDeleteResponseMsg, error)
+	DeviceGet(context.Context, *DeviceGetRequestMsg) (*DeviceGetResponseMsg, error)
+}
+
+func RegisterNicServer(s *grpc.Server, srv NicServer) {
+	s.RegisterService(&_Nic_serviceDesc, srv)
+}
+
+func _Nic_DeviceCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeviceRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NicServer).DeviceCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/device.Nic/DeviceCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NicServer).DeviceCreate(ctx, req.(*DeviceRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nic_DeviceUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeviceRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NicServer).DeviceUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/device.Nic/DeviceUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NicServer).DeviceUpdate(ctx, req.(*DeviceRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nic_DeviceDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeviceDeleteRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NicServer).DeviceDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/device.Nic/DeviceDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NicServer).DeviceDelete(ctx, req.(*DeviceDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nic_DeviceGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeviceGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NicServer).DeviceGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/device.Nic/DeviceGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NicServer).DeviceGet(ctx, req.(*DeviceGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Nic_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "device.Nic",
+	HandlerType: (*NicServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "DeviceCreate",
+			Handler:    _Nic_DeviceCreate_Handler,
+		},
+		{
+			MethodName: "DeviceUpdate",
+			Handler:    _Nic_DeviceUpdate_Handler,
+		},
+		{
+			MethodName: "DeviceDelete",
+			Handler:    _Nic_DeviceDelete_Handler,
+		},
+		{
+			MethodName: "DeviceGet",
+			Handler:    _Nic_DeviceGet_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "nic.proto",
+}
+
+func (m *DeviceSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -73,7 +446,7 @@ func (m *Device) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Device) MarshalTo(dAtA []byte) (int, error) {
+func (m *DeviceSpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -82,6 +455,322 @@ func (m *Device) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x8
 		i++
 		i = encodeVarintNic(dAtA, i, uint64(m.DeviceMode))
+	}
+	return i, nil
+}
+
+func (m *DeviceRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Device != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Device.Size()))
+		n1, err := m.Device.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	return i, nil
+}
+
+func (m *DeviceRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Request != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Request.Size()))
+		n2, err := m.Request.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
+func (m *DeviceResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.ApiStatus))
+	}
+	return i, nil
+}
+
+func (m *DeviceResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Response != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Response.Size()))
+		n3, err := m.Response.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	return i, nil
+}
+
+func (m *DeviceGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Meta.Size()))
+		n4, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+
+func (m *DeviceGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Request != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Request.Size()))
+		n5, err := m.Request.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	return i, nil
+}
+
+func (m *DeviceGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Device != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Device.Size()))
+		n6, err := m.Device.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	return i, nil
+}
+
+func (m *DeviceGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Response != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Response.Size()))
+		n7, err := m.Response.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	return i, nil
+}
+
+func (m *DeviceDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *DeviceDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Request != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Request.Size()))
+		n8, err := m.Request.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	return i, nil
+}
+
+func (m *DeviceDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *DeviceDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Response != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNic(dAtA, i, uint64(m.Response.Size()))
+		n9, err := m.Response.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
 	}
 	return i, nil
 }
@@ -95,11 +784,125 @@ func encodeVarintNic(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *Device) Size() (n int) {
+func (m *DeviceSpec) Size() (n int) {
 	var l int
 	_ = l
 	if m.DeviceMode != 0 {
 		n += 1 + sovNic(uint64(m.DeviceMode))
+	}
+	return n
+}
+
+func (m *DeviceRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Device != nil {
+		l = m.Device.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.Request != nil {
+		l = m.Request.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNic(uint64(m.ApiStatus))
+	}
+	return n
+}
+
+func (m *DeviceResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.Response != nil {
+		l = m.Response.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.Request != nil {
+		l = m.Request.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNic(uint64(m.ApiStatus))
+	}
+	if m.Device != nil {
+		l = m.Device.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.Response != nil {
+		l = m.Response.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *DeviceDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.Request != nil {
+		l = m.Request.Size()
+		n += 1 + l + sovNic(uint64(l))
+	}
+	return n
+}
+
+func (m *DeviceDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *DeviceDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.Response != nil {
+		l = m.Response.Size()
+		n += 1 + l + sovNic(uint64(l))
 	}
 	return n
 }
@@ -117,7 +920,7 @@ func sovNic(x uint64) (n int) {
 func sozNic(x uint64) (n int) {
 	return sovNic(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Device) Unmarshal(dAtA []byte) error {
+func (m *DeviceSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -140,10 +943,10 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Device: wiretype end group for non-group")
+			return fmt.Errorf("proto: DeviceSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Device: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DeviceSpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -165,6 +968,941 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Device", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Device == nil {
+				m.Device = &DeviceSpec{}
+			}
+			if err := m.Device.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Request == nil {
+				m.Request = &DeviceRequest{}
+			}
+			if err := m.Request.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Response == nil {
+				m.Response = &DeviceResponse{}
+			}
+			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Request == nil {
+				m.Request = &DeviceGetRequest{}
+			}
+			if err := m.Request.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Device", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Device == nil {
+				m.Device = &DeviceSpec{}
+			}
+			if err := m.Device.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Response == nil {
+				m.Response = &DeviceGetResponse{}
+			}
+			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Request == nil {
+				m.Request = &DeviceDeleteRequest{}
+			}
+			if err := m.Request.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Response == nil {
+				m.Response = &DeviceDeleteResponse{}
+			}
+			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNic(dAtA[iNdEx:])
@@ -294,18 +2032,40 @@ var (
 func init() { proto.RegisterFile("nic.proto", fileDescriptorNic) }
 
 var fileDescriptorNic = []byte{
-	// 197 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xcc, 0xcb, 0x4c, 0xd6,
-	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4b, 0x49, 0x2d, 0xcb, 0x4c, 0x4e, 0x55, 0xb2, 0xe5,
-	0x62, 0x73, 0x01, 0xb3, 0x84, 0x8c, 0xb9, 0xb8, 0x21, 0x62, 0xf1, 0xb9, 0xf9, 0x29, 0xa9, 0x12,
-	0x8c, 0x0a, 0x8c, 0x1a, 0x7c, 0x46, 0x42, 0x7a, 0x10, 0x31, 0x3d, 0x88, 0x22, 0xdf, 0xfc, 0x94,
-	0xd4, 0x20, 0xae, 0x14, 0x38, 0x5b, 0xab, 0x81, 0x91, 0x8b, 0x0b, 0x21, 0x25, 0x24, 0xc2, 0x25,
-	0xe0, 0xe2, 0x1a, 0xe6, 0xe9, 0xec, 0x1a, 0xef, 0xeb, 0xef, 0xe2, 0x1a, 0xef, 0xe7, 0xef, 0xe7,
-	0x2a, 0xc0, 0x20, 0x24, 0xc7, 0x25, 0x85, 0x2c, 0xea, 0xeb, 0xe8, 0xe7, 0xe8, 0xee, 0xea, 0x12,
-	0x1f, 0x1c, 0xee, 0x19, 0xe2, 0xec, 0x21, 0xc0, 0x28, 0xa4, 0xc0, 0x25, 0x83, 0x4d, 0xde, 0xc3,
-	0x3f, 0x38, 0x24, 0x3e, 0xc0, 0xd3, 0x4f, 0x80, 0x49, 0x48, 0x8a, 0x4b, 0x0c, 0x59, 0x45, 0x70,
-	0x88, 0xa3, 0x9f, 0x8b, 0xa3, 0x0f, 0xc8, 0x74, 0x66, 0x27, 0xa9, 0x13, 0x8f, 0xe4, 0x18, 0x2f,
-	0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x8e, 0x8c, 0xc4,
-	0x1c, 0xb0, 0x2f, 0x93, 0xd8, 0xc0, 0x94, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xea, 0x41, 0x63,
-	0x92, 0xf9, 0x00, 0x00, 0x00,
+	// 557 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcb, 0x6e, 0xd3, 0x40,
+	0x14, 0x8d, 0x53, 0x54, 0x9a, 0x1b, 0xa8, 0x9c, 0xa1, 0x09, 0x69, 0x1a, 0xb9, 0x95, 0x25, 0x24,
+	0xd4, 0x45, 0x90, 0x52, 0x21, 0xf1, 0x58, 0xb9, 0xb1, 0x49, 0x22, 0x61, 0x1b, 0xec, 0xf0, 0x10,
+	0x1b, 0xcb, 0xb5, 0x47, 0xc1, 0xa8, 0x8d, 0x4d, 0x3c, 0xad, 0xc4, 0x8e, 0x1d, 0xbf, 0xc0, 0x67,
+	0xf0, 0x19, 0x2c, 0xf9, 0x02, 0x84, 0xc2, 0x1f, 0xf0, 0x05, 0xc8, 0x9e, 0x99, 0x38, 0x76, 0xdc,
+	0xb2, 0xa0, 0xab, 0xd6, 0xf7, 0x9e, 0x39, 0xf7, 0x9c, 0x33, 0x73, 0x03, 0xb5, 0x59, 0xe0, 0xf5,
+	0xa2, 0x79, 0x48, 0x42, 0xb4, 0xe9, 0xe3, 0x8b, 0xc0, 0xc3, 0x9d, 0x3a, 0xf9, 0x14, 0xe1, 0x98,
+	0x16, 0x65, 0x05, 0x40, 0x4d, 0xcb, 0x76, 0x84, 0x3d, 0x74, 0x04, 0x75, 0x0a, 0x72, 0xce, 0x42,
+	0x1f, 0xb7, 0x85, 0x03, 0xe1, 0xfe, 0x76, 0x1f, 0xf5, 0x68, 0xad, 0x47, 0x81, 0x7a, 0xe8, 0x63,
+	0x0b, 0xfc, 0xe5, 0xff, 0xf2, 0x53, 0xb8, 0x4d, 0x3b, 0x16, 0xfe, 0x78, 0x8e, 0x63, 0x82, 0x0e,
+	0x81, 0x8d, 0x4a, 0x09, 0xea, 0x45, 0x82, 0x64, 0x92, 0xc5, 0x10, 0xf2, 0x00, 0xc4, 0xdc, 0x61,
+	0x3d, 0x9e, 0xa2, 0x07, 0x70, 0x73, 0x4e, 0xbf, 0x18, 0x41, 0x33, 0x4f, 0xc0, 0xa0, 0x16, 0x47,
+	0xc9, 0x6f, 0x61, 0x9b, 0x77, 0xe2, 0x28, 0x9c, 0xc5, 0x18, 0x3d, 0x03, 0x70, 0xa3, 0xc0, 0x89,
+	0x89, 0x4b, 0xce, 0x63, 0xe6, 0x43, 0xec, 0x51, 0xe3, 0x4a, 0x14, 0xd8, 0x69, 0xfd, 0xb8, 0xf9,
+	0xe7, 0xe7, 0x7e, 0xe3, 0x02, 0xcf, 0x02, 0x0f, 0x3f, 0xc9, 0xe0, 0x56, 0xcd, 0xe5, 0x08, 0x79,
+	0x08, 0x8d, 0x3c, 0x73, 0xa2, 0xaf, 0x0f, 0x5b, 0x73, 0xf6, 0xc9, 0x04, 0xb6, 0x8a, 0x02, 0x69,
+	0xd7, 0x5a, 0xe2, 0xe4, 0xc7, 0xdc, 0xe7, 0x10, 0x13, 0x9e, 0xd3, 0x3d, 0xb8, 0x71, 0x86, 0x89,
+	0xcb, 0x38, 0x1a, 0x4c, 0x9e, 0x79, 0xf2, 0x01, 0x7b, 0x44, 0xc7, 0xc4, 0xb5, 0xd2, 0xb6, 0x3c,
+	0x86, 0x3b, 0xc5, 0xa3, 0x54, 0x45, 0x21, 0xa5, 0x76, 0x5e, 0x44, 0x86, 0xce, 0x82, 0xfa, 0x22,
+	0x70, 0x3f, 0x69, 0xf7, 0x7a, 0xc3, 0x5a, 0xb9, 0xf7, 0xea, 0x3f, 0xef, 0x5d, 0x87, 0x9d, 0x35,
+	0x21, 0x89, 0xab, 0x87, 0x6b, 0xd9, 0xee, 0x96, 0xd8, 0x5a, 0x8b, 0xb7, 0xc9, 0x33, 0x52, 0xf1,
+	0x29, 0x26, 0xfc, 0x85, 0xc8, 0x26, 0xb4, 0x4a, 0xca, 0x74, 0x4e, 0x21, 0xbd, 0xbd, 0xfc, 0x98,
+	0xdc, 0x81, 0x2c, 0xc0, 0x16, 0x97, 0xcd, 0xfb, 0x6c, 0xbe, 0x0d, 0x77, 0xcb, 0xea, 0xc9, 0xa4,
+	0x47, 0x6b, 0x8e, 0xba, 0xe5, 0xa3, 0x8a, 0xa6, 0x0e, 0x3f, 0x0b, 0x7c, 0x39, 0x93, 0x3d, 0x43,
+	0x3b, 0x20, 0xaa, 0xda, 0xeb, 0xf1, 0x40, 0x73, 0x74, 0x53, 0xd5, 0x1c, 0xc3, 0x34, 0x34, 0xb1,
+	0x82, 0x24, 0xe8, 0xac, 0x56, 0x75, 0xc5, 0x50, 0x86, 0x9a, 0xea, 0xd8, 0x6f, 0xc6, 0x93, 0xc1,
+	0x48, 0x14, 0xd0, 0x01, 0x74, 0xcb, 0xfa, 0x23, 0xd3, 0x9e, 0x38, 0x2f, 0xc6, 0x86, 0x58, 0x45,
+	0x1d, 0x68, 0xad, 0x22, 0xec, 0x89, 0x62, 0xa8, 0xca, 0xf3, 0x84, 0x7d, 0xa3, 0xff, 0xad, 0x0a,
+	0x1b, 0x46, 0xe0, 0x21, 0x0d, 0x6e, 0x51, 0x25, 0x83, 0x39, 0x76, 0x09, 0x46, 0xed, 0xd2, 0x8d,
+	0xd4, 0xe3, 0x69, 0x67, 0xb7, 0x7c, 0x15, 0xf4, 0x78, 0x2a, 0x57, 0x32, 0x9a, 0x57, 0x91, 0xff,
+	0x1f, 0x34, 0x2f, 0x39, 0x0d, 0x8d, 0x0e, 0x49, 0x57, 0xdc, 0x5d, 0x42, 0xb6, 0x7f, 0x55, 0xe0,
+	0x94, 0x72, 0x04, 0xb5, 0xe5, 0xfb, 0x42, 0x7b, 0x97, 0x6d, 0x52, 0x42, 0xd6, 0xbd, 0xf4, 0x3d,
+	0xa6, 0x4c, 0xc7, 0x9d, 0xef, 0x0b, 0x49, 0xf8, 0xb1, 0x90, 0x84, 0x5f, 0x0b, 0x49, 0xf8, 0xfa,
+	0x5b, 0xaa, 0xbc, 0xdb, 0x7a, 0xef, 0x9e, 0xa6, 0xbf, 0xb6, 0x27, 0x9b, 0xe9, 0x9f, 0xa3, 0xbf,
+	0x01, 0x00, 0x00, 0xff, 0xff, 0x5a, 0xab, 0xb6, 0x4f, 0x96, 0x05, 0x00, 0x00,
 }

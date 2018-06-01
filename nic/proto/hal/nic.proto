@@ -8,8 +8,17 @@
 
 syntax = "proto3";
 
+import "types.proto";
+
 package device;
 option go_package="halproto";
+
+service Nic {
+  rpc DeviceCreate (DeviceRequestMsg) returns (DeviceResponseMsg) {}
+  rpc DeviceUpdate (DeviceRequestMsg) returns (DeviceResponseMsg) {}
+  rpc DeviceDelete (DeviceDeleteRequestMsg) returns (DeviceDeleteResponseMsg) {}
+  rpc DeviceGet (DeviceGetRequestMsg) returns (DeviceGetResponseMsg) {}
+}
 
 // NIC boots in classic mode first and may later transition to flow mode
 enum DeviceMode {
@@ -20,6 +29,53 @@ enum DeviceMode {
 }
 
 // Global config object for NIC
-message Device {
-  DeviceMode    device_mode = 1;    // one of the operating modes
+message DeviceSpec {
+  DeviceMode        device_mode = 1;    // one of the operating modes
+}
+
+message DeviceRequest {
+  DeviceSpec        device      = 1;         // Device Mode
+}
+
+message DeviceRequestMsg {
+  DeviceRequest     request     = 1;    // batched request
+}
+
+message DeviceResponse {
+  types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+message DeviceResponseMsg {
+  DeviceResponse    response    = 1;   // batched responses
+}
+
+message DeviceGetRequest {
+  types.ObjectMeta  meta        = 1;    // object meta
+}
+
+message DeviceGetRequestMsg {
+  DeviceGetRequest  request     = 1; // batched request
+}
+
+message DeviceGetResponse {
+  types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  DeviceSpec        device      = 2; // Device Mode
+}
+
+message DeviceGetResponseMsg {
+  DeviceGetResponse   response = 1; // batched response
+}
+
+message DeviceDeleteRequest {
+}
+
+message DeviceDeleteRequestMsg {
+  DeviceDeleteRequest request = 1;
+}
+
+message DeviceDeleteResponse {
+}
+
+message DeviceDeleteResponseMsg {
+  DeviceDeleteResponse response = 1;
 }
