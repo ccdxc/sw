@@ -292,7 +292,6 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
     prop->addr_base(0);
     prop->write();
     cap_top_csr.free(prop);
-
 }
 
 // RSS Topelitz Table
@@ -1124,12 +1123,10 @@ capri_table_hw_entry_read (uint32_t tableid,
     }
     for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
          i += CAPRI_SRAM_ROWS) {
-
         sdk::lib::csrlite::cap_pics_csr_dhs_sram_entry_t *entry;
         entry = pics_csr_hlpr->dhs_sram.entry[i].alloc();
         entry->read();
         temp = entry->data();
-        cap_top_csr.free(entry);
 
         for (int p = 15; p >= 8; p--) {
             byte = temp[p];
@@ -1147,6 +1144,7 @@ capri_table_hw_entry_read (uint32_t tableid,
         copy_bits -= to_copy;
         _hwentry += to_copy_bytes;
         entry_start_word = 0;
+        cap_top_csr.free(entry);
     }
     *hwentry_bit_len = tbl_info.entry_width_bits;
     return (CAPRI_OK);
@@ -1410,20 +1408,17 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
     uint8_t *temp_y;
     for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
          i += CAPRI_TCAM_ROWS) {
+        sdk::lib::csrlite::cap_pict_csr_dhs_tcam_xy_entry_t *entry;
         if (ingress) {
-            sdk::lib::csrlite::cap_pict_csr_dhs_tcam_xy_entry_t *entry;
             entry = cap_top_csr.tsi.pict.dhs_tcam_xy.entry[i].alloc();
             entry->read();
             temp_x = entry->x();
             temp_y = entry->y();
-            cap_top_csr.free(entry);
         } else {
-            sdk::lib::csrlite::cap_pict_csr_dhs_tcam_xy_entry_t *entry;
             entry = cap_top_csr.tse.pict.dhs_tcam_xy.entry[i].alloc();
             entry->read();
             temp_x = entry->x();
             temp_y = entry->y();
-            cap_top_csr.free(entry);
         }
         for (int p = 15; p >= 8; p--) {
             byte = temp_x[p];
@@ -1448,6 +1443,7 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
         _trit_y += to_copy_bytes;
         entry_start_word = 0;
         copy_bits -= to_copy;
+        cap_top_csr.free(entry);
     }
     *hwentry_bit_len = tbl_info.entry_width_bits;;
 
