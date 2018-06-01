@@ -33,22 +33,27 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
     HdlrResp hdlrResp;
     switch (resp->upgapprespval()) {
         case upgrade::PreUpgStatePass:
+        case upgrade::PreUpgStateFail:
             this->SetAppRespSuccess(hdlrResp);
             upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
         case upgrade::ProcessesQuiescedPass:
+        case upgrade::ProcessesQuiescedFail:
             this->SetAppRespSuccess(hdlrResp);
             upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
         case upgrade::PostBinRestartPass:
+        case upgrade::PostBinRestartFail:
             this->SetAppRespSuccess(hdlrResp);
             upgAgentHandler_->UpgStatePostBinRestartComplete(hdlrResp, resp->key());
             break;
         case upgrade::DataplaneDowntimeStartPass:
+        case upgrade::DataplaneDowntimeStartFail:
             this->SetAppRespSuccess(hdlrResp);
             upgAgentHandler_->UpgStateDataplaceDowntimeComplete(hdlrResp, resp->key());
             break;
         case upgrade::CleanupPass:
+        case upgrade::CleanupFail:
             this->SetAppRespSuccess(hdlrResp);
             upgAgentHandler_->UpgStateCleanupComplete(hdlrResp, resp->key());
             break;
