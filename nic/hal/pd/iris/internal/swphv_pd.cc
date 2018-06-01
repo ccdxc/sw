@@ -41,7 +41,7 @@ pd_swphv_inject (pd_swphv_inject_args_t *args)
     {
         tcp_proxy_rxdma_ingress_phv_t *phv = (tcp_proxy_rxdma_ingress_phv_t *)data;
         phv_size = sizeof(tcp_proxy_rxdma_ingress_phv_t);
-        lif_id = SERVICE_LIF_CPU;
+        lif_id = SERVICE_LIF_IPSEC_ESP;
 
         // initialize PHV intrinsic fields
         phv->p4_intr_global_drop = 1;
