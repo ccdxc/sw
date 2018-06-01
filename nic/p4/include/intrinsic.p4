@@ -287,7 +287,10 @@ header_type p4plus_to_p4_header_t {
         udp_opt_bytes           : 8;
         dst_lport               : 11;
         dst_lport_valid         : 1;
-        pad1                    : 4;
+        pad1                    : 1;
+        tso_last_segment        : 1;
+        tso_first_segment       : 1;
+        tso_valid               : 1;
         ip_id_delta             : 16;
         tcp_seq_delta           : 32;
         gso_start               : 14;
@@ -316,7 +319,10 @@ header_type p4plus_to_p4_s1_t {
         udp_opt_bytes           : 8;
         dst_lport               : 11;
         dst_lport_valid         : 1;
-        pad1                    : 4;
+        pad1                    : 1;
+        tso_last_segment        : 1;
+        tso_first_segment       : 1;
+        tso_valid               : 1;
         ip_id_delta             : 16;
         tcp_seq_delta           : 32;
         gso_start               : 14;

@@ -302,27 +302,14 @@
 /*****************************************************************************/
 /* TCP flags                                                                 */
 /*****************************************************************************/
-#define TCP_FLAG_CWR                   0x80
-#define TCP_FLAG_ECE                   0x40
-#define TCP_FLAG_URG                   0x20
-#define TCP_FLAG_ACK                   0x10
-#define TCP_FLAG_PSH                   0x08
-#define TCP_FLAG_RST                   0x04
-#define TCP_FLAG_SYN                   0x02
 #define TCP_FLAG_FIN                   0x01
-
-/*****************************************************************************/
-/* TCP flag masks                                                            */
-/*****************************************************************************/
-#define TCP_FLAGS_MASK_FIN             1
-#define TCP_FLAGS_MASK_SYN             2
-#define TCP_FLAGS_MASK_RST             4
-#define TCP_FLAGS_MASK_PSH             8
-#define TCP_FLAGS_MASK_ACK             16
-#define TCP_FLAGS_MASK_URG             32
-#define TCP_FLAGS_MASK_ECE             64
-#define TCP_FLAGS_MASK_CWR             128
-#define TCP_FLAGS_MASK_NS              256
+#define TCP_FLAG_SYN                   0x02
+#define TCP_FLAG_RST                   0x04
+#define TCP_FLAG_PSH                   0x08
+#define TCP_FLAG_ACK                   0x10
+#define TCP_FLAG_URG                   0x20
+#define TCP_FLAG_ECE                   0x40
+#define TCP_FLAG_CWR                   0x80
 
 /*****************************************************************************/
 /* ICMP related                                                              */

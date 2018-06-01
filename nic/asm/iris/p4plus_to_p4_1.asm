@@ -35,11 +35,18 @@ p4plus_to_p4_1_upd_tcp_seq:
   seq         c2, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
   phvwr.c2    p.control_metadata_from_cpu, TRUE
 
-  // Update the flow_index given by ARM CPU 
+  // Update the flow_index given by ARM CPU
   // In this case we will skip the flow_hash lookup
   seq         c2, k.p4plus_to_p4_flow_index_valid, TRUE
   phvwr.c2    p.flow_info_metadata_flow_index, k.p4plus_to_p4_flow_index
-  
+
+  bbne        k.p4plus_to_p4_tso_valid, TRUE, p4plus_to_p4_1_insert_vlan_tag
+  crestore    [c2-c1], k.{p4plus_to_p4_tso_last_segment, \
+                          p4plus_to_p4_tso_first_segment}, 0x3
+  phvwrmi.!c1 p.tcp_flags, 0, TCP_FLAG_CWR
+  phvwrmi.!c2 p.tcp_flags, 0, (TCP_FLAG_FIN|TCP_FLAG_PSH)
+
+p4plus_to_p4_1_insert_vlan_tag:
   // insert vlan tag
   seq         c2, k.p4plus_to_p4_insert_vlan_tag, TRUE
   nop.!c2.e

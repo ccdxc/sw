@@ -600,12 +600,12 @@ table p4plus_app_prep {
 /*****************************************************************************/
 action f_p4plus_to_p4_1() {
     // update IP id
-    if (p4plus_to_p4.update_ip_id == 1) {
+    if (p4plus_to_p4.update_ip_id == TRUE) {
         add(ipv4.identification, ipv4.identification, p4plus_to_p4.ip_id_delta);
     }
 
     // update IP length
-    if (p4plus_to_p4.update_ip_len == 1) {
+    if (p4plus_to_p4.update_ip_len == TRUE) {
         if (vlan_tag.valid == TRUE) {
             subtract(scratch_metadata.packet_len,
                      capri_p4_intrinsic.packet_len, 18);
@@ -629,8 +629,20 @@ action f_p4plus_to_p4_1() {
     }
 
     // update TCP sequence number
-    if (p4plus_to_p4.update_tcp_seq_no == 1) {
+    if (p4plus_to_p4.update_tcp_seq_no == TRUE) {
         add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
+    }
+
+    // tso
+    if (p4plus_to_p4.tso_valid == TRUE) {
+        if (p4plus_to_p4.tso_first_segment != TRUE) {
+            // reset CWR bit
+            modify_field(tcp.flags, 0, TCP_FLAG_CWR);
+        }
+        if (p4plus_to_p4.tso_last_segment != TRUE) {
+            // reset FIN and PSH bits
+            modify_field(tcp.flags, 0, (TCP_FLAG_FIN|TCP_FLAG_PSH));
+        }
     }
 
     // insert vlan tag
