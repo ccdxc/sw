@@ -11,6 +11,8 @@ from config.store               import Store
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 from infra.common.glopts import GlobalOptions
+from config.objects.proxycb_service    import ProxyCbServiceHelper
+from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 
 rnmdr = 0
 ipseccbq = 0
@@ -35,7 +37,11 @@ def TestCaseSetup(tc):
     tc.pvtdata = ObjectDatabase()
     print("TestCaseSetup(): Sample Implementation.")
     # 1. Configure IPSECCB in HBM before packet injection
-    ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    IpsecCbHelper.main(id)
+    ipsecid = "IPSECCB%04d" % id
+    ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
+
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
@@ -66,8 +72,10 @@ def TestCaseSetup(tc):
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
     rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
-    ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
-    ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
+
+    ipsec_cbq_id = ipsecid + "_IPSECCBQ"
+    ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id])
+    ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
 
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     rnmpr.GetMeta()
@@ -95,7 +103,11 @@ def TestCaseVerify(tc):
     global ipseccbq
     global ipseccb
 
-    ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"]
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    ipsecid = "IPSECCB%04d" % id
+    ipsec_cbq_id = ipsecid + "_IPSECCBQ"
+    ipseccb_cur = tc.infra_data.ConfigStore.objects.db[ipsecid]
+    ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id]
     ipseccbqq_cur.Configure()
 
     rnmdr = tc.pvtdata.db["RNMDR"]
@@ -121,7 +133,6 @@ def TestCaseVerify(tc):
     tnmpr_cur.GetRingEntries([tnmpr.pi,tnmpr_cur.pi])
 
     # 1. Verify pi/ci got update got updated
-    ipseccb_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
     print("pre-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
     ipseccb_cur.GetObjValPd()
     print("post-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
@@ -130,10 +141,6 @@ def TestCaseVerify(tc):
         return False
 
     print("Expected seq no 0x%x seq_no_bmp 0x%x" % (ipseccb_cur.expected_seq_no, ipseccb_cur.seq_no_bmp))
-
-    # 3. Fetch current values from Platform
-    ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"]
-    ipseccbqq_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi - rnmdr.pi > 2):

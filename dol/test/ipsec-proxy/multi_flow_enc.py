@@ -38,15 +38,14 @@ def TestCaseSetup(tc):
 
     tc.pvtdata = ObjectDatabase()
     print("TestCaseSetup(): Sample Implementation.")
-    # 1. Configure IPSECCB in HBM before packet injection
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    IpsecCbHelper.main(id)
+    IpsecCbHelper.main(id)    
     ipsecid = "IPSECCB%04d" % id
+    # 1. Configure IPSECCB in HBM before packet injection
     ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
-
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
-    key = b'\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc'
+    key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
     sip6 = b'\x20\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xaa\xaa'
     dip6 = b'\x20\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xbb\xbb'
     ipseccb.crypto_key.Update(key_type, key_size, key)
@@ -74,7 +73,6 @@ def TestCaseSetup(tc):
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
     rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
-
     ipsec_cbq_id = ipsecid + "_IPSECCBQ"
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id])
     ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
@@ -107,21 +105,21 @@ def TestCaseVerify(tc):
     global ipseccbq
     global ipseccb
 
-    # 1. Verify pi/ci got update got updated
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     ipsecid = "IPSECCB%04d" % id
-    ipsec_cbq_id = ipsecid + "_IPSECCBQ"
+    # 1. Verify pi/ci got update got updated
     ipseccb_cur = tc.infra_data.ConfigStore.objects.db[ipsecid]
     print("pre-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
     ipseccb_cur.GetObjValPd()
     print("post-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
     if (ipseccb_cur.pi != ipseccb.pi or ipseccb_cur.ci != ipseccb.ci):
-        print("pi/ci not as expected")
+        print("serq pi/ci not as expected")
         return False
+    ipsec_cbq_id = ipsecid + "_IPSECCBQ"
     # 3. Fetch current values from Platform
     ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id]
     ipseccbqq_cur.Configure()
-
+  
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     tnmdr = tc.pvtdata.db["TNMDR"]
@@ -155,7 +153,6 @@ def TestCaseVerify(tc):
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.GetMeta()
     brq_cur.GetRingEntries([brq.pi, brq_cur.pi])
-
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     if (brq_cur.pi != (brq.pi+1) or brq_cur.ci != (brq.ci+1)):
         print("brq pi/ci not as expected")
@@ -163,18 +160,18 @@ def TestCaseVerify(tc):
         #return False
 
     print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[brq.pi].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[brq.pi].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[brq.pi].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[brq.pi].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[brq.pi].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[brq.pi].status_addr)
+    print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
+    print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
+    print("command 0x%x" % brq_cur.ring_entries[0].command)
+    print("key_desc_index 0x%x" % brq_cur.ring_entries[0].key_desc_index)
+    print("iv_addr 0x%x" % brq_cur.ring_entries[0].iv_addr)
+    print("status_addr 0x%x" % brq_cur.ring_entries[0].status_addr)
     # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     # 7. Verify brq input desc and rnmdr
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].ilist_addr - 0x40)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)):
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
         return False
     print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
 

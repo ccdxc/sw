@@ -97,7 +97,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
             req_spec.spec.proxy_type = 3
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
                 req_spec.proxy_en = True
-                req_spec.alloc_qid = True
+                req_spec.alloc_qid = False 
                 req_spec.ipsec_config.encrypt = False
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'IPSEC-PROXY':
@@ -107,7 +107,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
             req_spec.spec.proxy_type = 3
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
                 req_spec.proxy_en = True
-                req_spec.alloc_qid = False
+                req_spec.alloc_qid = True
                 req_spec.ipsec_config.encrypt = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
  
@@ -150,6 +150,8 @@ class ProxyCbServiceObjectHelper:
             if proxycb.session.iflow.label == 'TCP-PROXY':
                 TcpCbHelper.main(proxycb.qid, proxycb.other_qid, proxycb.session, True)
                 TcpCbHelper.main(proxycb.other_qid, proxycb.qid, proxycb.session, False)
+            #if proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY':
+            #    IpsecCbHelper.main(proxycb.qid)
         return
 
     def GetSessionQids(self, session):

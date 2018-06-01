@@ -23,8 +23,9 @@ class IpsecCbObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('IPSECCB'))
         return
         
-    def Init(self):
-        self.id = resmgr.IpsecCbIdAllocator.get()
+    def Init(self, qid):
+        #self.id = resmgr.IpsecCbIdAllocator.get()
+        self.id = qid
         gid = "IPSECCB%04d" % self.id
         self.GID(gid)
         self.ipseccbq_base = SwDscrRingHelper.main("IPSECCBQ", gid, self.id)
@@ -147,19 +148,22 @@ class IpsecCbObjectHelper:
         halapi.ConfigureIpsecCbs(objlist)
         return
         
-    def __gen_one(self, ):
-        logger.info("Creating IpsecCb")
+    def __gen_one(self, qid):
+        logger.info("Creating IpsecCb for id: %d" % qid)
         ipseccb_obj = IpsecCbObject()
-        ipseccb_obj.Init()
+        ipseccb_obj.Init(qid)
         Store.objects.Add(ipseccb_obj)
         return ipseccb_obj
 
-    def Generate(self, ):
-        self.objlist.append(self.__gen_one())
+    def Generate(self, qid):
+        self.objlist.append(self.__gen_one(qid))
         return self.objlist 
 
-    def main(self):
-        objlist = self.Generate()
+    def main(self, qid):
+        gid = "IPSECCB%04d" % qid
+        if Store.objects.IsKeyIn(gid):
+            return Store.objects.Get(gid)
+        objlist = self.Generate(qid)
         self.Configure(self.objlist)
         return objlist
 

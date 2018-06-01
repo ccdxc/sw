@@ -77,6 +77,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_RX_STAGE0);
 
+    HAL_TRACE_DEBUG("Create/Delete Decrypt CB id {}", ipseccb_pd->ipseccb->cb_id); 
     if(!del) {
         // get pc address
         if(p4pd_get_ipsec_decrypt_rx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
@@ -93,8 +94,6 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size = ipseccb_pd->ipseccb->iv_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size = ipseccb_pd->ipseccb->block_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size = ipseccb_pd->ipseccb->icv_size;
-        //data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = ipseccb_pd->ipseccb->barco_enc_cmd;
-        // for now aes-decrypt-encoding hard-coded.
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = 0x30100000;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no = ipseccb_pd->ipseccb->esn_lo;
         key_index = ipseccb_pd->ipseccb->key_index;
@@ -106,16 +105,16 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         HAL_TRACE_DEBUG("key_index {}, new_key_index {}", ipseccb_pd->ipseccb->key_index, ipseccb_pd->ipseccb->new_key_index); 
         // the below may have to use a different range for the reverse direction 
         ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
-        ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE));
-        HAL_TRACE_DEBUG("Ring base in Decrypt 0x{0:x} CB Ring Addr 0x{0:x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
+        ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * (64*IPSEC_CB_RING_ENTRY_SIZE)));
+        HAL_TRACE_DEBUG("Ring base in Decrypt {:#x} CB Ring Addr 0x{:#x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr = htonl(ipsec_cb_ring_addr);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex = 0;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex = 0;
 
         ipsec_barco_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB_BARCO);
-        ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_BARCO_RING_ENTRY_SIZE));
-        HAL_TRACE_DEBUG("Ring base in Decrypt 0x{0:x} Barco Ring Addr 0x{0:x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
+        ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipseccb_pd->ipseccb->cb_id * (64*IPSEC_BARCO_RING_ENTRY_SIZE)));
+        HAL_TRACE_DEBUG("Ring base in Decrypt {:#x} Barco Ring Addr 0x{:#x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_ring_base_addr = htonll(ipsec_barco_ring_addr);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex = 0;
@@ -124,7 +123,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan = htons(ipseccb_pd->ipseccb->vrf_vlan); 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6 = ipseccb_pd->ipseccb->is_v6; 
     }
-    HAL_TRACE_DEBUG("Programming Decrypt stage0 at hw-id: 0x{0:x}", hwid); 
+    HAL_TRACE_DEBUG("Programming Decrypt stage0 at hw-id: {:#x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
@@ -147,7 +146,7 @@ p4pd_add_or_del_ipsec_decrypt_part2(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
     decrypt_part2.new_spi = htonl(ipseccb_pd->ipseccb->new_spi);
     decrypt_part2.iv_salt = ipseccb_pd->ipseccb->iv_salt;
  
-    HAL_TRACE_DEBUG("Programming Decrypt part2 at hw-id: 0x{0:x}", hwid); 
+    HAL_TRACE_DEBUG("Programming Decrypt part2 at hw-id: {:#x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create part2 entry for IPSECCB");
@@ -192,6 +191,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_RX_STAGE0);
 
+    HAL_TRACE_DEBUG("Reading Decrypt stage0 at hw-id: {:#x}", hwid); 
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
@@ -207,12 +207,12 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
     ipsec_cb_ring_addr = ntohll(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr);
     cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex;
     cb_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex;
-    HAL_TRACE_DEBUG("CB Ring Addr 0x{0:x} Pindex {} CIndex {}", ipsec_cb_ring_addr, cb_pindex, cb_cindex);
+    HAL_TRACE_DEBUG("CB Ring Addr {:#x} Pindex {} CIndex {}", ipsec_cb_ring_addr, cb_pindex, cb_cindex);
 
     ipsec_barco_ring_addr = ntohll(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_ring_base_addr);
     cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex;
     cb_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_pindex;
-    HAL_TRACE_DEBUG("Barco Ring Addr 0x{0:x} Pindex {} CIndex {}", ipsec_barco_ring_addr, barco_pindex, barco_cindex);
+    HAL_TRACE_DEBUG("Barco Ring Addr {:#x} Pindex {} CIndex {}", ipsec_barco_ring_addr, barco_pindex, barco_cindex);
 
     expected_seq_no = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no;
     replay_seq_no_bmp = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.replay_seq_no_bmp;
@@ -231,6 +231,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(pd_ipseccb_decrypt_t* ipseccb_pd)
 
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_PART2);
+    HAL_TRACE_DEBUG("Reading Decrypt stage0 at hw-id: {:#x}", hwid); 
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
@@ -300,7 +301,7 @@ pd_ipseccb_decrypt_get_base_hw_index(pd_ipseccb_decrypt_t* ipseccb_pd)
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset. 
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 1, 0);
-    HAL_TRACE_DEBUG("received decrypt offset 0x{0:x}", offset);
+    HAL_TRACE_DEBUG("received decrypt offset {:#x}", offset);
     return offset + \
         (ipseccb_pd->ipseccb->cb_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
 }
@@ -454,12 +455,12 @@ pd_ipseccb_decrypt_get (pd_ipseccb_decrypt_get_args_t *args)
     
     // get hw-id for this IPSECCB
     ipseccb_pd.hw_id = pd_ipseccb_decrypt_get_base_hw_index(&ipseccb_pd);
-    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", ipseccb_pd.hw_id);
+    HAL_TRACE_DEBUG("Received hw-id {:#x}", ipseccb_pd.hw_id);
 
     // get hw ipseccb entry
     ret = p4pd_get_ipseccb_decrypt_entry(&ipseccb_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", ipseccb_pd.ipseccb->cb_id);
+        HAL_TRACE_ERR("Get request failed for id: {:#x}", ipseccb_pd.ipseccb->cb_id);
     }
     return ret;
 }

@@ -238,3 +238,25 @@ modules:
         rtl     : True
         iterate :
             - flow: filter://type=IPV4
+
+    - module:
+        name    : MULTI_FLOW_ENC
+        enable  : True
+        package : test.ipsec-proxy
+        module  : multi_flow_enc 
+        spec    : multi_flow_enc.testspec 
+        ignore  : True 
+        rtl     : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : MULTI_FLOW_DECRYPT
+        enable  : True
+        package : test.ipsec-proxy
+        module  : multi_flow_decrypt
+        spec    : multi_flow_decrypt.testspec 
+        ignore  : True 
+        rtl     : False
+        iterate :
+            - flow: filter://type=IPV4

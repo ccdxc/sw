@@ -87,8 +87,8 @@ def process(topospec):
     RdmaSessionHelper.main()
 
     ipsec = getattr(topospec, 'ipsec', False)
-    if ipsec:
-        IpsecCbHelper.main()
+    #if ipsec:
+    #    IpsecCbHelper.main()
 
     CpuHelper.main(topospec)
     # Generate ACLs
