@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 
 
-struct s3_tbl_k k;
-struct s3_tbl_seq_barco_chain_action_d d;
+struct s4_tbl_k k;
+struct s4_tbl_seq_barco_chain_action_d d;
 struct phv_ p;
 
 /*
@@ -85,4 +85,3 @@ endif2:
     tblwr.f.e   d.p_ndx, r_pi
     CLEAR_TABLE0 // delay slot
 
-    

@@ -148,7 +148,7 @@ comp_encrypt_chain_t::pre_push(comp_encrypt_chain_pre_push_params_t params)
 int 
 comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 {
-    acc_chain_params_t  chain_params = {0};
+    chain_params_comp_t chain_params = {0};
     uint32_t            block_no;
 
     // validate app_blk_size
@@ -192,17 +192,16 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 
     // XTS chaining will use direct Barco push action from
     // comp status queue handler. Hence, no XTS seq queue needed.
-    chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
-    chain_params.seq_q = params.seq_comp_qid_;
-    chain_params.seq_status_q = params.seq_comp_status_qid_;
+    chain_params.seq_spec.seq_q = params.seq_comp_qid_;
+    chain_params.seq_spec.seq_status_q = params.seq_comp_status_qid_;
 
     // The compression status sequencer will use the AOLs given below
     // only to update the length fields with the correct output data length
     // and pad length.
     xts_src_aol_vec->line_set(0);
     xts_dst_aol_vec->line_set(0);
-    chain_params.chain_ent.aol_src_vec_addr = xts_src_aol_vec->pa();
-    chain_params.chain_ent.aol_dst_vec_addr = xts_dst_aol_vec->pa();
+    chain_params.aol_src_vec_addr = xts_src_aol_vec->pa();
+    chain_params.aol_dst_vec_addr = xts_dst_aol_vec->pa();
 
     // Note: p4+ will modify AOL vectors below based on compression
     // output_data_len and any required padding
@@ -235,64 +234,66 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
         /*
          * Per-block enryption will require setup of multiple descriptors
          */
-        chain_params.chain_ent.desc_vec_push_en = 1;
+        chain_params.desc_vec_push_en = 1;
+        chain_params.push_spec.barco_num_descs = num_enc_blks;
         for (block_no = 0; block_no < num_enc_blks; block_no++) {
             encrypt_setup(block_no, chain_params);
         }
 
     } else {
+        chain_params.push_spec.barco_num_descs = 1;
         encrypt_setup(0, chain_params);
     }
 
 
     // encryption will use direct Barco push action
     xts_desc_vec->line_set(0);
-    chain_params.chain_ent.next_doorbell_en = 1;
-    chain_params.chain_ent.next_db_action_barco_push = 1;
-    chain_params.chain_ent.push_entry.barco_ring_addr = 
+    chain_params.next_doorbell_en = 1;
+    chain_params.next_db_action_barco_push = 1;
+    chain_params.push_spec.barco_ring_addr = 
                            xts_ctx.acc_ring->ring_base_mem_pa_get();
-    chain_params.chain_ent.push_entry.barco_pndx_addr = 
+    chain_params.push_spec.barco_pndx_addr = 
                            xts_ctx.acc_ring->cfg_ring_pd_idx_get();
-    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = 
+    chain_params.push_spec.barco_pndx_shadow_addr = 
                            xts_ctx.acc_ring->shadow_pd_idx_pa_get();
-    chain_params.chain_ent.push_entry.barco_desc_addr = xts_desc_vec->pa();
-    chain_params.chain_ent.push_entry.barco_desc_size =
+    chain_params.push_spec.barco_desc_addr = xts_desc_vec->pa();
+    chain_params.push_spec.barco_desc_size =
                            (uint8_t)log2(xts_ctx.acc_ring->ring_desc_size_get());
-    chain_params.chain_ent.push_entry.barco_pndx_size =
+    chain_params.push_spec.barco_pndx_size =
                            (uint8_t)log2(xts_ctx.acc_ring->ring_pi_size_get());
-    chain_params.chain_ent.push_entry.barco_ring_size = 
+    chain_params.push_spec.barco_ring_size = 
                            (uint8_t)log2(xts_ctx.acc_ring->ring_size_get());
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
     if (comp_status_buf1 != comp_status_buf2) {
         comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
     }
-    chain_params.chain_ent.status_addr0 = comp_status_buf1->pa();
+    chain_params.status_addr0 = comp_status_buf1->pa();
     if (comp_status_buf1 != comp_status_buf2) {
-        chain_params.chain_ent.status_dma_en = 1;
-        chain_params.chain_ent.status_addr1 = comp_status_buf2->pa();
-        chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
+        chain_params.status_dma_en = 1;
+        chain_params.status_addr1 = comp_status_buf2->pa();
+        chain_params.status_len = comp_status_buf2->line_size_get();
     }
 
-    chain_params.chain_ent.pad_buf_addr = caller_comp_pad_buf->pa();
-    chain_params.chain_ent.stop_chain_on_error = 1;
-    chain_params.chain_ent.aol_pad_en = 1;
-    chain_params.chain_ent.pad_len_shift =
+    chain_params.pad_buf_addr = caller_comp_pad_buf->pa();
+    chain_params.stop_chain_on_error = 1;
+    chain_params.aol_pad_en = 1;
+    chain_params.pad_boundary_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
 
     // Enable interrupt in case compression fails
     comp_opaque_buf->clear_thru();
-    chain_params.chain_ent.intr_addr = comp_opaque_buf->pa();
-    chain_params.chain_ent.intr_data = kCompSeqIntrData;
-    chain_params.chain_ent.intr_en = 1;
+    chain_params.intr_addr = comp_opaque_buf->pa();
+    chain_params.intr_data = kCompSeqIntrData;
+    chain_params.intr_en = 1;
 
-    if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
-      printf("test_setup_seq_acc_chain_entry failed\n");
-      return -1;
+    if (seq_comp_status_desc_fill(chain_params) != 0) {
+        printf("comp_encrypt_chain seq_comp_status_desc_fill failed\n");
+        return -1;
     }
 
     // Chain compression to compression status sequencer 
-    cp_desc.doorbell_addr = chain_params.ret_doorbell_addr;
-    cp_desc.doorbell_data = chain_params.ret_doorbell_data;
+    cp_desc.doorbell_addr = chain_params.seq_spec.ret_doorbell_addr;
+    cp_desc.doorbell_data = chain_params.seq_spec.ret_doorbell_data;
     cp_desc.cmd_bits.doorbell_on = 1;
 
     push_type = params.push_type_;
@@ -318,7 +319,7 @@ comp_encrypt_chain_t::post_push(void)
  */
 void 
 comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
-                                    acc_chain_params_t& chain_params)
+                                    chain_params_comp_t& chain_params)
 {
     xts::xts_cmd_t  cmd;
     xts::xts_desc_t *xts_desc;
@@ -343,9 +344,9 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
     xts_ctx.init(0, false);
     xts_ctx.op = xts::AES_ENCR_ONLY;
     xts_ctx.push_type = ACC_RING_PUSH_INVALID;
-    if (chain_params.seq_next_q) {
+    if (chain_params.seq_spec.seq_next_q) {
         xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
-        xts_ctx.seq_xts_q = chain_params.seq_next_q;
+        xts_ctx.seq_xts_q = chain_params.seq_spec.seq_next_q;
     }
 
     // Set up XTS encrypt descriptor

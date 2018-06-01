@@ -187,41 +187,6 @@ xts_aol_sparse_fill(xts_enc_dec_blk_type_t enc_dec_blk_type,
     }
     xts_aol_vec->line_set(save_curr_line);
 }
-void
-xts_aol_sparse_fill(dp_mem_t *xts_aol_vec,
-                    dp_mem_t *xts_buf,
-                    uint32_t blk_size,
-                    uint32_t num_blks)
-{
-    xts::xts_aol_t  *xts_aol;
-    uint64_t        xts_buf_addr;
-    uint32_t        xts_buf_size;
-    uint32_t        block_no;
-    uint32_t        save_curr_line;
-
-    assert(xts_aol_vec->num_lines_get() >= num_blks);
-    xts_buf_addr = xts_buf->pa();
-    xts_buf_size = xts_buf->line_size_get();
-    save_curr_line = xts_aol_vec->line_get();
-
-    for (block_no = 0; block_no < num_blks; block_no++) {
-        xts_aol_vec->line_set(block_no);
-        xts_aol_vec->clear();
-
-        xts_aol = (xts::xts_aol_t *)xts_aol_vec->read();
-        xts_aol->a0 = xts_buf_addr;
-        xts_aol->l0 = xts_buf_size >= blk_size ? blk_size : xts_buf_size;
-        assert(xts_aol->l0);
-
-        if (block_no < (num_blks - 1)) {
-            xts_aol->next = xts_aol_vec->pa() + xts_aol_vec->line_size_get();
-        }
-        xts_aol_vec->write_thru();
-        xts_buf_addr += xts_aol->l0;
-        xts_buf_size -= xts_aol->l0;
-    }
-    xts_aol_vec->line_set(save_curr_line);
-}
 
 bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset,
     uint32_t& pending_size, uint32_t len)
@@ -522,19 +487,66 @@ XtsCtx::desc_write_seq_xts(xts::xts_desc_t *xts_desc) {
   return 0;
 }
 
-// Calculate xts status producer index addr globals;
-// then fill the next available seq_xts_status_desc with argument info
+// Calculate xts sequencer status producer index
+// then fill the next available seq_status_desc with the
+// given chaining parameters.
 int
-XtsCtx::desc_write_seq_xts_status(dp_mem_t *xts_status_desc) {
+XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
 
-  dp_mem_t *curr_status_desc;
+  dp_mem_t *seq_status_desc;
 
   // Fill the XTS status Seq descriptor
-  curr_status_desc = queues::seq_sq_consume_entry(seq_xts_status_q, &seq_xts_status_index);
-  memcpy(curr_status_desc->read(), xts_status_desc->read(),
-         curr_status_desc->line_size_get());
-  curr_status_desc->write_thru();
+  seq_status_desc = queues::seq_sq_consume_entry(chain_params.seq_spec.seq_status_q,
+                                                 &chain_params.seq_spec.ret_seq_status_index);
+  seq_status_desc->clear();
 
+  // desc bytes 0-63
+  if (chain_params.next_db_action_barco_push) {
+    seq_status_desc->write_bit_fields(0, 64, chain_params.push_spec.barco_ring_addr);
+    seq_status_desc->write_bit_fields(64, 64, chain_params.push_spec.barco_desc_addr);
+    seq_status_desc->write_bit_fields(128, 34, chain_params.push_spec.barco_pndx_addr);
+    seq_status_desc->write_bit_fields(162, 34, chain_params.push_spec.barco_pndx_shadow_addr);
+    seq_status_desc->write_bit_fields(196, 4, chain_params.push_spec.barco_desc_size);
+    seq_status_desc->write_bit_fields(200, 3, chain_params.push_spec.barco_pndx_size);
+    seq_status_desc->write_bit_fields(203, 5, chain_params.push_spec.barco_ring_size);
+    seq_status_desc->write_bit_fields(208, 6, chain_params.push_spec.barco_num_descs);
+  } else {
+    seq_status_desc->write_bit_fields(0, 64, chain_params.db_spec.next_doorbell_addr);
+    seq_status_desc->write_bit_fields(64, 64, chain_params.db_spec.next_doorbell_data);
+  }
+
+  seq_status_desc->write_bit_fields(214, 64, chain_params.status_addr0);
+  seq_status_desc->write_bit_fields(278, 64, chain_params.status_addr1);
+  seq_status_desc->write_bit_fields(342, 64, chain_params.intr_addr);
+  seq_status_desc->write_bit_fields(406, 32, chain_params.intr_data);
+  seq_status_desc->write_bit_fields(438, 16, chain_params.status_len);
+  seq_status_desc->write_bit_fields(454, 7, chain_params.status_offset0);
+  seq_status_desc->write_bit_fields(461, 1, chain_params.status_dma_en);
+  seq_status_desc->write_bit_fields(462, 1, chain_params.next_doorbell_en);
+  seq_status_desc->write_bit_fields(463, 1, chain_params.intr_en);
+  seq_status_desc->write_bit_fields(464, 1, chain_params.next_db_action_barco_push);
+
+  // desc bytes 64-127
+  seq_status_desc->write_bit_fields(512 + 0, 64, chain_params.comp_sgl_src_addr);
+  seq_status_desc->write_bit_fields(512 + 64, 64, chain_params.sgl_pdma_dst_addr);
+  seq_status_desc->write_bit_fields(512 + 128, 64, chain_params.decr_buf_addr);
+  seq_status_desc->write_bit_fields(512 + 192, 16, chain_params.data_len);
+  seq_status_desc->write_bit_fields(512 + 208, 5, chain_params.blk_boundary_shift);
+  seq_status_desc->write_bit_fields(512 + 213, 1, chain_params.stop_chain_on_error);
+  seq_status_desc->write_bit_fields(512 + 214, 1, chain_params.comp_len_update_en);
+  seq_status_desc->write_bit_fields(512 + 215, 1, chain_params.comp_sgl_src_en);
+  seq_status_desc->write_bit_fields(512 + 216, 1, chain_params.comp_sgl_src_vec_en);
+  seq_status_desc->write_bit_fields(512 + 217, 1, chain_params.sgl_pdma_en);
+  seq_status_desc->write_bit_fields(512 + 218, 1, chain_params.sgl_pdma_len_from_desc);
+  seq_status_desc->write_bit_fields(512 + 219, 1, chain_params.desc_vec_push_en);
+  seq_status_desc->write_thru();
+
+  // Form the doorbell to be returned by the API
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
+                             chain_params.seq_spec.seq_status_q, 0,
+                             chain_params.seq_spec.ret_seq_status_index, 
+                             &chain_params.seq_spec.ret_doorbell_addr,
+                             &chain_params.seq_spec.ret_doorbell_data);
   return 0;
 }
 

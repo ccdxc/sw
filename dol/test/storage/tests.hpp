@@ -6,6 +6,7 @@
 #include <vector>
 #include "gflags/gflags.h"
 #include "dp_mem.hpp"
+#include "chain_params.hpp"
 
 DECLARE_uint64(poll_interval);
 DECLARE_uint64(long_poll_interval);
@@ -68,95 +69,6 @@ const static uint32_t  kDefaultNlb           = 0;
 const static uint32_t  kDefaultNsid          = 1;
 const static uint32_t  kDefaultBufSize       = 4096;
 
-// Accelerator chaining
-
-typedef struct {
-  uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)
-  uint64_t next_doorbell_data;	// Next capri doorbell data (if chaining)
-} acc_chain_next_db_entry_t;
-
-typedef struct {
-  uint64_t barco_ring_addr;     // ring address
-  uint64_t barco_pndx_addr;     // producer index address
-  uint64_t barco_pndx_shadow_addr;// producer index shadow address
-  uint64_t barco_desc_addr;     // descriptor to push
-  uint8_t  barco_desc_size;     // log2(descriptor size)
-  uint8_t  barco_pndx_size;     // log2)producer index size)
-  uint8_t  barco_ring_size;     // log2(ring size)
-  uint8_t  barco_desc_set_total;// log2(descriptor set size) to advance to alternate descriptor set
-} acc_chain_barco_push_entry_t;
-
-typedef struct acc_chain_entry {
-  union {
-      acc_chain_next_db_entry_t    db_entry;
-      acc_chain_barco_push_entry_t push_entry;
-  };
-  uint64_t status_addr0;
-  uint64_t status_addr1;	// Destination for the PDMA of status from status_addr0 to status_addr1
-  uint64_t flat_dst_buf_addr; // Address of ...
-
-  // post compression, options available are:
-  // - PDMA compressed data to pdma_out_sgl_pa (sgl_pdma_en), or
-  // - chain to next accelerator service which uses input/output AOL (aol_pad_en),
-  // - chain to next accelerator service which uses SGL input (sgl_pad_en),
-  //   where P4+ will modify addr/length fields in the AOL/SGL based on compression result
-  uint64_t aol_src_vec_addr;
-  uint64_t aol_dst_vec_addr;
-  uint64_t sgl_vec_addr;	// SGL vector for multi-block hash
-  uint64_t pad_buf_addr;	// pad buffer address
-  uint64_t intr_addr;		// MSI-X Interrupt address
-  uint32_t intr_data;		// MSI-X Interrupt data
-  uint16_t status_len;		// Length of the status header
-  uint16_t data_len;		// Remaining data length of compression buffer
-  uint8_t  pad_len_shift;   // log2(max padding length)
-  uint8_t  unused;
-  // TODO: These bitfields are interpretted in big endian 
-  //       fashion by P4+. For DOL it won't matter as we set bitfields.
-  //       For driver, need to define the order properly.
-  uint16_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
-           status_dma_en        :1,	// enable DMA of status to status_hbm_pa
-  // NOTE: intr_en and next_doorbell_en can be enabled together.
-  // When comp/decomp succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.
-  // When comp/decomp fails and stop_chain_on_error is set, intr_en will be honored
-           next_doorbell_en     :1,	// enable chain doorbell
-           intr_en              :1,	// enable intr_data write to intr_pa
-           next_db_action_barco_push:1,	// next_db action is actually a Barco push
-           stop_chain_on_error  :1, // stop chaining on error
-           copy_src_dst_on_error:1,
-  // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.
-  // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
-           aol_pad_en           :1, // enable AOL length padding
-           sgl_pad_en           :1, // enable SGL length padding (e.g., for multi-block hash)
-           sgl_pdma_en          :1, // enable data transfer from src_hbm_pa to sgl_pa
-           sgl_pdma_pad_only    :1, // enable pad-only fill mode, i.e., Comp engine writes
-                                    // compressed output according to SGL, P4+ will fill
-                                    // the last block with the right amount of pad data.
-                                    // This mode requires sgl_pad_hash_en as P4+ will glean
-                                    // the buffers info from the supplied sgl_vec_pa.
-           desc_vec_push_en     : 1;// barco_desc_addr points to a vector of descriptors to be pushed
-} acc_chain_entry_t;
-
-typedef struct cq_sq_ent_sgl {
-  uint64_t addr[4];		// Destination Address in the SGL for compression data PDMA
-  uint16_t len[4];		// Length of the SGL element for compression data PDMA
-  uint64_t pad[3];
-} cp_sq_ent_sgl_t;
-
-typedef int (*acc_chain_desc_format_fn_t)(acc_chain_entry_t &chain_ent,
-                                          dp_mem_t *seq_status_desc);
-
-typedef struct acc_chain_params {
-  acc_chain_entry_t chain_ent;	// Accelerator chaining sequencer descriptor
-  acc_chain_desc_format_fn_t desc_format_fn;
-  uint32_t seq_q;	            // Sequencer queue
-  uint32_t seq_status_q;	    // Status sequencer queue
-  uint32_t seq_next_q;   	    // Next sequencer queue in chain
-  uint32_t seq_next_status_q;	// Next status sequencer queue in chain
-  uint64_t ret_doorbell_addr;	// Doorbell address that is formed for the Status sequencer (filled by API)
-  uint64_t ret_doorbell_data;	// Doorbell data that is formed for the Status sequencer (filled by API)
-  uint16_t ret_seq_status_index;
-} acc_chain_params_t;
-
 class Poller {
 public:
   Poller() : timeout(FLAGS_poll_interval) { }
@@ -168,11 +80,6 @@ private:
 };
 
 // API return values: 0 => successs; < 0 => failure
-int test_setup_seq_acc_chain_entry(acc_chain_params_t& params);
-int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
-                                          dp_mem_t *seq_status_desc);
-int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
-                                         dp_mem_t *seq_status_desc);
 int test_data_verify_and_dump(uint8_t *expected_data,
                               uint8_t *actual_data,
                               uint32_t len);

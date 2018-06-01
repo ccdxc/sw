@@ -8,7 +8,7 @@
 #include "INGRESS_p.h"
 
 
-struct s2_tbl_k k;
+struct s3_tbl_k k;
 struct phv_ p;
 
 %%

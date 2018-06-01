@@ -1,6 +1,5 @@
 /*****************************************************************************
- *  seq_comp_sgl_pdma_xfer: Parse the destination SGL and DMA the status,
- *                          data (if status was success) and set the interrupt.
+ *  seq_comp_sgl_pdma_xfer: Parse the destination SGL and DMA the data from
  *****************************************************************************/
 
 #include "storage_asm_defines.h"
@@ -15,79 +14,66 @@ struct phv_ p;
 /*
  * Registers usage
  */
-#define r_next_dma_cmd_ptr          r1  // next DMA command pointer
+#define r_curr_dma_cmd_ptr          r1  // pointer to current TxDMA descriptor in flit
 #define r_src_len                   r2  // length of data source
 #define r_xfer_len                  r3  // current transfer length
 #define r_src_addr                  r4  // source address
 #define r_dst_addr                  r5  // destination address
-#define r_sgl_len                   r6  // current length of an SGL entry
+#define r_sgl_tuple_p               r6  // pointer to the current SGL entry
+#define r_last_dma_cmd_ptr          r7  // pointer to last TxDMA descriptor in flit
 
 /*
- * Registers reuse, post source transfer completion
+ * Registers reuse, post 1st series of PDMA transfer
  */
-#define r_pad_len                   r_src_len // padding length
+#define r_sgl_rem_len               r_src_len
  
 %%
 
 storage_seq_comp_sgl_pdma_xfer:
 
-   // Store the data length into r_src_len accouting for the fact that 0 => 64K
+   //  r_src_len stores the running count of data remaining to be xfered
+   //  r_src_addr stores the offeset of the source data buffer from where
+   //  the current xfer is to be done.
    add          r_src_len, SEQ_KIVEC5_DATA_LEN, r0
+   add		r_src_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
 
-   // Setup the compression data buffer DMA based on flat source buffer 
-   // and destination SGL.The macro processes one SGL entry and branches
-   // if xfer is complete at any point.
-   // Notes: These GPRs are used for input/output to/from this macro
-   //  1. r_src_len stores the running count of data remaining to be xfered
-   //  2. r_src_addr stores the offeset of the source data buffer from where
-   //     the current xfer is to be done.
-   //
-   // Note that when next_db_action_barco_push is set, chances are some sort
-   // of padding would also be required which took up some number of TxDMA
-   // decriptors. So we will be limited with the number of SGLs we can process here.
-   //
-   // Alternatively, when next_db_action_barco_push is *not* set, the only padding
-   // that would apply is for the case of pad-only transfer, which would be handled
-   // entirely in storage_seq_comp_sgl_pad_only_xfer().
-   
-   bbeq         SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 1, limited_sgl_case
-   add		r_src_addr, SEQ_KIVEC3_FLAT_BUF_ADDR, r0        // delay slot
-
-all_sgl_plus_padding_case:
-   
    /*
-    * VERY IMPORTANT NOTE: mem2mem descriptors work in adjacent pair and must not
-    * cross flit boundary. P4+ code sets up PHV space which guarantees that a valid
-    * mem2mem pair always starts with an even numbered ID.
+    * VERY IMPORTANT NOTE: mem2mem descriptors work in adjacent pair and the
+    * pair must not cross flit boundary. P4+ code sets up PHV space which 
+    * guarantees that a valid mem2mem pair always starts with an even numbered ID.
     *
     * For example: dma_m2m_2/dma_m2m_3 would be a valid pair, 
     *              but dma_m2m_7/dma_m2m_8 would not necessarily be adjacent.
     *
-    * When a phv2mem doorbell ring follows a mem2mem of a descriptor,
-    * the phv2mem must also be in the same flit as the mem2mem.
-    *
-    * Currently it is known that dma_m2m_0/dma_m2m_0 are in one flit, and
+    * Currently it is known that dma_m2m_0/dma_m2m_1 are in one flit, and
     * all the subsequent mem2mem quads are in succeeding flits.
+    *
+    * The following is the initial flit where the first set of mem2mem
+    * descriptors are available for PDMA use. Note that the follow on macro
+    * invocations can advance into one or more subsequent flits!
     */
- 
-   // Can process the entire PDMA SGL here which holds 4 addr/len pairs,
-   // plus padding
+   CAPRI_FLIT_DMA_PTR_INITIAL(dma_m2m_6, dma_m2m_9)
+
+   /*
+    * Set up the initial d-vector chain_sgl_pdma tuple pointer in
+    * r_sgl_tuple_p, for use by tblrdp/tblwrp. 
+    */
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_INITIAL()
    
-   COMP_SGL_DMA(dma_m2m_2, dma_m2m_3,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_4),
-                d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_4, dma_m2m_5,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_6),
-                d.addr1, d.len1, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_6, dma_m2m_7,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_8),
-                d.addr2, d.len2, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_8, dma_m2m_9,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
-                d.addr3, d.len3, possible_padding_apply)
-
-src_len_remain_check:
-
+   CHAIN_SGL_PDMA_PTR(inner_label0, inner_label1, 
+                      possible_padding_apply, pdma_xfer_error)
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   
+   CHAIN_SGL_PDMA_PTR(inner_label2, inner_label3, 
+                      possible_padding_apply, pdma_xfer_error)
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   
+   CHAIN_SGL_PDMA_PTR(inner_label4, inner_label5, 
+                      possible_padding_apply, pdma_xfer_error)
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   CHAIN_SGL_PDMA_PTR(inner_label6, inner_label7,
+                      possible_padding_apply, pdma_xfer_error)
+   
    // Catch any driver errors here for debugging, i.e., driver did not 
    // provision the SGL correctly relative to comp output data length.
    bne          r_src_len, r0, pdma_xfer_error
@@ -95,103 +81,56 @@ src_len_remain_check:
       
 possible_padding_apply:
 
-   // Apply padding to the current SGL addressed by r_dst_addr if applicable.
-   // The remaining length in r_sgl_len must be >= r_pad_len.
+   // Apply padding to the remaining area in the current SGL.
+   // Note that when the last CHAIN_SGL_PDMA above exited to this point,
+   // r_xfer_len contains the remaining length in the current SGL.
+   //
+   seq          c1, SEQ_KIVEC3_PAD_LEN, r0
+   bcf          [c1], exit
    
-   add          r_pad_len, SEQ_KIVEC3_PAD_LEN, r0
-   beq          r_pad_len, r0, exit
-   nop
-   beq          r_next_dma_cmd_ptr, r0, pdma_xfer_error
-   nop
-   blt          r_sgl_len, r_pad_len, pdma_xfer_error
-   nop
+   // CAUTION: Due to registers shortage, r_sgl_rem_len is equated
+   // with r_src_len so only one of them can be in use at a time in
+   // the computations below.
+   
+   tblrdp.wx    r_sgl_rem_len, r_sgl_tuple_p, \
+                CAPRI_TBLRWP_FIELD_OP(chain_sgl_pdma_tuple_t, len) // delay slot
+   sub          r_sgl_rem_len, r_sgl_rem_len, r_xfer_len
+   
+   slt          c2, r_sgl_rem_len, SEQ_KIVEC3_PAD_LEN
+   cmov         r_xfer_len, c2, r_sgl_rem_len, SEQ_KIVEC3_PAD_LEN 
+   
+if0:
+   beq          r_xfer_len, r0, endif0
+   add		r_src_addr, SEQ_KIVEC5_PAD_BUF_ADDR, r0 // delay slot
 
-   // MEM2MEM source is pad buffer, assumed to be a 34-bit HBM address
-   DMA_MEM2MEM_PTR_SETUP_ADDR34(CAPRI_DMA_M2M_TYPE_SRC,
-                                SEQ_KIVEC3_PAD_BUF_ADDR, r_pad_len)
-   
-   // MEM2MEM destination
-   // Note: PHV flit memory is in big endian layout, so the next adjacent TxDMA
-   // descriptor is at a LOWER address! Hence, the subi instruction below.
-   
-   subi         r_next_dma_cmd_ptr, r_next_dma_cmd_ptr, sizeof(DMA_CMD_MEM2MEM_T)
+   DMA_MEM2MEM_PTR_SETUP_ADDR(CAPRI_DMA_M2M_TYPE_SRC,
+                              r_src_addr, r_xfer_len)
+if1:                              
+   CAPRI_FLIT_DMA_PTR_ADVANCE(endif1)
+endif1:   
    DMA_MEM2MEM_PTR_SETUP_ADDR(CAPRI_DMA_M2M_TYPE_DST,
-                              r_dst_addr, r_pad_len)
+                              r_dst_addr, r_xfer_len)
+   CAPRI_FLIT_DMA_PTR_ADVANCE(endif0)
+endif0:
    
+   sub          r_src_len, SEQ_KIVEC3_PAD_LEN, r_xfer_len
+   beq          r_src_len, r0, exit
+   add          r_src_addr, r_src_addr, r_xfer_len  // delay slot
+
+   // Transfer the remaining pad data which must fit in the
+   // next SGL entry
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   CHAIN_SGL_PDMA_PTR(inner_label8, inner_label9,
+                      exit, pdma_xfer_error)
+   
+   // Catch any driver errors here for debugging, i.e., driver did not 
+   // provision the SGL correctly relative to padding length
+   bne          r_src_len, r0, pdma_xfer_error
+   nop
+      
 exit:
    CLEAR_TABLE1_e
 
-limited_sgl_case:
-   // Only has enough dma_m2m for one, two, or three transfers
-   // because an AOL pad action and/or SGL pad action have occupied
-   // some of the DMA descriptors. So, try the best we could here.
-   bbeq         SEQ_KIVEC5_AOL_PAD_EN, 0, alt1_quad_sgl_case
-   nop
-   bbeq         SEQ_KIVEC5_STATUS_DMA_EN, 0, possible_alt0_quad_sgl_case
-   nop
-   bbeq         SEQ_KIVEC5_SGL_PAD_EN, 0, alt0_quad_sgl_case
-   nop
-   
-   // Can process only 2 addr/len pairs, plus padding
-   
-   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
-                d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_12, dma_m2m_13,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_14),
-                d.addr1, d.len1, possible_padding_apply)
-   b            src_len_remain_check
-   nop
-
-alt1_quad_sgl_case:
-   bbeq         SEQ_KIVEC5_SGL_PAD_EN, 0, all_sgl_plus_padding_case
-   nop
-   
-   // Can process 3 addr/len pairs, plus padding
-   
-   COMP_SGL_DMA(dma_m2m_6, dma_m2m_7,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_8),
-                d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_8, dma_m2m_9,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
-                d.addr1, d.len1, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
-                d.addr2, d.len2, possible_padding_apply)
-   b            src_len_remain_check
-   nop
-                
-possible_alt0_quad_sgl_case:
-   bbeq         SEQ_KIVEC5_SGL_PAD_EN, 0, alt0_quad_sgl_case
-   nop
-
-   // Can process 2 addr/len pairs, plus padding
-   
-   COMP_SGL_DMA(dma_m2m_0, dma_m2m_1,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
-                d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
-                d.addr1, d.len1, possible_padding_apply)
-   b            src_len_remain_check
-   nop
-   
-alt0_quad_sgl_case:
-
-   // Can process 3 addr/len pairs, plus padding
-   
-   COMP_SGL_DMA(dma_m2m_0, dma_m2m_1,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_2),
-                d.addr0, d.len0, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_2, dma_m2m_3,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_10),
-                d.addr1, d.len1, possible_padding_apply)
-   COMP_SGL_DMA(dma_m2m_10, dma_m2m_11,
-                PHV_DMA_CMD_START_OFFSET(dma_m2m_12),
-                d.addr2, d.len2, possible_padding_apply)
-   b            src_len_remain_check
-   nop
-                
 pdma_xfer_error:
    SEQ_COMP_SGL_PDMA_XFER_ERROR_TRAP()
    b            exit

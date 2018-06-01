@@ -136,6 +136,12 @@ header_type storage_capri_len32_t {
   }
 }
 
+header_type storage_capri_len16_t {
+  fields {
+    len     : 16;
+  }
+}
+
 header_type storage_doorbell_data_t {
   fields {
     data	: 64;	// 64 bit data

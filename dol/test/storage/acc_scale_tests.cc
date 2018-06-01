@@ -1173,7 +1173,8 @@ acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
                                                                          uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                                                          xts_status_mem_type1(DP_MEM_TYPE_HBM).
                                                                          xts_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
-                                                                         decrypt_mem_type(DP_MEM_TYPE_HBM).
+                                                                         decrypt_mem_type1(DP_MEM_TYPE_HBM).
+                                                                         decrypt_mem_type2(DP_MEM_TYPE_VOID).
                                                                          destructor_free_buffers(true).
                                                                          suppress_info_log(true)).
                                                    destructor_free_buffers(true));

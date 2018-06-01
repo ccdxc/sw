@@ -58,9 +58,9 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     } else {
         comp_buf2 = comp_buf1;
     }
-    seq_sgl_pdma = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t),
+    seq_sgl_pdma = new dp_mem_t(1, sizeof(chain_sgl_pdma_t),
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
-                                sizeof(cp_sq_ent_sgl_t));
+                                sizeof(chain_sgl_pdma_t));
 
     // for comp status, caller can elect to have 2 status buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
@@ -147,8 +147,7 @@ comp_hash_chain_t::pre_push(comp_hash_chain_pre_push_params_t params)
 int 
 comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
 {
-    acc_chain_params_t  chain_params = {0};
-    cp_sq_ent_sgl_t     *sgl_pdma_entry;
+    chain_params_comp_t chain_params = {0};
     uint32_t            block_no;
 
     // validate app_blk_size
@@ -252,7 +251,7 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
         compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_dst_sgl_vec,
                          comp_status_buf1, comp_buf1, app_blk_size);
         cp_desc.cmd_bits.dst_is_list = 1;
-        chain_params.chain_ent.sgl_pdma_pad_only = 1;
+        chain_params.sgl_pdma_pad_only = 1;
     } else {
         compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf1,
                          comp_status_buf1, comp_buf1, app_blk_size);
@@ -269,48 +268,47 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      * Hash chaining will use direct Barco push action from
      * comp status queue handler. Hence, no seq_next_q needed.
      */
-    chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
-    chain_params.seq_q = params.seq_comp_qid_;
-    chain_params.seq_status_q = params.seq_comp_status_qid_;
-    chain_params.chain_ent.next_doorbell_en = 1;
-    chain_params.chain_ent.next_db_action_barco_push = 1;
-    chain_params.chain_ent.push_entry.barco_ring_addr =
+    chain_params.seq_spec.seq_q = params.seq_comp_qid_;
+    chain_params.seq_spec.seq_status_q = params.seq_comp_status_qid_;
+    chain_params.next_doorbell_en = 1;
+    chain_params.next_db_action_barco_push = 1;
+    chain_params.push_spec.barco_ring_addr =
                            hash_ring->ring_base_mem_pa_get();
-    chain_params.chain_ent.push_entry.barco_pndx_addr =
+    chain_params.push_spec.barco_pndx_addr =
                            hash_ring->cfg_ring_pd_idx_get();
-    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr =
+    chain_params.push_spec.barco_pndx_shadow_addr =
                            hash_ring->shadow_pd_idx_pa_get();
-    chain_params.chain_ent.push_entry.barco_desc_size =
+    chain_params.push_spec.barco_desc_size =
                            (uint8_t)log2(hash_desc_vec->line_size_get());
-    chain_params.chain_ent.push_entry.barco_pndx_size =
+    chain_params.push_spec.barco_pndx_size =
                            (uint8_t)log2(sizeof(uint32_t));
-    chain_params.chain_ent.push_entry.barco_ring_size = 
+    chain_params.push_spec.barco_ring_size = 
                            (uint8_t)log2(hash_ring->ring_size_get());
-    chain_params.chain_ent.push_entry.barco_desc_addr = hash_desc_vec->pa();
-    chain_params.chain_ent.sgl_vec_addr = hash_sgl_vec->pa();
+    chain_params.push_spec.barco_desc_addr = hash_desc_vec->pa();
+    chain_params.sgl_vec_addr = hash_sgl_vec->pa();
 
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
     if (comp_status_buf1 != comp_status_buf2) {
         comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
     }
-    chain_params.chain_ent.status_addr0 = comp_status_buf1->pa();
+    chain_params.status_addr0 = comp_status_buf1->pa();
     if (comp_status_buf1 != comp_status_buf2) {
-        chain_params.chain_ent.status_dma_en = 1;
-        chain_params.chain_ent.status_addr1 = comp_status_buf2->pa();
-        chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
+        chain_params.status_dma_en = 1;
+        chain_params.status_addr1 = comp_status_buf2->pa();
+        chain_params.status_len = comp_status_buf2->line_size_get();
     }
 
-    chain_params.chain_ent.pad_buf_addr = caller_comp_pad_buf->pa();
-    chain_params.chain_ent.stop_chain_on_error = 1;
-    chain_params.chain_ent.sgl_pad_en = 1;
-    chain_params.chain_ent.pad_len_shift =
+    chain_params.pad_buf_addr = caller_comp_pad_buf->pa();
+    chain_params.stop_chain_on_error = 1;
+    chain_params.sgl_pad_en = 1;
+    chain_params.pad_boundary_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
 
     // Enable interrupt in case compression fails
     comp_opaque_buf->clear_thru();
-    chain_params.chain_ent.intr_addr = comp_opaque_buf->pa();
-    chain_params.chain_ent.intr_data = kCompSeqIntrData;
-    chain_params.chain_ent.intr_en = 1;
+    chain_params.intr_addr = comp_opaque_buf->pa();
+    chain_params.intr_data = kCompSeqIntrData;
+    chain_params.intr_en = 1;
 
     /*
      * If only one hash block is required, it is possible to do compression
@@ -335,31 +333,33 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      * chaining features are also enabled in the current chain.
      */
     if (comp_buf1 != comp_buf2) {
-        seq_sgl_pdma->clear();
-        sgl_pdma_entry = (cp_sq_ent_sgl_t *)seq_sgl_pdma->read();
-        sgl_pdma_entry->addr[0] = comp_buf2->pa();
-        sgl_pdma_entry->len[0] = comp_buf2->line_size_get();
-        seq_sgl_pdma->write_thru();
-
-        chain_params.chain_ent.flat_dst_buf_addr = comp_buf1->pa();
-        chain_params.chain_ent.aol_dst_vec_addr = seq_sgl_pdma->pa();
+        chain_sgl_pdma_packed_fill(seq_sgl_pdma, comp_buf2);
+        chain_params.comp_buf_addr = comp_buf1->pa();
+        chain_params.aol_dst_vec_addr = seq_sgl_pdma->pa();
     }
 
     /*
      * hash executes multiple requests, one per block; hence,
      * indicate to P4+ to push a vector of descriptors.
      */
-    chain_params.chain_ent.sgl_pdma_en = 1;
-    chain_params.chain_ent.desc_vec_push_en = 1;
+    chain_params.desc_vec_push_en = 1;
+    chain_params.push_spec.barco_num_descs = num_hash_blks;
 
-    if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
-        printf("test_setup_seq_acc_chain_entry failed\n");
+    /*
+     * Enable sgl_pdma_en, which for comp-hash is either full transfer when
+     * comp_buf1 != comp_buf2, or pad-only transfer when
+     * comp_buf1 == comp_buf2.
+     */
+    chain_params.sgl_pdma_en = 1; 
+
+    if (seq_comp_status_desc_fill(chain_params) != 0) {
+        printf("comp_hash_chain seq_comp_status_desc_fill failed\n");
         return -1;
     }
 
     // Chain compression to compression status sequencer 
-    cp_desc.doorbell_addr = chain_params.ret_doorbell_addr;
-    cp_desc.doorbell_data = chain_params.ret_doorbell_data;
+    cp_desc.doorbell_addr = chain_params.seq_spec.ret_doorbell_addr;
+    cp_desc.doorbell_data = chain_params.seq_spec.ret_doorbell_data;
     cp_desc.cmd_bits.doorbell_on = 1;
 
     push_type = params.push_type_;
@@ -385,7 +385,7 @@ comp_hash_chain_t::post_push(void)
  */
 void 
 comp_hash_chain_t::hash_setup(uint32_t block_no,
-                              acc_chain_params_t& chain_params)
+                              chain_params_comp_t& chain_params)
 {
     cp_desc_t   *hash_desc;
 

@@ -198,6 +198,39 @@ comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
     comp_sgl_vec->line_set(save_curr_line);
 }
 
+/*
+ * Format a packed chain SGL for PDMA purposes. Note that TxDMA mem2mem has
+ * as transfer limit of 14 bits (16K - 1) so each SGL addr/len must be
+ * within this limit.
+ */
+void
+chain_sgl_pdma_packed_fill(dp_mem_t *seq_sgl_pdma,
+                           dp_mem_t *dst_buf)
+{
+    chain_sgl_pdma_t    *sgl_pdma_entry;
+    uint64_t            dst_buf_addr;
+    uint32_t            dst_buf_size;
+    uint32_t            pdma_size;
+
+    dst_buf_addr = dst_buf->pa();
+    dst_buf_size = dst_buf->line_size_get();
+
+    seq_sgl_pdma->clear();
+    sgl_pdma_entry = (chain_sgl_pdma_t *)seq_sgl_pdma->read();
+    for (uint32_t i = 0; i < ARRAYSIZE(sgl_pdma_entry->tuple); i++) {
+        pdma_size = dst_buf_size > kMaxMem2MemSize ? 
+                    kMaxMem2MemSize : dst_buf_size;
+        sgl_pdma_entry->tuple[i].addr = dst_buf_addr;
+        sgl_pdma_entry->tuple[i].len = pdma_size;
+
+        dst_buf_addr += pdma_size;
+        dst_buf_size -= pdma_size;
+    }
+
+    assert(dst_buf_size == 0);
+    seq_sgl_pdma->write_thru();
+}
+
 bool
 comp_status_poll(dp_mem_t *status,
                  const cp_desc_t& desc,
@@ -340,6 +373,72 @@ comp_status_output_data_len_get(dp_mem_t *status)
 }
 
 
+// Calculate comp sequencer status producer index
+// then fill the next available seq_status_desc with the
+// given chaining parameters.
+int
+seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
+{
+    dp_mem_t *seq_status_desc;
+
+    seq_status_desc = queues::seq_sq_consume_entry(chain_params.seq_spec.seq_status_q,
+                                                   &chain_params.seq_spec.ret_seq_status_index);
+    seq_status_desc->clear();
+
+    // desc bytes 0-63
+    if (chain_params.next_db_action_barco_push) {
+      seq_status_desc->write_bit_fields(0, 64, chain_params.push_spec.barco_ring_addr);
+      seq_status_desc->write_bit_fields(64, 64, chain_params.push_spec.barco_desc_addr);
+      seq_status_desc->write_bit_fields(128, 34, chain_params.push_spec.barco_pndx_addr);
+      seq_status_desc->write_bit_fields(162, 34, chain_params.push_spec.barco_pndx_shadow_addr);
+      seq_status_desc->write_bit_fields(196, 4, chain_params.push_spec.barco_desc_size);
+      seq_status_desc->write_bit_fields(200, 3, chain_params.push_spec.barco_pndx_size);
+      seq_status_desc->write_bit_fields(203, 5, chain_params.push_spec.barco_ring_size);
+      seq_status_desc->write_bit_fields(208, 6, chain_params.push_spec.barco_num_descs);
+    } else {
+      seq_status_desc->write_bit_fields(0, 64, chain_params.db_spec.next_doorbell_addr);
+      seq_status_desc->write_bit_fields(64, 64, chain_params.db_spec.next_doorbell_data);
+    }
+
+    seq_status_desc->write_bit_fields(214, 64, chain_params.status_addr0);
+    seq_status_desc->write_bit_fields(278, 64, chain_params.status_addr1);
+    seq_status_desc->write_bit_fields(342, 64, chain_params.intr_addr);
+    seq_status_desc->write_bit_fields(406, 32, chain_params.intr_data);
+    seq_status_desc->write_bit_fields(438, 16, chain_params.status_len);
+    seq_status_desc->write_bit_fields(454, 7, chain_params.status_offset0);
+    seq_status_desc->write_bit_fields(461, 1, chain_params.status_dma_en);
+    seq_status_desc->write_bit_fields(462, 1, chain_params.next_doorbell_en);
+    seq_status_desc->write_bit_fields(463, 1, chain_params.intr_en);
+    seq_status_desc->write_bit_fields(464, 1, chain_params.next_db_action_barco_push);
+
+    // desc bytes 64-127
+    seq_status_desc->write_bit_fields(512 + 0, 64, 0); // reserved
+    seq_status_desc->write_bit_fields(512 + 64, 64, chain_params.comp_buf_addr);
+    seq_status_desc->write_bit_fields(512 + 128, 64, chain_params.aol_src_vec_addr);
+    seq_status_desc->write_bit_fields(512 + 192, 64, chain_params.aol_dst_vec_addr);
+    seq_status_desc->write_bit_fields(512 + 256, 64, chain_params.sgl_vec_addr);
+    seq_status_desc->write_bit_fields(512 + 320, 64, chain_params.pad_buf_addr);
+    seq_status_desc->write_bit_fields(512 + 384, 16, chain_params.data_len);
+    seq_status_desc->write_bit_fields(512 + 400, 5, chain_params.pad_boundary_shift);
+    seq_status_desc->write_bit_fields(512 + 405, 1, chain_params.stop_chain_on_error);
+    seq_status_desc->write_bit_fields(512 + 406, 1, chain_params.data_len_from_desc);
+    seq_status_desc->write_bit_fields(512 + 407, 1, chain_params.aol_pad_en);
+    seq_status_desc->write_bit_fields(512 + 408, 1, chain_params.sgl_pad_en);
+    seq_status_desc->write_bit_fields(512 + 409, 1, chain_params.sgl_pdma_en);
+    seq_status_desc->write_bit_fields(512 + 410, 1, chain_params.sgl_pdma_pad_only);
+    seq_status_desc->write_bit_fields(512 + 411, 1, chain_params.desc_vec_push_en);
+    seq_status_desc->write_bit_fields(512 + 412, 1, chain_params.copy_src_dst_on_error);
+    seq_status_desc->write_thru();
+
+    // Form the doorbell to be returned by the API
+    queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
+                               chain_params.seq_spec.seq_status_q, 0,
+                               chain_params.seq_spec.ret_seq_status_index, 
+                               &chain_params.seq_spec.ret_doorbell_addr,
+                               &chain_params.seq_spec.ret_doorbell_data);
+    return 0;
+}
+
 uint64_t
 queue_mem_pa_get(uint64_t reg_addr)
 {
@@ -393,9 +492,9 @@ compression_buf_init()
     host_sgl4 = new dp_mem_t(1, sizeof(cp_sgl_t),
                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                              sizeof(cp_sgl_t));
-    seq_sgl = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t),
+    seq_sgl = new dp_mem_t(1, sizeof(chain_sgl_pdma_t),
                            DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
-                           sizeof(cp_sq_ent_sgl_t));
+                           sizeof(chain_sgl_pdma_t));
 
     comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
@@ -440,7 +539,8 @@ compression_buf_init()
                                              uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                              xts_status_mem_type1(DP_MEM_TYPE_HBM).
                                              xts_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
-                                             decrypt_mem_type(DP_MEM_TYPE_HBM).
+                                             decrypt_mem_type1(DP_MEM_TYPE_HBM).
+                                             decrypt_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                              destructor_free_buffers(true));
     decrypt_decomp_chain_pre_push_params_t ddc_pre_push;
     decrypt_decomp_chain->pre_push(ddc_pre_push.caller_comp_status_buf(status_host_buf).
@@ -1001,44 +1101,47 @@ int _compress_output_through_sequencer(acc_ring_push_t push_type,
   compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_buf,
                                  status_buf, compressed_buf,
                                  kUncompressedDataSize);
-  // Prepare an SGL for the sequencer to output data.
+  // Prepare an SGL PDMA for the sequencer to output data.
   compressed_host_buf->fragment_find(0, 64)->clear_thru();
   seq_sgl->clear();
-  cp_sq_ent_sgl_t *ssgl = (cp_sq_ent_sgl_t *)seq_sgl->read();
+  chain_sgl_pdma_t *ssgl = (chain_sgl_pdma_t *)seq_sgl->read();
 
-  ssgl->addr[0] = compressed_host_buf->pa();
-  ssgl->len[0] = 199;
-  ssgl->addr[1] = compressed_host_buf->pa() + 199;
-  ssgl->len[1] = 537;
-  ssgl->addr[2] = compressed_host_buf->pa() + 199 + 537;
-  ssgl->len[2] = 1123;
-  ssgl->addr[3] = compressed_host_buf->pa() + 199 + 537 + 1123;
-  ssgl->len[3] = kCompressedBufSize - (199 + 537 + 1123);
+  ssgl->tuple[0].addr = compressed_host_buf->pa();
+  ssgl->tuple[0].len = 13199;
+  ssgl->tuple[1].addr = compressed_host_buf->pa() + 
+                        ssgl->tuple[0].len;
+  ssgl->tuple[1].len = 9537;
+  ssgl->tuple[2].addr = compressed_host_buf->pa() + 
+                        ssgl->tuple[0].len + ssgl->tuple[1].len;
+  ssgl->tuple[2].len = 10123;
+  ssgl->tuple[3].addr = compressed_host_buf->pa() +
+                        ssgl->tuple[0].len + ssgl->tuple[1].len + 
+                        ssgl->tuple[2].len;
+  ssgl->tuple[3].len = kMaxMem2MemSize;
   seq_sgl->write_thru();
 
-  acc_chain_params_t chain_params = {0};
+  chain_params_comp_t chain_params = {0};
   status_host_buf->clear_thru();
-  chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
-  chain_params.chain_ent.status_addr0 = status_buf->pa();
-  chain_params.chain_ent.status_addr1 = status_host_buf->pa();
-  chain_params.chain_ent.flat_dst_buf_addr = d.dst;
-  chain_params.chain_ent.aol_dst_vec_addr = seq_sgl->pa();
-  chain_params.chain_ent.sgl_pdma_en = 1;
-  chain_params.chain_ent.intr_addr = opaque_host_buf->pa();
-  chain_params.chain_ent.intr_data = kCompSeqIntrData;
+  chain_params.status_addr0 = status_buf->pa();
+  chain_params.status_addr1 = status_host_buf->pa();
+  chain_params.comp_buf_addr = d.dst;
+  chain_params.aol_dst_vec_addr = seq_sgl->pa();
+  chain_params.sgl_pdma_en = 1;
+  chain_params.intr_addr = opaque_host_buf->pa();
+  chain_params.intr_data = kCompSeqIntrData;
 
   // Clear the area where interrupt from sequencer is going to come.
   opaque_host_buf->clear_thru();
-  chain_params.chain_ent.status_len = status_buf->line_size_get();
-  chain_params.chain_ent.status_dma_en = 1;
-  chain_params.chain_ent.intr_en = 1;
-  chain_params.seq_status_q = queues::get_seq_comp_status_sq(0);
-  if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
-    printf("cp_chain_ent failed\n");
+  chain_params.status_len = status_buf->line_size_get();
+  chain_params.status_dma_en = 1;
+  chain_params.intr_en = 1;
+  chain_params.seq_spec.seq_status_q = queues::get_seq_comp_status_sq(0);
+  if (seq_comp_status_desc_fill(chain_params) != 0) {
+    printf("%s seq_comp_status_desc_fill failed\n", __FUNCTION__);
     return -1;
   }
-  d.doorbell_addr = chain_params.ret_doorbell_addr;
-  d.doorbell_data = chain_params.ret_doorbell_data;
+  d.doorbell_addr = chain_params.seq_spec.ret_doorbell_addr;
+  d.doorbell_data = chain_params.seq_spec.ret_doorbell_data;
   d.cmd_bits.doorbell_on = 1;
 
   // Verify(wait for) that the status makes it to HBM.
@@ -1509,6 +1612,19 @@ int seq_compress_output_encrypt_app_nominal_size() {
     return comp_encrypt_chain->full_verify();
 }
 
+int seq_compress_output_encrypt_app_test_size() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.enc_dec_blk_type(XTS_ENC_DEC_PER_HASH_BLK).
+                                    app_blk_size(kCompAppTestSize).
+                                    comp_ring(cp_ring).
+                                    push_type(ACC_RING_PUSH_SEQUENCER).
+                                    seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->full_verify();
+}
+
 int _compress_clear_insert_header(acc_ring_push_t push_type,
                                   uint32_t seq_comp_qid) {
   cp_desc_t d;
@@ -1578,10 +1694,12 @@ int decompress_clear_header_present() {
 }
 
 // Accelerator XTS-decrypt to decompression chaining DOLs.
-int seq_decrypt_output_decompress_last_app_blk() {
+int seq_decrypt_output_decompress_len_update_none() {
 
     // Execute decrypt-decompression on the last compress-pad-encrypted block,
     // i.e., the block size is whatever was last compressed and padded.
+    // 
+    // Execute the operations with no decomp_len_update.
     // 
     // Use the xts_ctx default mode of XTS sequencer queue, with chaining
     // to decompression initiated from P4+ handling of XTS status sequencer.
@@ -1590,7 +1708,50 @@ int seq_decrypt_output_decompress_last_app_blk() {
                                       decomp_ring(dc_ring).
                                       seq_xts_qid(queues::get_seq_xts_sq(0)).
                                       seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
-                                      seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
+                                      seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                      decrypt_decomp_len_update(DECRYPT_DECOMP_LEN_UPDATE_NONE));
+    decrypt_decomp_chain->post_push();
+    return decrypt_decomp_chain->full_verify();
+}
+
+int seq_decrypt_output_decompress_len_update_flat() {
+
+    // Execute decrypt-decompression with DECRYPT_DECOMP_LEN_UPDATE_FLAT.
+    decrypt_decomp_chain_push_params_t  params;
+    decrypt_decomp_chain->push(params.comp_encrypt_chain(comp_encrypt_chain).
+                                      decomp_ring(dc_ring).
+                                      seq_xts_qid(queues::get_seq_xts_sq(0)).
+                                      seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
+                                      seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                      decrypt_decomp_len_update(DECRYPT_DECOMP_LEN_UPDATE_FLAT));
+    decrypt_decomp_chain->post_push();
+    return decrypt_decomp_chain->full_verify();
+}
+
+int seq_decrypt_output_decompress_len_update_sgl_src() {
+
+    // Execute decrypt-decompression with DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC.
+    decrypt_decomp_chain_push_params_t  params;
+    decrypt_decomp_chain->push(params.comp_encrypt_chain(comp_encrypt_chain).
+                                      decomp_ring(dc_ring).
+                                      seq_xts_qid(queues::get_seq_xts_sq(0)).
+                                      seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
+                                      seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                      decrypt_decomp_len_update(DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC));
+    decrypt_decomp_chain->post_push();
+    return decrypt_decomp_chain->full_verify();
+}
+
+int seq_decrypt_output_decompress_len_update_sgl_src_vec() {
+
+    // Execute decrypt-decompression with DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC_VEC.
+    decrypt_decomp_chain_push_params_t  params;
+    decrypt_decomp_chain->push(params.comp_encrypt_chain(comp_encrypt_chain).
+                                      decomp_ring(dc_ring).
+                                      seq_xts_qid(queues::get_seq_xts_sq(0)).
+                                      seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
+                                      seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                      decrypt_decomp_len_update(DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC_VEC));
     decrypt_decomp_chain->post_push();
     return decrypt_decomp_chain->full_verify();
 }

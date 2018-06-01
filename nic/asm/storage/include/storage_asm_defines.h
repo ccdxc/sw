@@ -203,14 +203,22 @@
 #define SEQ_KIVEC2_SGL_VEC_ADDR                 \
     k.seq_kivec2_sgl_vec_addr
 
-#define SEQ_KIVEC3_FLAT_BUF_ADDR                \
-    k.seq_kivec3_flat_buf_addr
-#define SEQ_KIVEC3_PAD_BUF_ADDR                 \
-    k.{seq_kivec3_pad_buf_addr_sbit0_ebit31...seq_kivec3_pad_buf_addr_sbit32_ebit33}
+#define SEQ_KIVEC2XTS_SGL_PDMA_DST_ADDR         \
+    k.seq_kivec2xts_sgl_pdma_dst_addr
+#define SEQ_KIVEC2XTS_DECR_BUF_ADDR             \
+    k.seq_kivec2xts_decr_buf_addr
+    
+#define SEQ_KIVEC3_COMP_BUF_ADDR                \
+    k.seq_kivec3_comp_buf_addr
 #define SEQ_KIVEC3_PAD_LEN                      \
-    k.{seq_kivec3_pad_len_sbit0_ebit5...seq_kivec3_pad_len_sbit14_ebit15}
+    k.seq_kivec3_pad_len
+#define SEQ_KIVEC3_PAD_BOUNDARY_SHIFT           \
+    k.{seq_kivec3_pad_boundary_shift_sbit0_ebit2...seq_kivec3_pad_boundary_shift_sbit3_ebit4}
 #define SEQ_KIVEC3_NUM_BLKS                     \
     k.seq_kivec3_num_blks
+
+#define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
+    k.seq_kivec3xts_decr_buf_addr
 
 #define SEQ_KIVEC4_BARCO_DESC_ADDR              \
     k.{seq_kivec4_barco_desc_addr_sbit0_ebit15...seq_kivec4_barco_desc_addr_sbit56_ebit63}
@@ -224,17 +232,17 @@
     k.seq_kivec4_barco_pndx_size
 #define SEQ_KIVEC4_BARCO_RING_SIZE              \
     k.seq_kivec4_barco_ring_size
-#define SEQ_KIVEC4_BARCO_DESC_SET_TOTAL         \
-    k.seq_kivec4_barco_desc_set_total
 #define SEQ_KIVEC4_BARCO_NUM_DESCS              \
-    k.{seq_kivec4_barco_num_descs_sbit0_ebit1...seq_kivec4_barco_num_descs_sbit2_ebit9}
+    k.seq_kivec4_barco_num_descs
+#define SEQ_KIVEC4_PAD_BOUNDARY_SHIFT           \
+    k.{seq_kivec4_pad_boundary_shift_sbit0_ebit1...seq_kivec4_pad_boundary_shift_sbit2_ebit4}
 
 #define SEQ_KIVEC5_INTR_ADDR                    \
     k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
 #define SEQ_KIVEC5_DATA_LEN                     \
-    k.{seq_kivec5_data_len_sbit0_ebit7...seq_kivec5_data_len_sbit8_ebit15}
-#define SEQ_KIVEC5_PAD_LEN_SHIFT                \
-    k.seq_kivec5_pad_len_shift
+    k.{seq_kivec5_data_len_sbit0_ebit5...seq_kivec5_data_len_sbit14_ebit15}
+#define SEQ_KIVEC5_PAD_BUF_ADDR                  \
+    k.{seq_kivec5_pad_buf_addr_sbit0_ebit7...seq_kivec5_pad_buf_addr_sbit32_ebit33}
 #define SEQ_KIVEC5_STATUS_DMA_EN                \
     k.seq_kivec5_status_dma_en
 #define SEQ_KIVEC5_DATA_LEN_FROM_DESC           \
@@ -260,10 +268,52 @@
 #define SEQ_KIVEC5_DESC_VEC_PUSH_EN             \
     k.seq_kivec5_desc_vec_push_en
 
+#define SEQ_KIVEC5XTS_INTR_ADDR                 \
+    k.{seq_kivec5xts_intr_addr_sbit0_ebit7...seq_kivec5xts_intr_addr_sbit40_ebit63}
+#define SEQ_KIVEC5XTS_DATA_LEN                  \
+    k.{seq_kivec5xts_data_len_sbit0_ebit7...seq_kivec5xts_data_len_sbit8_ebit15}
+#define SEQ_KIVEC5XTS_BLK_BOUNDARY_SHIFT        \
+    k.seq_kivec5xts_blk_boundary_shift
+#define SEQ_KIVEC5XTS_STATUS_DMA_EN             \
+    k.seq_kivec5xts_status_dma_en
+#define SEQ_KIVEC5XTS_STOP_CHAIN_ON_ERROR       \
+    k.seq_kivec5xts_stop_chain_on_error
+#define SEQ_KIVEC5XTS_NEXT_DB_EN                \
+    k.seq_kivec5xts_next_db_en
+#define SEQ_KIVEC5XTS_COMP_LEN_UPDATE_EN        \
+    k.seq_kivec5xts_comp_len_update_en
+#define SEQ_KIVEC5XTS_COMP_SGL_SRC_EN           \
+    k.seq_kivec5xts_comp_sgl_src_en
+#define SEQ_KIVEC5XTS_COMP_SGL_SRC_VEC_EN       \
+    k.seq_kivec5xts_comp_sgl_src_vec_en
+#define SEQ_KIVEC5XTS_INTR_EN                   \
+    k.seq_kivec5xts_intr_en
+#define SEQ_KIVEC5XTS_NEXT_DB_ACTION_BARCO_PUSH \
+    k.seq_kivec5xts_next_db_action_barco_push
+#define SEQ_KIVEC5XTS_SGL_PDMA_EN               \
+    k.seq_kivec5xts_sgl_pdma_en
+#define SEQ_KIVEC5XTS_SGL_PDMA_LEN_FROM_DESC    \
+    k.seq_kivec5xts_sgl_pdma_len_from_desc
+#define SEQ_KIVEC5XTS_DESC_VEC_PUSH_EN          \
+    k.seq_kivec5xts_desc_vec_push_en
+    
 #define SEQ_KIVEC6_AOL_SRC_VEC_ADDR             \
     k.seq_kivec6_aol_src_vec_addr
 #define SEQ_KIVEC6_AOL_DST_VEC_ADDR             \
     k.seq_kivec6_aol_dst_vec_addr
+    
+#define SEQ_KIVEC7XTS_COMP_DESC_ADDR            \
+    k.seq_kivec7xts_comp_desc_addr
+#define SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR         \
+    k.seq_kivec7xts_comp_sgl_src_addr
+
+#define SEQ_KIVEC8_PAD_LEN                      \
+    k.{seq_kivec8_pad_len}
+#define SEQ_KIVEC8_LAST_BLK_LEN                 \
+    k.{seq_kivec8_last_blk_len}
+    
+#define SEQ_KIVEC8XTS_DATAIN_LEN                \
+    k.{seq_kivec8xts_datain_len}
     
 /*
  * Debug flags
@@ -273,16 +323,82 @@
 #define DMA_CMD_MEM2MEM_SIZE_DEBUG              1
 
 /*
- * Barco SGL descriptor size
+ * Barco SGL rearranged to little-endian layout
  */
+struct barco_sgl_le_t {
+    rsvd        : 64;
+    link        : 64;
+    rsvd2       : 32;
+    len2        : 32;
+    addr2       : 64;
+    rsvd1       : 32;
+    len1        : 32;
+    addr1       : 64;
+    rsvd0       : 32;
+    len0        : 32;
+    addr0       : 64;
+};
+
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
 
 /*
- * Barco AOL descriptor size
+ * Barco AOL rearranged to little-endian layout
  */
+struct barco_aol_le_t {
+    rsvd        : 64;
+    next_addr   : 64;
+    L2          : 32;
+    O2          : 32;
+    A2          : 64;
+    L1          : 32;
+    O1          : 32;
+    A1          : 64;
+    L0          : 32;
+    O0          : 32;
+    A0          : 64;
+};
+
 #define BARCO_AOL_DESC_SIZE         64
 #define BARCO_AOL_DESC_SIZE_SHIFT   6
+
+/*
+ * Specification of a single chain SGL PDMA tuple for use with tblrdp/tblwrp.
+ */
+struct chain_sgl_pdma_tuple_t {
+    addr        : 64;
+    len         : 32;
+};
+
+/*
+ * Compression descriptor rearranged to little-endian layout
+ */
+struct comp_desc_le_t {
+    status_data     : 32;
+    opaque_tag_data : 32;
+    opaque_tag_addr : 64;
+    doorbell_data   : 64;
+    doorbell_addr   : 64;
+    status_addr     : 64;
+    threshold_len   : 16;
+    extended_len    : 16;
+    datain_len      : 16;
+    cmd             : 16;
+    dst             : 64;
+    src             : 64;
+};
+
+#define COMP_DESC_SIZE              64
+#define COMP_DESC_SIZE_SHIFT        6
+
+/*
+ * Compression header
+ */
+struct seq_comp_hdr_t {
+    cksum           : 32;
+    data_len        : 16;
+    version         : 16;
+};
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_NOP               0
@@ -319,7 +435,7 @@ struct capri_dma_cmd_mem2mem_t {
 };
 
 #define DMA_M2M_PTR_WRITE(_field, _val)                                 \
-  phvwrp    r_next_dma_cmd_ptr, offsetof(DMA_CMD_MEM2MEM_T, _field),    \
+  phvwrp    r_curr_dma_cmd_ptr, offsetof(DMA_CMD_MEM2MEM_T, _field),    \
             sizeof(DMA_CMD_MEM2MEM_T._field), _val;                     \
 
 #define CLEAR_TABLE_VALID_e(_num)                                       \
@@ -560,6 +676,58 @@ struct capri_dma_cmd_mem2mem_t {
 #define CAPRI_PHV_BIT_TO_BYTE(x)                                        \
         (((x) / CAPRI_PHV_FLIT_SIZE_BITS) * CAPRI_PHV_FLIT_SIZE_BYTES) +\
          (CAPRI_PHV_FLIT_SIZE_BYTES) - 1 - (((x) % CAPRI_PHV_FLIT_SIZE_BITS) / 8)
+         
+#define CAPRI_PHV_FLIT_SIZE_BITS_SHIFT  9
+#define CAPRI_TXDMA_DESC_SIZE_BITS      128
+#define CAPRI_NUM_TXDMA_DESCS_PER_FLIT                                  \
+    (CAPRI_PHV_FLIT_SIZE_BITS / CAPRI_TXDMA_DESC_SIZE_BITS)
+
+// Given a flit number, calculate the bit offset to the first TxDMA descriptor
+// in that flit, assuming the entire flit holds only TxDMA descriptors.
+// _flit_no is an immediate value.
+// 
+// Note: PHV flit memory is in big endian layout, so the next adjacent
+// descriptor is at a LOWER address! Hence, the subi instruction below.
+#define CAPRI_FLIT_TO_DMA_PTR(_flit_no)                                 \
+    addi        r_curr_dma_cmd_ptr, r0, ((_flit_no + 1) *               \
+                CAPRI_PHV_FLIT_SIZE_BITS) - CAPRI_TXDMA_DESC_SIZE_BITS; \
+    subi        r_last_dma_cmd_ptr, r_curr_dma_cmd_ptr,                 \
+                CAPRI_TXDMA_DESC_SIZE_BITS *                            \
+                    (CAPRI_NUM_TXDMA_DESCS_PER_FLIT - 1);               \
+
+// Alternatively, the caller can pass in the 1st available and last
+// descriptors in a flit, from which r_curr_dma_cmd_ptr and
+// r_last_dma_cmd_ptr can be calculated.
+#define CAPRI_FLIT_DMA_PTR_INITIAL(_dma_desc_avail, _dma_desc_last)     \
+    addi        r_curr_dma_cmd_ptr, r0,                                 \
+                PHV_DMA_CMD_START_OFFSET(_dma_desc_avail);              \
+    addi        r_last_dma_cmd_ptr, r0,                                 \
+                PHV_DMA_CMD_START_OFFSET(_dma_desc_last);               \
+
+// Given r_curr_dma_cmd_ptr, calculate the next adjacent descriptor, taking
+// into account of flit boundary crossing. When crossing the flit, rewind
+// back to the first descriptor of the flit (which means adding 
+// CAPRI_PHV_FLIT_SIZE_BITS minus CAPRI_TXDMA_DESC_SIZE_BITS),
+// then add CAPRI_TXDMA_DESC_SIZE_BITS to advance to the first descriptor
+// in the next flit.
+// 
+// Note: PHV flit memory is in big endian layout, so the next adjacent
+// descriptor is at a LOWER address! Hence, the subi instruction below.
+#define CAPRI_FLIT_DMA_PTR_ADVANCE(_outer_label)                        \
+    bne         r_curr_dma_cmd_ptr, r_last_dma_cmd_ptr, _outer_label;   \
+    subi        r_curr_dma_cmd_ptr, r_curr_dma_cmd_ptr,                 \
+                CAPRI_TXDMA_DESC_SIZE_BITS;                             \
+    addi        r_curr_dma_cmd_ptr, r_curr_dma_cmd_ptr,                 \
+                (CAPRI_PHV_FLIT_SIZE_BITS * 2) -                        \
+                     CAPRI_TXDMA_DESC_SIZE_BITS;                        \
+    subi        r_last_dma_cmd_ptr, r_curr_dma_cmd_ptr,                 \
+                CAPRI_TXDMA_DESC_SIZE_BITS *                            \
+                    (CAPRI_NUM_TXDMA_DESCS_PER_FLIT - 1);               \
+
+// Offset/size operands for tblrdp/tblwrp instruction
+#define CAPRI_TBLRWP_FIELD_OP(_struct, _field)                          \
+    offsetof(struct _struct, _field),                                   \
+    sizeof(struct _struct._field)                                       \
 
 
 // Phv2Mem DMA: Specify the address of the start and end fields in the PHV
@@ -1074,6 +1242,22 @@ struct capri_dma_cmd_mem2mem_t {
 // Offset to the start of a TxDMA descriptor in PHV
 #define PHV_DMA_CMD_START_OFFSET(_dma_cmd) offsetof(p, _dma_cmd##_dma_cmd_type)
 
+// Set up the initial d-vector chain_sgl_pdma tuple pointer in
+// r_sgl_tuple_p, for use by tblrdp/tblwrp. 
+// Note that tblrdp/tblwrp uses positive incremental offset, while 
+// chain_sgl_pdma embedded in descriptor are ordered from low to high as 
+// len/addr tuples. Hence, the initial starting offset below is len0.
+#define CAPRI_CHAIN_SGL_PDMA_TUPLE_INITIAL()                            \
+    addi         r_sgl_tuple_p, r0, offsetof(d, len0);                  \
+
+// Given the current chain_sgl_pdma tuple pointer in r_sgl_tuple_p,
+// advance to the next tuple. Due to Capri big endian layout, each 
+// subsequent tuple is *BELOW* its predecessor, hence the subi 
+// sinstruction below.
+#define CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()                            \
+    subi    r_sgl_tuple_p, r_sgl_tuple_p,                               \
+            sizeof(struct chain_sgl_pdma_tuple_t);                      \
+
 // Setup the compression data buffer DMA based on flat source buffer 
 // and destination SGL (processing one SGL entry in this macro).
 // Notes: These GPRs are used for input/output to/from this macro
@@ -1081,19 +1265,18 @@ struct capri_dma_cmd_mem2mem_t {
 //  2. r_src_addr stores the offset of the source data buffer from where
 //     the current xfer is to be done.
 // Steps:
-//  1. Adjust data len (0 => 64L xfer) and store it in r_xfer_len
-//  2. Setup the DMA size based on the min size in r_xfer_len vs r_src_len. 
-//  3. Source of the DMA is stored in r_src_addr.
-//  4. Destination of the DMA is based on the address in SGL.
-//  5. Update data remaining (r_src_len) and address offset (r_src_addr) 
-//  6. If data xfer is complete, jump to the branch instruction
-#define COMP_SGL_DMA(_dma_cmd_ptr_src, _dma_cmd_ptr_dst,                \
-                      next_dma_cmd_ptr,_addr, _len, _branch_instr)      \
-   addi     r_next_dma_cmd_ptr, r0, next_dma_cmd_ptr;                   \
-   seq      c1, _len, r0;                                               \
-   cmov     r_xfer_len, c1, 65536, _len;                                \
+//  1. Setup the DMA size based on the min size in r_xfer_len vs r_src_len. 
+//  2. Source of the DMA is stored in r_src_addr.
+//  3. Destination of the DMA is based on the address in SGL.
+//  4. Update data remaining (r_src_len) and address offset (r_src_addr) 
+//  5. If data xfer is complete, jump to the branch instruction
+#define CHAIN_SGL_PDMA(_dma_cmd_ptr_src, _dma_cmd_ptr_dst,              \
+                       _addr, _len, _outer_label, _error_label)         \
+   add      r_xfer_len, _len, r0;                                       \
    sle      c2, r_src_len, r_xfer_len;                                  \
    add.c2   r_xfer_len, r0, r_src_len;                                  \
+   sle      c3, r_xfer_len, DMA_CMD_MEM2MEM_SIZE_MAX;                   \
+   bcf      [!c3], _error_label;                                        \
    add      r_dst_addr, r0, _addr;                                      \
    DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r_src_addr,\
                                      r_xfer_len, _dma_cmd_ptr_src)      \
@@ -1102,7 +1285,33 @@ struct capri_dma_cmd_mem2mem_t {
    add      r_src_addr, r_src_addr, r_xfer_len;                         \
    add      r_dst_addr, r_dst_addr, r_xfer_len;                         \
    sub      r_sgl_len, _len, r_xfer_len;                                \
-   bcf      [c2], _branch_instr;                                        \
+   bcf      [c2], _outer_label;                                         \
+   sub      r_src_len, r_src_len, r_xfer_len;                           \
+
+// Same as CHAIN_SGL_PDMA() but uses DMA descriptor pointer and
+// SGL tuple pointer, which are a necessity when post PDMA padding
+// comes into play.
+#define CHAIN_SGL_PDMA_PTR(_inner_label0, _inner_label1,                \
+                           _outer_label, _error_label)                  \
+   tblrdp.wx r_xfer_len, r_sgl_tuple_p,                                 \
+             CAPRI_TBLRWP_FIELD_OP(chain_sgl_pdma_tuple_t, len);        \
+   sle      c2, r_src_len, r_xfer_len;                                  \
+   add.c2   r_xfer_len, r0, r_src_len;                                  \
+   sle      c3, r_xfer_len, DMA_CMD_MEM2MEM_SIZE_MAX;                   \
+   bcf      [!c3], _error_label;                                        \
+   tblrdp.dx r_dst_addr, r_sgl_tuple_p,                                 \
+             CAPRI_TBLRWP_FIELD_OP(chain_sgl_pdma_tuple_t, addr);       \
+   DMA_MEM2MEM_PTR_SETUP_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r_src_addr,       \
+                              r_xfer_len)                               \
+   CAPRI_FLIT_DMA_PTR_ADVANCE(_inner_label0)                            \
+_inner_label0:;                                                         \
+   DMA_MEM2MEM_PTR_SETUP_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_dst_addr,       \
+                              r_xfer_len)                               \
+   CAPRI_FLIT_DMA_PTR_ADVANCE(_inner_label1)                            \
+_inner_label1:;                                                         \
+   add      r_src_addr, r_src_addr, r_xfer_len;                         \
+   add      r_dst_addr, r_dst_addr, r_xfer_len;                         \
+   bcf      [c2], _outer_label;                                         \
    sub      r_src_len, r_src_len, r_xfer_len;                           \
 
 #define NVME_DATA_XFER_FROM_HOST(_prp_entry, _dst_addr, _data_len,      \

@@ -54,6 +54,7 @@ const static uint32_t	kArmTotalQs		 = 6; // absolute value and not log2 value
 const static uint32_t	kDefaultQstateEntrySize = 6; // Default qstate is 64 bytes
 const static uint32_t	kDefaultEntrySize	 = 6; // Default desc size is 64 bytes
 const static uint32_t	kSeqCompStatusSQEntrySize = 7; // Seq compression status SQ is 128 bytes
+const static uint32_t	kSeqXtsStatusSQEntrySize = 7; // Seq XTS status SQ is 128 bytes
 const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME command + PVM header)
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
@@ -70,7 +71,8 @@ const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static char	*kSeqXtsSqHandler	 = "storage_seq_barco_entry_handler.bin";
-const static char	*kSeqXtsStatusSqHandler = "storage_seq_xts_status_desc_handler.bin";
+const static char	*kSeqXtsStatusDesc0SqHandler = "storage_seq_xts_status_desc0_handler.bin";
+const static char	*kSeqXtsStatusDesc1SqHandler = "storage_seq_xts_status_desc1_handler.bin";
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
 const static char	*kSeqCompSqHandler	 = "storage_seq_barco_entry_handler.bin";
@@ -1058,10 +1060,21 @@ seq_queues_setup() {
   // Initialize PVM SQs for processing Sequencer commands for post XTS
   pvm_seq_xts_status_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumXtsStatusSQs); j++, i++) {
-    if (seq_queue_setup(&seq_sqs[i], i, (char *) kSeqXtsStatusSqHandler,
-                        kDefaultTotalRings, kDefaultHostRings,
-                        DP_MEM_TYPE_HOST_MEM) < 0) {
-      printf("Failed to setup PVM Seq XTS Status queue %d \n", i);
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumEntries),
+                   NUM_TO_VAL(kSeqXtsStatusSQEntrySize),
+                   DP_MEM_TYPE_HOST_MEM) < 0) {
+      printf("Unable to allocate host memory for PVM Seq XTS Status SQ %d\n", i);
+      return -1;
+    }
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqXtsStatusDesc0SqHandler,
+                                     kDefaultTotalRings, kDefaultHostRings, 
+                                     kSeqNumEntries, seq_sqs[i].mem->pa(),
+                                     kSeqXtsStatusSQEntrySize, false, 0, 0, 0,
+                                     (char *) kSeqXtsStatusDesc1SqHandler) < 0) {
+      printf("Failed to setup XTS Status SQ %d state \n", i);
       return -1;
     }
     printf("Setup PVM Seq XTS Status queue %d \n", i);

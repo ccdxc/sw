@@ -263,12 +263,17 @@ public:
         return uncomp_buf->read_thru();
     }
 
+    uint8_t *comp_data_get(void)
+    {
+        return comp_buf->read_thru();
+    }
+
     int actual_enc_blks_get(test_resource_query_method_t query_method);
 
 private:
 
     void  encrypt_setup(uint32_t block_no,
-                        acc_chain_params_t& chain_params);
+                        chain_params_comp_t& chain_params);
 
     xts_enc_dec_blk_type_t enc_dec_blk_type;
     uint32_t        app_max_size;

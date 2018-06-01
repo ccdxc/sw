@@ -13,24 +13,8 @@ struct s2_tbl_seq_comp_status_handler_d d;
 struct phv_ p;
 
 /*
- * SGL rearranged to little-endian layout
- */
-struct barco_sgl_le_t {
-    rsvd : 64;
-    link : 64;
-    rsvd2: 32;
-    len2 : 32;
-    addr2: 64;
-    rsvd1: 32;
-    len1 : 32;
-    addr1: 64;
-    rsvd0: 32;
-    len0 : 32;
-    addr0: 64;
-};
-
-/*
  * Registers usage
+ * CAUTION: r1 is also implicitly used by LOAD_TABLE1_FOR_ADDR_PC_IMM()
  */
 #define r_comp_data_len             r1  // compression output data length
 #define r_total_len                 r2  // above length plus padding
@@ -48,7 +32,7 @@ struct barco_sgl_le_t {
 
 %%
     .param storage_seq_barco_chain_action
-    .param storage_seq_comp_aol_pad_handler
+    .param storage_seq_comp_aol_pad_prep
     .param storage_seq_comp_sgl_pdma_xfer
     .param storage_seq_comp_sgl_pad_only_xfer
 
@@ -75,37 +59,38 @@ storage_seq_comp_status_handler:
     // r_total_len = r_num_blks * r_pad_boundary
     // r_pad_len = r_total_len - r_comp_data_len
    
-    sll         r_pad_boundary, 1, SEQ_KIVEC5_PAD_LEN_SHIFT
+    sll         r_pad_boundary, 1, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
     add         r_num_blks, r_comp_data_len, r_pad_boundary
     sub         r_num_blks, r_num_blks, 1
-    srl         r_num_blks, r_num_blks, SEQ_KIVEC5_PAD_LEN_SHIFT
-    sll         r_total_len, r_num_blks, SEQ_KIVEC5_PAD_LEN_SHIFT
+    srl         r_num_blks, r_num_blks, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
+    sll         r_total_len, r_num_blks, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
     sub         r_pad_len, r_total_len, r_comp_data_len
     sub         r_last_blk_len, r_pad_boundary, r_pad_len
 
     phvwrpair   p.comp_last_blk_len_len, r_last_blk_len.wx, \
                 p.comp_pad_len_len, r_pad_len.wx
-                
+    
     // Note that both SGL padding and AOL padding may be enabled, for the
     // following use case: compress-pad-encrypt where the compressed output
     // data (padded) is saved while at the same time passed to Barco
     // for encryption (compression uses SGL format while encryption uses AOL).
                      
     bbeq        SEQ_KIVEC5_AOL_PAD_EN, 0, possible_sgl_padding
-    phvwr       p.seq_kivec3_num_blks, r_num_blks        // delay slot
+    phvwrpair   p.seq_kivec8_pad_len, r_pad_len, \
+                p.seq_kivec8_last_blk_len, r_last_blk_len       // delay slot
     
 aol_padding:
     
     // AOL padding enabled: handle in the next stage due to low availability
     // of k-vec space which forces usage of a stage_2_stage (seq_kivec6).
-    LOAD_TABLE_NO_LKUP_PC_IMM(3, storage_seq_comp_aol_pad_handler) 
+    LOAD_TABLE_NO_LKUP_PC_IMM(3, storage_seq_comp_aol_pad_prep) 
 
     // Tell possible_sgl_pdma_xfer that padding is enabled
     setcf       c6, [c0]
 
 possible_sgl_padding:
     bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, possible_per_block_descs
-    nop
+    phvwr       p.seq_kivec3_num_blks, r_num_blks        // delay slot
 
     // SGL padding enabled:
     // Given a vector of SGLs, each prefilled with exactly one block addr and len,
@@ -140,6 +125,7 @@ if0:
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len1))
     DMA_PHV2MEM_SETUP_ADDR64(comp_pad_len_len, comp_pad_len_len,
                              r_sgl_field_p, dma_p2m_4)
+
 endif0:
 
 possible_per_block_descs:
