@@ -78,9 +78,9 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
 
 def __invoke_api(api, req_msg):
     if req_msg:
-        resp_msg = api(req_msg)
+        resp_msg = api(req_msg, timeout = 60)
     else:
-        resp_msg = api(types_pb2.Empty())
+        resp_msg = api(types_pb2.Empty(), timeout = 60)
     return resp_msg
 
 def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
