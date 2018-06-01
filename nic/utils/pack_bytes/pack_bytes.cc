@@ -56,7 +56,7 @@ uint64_t pack_bytes_unpack(uint8_t *bytes, uint32_t start, uint32_t width) {
                 mask &= end_masks[end_bits];
             }
 
-            val |= (((bytes[i] & mask) << ((i - start_byte) * 8)) >> start_bits);
+            val |= ((((uint64_t)(bytes[i] & mask)) << ((i - start_byte) * 8)) >> start_bits);
         }
     }
 

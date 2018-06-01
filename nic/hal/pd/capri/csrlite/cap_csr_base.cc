@@ -127,7 +127,7 @@ void cap_sw_register_base::write_hw(uint8_t *write_bytes, int block_write) {
 
     for(uint32_t ii = 0; ii < words; ii++) {
         uint32_t data = *((uint32_t *)&(write_bytes[ii*4]));
-        SDK_TRACE_DEBUG("cap_sw_register_base::write_hw(): Addr: 0x%0x; Data: 0x%0x\n",
+        SDK_TRACE_DEBUG("cap_sw_register_base::write_hw(): Addr: 0x%0x; Data: 0x%0x",
                          offset + (ii*4), data);
         sdk::lib::pal_reg_write(offset + (ii*4), &data);
     }
@@ -144,7 +144,7 @@ void cap_sw_register_base::read_hw(uint8_t *read_bytes, int block_read) {
         uint32_t data = 0;
         sdk::lib::pal_reg_read(offset + (ii*4), &data);
         *((uint32_t *)&(read_bytes[ii*4])) = data;
-        SDK_TRACE_DEBUG("cap_sw_register_base::read_hw(): Addr: 0x%0x; Data: 0x%0x\n",
+        SDK_TRACE_DEBUG("cap_sw_register_base::read_hw(): Addr: 0x%0x; Data: 0x%0x",
                          offset + (ii*4), data);
     }
 }
