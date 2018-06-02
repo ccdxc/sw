@@ -65,7 +65,7 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qtype, int qid, uint64_t ring_base,
     }
 
     HAL_TRACE_DEBUG("Programming gc tx qtype {} qid {} stage0 at addr: {:#x}",
-            qtype, qid, addr);
+                    qtype, qid, addr);
     if(!p4plus_hbm_write(addr,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for addr");
@@ -75,7 +75,7 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qtype, int qid, uint64_t ring_base,
 }
 
 /*
- * Program GC CB for 
+ * Program GC CB for
  *  LIF (SERVICE_LIF_GC)
  *  type (type of ring RNMDR/TNMDR)
  *  qid (producer - tcp, tls, ipsec etc.)

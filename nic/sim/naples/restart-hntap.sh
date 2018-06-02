@@ -7,7 +7,7 @@ export LOG_DIR=/naples/data/logs
 export MODEL_ZMQ_TYPE_TCP=1
 export ZMQ_SOC_DIR=$NIC_DIR
 
-echo "Re-Starting hntap ..."
+echo "Restarting hntap ..."
 pkill nic_infra_hntap && echo "Stopped hntap" || echo "hntap not running"
 echo "Starting hntap ..."
 $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json > $LOG_DIR/hntap.log  2>&1 &

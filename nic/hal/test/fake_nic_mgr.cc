@@ -27,6 +27,131 @@ using intf::LifQStateMapEntry;
 using intf::QStateSetReq;
 using types::Empty;
 
+const char tx_qstate[] = {
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x11,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    (char)0xc0,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+};
+
+const char rx_qstate[] = {
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x11,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    (char)0xc0,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x3f,
+    0x00,
+};
+
+const char admin_qstate[] = {
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x11,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    (char)0xc0,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+};
+
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) :
@@ -53,7 +178,7 @@ public:
         if (status.ok()) {
             num_rsp = rsp_msg.response_size();
             std::cout << "Num of Rsps: " << num_rsp << std::endl;
-            for (uint32_t i = 0; i < num_rsp; i ++) { 
+            for (uint32_t i = 0; i < num_rsp; i ++) {
                 std::cout << "Lif ID = "
                           << rsp_msg.response(i).spec().key_or_handle().lif_id()
                           << std::endl;
@@ -63,7 +188,7 @@ public:
         }
     }
 
-    uint64_t lif_create(uint32_t lif_id, uint32_t type_num) {
+    uint64_t lif_create(uint32_t lif_id, uint32_t type_num, uint32_t num_lifs) {
         LifSpec              *spec;
         LifRequestMsg        req_msg;
         LifResponseMsg       rsp_msg;
@@ -71,28 +196,49 @@ public:
         QStateSetReq         *lif_qstate;
         ClientContext        context;
         Status               status;
-        uint32_t             entries = 1;
-        uint32_t             size = 64;
 
-        spec = req_msg.add_request();
-        spec->mutable_key_or_handle()->set_lif_id(lif_id);
-        spec->set_admin_status(::intf::IF_STATUS_UP);
-        spec->mutable_packet_filter()->set_receive_broadcast(true);
-        lif_qstate_map = spec->add_lif_qstate_map();
-        lif_qstate_map->set_type_num(type_num);
-        lif_qstate_map->set_size(log2(size));
-        lif_qstate_map->set_entries(log2(entries));
-        lif_qstate_map->set_purpose(::intf::LIF_QUEUE_PURPOSE_TX);
-        lif_qstate = spec->add_lif_qstate();
-        lif_qstate->set_lif_handle(0);
-        lif_qstate->set_type_num(type_num);
-        lif_qstate->set_qid(0);
-        /*
-        lif_qstate->mutable_label()->set_handle("p4plus");
-        req_spec.queue_state = bytes(EthTxQstate(host=1, total=1, enable=1));
-        req_spec.label.prog_name = "txdma_stage0.bin";
-        req_spec.label.label = "eth_tx_stage0"
-        */
+        for (uint32_t i = 0; i < num_lifs; i++) {
+            spec = req_msg.add_request();
+            spec->mutable_key_or_handle()->set_lif_id(lif_id + i);
+            spec->set_admin_status(::intf::IF_STATUS_UP);
+            spec->mutable_packet_filter()->set_receive_broadcast(true);
+            lif_qstate_map = spec->add_lif_qstate_map();
+            lif_qstate_map->set_type_num(1);
+            lif_qstate_map->set_size(1);
+            lif_qstate_map->set_purpose(::intf::LIF_QUEUE_PURPOSE_TX);
+
+            lif_qstate_map = spec->add_lif_qstate_map();
+            lif_qstate_map->set_size(1);
+            lif_qstate_map->set_purpose(::intf::LIF_QUEUE_PURPOSE_RX);
+
+            lif_qstate_map = spec->add_lif_qstate_map();
+            lif_qstate_map->set_type_num(2);
+            lif_qstate_map->set_size(1);
+            lif_qstate_map->set_purpose(::intf::LIF_QUEUE_PURPOSE_ADMIN);
+
+            lif_qstate = spec->add_lif_qstate();
+            lif_qstate->set_type_num(1);
+            auto label = lif_qstate->mutable_label();
+            label->set_handle("p4plus");
+            label->set_prog_name("txdma_stage0.bin");
+            label->set_label("eth_tx_stage0");
+            lif_qstate->set_queue_state(tx_qstate, sizeof(tx_qstate));
+
+            lif_qstate = spec->add_lif_qstate();
+            label = lif_qstate->mutable_label();
+            label->set_handle("p4plus");
+            label->set_prog_name("rxdma_stage0.bin");
+            label->set_label("eth_rx_stage0");
+            lif_qstate->set_queue_state(rx_qstate, sizeof(rx_qstate));
+
+            lif_qstate = spec->add_lif_qstate();
+            lif_qstate->set_type_num(2);
+            label = lif_qstate->mutable_label();
+            label->set_handle("p4plus");
+            label->set_prog_name("txdma_stage0.bin");
+            label->set_label("adminq_stage0");
+            lif_qstate->set_queue_state(admin_qstate, sizeof(admin_qstate));
+        }
         status = intf_stub_->LifCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
@@ -151,9 +297,9 @@ int
 main (int argc, char** argv)
 {
     uint64_t       uplink_if_handle;
-    uint64_t       lif_handle;
+    uint64_t       lif_id = 100;
     uint64_t       if_id = 1;
-    uint64_t       num_uplinks = 2;
+    uint64_t       num_lifs = 16, num_uplinks = 2;
     std::string    svc_endpoint;
 
     grpc_init();
@@ -174,11 +320,8 @@ main (int argc, char** argv)
         exit(1);
     }
 
-    // create a lif
-    lif_handle = hclient.lif_create(100, 1);
-    if (lif_handle == 0) {
-        exit(1);
-    }
+    // create lif(s)
+    hclient.lif_create(lif_id, 1, num_lifs);
     hclient.lif_get_all();
 
     return 0;

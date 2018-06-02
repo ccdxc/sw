@@ -71,7 +71,9 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
         resp_spec = resp_msg.response[idx]
         req_obj = req_objs[idx]
         getattr(req_obj, respcb)(req_spec, resp_spec)
-        if resp_spec.api_status != types_pb2.API_STATUS_OK:
+        if resp_spec.api_status == types_pb2.API_STATUS_EXISTS_ALREADY:
+            logger.info(" Object exists already")
+        elif resp_spec.api_status != types_pb2.API_STATUS_OK:
             logger.error(" HAL Returned API Status:%d" % (resp_spec.api_status))
             assert(0)
     return

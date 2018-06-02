@@ -10,5 +10,101 @@
     "local"   : false,
     "port"    : 2,
     "lif_id"  : 0
+  },
+  {
+    "name"    : "ep-1",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 3 
+  },
+  {
+    "name"    : "ep-2",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 4
+  },
+  {
+    "name"    : "ep-3",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 5
+  },
+  {
+    "name"    : "ep-4",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 6
+  },
+  {
+    "name"    : "ep-5",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 7
+  },
+  {
+    "name"    : "ep-6",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 8
+  },
+  {
+    "name"    : "ep-7",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 9
+  },
+  {
+    "name"    : "ep-8",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 10
+  },
+  {
+    "name"    : "ep-9",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 11
+  },
+  {
+    "name"    : "ep-10",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 12
+  },
+  {
+    "name"    : "ep-11",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 13
+  },
+  {
+    "name"    : "ep-12",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 14
+  },
+  {
+    "name"    : "ep-13",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 15
+  },
+  {
+    "name"    : "ep-14",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 16
+  },
+  {
+    "name"    : "ep-15",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 17
+  },
+  {
+    "name"    : "ep-16",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 18
   }
 ]

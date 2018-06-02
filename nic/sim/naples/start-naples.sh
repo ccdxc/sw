@@ -53,16 +53,6 @@ else
     echo "HAL started, pid is $PID"
 fi
 
-echo "Starting hntap ..."
-$NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json &
-PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start hntap service"
-    #exit $?
-else
-    echo "hntap service started, pid is $PID"
-fi
-
 # wait for HAL to open gRPC port before spawning agent(s)
 HAL_WAIT_TIMEOUT=1
 HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
@@ -95,6 +85,16 @@ $NIC_DIR/bin/nic_mgr_app
 if [ $? -ne 0 ]; then
     echo "Failed to start nic mgr"
     #exit $?
+fi
+
+echo "Starting hntap ..."
+$NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json &
+PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
+if [[ "" ==  "$PID" ]]; then
+    echo "Failed to start hntap service"
+    #exit $?
+else
+    echo "hntap service started, pid is $PID"
 fi
 
 echo "Starting netagent ..."

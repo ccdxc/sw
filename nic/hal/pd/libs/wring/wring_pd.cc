@@ -19,7 +19,7 @@ hal_ret_t serq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
 hal_ret_t barco_gcm0_get_hw_meta(pd_wring_t* wring_pd);
 
-hal_ret_t  
+hal_ret_t
 wring_pd_meta_init() {
     /*
      * Add meta info for each ring
@@ -27,40 +27,40 @@ wring_pd_meta_init() {
      *         associate object region name, associated size of object
      */
 
-    g_meta[types::WRING_TYPE_SERQ] = 
+    g_meta[types::WRING_TYPE_SERQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, CAPRI_SERQ_RING_SLOTS, SERQ_WRING_SLOT_SIZE, "", 0, 0, 0, serq_slot_parser, NULL, false};
- 
-    g_meta[types::WRING_TYPE_NMDR_TX] = 
+
+    g_meta[types::WRING_TYPE_NMDR_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, CAPRI_TNMDR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
                            CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDR_FREE_RAW_ADDR,
                            NULL, NULL, false};
- 
-    g_meta[types::WRING_TYPE_NMDR_RX] = 
+
+    g_meta[types::WRING_TYPE_NMDR_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, CAPRI_RNMDR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
                            CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDR_FREE_RAW_ADDR,
                            NULL, NULL, false};
-    
-    g_meta[types::WRING_TYPE_NMPR_SMALL_TX] = 
+
+    g_meta[types::WRING_TYPE_NMPR_SMALL_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, CAPRI_TNMPR_SMALL_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_SMALL_TX, 2048,
                            CAPRI_SEM_TNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_SMALL_FREE_RAW_ADDR,
                            NULL, NULL, false};
 
-    g_meta[types::WRING_TYPE_NMPR_SMALL_RX] = 
+    g_meta[types::WRING_TYPE_NMPR_SMALL_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, CAPRI_RNMPR_SMALL_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_SMALL_RX, 2048,
                            CAPRI_SEM_RNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_SMALL_FREE_RAW_ADDR,
                            NULL, NULL, false};
 
-    g_meta[types::WRING_TYPE_NMPR_BIG_TX] = 
+    g_meta[types::WRING_TYPE_NMPR_BIG_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, CAPRI_TNMPR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_TX, 9600,
                            CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR,
                            NULL, NULL, false};
 
-    g_meta[types::WRING_TYPE_NMPR_BIG_RX] = 
+    g_meta[types::WRING_TYPE_NMPR_BIG_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, CAPRI_RNMPR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_RX, 9600,
                            CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR,
@@ -72,7 +72,7 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_BRQ] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser, barco_gcm0_get_hw_meta, false};
 
-    g_meta[types::WRING_TYPE_SESQ] = 
+    g_meta[types::WRING_TYPE_SESQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_IPSECCBQ] =
@@ -102,16 +102,16 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0,
                            NULL, NULL, true};
 
-    g_meta[types::WRING_TYPE_ASESQ] = 
+    g_meta[types::WRING_TYPE_ASESQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, CAPRI_ASESQ_RING_SLOTS,
                             DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
 
-    g_meta[types::WRING_TYPE_NMDR_TX_GC] = 
+    g_meta[types::WRING_TYPE_NMDR_TX_GC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_TX_GC,
                            CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
- 
-    g_meta[types::WRING_TYPE_NMDR_RX_GC] = 
+
+    g_meta[types::WRING_TYPE_NMDR_RX_GC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_RX_GC,
                            CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
@@ -121,7 +121,7 @@ wring_pd_meta_init() {
 
 pd_wring_meta_t* wring_pd_get_meta(types::WRingType type)
 {
-    return &g_meta[type];    
+    return &g_meta[type];
 }
 /**************************
  * Helper functions
@@ -202,7 +202,7 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
     pd_wring_meta_t     *meta = &g_meta[type];
     wring_hw_id_t       addr = 0;
 
-    addr = get_start_offset(meta->hbm_reg_name); 
+    addr = get_start_offset(meta->hbm_reg_name);
     if(!addr) {
         HAL_TRACE_ERR("Could not find addr for {} region", meta->hbm_reg_name);
         return HAL_RET_ERR;
@@ -210,10 +210,10 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
 
     if(meta->is_global) {
         // Global rings start at the base of hbm_region
-        *wring_base = addr;    
+        *wring_base = addr;
     } else {
         // Flow local ring. Get the offset based on wring id
-        uint32_t wring_size = meta->num_slots * meta->slot_size_in_bytes; 
+        uint32_t wring_size = meta->num_slots * meta->slot_size_in_bytes;
         *wring_base = addr + (wring_id * wring_size);
     }
 
@@ -221,7 +221,7 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
 }
 
 hal_ret_t
-wring_pd_table_init(types::WRingType type, uint32_t wring_id) 
+wring_pd_table_init(types::WRingType type, uint32_t wring_id)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_wring_meta_t     *meta = &g_meta[type];
@@ -232,7 +232,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         HAL_TRACE_ERR("Could not find the wring base addr");
         return ret;
     }
-    
+
     uint32_t reg_size = get_size_kb(meta->hbm_reg_name);
     if(!reg_size) {
         HAL_TRACE_ERR("Could not find size for {} region", meta->hbm_reg_name);
@@ -250,7 +250,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         for(uint32_t  index = 0; index<meta->num_slots; index++) {
 
             uint64_t slot_addr = wring_base + (index * meta->slot_size_in_bytes);
-            
+
             get_default_slot_value(type, index, value);
             p4plus_hbm_write(slot_addr, value, meta->slot_size_in_bytes,
                     P4PLUS_CACHE_ACTION_NONE);
@@ -261,8 +261,8 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         // Set CI = ring size
         uint32_t val32 = meta->num_slots;
         HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
-                                val32, meta->alloc_semaphore_addr +
-                                CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
+                        val32, meta->alloc_semaphore_addr +
+                        CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
         p4plus_reg_write(
                 meta->alloc_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                 val32);
@@ -274,7 +274,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         uint32_t val32 = meta->num_slots;
         p4plus_reg_write(meta->free_semaphore_addr, val32);
         HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
-                                val32, meta->free_semaphore_addr);
+                        val32, meta->free_semaphore_addr);
 
         // FP.CI = FP.PI + 1 (this queue is initially full, until one object is
         // inserted). Note CI is currently unused, since FP is incremented using
@@ -285,8 +285,8 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         p4plus_reg_write(meta->free_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                                         val32);
         HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
-                                val32, meta->free_semaphore_addr +
-                                CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
+                        val32, meta->free_semaphore_addr +
+                        CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
     }
     return HAL_RET_OK;
 }
@@ -329,30 +329,30 @@ hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *sl
     wring->slot_info.gcm_desc.header_size = gcm_desc->header_size;
 
     /* IV is not directly located in the ring, hence dereference it */
-    
+
     if (gcm_desc->iv_address) {
-        if(!p4plus_hbm_read(gcm_desc->iv_address, 
+        if(!p4plus_hbm_read(gcm_desc->iv_address,
                             (uint8_t*)&wring->slot_info.gcm_desc.salt,
                             sizeof(wring->slot_info.gcm_desc.salt))) {
-            HAL_TRACE_ERR("Failed to read the Salt information from HBM");    
+            HAL_TRACE_ERR("Failed to read the Salt information from HBM");
         }
-        if(!p4plus_hbm_read(gcm_desc->iv_address + 4, 
-                            (uint8_t*)&wring->slot_info.gcm_desc.explicit_iv, 
+        if(!p4plus_hbm_read(gcm_desc->iv_address + 4,
+                            (uint8_t*)&wring->slot_info.gcm_desc.explicit_iv,
                             sizeof(wring->slot_info.gcm_desc.explicit_iv))) {
-            HAL_TRACE_ERR("Failed to read the explicit IV information from HBM");    
+            HAL_TRACE_ERR("Failed to read the explicit IV information from HBM");
         }
     } else {
             wring->slot_info.gcm_desc.salt = 0;
             wring->slot_info.gcm_desc.explicit_iv = 0;
     }
     if (gcm_desc->status_address) {
-        if(!p4plus_hbm_read(gcm_desc->status_address, 
-                            (uint8_t*)&wring->slot_info.gcm_desc.barco_status, 
+        if(!p4plus_hbm_read(gcm_desc->status_address,
+                            (uint8_t*)&wring->slot_info.gcm_desc.barco_status,
                             sizeof(wring->slot_info.gcm_desc.barco_status))) {
-            HAL_TRACE_ERR("Failed to read the Barco Status information from HBM");    
+            HAL_TRACE_ERR("Failed to read the Barco Status information from HBM");
         }
     } else {
-        wring->slot_info.gcm_desc.barco_status = 0;   
+        wring->slot_info.gcm_desc.barco_status = 0;
     }
 
     return HAL_RET_OK;
@@ -369,21 +369,21 @@ hal_ret_t serq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
 
 static
 hal_ret_t
-p4pd_wring_get_entry(pd_wring_t* wring_pd) 
+p4pd_wring_get_entry(pd_wring_t* wring_pd)
 {
     hal_ret_t           ret = HAL_RET_OK;
     wring_t*            wring = wring_pd->wring;
     pd_wring_meta_t     *meta = &g_meta[wring->wring_type];
     wring_hw_id_t       wring_base;
-   
-    ret = wring_pd_get_base_addr(wring->wring_type, 
-                                 wring->wring_id, 
+
+    ret = wring_pd_get_base_addr(wring->wring_type,
+                                 wring->wring_id,
                                  &wring_base);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Could not find the wring base addr");
         return ret;
     }
-    
+
     // Normalize
     uint32_t slot_index = (wring_pd->wring->slot_index % meta->num_slots);
     wring_hw_id_t slot_addr = wring_base + (slot_index * meta->slot_size_in_bytes);
@@ -391,10 +391,10 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
     uint8_t value[meta->slot_size_in_bytes];
     uint64_t *value64 = (uint64_t*)value;
 
-    if(!p4plus_hbm_read(slot_addr, 
-                        value, 
+    if(!p4plus_hbm_read(slot_addr,
+                        value,
                         meta->slot_size_in_bytes)) {
-        HAL_TRACE_ERR("Failed to read the data from the hw)");    
+        HAL_TRACE_ERR("Failed to read the data from the hw)");
     }
     if(meta->slot_size_in_bytes == sizeof(uint64_t)) {
         wring->slot_value = ntohll(*value64);
@@ -490,7 +490,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
 
     if(sem_addr == 0) {
         HAL_TRACE_DEBUG("skipping PI/CI read for sem addr 0");
-        return ret;    
+        return ret;
     }
 
     HAL_TRACE_DEBUG("Reading pi from the addr: {:#x}", sem_addr);
@@ -550,25 +550,25 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
 
 
 hal_ret_t
-wring_pd_init_global_rings() 
+wring_pd_init_global_rings()
 {
     hal_ret_t   ret = HAL_RET_OK;
-   
+
     ret = wring_pd_meta_init();
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize meta");
-        return HAL_RET_ERR; 
+        return HAL_RET_ERR;
     }
 
     for(int i = 1; i< types::WRingType_ARRAYSIZE; i++) {
         if(g_meta[i].is_global) {
             ret = wring_pd_table_init(types::WRingType(i), 0);
             if(ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to initialize p4plus wring of type: {}", i); 
+                HAL_TRACE_ERR("Failed to initialize p4plus wring of type: {}", i);
                 // continue with the initialization of the remaining tables
                 continue;
-            } 
-            HAL_TRACE_DEBUG("Initialized p4plus ring: {}", 
+            }
+            HAL_TRACE_DEBUG("Initialized p4plus ring: {}",
                 types::WRingType_Name(types::WRingType(i)));
         }
     }
@@ -619,7 +619,7 @@ pd_wring_create (pd_wring_create_args_t *args)
     ret = wring_pd_table_init(wring_pd->wring->wring_type,
                               wring_pd->wring->wring_id);
     if(ret != HAL_RET_OK) {
-        goto cleanup;    
+        goto cleanup;
     }
 
     // add to db
@@ -653,8 +653,8 @@ pd_wring_get_entry (pd_wring_get_entry_args_t *args)
     // get hw wring entry
     ret = p4pd_wring_get_entry(&wring_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get wring entry"); 
-        goto cleanup;    
+        HAL_TRACE_ERR("Failed to get wring entry");
+        goto cleanup;
     }
 cleanup:
     return ret;
