@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 
-#include "nic/upgrade_manager/example/example.hpp"
+#include "nic/upgrade_manager/example/c/example.hpp"
 
 using namespace std;
 using namespace upgrade;

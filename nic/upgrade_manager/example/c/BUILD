@@ -12,8 +12,8 @@ cc_library(
     ],
     deps = [
         "//nic/delphi/sdk",
-        "//nic/upgrade_manager/export:upgrade_app_lib",
-        "//nic/upgrade_manager/export:upgrade_app_lib_includes",
+        "//nic/upgrade_manager/export/c:upgrade_app_lib",
+        "//nic/upgrade_manager/export/c:upgrade_app_lib_includes",
     ],
 )
 
@@ -25,8 +25,8 @@ cc_binary(
     ],
     deps = [
         ":example_lib",
-        "//nic/upgrade_manager/export:upgrade_app_lib",
-        "//nic/upgrade_manager/export:upgrade_app_lib_includes",
+        "//nic/upgrade_manager/export/c:upgrade_app_lib",
+        "//nic/upgrade_manager/export/c:upgrade_app_lib_includes",
         "//nic/delphi/sdk",
         "@third_party//:libev",
         "@third_party//:libev_includes",
@@ -49,8 +49,8 @@ cc_binary(
         "nmd.cc"
     ],
     deps = [
-        "//nic/upgrade_manager/export:upgrade_app_lib",
-        "//nic/upgrade_manager/export:upgrade_app_lib_includes",
+        "//nic/upgrade_manager/export/c:upgrade_app_lib",
+        "//nic/upgrade_manager/export/c:upgrade_app_lib_includes",
         ":nmd_includes",
         "//nic/delphi/sdk",
         "@third_party//:libev",

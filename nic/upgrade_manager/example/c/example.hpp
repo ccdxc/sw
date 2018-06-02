@@ -4,7 +4,7 @@
 #define __EXAMPLE_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/upgrade_manager/export/upgrade.hpp"
+#include "nic/upgrade_manager/export/c/upgrade.hpp"
 
 namespace example {
 

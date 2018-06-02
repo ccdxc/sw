@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "upgrade_app_resp_reactor.hpp"
-#include "nic/upgrade_manager/include/upgrade_state_machine.hpp"
+#include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
 
 namespace upgrade {
 

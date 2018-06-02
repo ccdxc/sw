@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 
-#include "nic/upgrade_manager/example/nmd.hpp"
+#include "nic/upgrade_manager/example/c/nmd.hpp"
 
 using namespace std;
 using namespace nmd;
