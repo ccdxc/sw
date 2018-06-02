@@ -16,9 +16,6 @@ using device::DeviceRequest;
 using device::DeviceGetResponse;
 using device::DeviceGetResponseMsg;
 using device::DeviceGetRequest;
-using device::DeviceDeleteResponse;
-using device::DeviceDeleteResponseMsg;
-using device::DeviceDeleteRequest;
 
 namespace hal {
 
@@ -26,8 +23,6 @@ hal_ret_t device_create(DeviceRequest *req,
                         DeviceResponseMsg *rsp);
 hal_ret_t device_update(DeviceRequest *req,
                         DeviceResponseMsg *rsp);
-hal_ret_t device_delete(DeviceDeleteRequest *req,
-                        DeviceDeleteResponseMsg *rsp);
 hal_ret_t device_get(DeviceGetRequest *req,
                      DeviceGetResponseMsg *rsp);
 

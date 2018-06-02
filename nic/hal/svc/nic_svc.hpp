@@ -23,10 +23,6 @@ public:
                         const device::DeviceRequestMsg *req,
                         device::DeviceResponseMsg *rsp) override;
 
-    Status DeviceDelete(ServerContext *context,
-                        const device::DeviceDeleteRequestMsg *req,
-                        device::DeviceDeleteResponseMsg *rsp) override;
-
     Status DeviceGet(ServerContext *context,
                         const device::DeviceGetRequestMsg *req,
                         device::DeviceGetResponseMsg *rsp) override;

@@ -40,20 +40,6 @@ NicServiceImpl::DeviceUpdate(ServerContext *context,
 }
 
 Status
-NicServiceImpl::DeviceDelete(ServerContext *context,
-                             const device::DeviceDeleteRequestMsg *req,
-                             device::DeviceDeleteResponseMsg *rsp)
-{
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    {
-        auto request = ((device::DeviceDeleteRequestMsg *)req)->mutable_request();
-        hal::device_delete(request, rsp);
-    }
-    hal::hal_cfg_db_close();
-    return Status::OK;
-}
-
-Status
 NicServiceImpl::DeviceGet(ServerContext *context,
                           const device::DeviceGetRequestMsg *req,
                           device::DeviceGetResponseMsg *rsp)

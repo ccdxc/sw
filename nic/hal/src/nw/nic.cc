@@ -81,15 +81,6 @@ device_update (DeviceRequest *req, DeviceResponseMsg *rsp)
     return HAL_RET_OK;                   
 }
 
-//------------------------------------------------------------------------------
-// process a device delete request
-//------------------------------------------------------------------------------
-hal_ret_t
-device_delete (DeviceDeleteRequest *req, DeviceDeleteResponseMsg *rsp)
-{
-    return HAL_RET_OK;
-}
-
 hal_ret_t
 device_get (DeviceGetRequest *req, DeviceGetResponseMsg *rsp)
 {

@@ -16,7 +16,6 @@ option go_package="halproto";
 service Nic {
   rpc DeviceCreate (DeviceRequestMsg) returns (DeviceResponseMsg) {}
   rpc DeviceUpdate (DeviceRequestMsg) returns (DeviceResponseMsg) {}
-  rpc DeviceDelete (DeviceDeleteRequestMsg) returns (DeviceDeleteResponseMsg) {}
   rpc DeviceGet (DeviceGetRequestMsg) returns (DeviceGetResponseMsg) {}
 }
 
@@ -64,18 +63,4 @@ message DeviceGetResponse {
 
 message DeviceGetResponseMsg {
   DeviceGetResponse   response = 1; // batched response
-}
-
-message DeviceDeleteRequest {
-}
-
-message DeviceDeleteRequestMsg {
-  DeviceDeleteRequest request = 1;
-}
-
-message DeviceDeleteResponse {
-}
-
-message DeviceDeleteResponseMsg {
-  DeviceDeleteResponse response = 1;
 }
