@@ -11,6 +11,8 @@ from config.store               import Store
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 from infra.common.glopts import GlobalOptions
+from config.objects.proxycb_service    import ProxyCbServiceHelper
+from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 
 rnmdr = 0
 ipseccbq = 0
@@ -42,8 +44,15 @@ def TestCaseSetup(tc):
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
     rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
-    ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
-    ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
+
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    IpsecCbHelper.main(id)
+    ipsecid = "IPSECCB%04d" % id
+    ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
+    ipsec_cbq_id = ipsecid + "_IPSECCBQ"
+
+    ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id])
+    ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
 
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     rnmpr.GetMeta()
