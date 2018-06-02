@@ -2,8 +2,8 @@
 #include "ingress.h"
 #include "ipsec_asm_defines.h"
 
-struct tx_table_s2_t0_k k;
-struct tx_table_s2_t0_ipsec_encap_txdma_load_head_desc_int_header_d d;
+struct tx_table_s3_t0_k k;
+struct tx_table_s3_t0_ipsec_encap_txdma_load_head_desc_int_header_d d;
 struct phv_ p;
 
 %%

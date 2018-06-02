@@ -92,6 +92,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         HAL_TRACE_DEBUG("Received TX pc address {}", pc_offset);
         HAL_TRACE_DEBUG("Received cb_id as {}", ipseccb_pd->ipseccb->cb_id);
         data.u.ipsec_encap_rxdma_initial_table_d.total = 2;
+        data.u.ipsec_encap_rxdma_initial_table_d.cosA = 1;
+        data.u.ipsec_encap_rxdma_initial_table_d.cosB = 1;
         data.u.ipsec_encap_rxdma_initial_table_d.iv = ipseccb_pd->ipseccb->iv;
         data.u.ipsec_encap_rxdma_initial_table_d.iv_salt = ipseccb_pd->ipseccb->iv_salt;
         data.u.ipsec_encap_rxdma_initial_table_d.iv_size = ipseccb_pd->ipseccb->iv_size;

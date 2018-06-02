@@ -20,7 +20,7 @@ esp_ipv4_tunnel_h2n_allocate_output_page_semaphore:
     phvwri p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END
 
     phvwri p.app_header_table3_valid, 1
-    and r1, d.{out_page_ring_index}.dx, 0x3FF 
+    and r1, d.{out_page_ring_index}.dx, IPSEC_PAGE_RING_INDEX_MASK 
     sll r1, r1, 3 
     addui r1, r1, hiword(TNMPR_TABLE_BASE)
     addi r1, r1, loword(TNMPR_TABLE_BASE)

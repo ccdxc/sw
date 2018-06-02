@@ -3,8 +3,8 @@
 #include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
-struct tx_table_s3_t0_k k;
-struct tx_table_s3_t0_tx_table_s3_t0_cfg_action_d d;
+struct tx_table_s4_t0_k k;
+struct tx_table_s4_t0_tx_table_s4_t0_cfg_action_d d;
 struct phv_ p;
 
 %%
@@ -13,11 +13,11 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     // Outer-IP  
-    add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET+14
+    add r1, k.ipsec_to_stage4_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET+14
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
-    seq c1, k.ipsec_to_stage3_is_v6, 1
+    seq c1, k.ipsec_to_stage4_is_v6, 1
     cmov r6, c1, IPV6_HDR_SIZE, IPV4_HDR_SIZE 
-    seq c3, k.ipsec_to_stage3_is_nat_t, 1
+    seq c3, k.ipsec_to_stage4_is_nat_t, 1
     addi.c3 r6, r6, UDP_FIXED_HDR_SIZE 
     phvwr  p.ip_hdr_dma_cmd_size, r6 
     // P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN | P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | P4PLUS_TO_P4_FLAGS_COMP_OUTER_CSUM 

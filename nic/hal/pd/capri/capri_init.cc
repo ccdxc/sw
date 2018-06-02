@@ -21,7 +21,7 @@
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/include/capri_common.h"
 
-#define P4PLUS_SYMBOLS_MAX  130
+#define P4PLUS_SYMBOLS_MAX  131
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -806,6 +806,13 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
+                                 CAPRI_MAX_TLS_PAD_SIZE; 
+    i++;
+
+    symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_s1_dummy.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 

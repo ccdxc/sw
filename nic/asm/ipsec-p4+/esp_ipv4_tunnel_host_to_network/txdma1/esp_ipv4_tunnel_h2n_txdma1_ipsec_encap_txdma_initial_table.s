@@ -7,14 +7,14 @@ struct tx_table_s0_t0_ipsec_encap_txdma_initial_table_d d;
 struct phv_ p;
 
 %%
-        .param esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex 
-        .param esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex 
-        .param esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2 
-        .param      TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
+        .param esp_ipv4_tunnel_h2n_txdma1_s1_dummy 
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
-    sub r1, d.{barco_ring_cindex}.hx, 1
-    seq c5, d.{barco_ring_pindex}.hx, r1
+    //sub r1, d.{barco_ring_cindex}.hx, 1
+    //seq c5, d.{barco_ring_pindex}.hx, r1
+    add r1, d.{barco_ring_pindex}.hx, 1
+    and r1, r1, IPSEC_BARCO_RING_INDEX_MASK 
+    seq c5, d.{barco_ring_cindex}.hx, r1
     bcf [c5], esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table_barco_ring_full
 
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
@@ -26,20 +26,18 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     add r6, r0, d.{key_index}
     phvwr p.barco_req_key_desc_index, r6.wx 
     phvwr p.t0_s2s_iv_size, d.iv_size
-    phvwri p.{app_header_table0_valid...app_header_table1_valid}, 3 
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex[33:6] 
-    and r2, d.cb_cindex, 0xFF 
+    phvwri p.app_header_table0_valid, 1
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 7 
+    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_s1_dummy[33:6] 
+    and r2, d.cb_cindex, IPSEC_CB_RING_INDEX_MASK 
     sll r2, r2, 3
     add r2, r2, d.cb_ring_base_addr
     add r7, d.cb_cindex, 1
-    and r7, r7, 0x3FF
+    and r7, r7, IPSEC_CB_RING_INDEX_MASK 
     tblwr d.cb_cindex, r7
-    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2, r5, TABLE_SIZE_16_BITS)
-    tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
-    phvwr p.common_te0_phv_table_addr, r2
+    //tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
+    tblmincri.f     d.{rxdma_ring_cindex}.hx, 8, 1
+    phvwr p.ipsec_to_stage1_cb_ring_slot_addr, r2
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.!c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)

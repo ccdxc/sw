@@ -3,14 +3,14 @@
 #include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
-struct tx_table_s3_t0_k k;
-struct tx_table_s3_t0_ipsec_write_barco_req_d d;
+struct tx_table_s4_t0_k k;
+struct tx_table_s4_t0_ipsec_write_barco_req_d d;
 struct phv_ p;
 
 %%
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
-    phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage3_barco_req_addr 
+    phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage4_barco_req_addr 
     phvwri p.brq_req_write_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
     phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
 

@@ -2,8 +2,8 @@
 #include "ingress.h"
 #include "ipsec_asm_defines.h"
 
-struct tx_table_s2_t0_k k;
-struct tx_table_s2_t0_ipsec_encap_txdma2_load_in_desc_d d;
+struct tx_table_s3_t0_k k;
+struct tx_table_s3_t0_ipsec_encap_txdma2_load_in_desc_d d;
 struct phv_ p;
 
 %%
@@ -20,7 +20,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_in_desc:
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet2[33:6] 
     phvwr  p.common_te1_phv_table_addr, k.txdma2_global_in_desc_addr
 
-    add r1, k.ipsec_to_stage2_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET
+    add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET
     phvwr.f  p.eth_hdr_dma_cmd_addr, r1
 
 

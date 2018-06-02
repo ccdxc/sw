@@ -26,7 +26,7 @@ dma_cmd_to_write_output_desc_aol:
     phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, r1 
 
 esp_ipv4_tunnel_n2h_post_to_cb_ring:
-    and r3, d.cb_pindex, 0xFF 
+    and r3, d.cb_pindex, IPSEC_CB_RING_INDEX_MASK 
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.cb_ring_base_addr 
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
@@ -35,7 +35,7 @@ esp_ipv4_tunnel_n2h_post_to_cb_ring:
 
 esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
     add r7, d.cb_pindex, 1
-    andi r7, r7, 0x3FF
+    andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
 dma_cmd_ring_doorbell:
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 1, k.ipsec_global_ipsec_cb_index, 0, r7, db_data_pid, db_data_index)
     tblwr d.cb_pindex, r7

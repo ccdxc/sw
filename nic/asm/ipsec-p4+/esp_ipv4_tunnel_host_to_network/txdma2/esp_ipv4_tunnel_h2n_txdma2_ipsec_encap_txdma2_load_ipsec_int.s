@@ -2,8 +2,8 @@
 #include "ingress.h"
 #include "ipsec_asm_defines.h"
 
-struct tx_table_s2_t2_k k;
-struct tx_table_s2_t2_ipsec_encap_txdma2_load_ipsec_int_d d;
+struct tx_table_s3_t2_k k;
+struct tx_table_s3_t2_ipsec_encap_txdma2_load_ipsec_int_d d;
 struct phv_ p;
 
 %%
@@ -24,7 +24,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_barco_error:
     phvwri p.p4_intr_global_drop, 1
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
-    phvwri p.ipsec_to_stage3_barco_error, 1
+    phvwri p.ipsec_to_stage4_barco_error, 1
     nop.e
     nop
  

@@ -63,7 +63,7 @@ def TestCaseSetup(tc):
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
     ipseccb.expected_seq_no           = 0
     ipseccb.seq_no_bmp                = 0
-    ipseccb.vrf_vlan                  = 0x0005
+    ipseccb.vrf_vlan                  = 0x0006
     ipseccb.is_nat_t                  = 0
     ipseccb.SetObjValPd()
 
@@ -174,7 +174,7 @@ def TestCaseVerify(tc):
     # 5. Verify descriptor
     print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
     if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
+        print("Descriptor handle not as expected in cb ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
         return False
 
     if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[0].DescAddr:
@@ -182,7 +182,7 @@ def TestCaseVerify(tc):
         return False
     # 7. Verify brq input desc and rnmdr
     if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].ilist_addr - 0x40)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
+        print("Descriptor handle not as expected in brq ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
         return False
 
     # 8. Verify PI for TNMDR got incremented by 1

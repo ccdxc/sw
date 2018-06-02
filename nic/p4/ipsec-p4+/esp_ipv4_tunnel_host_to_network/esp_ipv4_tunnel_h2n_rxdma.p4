@@ -243,6 +243,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
     modify_field(ipsec_global_scratch.qid, ipsec_global.qid); \
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
     modify_field(ipsec_global_scratch.ipsec_cb_addr, ipsec_global.ipsec_cb_addr); \
+    modify_field(ipsec_global_scratch.ipsec_cb_pindex, ipsec_global.ipsec_cb_pindex); \
 
 //stage 4 - table 0
 action ipsec_cb_tail_enqueue_input_desc2(pc, rsvd, cosA, cosB, cos_sel,
