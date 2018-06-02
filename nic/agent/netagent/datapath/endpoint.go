@@ -17,7 +17,7 @@ import (
 // --------------------------- Local Endpoint CRUDs --------------------------- //
 
 // CreateLocalEndpoint creates a local endpoint in the datapath
-func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*types.IntfInfo, error) {
+func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -42,6 +42,12 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		},
 	}
 
+	vrfKey := halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
@@ -53,20 +59,20 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		sgHandles = append(sgHandles, &sgKey)
 	}
 
-	l2Handle := halproto.L2SegmentKeyHandle{
-		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
-			L2SegmentHandle: nw.Status.NetworkHandle,
+	l2Key := halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
+			SegmentId: nw.Status.NetworkID,
 		},
 	}
 
-	ifKeyHandle := halproto.InterfaceKeyHandle{
-		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
-			IfHandle: 0, //FIXME
+	ifKey := halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+			InterfaceId: enicID,
 		},
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceKeyHandle: &ifKeyHandle, //FIXME
+		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Status.UsegVlan,
 		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SgKeyHandle:        sgHandles,
@@ -77,7 +83,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			EndpointKey: &halproto.EndpointKey{
 				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
 					L2Key: &halproto.EndpointL2Key{
-						L2SegmentKeyHandle: &l2Handle,
+						L2SegmentKeyHandle: &l2Key,
 						MacAddress:         macaddr,
 					},
 				},
@@ -85,23 +91,90 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		},
 	}
 
+	// build enic message
+	enicSpec := &halproto.InterfaceSpec{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: enicID,
+			},
+		},
+		Type: halproto.IfType_IF_TYPE_ENIC,
+		// associate the lif id
+		IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+			IfEnicInfo: &halproto.IfEnicInfo{
+				EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
+				LifKeyOrHandle: &halproto.LifKeyHandle{
+					KeyOrHandle: &halproto.LifKeyHandle_LifId{
+						LifId: lifID,
+					},
+				},
+				EnicTypeInfo: &halproto.IfEnicInfo_EnicInfo{
+					EnicInfo: &halproto.EnicInfo{
+						L2SegmentKeyHandle: &l2Key,
+						MacAddress:         macaddr,
+						EncapVlanId:        nw.Spec.VlanID,
+					},
+				},
+			},
+		},
+	}
+
+	enicReqMsg := &halproto.InterfaceRequestMsg{
+		Request: []*halproto.InterfaceSpec{
+			enicSpec,
+		},
+	}
+
+	// create enic
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), enicReqMsg)
+		if err != nil {
+			log.Errorf("Error creating interface. Err: %v", err)
+			return nil, err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return nil, ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), enicReqMsg)
+		if err != nil {
+			log.Errorf("Error creating interface. Err: %v", err)
+			return nil, err
+		}
+	}
+
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
 		KeyOrHandle:   &epHandle,
 		Meta:          &halproto.ObjectMeta{},
 		EndpointAttrs: &epAttrs,
+		VrfKeyHandle:  &vrfKey,
 	}
 	epReq := halproto.EndpointRequestMsg{
 		Request: []*halproto.EndpointSpec{&epinfo},
 	}
 
-	// call hal to create the endpoint
-	// FIXME: handle response
-	_, err = hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
-	if err != nil {
-		log.Errorf("Error creating endpoint. Err: %v", err)
-		return nil, err
+	// create endpoint
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
+		if err != nil {
+			log.Errorf("Error creating endpoint. Err: %v", err)
+			return nil, err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("Error creating endpoint. Err: %v", err)
+			return nil, ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
+		if err != nil {
+			log.Errorf("Error creating endpoint. Err: %v", err)
+			return nil, err
+		}
 	}
+
 	// save the endpoint message
 	hd.Lock()
 	hd.DB.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
@@ -251,7 +324,7 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 // --------------------------- Remote Endpoint CRUDs --------------------------- //
 
 // CreateRemoteEndpoint creates remote endpoint
-func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplink *netproto.Interface, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -289,7 +362,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 	ifKey := halproto.InterfaceKeyHandle{
 		KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-			InterfaceId: uplink.Status.InterfaceID,
+			InterfaceId: uplinkID,
 		},
 	}
 
@@ -329,7 +402,6 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	}
 
 	// call hal to create the endpoint
-	// FIXME: handle response
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
 		if err != nil {

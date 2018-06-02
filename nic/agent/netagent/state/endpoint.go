@@ -100,7 +100,31 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 	// call the datapath
 	var intfInfo *types.IntfInfo
 	if ep.Status.NodeUUID == na.NodeUUID {
-		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs)
+		// User specified a local ep create on a specific lif
+		var epLIF string
+		if len(ep.Spec.Interface) > 0 {
+			epLIF = ep.Spec.Interface
+		} else {
+			lifCount, err := na.countIntfs("LIF")
+			if err != nil {
+				return nil, err
+			}
+			epLIF, err = na.findAvailableInterface(lifCount, ep.Status.IPv4Address, "LIF")
+		}
+		lif, ok := na.findIntfByName(epLIF)
+		if !ok {
+			log.Errorf("could not find a lif")
+			return nil, fmt.Errorf("could not find the specified interface %v", epLIF)
+		}
+		// Allocate an ENIC ID. ToDo capture the allocated enic ID in status to ensure that this can be deleted in the datapath
+		enicID, err := na.Store.GetNextID(types.InterfaceID)
+		if err != nil {
+			log.Errorf("Could not allocate enic for the local EP. %v", err)
+			return nil, err
+		}
+		// Ensure the ID is non-overlapping with existing hw interfaces.
+		enicID = enicID + maxNumUplinks
+		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lif.Status.InterfaceID, enicID, ns)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -115,14 +139,14 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 			if err != nil {
 				return nil, err
 			}
-			pinnedUplink, err = na.findPinnedUplink(uplinkCount, ep.Status.IPv4Address)
+			pinnedUplink, err = na.findAvailableInterface(uplinkCount, ep.Status.IPv4Address, "UPLINK")
 		}
 		uplink, ok := na.findIntfByName(pinnedUplink)
 		if !ok {
 			log.Errorf("could not find an uplink")
 			return nil, fmt.Errorf("could not find the specified interface %v", pinnedUplink)
 		}
-		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink, ns)
+		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink.Status.InterfaceID, ns)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -270,18 +294,30 @@ func (na *Nagent) ListEndpoint() []*netproto.Endpoint {
 	return epList
 }
 
-func (na *Nagent) findPinnedUplink(uplinkCount uint64, IPAddress string) (string, error) {
+func (na *Nagent) findAvailableInterface(count uint64, IPAddress, intfType string) (string, error) {
 	// convert the ip address to int
 	ip, _, err := net.ParseCIDR(IPAddress)
 	if err != nil {
 		log.Errorf("Error parsing the IP Address. Err: %v", err)
 		return "", err
 	}
-
-	if len(IPAddress) == 16 {
-		intIP := binary.BigEndian.Uint32(ip[12:16])
-		return fmt.Sprintf("default-uplink-%d", uint64(intIP)%uplinkCount), nil
+	switch intfType {
+	case "UPLINK":
+		if len(IPAddress) == 16 {
+			intIP := binary.BigEndian.Uint32(ip[12:16])
+			return fmt.Sprintf("default-uplink-%d", uint64(intIP)%count), nil
+		}
+		intIP := binary.BigEndian.Uint32(ip)
+		return fmt.Sprintf("default-uplink-%d", uint64(intIP)%count), nil
+	case "LIF":
+		if len(IPAddress) == 16 {
+			intIP := binary.BigEndian.Uint32(ip[12:16])
+			return fmt.Sprintf("default-lif-%d", uint64(intIP)%count), nil
+		}
+		intIP := binary.BigEndian.Uint32(ip)
+		return fmt.Sprintf("default-lif-%d", uint64(intIP)%count), nil
+	default:
+		log.Errorf("Invalid interface type.")
+		return "", fmt.Errorf("invalid interface type specified. %v", intfType)
 	}
-	intIP := binary.BigEndian.Uint32(ip)
-	return fmt.Sprintf("default-uplink-%d", uint64(intIP)%uplinkCount), nil
 }
