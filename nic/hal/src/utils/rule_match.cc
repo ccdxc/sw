@@ -431,21 +431,18 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
         rule->field[MAC_SRC].value.u32 = mac_sa_entry->addr;
         rule->field[MAC_SRC].mask_range.u32 = 0xFFFFFFFF;
     }
-    if (dst_sg_entry->sg_id != 0) {
-        rule->field[DST_SG].value.u32 = dst_sg_entry->sg_id;
-        rule->field[DST_SG].mask_range.u32 = 0xFFFFFFFF;
-    }
-
-    if (src_sg_entry->sg_id != 0) {
-        rule->field[SRC_SG].value.u32 = src_sg_entry->sg_id;
-        rule->field[SRC_SG].mask_range.u32 = 0xFFFFFFFF;
-    }
-
     if (mac_da_entry->addr != 0) {
         rule->field[MAC_DST].value.u32 = mac_da_entry->addr;
         rule->field[MAC_DST].mask_range.u32 = 0xFFFFFFFF;
     }
-
+    if (src_sg_entry->sg_id != 0) {
+        rule->field[SRC_SG].value.u32 = src_sg_entry->sg_id;
+        rule->field[SRC_SG].mask_range.u32 = 0xFFFFFFFF;
+    }
+    if (dst_sg_entry->sg_id != 0) {
+        rule->field[DST_SG].value.u32 = dst_sg_entry->sg_id;
+        rule->field[DST_SG].mask_range.u32 = 0xFFFFFFFF;
+    }
     if (ethertype != 0) {
         rule->field[ETHERTYPE].value.u16 = ethertype;
         rule->field[ETHERTYPE].mask_range.u16 = 0xFFFF;
@@ -575,6 +572,12 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     }
     if (!dllist_empty(&src_port_new.list_ctxt)) {
         dllist_del(&src_port_new.list_ctxt);
+    }
+    if (!dllist_empty(&src_sg_new.list_ctxt)) {
+        dllist_del(&src_sg_new.list_ctxt);
+    }
+    if (!dllist_empty(&dst_sg_new.list_ctxt)) {
+        dllist_del(&dst_sg_new.list_ctxt);
     }
     return ret;
 }

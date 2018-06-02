@@ -183,7 +183,7 @@ mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rs
     args.session = &session;
     if (!req.has_key_or_handle()) {
         /* Iterate over all the sessions */
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
             args.session->id = i;
             ret = mirror_session_process_get(req, &args);
             if (ret == HAL_RET_OK) {
