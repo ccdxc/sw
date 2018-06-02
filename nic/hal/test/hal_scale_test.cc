@@ -163,6 +163,10 @@ public:
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_INGRESS);
         } else if (!strcmp(pipeline_type, "p4_egress")) {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_EGRESS);
+        } else if (!strcmp(pipeline_type, "p4p_rxdma")) {
+            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_RXDMA);
+        } else if (!strcmp(pipeline_type, "p4p_txdma")) {
+            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_TXDMA);
         } else {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_NONE);
         }

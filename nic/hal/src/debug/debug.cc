@@ -158,6 +158,14 @@ mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
         args.pipeline_type = hal::pd::MPU_TRACE_PIPELINE_P4_EGRESS;
         break;
 
+    case debug::MPU_TRACE_PIPELINE_P4P_RXDMA:
+        args.pipeline_type = hal::pd::MPU_TRACE_PIPELINE_P4P_RXDMA;
+        break;
+
+    case debug::MPU_TRACE_PIPELINE_P4P_TXDMA:
+        args.pipeline_type = hal::pd::MPU_TRACE_PIPELINE_P4P_TXDMA;
+        break;
+
     default:
         args.pipeline_type = hal::pd::MPU_TRACE_PIPELINE_NONE;
         break;

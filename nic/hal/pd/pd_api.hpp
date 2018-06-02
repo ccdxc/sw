@@ -1909,6 +1909,8 @@ typedef enum pd_mpu_trace_pipeline_type_e {
     MPU_TRACE_PIPELINE_NONE,
     MPU_TRACE_PIPELINE_P4_INGRESS,
     MPU_TRACE_PIPELINE_P4_EGRESS,
+    MPU_TRACE_PIPELINE_P4P_RXDMA,
+    MPU_TRACE_PIPELINE_P4P_TXDMA
 } pd_mpu_trace_pipeline_type_t;
 
 // MPU tracing

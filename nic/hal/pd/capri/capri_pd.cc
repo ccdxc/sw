@@ -391,6 +391,100 @@ capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
     return HAL_RET_OK;
 }
 
+// Enable MPU tracing on p4plus txdma
+static hal_ret_t
+capri_p4p_txdma_mpu_trace_enable(uint32_t stage_id,
+                                 uint32_t mpu,
+                                 uint8_t  enable,
+                                 uint8_t  trace_enable,
+                                 uint8_t  phv_debug,
+                                 uint8_t  phv_error,
+                                 uint64_t watch_pc,
+                                 uint64_t base_addr,
+                                 uint8_t  table_key,
+                                 uint8_t  instructions,
+                                 uint8_t  wrap,
+                                 uint8_t  reset,
+                                 uint32_t buf_size)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    HAL_TRACE_DEBUG ("{0:s} EGRESS: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                     __FUNCTION__, stage_id, mpu, base_addr);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.pct.mpu[stage_id].trace[mpu].read();
+    cap0.pct.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.pct.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.pct.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.pct.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.pct.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
+    cap0.pct.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.pct.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.pct.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.pct.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.pct.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.pct.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.pct.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.pct.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
+    cap0.pct.mpu[stage_id].trace[mpu].write();
+
+    return HAL_RET_OK;
+}
+
+// Enable MPU tracing on p4plus rxdma
+static hal_ret_t
+capri_p4p_rxdma_mpu_trace_enable(uint32_t stage_id,
+                                 uint32_t mpu,
+                                 uint8_t  enable,
+                                 uint8_t  trace_enable,
+                                 uint8_t  phv_debug,
+                                 uint8_t  phv_error,
+                                 uint64_t watch_pc,
+                                 uint64_t base_addr,
+                                 uint8_t  table_key,
+                                 uint8_t  instructions,
+                                 uint8_t  wrap,
+                                 uint8_t  reset,
+                                 uint32_t buf_size)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    HAL_TRACE_DEBUG ("{0:s} EGRESS: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                     __FUNCTION__, stage_id, mpu, base_addr);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.pcr.mpu[stage_id].trace[mpu].read();
+    cap0.pcr.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.pcr.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.pcr.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.pcr.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.pcr.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
+    cap0.pcr.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.pcr.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.pcr.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.pcr.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.pcr.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.pcr.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.pcr.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.pcr.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
+    cap0.pcr.mpu[stage_id].trace[mpu].write();
+
+    return HAL_RET_OK;
+}
+
 // Enable MPU tracing on p4 ingress and p4 egress
 // TODO deprecate later
 static hal_ret_t
@@ -431,6 +525,46 @@ capri_mpu_trace_enable(void)
             cap0.sge.mpu[i].trace[j].instructions(0);
             cap0.sge.mpu[i].trace[j].enable(1);
             cap0.sge.mpu[i].trace[j].write();
+
+            base_addr += 2048;
+        }
+    }
+
+    // TXDMA
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 4; ++j) {
+            HAL_TRACE_DEBUG ("{0:s} P4P TXDMA: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                             __FUNCTION__, i, j, base_addr);
+
+
+            cap0.pct.mpu[i].trace[j].read();
+            cap0.pct.mpu[i].trace[j].base_addr(base_addr >> 6);
+            cap0.pct.mpu[i].trace[j].buf_size(5);
+            cap0.pct.mpu[i].trace[j].wrap(1);
+            cap0.pct.mpu[i].trace[j].table_and_key(1);
+            cap0.pct.mpu[i].trace[j].instructions(0);
+            cap0.pct.mpu[i].trace[j].enable(1);
+            cap0.pct.mpu[i].trace[j].write();
+
+            base_addr += 2048;
+        }
+    }
+
+    // RXDMA
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 4; ++j) {
+            HAL_TRACE_DEBUG ("{0:s} P4P TXDMA: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                             __FUNCTION__, i, j, base_addr);
+
+
+            cap0.pcr.mpu[i].trace[j].read();
+            cap0.pcr.mpu[i].trace[j].base_addr(base_addr >> 6);
+            cap0.pcr.mpu[i].trace[j].buf_size(5);
+            cap0.pcr.mpu[i].trace[j].wrap(1);
+            cap0.pcr.mpu[i].trace[j].table_and_key(1);
+            cap0.pcr.mpu[i].trace[j].instructions(0);
+            cap0.pcr.mpu[i].trace[j].enable(1);
+            cap0.pcr.mpu[i].trace[j].write();
 
             base_addr += 2048;
         }
@@ -484,6 +618,34 @@ pd_mpu_trace_enable(pd_mpu_trace_enable_args_t *args)
                                                 args->reset,
                                                 args->buf_size);
 
+    case MPU_TRACE_PIPELINE_P4P_RXDMA:
+        return capri_p4p_rxdma_mpu_trace_enable(args->stage_id,
+                                                args->mpu,
+                                                args->enable,
+                                                args->trace_enable,
+                                                args->phv_debug,
+                                                args->phv_error,
+                                                args->watch_pc,
+                                                base_addr,
+                                                args->table_key,
+                                                args->instructions,
+                                                args->wrap,
+                                                args->reset,
+                                                args->buf_size);
+    case MPU_TRACE_PIPELINE_P4P_TXDMA:
+        return capri_p4p_txdma_mpu_trace_enable(args->stage_id,
+                                                args->mpu,
+                                                args->enable,
+                                                args->trace_enable,
+                                                args->phv_debug,
+                                                args->phv_error,
+                                                args->watch_pc,
+                                                base_addr,
+                                                args->table_key,
+                                                args->instructions,
+                                                args->wrap,
+                                                args->reset,
+                                                args->buf_size);
     default:
         return capri_mpu_trace_enable();
     }

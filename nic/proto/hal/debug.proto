@@ -201,6 +201,8 @@ enum MpuTracePipelineType {
   MPU_TRACE_PIPELINE_NONE       = 0;   // pipeline type not set
   MPU_TRACE_PIPELINE_P4_INGRESS = 1;   // P4 ingress pipeline
   MPU_TRACE_PIPELINE_P4_EGRESS  = 2;   // P4 egress pipeline
+  MPU_TRACE_PIPELINE_P4P_RXDMA  = 3;   // P4+ RXDMA pipeline
+  MPU_TRACE_PIPELINE_P4P_TXDMA  = 4;   // P4+ TXDMA pipeline
 }
 
 // parameters to enable/disable MPU tracing

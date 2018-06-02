@@ -237,6 +237,10 @@ public:
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_INGRESS);
         } else if (!strcmp(pipeline_type, "p4_egress")) {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_EGRESS);
+        } else if (!strcmp(pipeline_type, "p4p_rxdma")) {
+            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_RXDMA);
+        } else if (!strcmp(pipeline_type, "p4p_txdma")) {
+            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_TXDMA);
         } else {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_NONE);
         }
@@ -2269,7 +2273,7 @@ main (int argc, char** argv)
     } else if (mpu_trace == true) {
         if (argc != 5) {
             std::cout << "Usage: <pgm> <mpu_trace_enable/mpu_trace_disable>"
-                         " <p4_ingress/p4_egress/none> stage_id mpu"
+                         " <p4_ingress/p4_egress/p4p_rxdma/p4p_txdma/none> stage_id mpu"
                       << std::endl;
             return 0;
         }

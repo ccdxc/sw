@@ -312,7 +312,7 @@
         },
         {
             "name": "mpu-trace",
-            "size_kb": 96
+            "size_kb": 224
         },
         {
             "name": "brq-ring-gcm0",
