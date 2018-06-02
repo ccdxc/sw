@@ -46,7 +46,6 @@ var _ = Describe("Logging tests", func() {
 				globals.APIGw:     {true},
 				globals.APIServer: {false},
 				globals.VCHub:     {false},
-				globals.Ckm:       {false},
 				globals.EvtsMgr:   {true},
 				globals.EvtsProxy: {true},
 				globals.Collector: {false},
@@ -81,14 +80,14 @@ var _ = Describe("Logging tests", func() {
 							if err != nil {
 								return err
 							}
-							Expect(result.TotalHits).ShouldNot(BeZero())
+							Expect(result.TotalHits()).ShouldNot(BeZero(), "No logs found for service %s on node %s", service, nodeName)
 							By(fmt.Sprintf("Logs verified for Service: %s on Node: %s", service, nodeName))
 						}
 					} else {
 
 						// Singleton service, use wildcard node suffix
-						nodeName := fmt.Sprintf("node*")
-						query = query.Must(es.NewTermQuery("beat.hostname", nodeName))
+						nodePattern := fmt.Sprintf("node.*")
+						query = query.Must(es.NewRegexpQuery("beat.hostname", nodePattern))
 						result, err := esClient.Search(context.Background(),
 							indexName,
 							indexType,
@@ -100,7 +99,7 @@ var _ = Describe("Logging tests", func() {
 						if err != nil {
 							return err
 						}
-						Expect(result.TotalHits).ShouldNot(BeZero())
+						Expect(result.TotalHits()).ShouldNot(BeZero(), "No logs found for singleton service %s", service)
 						By(fmt.Sprintf("Logs verified for Service: %s", service))
 					}
 					return nil

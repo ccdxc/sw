@@ -115,6 +115,8 @@ func launchVCHub(opts *cliOpts) {
 		os.Exit(1)
 	}
 
+	log.Infof("%s is running", globals.VCHub)
+
 	storeCh := make(chan defs.StoreMsg, storeQSize)
 	vchStore := store.NewVCHStore(context.Background())
 	vchStore.Run(storeCh)
@@ -178,6 +180,5 @@ func main() {
 	log.SetConfig(logConfig)
 
 	launchVCHub(&opts)
-	log.Infof("%s is running", globals.VCHub)
 	waitForever()
 }

@@ -57,7 +57,7 @@ func main() {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}
 
-	log.Info("%s is running {%+v}", globals.Ckm, ctrlr)
+	log.Infof("%s is running {%+v}", globals.Ckm, ctrlr)
 
 	// wait forever
 	<-waitCh

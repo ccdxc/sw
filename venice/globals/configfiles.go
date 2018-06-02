@@ -10,7 +10,7 @@ const (
 
 	// FilebeatFieldsFile is used by Filebeat and it contains logging fields
 	// mapping for elasticsearch indexing.
-	FilebeatFieldsFile = "/etc/pensando/filebeat/logging_fields.yml"
+	FilebeatFieldsFile = "/etc/pensando/" + Filebeat + "/logging_fields.yml"
 
 	// ElasticDiscoveryConfigFile is used by Elastic for Node discovery
 	ElasticDiscoveryConfigFile = "/etc/pensando/" + ElasticSearch + "/elastic-discovery/unicast_hosts.txt"

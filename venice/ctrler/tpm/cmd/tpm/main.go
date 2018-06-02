@@ -75,7 +75,9 @@ func main() {
 		log.Fatalf("failed to initialize debug, %s", err)
 	}
 	defer l.Close()
-	go log.Fatal(http.Serve(l, router))
+	go func() {
+		log.Fatal(http.Serve(l, router))
+	}()
 
 	log.Infof("%s is running {%+v}", globals.Tpm, pm)
 
