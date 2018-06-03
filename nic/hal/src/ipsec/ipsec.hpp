@@ -58,6 +58,8 @@ using ipsec::IpsecSADecryptGetResponseMsg;
 namespace hal {
 
 #define MAX_IPSEC_KEY_SIZE  32
+#define IPSEC_CB_RING_SIZE 256
+#define IPSEC_BARCO_RING_SIZE 1024 
 
 typedef uint64_t rule_id_t;
 typedef uint64_t pol_id_t;
