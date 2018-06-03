@@ -10,8 +10,18 @@
 namespace hal {
 namespace proxy {
 
+static bool
+is_dst_local_ep(hal::if_t *intf) {
+    return (intf != NULL && intf->if_type == intf::IF_TYPE_ENIC);
+}
+
+static bool
+is_src_local_ep(hal::if_t *intf) {
+    return (intf != NULL && intf->if_type == intf::IF_TYPE_ENIC);
+}
+
 static inline fte::pipeline_action_t
-update_host_flow_fwding_info2(fte::ctx_t&ctx)
+ipsec_exec2(fte::ctx_t&ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
     hal::rule_data_t                  *rule_data;
@@ -19,8 +29,13 @@ update_host_flow_fwding_info2(fte::ctx_t&ctx)
     const hal::ipv4_rule_t            *rule = NULL;
     const acl::acl_ctx_t              *acl_ctx = NULL;
     ipsec_cfg_rule_t                  *rule_cfg;
+    bool is_local_dest = is_dst_local_ep(ctx.dif());
+    bool is_local_src = is_src_local_ep(ctx.sif());
+    flow_key_t              flow_key = ctx.key();
 
     const char *ctx_name = ipsec_acl_ctx_name(ctx.get_key().svrf_id);
+    HAL_TRACE_DEBUG("IPSec flow forwarding role: {} direction: {} key {} is_local_src {} is_local_dest{} ", 
+        ctx.role(), ctx.direction(), ctx.key(), is_local_src, is_local_dest);
 
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
@@ -68,21 +83,25 @@ update_host_flow_fwding_info2(fte::ctx_t&ctx)
          ret = ctx.update_flow(flowupd);
          ctx.set_feature_status(ret);
          if (rule_cfg->action.sa_action == ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_ENCRYPT) {
-             flowupd.fwding.qid = rule_cfg->action.sa_action_enc_handle;
-             flowupd.fwding.qtype = 0;
-         } else if (rule_cfg->action.sa_action == ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_ENCRYPT) {
-             flowupd.fwding.qid = rule_cfg->action.sa_action_dec_handle;
-             flowupd.fwding.qtype = 1;
+             HAL_TRACE_DEBUG("Result type Encrypt with qid {}", rule_cfg->action.sa_action_enc_handle);
+             if (((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && is_local_src) ||
+                  ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && (flow_key.proto != IPPROTO_ESP)) ||
+                  ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) && (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto != IPPROTO_ESP))) {
+                 flowupd.fwding.qid = rule_cfg->action.sa_action_enc_handle;
+                 flowupd.fwding.qtype = 0;
+                 HAL_TRACE_DEBUG("Updating encrypt result qid {}", flowupd.fwding.qid);
+             }
+         } else if (rule_cfg->action.sa_action == ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_DECRYPT) {
+             if (flow_key.proto == IPPROTO_ESP) {
+                 flowupd.fwding.qid = rule_cfg->action.sa_action_dec_handle;
+                 flowupd.fwding.qtype = 1;
+                 HAL_TRACE_DEBUG("Updating decrypt result qid {}", flowupd.fwding.qid);
+             }
          }
     }
 
 lookup_fail:
     return  fte::PIPELINE_CONTINUE;
-}
-
-static bool
-is_dst_local_ep(hal::if_t *intf) {
-    return (intf != NULL && intf->if_type == intf::IF_TYPE_ENIC);
 }
 
 static inline fte::pipeline_action_t
