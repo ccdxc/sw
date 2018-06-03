@@ -103,6 +103,7 @@ std::vector<tests::TestEntry> nvme_dp_scale_tests = {
   {&tests::test_run_nvme_dp_read_scale, "NVME Datapath read scale", false},
   {&tests::test_run_nvme_dp_e2e_scale, "NVME Datapath E2E scale", false},
   {&tests::test_run_nvme_dp_write_perf, "NVME Datapath write performance", false},
+  {&tests::test_run_nvme_dp_read_perf, "NVME Datapath read performance", false},
 };
 
 std::vector<tests::TestEntry> unit_tests = {

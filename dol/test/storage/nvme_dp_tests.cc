@@ -337,7 +337,8 @@ int nvme_dp_write_perf(int num_iter) {
     }
     return 0;
   };
-  Poller poll(FLAGS_long_poll_interval, false);
+  // Run for 6 hours as this can take a long time
+  Poller poll((6 * 3600), false);
   rc = poll(func1);
   if (rc < 0) {
     printf("Failed all entries status check \n");
@@ -352,19 +353,16 @@ int nvme_dp_write_perf(int num_iter) {
 }
 
 int test_run_nvme_dp_write_perf() {
-  if (nvme_dp_write_perf(8) < 0) {
+  if (nvme_dp_write_perf(4) < 0) {
     printf("Failed to prime the perf test \n");
     return -1;
   }
   printf("Successfully primed the perf test \n");
 
-#if 0
-  // Enable this along with RTL debugging
   sleep(600); //Wait for acks to drain
-#endif
 
   printf("Starting scaling of perf test (after draining of acks) \n");
-  if (nvme_dp_write_perf(31) < 0) {
+  if (nvme_dp_write_perf(27) < 0) {
     printf("Failed to scale the perf test \n");
     return -1;
   }
@@ -372,6 +370,92 @@ int test_run_nvme_dp_write_perf() {
   return 0;
 }
 
+int nvme_dp_read_perf(int num_iter) {
+  int i, rc;
+  uint16_t cmd_index[num_iter], status_index[num_iter];
+  dp_mem_t *nvme_cmd, *nvme_status, *read_buf;
+  uint64_t nvme_cmd_va[num_iter], nvme_status_va[num_iter];
+
+  // Use non-zero queue (0 is Admin Q)
+  uint16_t nvme_sq = queues::get_host_nvme_sq(3);
+  uint16_t nvme_cq = queues::get_host_nvme_cq(3);
+
+  // Marker for requests - start
+  testcase_begin(tcid, perf_marker);
+
+  // Iterate
+  for (i = 0; i < num_iter; i++) {
+    // Consume the entries
+    if (consume_nvme_sq_cq_entries(nvme_sq, nvme_cq, &nvme_cmd, &nvme_status, 
+                                   &cmd_index[i], &status_index[i]) < 0) {
+      return -1;
+    }
+
+    // Save the PAs
+    nvme_cmd_va[i] = nvme_cmd->va();
+    nvme_status_va[i] = nvme_status->va();
+
+    // Form the read command
+    if ((read_buf = form_nvme_dp_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+                                                     get_next_slba(), kDefaultNlb)) == NULL) {
+      return -1;
+    }
+  }
+
+  // Marker for requests - end
+  testcase_end(tcid, perf_marker++);
+
+  // Send the NVME admin command
+  test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index[i-1]);
+
+  // Marker for responses - start
+  testcase_begin(tcid, perf_marker);
+
+  // Poll and check all previous entries status. Match against all other entries as
+  // there is no guarantee of ordering.
+  auto func1 = [&nvme_status_va, &nvme_cmd_va, i] () {
+    int j, k;
+    for (j = 0; j < i; j++) {
+      for (k = 0; k < i; k++) {
+        if (check_nvme_dp_va_status(nvme_status_va[j], nvme_cmd_va[k]) >= 0) break;
+      }
+      // Any status check failed => return failure
+      if (k == i) return -1;
+    }
+    return 0;
+  };
+  // Run for 6 hours as this can take a long time
+  Poller poll((6 * 3600), false);
+  rc = poll(func1);
+  if (rc < 0) {
+    printf("Failed all entries status check \n");
+  } else {
+    printf("Passed all entries status check \n");
+  }
+
+  // Marker for responses - end
+  testcase_end(tcid, perf_marker++);
+
+  return rc;
+}
+
+int test_run_nvme_dp_read_perf() {
+  if (nvme_dp_read_perf(4) < 0) {
+    printf("Failed to prime the perf test \n");
+    return -1;
+  }
+  printf("Successfully primed the perf test \n");
+
+  sleep(600); //Wait for acks to drain
+
+  printf("Starting scaling of perf test (after draining of acks) \n");
+  if (nvme_dp_read_perf(27) < 0) {
+    printf("Failed to scale the perf test \n");
+    return -1;
+  }
+  printf("Successfully scaled the perf test \n");
+  return 0;
+}
 int test_run_nvme_dp_write_scale() {
   printf("Starting NVME Datapath WRITE scale test \n");
   for (int i = 0; i < (int) FLAGS_nvme_scale_iters; i++) {

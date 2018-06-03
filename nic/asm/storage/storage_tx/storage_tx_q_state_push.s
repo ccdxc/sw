@@ -18,11 +18,11 @@ struct phv_ p;
 storage_tx_q_state_push_start:
    // Check queue full condition and exit
    // TODO: Push error handling
-   QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, tbl_load)
+   QUEUE_FULL(d.wp_ndx, d.c_ndx, d.num_entries, tbl_load)
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.
-   QUEUE_PUSH_ADDR(d.base_addr, d.p_ndx, d.entry_size)
+   QUEUE_PUSH_ADDR(d.base_addr, d.wp_ndx, d.entry_size)
 
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_p2m_1)
@@ -30,11 +30,11 @@ storage_tx_q_state_push_start:
    // DMA entries #3, #4 are used for ringing additional doorbells, 
    // writes for fixing up pointers etc. (default NOP)
 
-   // Push the entry to the queue (this increments p_ndx and writes to table)
-   QUEUE_PUSH(d.p_ndx, d.num_entries)
+   // Push the entry to the queue (this increments wp_ndx and writes to table)
+   QUEUE_PUSH(d.wp_ndx, d.num_entries)
 
    // Ring the doorbell for the recipient of the push.
-   QUEUE_PUSH_DOORBELL_RING(dma_p2m_5)
+   QUEUE_PUSH_DOORBELL_UPDATE_RING(dma_p2m_5, d.wp_ndx)
 
 
    // Setup the start and end DMA pointers

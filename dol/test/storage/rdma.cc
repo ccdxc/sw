@@ -1279,7 +1279,7 @@ int rdma_pvm_qs_init() {
 
   // Target R2N Xlate
   qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
-                                queues::get_pvm_r2n_tgt_sq(0),  // Only one R2N SQ
+                                queues::get_pvm_r2n_tgt_sq(1), // 1 for P4+ to update wp_ndx 
                                 pvm_roce_tgt_sq_xlate_addr, NULL);
   return 0;
 }
