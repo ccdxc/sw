@@ -31,7 +31,7 @@ struct phv_ p;
 #define r_status                    r7  // comp status, briefly used at beginning
 
 %%
-    .param storage_seq_barco_chain_action
+    .param storage_seq_barco_ring_pndx_read
     .param storage_seq_comp_aol_pad_prep
     .param storage_seq_comp_sgl_pdma_xfer
     .param storage_seq_comp_sgl_pad_only_xfer
@@ -168,16 +168,12 @@ possible_barco_push:
     // If Barco ring push is applicable, execute table lock read
     // to get the current ring pindex. Note that this must be done
     // in the same stage as storage_seq_barco_entry_handler()
-    // which is stage 2.
+    // which is stage 3.
     bbeq        SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, all_dma_complete
     nop
 
-barco_push:
-
-    // Set the table and program address 
-    LOAD_TABLE_FOR_ADDR34_PC_IMM_CONT(SEQ_KIVEC4_BARCO_PNDX_SHADOW_ADDR,
-                                      SEQ_KIVEC4_BARCO_PNDX_SIZE,
-                                      storage_seq_barco_chain_action)
+    LOAD_TABLE_NO_LKUP_PC_IMM(0, storage_seq_barco_ring_pndx_read)
+    
 all_dma_complete:
 
     // Setup the start and end DMA pointers
