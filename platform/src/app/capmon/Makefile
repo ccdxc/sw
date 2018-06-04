@@ -5,7 +5,6 @@
 PROGRAM = capmon
 SOURCES = capmon.cc
 
-# x86_64 build requires -lmodel_client
 LBUILD_ARCHES = aarch64
 
 LCXXFLAGS = \
@@ -29,7 +28,7 @@ SYSTEM_LIBRARIES = \
 	$(NULL)
 
 LCXXFLAGS += \
-	-I $(TOPDIR)/../nic/model_sim/include/ \
+ 	-I $(TOPDIR)/../nic/model_sim/include/ \
 	$(NULL)
 
 LLDFLAGS += \
