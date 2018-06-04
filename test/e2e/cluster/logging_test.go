@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,7 +40,7 @@ var _ = Describe("Logging tests", func() {
 			Eventually(func() error {
 				esClient, err = elastic.NewClient(esAddr, nil, log.GetNewLogger(logConfig))
 				return err
-			}, 15, 1).Should(BeNil(), "failed to initialize elastic client, err: %v", err)
+			}, 90, 1).Should(BeNil(), "failed to initialize elastic client")
 
 			services = map[string]serviceInfo{
 				globals.Cmd:       {true},
@@ -61,14 +62,13 @@ var _ = Describe("Logging tests", func() {
 			for service, info := range services {
 				Eventually(func() error {
 					str := fmt.Sprintf("%s is running", service)
-					query := es.NewBoolQuery().Must(es.NewMatchPhraseQuery("msg", str))
 					if info.daemonSet == true {
 						// validate log from each node - for Daemon set
 						for n := 1; n <= len(ts.tu.QuorumNodes); n++ {
 
 							// verify for each venice node
 							nodeName := fmt.Sprintf("node%d", n)
-							query = query.Must(es.NewTermQuery("beat.hostname", nodeName))
+							query := es.NewBoolQuery().Must(es.NewMatchPhraseQuery("msg", str)).Must(es.NewTermQuery("beat.hostname", nodeName))
 							result, err := esClient.Search(context.Background(),
 								indexName,
 								indexType,
@@ -80,14 +80,17 @@ var _ = Describe("Logging tests", func() {
 							if err != nil {
 								return err
 							}
-							Expect(result.TotalHits()).ShouldNot(BeZero(), "No logs found for service %s on node %s", service, nodeName)
-							By(fmt.Sprintf("Logs verified for Service: %s on Node: %s", service, nodeName))
+							if result.TotalHits() == 0 {
+								err = fmt.Errorf("No logs found for service %s on node %s", service, nodeName)
+								return err
+							}
+							By(fmt.Sprintf("ts:%s Logs verified for Service: %s on Node: %s", time.Now().String(), service, nodeName))
 						}
 					} else {
 
 						// Singleton service, use wildcard node suffix
 						nodePattern := fmt.Sprintf("node.*")
-						query = query.Must(es.NewRegexpQuery("beat.hostname", nodePattern))
+						query := es.NewBoolQuery().Must(es.NewMatchPhraseQuery("msg", str)).Must(es.NewRegexpQuery("beat.hostname", nodePattern))
 						result, err := esClient.Search(context.Background(),
 							indexName,
 							indexType,
@@ -99,11 +102,14 @@ var _ = Describe("Logging tests", func() {
 						if err != nil {
 							return err
 						}
-						Expect(result.TotalHits()).ShouldNot(BeZero(), "No logs found for singleton service %s", service)
-						By(fmt.Sprintf("Logs verified for Service: %s", service))
+						if result.TotalHits() == 0 {
+							err = fmt.Errorf("No logs found for singleton service %s", service)
+							return err
+						}
+						By(fmt.Sprintf("ts:%s Logs verified for Service: %s", time.Now().String(), service))
 					}
 					return nil
-				}, 60, 1).Should(BeNil(), "failed to verify log export for {%s}, err: %v", service, err)
+				}, 90, 1).Should(BeNil(), "failed to verify log export for {%s}", service)
 			}
 		})
 

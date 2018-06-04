@@ -33,16 +33,15 @@ var _ = Describe("SmartNIC tests", func() {
 				if len(snics) != ts.tu.NumNaplesNodes {
 					return false
 				}
-				By(fmt.Sprintf("SmartNIC creation validated for [%d] nics", len(snics)))
+				By(fmt.Sprintf("ts:%s SmartNIC creation validated for [%d] nics", time.Now().String(), len(snics)))
 				return true
-			}, 60, 1).Should(BeTrue(), "SmartNIC object creation failed")
+			}, 90, 1).Should(BeTrue(), "SmartNIC object creation failed")
 
 			// Validate nic-admission status
 			Eventually(func() bool {
 
 				numAdmittedNICs := 0
 				for _, snic := range snics {
-					Expect(snic.Spec.Phase).Should(Equal(cmd.SmartNICSpec_ADMITTED.String()))
 					if snic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
 						return false
 					}
@@ -54,9 +53,9 @@ var _ = Describe("SmartNIC tests", func() {
 					return false
 				}
 
-				By(fmt.Sprintf("SmartNIC admission validated for [%d] nics", numAdmittedNICs))
+				By(fmt.Sprintf("ts:%s SmartNIC admission validated for [%d] nics", time.Now().String(), numAdmittedNICs))
 				return true
-			}, 60, 1).Should(BeTrue(), "SmartNIC nic-admission check failed")
+			}, 90, 1).Should(BeTrue(), "SmartNIC nic-admission check failed")
 		})
 	})
 
@@ -95,18 +94,18 @@ var _ = Describe("SmartNIC tests", func() {
 					return false
 				}
 
-				By(fmt.Sprintf("SmartNIC health status check validated for [%d] nics", numHealthySmartNICs))
+				By(fmt.Sprintf("ts:%s SmartNIC health status check validated for [%d] nics", time.Now().String(), numHealthySmartNICs))
 				return true
-			}, 60, 1).Should(BeTrue(), "SmartNIC health status check failed")
+			}, 90, 1).Should(BeTrue(), "SmartNIC health status check failed")
 
 			// Wait for nic-update interval and get the updated object
 			// Wait for 5 sec plus a buffer of 200ms to accomadate load/stress in testbed
 			time.Sleep(5*time.Second + 200*time.Millisecond)
-			snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
 
 			// Validate periodic health updates
 			Eventually(func() bool {
 
+				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
 				numHealthySmartNICs := 0
 				for _, snic := range snics {
 					for _, cond := range snic.Status.Conditions {
@@ -125,7 +124,7 @@ var _ = Describe("SmartNIC tests", func() {
 								return false
 							}
 							numHealthySmartNICs++
-							By(fmt.Sprintf("SmartNIC [%s] reported new health update", snic.Name))
+							By(fmt.Sprintf("ts:%s SmartNIC [%s] reported new health update", time.Now().String(), snic.Name))
 						}
 					}
 				}
@@ -134,9 +133,9 @@ var _ = Describe("SmartNIC tests", func() {
 					return false
 				}
 
-				By(fmt.Sprintf("SmartNIC periodic health update validated for [%d] nics", numHealthySmartNICs))
+				By(fmt.Sprintf("ts: %s SmartNIC periodic health update validated for [%d] nics", time.Now().String(), numHealthySmartNICs))
 				return true
-			}, 60, 1).Should(BeTrue(), "SmartNIC periodic health update check failed")
+			}, 90, 1).Should(BeTrue(), "SmartNIC periodic health update check failed")
 
 		})
 
