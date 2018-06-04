@@ -21,6 +21,7 @@ public:
     virtual HdlrResp HandleStatePostBinRestart(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx);
+    virtual HdlrResp HandleDataplaneDowntimeAdminQ(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateDataplaneDowntimePhase2Start(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateCleanup(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateUpgSuccess(UpgCtx& upgCtx);

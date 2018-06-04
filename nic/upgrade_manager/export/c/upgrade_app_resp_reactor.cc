@@ -31,20 +31,22 @@ void UpgAppRespReact::SetAppRespFail(HdlrResp &resp, string str) {
 
 void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &hdlrResp) {
     switch (resp->upgapprespval()) {
-        case upgrade::PreUpgStatePass:
-        case upgrade::ProcessesQuiescedPass:
-        case upgrade::PostBinRestartPass:
-        case upgrade::DataplaneDowntimePhase1StartPass:
-        case upgrade::DataplaneDowntimePhase2StartPass:
-        case upgrade::CleanupPass:
+        case PreUpgStatePass:
+        case ProcessesQuiescedPass:
+        case PostBinRestartPass:
+        case DataplaneDowntimePhase1StartPass:
+        case DataplaneDowntimeAdminQHandlingPass:
+        case DataplaneDowntimePhase2StartPass:
+        case CleanupPass:
             this->SetAppRespSuccess(hdlrResp);
             break;
-        case upgrade::PreUpgStateFail:
-        case upgrade::ProcessesQuiescedFail:
-        case upgrade::PostBinRestartFail:
-        case upgrade::DataplaneDowntimePhase1StartFail:
-        case upgrade::DataplaneDowntimePhase2StartFail:
-        case upgrade::CleanupFail:
+        case PreUpgStateFail:
+        case ProcessesQuiescedFail:
+        case PostBinRestartFail:
+        case DataplaneDowntimePhase1StartFail:
+        case DataplaneDowntimeAdminQHandlingFail:
+        case DataplaneDowntimePhase2StartFail:
+        case CleanupFail:
             this->SetAppRespFail(hdlrResp, GetAppRespStr(resp));
             break;
         default:
@@ -56,28 +58,32 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
     HdlrResp hdlrResp;
     GetAppResp(resp, hdlrResp);
     switch (resp->upgapprespval()) {
-        case upgrade::PreUpgStatePass:
-        case upgrade::PreUpgStateFail:
+        case PreUpgStatePass:
+        case PreUpgStateFail:
             upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
-        case upgrade::ProcessesQuiescedPass:
-        case upgrade::ProcessesQuiescedFail:
+        case ProcessesQuiescedPass:
+        case ProcessesQuiescedFail:
             upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
-        case upgrade::PostBinRestartPass:
-        case upgrade::PostBinRestartFail:
+        case PostBinRestartPass:
+        case PostBinRestartFail:
             upgAgentHandler_->UpgStatePostBinRestartComplete(hdlrResp, resp->key());
             break;
-        case upgrade::DataplaneDowntimePhase1StartPass:
-        case upgrade::DataplaneDowntimePhase1StartFail:
+        case DataplaneDowntimePhase1StartPass:
+        case DataplaneDowntimePhase1StartFail:
             upgAgentHandler_->UpgStateDataplaneDowntimePhase1Complete(hdlrResp, resp->key());
             break;
-        case upgrade::DataplaneDowntimePhase2StartPass:
-        case upgrade::DataplaneDowntimePhase2StartFail:
+        case DataplaneDowntimeAdminQHandlingPass:
+        case DataplaneDowntimeAdminQHandlingFail:
+            upgAgentHandler_->UpgStateDataplaneDowntimeAdminQComplete(hdlrResp, resp->key());
+            break;
+        case DataplaneDowntimePhase2StartPass:
+        case DataplaneDowntimePhase2StartFail:
             upgAgentHandler_->UpgStateDataplaneDowntimePhase2Complete(hdlrResp, resp->key());
             break;
-        case upgrade::CleanupPass:
-        case upgrade::CleanupFail:
+        case CleanupPass:
+        case CleanupFail:
             upgAgentHandler_->UpgStateCleanupComplete(hdlrResp, resp->key());
             break;
         default:

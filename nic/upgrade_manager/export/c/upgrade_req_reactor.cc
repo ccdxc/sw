@@ -31,6 +31,10 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgC
             LogInfo("Upgrade: Dataplane Downtime Phase1 Start");
             hdlrResp = this->upgHdlrPtr_->HandleStateDataplaneDowntimePhase1Start(ctx);
             break;
+        case DataplaneDowntimeAdminQHandling:
+            LogInfo("Upgrade: Dataplane Downtime AdminQ Handling Start");
+            hdlrResp = this->upgHdlrPtr_->HandleDataplaneDowntimeAdminQ(ctx);
+            break;
         case DataplaneDowntimePhase2Start:
             LogInfo("Upgrade: Dataplane Downtime Phase2 Start");
             hdlrResp = this->upgHdlrPtr_->HandleStateDataplaneDowntimePhase2Start(ctx);

@@ -51,6 +51,12 @@ HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx) {
     return resp;
 }
 
+HdlrResp UpgHandler::HandleDataplaneDowntimeAdminQ(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    LogInfo("UpgHandler HandleDataplaneDowntimeAdminQ not implemented by service");
+    return resp;
+}
+
 HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase2Start(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateDataplaneDowntimePhase2Start not implemented by service");

@@ -59,17 +59,29 @@ void InitStateMachineVector(void) {
                 "Post Process Restart Pass", 
                 "Post Process Restart Fail"
                };
-    StateMachine[DataplaneDowntimePhase1Start] = 
+    StateMachine[DataplaneDowntimePhase1Start] =
                {
-                DataplaneDowntimePhase1Start, 
-                DataplaneDowntimePhase2Start, 
-                DataplaneDowntimePhase1StartPass, 
-                DataplaneDowntimePhase1StartFail, 
-                "Sending pass to upg-mgr for Dataplane Downtime Phase1 Start message", 
-                "Sending fail to upg-mgr for Dataplane Downtime Phase1 Start message", 
-                "Dataplane Downtime Phase1 Start", 
-                "Dataplane Downtime Phase1 Success", 
+                DataplaneDowntimePhase1Start,
+                DataplaneDowntimeAdminQHandling,
+                DataplaneDowntimePhase1StartPass,
+                DataplaneDowntimePhase1StartFail,
+                "Sending pass to upg-mgr for Dataplane Downtime Phase1 Start message",
+                "Sending fail to upg-mgr for Dataplane Downtime Phase1 Start message",
+                "Dataplane Downtime Phase1 Start",
+                "Dataplane Downtime Phase1 Success",
                 "Dataplane Downtime Phase1 Fail"
+               };
+    StateMachine[DataplaneDowntimeAdminQHandling] = 
+               {
+                DataplaneDowntimeAdminQHandling,
+                DataplaneDowntimePhase2Start, 
+                DataplaneDowntimeAdminQHandlingPass, 
+                DataplaneDowntimeAdminQHandlingFail, 
+                "Sending pass to upg-mgr for Dataplane Downtime AdminQ Handling message", 
+                "Sending fail to upg-mgr for Dataplane Downtime AdminQ Handling message", 
+                "Dataplane Downtime AdminQ Handling Start", 
+                "Dataplane Downtime AdminQ Handling Success", 
+                "Dataplane Downtime AdminQ Handling Fail"
                };
     StateMachine[DataplaneDowntimePhase2Start] =
                {
