@@ -37,9 +37,8 @@ header_type q_state_t {
     ssd_q_num	: 16;	// Number of entries in the SSD priority queue
     ssd_q_size	: 16;	// Size of each queue state entry in SSD priority queue
     ssd_ci_addr	: 64;	// Address of the consumer index in the SSD qstate
-    desc1_next_pc_valid: 1;
-    desc1_next_pc: 28;	// desc bytes 64-127 next program's PC
-    pad		: 13;	// Align to 64 bytes
+    wp_ndx	: 16;	// Working producer index
+    pad		: 26;	// Align to 64 bytes
   }
 }
 
@@ -359,15 +358,14 @@ header_type storage_kivec6_t {
   modify_field(q_state.ssd_q_num, ssd_q_num);		\
   modify_field(q_state.ssd_q_size, ssd_q_size);		\
   modify_field(q_state.ssd_ci_addr, ssd_ci_addr);	\
-  modify_field(q_state.desc1_next_pc_valid, desc1_next_pc_valid);\
-  modify_field(q_state.desc1_next_pc, desc1_next_pc);\
+  modify_field(q_state.wp_ndx, wp_ndx);			\
 
-#define ACC_Q_STATE_COPY_STAGE0(q_state)			\
+#define ACC_Q_STATE_COPY_STAGE0(q_state)		\
   Q_STATE_COPY_INTRINSIC(q_state)			\
   modify_field(q_state.p_ndx, p_ndx);			\
   modify_field(q_state.c_ndx, c_ndx);			\
   modify_field(q_state.w_ndx, w_ndx);			\
-  modify_field(q_state.num_entries, num_entries);   \
+  modify_field(q_state.num_entries, num_entries);   	\
   modify_field(q_state.base_addr, base_addr);		\
   modify_field(q_state.entry_size, entry_size);		\
   modify_field(q_state.next_pc, next_pc);		\

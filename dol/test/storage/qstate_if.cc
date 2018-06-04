@@ -24,8 +24,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                   uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
                   uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
                   uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr, 
-                  uint16_t ssd_q_num, uint16_t ssd_q_size, uint64_t ssd_ci_addr,
-                  char *desc1_pgm_bin) {
+                  uint16_t ssd_q_num, uint16_t ssd_q_size, uint64_t ssd_ci_addr) {
 
   uint8_t q_state[64];
   uint8_t pc_offset;
@@ -75,16 +74,6 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 374, 16, ssd_q_num);
   utils::write_bit_fields(q_state, 390, 16, ssd_q_size);
   utils::write_bit_fields(q_state, 406, 64, ssd_ci_addr);
-
-  if (desc1_pgm_bin) {
-    if (hal_if::get_pgm_base_addr(desc1_pgm_bin, &next_pc) < 0) {
-      printf("Failed to get base addr of %s\n", desc1_pgm_bin);
-      return -1;
-    }
-    next_pc = next_pc >> 6;
-    utils::write_bit_fields(q_state, 470, 1, 1);    // desc1_next_pc valid
-    utils::write_bit_fields(q_state, 471, 28, next_pc);
-  }
 
   //utils::dump(q_state);
 

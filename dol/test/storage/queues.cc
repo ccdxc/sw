@@ -26,7 +26,7 @@
 
       static uint32_t	PvmNumSQs;                    // log2(Sum total of all PVM SQs)
 const static uint32_t	kPvmNumNvmeSQs		 = 1;
-const static uint32_t	kPvmNumR2nSQs		 = 0; // 2^0 => 1 queue
+const static uint32_t	kPvmNumR2nSQs		 = 1; 
 const static uint32_t	kPvmNumNvmeBeSQs	 = 4;
 const static uint32_t	kPvmNumSsdSQs	 	 = 4;
 

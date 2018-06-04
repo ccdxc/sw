@@ -21,8 +21,7 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                    total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                    num_entries, base_addr, entry_size, next_pc,
                    dst_lif, dst_qtype, dst_qid,  dst_qaddr, vf_id, sq_id, ssd_bm_addr, 
-                   ssd_q_num, ssd_q_size, ssd_ci_addr,
-		   desc1_next_pc_valid, desc1_next_pc, pad) {
+                   ssd_q_num, ssd_q_size, ssd_ci_addr, wp_ndx, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   Q_STATE_COPY_STAGE0(q_state_scratch)
@@ -72,8 +71,7 @@ action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                     total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                     num_entries, base_addr, entry_size, next_pc, 
                     dst_lif, dst_qtype, dst_qid, dst_qaddr, vf_id, sq_id, ssd_bm_addr, 
-                    ssd_q_num, ssd_q_size, ssd_ci_addr,
- 		    desc1_next_pc_valid, desc1_next_pc, pad) {
+                    ssd_q_num, ssd_q_size, ssd_ci_addr, wp_ndx, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -671,13 +669,12 @@ action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                         total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                         num_entries, base_addr, entry_size, next_pc, 
                         dst_lif, dst_qtype, dst_qid, dst_qaddr, vf_id, sq_id, ssd_bm_addr, 
-                        ssd_q_num, ssd_q_size, ssd_ci_addr,
-			desc1_next_pc_valid, desc1_next_pc, pad) {
-
+                        ssd_q_num, ssd_q_size, ssd_ci_addr, wp_ndx, pad) {
+ 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
   STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
-
+ 
   // For D vector generation (type inference). No need to translate this to ASM.
   Q_STATE_COPY(q_state_scratch)
 

@@ -1382,7 +1382,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
                       uint16_t io_priority) {
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
-  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0); 
   uint16_t r2n_index;
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *r2n_buf;
@@ -1661,7 +1661,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
                       uint16_t io_priority, XtsCtx& xts_ctx) {
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
-  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0); 
   uint16_t r2n_index;
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *r2n_buf;

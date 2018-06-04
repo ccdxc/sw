@@ -53,9 +53,6 @@ storage_tx_q_state_pop_start:
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
    TABLE_ADDR_FOR_INDEX(d.base_addr, r6, d.entry_size)
-   bbeq         d.desc1_next_pc_valid, 0, load_table_default
-   add          r1, r7, STORAGE_DEFAULT_TBL_LOAD_SIZE_BYTES // delay slot
-   LOAD_TABLE1_FOR_ADDR64(r1, STORAGE_DEFAULT_TBL_LOAD_SIZE, d.desc1_next_pc)
    LOAD_TABLE0_FOR_ADDR64(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE, d.next_pc)
 
 load_table_default:   
