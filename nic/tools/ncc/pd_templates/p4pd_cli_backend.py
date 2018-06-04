@@ -1000,13 +1000,8 @@ def populate_table(ctx):
         # endfor table
 
 def table_dump():
-    if "TBL_DIR" in os.environ:
-        tbl_dir = os.environ['TBL_DIR']
-    else:
-        print ("TBL_DIR env variable not set")
-        return
-
-    with open(tbl_dir + "/${pddict['cli-name']}/p4pd/capri_p4_table_map.json") as data_file:
+    tbl_dir = os.environ['HAL_CONFIG_PATH']
+    with open(tbl_dir + "/${pddict['cli-name']}/capri_p4_table_map.json") as data_file:
         data = json.load(data_file)
         print("=================================================================================")
         print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format("Table","TblId", "Type", "In/Egress", "Stage", "StageTblID", "Size"))
