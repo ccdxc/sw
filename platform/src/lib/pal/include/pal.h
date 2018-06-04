@@ -51,6 +51,7 @@ void pal_mem_unmap(void *va);
 u_int64_t pal_mem_vtop(const void *va);
 int pal_mem_rd(const u_int64_t pa,       void *buf, const size_t sz);
 int pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz);
+int pal_memset(const u_int64_t pa, u_int8_t c, const size_t sz);
 
 int pal_mem_trace_control(const int on);
 
