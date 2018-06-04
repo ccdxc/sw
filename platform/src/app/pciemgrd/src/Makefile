@@ -5,13 +5,13 @@
 PROGRAM = pciemgrd
 SOURCES = pciemgrd.cc
 LCFLAGS = \
-	-I ../../../../include/common \
-	-I ../../../../src/lib/misc/include \
-	-I ../../../../src/lib/pcieport/include \
-	-I ../../../../src/lib/cfgspace/include \
-	-I ../../../../src/lib/pciehost/include \
-	-I ../../../../src/lib/pciehw/include \
-	-I ../../../../src/lib/pciehdevices/include \
+	-I $(TOPDIR)/include/common \
+	-I $(TOPDIR)/src/lib/misc/include \
+	-I $(TOPDIR)/src/lib/pcieport/include \
+	-I $(TOPDIR)/src/lib/cfgspace/include \
+	-I $(TOPDIR)/src/lib/pciehost/include \
+	-I $(TOPDIR)/src/lib/pciehw/include \
+	-I $(TOPDIR)/src/lib/pciehdevices/include \
 	$(NULL)
 
 LCXXFLAGS = $(LCFLAGS)
