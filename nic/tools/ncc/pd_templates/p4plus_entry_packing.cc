@@ -418,6 +418,11 @@ p4pd_p4table_entry_prepare(uint8_t *hwentry,
 //::                max_actionfld_len = actionfldlen
 //::            #endif
 //::        #endfor
+//::        #Toeplitz hash tables do not table programming APIs.
+//::        #There is no lookup table to match toeplitz key
+//::        if pddict['tables'][table]['is_toeplitz_hash']:
+//::            continue
+//::        #endif
 
 /* Query key details for p4-table '${table}'
  *
@@ -876,6 +881,9 @@ ${api_prefix}_hwentry_query(uint32_t tableid,
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
+//::            if pddict['tables'][table]['is_toeplitz_hash']:
+//::                continue
+//::            #endif
 //::            caps_tablename = table.upper()
 //::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
 //::                continue
@@ -922,6 +930,9 @@ ${api_prefix}_index_to_hwindex_map(uint32_t   tableid,
 
     switch (tableid) {
 //::        for table, tid in tabledict.items():
+//::            if pddict['tables'][table]['is_toeplitz_hash']:
+//::                continue
+//::            #endif
 //::            caps_tablename = table.upper()
 //::            if pddict['tables'][table]['type'] != 'Index':
 //::                continue
@@ -1040,6 +1051,9 @@ ${api_prefix}_entry_pack(uint32_t tableid,
 
     switch (tableid) {
 //::        for table, tid in tabledict.items():
+//::            if pddict['tables'][table]['is_toeplitz_hash']:
+//::                continue
+//::            #endif
 //::            caps_tablename = table.upper()
 //::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
 //::                continue
@@ -1098,6 +1112,9 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
     }
     switch (tableid) {
 //::        for table, tid in tabledict.items():
+//::            if pddict['tables'][table]['is_toeplitz_hash']:
+//::                continue
+//::            #endif
 //::            caps_tablename = table.upper()
 //::            if pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
 //::                continue
@@ -1220,6 +1237,9 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 
     switch (tableid) {
 //::        for table, tid in tabledict.items():
+//::            if pddict['tables'][table]['is_toeplitz_hash']:
+//::                continue
+//::            #endif
 //::            caps_tablename = table.upper()
 //::            if pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
 //::                continue

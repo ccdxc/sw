@@ -1359,6 +1359,7 @@ class capri_p4pd:
             tdict['match_key_bit_length'] = keydict['match_key_len']
             tdict['is_wide_key'] = 1 if ctable.is_wide_key else 0
             tdict['wide_key_len'] = keydict['wide_key_len']
+            tdict['is_toeplitz_hash'] = 1 if ctable.is_toeplitz_hash() else 0
             # Not my key bytes and bits will NOT be NULL when
             # KeyMaker is shared by 2 TCAM tables. KM logic
             # can interperse Key bytes/bits to adhere to Banyan
