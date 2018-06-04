@@ -136,7 +136,7 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 	tsa.DB.AllocatedFlowMonitorRuleIds = 1
 }
 
-func allocateMirrorSessionID(tsa *Tagent, msName string) uint32 {
+func (tsa *Tagent) allocateMirrorSessionID(msName string) uint32 {
 	if _, v := tsa.DB.MirrorSessionNameToID[msName]; v {
 		return tsa.DB.MirrorSessionNameToID[msName]
 	}
@@ -148,14 +148,14 @@ func allocateMirrorSessionID(tsa *Tagent, msName string) uint32 {
 	return halMaxMirrorSession + 1
 }
 
-func getMirrorSessionID(tsa *Tagent, msName string) uint32 {
+func (tsa *Tagent) getMirrorSessionID(msName string) uint32 {
 	if _, v := tsa.DB.MirrorSessionNameToID[msName]; v {
 		return tsa.DB.MirrorSessionNameToID[msName]
 	}
 	return halMaxMirrorSession + 1
 }
 
-func allocateDropRuleID(tsa *Tagent, dropRule types.DropMonitorRule) uint64 {
+func (tsa *Tagent) allocateDropRuleID(dropRule types.DropMonitorRule) uint64 {
 	var ruleID uint64
 	if _, v := tsa.DB.DropMonitorRules[dropRule]; v {
 		ruleID = tsa.DB.DropMonitorRules[dropRule].RuleID
@@ -167,21 +167,21 @@ func allocateDropRuleID(tsa *Tagent, dropRule types.DropMonitorRule) uint64 {
 	return ruleID
 }
 
-func getDropRuleID(tsa *Tagent, dropRule types.DropMonitorRule) uint64 {
+func (tsa *Tagent) getDropRuleID(dropRule types.DropMonitorRule) uint64 {
 	if _, v := tsa.DB.DropMonitorRules[dropRule]; v {
 		return tsa.DB.DropMonitorRules[dropRule].RuleID
 	}
 	return 0
 }
 
-func getFlowMonitorRuleID(tsa *Tagent, flowRule types.FlowMonitorRule) uint64 {
+func (tsa *Tagent) getFlowMonitorRuleID(flowRule types.FlowMonitorRule) uint64 {
 	if _, v := tsa.DB.FlowMonitorRules[flowRule]; v {
 		return tsa.DB.FlowMonitorRules[flowRule].RuleID
 	}
 	return 0
 }
 
-func allocateFlowMonitorRuleID(tsa *Tagent, flowRule types.FlowMonitorRule) uint64 {
+func (tsa *Tagent) allocateFlowMonitorRuleID(flowRule types.FlowMonitorRule) uint64 {
 	var ruleID uint64
 	if _, v := tsa.DB.FlowMonitorRules[flowRule]; v {
 		ruleID = tsa.DB.FlowMonitorRules[flowRule].RuleID
@@ -773,7 +773,7 @@ func buildMirrorTrafficCollectorProtoObj(mirrorSession *tsproto.MirrorSession, m
 	return veniceCollectors, erspanCollectors
 }
 
-func createHALMirrorSessionProtoObj(tsa *Tagent, mirrorSession *tsproto.MirrorSession, sessID uint32) (*halproto.MirrorSessionRequestMsg, error) {
+func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *tsproto.MirrorSession, sessID uint32) (*halproto.MirrorSessionRequestMsg, error) {
 
 	tsa.DB.PktMirrorSessions[mirrorSession.Name] = &types.MirrorSessionStatus{
 		Created:  false,
@@ -810,7 +810,7 @@ func createHALMirrorSessionProtoObj(tsa *Tagent, mirrorSession *tsproto.MirrorSe
 	return &ReqMsg, nil
 }
 
-func createHALDropMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.MirrorSession) ([]*halproto.DropMonitorRuleRequestMsg, error) {
+func (tsa *Tagent) createHALDropMonitorRulesProtoObj(mirrorSession *tsproto.MirrorSession) ([]*halproto.DropMonitorRuleRequestMsg, error) {
 
 	MsKeyOrHandle := &halproto.MirrorSessionKeyHandle{
 		KeyOrHandle: &halproto.MirrorSessionKeyHandle_MirrorsessionHandle{
@@ -834,9 +834,9 @@ func createHALDropMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.Mirro
 				}
 				// Check if the dropRule is already applied on the same mirror session
 				// If so, need to reuse ruleID
-				ruleID := getDropRuleID(tsa, dropRule)
+				ruleID := tsa.getDropRuleID(dropRule)
 				if ruleID == 0 {
-					ruleID = allocateDropRuleID(tsa, dropRule)
+					ruleID = tsa.allocateDropRuleID(dropRule)
 				}
 				dropRuleSpec := halproto.DropMonitorRuleSpec{
 					Meta: &halproto.ObjectMeta{
@@ -862,9 +862,9 @@ func createHALDropMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.Mirro
 				}
 				// Check if the dropRule is already applied on the same mirror session
 				// If so, need to reuse ruleID
-				ruleID := getDropRuleID(tsa, dropRule)
+				ruleID := tsa.getDropRuleID(dropRule)
 				if ruleID == 0 {
-					ruleID = allocateDropRuleID(tsa, dropRule)
+					ruleID = tsa.allocateDropRuleID(dropRule)
 				}
 				dropRuleSpec := halproto.DropMonitorRuleSpec{
 					Meta: &halproto.ObjectMeta{
@@ -890,9 +890,9 @@ func createHALDropMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.Mirro
 				}
 				// Check if the dropRule is already applied on the same mirror session
 				// If so, need to reuse ruleID
-				ruleID := getDropRuleID(tsa, dropRule)
+				ruleID := tsa.getDropRuleID(dropRule)
 				if ruleID == 0 {
-					ruleID = allocateDropRuleID(tsa, dropRule)
+					ruleID = tsa.allocateDropRuleID(dropRule)
 				}
 				dropRuleSpec := halproto.DropMonitorRuleSpec{
 					Meta: &halproto.ObjectMeta{
@@ -914,7 +914,7 @@ func createHALDropMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.Mirro
 	return ReqMsgList, nil
 }
 
-func createHALFlowMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.MirrorSession) ([]*halproto.FlowMonitorRuleRequestMsg, error) {
+func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.MirrorSession) ([]*halproto.FlowMonitorRuleRequestMsg, error) {
 
 	var ReqMsgList []*halproto.FlowMonitorRuleRequestMsg
 
@@ -962,9 +962,9 @@ func createHALFlowMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.Mirro
 			}
 			// Check if the FlowRule is already applied on the same mirror session
 			// If so, need to reuse ruleID
-			ruleID := getFlowMonitorRuleID(tsa, flowRule)
+			ruleID := tsa.getFlowMonitorRuleID(flowRule)
 			if ruleID == 0 {
-				ruleID = allocateFlowMonitorRuleID(tsa, flowRule)
+				ruleID = tsa.allocateFlowMonitorRuleID(flowRule)
 			}
 			srcAddrObj := buildIPAddrObjProtoObj(ipFmRule.SrcIPObj)
 			destAddrObj := buildIPAddrObjProtoObj(ipFmRule.SrcIPObj)
@@ -1006,9 +1006,9 @@ func createHALFlowMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.Mirro
 			}
 			// Check if the FlowRule is already applied on the same mirror session
 			// If so, need to reuse ruleID
-			ruleID := getFlowMonitorRuleID(tsa, flowRule)
+			ruleID := tsa.getFlowMonitorRuleID(flowRule)
 			if ruleID == 0 {
-				ruleID = allocateFlowMonitorRuleID(tsa, flowRule)
+				ruleID = tsa.allocateFlowMonitorRuleID(flowRule)
 			}
 			appMatchObj := buildAppMatchInfoObj(macRule.AppPortObj)
 			flowRuleSpec := halproto.FlowMonitorRuleSpec{
@@ -1054,7 +1054,7 @@ func createHALFlowMonitorRulesProtoObj(tsa *Tagent, mirrorSession *tsproto.Mirro
 }
 
 // CreatePacketCaptureSessionProtoObjects creates all proto objects needed to create mirror session.
-func createPacketCaptureSessionProtoObjs(tsa *Tagent, mirrorSession *tsproto.MirrorSession) (*halproto.MirrorSessionRequestMsg, []*halproto.FlowMonitorRuleRequestMsg, []*halproto.DropMonitorRuleRequestMsg, error) {
+func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.MirrorSession) (*halproto.MirrorSessionRequestMsg, []*halproto.FlowMonitorRuleRequestMsg, []*halproto.DropMonitorRuleRequestMsg, error) {
 	var flowRuleProtoObjs []*halproto.FlowMonitorRuleRequestMsg
 	var dropRuleProtoObjs []*halproto.DropMonitorRuleRequestMsg
 	var mirrorSessionProtoObjs *halproto.MirrorSessionRequestMsg
@@ -1076,7 +1076,7 @@ func createPacketCaptureSessionProtoObjs(tsa *Tagent, mirrorSession *tsproto.Mir
 	}
 
 	createMirrorSession := true
-	sessID := getMirrorSessionID(tsa, mirrorSession.Name)
+	sessID := tsa.getMirrorSessionID(mirrorSession.Name)
 	if sessID < halMaxMirrorSession {
 		if tsa.DB.PktMirrorSessions[mirrorSession.Name].Created &&
 			tsa.DB.PktMirrorSessions[mirrorSession.Name].Handle != 0 {
@@ -1084,7 +1084,7 @@ func createPacketCaptureSessionProtoObjs(tsa *Tagent, mirrorSession *tsproto.Mir
 			createMirrorSession = false
 		}
 	} else {
-		sessID = allocateMirrorSessionID(tsa, mirrorSession.Name)
+		sessID = tsa.allocateMirrorSessionID(mirrorSession.Name)
 		if sessID > halMaxMirrorSession {
 			return nil, nil, nil, ErrMirrorSpecResource
 		}
@@ -1092,14 +1092,14 @@ func createPacketCaptureSessionProtoObjs(tsa *Tagent, mirrorSession *tsproto.Mir
 
 	//Mirror Session  proto objs
 	if createMirrorSession {
-		mirrorSessionProtoObjs, err = createHALMirrorSessionProtoObj(tsa, mirrorSession, sessID)
+		mirrorSessionProtoObjs, err = tsa.createHALMirrorSessionProtoObj(mirrorSession, sessID)
 		if err != nil {
 			return nil, nil, nil, err
 		}
 	}
 
 	// FlowMonitor rules
-	flowRuleProtoObjs, err = createHALFlowMonitorRulesProtoObj(tsa, mirrorSession)
+	flowRuleProtoObjs, err = tsa.createHALFlowMonitorRulesProtoObj(mirrorSession)
 	if err != nil {
 		if err != nil {
 			return nil, nil, nil, err
@@ -1107,7 +1107,7 @@ func createPacketCaptureSessionProtoObjs(tsa *Tagent, mirrorSession *tsproto.Mir
 	}
 	// Drop monitor rules
 	if dropMonitor {
-		dropRuleProtoObjs, err = createHALDropMonitorRulesProtoObj(tsa, mirrorSession)
+		dropRuleProtoObjs, err = tsa.createHALDropMonitorRulesProtoObj(mirrorSession)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1117,28 +1117,31 @@ func createPacketCaptureSessionProtoObjs(tsa *Tagent, mirrorSession *tsproto.Mir
 
 // CreatePacketCaptureSession creates mirror session to enable packet capture
 func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
-	log.Infof("Processing create packet capture session")
-	mirrorProtoObj, flowRuleProtoObj, dropRuleProtoObj, err := createPacketCaptureSessionProtoObjs(tsa, pcSession)
+	mirrorProtoObj, flowRuleProtoObj, dropRuleProtoObj, err := tsa.createPacketCaptureSessionProtoObjs(pcSession)
 	if err == nil {
 		return tsa.Datapath.CreatePacketCaptureSession(pcSession.Name, &tsa.DB, mirrorProtoObj, flowRuleProtoObj, dropRuleProtoObj)
 	}
 	return err
 }
 
+// GetPacketCaptureSession gets a mirror session
+func (tsa *Tagent) GetPacketCaptureSession() *tsproto.MirrorSession {
+	//TODO
+	return nil
+}
+
 // ListPacketCaptureSession lists all mirror sessions
 func (tsa *Tagent) ListPacketCaptureSession() []*tsproto.MirrorSession {
-	log.Infof("Processing list packet capture session")
+	//TODO
 	return nil
 }
 
 // UpdatePacketCaptureSession updates mirror session
 func (tsa *Tagent) UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
-	log.Infof("Processing update packet capture session")
 	return tsa.Datapath.UpdatePacketCaptureSession(pcSession)
 }
 
 // DeletePacketCaptureSession deletes packet capture session.
 func (tsa *Tagent) DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
-	log.Infof("Processing delete packet capture session")
 	return tsa.Datapath.DeletePacketCaptureSession(pcSession)
 }

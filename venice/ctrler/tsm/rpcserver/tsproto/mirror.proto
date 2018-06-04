@@ -154,6 +154,12 @@ message PacketAckDummy {
 
 // trouble shooting controller - mirror api
 service MirrorSessionApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "MirrorSession",
+        Method: ["get", "list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+    };
     rpc WatchMirrorSessions (api.ObjectMeta) returns (stream MirrorSessionEventList) {};
     // client side streaming to receive mirror session status on agent
     // XXX change it simple rpc status update once we settle down on packet streaming vs minio from naples

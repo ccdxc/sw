@@ -20,13 +20,27 @@ import (
 // addMirrorSessionAPIRoutes adds MirrorSession
 func addMirrorSessionAPIRoutes(r *mux.Router, srv *RestServer) {
 
+	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCaptureGetHandler))
+
 	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.PacketCaptureListHandler))
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.PacketCapturePostHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCapturePutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCapturePutHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCaptureDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCaptureDeleteHandler))
+
+}
+
+func (s *RestServer) PacketCaptureGetHandler(r *http.Request) (interface{}, error) {
+	var o tsproto.MirrorSession
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.TsAgent.GetPacketCaptureSession(), nil
 
 }
 

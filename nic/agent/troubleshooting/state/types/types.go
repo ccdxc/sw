@@ -108,6 +108,7 @@ type CtrlerIntf interface {
 	RegisterCtrlerIf(ctrlerif CtrlerAPI) error
 	CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) error
 	ListPacketCaptureSession() []*tsproto.MirrorSession
+	GetPacketCaptureSession() *tsproto.MirrorSession
 	UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) error
 	DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) error
 	//EnablePacketCaptureSession(pcSession *tsproto.PacketCaptureSession) error

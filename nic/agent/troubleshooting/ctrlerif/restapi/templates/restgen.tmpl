@@ -47,7 +47,9 @@ import (
                         if err != nil {
                             return nil, err
                         }
-                        {{if strEq . "post"}}
+                        {{if strEq . "get"}}
+                             return s.TsAgent.GetPacketCaptureSession(), nil
+                        {{else if strEq . "post"}}
                              return nil, s.TsAgent.CreatePacketCaptureSession(&o)
                         {{else if strEq . "put"}}
                              return nil, s.TsAgent.UpdatePacketCaptureSession(&o)
