@@ -796,7 +796,7 @@ void SendSmallUspaceBuf() {
   tests::test_ring_doorbell(g_rdma_hw_lif_id, kSQType, 0, 0, initiator_sq_va->line_get());
 }
 
-int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd_ptr, uint64_t slba) {
+int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd_ptr, uint64_t slba, dp_mem_t **rolling_write_buf) {
   // Increment the LKey at the beginning of each API
   SendBufLKeyIncr();
 
@@ -819,6 +819,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   dp_mem_t *wr_buf = r2n_buf_va->fragment_find(kR2NDataBufOffset - offsetof(r2n::r2n_buf_t, cmd_buf),
                                                kR2NDataSize);
   wr_buf->fill_thru(byte_val);
+  *rolling_write_buf = wr_buf;
 
   // For the send wqe
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);

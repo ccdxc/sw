@@ -247,16 +247,17 @@ std::vector<tests::TestEntry> rdma_tests = {
   {&tests::test_run_rdma_e2e_read, "E2E read over RDMA", false},
 };
 
-std::vector<tests::TestEntry> rdma_lif_override_tests = {
-  {&tests::test_run_rdma_lif_override, "E2E read LIF override", false},
-};
-
 std::vector<tests::TestEntry> rdma_xts_tests = {
   {&tests::test_run_rdma_e2e_xts_write1, "E2E write over RDMA with XTS", false},
   {&tests::test_run_rdma_e2e_xts_read1, "E2E read over RDMA with XTS", false},
 
   // Last in series
   {&tests::xts_resync, "XTS rings resync", false},
+};
+
+std::vector<tests::TestEntry> rdma_lif_override_tests = {
+  {&tests::test_run_rdma_e2e_write, "E2E write (pre LIF override)", false},
+  {&tests::test_run_rdma_lif_override, "E2E read LIF override", false},
 };
 
 std::vector<tests::TestEntry> pdma_tests = {
@@ -442,8 +443,8 @@ int main(int argc, char**argv) {
       run_comp_seq_tests = true;
       run_xts_tests = true;
       run_rdma_tests = true;
-      run_rdma_lif_override_tests = false;	// Enable after h/w model changes
       run_rdma_xts_tests = false;		// Enable after s/w debugging
+      run_rdma_lif_override_tests = false;	// Enable after h/w model changes
       run_xts_perf_tests = false;		// Never enable this for RTL sanity
       run_comp_perf_tests = false;		// Never enable this for RTL sanity
       run_pdma_tests = false;			// Never enable this for RTL sanity
@@ -468,8 +469,8 @@ int main(int argc, char**argv) {
       run_xts_tests = true;
   } else if (FLAGS_test_group == "rdma") {
       run_rdma_tests = true;
-      run_rdma_lif_override_tests = true;
       run_rdma_xts_tests = true;
+      run_rdma_lif_override_tests = true;
   } else if (FLAGS_test_group == "xts_perf") {
       run_xts_perf_tests = true;
   } else if (FLAGS_test_group == "comp_perf") {
@@ -661,23 +662,20 @@ int main(int argc, char**argv) {
     printf("Added RDMA tests \n");
   }
 
-  // NOTE: DO NOT ADD any tests between rdma_tests & rdma_lif_override_tests.
-  //       There is an ORDERING dependency.
- 
-  // Add rdma lif override tests
-  if (run_rdma_lif_override_tests) {
-    for (size_t i = 0; i < rdma_lif_override_tests.size(); i++) {
-      test_suite.push_back(rdma_lif_override_tests[i]);
-    }
-    printf("Added RDMA LIF override tests \n");
-  }
-
   // Add rdma xts tests
   if (run_rdma_xts_tests) {
     for (size_t i = 0; i < rdma_xts_tests.size(); i++) {
       test_suite.push_back(rdma_xts_tests[i]);
     }
     printf("Added RDMA XTS tests \n");
+  }
+
+  // Add rdma lif override tests
+  if (run_rdma_lif_override_tests) {
+    for (size_t i = 0; i < rdma_lif_override_tests.size(); i++) {
+      test_suite.push_back(rdma_lif_override_tests[i]);
+    }
+    printf("Added RDMA LIF override tests \n");
   }
 
   // Add pdma tests
