@@ -179,6 +179,7 @@ struct ionic_admin_ctx {
 	union adminq_comp comp;
 
 #ifndef ADMINQ
+	struct list_head list;
 	void *side_data;
 	size_t side_data_len;
 #endif

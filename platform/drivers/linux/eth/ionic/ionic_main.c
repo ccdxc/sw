@@ -200,6 +200,115 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	return err;
 }
 
+#ifndef ADMINQ
+#define XXX_DEVCMD_HALF_PAGE 0x800
+
+// XXX temp func to get side-band data from 2nd half page of dev_cmd reg space.
+static int SBD_get(struct ionic_dev *idev, void *dst, size_t len)
+{
+	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd;
+	u32 *dst32 = dst;
+	unsigned int i, count;
+
+	// check pointer and size alignment
+	if ((unsigned long)dst & 0x3 || len & 0x3)
+		return -EINVAL;
+
+	// check length fits in 2nd half of page
+	if (len > XXX_DEVCMD_HALF_PAGE)
+		return -EINVAL;
+
+	page32 += XXX_DEVCMD_HALF_PAGE / sizeof(*page32);
+	count = len / sizeof(*page32);
+
+	for (i = 0; i < count; ++i)
+		dst32[i] = ioread32(&page32[i]);
+
+	return 0;
+}
+
+// XXX temp func to put side-band data into 2nd half page of dev_cmd reg space.
+static int SBD_put(struct ionic_dev *idev, void *src, size_t len)
+{
+	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd;
+	u32 *src32 = src;
+	unsigned int i, count;
+
+	// check pointer and size alignment
+	if ((unsigned long)src & 0x3 || len & 0x3)
+		return -EINVAL;
+
+	// check length fits in 2nd half of page
+	if (len > XXX_DEVCMD_HALF_PAGE)
+		return -EINVAL;
+
+	page32 += XXX_DEVCMD_HALF_PAGE / sizeof(*page32);
+	count = len / sizeof(*page32);
+
+	for (i = 0; i < count; ++i)
+		iowrite32(src32[i], &page32[i]);
+
+	return 0;
+}
+
+static void ionic_dev_cmd_work(struct work_struct *work)
+{
+	struct ionic *ionic = container_of(work, struct ionic, cmd_work);
+	struct ionic_admin_ctx *ctx;
+	int err = 0;
+
+	spin_lock_bh(&ionic->cmd_lock);
+	if (list_empty(&ionic->cmd_list)) {
+		spin_unlock_bh(&ionic->cmd_lock);
+		return;
+	}
+
+	ctx = list_first_entry(&ionic->cmd_list,
+			       struct ionic_admin_ctx, list);
+	list_del(&ctx->list);
+	spin_unlock_bh(&ionic->cmd_lock);
+
+	dev_dbg(ionic->dev, "post admin dev command:\n");
+	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+			     &ctx->cmd, sizeof(ctx->cmd), true);
+
+	if (ctx->side_data) {
+		dynamic_hex_dump("data ", DUMP_PREFIX_OFFSET, 16, 1,
+				 ctx->side_data, ctx->side_data_len, true);
+
+		err = SBD_put(&ionic->idev, ctx->side_data, ctx->side_data_len);
+		if (err)
+			goto err_out;
+	}
+
+	ionic_dev_cmd_go(&ionic->idev, (void *)&ctx->cmd);
+
+	err = ionic_dev_cmd_wait_check(&ionic->idev, HZ * devcmd_timeout);
+	if (err)
+		goto err_out;
+
+	ionic_dev_cmd_comp(&ionic->idev, &ctx->comp);
+
+	if (ctx->side_data) {
+		err = SBD_get(&ionic->idev, ctx->side_data, ctx->side_data_len);
+		if (err)
+			goto err_out;
+	}
+
+	dev_dbg(ionic->dev, "comp admin dev command:\n");
+	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+			     &ctx->comp, sizeof(ctx->comp), true);
+
+err_out:
+	if (WARN_ON(err))
+		memset(&ctx->comp, 0xAB, sizeof(ctx->comp));
+
+	complete_all(&ctx->work);
+
+	schedule_work(&ionic->cmd_work);
+}
+#endif
+
 int ionic_setup(struct ionic *ionic)
 {
 	int err;
@@ -207,6 +316,12 @@ int ionic_setup(struct ionic *ionic)
 	err = ionic_dev_setup(&ionic->idev, ionic->bars, ionic->num_bars);
 	if (err)
 		return err;
+
+#ifndef ADMINQ
+	spin_lock_init(&ionic->cmd_lock);
+	INIT_LIST_HEAD(&ionic->cmd_list);
+	INIT_WORK(&ionic->cmd_work, ionic_dev_cmd_work);
+#endif
 
 	return ionic_debugfs_add_dev_cmd(ionic);
 }

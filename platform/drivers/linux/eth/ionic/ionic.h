@@ -50,6 +50,12 @@ struct ionic {
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
+
+#ifndef ADMINQ
+	spinlock_t cmd_lock;
+	struct list_head cmd_list;
+	struct work_struct cmd_work;
+#endif
 };
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
