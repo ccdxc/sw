@@ -22,7 +22,8 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	struct ionic_ctx_resp resp = {};
 	int rc;
 
-	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx);
+	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx,
+					   RDMA_DRIVER_UNKNOWN);
 	if (!ctx) {
 		rc = errno;
 		goto err_ctx;
