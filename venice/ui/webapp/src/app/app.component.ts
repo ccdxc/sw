@@ -266,8 +266,10 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
       this.navigate(['/network', 'network']);
     } else if (payload['id'] === 'troubleshooting') {
       this.navigate(['/monitoring', 'troubleshooting']);
+    } else if (payload['id'] === 'cluster') {
+        this.navigate(['/cluster-group', 'cluster']);
     } else if (payload['id'] === 'naples') {
-      this.navigate(['/cluster', 'naples']);
+      this.navigate(['/cluster-group', 'naples']);
     } else {
       this.navigate(['/dashboard']);
     }

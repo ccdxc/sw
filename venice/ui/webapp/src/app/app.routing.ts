@@ -53,8 +53,8 @@ export const routes: Routes = [
     loadChildren: '@components/network/network.module#NetworkModule'
   },
   {
-    path: 'cluster',
-    loadChildren: '@components/cluster/cluster.module#ClusterModule'
+    path: 'cluster-group',
+    loadChildren: '@components/cluster-group/cluster-group.module#ClusterGroupModule'
   },
   {
     path: '**',

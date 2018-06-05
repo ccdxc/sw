@@ -14,8 +14,8 @@ export const environment = {
   logger_webapi: false,
 
   // for example: http://192.168.30.11:9000/v1/cmd/nodes
-  server_url: 'http://192.168.69.189',
-  server_port: '10001',
+  server_url: 'http://localhost',
+  server_port: '4200',
   version_api_string: '/v1/',
   login: 'login',
   venice_nodes: 'cmd/nodes',

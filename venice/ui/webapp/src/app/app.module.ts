@@ -29,6 +29,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { AbstractService } from '@app/services/abstract.service';
 import { AuthService } from '@app/services/auth.service';
 import { WorkloadService } from '@app/services/workload.service';
+import { ClusterService } from '@app/services/cluster.service'
 import { DatafetchService } from '@app/services/datafetch.service';
 import { VeniceUIHttpInterceptor } from '@app/inteceptors/httpinterceptor.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -51,7 +52,6 @@ import { AlertlistModule } from '@app/components/alertlist';
 import { AlerttableModule } from '@app/components/alerttable';
 import { SecurityModule } from '@app/components/security';
 import { NetworkModule } from '@app/components/network';
-import { ClusterModule } from '@app/components/cluster';
 import { LoginModule } from '@app/components/login/login.module';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
@@ -122,6 +122,7 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     AbstractService,
     AuthService,
     WorkloadService,
+    ClusterService,
     DatafetchService,
     LogService,
     LogPublishersService,

@@ -6,7 +6,7 @@ import { MockDataUtil } from '@app/common/MockDataUtil';
 import { Observable } from 'rxjs/Observable';
 import { TestScheduler } from 'rxjs/testing/TestScheduler';
 
-fdescribe('AbstractService', () => {
+describe('AbstractService', () => {
   let httpMock: HttpTestingController;
   beforeEach(() => {
     TestBed.configureTestingModule({

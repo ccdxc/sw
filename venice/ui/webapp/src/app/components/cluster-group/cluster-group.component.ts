@@ -3,16 +3,15 @@ import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
 
-
 @Component({
-  selector: 'app-cluster',
-  templateUrl: './cluster.component.html',
-  styleUrls: ['./cluster.component.scss']
+  selector: 'app-cluster-group',
+  templateUrl: './cluster-group.component.html',
+  styleUrls: ['./cluster-group.component.scss']
 })
-export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy {
 
-  constructor(protected _controllerService: ControllerService,
-  ) {
+export class ClusterGroupComponent extends BaseComponent implements OnInit, OnDestroy {
+
+  constructor(protected _controllerService: ControllerService) {
     super(_controllerService);
   }
 
@@ -20,7 +19,6 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     if (!this._controllerService.isUserLogin()) {
       this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
     } else {
-
     }
   }
 
@@ -28,8 +26,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
    * Component is about to exit
    */
   ngOnDestroy() {
-    // publish event that AppComponent is about to exist
-    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'ClusterComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+    // publish event that this component is about to exit
+    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'ClusterGroupComponent', 'state': Eventtypes.COMPONENT_DESTROY });
   }
-
 }
