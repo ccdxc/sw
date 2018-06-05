@@ -76,7 +76,9 @@ func TestTenantUpdate(t *testing.T) {
 	Assert(t, tnt.Name == "updateTenant", "Tenant names did not match", tnt)
 
 	tnSpec := netproto.TenantSpec{
-		TenantType: "CUSTOMER",
+		Meta: &api.ObjectMeta{
+			ResourceVersion: "v2",
+		},
 	}
 
 	tn.Spec = tnSpec

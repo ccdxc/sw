@@ -106,7 +106,9 @@ func TestTenantUpdate(t *testing.T) {
 
 	var actualTenantSpec netproto.TenantSpec
 	updatedTenantSpec := netproto.TenantSpec{
-		TenantType: "CUSTOMER",
+		Meta: &api.ObjectMeta{
+			ResourceVersion: "v2",
+		},
 	}
 	putData := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},

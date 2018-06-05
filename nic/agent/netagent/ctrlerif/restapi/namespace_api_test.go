@@ -107,9 +107,7 @@ func TestNamespaceUpdate(t *testing.T) {
 
 	var actualNamespaceSpec netproto.NamespaceSpec
 	updatedNamespaceSpec := netproto.NamespaceSpec{
-		Meta: &api.ObjectMeta{
-			ResourceVersion: "v2",
-		},
+		NamespaceType: "CUSTOMER",
 	}
 	putData := netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},

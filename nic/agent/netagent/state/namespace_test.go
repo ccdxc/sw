@@ -95,9 +95,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	Assert(t, namespace.Name == "updateNamespace", "Namespace names did not match", namespace)
 
 	nsSpec := netproto.NamespaceSpec{
-		Meta: &api.ObjectMeta{
-			ResourceVersion: "v2",
-		},
+		NamespaceType: "CUSTOMER",
 	}
 
 	ns.Spec = nsSpec

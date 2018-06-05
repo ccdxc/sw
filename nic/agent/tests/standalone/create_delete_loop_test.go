@@ -110,7 +110,7 @@ var _ = Describe("Agent create delete loop tests", func() {
 			if err != nil {
 				Fail(fmt.Sprintf("could not get default namespaces, %v", err))
 			}
-			if len(nsList) != 1 {
+			if len(nsList) != 2 {
 				Fail(fmt.Sprintf("expected only default namespace, after symmetric create delete. But found %v. Err: %v", nsList, err))
 			}
 

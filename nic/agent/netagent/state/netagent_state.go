@@ -69,6 +69,13 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUI
 			return nil, err
 
 		}
+		// We need to create an infra namespace at startup. This will create an infra vrf in the datapath
+		err = na.createInfraNamespace()
+		if err != nil {
+			emdb.Close()
+			return nil, err
+
+		}
 	}
 
 	err = na.GetHwInterfaces()
@@ -138,6 +145,28 @@ func (na *Nagent) createDefaultTenant() error {
 		},
 	}
 	return na.CreateTenant(&tn)
+}
+
+func (na *Nagent) createInfraNamespace() error {
+	c, _ := gogoproto.TimestampProto(time.Now())
+
+	infraNS := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "infra",
+			Tenant: "default",
+			CreationTime: api.Timestamp{
+				Timestamp: *c,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *c,
+			},
+		},
+		Spec: netproto.NamespaceSpec{
+			NamespaceType: "INFRA",
+		},
+	}
+	return na.CreateNamespace(&infraNS)
 }
 
 func (na *Nagent) validateMeta(kind string, oMeta api.ObjectMeta) error {

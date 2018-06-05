@@ -407,9 +407,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                                                       Meta: &api.ObjectMeta{
-                                                                                       ResourceVersion:"v2",
-                                                                                   },
+                                                                       NamespaceType: "CUSTOMER",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
                                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
@@ -710,7 +708,9 @@ import (
                             {{else if strEq $crudObject "Tenant"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                		                               TenantType: "CUSTOMER",
+                                                        Meta: &api.ObjectMeta{
+                                                                        ResourceVersion:"v2",
+                                                                    },
                                 		                            }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
                                     TypeMeta: api.TypeMeta{Kind: "Tenant"},

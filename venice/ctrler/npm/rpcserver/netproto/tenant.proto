@@ -22,13 +22,7 @@ message TenantStatus {
 
 // TenantSpec captures all the tenant level configuration
 message TenantSpec {
-    enum Type
-    {
-        CUSTOMER  = 0;  // Customer type tenant.
-        INFRA     = 1;  // Infra tenant. This will create an infra VRF in HAL
-    }
-    string TenantType  = 1 [(venice.check) = "StrEnum(TenantSpec.Type)",
-                            (gogoproto.nullable) = true, (gogoproto.jsontag) = "tenant-type,omitempty"];
+    api.ObjectMeta Meta = 1; // common object meta
 }
 
 // Tenant object

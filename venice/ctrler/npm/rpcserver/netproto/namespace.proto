@@ -39,7 +39,14 @@ message Namespace {
 
 // NamespaceSpec captures all the namespace level configuration
 message NamespaceSpec {
-    api.ObjectMeta Meta = 1; // common object meta
+    enum Type
+    {
+        CUSTOMER  = 0;  // Customer type tenant.
+        INFRA     = 1;  // Infra tenant. This will create an infra VRF in HAL
+    }
+    string NamespaceType  = 1 [(venice.check) = "StrEnum(NamespaceSpec.Type)",
+                               (gogoproto.nullable) = true, (gogoproto.jsontag) = "namespace-type,omitempty"];
+
 
 }
 // Namespace Status
