@@ -60,8 +60,10 @@ func (hd *Datapath) CreateVrf(vrfID uint64, vrfType string) error {
 func (hd *Datapath) DeleteVrf(vrfID uint64) error {
 
 	vrfDelReq := halproto.VrfDeleteRequest{
-		Meta: &halproto.ObjectMeta{
-			VrfId: vrfID,
+		KeyOrHandle: &halproto.VrfKeyHandle{
+			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+				VrfId: vrfID,
+			},
 		},
 	}
 
@@ -69,13 +71,24 @@ func (hd *Datapath) DeleteVrf(vrfID uint64) error {
 		Request: []*halproto.VrfDeleteRequest{&vrfDelReq},
 	}
 
-	// delete the tenant
-	_, err := hd.Hal.Tnclient.VrfDelete(context.Background(), &vrfDelReqMsg)
-	if err != nil {
-		log.Errorf("Error deleting tenant. Err: %v", err)
-		return err
+	// create the tenant. Enforce HAL Status == OK for HAL datapath
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Tnclient.VrfDelete(context.Background(), &vrfDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting vrf. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Tnclient.VrfDelete(context.Background(), &vrfDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting vrf. Err: %v", err)
+			return err
+		}
 	}
-
 	return nil
 }
 
