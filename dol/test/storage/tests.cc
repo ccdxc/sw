@@ -2128,7 +2128,7 @@ int test_run_rdma_e2e_write() {
   // Get the SLBA to write to and read from
   rolling_write_slba = get_next_slba();
 
-  StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf, rolling_write_slba);
+  StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf, rolling_write_slba, &rolling_write_data_buf);
   printf("Started sequencer to PDMA + write command send over ROCE \n");
 
   //printf("Dumping NVME command sent \n");
@@ -2148,9 +2148,6 @@ int test_run_rdma_e2e_write() {
     printf("Failure in retriving status \n");
   else 
     printf("Successfully retrived status \n");
-
-  // Save the rolling write data buffer
-  rolling_write_data_buf = rdma_get_target_write_data_buf();
 
   // Post the Initiator buffers back so that RDMA can reuse them. 
   PostInitiatorRcvBuf1();
@@ -2207,9 +2204,9 @@ int test_run_rdma_e2e_read() {
       } else {
         // Enable this to debug as needed
         //printf("Dumping data buffer which contains NVME read data\n");
-        //utils::dump(data_buf);
+        //utils::dump(data_buf->read_thru());
         //printf("Dumping rolling NVME write data buffer\n");
-        //utils::dump(rolling_write_data_buf);
+        //utils::dump(rolling_write_data_buf->read_thru());
         if (memcmp(data_buf->read_thru(), rolling_write_data_buf->read_thru(), kDefaultBufSize)) { 
           printf("Comparison of RDMA read and write buffer failed \n");
           rc = -1;
@@ -2281,9 +2278,9 @@ int test_run_rdma_lif_override() {
       } else {
         // Enable this to debug as needed
         //printf("Dumping data buffer which contains NVME read data\n");
-        //utils::dump(data_buf);
+        //utils::dump(data_buf->read_thru());
         //printf("Dumping rolling NVME write data buffer\n");
-        //utils::dump(rolling_write_data_buf);
+        //utils::dump(rolling_write_data_buf->read_thru());
         if (memcmp(data_buf->read_thru(), rolling_write_data_buf->read_thru(), kDefaultBufSize)) { 
           printf("Comparison of RDMA read and write buffer failed \n");
           rc = -1;

@@ -66,7 +66,7 @@ int test_run_perf_rdma_e2e_write() {
     } else {
       rdma_ring_db = false;
     }
-    StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf[i], rolling_write_slba);
+    StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf[i], rolling_write_slba, &rolling_write_data_buf);
     printf("Started sequencer to PDMA + write command send over ROCE \n");
   }
 
