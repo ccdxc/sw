@@ -73,6 +73,19 @@ cc_library(
 )
 
 cc_library(
+    name = "libtins",
+    srcs = select ({
+        "//conditions:default" : [
+	        "tins/x86_64/lib/libtins.so",
+        ],
+        ":aarch64_mode" : [
+            "tins/aarch64/lib/libtins.so",
+            "pcap/aarch64/lib/libpcap.so.0.8",
+        ],
+    }),
+)
+
+cc_library(
    name = "spdlog",
    includes = ["spdlog/include"],
    hdrs = glob(["spdlog/include/**/*.hpp"]) + glob(["spdlog/include/**/*.h"]) + glob(["spdlog/include/**/*.cc"]),

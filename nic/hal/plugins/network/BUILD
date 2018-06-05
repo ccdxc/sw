@@ -33,6 +33,6 @@ cc_test(
     copts = sdk_copts,
     linkopts =  ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     tags = ["gtests"],
-    deps =  ["//nic/fte:fte_base_test"] + [":network"] + gl_deps_list + test_deps_list, 
+    deps =  ["//nic/fte:fte_base_test", "//nic:libtins"] + [":network"] + gl_deps_list + test_deps_list, 
 )
 

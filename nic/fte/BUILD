@@ -49,6 +49,7 @@ cc_test(
     deps = [ "//nic/utils/agent_api:agent_api", 
              "//nic/hal/plugins/sfw:sfw_pkt_utils",
              "//nic/e2etests:e2etest-lib",
+             "//nic:libtins",
            ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
 )

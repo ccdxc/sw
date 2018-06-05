@@ -482,6 +482,11 @@ cc_library(
     deps = ["//nic/hal/third-party:libtirpc"],
 )
 
+cc_library(
+    name = "libtins",
+    deps = ["//nic/hal/third-party:libtins"],
+)
+
 config_setting(
     name = "aarch64_mode",
     values = { "cpu": "aarch64-linux" }
