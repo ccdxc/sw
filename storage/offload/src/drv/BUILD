@@ -11,7 +11,6 @@ cc_library(
         "pnso_cp.c",
         "pnso_dc.c",
         "pnso_chksum.c",
-        "pnso_hash.c",
         "pnso_cpdc.c",
         "pnso_cpdc_cmn.c",
         "pnso_encrypt.c",
