@@ -16,9 +16,11 @@ struct phv_ p;
 
 storage_nvme_cleanup_io_ctx_start:
 
-   // I/O not completed ? Drop PHV and exit as ARM will handle it
+   // I/O not completed (status path) or IOB not already free (Unused IOB ? i
+   // Drop PHV and exit as ARM will handle it
    seq		c1, d.oper_status, IO_CTX_OPER_STATUS_COMPLETED
-   bcf		[!c1], drop_n_exit
+   seq		c2, d.oper_status, IO_CTX_OPER_STATUS_FREE
+   bcf		![c1 | c2], drop_n_exit
    nop
 
    // Set error status
