@@ -26,18 +26,19 @@ static void ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_up_ep);
 // ----------------------------------------------------------------------------
 // EP Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
-pd_ep_create(pd_ep_create_args_t *args)
+hal_ret_t
+pd_ep_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;
+    pd_ep_create_args_t *args = pd_func_args->pd_ep_create;
     pd_ep_t             *pd_ep;
     mac_addr_t           *mac;
 
     mac = ep_get_mac_addr(args->ep);
 
-    HAL_TRACE_DEBUG("{}: creating pd state for ep: {}", 
+    HAL_TRACE_DEBUG("{}: creating pd state for ep: {}",
                     __FUNCTION__, ep_l2_key_to_str(args->ep));
-                    
+
     // Create ep PD
     pd_ep = ep_pd_alloc_init();
     if (pd_ep == NULL) {
@@ -52,8 +53,8 @@ pd_ep_create(pd_ep_create_args_t *args)
     ret = ep_pd_alloc_res(pd_ep);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-EP::{}: Unable to alloc. resources for EP: {}:{}", 
-                      __FUNCTION__, ep_get_l2segid(args->ep), 
+        HAL_TRACE_ERR("PD-EP::{}: Unable to alloc. resources for EP: {}:{}",
+                      __FUNCTION__, ep_get_l2segid(args->ep),
                 ether_ntoa((struct ether_addr*)*mac));
         goto end;
     }
@@ -72,14 +73,15 @@ end:
 }
 
 // ----------------------------------------------------------------------------
-// EP Update 
+// EP Update
 // ----------------------------------------------------------------------------
-hal_ret_t 
-pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
+hal_ret_t
+pd_ep_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_ep_update_args_t *pd_ep_upd_args = pd_func_args->pd_ep_update;
 
-    HAL_TRACE_DEBUG(":{}: updating pd state for ep:{}", 
+    HAL_TRACE_DEBUG(":{}: updating pd state for ep:{}",
                     __FUNCTION__,
                     ep_l2_key_to_str(pd_ep_upd_args->ep));
 
@@ -90,9 +92,10 @@ pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 // PD Endpoint Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_delete (pd_ep_delete_args_t *args)
+pd_ep_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_ep_delete_args_t *args = pd_func_args->pd_ep_delete;
     pd_ep_t    *ep_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -122,7 +125,7 @@ end:
 //  - Delink PI <-> PD
 //  - Free PD Endpoint
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -139,8 +142,8 @@ ep_pd_cleanup(pd_ep_t *ep_pd)
     // Releasing resources
     ret = ep_pd_dealloc_res(ep_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for ep: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("{}: unable to dealloc res for ep: {}",
+                      __FUNCTION__,
                       (ep_l2_key_to_str((ep_t *)(ep_pd->pi_ep))));
         goto end;
     }
@@ -157,7 +160,7 @@ end:
 // ----------------------------------------------------------------------------
 // Allocate resources for PD EP
 // ----------------------------------------------------------------------------
-static hal_ret_t 
+static hal_ret_t
 ep_pd_alloc_res(pd_ep_t *pd_ep)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -168,7 +171,7 @@ ep_pd_alloc_res(pd_ep_t *pd_ep)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD EP
 // ----------------------------------------------------------------------------
-static hal_ret_t 
+static hal_ret_t
 ep_pd_dealloc_res(pd_ep_t *pd_ep)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -191,8 +194,8 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
         goto end;
     }
 
-    // Program Rx Vport table. 
-    //  - In real GFT pipeline the hair-pin case is 
+    // Program Rx Vport table.
+    //  - In real GFT pipeline the hair-pin case is
     //    Uplink -> Ingress -> RXDMA -> TXDMA -> Egress -> Uplink
     // This programming is only for DOLs
     //    Uplink -> Ingress -> Uplinnk
@@ -235,7 +238,7 @@ ep_pd_pgm_tx_vport (pd_ep_t *pd_ep, table_oper_t oper)
 
     // key
     mac = ep_get_mac_addr(pi_ep);
-    memcpy(key.flow_action_metadata_tx_ethernet_dst, *mac, 
+    memcpy(key.flow_action_metadata_tx_ethernet_dst, *mac,
            ETHER_ADDR_LEN);
     memrev(key.flow_action_metadata_tx_ethernet_dst, ETHER_ADDR_LEN);
 
@@ -261,7 +264,7 @@ ep_pd_pgm_tx_vport (pd_ep_t *pd_ep, table_oper_t oper)
                             pd_ep->tx_vport_idx);
         }
     } else {
-        sdk_ret = tx_vport_tbl->update(pd_ep->tx_vport_idx, 
+        sdk_ret = tx_vport_tbl->update(pd_ep->tx_vport_idx,
                                        &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -322,7 +325,7 @@ ep_pd_pgm_rx_vport (pd_ep_t *pd_ep, table_oper_t oper)
         goto end;
     }
     data.rx_vport_action_u.rx_vport_rx_vport.vport = hw_lif_id;
-    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport = 
+    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport =
         uplinkif_get_port_num(pi_if);
     data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 0;
 
@@ -339,7 +342,7 @@ ep_pd_pgm_rx_vport (pd_ep_t *pd_ep, table_oper_t oper)
                             pd_ep->rx_vport_idx);
         }
     } else {
-        sdk_ret = rx_vport_tbl->update(pd_ep->rx_vport_idx, 
+        sdk_ret = rx_vport_tbl->update(pd_ep->rx_vport_idx,
                                        &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -361,7 +364,7 @@ end:
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 ep_link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 {
     pd_ep->pi_ep = pi_ep;
@@ -371,7 +374,7 @@ ep_link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 // ----------------------------------------------------------------------------
 // De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 {
     pd_ep->pi_ep = NULL;
@@ -382,9 +385,10 @@ ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_make_clone(pd_ep_make_clone_args_t *args)
+pd_ep_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_ep_make_clone_args_t *args = pd_func_args->pd_ep_make_clone;
     pd_ep_t             *pd_ep_clone = NULL;
     ep_t *ep = args->ep;
     ep_t *clone = args->clone;
@@ -407,9 +411,10 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_mem_free(pd_ep_mem_free_args_t *args)
+pd_ep_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_ep_mem_free_args_t *args = pd_func_args->pd_ep_mem_free;
     pd_ep_t        *ep_pd;
 
     ep_pd = (pd_ep_t *)args->ep->pd;

@@ -19,9 +19,10 @@ namespace pd {
 // PD If Create
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_create (pd_if_create_args_t *args)
+pd_if_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_create_args_t *args = pd_func_args->pd_if_create;
     intf::IfType    if_type;
 
     if_type = hal::intf_get_if_type(args->intf);
@@ -55,9 +56,10 @@ pd_if_create (pd_if_create_args_t *args)
 // PD If Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_update (pd_if_update_args_t *args)
+pd_if_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_update_args_t *args = pd_func_args->pd_if_update;
     intf::IfType    if_type;
 
     if_type = hal::intf_get_if_type(args->intf);
@@ -91,9 +93,10 @@ pd_if_update (pd_if_update_args_t *args)
 // PD If Delete
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_delete (pd_if_delete_args_t *args)
+pd_if_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_delete_args_t *args = pd_func_args->pd_if_delete;
     intf::IfType    if_type;
 
     if_type = hal::intf_get_if_type(args->intf);
@@ -127,9 +130,10 @@ pd_if_delete (pd_if_delete_args_t *args)
 // PD If Get
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_get (pd_if_get_args_t *args)
+pd_if_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_get_args_t *args = pd_func_args->pd_if_get;
     intf::IfType    if_type;
 
     if_type = hal::intf_get_if_type(args->hal_if);
@@ -163,9 +167,10 @@ pd_if_get (pd_if_get_args_t *args)
 // PD IF Restore
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_if_restore (pd_if_restore_args_t *args)
+pd_if_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
+    pd_if_restore_args_t *args = pd_func_args->pd_if_restore;
     intf::IfType    if_type;
     if_type = hal::intf_get_if_type(args->hal_if);
     switch(if_type) {
@@ -198,8 +203,9 @@ pd_if_restore (pd_if_restore_args_t *args)
 // Lif params update. For enics
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_lif_update(pd_if_lif_update_args_t *args)
+pd_if_lif_update (pd_func_args_t *pd_func_args)
 {
+    pd_if_lif_update_args_t *args = pd_func_args->pd_if_lif_update;
     return pd_enicif_lif_update(args);
 }
 
@@ -207,9 +213,10 @@ pd_if_lif_update(pd_if_lif_update_args_t *args)
 // PD If mem free
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_mem_free (pd_if_mem_free_args_t *args)
+pd_if_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_mem_free_args_t *args = pd_func_args->pd_if_mem_free;
     intf::IfType    if_type;
 
     HAL_TRACE_DEBUG("if mem_free");
@@ -242,9 +249,10 @@ pd_if_mem_free (pd_if_mem_free_args_t *args)
 }
 
 hal_ret_t
-pd_if_make_clone (pd_if_make_clone_args_t *args)
+pd_if_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_make_clone_args_t *args = pd_func_args->pd_if_make_clone;
     intf::IfType    if_type;
     if_t *hal_if = args->hal_if;
     // if_t *clone = args->clone;
@@ -282,9 +290,10 @@ pd_if_make_clone (pd_if_make_clone_args_t *args)
 //      - Triggered from vrf update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_if_nwsec_update(pd_if_nwsec_update_args_t *args)
+pd_if_nwsec_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    pd_if_nwsec_update_args_t *args = pd_func_args->pd_if_nwsec_update;
     intf::IfType                if_type;
     void                        *pd_if = args->intf->pd_if;
     pd_add_l2seg_uplink_args_t  uplink_args = { 0 };

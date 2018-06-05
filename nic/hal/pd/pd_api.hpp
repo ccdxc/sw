@@ -2386,7 +2386,7 @@ typedef struct pd_capri_barco_ring_meta_get_args_s {
 
 // crypto
 typedef struct pd_capri_barco_asym_async_args_s {
-    bool async_en;       
+    bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } pd_capri_barco_asym_async_args_t;
 
@@ -2868,6 +2868,754 @@ typedef struct pd_get_slab_args_s {
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
+#define PD_UNION_ARGS_FIELD(NAME) NAME ## _args_t *NAME
+
+typedef struct pd_func_args_s {
+    union {
+        // init pd calls
+        PD_UNION_ARGS_FIELD(pd_mem_init);
+        PD_UNION_ARGS_FIELD(pd_mem_init_phase2);
+        PD_UNION_ARGS_FIELD(pd_pgm_def_entries);
+        PD_UNION_ARGS_FIELD(pd_pgm_def_p4plus_entries);
+
+        // vrf pd calls
+        PD_UNION_ARGS_FIELD(pd_vrf_create);
+        PD_UNION_ARGS_FIELD(pd_vrf_restore);
+        PD_UNION_ARGS_FIELD(pd_vrf_delete);
+        PD_UNION_ARGS_FIELD(pd_vrf_update);
+        PD_UNION_ARGS_FIELD(pd_vrf_mem_free);
+        PD_UNION_ARGS_FIELD(pd_vrf_make_clone);
+        PD_UNION_ARGS_FIELD(pd_vrf_get);
+
+        // l2seg pd calls
+        PD_UNION_ARGS_FIELD(pd_l2seg_create);
+        PD_UNION_ARGS_FIELD(pd_l2seg_restore);
+        PD_UNION_ARGS_FIELD(pd_l2seg_update);
+        PD_UNION_ARGS_FIELD(pd_l2seg_delete);
+        PD_UNION_ARGS_FIELD(pd_l2seg_mem_free);
+        PD_UNION_ARGS_FIELD(pd_l2seg_make_clone);
+        PD_UNION_ARGS_FIELD(pd_l2seg_get);
+
+        // misc apis for vrf and l2seg
+        PD_UNION_ARGS_FIELD(pd_get_object_from_flow_lkupid);
+        PD_UNION_ARGS_FIELD(pd_l2seg_get_flow_lkupid);
+        PD_UNION_ARGS_FIELD(pd_vrf_get_lookup_id);
+        PD_UNION_ARGS_FIELD(pd_l2seg_get_fromcpu_vlanid);
+        PD_UNION_ARGS_FIELD(pd_vrf_get_fromcpu_vlanid);
+
+        // nwsec_profile pd calls
+        PD_UNION_ARGS_FIELD(pd_nwsec_profile_create);
+        PD_UNION_ARGS_FIELD(pd_nwsec_profile_delete);
+        PD_UNION_ARGS_FIELD(pd_nwsec_profile_update);
+        PD_UNION_ARGS_FIELD(pd_nwsec_profile_mem_free);
+        PD_UNION_ARGS_FIELD(pd_nwsec_profile_make_clone);
+        PD_UNION_ARGS_FIELD(pd_nwsec_profile_restore);
+        PD_UNION_ARGS_FIELD(pd_nwsec_profile_get);
+
+        // dos_policy pd calls
+        PD_UNION_ARGS_FIELD(pd_dos_policy_create);
+        PD_UNION_ARGS_FIELD(pd_dos_policy_delete);
+        PD_UNION_ARGS_FIELD(pd_dos_policy_update);
+        PD_UNION_ARGS_FIELD(pd_dos_policy_mem_free);
+        PD_UNION_ARGS_FIELD(pd_dos_policy_make_clone);
+
+        // lif pd calls
+        PD_UNION_ARGS_FIELD(pd_lif_create);
+        PD_UNION_ARGS_FIELD(pd_lif_delete);
+        PD_UNION_ARGS_FIELD(pd_lif_update);
+        PD_UNION_ARGS_FIELD(pd_lif_mem_free);
+        PD_UNION_ARGS_FIELD(pd_lif_make_clone);
+        PD_UNION_ARGS_FIELD(pd_lif_get);
+
+        // if calls
+        PD_UNION_ARGS_FIELD(pd_if_create);
+        PD_UNION_ARGS_FIELD(pd_if_delete);
+        PD_UNION_ARGS_FIELD(pd_if_update);
+        PD_UNION_ARGS_FIELD(pd_if_mem_free);
+        PD_UNION_ARGS_FIELD(pd_if_make_clone);
+        PD_UNION_ARGS_FIELD(pd_if_nwsec_update);
+        PD_UNION_ARGS_FIELD(pd_if_lif_update);
+        PD_UNION_ARGS_FIELD(pd_if_get);
+        PD_UNION_ARGS_FIELD(pd_if_restore);
+
+        // ep calls
+        PD_UNION_ARGS_FIELD(pd_ep_create);
+        PD_UNION_ARGS_FIELD(pd_ep_update);
+        PD_UNION_ARGS_FIELD(pd_ep_delete);
+        PD_UNION_ARGS_FIELD(pd_ep_mem_free);
+        PD_UNION_ARGS_FIELD(pd_ep_make_clone);
+        PD_UNION_ARGS_FIELD(pd_ep_get);
+        PD_UNION_ARGS_FIELD(pd_ep_restore);
+
+        // session calls
+        PD_UNION_ARGS_FIELD(pd_session_create);
+        PD_UNION_ARGS_FIELD(pd_session_update);
+        PD_UNION_ARGS_FIELD(pd_session_delete);
+        PD_UNION_ARGS_FIELD(pd_session_get);
+        PD_UNION_ARGS_FIELD(pd_get_cpu_bypass_flowid);
+
+        // tlscb calls
+        PD_UNION_ARGS_FIELD(pd_tlscb_create);
+        PD_UNION_ARGS_FIELD(pd_tlscb_update);
+        PD_UNION_ARGS_FIELD(pd_tlscb_delete);
+        PD_UNION_ARGS_FIELD(pd_tlscb_get);
+
+        // tcpcb calls
+        PD_UNION_ARGS_FIELD(pd_tcpcb_create);
+        PD_UNION_ARGS_FIELD(pd_tcpcb_update);
+        PD_UNION_ARGS_FIELD(pd_tcpcb_delete);
+        PD_UNION_ARGS_FIELD(pd_tcpcb_get);
+
+        // ipseccb calls
+        PD_UNION_ARGS_FIELD(pd_ipseccb_create);
+        PD_UNION_ARGS_FIELD(pd_ipseccb_update);
+        PD_UNION_ARGS_FIELD(pd_ipseccb_delete);
+        PD_UNION_ARGS_FIELD(pd_ipseccb_get);
+
+        // ipseccb_decrypt calls
+        PD_UNION_ARGS_FIELD(pd_ipseccb_decrypt_create);
+        PD_UNION_ARGS_FIELD(pd_ipseccb_decrypt_update);
+        PD_UNION_ARGS_FIELD(pd_ipseccb_decrypt_delete);
+        PD_UNION_ARGS_FIELD(pd_ipseccb_decrypt_get);
+
+        // ipsec_sa_encrypt calls
+        PD_UNION_ARGS_FIELD(pd_ipsec_encrypt_create);
+        PD_UNION_ARGS_FIELD(pd_ipsec_encrypt_update);
+        PD_UNION_ARGS_FIELD(pd_ipsec_encrypt_delete);
+        PD_UNION_ARGS_FIELD(pd_ipsec_encrypt_get);
+
+        // ipsec_sa_decrypt calls
+        PD_UNION_ARGS_FIELD(pd_ipsec_decrypt_create);
+        PD_UNION_ARGS_FIELD(pd_ipsec_decrypt_update);
+        PD_UNION_ARGS_FIELD(pd_ipsec_decrypt_delete);
+        PD_UNION_ARGS_FIELD(pd_ipsec_decrypt_get);
+
+        // l4lb
+        PD_UNION_ARGS_FIELD(pd_l4lb_create);
+
+        // cpucb
+        PD_UNION_ARGS_FIELD(pd_cpucb_create);
+        PD_UNION_ARGS_FIELD(pd_cpucb_update);
+        PD_UNION_ARGS_FIELD(pd_cpucb_delete);
+        PD_UNION_ARGS_FIELD(pd_cpucb_get);
+
+        // rawrcb
+        PD_UNION_ARGS_FIELD(pd_rawrcb_create);
+        PD_UNION_ARGS_FIELD(pd_rawrcb_update);
+        PD_UNION_ARGS_FIELD(pd_rawrcb_delete);
+        PD_UNION_ARGS_FIELD(pd_rawrcb_get);
+
+        // rawccb
+        PD_UNION_ARGS_FIELD(pd_rawccb_create);
+        PD_UNION_ARGS_FIELD(pd_rawccb_update);
+        PD_UNION_ARGS_FIELD(pd_rawccb_delete);
+        PD_UNION_ARGS_FIELD(pd_rawccb_get);
+
+        // proxyrcb
+        PD_UNION_ARGS_FIELD(pd_proxyrcb_create);
+        PD_UNION_ARGS_FIELD(pd_proxyrcb_update);
+        PD_UNION_ARGS_FIELD(pd_proxyrcb_delete);
+        PD_UNION_ARGS_FIELD(pd_proxyrcb_get);
+
+        // proxyccb
+        PD_UNION_ARGS_FIELD(pd_proxyccb_create);
+        PD_UNION_ARGS_FIELD(pd_proxyccb_update);
+        PD_UNION_ARGS_FIELD(pd_proxyccb_delete);
+        PD_UNION_ARGS_FIELD(pd_proxyccb_get);
+
+        // qos clas
+        PD_UNION_ARGS_FIELD(pd_qos_class_create);
+        PD_UNION_ARGS_FIELD(pd_qos_class_restore);
+        PD_UNION_ARGS_FIELD(pd_qos_class_delete);
+        PD_UNION_ARGS_FIELD(pd_qos_class_update);
+        PD_UNION_ARGS_FIELD(pd_qos_class_mem_free);
+        PD_UNION_ARGS_FIELD(pd_qos_class_make_clone);
+        PD_UNION_ARGS_FIELD(pd_qos_class_get);
+        PD_UNION_ARGS_FIELD(pd_qos_class_periodic_stats_update);
+
+        // copp
+        PD_UNION_ARGS_FIELD(pd_copp_create);
+        PD_UNION_ARGS_FIELD(pd_copp_restore);
+        PD_UNION_ARGS_FIELD(pd_copp_delete);
+        PD_UNION_ARGS_FIELD(pd_copp_update);
+        PD_UNION_ARGS_FIELD(pd_copp_mem_free);
+        PD_UNION_ARGS_FIELD(pd_copp_make_clone);
+        PD_UNION_ARGS_FIELD(pd_copp_get);
+
+        // acl pd calls
+        PD_UNION_ARGS_FIELD(pd_acl_create);
+        PD_UNION_ARGS_FIELD(pd_acl_restore);
+        PD_UNION_ARGS_FIELD(pd_acl_delete);
+        PD_UNION_ARGS_FIELD(pd_acl_update);
+        PD_UNION_ARGS_FIELD(pd_acl_mem_free);
+        PD_UNION_ARGS_FIELD(pd_acl_make_clone);
+        PD_UNION_ARGS_FIELD(pd_acl_get);
+
+        // wring
+        PD_UNION_ARGS_FIELD(pd_wring_create);
+        PD_UNION_ARGS_FIELD(pd_wring_delete);
+        PD_UNION_ARGS_FIELD(pd_wring_update);
+        PD_UNION_ARGS_FIELD(pd_wring_get_entry);
+        PD_UNION_ARGS_FIELD(pd_wring_get_meta);
+        PD_UNION_ARGS_FIELD(pd_wring_set_meta);
+
+        // mirror session
+        PD_UNION_ARGS_FIELD(pd_mirror_session_create);
+        PD_UNION_ARGS_FIELD(pd_mirror_session_delete);
+        PD_UNION_ARGS_FIELD(pd_mirror_session_get);
+
+        // flow monitor rule
+        PD_UNION_ARGS_FIELD(pd_flow_monitor_rule_create);
+        PD_UNION_ARGS_FIELD(pd_flow_monitor_rule_delete);
+        PD_UNION_ARGS_FIELD(pd_flow_monitor_rule_get);
+
+        // drop monitor rule
+        PD_UNION_ARGS_FIELD(pd_drop_monitor_rule_create);
+        PD_UNION_ARGS_FIELD(pd_drop_monitor_rule_delete);
+        PD_UNION_ARGS_FIELD(pd_drop_monitor_rule_get);
+
+        // collector
+        PD_UNION_ARGS_FIELD(pd_collector_create);
+
+        // mc entry
+        PD_UNION_ARGS_FIELD(pd_mc_entry_create);
+        PD_UNION_ARGS_FIELD(pd_mc_entry_delete);
+        PD_UNION_ARGS_FIELD(pd_mc_entry_update);
+
+        // flow get
+        PD_UNION_ARGS_FIELD(pd_flow_get);
+
+        // l2seg-uplink
+        PD_UNION_ARGS_FIELD(pd_add_l2seg_uplink);
+        PD_UNION_ARGS_FIELD(pd_del_l2seg_uplink);
+
+        // debug cli
+        PD_UNION_ARGS_FIELD(pd_debug_cli_read);
+        PD_UNION_ARGS_FIELD(pd_debug_cli_write);
+        PD_UNION_ARGS_FIELD(pd_mpu_trace_enable);
+        PD_UNION_ARGS_FIELD(pd_table_metadata_get);
+        PD_UNION_ARGS_FIELD(pd_table_get);
+
+        // get apis
+        PD_UNION_ARGS_FIELD(pd_if_get_hw_lif_id);
+        PD_UNION_ARGS_FIELD(pd_if_get_lport_id);
+        PD_UNION_ARGS_FIELD(pd_if_get_tm_oport);
+
+        // twice nat
+        PD_UNION_ARGS_FIELD(pd_rw_entry_find_or_alloc);
+        PD_UNION_ARGS_FIELD(pd_twice_nat_add);
+        PD_UNION_ARGS_FIELD(pd_twice_nat_del);
+
+        // qos
+        PD_UNION_ARGS_FIELD(pd_qos_class_get_qos_class_id);
+        PD_UNION_ARGS_FIELD(pd_qos_class_get_admin_cos);
+
+        // aol
+        PD_UNION_ARGS_FIELD(pd_descriptor_aol_get);
+
+        // crypto
+        PD_UNION_ARGS_FIELD(pd_crypto_alloc_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_free_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_write_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_read_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_asym_alloc_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_asym_free_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_asym_write_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_asym_read_key);
+
+        // barco
+        PD_UNION_ARGS_FIELD(pd_get_opaque_tag_addr);
+
+        // stats
+        PD_UNION_ARGS_FIELD(pd_drop_stats_get);
+        PD_UNION_ARGS_FIELD(pd_egress_drop_stats_get);
+        PD_UNION_ARGS_FIELD(pd_table_stats_get);
+
+        // oifl
+        PD_UNION_ARGS_FIELD(pd_oif_list_create);
+        PD_UNION_ARGS_FIELD(pd_oif_list_create_block);
+        PD_UNION_ARGS_FIELD(pd_oif_list_delete);
+        PD_UNION_ARGS_FIELD(pd_oif_list_delete_block);
+        PD_UNION_ARGS_FIELD(pd_oif_list_attach);
+        PD_UNION_ARGS_FIELD(pd_oif_list_detach);
+        PD_UNION_ARGS_FIELD(pd_oif_list_add_oif);
+        PD_UNION_ARGS_FIELD(pd_oif_list_add_qp_oif);
+        PD_UNION_ARGS_FIELD(pd_oif_list_remove_oif);
+        PD_UNION_ARGS_FIELD(pd_oif_list_is_member);
+        PD_UNION_ARGS_FIELD(pd_oif_list_get_num_oifs);
+        PD_UNION_ARGS_FIELD(pd_oif_list_get_oif_array);
+        PD_UNION_ARGS_FIELD(pd_oif_list_set_honor_ingress);
+        PD_UNION_ARGS_FIELD(pd_oif_list_clr_honor_ingress);
+
+        // if
+        PD_UNION_ARGS_FIELD(pd_tunnelif_get_rw_idx);
+
+        // cpu
+        PD_UNION_ARGS_FIELD(pd_cpupkt_ctxt_alloc_init);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_register_rx_queue);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_register_tx_queue);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_unregister_tx_queue);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_poll_receive);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_free);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_send);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_page_alloc);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_descr_alloc);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_program_send_ring_doorbell);
+
+        // rdma
+        PD_UNION_ARGS_FIELD(pd_rxdma_table_entry_add);
+        PD_UNION_ARGS_FIELD(pd_txdma_table_entry_add);
+
+        // lif
+        PD_UNION_ARGS_FIELD(pd_lif_get_lport_id);
+
+        // p4pt
+        PD_UNION_ARGS_FIELD(p4pt_pd_init);
+
+        // eth
+        PD_UNION_ARGS_FIELD(pd_rss_params_table_entry_add);
+        PD_UNION_ARGS_FIELD(pd_rss_indir_table_entry_add);
+
+        // asic init
+        PD_UNION_ARGS_FIELD(pd_asic_init);
+
+        PD_UNION_ARGS_FIELD(pd_table_properties_get);
+
+        // capri
+        PD_UNION_ARGS_FIELD(pd_get_start_offset);
+        PD_UNION_ARGS_FIELD(pd_get_size_kb);
+        PD_UNION_ARGS_FIELD(pd_push_qstate_to_capri);
+        PD_UNION_ARGS_FIELD(pd_clear_qstate);
+        PD_UNION_ARGS_FIELD(pd_read_qstate);
+        PD_UNION_ARGS_FIELD(pd_write_qstate);
+        PD_UNION_ARGS_FIELD(pd_get_pc_offset);
+        PD_UNION_ARGS_FIELD(pd_capri_hbm_read_mem);
+        PD_UNION_ARGS_FIELD(pd_capri_hbm_write_mem);
+        PD_UNION_ARGS_FIELD(pd_capri_program_label_to_offset);
+        PD_UNION_ARGS_FIELD(pd_capri_pxb_cfg_lif_bdf);
+        PD_UNION_ARGS_FIELD(pd_capri_program_to_base_addr);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_req_descr_get);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_symm_req_descr_get);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_get);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecc_point_mul_p256);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_gen);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_verify);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_encrypt);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_decrypt);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_crt_decrypt);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_sig_gen);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_sig_verify);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_sym_hash_process_request);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_add_pend_req);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_poll_pend_req);
+
+        // gft exact match profile apis
+        PD_UNION_ARGS_FIELD(pd_gft_exact_match_profile);
+        PD_UNION_ARGS_FIELD(pd_gft_exact_match_profile_make_clone);
+
+        // gft group xposition profile
+        PD_UNION_ARGS_FIELD(pd_gft_hdr_group_xposition_profile);
+        PD_UNION_ARGS_FIELD(pd_gft_hdr_group_xposition_profile_make_clone);
+
+        // gft match flow entry
+        PD_UNION_ARGS_FIELD(pd_gft_exact_match_flow_entry);
+        PD_UNION_ARGS_FIELD(pd_gft_exact_match_flow_entry_make_clone);
+
+        // clock
+        PD_UNION_ARGS_FIELD(pd_conv_hw_clock_to_sw_clock);
+        PD_UNION_ARGS_FIELD(pd_conv_sw_clock_to_hw_clock);
+        PD_UNION_ARGS_FIELD(pd_clock_delta_comp);
+
+        // slab
+        PD_UNION_ARGS_FIELD(pd_get_slab);
+
+        // swphv
+        PD_UNION_ARGS_FIELD(pd_swphv_inject);
+        PD_UNION_ARGS_FIELD(pd_swphv_get_state);
+    };
+} pd_func_args_t;
+typedef hal_ret_t (* pd_func_t)(pd_func_args_t *args);
+
+#define PD_FUNCP_TYPEDEF(NAME)                                              \
+    extern "C" hal_ret_t NAME(pd_func_args_t *args)
+
+// init pd calls
+PD_FUNCP_TYPEDEF(pd_mem_init);
+PD_FUNCP_TYPEDEF(pd_mem_init_phase2);
+PD_FUNCP_TYPEDEF(pd_pgm_def_entries);
+PD_FUNCP_TYPEDEF(pd_pgm_def_p4plus_entries);
+
+// vrf pd calls
+PD_FUNCP_TYPEDEF(pd_vrf_create);
+PD_FUNCP_TYPEDEF(pd_vrf_restore);
+PD_FUNCP_TYPEDEF(pd_vrf_delete);
+PD_FUNCP_TYPEDEF(pd_vrf_update);
+PD_FUNCP_TYPEDEF(pd_vrf_mem_free);
+PD_FUNCP_TYPEDEF(pd_vrf_make_clone);
+PD_FUNCP_TYPEDEF(pd_vrf_get);
+
+// l2seg pd calls
+PD_FUNCP_TYPEDEF(pd_l2seg_create);
+PD_FUNCP_TYPEDEF(pd_l2seg_restore);
+PD_FUNCP_TYPEDEF(pd_l2seg_update);
+PD_FUNCP_TYPEDEF(pd_l2seg_delete);
+PD_FUNCP_TYPEDEF(pd_l2seg_mem_free);
+PD_FUNCP_TYPEDEF(pd_l2seg_make_clone);
+PD_FUNCP_TYPEDEF(pd_l2seg_get);
+
+// misc apis for vrf and l2seg
+PD_FUNCP_TYPEDEF(pd_get_object_from_flow_lkupid);
+PD_FUNCP_TYPEDEF(pd_l2seg_get_flow_lkupid);
+PD_FUNCP_TYPEDEF(pd_vrf_get_lookup_id);
+PD_FUNCP_TYPEDEF(pd_l2seg_get_fromcpu_vlanid);
+PD_FUNCP_TYPEDEF(pd_vrf_get_fromcpu_vlanid);
+
+// nwsec_profile pd calls
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_create);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_delete);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_update);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_mem_free);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_make_clone);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_restore);
+PD_FUNCP_TYPEDEF(pd_nwsec_profile_get);
+
+// dos_policy pd calls
+PD_FUNCP_TYPEDEF(pd_dos_policy_create);
+PD_FUNCP_TYPEDEF(pd_dos_policy_delete);
+PD_FUNCP_TYPEDEF(pd_dos_policy_update);
+PD_FUNCP_TYPEDEF(pd_dos_policy_mem_free);
+PD_FUNCP_TYPEDEF(pd_dos_policy_make_clone);
+
+// lif pd calls
+PD_FUNCP_TYPEDEF(pd_lif_create);
+PD_FUNCP_TYPEDEF(pd_lif_delete);
+PD_FUNCP_TYPEDEF(pd_lif_update);
+PD_FUNCP_TYPEDEF(pd_lif_mem_free);
+PD_FUNCP_TYPEDEF(pd_lif_make_clone);
+PD_FUNCP_TYPEDEF(pd_lif_get);
+
+// if calls
+PD_FUNCP_TYPEDEF(pd_if_create);
+PD_FUNCP_TYPEDEF(pd_if_delete);
+PD_FUNCP_TYPEDEF(pd_if_update);
+PD_FUNCP_TYPEDEF(pd_if_mem_free);
+PD_FUNCP_TYPEDEF(pd_if_make_clone);
+PD_FUNCP_TYPEDEF(pd_if_nwsec_update);
+PD_FUNCP_TYPEDEF(pd_if_lif_update);
+PD_FUNCP_TYPEDEF(pd_if_get);
+PD_FUNCP_TYPEDEF(pd_if_restore);
+
+// ep calls
+PD_FUNCP_TYPEDEF(pd_ep_create);
+PD_FUNCP_TYPEDEF(pd_ep_update);
+PD_FUNCP_TYPEDEF(pd_ep_delete);
+PD_FUNCP_TYPEDEF(pd_ep_mem_free);
+PD_FUNCP_TYPEDEF(pd_ep_make_clone);
+PD_FUNCP_TYPEDEF(pd_ep_get);
+PD_FUNCP_TYPEDEF(pd_ep_restore);
+
+// session calls
+PD_FUNCP_TYPEDEF(pd_session_create);
+PD_FUNCP_TYPEDEF(pd_session_update);
+PD_FUNCP_TYPEDEF(pd_session_delete);
+PD_FUNCP_TYPEDEF(pd_session_get);
+PD_FUNCP_TYPEDEF(pd_get_cpu_bypass_flowid);
+
+// tlscb calls
+PD_FUNCP_TYPEDEF(pd_tlscb_create);
+PD_FUNCP_TYPEDEF(pd_tlscb_update);
+PD_FUNCP_TYPEDEF(pd_tlscb_delete);
+PD_FUNCP_TYPEDEF(pd_tlscb_get);
+
+// tcpcb calls
+PD_FUNCP_TYPEDEF(pd_tcpcb_create);
+PD_FUNCP_TYPEDEF(pd_tcpcb_update);
+PD_FUNCP_TYPEDEF(pd_tcpcb_delete);
+PD_FUNCP_TYPEDEF(pd_tcpcb_get);
+
+// ipseccb calls
+PD_FUNCP_TYPEDEF(pd_ipseccb_create);
+PD_FUNCP_TYPEDEF(pd_ipseccb_update);
+PD_FUNCP_TYPEDEF(pd_ipseccb_delete);
+PD_FUNCP_TYPEDEF(pd_ipseccb_get);
+
+// ipseccb_decrypt calls
+PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_create);
+PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_update);
+PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_delete);
+PD_FUNCP_TYPEDEF(pd_ipseccb_decrypt_get);
+
+// ipsec_sa_encrypt calls
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_create);
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_update);
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_delete);
+PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_get);
+
+// ipsec_sa_decrypt calls
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_create);
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_update);
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_delete);
+PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_get);
+
+// l4lb
+PD_FUNCP_TYPEDEF(pd_l4lb_create);
+
+// cpucb
+PD_FUNCP_TYPEDEF(pd_cpucb_create);
+PD_FUNCP_TYPEDEF(pd_cpucb_update);
+PD_FUNCP_TYPEDEF(pd_cpucb_delete);
+PD_FUNCP_TYPEDEF(pd_cpucb_get);
+
+// rawrcb
+PD_FUNCP_TYPEDEF(pd_rawrcb_create);
+PD_FUNCP_TYPEDEF(pd_rawrcb_update);
+PD_FUNCP_TYPEDEF(pd_rawrcb_delete);
+PD_FUNCP_TYPEDEF(pd_rawrcb_get);
+
+// rawccb
+PD_FUNCP_TYPEDEF(pd_rawccb_create);
+PD_FUNCP_TYPEDEF(pd_rawccb_update);
+PD_FUNCP_TYPEDEF(pd_rawccb_delete);
+PD_FUNCP_TYPEDEF(pd_rawccb_get);
+
+// proxyrcb
+PD_FUNCP_TYPEDEF(pd_proxyrcb_create);
+PD_FUNCP_TYPEDEF(pd_proxyrcb_update);
+PD_FUNCP_TYPEDEF(pd_proxyrcb_delete);
+PD_FUNCP_TYPEDEF(pd_proxyrcb_get);
+
+// proxyccb
+PD_FUNCP_TYPEDEF(pd_proxyccb_create);
+PD_FUNCP_TYPEDEF(pd_proxyccb_update);
+PD_FUNCP_TYPEDEF(pd_proxyccb_delete);
+PD_FUNCP_TYPEDEF(pd_proxyccb_get);
+
+// qos clas
+PD_FUNCP_TYPEDEF(pd_qos_class_create);
+PD_FUNCP_TYPEDEF(pd_qos_class_restore);
+PD_FUNCP_TYPEDEF(pd_qos_class_delete);
+PD_FUNCP_TYPEDEF(pd_qos_class_update);
+PD_FUNCP_TYPEDEF(pd_qos_class_mem_free);
+PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
+PD_FUNCP_TYPEDEF(pd_qos_class_get);
+PD_FUNCP_TYPEDEF(pd_qos_class_periodic_stats_update);
+
+// copp
+PD_FUNCP_TYPEDEF(pd_copp_create);
+PD_FUNCP_TYPEDEF(pd_copp_restore);
+PD_FUNCP_TYPEDEF(pd_copp_delete);
+PD_FUNCP_TYPEDEF(pd_copp_update);
+PD_FUNCP_TYPEDEF(pd_copp_mem_free);
+PD_FUNCP_TYPEDEF(pd_copp_make_clone);
+PD_FUNCP_TYPEDEF(pd_copp_get);
+
+// acl pd calls
+PD_FUNCP_TYPEDEF(pd_acl_create);
+PD_FUNCP_TYPEDEF(pd_acl_restore);
+PD_FUNCP_TYPEDEF(pd_acl_delete);
+PD_FUNCP_TYPEDEF(pd_acl_update);
+PD_FUNCP_TYPEDEF(pd_acl_mem_free);
+PD_FUNCP_TYPEDEF(pd_acl_make_clone);
+PD_FUNCP_TYPEDEF(pd_acl_get);
+
+// wring
+PD_FUNCP_TYPEDEF(pd_wring_create);
+PD_FUNCP_TYPEDEF(pd_wring_delete);
+PD_FUNCP_TYPEDEF(pd_wring_update);
+PD_FUNCP_TYPEDEF(pd_wring_get_entry);
+PD_FUNCP_TYPEDEF(pd_wring_get_meta);
+PD_FUNCP_TYPEDEF(pd_wring_set_meta);
+
+// mirror session
+PD_FUNCP_TYPEDEF(pd_mirror_session_create);
+PD_FUNCP_TYPEDEF(pd_mirror_session_delete);
+PD_FUNCP_TYPEDEF(pd_mirror_session_get);
+
+// flow monitor rule
+PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_create);
+PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_delete);
+PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_get);
+
+// drop monitor rule
+PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_create);
+PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_delete);
+PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_get);
+
+// collector
+PD_FUNCP_TYPEDEF(pd_collector_create);
+
+// mc entry
+PD_FUNCP_TYPEDEF(pd_mc_entry_create);
+PD_FUNCP_TYPEDEF(pd_mc_entry_delete);
+PD_FUNCP_TYPEDEF(pd_mc_entry_update);
+
+// flow get
+PD_FUNCP_TYPEDEF(pd_flow_get);
+
+// l2seg-uplink
+PD_FUNCP_TYPEDEF(pd_add_l2seg_uplink);
+PD_FUNCP_TYPEDEF(pd_del_l2seg_uplink);
+
+// debug cli
+PD_FUNCP_TYPEDEF(pd_debug_cli_read);
+PD_FUNCP_TYPEDEF(pd_debug_cli_write);
+PD_FUNCP_TYPEDEF(pd_mpu_trace_enable);
+PD_FUNCP_TYPEDEF(pd_table_metadata_get);
+PD_FUNCP_TYPEDEF(pd_table_get);
+
+// get apis
+PD_FUNCP_TYPEDEF(pd_if_get_hw_lif_id);
+PD_FUNCP_TYPEDEF(pd_if_get_lport_id);
+PD_FUNCP_TYPEDEF(pd_if_get_tm_oport);
+
+// twice nat
+PD_FUNCP_TYPEDEF(pd_rw_entry_find_or_alloc);
+PD_FUNCP_TYPEDEF(pd_twice_nat_add);
+PD_FUNCP_TYPEDEF(pd_twice_nat_del);
+
+// qos
+PD_FUNCP_TYPEDEF(pd_qos_class_get_qos_class_id);
+PD_FUNCP_TYPEDEF(pd_qos_class_get_admin_cos);
+
+// aol
+PD_FUNCP_TYPEDEF(pd_descriptor_aol_get);
+
+// crypto
+PD_FUNCP_TYPEDEF(pd_crypto_alloc_key);
+PD_FUNCP_TYPEDEF(pd_crypto_free_key);
+PD_FUNCP_TYPEDEF(pd_crypto_write_key);
+PD_FUNCP_TYPEDEF(pd_crypto_read_key);
+PD_FUNCP_TYPEDEF(pd_crypto_asym_alloc_key);
+PD_FUNCP_TYPEDEF(pd_crypto_asym_free_key);
+PD_FUNCP_TYPEDEF(pd_crypto_asym_write_key);
+PD_FUNCP_TYPEDEF(pd_crypto_asym_read_key);
+
+// barco
+PD_FUNCP_TYPEDEF(pd_get_opaque_tag_addr);
+
+// stats
+PD_FUNCP_TYPEDEF(pd_drop_stats_get);
+PD_FUNCP_TYPEDEF(pd_egress_drop_stats_get);
+PD_FUNCP_TYPEDEF(pd_table_stats_get);
+
+// oifl
+PD_FUNCP_TYPEDEF(pd_oif_list_create);
+PD_FUNCP_TYPEDEF(pd_oif_list_create_block);
+PD_FUNCP_TYPEDEF(pd_oif_list_delete);
+PD_FUNCP_TYPEDEF(pd_oif_list_delete_block);
+PD_FUNCP_TYPEDEF(pd_oif_list_attach);
+PD_FUNCP_TYPEDEF(pd_oif_list_detach);
+PD_FUNCP_TYPEDEF(pd_oif_list_add_oif);
+PD_FUNCP_TYPEDEF(pd_oif_list_add_qp_oif);
+PD_FUNCP_TYPEDEF(pd_oif_list_remove_oif);
+PD_FUNCP_TYPEDEF(pd_oif_list_is_member);
+PD_FUNCP_TYPEDEF(pd_oif_list_get_num_oifs);
+PD_FUNCP_TYPEDEF(pd_oif_list_get_oif_array);
+PD_FUNCP_TYPEDEF(pd_oif_list_set_honor_ingress);
+PD_FUNCP_TYPEDEF(pd_oif_list_clr_honor_ingress);
+
+// if
+PD_FUNCP_TYPEDEF(pd_tunnelif_get_rw_idx);
+
+// cpu
+PD_FUNCP_TYPEDEF(pd_cpupkt_ctxt_alloc_init);
+PD_FUNCP_TYPEDEF(pd_cpupkt_register_rx_queue);
+PD_FUNCP_TYPEDEF(pd_cpupkt_register_tx_queue);
+PD_FUNCP_TYPEDEF(pd_cpupkt_unregister_tx_queue);
+PD_FUNCP_TYPEDEF(pd_cpupkt_poll_receive);
+PD_FUNCP_TYPEDEF(pd_cpupkt_free);
+PD_FUNCP_TYPEDEF(pd_cpupkt_send);
+PD_FUNCP_TYPEDEF(pd_cpupkt_page_alloc);
+PD_FUNCP_TYPEDEF(pd_cpupkt_descr_alloc);
+PD_FUNCP_TYPEDEF(pd_cpupkt_program_send_ring_doorbell);
+
+// rdma
+PD_FUNCP_TYPEDEF(pd_rxdma_table_entry_add);
+PD_FUNCP_TYPEDEF(pd_txdma_table_entry_add);
+
+// lif
+PD_FUNCP_TYPEDEF(pd_lif_get_lport_id);
+
+// p4pt
+PD_FUNCP_TYPEDEF(p4pt_pd_init);
+
+// eth
+PD_FUNCP_TYPEDEF(pd_rss_params_table_entry_add);
+PD_FUNCP_TYPEDEF(pd_rss_indir_table_entry_add);
+
+// asic init
+PD_FUNCP_TYPEDEF(pd_asic_init);
+
+PD_FUNCP_TYPEDEF(pd_table_properties_get);
+
+// capri
+PD_FUNCP_TYPEDEF(pd_get_start_offset);
+PD_FUNCP_TYPEDEF(pd_get_size_kb);
+PD_FUNCP_TYPEDEF(pd_push_qstate_to_capri);
+PD_FUNCP_TYPEDEF(pd_clear_qstate);
+PD_FUNCP_TYPEDEF(pd_read_qstate);
+PD_FUNCP_TYPEDEF(pd_write_qstate);
+PD_FUNCP_TYPEDEF(pd_get_pc_offset);
+PD_FUNCP_TYPEDEF(pd_capri_hbm_read_mem);
+PD_FUNCP_TYPEDEF(pd_capri_hbm_write_mem);
+PD_FUNCP_TYPEDEF(pd_capri_program_label_to_offset);
+PD_FUNCP_TYPEDEF(pd_capri_pxb_cfg_lif_bdf);
+PD_FUNCP_TYPEDEF(pd_capri_program_to_base_addr);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_req_descr_get);
+PD_FUNCP_TYPEDEF(pd_capri_barco_symm_req_descr_get);
+PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_get);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecc_point_mul_p256);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_gen);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_verify);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_encrypt);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_decrypt);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_crt_decrypt);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_gen);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_verify);
+PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_add_pend_req);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_poll_pend_req);
+
+// gft exact match profile apis
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_create);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_delete);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_update);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_mem_free);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_make_clone);
+
+// gft group xposition profile
+PD_FUNCP_TYPEDEF(pd_gft_hdr_group_xposition_profile_create);
+PD_FUNCP_TYPEDEF(pd_gft_hdr_group_xposition_profile_delete);
+PD_FUNCP_TYPEDEF(pd_gft_hdr_group_xposition_profile_update);
+PD_FUNCP_TYPEDEF(pd_gft_hdr_group_xposition_profile_mem_free);
+PD_FUNCP_TYPEDEF(pd_gft_hdr_group_xposition_profile_make_clone);
+
+// gft match flow entry
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_create);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_delete);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_update);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_mem_free);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_make_clone);
+
+// clock
+PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
+PD_FUNCP_TYPEDEF(pd_conv_sw_clock_to_hw_clock);
+PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
+
+// slab
+PD_FUNCP_TYPEDEF(pd_get_slab);
+
+// swphv
+PD_FUNCP_TYPEDEF(pd_swphv_inject);
+PD_FUNCP_TYPEDEF(pd_swphv_get_state);
+
+#if 0
 #define PD_FUNCP_TYPEDEF(NAME)                                              \
     extern "C" hal_ret_t NAME(NAME ## _args_t *args);                       \
     typedef hal_ret_t (* NAME ## _t)(NAME ## _args_t *args)
@@ -3614,8 +4362,9 @@ typedef struct pd_call_s {
     };
 
 } pd_call_t;
+#endif
 
-hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, void *args);
+hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);
 
 }    // namespace pd
 }    // namespace hal

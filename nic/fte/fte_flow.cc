@@ -325,10 +325,12 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     rw_key.rw_act = attrs.rw_act;
 
     hal::pd::pd_rw_entry_find_or_alloc_args_t r_args;
+    hal::pd::pd_func_args_t          pd_func_args = {0};
     r_args.args = &rw_key;
     r_args.rw_idx = &attrs.rw_idx;
     // ret = hal::pd::pd_rw_entry_find_or_alloc(&rw_key, &attrs.rw_idx);
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, (void *)&r_args);
+    pd_func_args.pd_rw_entry_find_or_alloc = &r_args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, &pd_func_args);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -344,7 +346,8 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
 		hal::pd::pd_twice_nat_add_args_t t_args;
 		t_args.args = &args;
 		t_args.twice_nat_idx = &attrs.twice_nat_idx;
-		ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TWICE_NAT_ADD, (void *)&t_args);
+        pd_func_args.pd_twice_nat_add = &t_args;
+		ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TWICE_NAT_ADD, &pd_func_args);
 		// ret = pd_twice_nat_add(&args, &attrs.twice_nat_idx);
         if (ret != HAL_RET_OK) {
             return ret;

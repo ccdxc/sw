@@ -33,10 +33,12 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
 
 #ifndef GFT
     pd::pd_rss_params_table_entry_add_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
     args.hw_lif_id = hw_lif_id;
     args.rss_type = rss->type;
     args.rss_key = (uint8_t *)&rss->key;
-    pd::hal_pd_call(pd::PD_FUNC_ID_RSS_PARAMS_TABLE_ADD, (void *)&args);
+    pd_func_args.pd_rss_params_table_entry_add = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_RSS_PARAMS_TABLE_ADD, &pd_func_args);
 
     num_queues = qinfo[intf::LIF_QUEUE_PURPOSE_RX].num_queues;
     HAL_ASSERT(num_queues < ETH_RSS_MAX_QUEUES);
@@ -50,7 +52,8 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
             args.index = index;
             args.enable = rss->enable;
             args.qid = index % num_queues;
-            pd::hal_pd_call(pd::PD_FUNC_ID_RSS_INDIR_TABLE_ADD, (void *)&args);
+            pd_func_args.pd_rss_indir_table_entry_add = &args;
+            pd::hal_pd_call(pd::PD_FUNC_ID_RSS_INDIR_TABLE_ADD, &pd_func_args);
         }
     }
 #endif

@@ -25,8 +25,9 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_rss_params_table_entry_add(pd_rss_params_table_entry_add_args_t *args)
+pd_rss_params_table_entry_add (pd_func_args_t *pd_func_args)
 {
+    pd_rss_params_table_entry_add_args_t *args = pd_func_args->pd_rss_params_table_entry_add;
     return p4pd_common_p4plus_rxdma_rss_params_table_entry_add(args->hw_lif_id,
                                                                args->rss_type,
                                                                args->rss_key);
@@ -84,10 +85,11 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
 }
 
 hal_ret_t
-pd_rss_indir_table_entry_add(pd_rss_indir_table_entry_add_args_t *args)
+pd_rss_indir_table_entry_add (pd_func_args_t *pd_func_args)
 {
+    pd_rss_indir_table_entry_add_args_t *args = pd_func_args->pd_rss_indir_table_entry_add;
     return p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(args->hw_lif_id,
-                                                              args->index, 
+                                                              args->index,
                                                               args->enable,
                                                               args->qid);
 }

@@ -23,9 +23,10 @@ namespace pd {
 // Adding L2segment on Uplink
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_add_l2seg_uplink(pd_add_l2seg_uplink_args_t *args)
+pd_add_l2seg_uplink(pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_add_l2seg_uplink_args_t *args = pd_func_args->pd_add_l2seg_uplink;
 
     HAL_TRACE_DEBUG("pd-l2seg<->uplink:pd call");
 
@@ -39,9 +40,10 @@ pd_add_l2seg_uplink(pd_add_l2seg_uplink_args_t *args)
 // Deleting L2segment on Uplink
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_del_l2seg_uplink(pd_del_l2seg_uplink_args_t *args)
+pd_del_l2seg_uplink(pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_del_l2seg_uplink_args_t *args = pd_func_args->pd_del_l2seg_uplink;
 
     HAL_TRACE_DEBUG("pd-l2seg<->uplink:pd call");
 

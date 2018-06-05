@@ -44,7 +44,7 @@ void ssl_msg_callback(int writep, int version, int contentType,
     if(arg) {
         hal::tls::SSLConnection* conn = (hal::tls::SSLConnection *)arg;
         //HAL_TRACE_DEBUG("SSL: id: {}", conn->get_id());
-        conn->ssl_msg_cb(writep, version, contentType, buf, len, ssl, arg); 
+        conn->ssl_msg_cb(writep, version, contentType, buf, len, ssl, arg);
     }
 }
 
@@ -84,7 +84,7 @@ SSLConnection::get_pse_key_rsa(PSE_KEY &pse_key,
     pse_key.u.rsa_key.rsa_e.len = cert.pub_key.u.rsa_params.e_len;
     pse_key.u.rsa_key.rsa_e.data = (uint8_t *)cert.pub_key.u.rsa_params.e;
 
-    HAL_TRACE_DEBUG("Received  n {}, e: {}", 
+    HAL_TRACE_DEBUG("Received  n {}, e: {}",
                     pse_key.u.rsa_key.rsa_n.len,
                     pse_key.u.rsa_key.rsa_e.len);
 
@@ -101,9 +101,9 @@ SSLConnection::get_pse_key(PSE_KEY &pse_key,
     if(!tls_flow_cfg || !cert) {
         return HAL_RET_OK;
     }
-    
+
     switch(tls_flow_cfg->key_type) {
-    
+
     case types::CRYPTO_ASYM_KEY_TYPE_RSA:
         ret = get_pse_key_rsa(pse_key, *tls_flow_cfg, *cert);
         break;
@@ -131,14 +131,14 @@ SSLConnection::load_certs_key(const tls_proxy_flow_info_t *tls_flow_cfg) const
     EVP_PKEY           *pkey = NULL;
 
     if(!tls_flow_cfg) {
-        return HAL_RET_OK;    
+        return HAL_RET_OK;
     }
 
     if(tls_flow_cfg->cert_id <= 0) {
         HAL_TRACE_ERR("Invalid cert_id: {}", tls_flow_cfg->cert_id);
         return HAL_RET_OK;
     }
-     
+
     // set cipher list
     if(tls_flow_cfg->ciphers.length() > 0) {
         HAL_TRACE_DEBUG("Setting cipher for the server: {}", tls_flow_cfg->ciphers);
@@ -152,19 +152,19 @@ SSLConnection::load_certs_key(const tls_proxy_flow_info_t *tls_flow_cfg) const
                       tls_flow_cfg->cert_id);
         return HAL_RET_OK;
     }
-    
+
     if(!cert->x509_cert) {
         HAL_TRACE_ERR("X509 cert is null for cert with id: {}",
                       tls_flow_cfg->cert_id);
         return HAL_RET_OK;
     }
-    
+
     if(SSL_use_certificate(ssl, cert->x509_cert) <= 0) {
         HAL_TRACE_ERR("Failed to add cert with idx: {}", cert->cert_id);
         return HAL_RET_SSL_CERT_KEY_ADD_ERR;
     }
-            
-    //additional certs 
+
+    //additional certs
     add_cert_id = cert->next_cert_id;
     while(add_cert_id > 0) {
         add_cert = find_cert_by_id(add_cert_id);
@@ -178,22 +178,22 @@ SSLConnection::load_certs_key(const tls_proxy_flow_info_t *tls_flow_cfg) const
         }
         add_cert_id = add_cert->next_cert_id;
     }
-    
+
     // Load private Key
     ret = get_pse_key(pse_key, tls_flow_cfg, cert);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get pse_key: {}", ret);
         return ret;
-    }        
-        
+    }
+
     pkey = ENGINE_load_private_key(helper->get_engine(),
                                    (const char *)&pse_key,
                                    NULL, NULL);
     if(pkey == NULL) {
         HAL_TRACE_ERR("Failed to load engine key");
         return HAL_RET_ERR;
-    } 
-                                
+    }
+
     if ( SSL_use_PrivateKey(ssl, pkey) <= 0 ){
         HAL_TRACE_ERR("Failed to add key to SSL");
         ERR_print_errors_fp(stderr);
@@ -221,12 +221,12 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx,
     ssl = SSL_new(ctx);
     SSL_set_msg_callback(ssl, ssl_msg_callback);
     SSL_set_msg_callback_arg(ssl, this);
-    
+
     ret = load_certs_key(tls_flow_cfg);
     if(ret != HAL_RET_OK) {
-        return ret;    
+        return ret;
     }
-    
+
     BIO_new_bio_pair(&ibio, 0, &nbio, 0);
     if(ibio == NULL || nbio == NULL) {
         HAL_TRACE_ERR("Failed to allocate bio");
@@ -272,6 +272,7 @@ SSLConnection::handle_ssl_async()
 {
     size_t num_fds = 0, num_del_fds = 0;
     hal::pd::pd_capri_barco_asym_add_pend_req_args_t args = {0};
+    hal::pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_TRACE_DEBUG("SSL: id: {} waiting for async", id);
 
@@ -285,8 +286,8 @@ SSLConnection::handle_ssl_async()
                 HAL_TRACE_DEBUG("SSL: id: {} received fd: {}", id, fds[i]);
                 args.hw_id = fds[i];
                 args.sw_id = id;
-                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ,
-                                         (void *) &args);
+                pd_func_args.pd_capri_barco_asym_add_pend_req = &args;
+                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ, &pd_func_args);
             }
         }
     }
@@ -403,7 +404,7 @@ SSLConnection::handle_ssl_ret(int ret)
     case SSL_ERROR_ZERO_RETURN:
     case SSL_ERROR_WANT_READ:
         break;
-    
+
     case SSL_ERROR_WANT_ASYNC:
         HAL_TRACE_DEBUG("SSL: async operation in progress");
         return HAL_RET_ASYNC;
@@ -436,7 +437,7 @@ SSLConnection::get_sym_key_type(int cipher_nid, types::CryptoKeyType& key_type)
     case NID_des_ede3_cbc:
         key_type = types::CRYPTO_KEY_TYPE_DES;
         break;
-    default: 
+    default:
         HAL_TRACE_DEBUG("Unsupported nid: {}", cipher_nid);
         break;
     }
@@ -452,7 +453,7 @@ SSLConnection::ssl_msg_cb(int writep, int version, int contentType,
     types::CryptoKeyType key_type;
     if(writep != 2 && writep != PEN_MSG_WRITEP)
         return;
-    
+
     switch(contentType) {
         case TLS1_RT_CRYPTO_READ | TLS1_RT_CRYPTO_KEY:
             nid = SSL_CIPHER_get_cipher_nid(SSL_get_current_cipher(ssl));
@@ -464,7 +465,7 @@ SSLConnection::ssl_msg_cb(int writep, int version, int contentType,
                                           key_type,
                                           (const uint8_t *)buf,
                                           len,
-                                          &read_key_index);     
+                                          &read_key_index);
             }
             break;
 
@@ -478,30 +479,30 @@ SSLConnection::ssl_msg_cb(int writep, int version, int contentType,
                                           key_type,
                                           (const uint8_t*)buf,
                                           len,
-                                          &write_key_index);     
+                                          &write_key_index);
             }
             break;
-        
+
         case TLS1_RT_CRYPTO_READ | TLS1_RT_CRYPTO_IV:
         case TLS1_RT_CRYPTO_READ | TLS1_RT_CRYPTO_FIXED_IV:
             HAL_TRACE_DEBUG("read iv: {}",
                                 hex_dump((uint8_t *)buf, len));
             memcpy(read_iv, buf, len);
             break;
-        
+
         case TLS1_RT_CRYPTO_WRITE | TLS1_RT_CRYPTO_IV:
         case TLS1_RT_CRYPTO_WRITE | TLS1_RT_CRYPTO_FIXED_IV:
             HAL_TRACE_DEBUG("write iv: {}",
                                 hex_dump((uint8_t *)buf, len));
             memcpy(write_iv, buf, len);
             break;
-        
+
         case PEN_TLS_RT_HS_SEQ_NUM | PEN_TLS_RT_HS_READ:
             HAL_TRACE_DEBUG("Read_seq_num: {}",
                                 hex_dump((uint8_t *)buf, len));
             memcpy(read_seq_num, buf, len);
             break;
-        
+
         case PEN_TLS_RT_HS_SEQ_NUM | PEN_TLS_RT_HS_WRITE:
             HAL_TRACE_DEBUG("write_seq_num: {}",
                                 hex_dump((uint8_t *)buf, len));
@@ -558,7 +559,7 @@ SSLHelper::init_pse_engine()
     std::string eng_path;
 
     if(engine != NULL) {
-        return HAL_RET_OK;    
+        return HAL_RET_OK;
     }
     ENGINE_load_dynamic();
     ENGINE_load_builtin_engines();
@@ -600,7 +601,7 @@ SSLHelper::init_pse_engine()
 
     ENGINE_set_default_EC(engine);
     ENGINE_set_default_RSA(engine);
-    
+
     return HAL_RET_OK;
 }
 

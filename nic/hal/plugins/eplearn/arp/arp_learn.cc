@@ -228,6 +228,7 @@ proxy_arp_build_cpu_p4_plus_header(fte::ctx_t &ctx,
     if_t                                *sif;
     pd_if_get_lport_id_args_t            if_args;
     pd_get_cpu_bypass_flowid_args_t      args;
+    pd_func_args_t pd_func_args = {0};
 
     send_cpu_hdr.src_lif = SERVICE_LIF_CPU_BYPASS;
 
@@ -244,7 +245,8 @@ proxy_arp_build_cpu_p4_plus_header(fte::ctx_t &ctx,
     }*/
 
     args.hw_flowid = 0;
-    ret = hal_pd_call(PD_FUNC_ID_BYPASS_FLOWID_GET, &args);
+    pd_func_args.pd_get_cpu_bypass_flowid = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BYPASS_FLOWID_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         goto out;
     }
@@ -260,8 +262,9 @@ proxy_arp_build_cpu_p4_plus_header(fte::ctx_t &ctx,
     }
 
     if_args.pi_if = sif;
+    pd_func_args.pd_if_get_lport_id = &if_args;
     if (hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID,
-            (void*)&if_args) != HAL_RET_OK) {
+            &pd_func_args) != HAL_RET_OK) {
         HAL_TRACE_INFO("Destination lport not found for proxy arp.");
         goto out;
     }

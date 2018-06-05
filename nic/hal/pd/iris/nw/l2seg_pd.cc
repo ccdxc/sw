@@ -96,9 +96,10 @@ flow_lkupid_compare_hw_key_func (void *key1, void *key2)
 //-----------------------------------------------------------------------------
 // get the PI vrf or l2seg given the flow lookup id
 //-----------------------------------------------------------------------------
-hal_ret_t pd_get_object_from_flow_lkupid(pd_get_object_from_flow_lkupid_args_t *args)
+hal_ret_t pd_get_object_from_flow_lkupid(pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_get_object_from_flow_lkupid_args_t *args = pd_func_args->pd_get_object_from_flow_lkupid;
     hal_handle_id_ht_entry_t    *entry;
     uint32_t flow_lkupid = args->flow_lkupid;
     hal_obj_id_t *obj_id = args->obj_id;
@@ -219,9 +220,10 @@ l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
 // PD l2seg create
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_create (pd_l2seg_create_args_t *args)
+pd_l2seg_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t     ret;
+    pd_l2seg_create_args_t *args = pd_func_args->pd_l2seg_create;
     pd_l2seg_t    *l2seg_pd = NULL;
 
     HAL_TRACE_DEBUG("Creating pd state for l2seg {}", args->l2seg->seg_id);
@@ -293,9 +295,10 @@ pd_l2seg_restore_data (pd_l2seg_restore_args_t *args)
 // PD l2seg restore
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_restore (pd_l2seg_restore_args_t *args)
+pd_l2seg_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t     ret;
+    pd_l2seg_restore_args_t *args = pd_func_args->pd_l2seg_restore;
     pd_l2seg_t    *l2seg_pd = NULL;
 
     HAL_TRACE_DEBUG("Restoring pd state for l2seg {}", args->l2seg->seg_id);
@@ -342,9 +345,10 @@ end:
 // PD l2seg Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_update (pd_l2seg_update_args_t *args)
+pd_l2seg_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    pd_l2seg_update_args_t *args = pd_func_args->pd_l2seg_update;
 
     if (args->iflist_change) {
         HAL_TRACE_DEBUG("If list change: Input props table change. "
@@ -364,9 +368,10 @@ pd_l2seg_update (pd_l2seg_update_args_t *args)
 // PD l2seg Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_delete (pd_l2seg_delete_args_t *args)
+pd_l2seg_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_l2seg_delete_args_t *args = pd_func_args->pd_l2seg_delete;
     pd_l2seg_t     *l2seg_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -1188,9 +1193,10 @@ pd_l2seg_get_pd_vrf (pd_l2seg_t *pd_l2seg)
 // makes a clone
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_make_clone (pd_l2seg_make_clone_args_t *args)
+pd_l2seg_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_l2seg_make_clone_args_t *args = pd_func_args->pd_l2seg_make_clone;
     pd_l2seg_t         *pd_l2seg_clone = NULL;
     l2seg_t            *l2seg, *clone;
 
@@ -1215,8 +1221,9 @@ end:
 // get flow lookup id
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_get_flow_lkupid (pd_l2seg_get_flow_lkupid_args_t *args)
+pd_l2seg_get_flow_lkupid (pd_func_args_t *pd_func_args)
 {
+    pd_l2seg_get_flow_lkupid_args_t *args = pd_func_args->pd_l2seg_get_flow_lkupid;
     l2seg_t *l2seg = args->l2seg;
     args->hwid = ((pd_l2seg_t *)l2seg->pd)->l2seg_fl_lkup_id;
     return HAL_RET_OK;
@@ -1227,9 +1234,10 @@ pd_l2seg_get_flow_lkupid (pd_l2seg_get_flow_lkupid_args_t *args)
 // reinjected packets) returns false if vlan is not valid
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_get_fromcpu_vlanid (pd_l2seg_get_fromcpu_vlanid_args_t *args)
+pd_l2seg_get_fromcpu_vlanid (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    pd_l2seg_get_fromcpu_vlanid_args_t *args = pd_func_args->pd_l2seg_get_fromcpu_vlanid;
     l2seg_t     *l2seg = args->l2seg;
     uint16_t    *vid = args->vid;
     vrf_t       *vrf;
@@ -1252,9 +1260,10 @@ end:
 // pd l2seg get
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_get (pd_l2seg_get_args_t *args)
+pd_l2seg_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_l2seg_get_args_t *args = pd_func_args->pd_l2seg_get;
     l2seg_t                 *l2seg = args->l2seg;
     pd_l2seg_t              *l2seg_pd = (pd_l2seg_t *)l2seg->pd;
     L2SegmentGetResponse    *rsp = args->rsp;
@@ -1280,9 +1289,10 @@ pd_l2seg_get (pd_l2seg_get_args_t *args)
 // frees PD memory without indexer free.
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_l2seg_mem_free (pd_l2seg_mem_free_args_t *args)
+pd_l2seg_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_l2seg_mem_free_args_t *args = pd_func_args->pd_l2seg_mem_free;
     pd_l2seg_t     *l2seg_pd;
 
     l2seg_pd = (pd_l2seg_t *)args->l2seg->pd;

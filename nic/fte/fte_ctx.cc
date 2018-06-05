@@ -44,6 +44,7 @@ ctx_t::extract_flow_key()
     icmp_header_t *icmphdr;
     ipsec_esp_header_t *esphdr;
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
     hal::l2seg_t *l2seg = NULL;
     hal::hal_obj_id_t obj_id;
     void *obj;
@@ -56,7 +57,8 @@ ctx_t::extract_flow_key()
     args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+    pd_func_args.pd_get_object_from_flow_lkupid = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: Invalid obj id: {}, ret: {}", obj_id, ret);
         return HAL_RET_L2SEG_NOT_FOUND;
@@ -150,6 +152,7 @@ ctx_t::lookup_flow_objs()
 {
     ether_header_t *ethhdr;
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::pd::pd_func_args_t          pd_func_args = {0};
     hal::hal_obj_id_t obj_id;
     void *obj;
     hal_ret_t ret;
@@ -191,7 +194,8 @@ ctx_t::lookup_flow_objs()
         args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
         args.obj_id = &obj_id;
         args.pi_obj = &obj;
-        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+        pd_func_args.pd_get_object_from_flow_lkupid = &args;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
         if (ret == HAL_RET_OK && obj_id == hal::HAL_OBJ_ID_L2SEG) {
             sl2seg_ = (hal::l2seg_t *)obj;
 
@@ -340,7 +344,7 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
     }
 
     // Set drop from the existing session
-    if (sess->iflow->pgm_attrs.drop) 
+    if (sess->iflow->pgm_attrs.drop)
         set_drop();
 }
 
@@ -496,6 +500,7 @@ ctx_t::update_flow_table()
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
     hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;
     hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
+    hal::pd::pd_func_args_t          pd_func_args = {0};
 
     hal::session_args_t session_args = {};
     hal::session_cfg_t session_cfg = {};
@@ -537,11 +542,13 @@ ctx_t::update_flow_table()
 
         if (sl2seg_) {
             args.l2seg = sl2seg_;
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+            pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
             iflow_attrs.vrf_hwid = args.hwid;
         } else {
             vrf_args.vrf = svrf_;
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, (void *)&vrf_args);
+            pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
             iflow_attrs.vrf_hwid = vrf_args.lkup_id;
         }
 
@@ -560,8 +567,9 @@ ctx_t::update_flow_table()
             iflow_attrs.tnnl_rw_idx = 1;
         } else if (dif_ && dif_->if_type == intf::IF_TYPE_TUNNEL) {
             t_args.hal_if = dif_;
+            pd_func_args.pd_tunnelif_get_rw_idx = &t_args;
             ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
-                                       (void *)&t_args);
+                                       &pd_func_args);
             iflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
         }
 
@@ -624,7 +632,8 @@ ctx_t::update_flow_table()
         }
 
 		args.l2seg = dl2seg_;
-		hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+        pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+		hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
 		rflow_attrs.vrf_hwid = args.hwid;
         // rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(dl2seg_);
 
@@ -635,8 +644,9 @@ ctx_t::update_flow_table()
             rflow_attrs.tnnl_rw_idx = 1;
         } else if (sif_ && sif_->if_type == intf::IF_TYPE_TUNNEL) {
 			t_args.hal_if = sif_;
+            pd_func_args.pd_tunnelif_get_rw_idx = &t_args;
 			ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
-									   (void *)&t_args);
+                                       &pd_func_args);
 			rflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
         }
 
@@ -1224,6 +1234,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
 {
     txpkt_info_t *pkt_info;
     hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
+    hal::pd::pd_func_args_t          pd_func_args = {0};
 
     if (txpkt_cnt_ >= MAX_QUEUED_PKTS) {
         HAL_TRACE_ERR("fte: queued tx pkts exceeded {}", txpkt_cnt_);
@@ -1243,8 +1254,9 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
             args.l2seg = sl2seg_;
             args.vid = &pkt_info->cpu_header.hw_vlan_id;
 
+            pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
             if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                     (void*)&args) == HAL_RET_OK) {
+                                     &pd_func_args) == HAL_RET_OK) {
 
 #if 0
             if (hal::pd::pd_l2seg_get_fromcpu_vlanid(sl2seg_,
@@ -1311,6 +1323,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         pkt_info->p4plus_header.p4plus_app_id = hal::P4PLUS_APPTYPE_CPU;
 
         hal::pd::pd_cpupkt_send_args_t args;
+        hal::pd::pd_func_args_t pd_func_args = {0};
         args.ctxt = arm_ctx;
         args.type = pkt_info->wring_type;
         args.queue_id = pkt_info->wring_type == types::WRING_TYPE_ASQ ? fte_id() : pkt_info->lifq.qid;
@@ -1322,7 +1335,8 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         args.qtype = pkt_info->lifq.qtype;
         args.qid = pkt_info->wring_type == types::WRING_TYPE_ASQ ? fte_id() : pkt_info->lifq.qid;
         args.ring_number = pkt_info->ring_number;
-        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, (void *)&args);
+        pd_func_args.pd_cpupkt_send = &args;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
 #if 0
         ret = hal::pd::cpupkt_send(arm_ctx,
                                    pkt_info->wring_type,

@@ -485,7 +485,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 
     // Insert the entry
     if (update) {
-        ret = acl_tbl->update(pd_acl->handle, &key, &mask, &data, 
+        ret = acl_tbl->update(pd_acl->handle, &key, &mask, &data,
                               acl_get_priority(pi_acl));
     } else {
         ret = acl_tbl->insert(&key, &mask, &data, acl_get_priority(pi_acl), &pd_acl->handle);
@@ -594,9 +594,10 @@ end:
 //  Acl Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_update (pd_acl_update_args_t *args)
+pd_acl_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_acl_update_args_t *args = pd_func_args->pd_acl_update;
     pd_acl_t  *pd_acl;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -616,9 +617,10 @@ pd_acl_update (pd_acl_update_args_t *args)
 // Delete a PD ACL and remove from hardware
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_delete (pd_acl_delete_args_t *args)
+pd_acl_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_acl_delete_args_t *args = pd_func_args->pd_acl_delete;
     pd_acl_t *pd_acl;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -642,9 +644,10 @@ pd_acl_delete (pd_acl_delete_args_t *args)
 // Create a PD ACL and add it to hardware
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_create (pd_acl_create_args_t *args)
+pd_acl_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_acl_create_args_t *args = pd_func_args->pd_acl_create;
     pd_acl_t  *pd_acl;
 
     HAL_TRACE_DEBUG("Creating pd state for acl: {}",
@@ -683,10 +686,10 @@ end:
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-// pd_acl_make_clone(acl_t *acl, acl_t *clone)
-pd_acl_make_clone (pd_acl_make_clone_args_t *args)
+pd_acl_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_acl_make_clone_args_t *args = pd_func_args->pd_acl_make_clone;
     pd_acl_t *pd_acl_clone = NULL;
     acl_t *acl = args->acl;
     acl_t *clone = args->clone;
@@ -709,9 +712,10 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_mem_free (pd_acl_mem_free_args_t *args)
+pd_acl_mem_free (pd_func_args_t *pd_func_args)
 {
     pd_acl_t        *pd_acl;
+    pd_acl_mem_free_args_t *args = pd_func_args->pd_acl_mem_free;
 
     pd_acl = (pd_acl_t *)args->acl->pd;
     acl_pd_mem_free(pd_acl);
@@ -723,7 +727,7 @@ pd_acl_mem_free (pd_acl_mem_free_args_t *args)
 // pd acl get
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_get (pd_acl_get_args_t *args)
+pd_acl_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 #if 0
@@ -758,9 +762,10 @@ acl_pd_restore_data (pd_acl_restore_args_t *args)
 // pd acl restore
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_restore (pd_acl_restore_args_t *args)
+pd_acl_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret;
+    pd_acl_restore_args_t *args = pd_func_args->pd_acl_restore;
     pd_acl_t *acl_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);

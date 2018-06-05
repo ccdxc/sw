@@ -7,9 +7,10 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_asic_init (pd_asic_init_args_t *args)
+pd_asic_init (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_asic_init_args_t *args = pd_func_args->pd_asic_init;
 
     args->cfg->pgm_name = std::string("iris");
     args->cfg->repl_entry_width = P4_REPL_ENTRY_WIDTH;

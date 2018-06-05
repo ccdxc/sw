@@ -16,11 +16,13 @@ hal_ret_t   GetOpaqueTagAddr(const GetOpaqueTagAddrRequest& request,
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint64_t addr;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     pd::pd_get_opaque_tag_addr_args_t args;
     args.ring_type = request.ring_type();
     args.addr = &addr;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_OPAQUE_TAG_ADDR, (void *)&args);
+    pd_func_args.pd_get_opaque_tag_addr = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_OPAQUE_TAG_ADDR, &pd_func_args);
     if ((ret != HAL_RET_OK)) {
         response->set_api_status(types::API_STATUS_ERR);
     }
@@ -39,13 +41,15 @@ hal_ret_t BarcoGetReqDescrEntry(const BarcoGetReqDescrEntryRequest& request,
     barco_asym_descr_t asym_req_descr;
     pd::pd_capri_barco_asym_req_descr_get_args_t args;
     pd::pd_capri_barco_symm_req_descr_get_args_t sym_args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     switch (request.ring_type()) {
     case types::BARCO_RING_ASYM:
         memset(&asym_req_descr, 0, sizeof(asym_req_descr));
         args.slot_index = request.slot_index();
         args.asym_req_descr = &asym_req_descr;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET, (void *)&args);
+        pd_func_args.pd_capri_barco_asym_req_descr_get = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET, &pd_func_args);
 	if (ret != HAL_RET_OK) {
 	    HAL_TRACE_ERR("BarcoGetReqDescr({}-{:d}): Failed to get Asym req "
 			  "descriptor, err: {}", types::BarcoRings_Name(request.ring_type()),
@@ -69,7 +73,8 @@ hal_ret_t BarcoGetReqDescrEntry(const BarcoGetReqDescrEntryRequest& request,
         sym_args.ring_type = request.ring_type();
         sym_args.slot_index = request.slot_index();
         sym_args.symm_req_descr = &symm_req_descr;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, (void *)&sym_args);
+        pd_func_args.pd_capri_barco_symm_req_descr_get = &sym_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, &pd_func_args);
 	if (ret != HAL_RET_OK) {
 	    HAL_TRACE_ERR("BarcoGetReqDescr({}-{:d}): Failed to get Symm req "
 			  "descriptor, err: {}", types::BarcoRings_Name(request.ring_type()),
@@ -109,11 +114,13 @@ hal_ret_t BarcoGetRingMeta(const BarcoGetRingMetaRequest& request,
     hal_ret_t          ret = HAL_RET_OK;
     uint32_t           pi = 0, ci = 0;
     pd::pd_capri_barco_ring_meta_get_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     args.ring_type = request.ring_type();
     args.pi = &pi;
     args.ci = &ci;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_RING_META_GET, (void *)&args);
+    pd_func_args.pd_capri_barco_ring_meta_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_RING_META_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("BarcoGetRingMeta({}): Failed to get PI/CI, "
 		      "err: {}", types::BarcoRings_Name(request.ring_type()), ret);

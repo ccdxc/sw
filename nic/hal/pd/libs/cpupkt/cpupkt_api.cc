@@ -184,8 +184,9 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
  ***************************************************************/
 
 hal_ret_t
-pd_cpupkt_ctxt_alloc_init(pd_cpupkt_ctxt_alloc_init_args_t *args)
+pd_cpupkt_ctxt_alloc_init(pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_ctxt_alloc_init_args_t *args = pd_func_args->pd_cpupkt_ctxt_alloc_init;
     args->ctxt = cpupkt_ctxt_init(cpupkt_ctxt_alloc());
     return HAL_RET_OK;
 }
@@ -240,8 +241,9 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::W
 }
 
 hal_ret_t
-pd_cpupkt_register_tx_queue(pd_cpupkt_register_tx_queue_args_t *args)
+pd_cpupkt_register_tx_queue(pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_register_tx_queue_args_t *args = pd_func_args->pd_cpupkt_register_tx_queue;
     cpupkt_ctxt_t* ctxt = args->ctxt;
     types::WRingType type = args->type;
     uint32_t queue_id = args->queue_id;
@@ -272,8 +274,9 @@ pd_cpupkt_register_tx_queue(pd_cpupkt_register_tx_queue_args_t *args)
 }
 
 hal_ret_t
-pd_cpupkt_register_rx_queue(pd_cpupkt_register_rx_queue_args_t *args)
+pd_cpupkt_register_rx_queue(pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_register_rx_queue_args_t *args = pd_func_args->pd_cpupkt_register_rx_queue;
     cpupkt_ctxt_t* ctxt = args->ctxt;
     types::WRingType type = args->type;
     uint32_t queue_id = args->queue_id;
@@ -318,8 +321,9 @@ pd_cpupkt_register_rx_queue(pd_cpupkt_register_rx_queue_args_t *args)
 }
 
 hal_ret_t
-pd_cpupkt_unregister_tx_queue(pd_cpupkt_unregister_tx_queue_args_t *args)
+pd_cpupkt_unregister_tx_queue(pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_unregister_tx_queue_args_t *args = pd_func_args->pd_cpupkt_unregister_tx_queue;
     cpupkt_ctxt_t* ctxt = args->ctxt;
     types::WRingType type = args->type;
     uint32_t queue_id = args->queue_id;
@@ -344,9 +348,10 @@ pd_cpupkt_unregister_tx_queue(pd_cpupkt_unregister_tx_queue_args_t *args)
 
 
 hal_ret_t
-pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
+pd_cpupkt_poll_receive(pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    pd_cpupkt_poll_receive_args_t *args = pd_func_args->pd_cpupkt_poll_receive;
     cpupkt_ctxt_t* ctxt = args->ctxt;
     p4_to_p4plus_cpu_pkt_t** flow_miss_hdr = args->flow_miss_hdr;
     uint8_t** data = args->data;
@@ -407,8 +412,9 @@ pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
 }
 
 hal_ret_t
-pd_cpupkt_free(pd_cpupkt_free_args_t *args)
+pd_cpupkt_free(pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_free_args_t *args = pd_func_args->pd_cpupkt_free;
     p4_to_p4plus_cpu_pkt_t* flow_miss_hdr = args->flow_miss_hdr;
     free(flow_miss_hdr);
     return HAL_RET_OK;
@@ -419,6 +425,7 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
 {
     hal_ret_t       ret = HAL_RET_OK;
     wring_hw_id_t   gc_slot_addr=0;
+    pd_func_args_t  pd_func_args = {0};
 
     // program GC queue
     ret = wring_pd_get_base_addr(types::WRING_TYPE_NMDR_RX_GC,
@@ -442,7 +449,8 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
     d_args.qtype = CAPRI_HBM_GC_RNMDR_QTYPE;
     d_args.qid = CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER;
     d_args.ring_number = 0;
-    ret = pd_cpupkt_program_send_ring_doorbell(&d_args);
+    pd_func_args.pd_cpupkt_program_send_ring_doorbell = &d_args;
+    ret = pd_cpupkt_program_send_ring_doorbell(&pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to ring doorbell");
         return HAL_RET_HW_FAIL;
@@ -455,9 +463,10 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
 
 
 hal_ret_t
-pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
+pd_cpupkt_descr_alloc(pd_func_args_t *pd_func_args)
 {
     //indexer::status     rs;
+    pd_cpupkt_descr_alloc_args_t *args = pd_func_args->pd_cpupkt_descr_alloc;
     uint32_t            descr_index;
     cpupkt_hw_id_t      base_addr;
     cpupkt_hw_id_t      *descr_addr = args->descr_addr;
@@ -488,8 +497,9 @@ pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
 }
 
 hal_ret_t
-pd_cpupkt_page_alloc(pd_cpupkt_page_alloc_args_t *args)
+pd_cpupkt_page_alloc(pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_page_alloc_args_t *args = pd_func_args->pd_cpupkt_page_alloc;
     //indexer::status     rs;
     uint32_t            page_index;
     cpupkt_hw_id_t      base_addr;
@@ -526,10 +536,12 @@ cpupkt_program_descr(cpupkt_hw_id_t page_addr, size_t len, cpupkt_hw_id_t* descr
     hal_ret_t       ret = HAL_RET_OK;
     pd_descr_aol_t  descr = {0};
     pd_cpupkt_descr_alloc_args_t args;
+    pd_func_args_t pd_func_args = {0};
 
     args.descr_addr = descr_addr;
 
-    ret = pd_cpupkt_descr_alloc(&args);
+    pd_func_args.pd_cpupkt_descr_alloc = &args;
+    ret = pd_cpupkt_descr_alloc(&pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to allocate descr for the packet, err: {}", ret);
         goto cleanup;
@@ -575,8 +587,9 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
 }
 
 hal_ret_t
-pd_cpupkt_program_send_ring_doorbell(pd_cpupkt_program_send_ring_doorbell_args_t *args)
+pd_cpupkt_program_send_ring_doorbell(pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_program_send_ring_doorbell_args_t *args = pd_func_args->pd_cpupkt_program_send_ring_doorbell;
     uint64_t            addr = 0;
     uint64_t            data = 0;
     uint16_t dest_lif = args->dest_lif;
@@ -617,9 +630,10 @@ pd_swizzle_header (uint8_t *hdr, uint32_t hdr_len)
 }
 
 hal_ret_t
-pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
+pd_cpupkt_send(pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_cpupkt_send_args_t *s_args = pd_func_args->pd_cpupkt_send;
     cpupkt_hw_id_t      page_addr = 0;
     cpupkt_hw_id_t      descr_addr = 0;
     cpupkt_hw_id_t      write_addr = 0;
@@ -636,6 +650,7 @@ pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
     uint8_t  qtype = s_args->qtype;
     uint32_t qid = s_args->qid;
     uint8_t ring_number = s_args->ring_number;
+    pd_func_args_t pd_func_args1 = {0};
 
     if(!ctxt || !data) {
         return HAL_RET_INVALID_ARG;
@@ -644,7 +659,8 @@ pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
     // Allocate a page and descr for the pkt
     pd_cpupkt_page_alloc_args_t args;
     args.page_addr = &page_addr;
-    ret = pd_cpupkt_page_alloc(&args);
+    pd_func_args1.pd_cpupkt_page_alloc = &args;
+    ret = pd_cpupkt_page_alloc(&pd_func_args1);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to allocate page for the packet, err: {}", ret);
         goto cleanup;
@@ -715,8 +731,9 @@ pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
     d_args.qtype = qtype;
     d_args.qid = qid;
     d_args.ring_number = ring_number;
+    pd_func_args1.pd_cpupkt_program_send_ring_doorbell = &d_args;
     // ret = cpupkt_program_send_ring_doorbell(dest_lif, qtype, qid, ring_number);
-    ret = pd_cpupkt_program_send_ring_doorbell(&d_args);
+    ret = pd_cpupkt_program_send_ring_doorbell(&pd_func_args1);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }

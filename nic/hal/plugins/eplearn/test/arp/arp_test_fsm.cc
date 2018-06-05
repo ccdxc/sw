@@ -309,8 +309,10 @@ get_l2seg_hw_id(hal_handle_t l2seg_handle)
     hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(l2seg_handle);
     //ASSERT_TRUE(l2seg != nullptr);
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     args.l2seg = l2seg;
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+    pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
     return args.hwid;
 }
 

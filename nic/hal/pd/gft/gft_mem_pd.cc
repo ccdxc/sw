@@ -37,64 +37,64 @@ hal_state_pd::init(void)
     p4plus_txdma_dm_tables_ = NULL;
 
     // initialize LIF PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] =
         slab::factory("LIF_PD", HAL_SLAB_LIF_PD,
                       sizeof(hal::pd::pd_lif_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] != NULL),
                       false);
 
     lif_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_LIFS);
     HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
 
     // initialize vrf related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] =
         slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
                       sizeof(hal::pd::pd_vrf_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] != NULL),
                       false);
 
     // initialize Uplink If PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] =
         slab::factory("UPLINKIF_PD", HAL_SLAB_UPLINKIF_PD,
                       sizeof(hal::pd::pd_uplinkif_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] != NULL),
                       false);
 
     // initialize ENIC If PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] =
         slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
                       sizeof(hal::pd::pd_enicif_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] != NULL),
                       false);
 
     // initialize EP PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] =
         slab::factory("EP_PD", HAL_SLAB_EP_PD,
                       sizeof(hal::pd::pd_ep_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] != NULL),
                       false);
 
     // initiate GFT exact match profile
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EMP_PD)] = 
-        slab::factory("GFT_EMP_PD", 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EMP_PD)] =
+        slab::factory("GFT_EMP_PD",
                       HAL_SLAB_GFT_EMP_PD,
-                      sizeof(hal::pd::pd_gft_emp_t), 
+                      sizeof(hal::pd::pd_gft_emp_t),
                       8, false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EMP_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EMP_PD)] != NULL),
                       false);
 
-    // initiate GFT exact flow entry 
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EFE_PD)] = 
-        slab::factory("GFT_EFE_PD", 
+    // initiate GFT exact flow entry
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EFE_PD)] =
+        slab::factory("GFT_EFE_PD",
                       HAL_SLAB_GFT_EFE_PD,
-                      sizeof(hal::pd::pd_gft_efe_t), 
+                      sizeof(hal::pd::pd_gft_efe_t),
                       8, false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EFE_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EFE_PD)] != NULL),
                       false);
 
     return true;
@@ -221,15 +221,15 @@ hal_state_pd::factory(void)
 }
 
 hal_ret_t
-pd_get_slab (pd_get_slab_args_t *args)
+pd_get_slab (pd_func_args_t *pd_func_args)
 {
-
+    pd_get_slab_args_t *args = pd_func_args->pd_get_slab;
     args->slab = g_hal_state_pd->get_slab(args->slab_id);
     return HAL_RET_OK;
 }
 
 slab *
-hal_state_pd::get_slab(hal_slab_t slab_id) 
+hal_state_pd::get_slab(hal_slab_t slab_id)
 {
     if (slab_id >= HAL_SLAB_PD_MAX || slab_id < HAL_SLAB_PD_MIN) {
         return NULL;
@@ -459,9 +459,10 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
 }
 
 hal_ret_t
-pd_mem_init (pd_mem_init_args_t *args)
+pd_mem_init (pd_func_args_t *pd_func_args)
 {
     hal_ret_t    ret = HAL_RET_OK;
+    pd_mem_init_args_t *args = pd_func_args->pd_mem_init;
 
     g_hal_state_pd = hal_state_pd::factory();
     if (g_hal_state_pd == NULL) {
@@ -496,8 +497,9 @@ cleanup:
 }
 
 hal_ret_t
-pd_mem_init_phase2 (pd_mem_init_phase2_args_t *arg)
+pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
 {
+    // pd_mem_init_phase2_args_t *arg = pd_func_args->pd_mem_init_phase2;
     p4pd_cfg_t    p4pd_cfg = {
         .table_map_cfg_file = "gft/capri_p4_table_map.json",
         .p4pd_pgm_name = "gft"
@@ -520,9 +522,10 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *arg)
 }
 
 hal_ret_t
-pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
+pd_pgm_def_entries (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    pd_pgm_def_entries_args_t *args = pd_func_args->pd_pgm_def_entries;
     p4pd_def_cfg_t  p4pd_def_cfg;
 
     HAL_TRACE_DEBUG("Programming table default entries ...");
@@ -536,7 +539,7 @@ pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 }
 
 hal_ret_t
-pd_pgm_def_p4plus_entries (pd_pgm_def_p4plus_entries_args_t *args)
+pd_pgm_def_p4plus_entries (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
@@ -636,7 +639,7 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 // TODO: this doesn't belong in PD as this is not pipeline dependent
 // move the code in iris to some common place so all HAL PDs can use
 hal_ret_t
-pd_clock_delta_comp (pd_clock_delta_comp_args_t *args)
+pd_clock_delta_comp (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
@@ -644,20 +647,21 @@ pd_clock_delta_comp (pd_clock_delta_comp_args_t *args)
 // TODO: this doesn't belong in PD .. CPU tx/rx driver can't be in iris/gft, it
 // is common to all PDs
 hal_ret_t
-pd_cpupkt_ctxt_alloc_init (pd_cpupkt_ctxt_alloc_init_args_t *args)
+pd_cpupkt_ctxt_alloc_init (pd_func_args_t *pd_func_args)
 {
+    pd_cpupkt_ctxt_alloc_init_args_t *args = pd_func_args->pd_cpupkt_ctxt_alloc_init;
     args->ctxt = NULL;
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_cpupkt_register_tx_queue (pd_cpupkt_register_tx_queue_args_t *args)
+pd_cpupkt_register_tx_queue (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_cpupkt_register_rx_queue (pd_cpupkt_register_rx_queue_args_t *args)
+pd_cpupkt_register_rx_queue (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }

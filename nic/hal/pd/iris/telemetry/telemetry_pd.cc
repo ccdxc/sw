@@ -46,11 +46,13 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
 
 
 hal_ret_t
-pd_mirror_session_create(pd_mirror_session_create_args_t *args)
+pd_mirror_session_create(pd_func_args_t *pd_func_args)
 {
     uint32_t dst_lport;
+    pd_mirror_session_create_args_t *args = pd_func_args->pd_mirror_session_create;
     mirror_actiondata action_data;
     hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
+    pd_func_args_t pd_func_args1 = {0};
 
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR(" NULL argument");
@@ -96,7 +98,8 @@ pd_mirror_session_create(pd_mirror_session_create_args_t *args)
         action_data.mirror_action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
         action_data.mirror_action_u.mirror_erspan_mirror.dst_lport = dst_lport;
         tif_args.hal_if = args->session->mirror_destination_u.er_span_dest.tunnel_if;
-        hal::pd::pd_tunnelif_get_rw_idx(&tif_args);
+        pd_func_args1.pd_tunnelif_get_rw_idx = &tif_args;
+        hal::pd::pd_tunnelif_get_rw_idx(&pd_func_args1);
         action_data.mirror_action_u.mirror_erspan_mirror.tunnel_rewrite_index =
             tif_args.tnnl_rw_idx;
         break;
@@ -110,9 +113,10 @@ pd_mirror_session_create(pd_mirror_session_create_args_t *args)
 }
 
 hal_ret_t
-pd_mirror_session_delete(pd_mirror_session_delete_args_t *args)
+pd_mirror_session_delete(pd_func_args_t *pd_func_args)
 {
     mirror_actiondata action_data;
+    pd_mirror_session_delete_args_t *args = pd_func_args->pd_mirror_session_delete;
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
@@ -125,9 +129,10 @@ pd_mirror_session_delete(pd_mirror_session_delete_args_t *args)
 }
 
 hal_ret_t
-pd_mirror_session_get(pd_mirror_session_get_args_t *args)
+pd_mirror_session_get(pd_func_args_t *pd_func_args)
 {
     mirror_actiondata action_data;
+    pd_mirror_session_get_args_t *args = pd_func_args->pd_mirror_session_get;
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
@@ -168,10 +173,12 @@ pd_mirror_session_get(pd_mirror_session_get_args_t *args)
 telemetry_export_dest *_export_destinations[IPFIX_HBM_MEMSIZE/IPFIX_BUFSIZE];
 hal_ret_t
 // pd_collector_create(collector_config_t *cfg)
-pd_collector_create(pd_collector_create_args_t *c_args)
+pd_collector_create(pd_func_args_t *pd_func_args)
 {
+    pd_collector_create_args_t *c_args = pd_func_args->pd_collector_create;
     collector_config_t *cfg = c_args->cfg;
     pd_l2seg_get_fromcpu_vlanid_args_t args;
+    pd_func_args_t pd_func_args1 = {0};
     HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
     cfg->exporter_id);
     // Id is less than max size allows.
@@ -191,8 +198,9 @@ pd_collector_create(pd_collector_create_args_t *c_args)
 
     args.l2seg = cfg->l2seg;
     args.vid = &cfg->vlan;
+    pd_func_args1.pd_l2seg_get_fromcpu_vlanid = &args;
     // if (pd_l2seg_get_fromcpu_vlanid(cfg->l2seg, &cfg->vlan) != HAL_RET_OK)
-    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, (void *)&args) != HAL_RET_OK) {
+    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, &pd_func_args1) != HAL_RET_OK) {
         HAL_TRACE_DEBUG("{}: Could not retrieve CPU VLAN", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
@@ -343,7 +351,7 @@ telemetry_export_dest::commit()
 }
 
 hal_ret_t
-pd_flow_monitor_rule_create(pd_flow_monitor_rule_create_args_t *args)
+pd_flow_monitor_rule_create(pd_func_args_t *pd_func_args)
 {
     // TODO: Add rules to itree
     hal_ret_t ret = HAL_RET_OK;
@@ -352,7 +360,7 @@ pd_flow_monitor_rule_create(pd_flow_monitor_rule_create_args_t *args)
 }
 
 hal_ret_t
-pd_flow_monitor_rule_delete(pd_flow_monitor_rule_delete_args_t *args)
+pd_flow_monitor_rule_delete(pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -360,7 +368,7 @@ pd_flow_monitor_rule_delete(pd_flow_monitor_rule_delete_args_t *args)
 }
 
 hal_ret_t
-pd_flow_monitor_rule_get(pd_flow_monitor_rule_get_args_t *args)
+pd_flow_monitor_rule_get(pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -374,10 +382,10 @@ program_drop_stats_actiondata_table (drop_stats_actiondata *data,
     hal_ret_t   ret = HAL_RET_OK;
     sdk_ret_t   sdk_ret;
     tcam        *tcam;
-    
+
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
-    
+
     data->drop_stats_action_u.drop_stats_drop_stats.mirror_en = reason;
     data->drop_stats_action_u.drop_stats_drop_stats.mirror_session_id = sessid_bitmap;
     data->actionid = DROP_STATS_DROP_STATS_ID;
@@ -398,12 +406,13 @@ end:
     if (ret != HAL_RET_OK) goto end;
 
 hal_ret_t
-pd_drop_monitor_rule_create(pd_drop_monitor_rule_create_args_t *args)
+pd_drop_monitor_rule_create(pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_drop_monitor_rule_create_args_t *args = pd_func_args->pd_drop_monitor_rule_create;
     uint8_t                 sessid_bitmap = 0;
     drop_stats_actiondata   data = { 0 };
-    
+
     for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
         sessid_bitmap |= args->rule->mirror_destinations[i] ? (1 << i) : 0;
     }
@@ -437,7 +446,7 @@ end:
 }
 
 hal_ret_t
-pd_drop_monitor_rule_delete(pd_drop_monitor_rule_delete_args_t *args)
+pd_drop_monitor_rule_delete(pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -445,7 +454,7 @@ pd_drop_monitor_rule_delete(pd_drop_monitor_rule_delete_args_t *args)
 }
 
 hal_ret_t
-pd_drop_monitor_rule_get(pd_drop_monitor_rule_get_args_t *args)
+pd_drop_monitor_rule_get(pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
 

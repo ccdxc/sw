@@ -42,7 +42,7 @@ rw_entry_pd_compare_key_func (void *key1, void *key2)
 }
 
 //-----------------------------------------------------------------------------
-// Find an entry 
+// Find an entry
 //-----------------------------------------------------------------------------
 hal_ret_t
 rw_entry_find (pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
@@ -60,7 +60,7 @@ rw_entry_find (pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
 		ret = HAL_RET_ENTRY_NOT_FOUND;
 	} else {
         buf.write("PD-RW: Found rw_id: {} for [ rw_act: {}, ",
-                (*rwe)->rw_idx, 
+                (*rwe)->rw_idx,
                 rw_key->rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
@@ -74,7 +74,7 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// Allocate an entry 
+// Allocate an entry
 //-----------------------------------------------------------------------------
 hal_ret_t
 rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
@@ -85,7 +85,7 @@ rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     indexer::status     rs = indexer::SUCCESS;
     pd_rw_entry_t       *rwe = NULL;
     fmt::MemoryWriter   buf;
-	
+
 	if (!rw_key || !rw_idx) {
 		ret = HAL_RET_INVALID_ARG;
 		goto end;
@@ -97,7 +97,7 @@ rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
 		goto end;
 	}
     ret = HAL_RET_OK;
-	
+
 	// Allocate an id for this entry
 	if (rw_info && rw_info->with_id) {
         // Set the id
@@ -155,10 +155,10 @@ rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
 end:
 
 	return ret;
-} 
+}
 
 //-----------------------------------------------------------------------------
-// Find or Allocate an entry 
+// Find or Allocate an entry
 // - Check if entry already exists. If it exists, returns the allocated rw_idx.
 // - If it doesnt exist, allocated a new entry and allocates an index from
 //   the indexer.
@@ -183,14 +183,14 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
         buf.write("PD-RW: Usage: {} ref_cnt: {} Find/Alloc rw_id: {} for [ rw_act: {}, ",
                   g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
                   rwe->ref_cnt,
-                  rwe->rw_idx, 
+                  rwe->rw_idx,
                   rw_key->rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
         HAL_TRACE_DEBUG("{}", buf.c_str());
         goto end;
     }
-    
+
     ret = rw_entry_alloc(rw_key, NULL, rw_idx);
 
  end:
@@ -199,9 +199,10 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
 }
 
 hal_ret_t
-pd_rw_entry_find_or_alloc (pd_rw_entry_find_or_alloc_args_t *rw_args)
+pd_rw_entry_find_or_alloc (pd_func_args_t *pd_func_args)
 {
     pd_rw_entry_key_t   rw_key{};
+    pd_rw_entry_find_or_alloc_args_t *rw_args = pd_func_args->pd_rw_entry_find_or_alloc;
     pd_rw_entry_args_t *args = rw_args->args;
     uint32_t *rw_idx = rw_args->rw_idx;
 
@@ -220,7 +221,7 @@ pd_rw_entry_find_or_alloc (pd_rw_entry_find_or_alloc_args_t *rw_args)
 // Delete the rw entry
 //-----------------------------------------------------------------------------
 hal_ret_t
-rw_entry_delete (pd_rw_entry_key_t *rw_key) 
+rw_entry_delete (pd_rw_entry_key_t *rw_key)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_rw_entry_t       *rwe = NULL;
@@ -245,7 +246,7 @@ rw_entry_delete (pd_rw_entry_key_t *rw_key)
     buf.write("PD-RW: Usage: {} ref_cnt: {} Delete rw_id: {} for [ rw_act: {}, ",
             g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
             rwe->ref_cnt,
-            rwe->rw_idx, 
+            rwe->rw_idx,
             rw_key->rw_act);
     buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
     buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
@@ -283,7 +284,7 @@ end:
 // Deprogramming the hw entry
 //-----------------------------------------------------------------------------
 hal_ret_t
-rw_pd_depgm_rw_tbl (pd_rw_entry_t *rwe) 
+rw_pd_depgm_rw_tbl (pd_rw_entry_t *rwe)
 {
     hal_ret_t            ret = HAL_RET_OK;
     sdk_ret_t            sdk_ret;
@@ -297,13 +298,13 @@ rw_pd_depgm_rw_tbl (pd_rw_entry_t *rwe)
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         buf.write("PD-RW: Unable to de-program at rw_id: {} for [ rw_act: {}, ",
-                  rwe->rw_idx, 
+                  rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
     } else {
         buf.write("PD-RW: De-Programmed at rw_id: {} for [ rw_act: {}, ",
-                  rwe->rw_idx, 
+                  rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
@@ -326,7 +327,7 @@ rw_pd_pgm_rw_tbl (pd_rw_entry_t *rwe)
     fmt::MemoryWriter    buf;
 
     memset(&data, 0, sizeof(data));
-    
+
 
     rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
     HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
@@ -340,13 +341,13 @@ rw_pd_pgm_rw_tbl (pd_rw_entry_t *rwe)
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         buf.write("PD-RW: Unable to program at rw_id: {} for [ rw_act: {}, ",
-                  rwe->rw_idx, 
+                  rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
     } else {
         buf.write("PD-RW: Programmed at rw_id: {} for [ rw_act: {}, ",
-                  rwe->rw_idx, 
+                  rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));

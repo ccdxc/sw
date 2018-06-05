@@ -105,6 +105,7 @@ hal_inject_arp_request_pkt(const l2seg_t *segment,
     cpu_to_p4plus_header_t      cpu_hdr = {0};
     p4plus_to_p4_header_t       p4plus_hdr = {0};
     pd_l2seg_get_fromcpu_vlanid_args_t   l2_args;
+    pd_func_args_t pd_func_args = {0};
     hal_ret_t                   ret = HAL_RET_OK;
 
 
@@ -116,8 +117,9 @@ hal_inject_arp_request_pkt(const l2seg_t *segment,
     l2_args.l2seg = (l2seg_t*)(segment);
     l2_args.vid = &(cpu_hdr.hw_vlan_id);
 
+    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &l2_args;
     if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                      (void*)&l2_args) == HAL_RET_OK) {
+                                      &pd_func_args) == HAL_RET_OK) {
         cpu_hdr.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
     }
 
@@ -137,6 +139,7 @@ hal_inject_arp_response_pkt(const l2seg_t *segment,
     cpu_to_p4plus_header_t      cpu_hdr = {0};
     p4plus_to_p4_header_t       p4plus_hdr = {0};
     pd_l2seg_get_fromcpu_vlanid_args_t   l2_args;
+    pd_func_args_t pd_func_args = {0};
     hal_ret_t                   ret = HAL_RET_OK;
 
 
@@ -148,8 +151,9 @@ hal_inject_arp_response_pkt(const l2seg_t *segment,
     l2_args.l2seg = (l2seg_t*)(segment);
     l2_args.vid = &(cpu_hdr.hw_vlan_id);
 
+    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &l2_args;
     if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                      (void*)&l2_args) == HAL_RET_OK) {
+                                      &pd_func_args) == HAL_RET_OK) {
         cpu_hdr.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
     }
 

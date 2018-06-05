@@ -11,9 +11,10 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_table_metadata_get (pd_table_metadata_get_args_t *args)
+pd_table_metadata_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_table_metadata_get_args_t *args = pd_func_args->pd_table_metadata_get;
     directmap *dm = NULL;
     tcam *tm = NULL;
     sdk::table::hash *h = NULL;
@@ -299,9 +300,10 @@ pd_table_flow_get_entries (uint32_t table_id, TableResponse *rsp)
 }
 
 hal_ret_t
-pd_table_get (pd_table_get_args_t *args)
+pd_table_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_table_get_args_t *args = pd_func_args->pd_table_get;
     TableSpec *spec = args->spec;
     TableResponse *rsp = args->rsp;
     TableKind kind = table::TABLE_NONE;

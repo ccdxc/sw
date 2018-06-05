@@ -71,6 +71,7 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
 #endif
 
     hal::pd::pd_cpupkt_send_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
     args.ctxt = asesq_ctx;
     args.type = types::WRING_TYPE_ASESQ;
     args.queue_id = id;
@@ -82,7 +83,8 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
     args.qtype = 0;
     args.qid = id;
     args.ring_number = TCP_SCHED_RING_ASESQ;
-    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, (void *)&args);
+    pd_func_args.pd_cpupkt_send = &args;
+    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
 #if 0
     return hal::pd::cpupkt_send(asesq_ctx,
                                 types::WRING_TYPE_ASESQ,
@@ -286,7 +288,9 @@ tls_api_init(void)
     // Initialize pkt send ctxt
     if (asesq_ctx == NULL)   {
         hal::pd::pd_cpupkt_ctxt_alloc_init_args_t args;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, (void *)&args);
+        hal::pd::pd_func_args_t pd_func_args = {0};
+        pd_func_args.pd_cpupkt_ctxt_alloc_init = &args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, &pd_func_args);
         // asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
         asesq_ctx = args.ctxt;
         HAL_ASSERT_RETURN(asesq_ctx != NULL, HAL_RET_NO_RESOURCE);
@@ -344,10 +348,12 @@ tls_api_start_connection(uint32_t enc_qid,
     // Start connection towards decrypt
     // register this qid to send context
     hal::pd::pd_cpupkt_register_tx_queue_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
     args.ctxt = asesq_ctx;
     args.type = types::WRING_TYPE_ASESQ;
     args.queue_id = dec_qid;
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&args);
+    pd_func_args.pd_cpupkt_register_tx_queue = &args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, &pd_func_args);
 
     conn_args.id = dec_qid;
     conn_args.oflow_id = enc_qid;
@@ -367,7 +373,7 @@ tls_api_data_receive(uint32_t qid, uint8_t* data, size_t len)
 }
 
 hal_ret_t
-tls_api_process_hw_oper_done(uint32_t qid) 
+tls_api_process_hw_oper_done(uint32_t qid)
 {
     return g_ssl_helper.process_hw_oper_done(qid);
 }

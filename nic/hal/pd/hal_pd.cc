@@ -12,8 +12,10 @@ extern bool gl_super_user;
 
 namespace pd {
 
-pd_call_t    *g_pd_calls;
+// pd_call_t   *g_pd_calls;
+pd_func_t   *g_pd_funcs;
 
+#if 0
 #define PD_SYMBOL_LOAD(PD_FUNC_ID, NAME)                                       \
 {                                                                              \
     g_pd_calls[PD_FUNC_ID].NAME =                                              \
@@ -24,6 +26,26 @@ pd_call_t    *g_pd_calls;
                         dlsym_error);                                          \
         g_pd_calls[PD_FUNC_ID].NAME =                                          \
             (NAME ## _t)dlsym(hal_cfg->pd_stub_so, #NAME);                     \
+        dlsym_error = dlerror();                                               \
+        if (dlsym_error) {                                                     \
+            HAL_TRACE_ERR("Failed to load symbol from PD stub lib {}:{}",      \
+                          #NAME, dlsym_error);                                 \
+            HAL_ASSERT(0);                                                     \
+        }                                                                      \
+    }                                                                          \
+}
+#endif
+
+#define PD_FUNC_LOAD(PD_FUNC_ID, NAME)                                         \
+{                                                                              \
+    g_pd_funcs[PD_FUNC_ID] =                                                   \
+        (pd_func_t)dlsym(hal_cfg->pd_so, #NAME);                               \
+    dlsym_error = dlerror();                                                   \
+    if (dlsym_error) {                                                         \
+        HAL_TRACE_DEBUG("Failed to load symbol from PD lib {}:{}", #NAME,      \
+                        dlsym_error);                                          \
+        g_pd_funcs[PD_FUNC_ID] =                                               \
+            (pd_func_t)dlsym(hal_cfg->pd_stub_so, #NAME);                      \
         dlsym_error = dlerror();                                               \
         if (dlsym_error) {                                                     \
             HAL_TRACE_ERR("Failed to load symbol from PD stub lib {}:{}",      \
@@ -60,6 +82,373 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     hal_ret_t       ret = HAL_RET_OK;
     const char*     dlsym_error = NULL;
 
+    g_pd_funcs = (pd_func_t *)HAL_CALLOC(HAL_MEM_ALLOC_PD_FUNCS,
+                                       PD_FUNC_ID_MAX * sizeof(pd_func_t));
+
+    // init pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_MEM_INIT, pd_mem_init);
+    PD_FUNC_LOAD(PD_FUNC_ID_MEM_INIT_PHASE2, pd_mem_init_phase2);
+    PD_FUNC_LOAD(PD_FUNC_ID_PGM_DEF_ENTRIES, pd_pgm_def_entries);
+    PD_FUNC_LOAD(PD_FUNC_ID_PGM_DEF_P4PLUS_ENTRIES, pd_pgm_def_p4plus_entries);
+
+    // vrf pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_CREATE, pd_vrf_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_RESTORE, pd_vrf_restore);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_DELETE, pd_vrf_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_UPDATE, pd_vrf_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_MEM_FREE, pd_vrf_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_MAKE_CLONE, pd_vrf_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_GET, pd_vrf_get);
+
+    // l2seg pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_CREATE, pd_l2seg_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_RESTORE, pd_l2seg_restore);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_DELETE, pd_l2seg_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_GET, pd_l2seg_get);
+
+    // misc apis for vrf and l2seg
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, pd_get_object_from_flow_lkupid);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, pd_l2seg_get_flow_lkupid);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_GET_FLOW_LKPID, pd_vrf_get_lookup_id);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, pd_l2seg_get_fromcpu_vlanid);
+    PD_FUNC_LOAD(PD_FUNC_ID_VRF_GET_FRCPU_VLANID, pd_vrf_get_fromcpu_vlanid);
+
+    // nwsec profile pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_NWSEC_PROF_CREATE, pd_nwsec_profile_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_NWSEC_PROF_DELETE, pd_nwsec_profile_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_NWSEC_PROF_UPDATE, pd_nwsec_profile_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_NWSEC_PROF_MEM_FREE, pd_nwsec_profile_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_NWSEC_PROF_MAKE_CLONE, pd_nwsec_profile_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_NWSEC_PROF_RESTORE, pd_nwsec_profile_restore);
+    PD_FUNC_LOAD(PD_FUNC_ID_NWSEC_PROF_GET, pd_nwsec_profile_get);
+
+    // dos policy pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_DOS_POLICY_CREATE, pd_dos_policy_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_DOS_POLICY_DELETE, pd_dos_policy_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_DOS_POLICY_UPDATE, pd_dos_policy_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_DOS_POLICY_MEM_FREE, pd_dos_policy_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_DOS_POLICY_MAKE_CLONE, pd_dos_policy_make_clone);
+
+    // lif pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_CREATE, pd_lif_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_DELETE, pd_lif_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_UPDATE, pd_lif_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_MEM_FREE, pd_lif_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_MAKE_CLONE, pd_lif_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_GET, pd_lif_get);
+
+    // if pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_CREATE, pd_if_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_DELETE, pd_if_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_UPDATE, pd_if_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_MEM_FREE, pd_if_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_MAKE_CLONE, pd_if_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_NWSEC_UPDATE, pd_if_nwsec_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_LIF_UPDATE, pd_if_lif_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_GET, pd_if_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_RESTORE, pd_if_restore);
+
+    // ep pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_CREATE, pd_ep_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_DELETE, pd_ep_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_UPDATE, pd_ep_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_MEM_FREE, pd_ep_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_MAKE_CLONE, pd_ep_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_GET, pd_ep_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_RESTORE, pd_ep_restore);
+
+    // session pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_SESSION_CREATE, pd_session_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_SESSION_DELETE, pd_session_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_SESSION_UPDATE, pd_session_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_SESSION_GET, pd_session_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_BYPASS_FLOWID_GET, pd_get_cpu_bypass_flowid);
+
+    // tlscb pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_TLSCB_CREATE, pd_tlscb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_TLSCB_DELETE, pd_tlscb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_TLSCB_UPDATE, pd_tlscb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_TLSCB_GET, pd_tlscb_get);
+
+    // tcpcb pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_CREATE, pd_tcpcb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_DELETE, pd_tcpcb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_UPDATE, pd_tcpcb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_GET, pd_tcpcb_get);
+
+    // ipseccb pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_CREATE, pd_ipseccb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_DELETE, pd_ipseccb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_UPDATE, pd_ipseccb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_GET, pd_ipseccb_get);
+
+    // ipseccb_decrypt pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_DECRYPT_CREATE, pd_ipseccb_decrypt_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_DECRYPT_DELETE, pd_ipseccb_decrypt_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE, pd_ipseccb_decrypt_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_DECRYPT_GET, pd_ipseccb_decrypt_get);
+
+    // ipsec_sa_encrypt pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_CREATE, pd_ipsec_encrypt_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE, pd_ipsec_encrypt_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE, pd_ipsec_encrypt_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_GET, pd_ipsec_encrypt_get);
+
+    // ipsec_sa_decrypt pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_CREATE, pd_ipsec_decrypt_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_DELETE, pd_ipsec_decrypt_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE, pd_ipsec_decrypt_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_GET, pd_ipsec_decrypt_get);
+
+    // l4lb
+    PD_FUNC_LOAD(PD_FUNC_ID_L4LB_CREATE, pd_l4lb_create);
+
+    // cpucb
+    PD_FUNC_LOAD(PD_FUNC_ID_CPUCB_CREATE, pd_cpucb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPUCB_DELETE, pd_cpucb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPUCB_UPDATE, pd_cpucb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPUCB_GET, pd_cpucb_get);
+
+    // rawrcb
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWRCB_CREATE, pd_rawrcb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWRCB_DELETE, pd_rawrcb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWRCB_UPDATE, pd_rawrcb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWRCB_GET, pd_rawrcb_get);
+
+
+    // rawccb
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWCCB_CREATE, pd_rawccb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWCCB_DELETE, pd_rawccb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWCCB_UPDATE, pd_rawccb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_RAWCCB_GET, pd_rawccb_get);
+
+    // proxyrcb
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYRCB_CREATE, pd_proxyrcb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYRCB_DELETE, pd_proxyrcb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYRCB_UPDATE, pd_proxyrcb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYRCB_GET, pd_proxyrcb_get);
+
+    // proxyccb
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYCCB_CREATE, pd_proxyccb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYCCB_DELETE, pd_proxyccb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYCCB_UPDATE, pd_proxyccb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROXYCCB_GET, pd_proxyccb_get);
+
+    // qos class
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_CREATE, pd_qos_class_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_RESTORE, pd_qos_class_restore);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_DELETE, pd_qos_class_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_UPDATE, pd_qos_class_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE,
+                   pd_qos_class_periodic_stats_update);
+
+    // copp
+    PD_FUNC_LOAD(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_COPP_RESTORE, pd_copp_restore);
+    PD_FUNC_LOAD(PD_FUNC_ID_COPP_DELETE, pd_copp_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_COPP_UPDATE, pd_copp_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_COPP_MAKE_CLONE, pd_copp_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_COPP_MEM_FREE, pd_copp_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_COPP_GET, pd_copp_get);
+
+    // acl
+    PD_FUNC_LOAD(PD_FUNC_ID_ACL_CREATE, pd_acl_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACL_RESTORE, pd_acl_restore);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACL_DELETE, pd_acl_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACL_UPDATE, pd_acl_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACL_MEM_FREE, pd_acl_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACL_MAKE_CLONE, pd_acl_make_clone);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACL_GET, pd_acl_get);
+
+    // wring
+    PD_FUNC_LOAD(PD_FUNC_ID_WRING_CREATE, pd_wring_create);
+    // PD_FUNC_LOAD(PD_FUNC_ID_WRING_DELETE, pd_wring_delete);
+    // PD_FUNC_LOAD(PD_FUNC_ID_WRING_UPDATE, pd_wring_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_WRING_GET_ENTRY, pd_wring_get_entry);
+    PD_FUNC_LOAD(PD_FUNC_ID_WRING_GET_META, pd_wring_get_meta);
+    PD_FUNC_LOAD(PD_FUNC_ID_WRING_SET_META, pd_wring_set_meta);
+
+    // mirror session
+    PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_CREATE, pd_mirror_session_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_DELETE, pd_mirror_session_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_GET, pd_mirror_session_get);
+
+    // flow monitoring rule
+    PD_FUNC_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, pd_flow_monitor_rule_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, pd_flow_monitor_rule_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_GET, pd_flow_monitor_rule_get);
+
+    // drop monitoring rule
+    PD_FUNC_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, pd_drop_monitor_rule_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, pd_drop_monitor_rule_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_GET, pd_drop_monitor_rule_get);
+
+    // collector
+    PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_CREATE, pd_collector_create);
+
+    // mc entry
+    PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_CREATE, pd_mc_entry_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_DELETE, pd_mc_entry_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_UPDATE, pd_mc_entry_update);
+
+    // flow get
+    PD_FUNC_LOAD(PD_FUNC_ID_FLOW_GET, pd_flow_get);
+
+    // l2seg-uplink
+    PD_FUNC_LOAD(PD_FUNC_ID_ADD_L2SEG_UPLINK, pd_add_l2seg_uplink);
+    PD_FUNC_LOAD(PD_FUNC_ID_DEL_L2SEG_UPLINK, pd_del_l2seg_uplink);
+
+    // debug cli
+    PD_FUNC_LOAD(PD_FUNC_ID_DEBUG_CLI_READ, pd_debug_cli_read);
+    PD_FUNC_LOAD(PD_FUNC_ID_DEBUG_CLI_WRITE, pd_debug_cli_write);
+    PD_FUNC_LOAD(PD_FUNC_ID_MPU_TRACE_ENABLE, pd_mpu_trace_enable);
+    PD_FUNC_LOAD(PD_FUNC_ID_TABLE_METADATA_GET, pd_table_metadata_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_TABLE_GET, pd_table_get);
+
+    // apis
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_GET_HW_LIF_ID, pd_if_get_hw_lif_id);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_GET_LPORT_ID, pd_if_get_lport_id);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_GET_TM_OPORT, pd_if_get_tm_oport);
+
+    // twice nat
+    PD_FUNC_LOAD(PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, pd_rw_entry_find_or_alloc);
+    PD_FUNC_LOAD(PD_FUNC_ID_TWICE_NAT_ADD, pd_twice_nat_add);
+    PD_FUNC_LOAD(PD_FUNC_ID_TWICE_NAT_DEL, pd_twice_nat_del);
+
+    // qos
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_QOS_CLASSID, pd_qos_class_get_qos_class_id);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_GET_ADMIN_COS, pd_qos_class_get_admin_cos);
+
+    // aol
+    PD_FUNC_LOAD(PD_FUNC_ID_DESC_AOL_GET, pd_descriptor_aol_get);
+
+    // crypto
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_ALLOC_KEY, pd_crypto_alloc_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_FREE_KEY, pd_crypto_free_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_WRITE_KEY, pd_crypto_write_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_READ_KEY, pd_crypto_read_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, pd_crypto_asym_alloc_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, pd_crypto_asym_free_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, pd_crypto_asym_write_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_ASYM_READ_KEY, pd_crypto_asym_read_key);
+
+    // barco
+    PD_FUNC_LOAD(PD_FUNC_ID_OPAQUE_TAG_ADDR, pd_get_opaque_tag_addr);
+
+    // stats
+    PD_FUNC_LOAD(PD_FUNC_ID_DROP_STATS_GET, pd_drop_stats_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_EGRESS_DROP_STATS_GET, pd_egress_drop_stats_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_TABLE_STATS_GET, pd_table_stats_get);
+
+    // oifl
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_CREATE, pd_oif_list_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_CREATE_BLOCK, pd_oif_list_create_block);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_DELETE, pd_oif_list_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_DELETE_BLOCK, pd_oif_list_delete_block);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_ATTACH, pd_oif_list_attach);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_DETACH, pd_oif_list_detach);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_ADD_OIF, pd_oif_list_add_oif);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_ADD_QP_OIF, pd_oif_list_add_qp_oif);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_REM_OIF, pd_oif_list_remove_oif);
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_IS_MEMBER, pd_oif_list_is_member);
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_NUM_OIFS, pd_oif_list_get_num_oifs);
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_OIF_ARRAY, pd_oif_list_get_oif_array);
+    PD_FUNC_LOAD(PD_FUNC_ID_SET_HONOR_ING, pd_oif_list_set_honor_ingress);
+    PD_FUNC_LOAD(PD_FUNC_ID_CLR_HONOR_ING, pd_oif_list_clr_honor_ingress);
+
+    // tnnl if
+    PD_FUNC_LOAD(PD_FUNC_ID_TNNL_IF_GET_RW_IDX, pd_tunnelif_get_rw_idx);
+
+    // cpu
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_ALLOC_INIT, pd_cpupkt_ctxt_alloc_init);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_REG_RXQ, pd_cpupkt_register_rx_queue);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_REG_TXQ, pd_cpupkt_register_tx_queue);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_UNREG_TXQ, pd_cpupkt_unregister_tx_queue);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_POLL_REC, pd_cpupkt_poll_receive);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_FREE, pd_cpupkt_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_SEND, pd_cpupkt_send);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_PAGE_ALLOC, pd_cpupkt_page_alloc);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_DESCR_ALLOC, pd_cpupkt_descr_alloc);
+    PD_FUNC_LOAD(PD_FUNC_ID_PGM_SEND_RING_DBELL, pd_cpupkt_program_send_ring_doorbell);
+
+    // rdma
+    PD_FUNC_LOAD(PD_FUNC_ID_RXDMA_TABLE_ADD, pd_rxdma_table_entry_add);
+    PD_FUNC_LOAD(PD_FUNC_ID_TXDMA_TABLE_ADD, pd_txdma_table_entry_add);
+
+    // lif
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_GET_LPORTID, pd_lif_get_lport_id);
+
+    // p4pt
+    PD_FUNC_LOAD(PD_FUNC_ID_P4PT_INIT, p4pt_pd_init);
+
+    // eth
+    PD_FUNC_LOAD(PD_FUNC_ID_RSS_PARAMS_TABLE_ADD, pd_rss_params_table_entry_add);
+    PD_FUNC_LOAD(PD_FUNC_ID_RSS_INDIR_TABLE_ADD, pd_rss_indir_table_entry_add);
+
+    // asic
+    PD_FUNC_LOAD(PD_FUNC_ID_ASIC_INIT, pd_asic_init);
+
+    PD_FUNC_LOAD(PD_FUNC_ID_TABLE_PROPERTIES_GET, pd_table_properties_get);
+
+    // capri
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_START_OFFSET, pd_get_start_offset);
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_REG_SIZE, pd_get_size_kb);
+    PD_FUNC_LOAD(PD_FUNC_ID_PUSH_QSTATE, pd_push_qstate_to_capri);
+    PD_FUNC_LOAD(PD_FUNC_ID_CLEAR_QSTATE, pd_clear_qstate);
+    PD_FUNC_LOAD(PD_FUNC_ID_READ_QSTATE, pd_read_qstate);
+    PD_FUNC_LOAD(PD_FUNC_ID_WRITE_QSTATE, pd_write_qstate);
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_PC_OFFSET, pd_get_pc_offset);
+    PD_FUNC_LOAD(PD_FUNC_ID_HBM_READ, pd_capri_hbm_read_mem);
+    PD_FUNC_LOAD(PD_FUNC_ID_HBM_WRITE, pd_capri_hbm_write_mem);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROG_LBL_TO_OFFSET, pd_capri_program_label_to_offset);
+    PD_FUNC_LOAD(PD_FUNC_ID_PXB_CFG_LIF_BDF, pd_capri_pxb_cfg_lif_bdf);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROG_TO_BASE_ADDR, pd_capri_program_to_base_addr);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET, pd_capri_barco_asym_req_descr_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, pd_capri_barco_symm_req_descr_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_RING_META_GET, pd_capri_barco_ring_meta_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, pd_capri_barco_asym_ecc_point_mul_p256);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, pd_capri_barco_asym_ecdsa_p256_sig_gen);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, pd_capri_barco_asym_ecdsa_p256_sig_verify);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, pd_capri_barco_asym_rsa2k_decrypt);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, pd_capri_barco_asym_rsa2k_crt_decrypt);
+    PD_FUNC_LOAD(PD_FUNC_ID_ASYM_RSA2K_SETUP_SIG_GEN_PRIV_KEY, pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
+
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request)
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ, pd_capri_barco_asym_add_pend_req);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, pd_capri_barco_asym_poll_pend_req);
+
+    // hw clock to sw clock conversion api
+    PD_FUNC_LOAD(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
+    PD_FUNC_LOAD(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, pd_conv_sw_clock_to_hw_clock);
+    PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
+
+    // gft
+    PD_FUNC_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE,
+                   pd_gft_exact_match_profile_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE,
+                   pd_gft_hdr_group_xposition_profile_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE,
+                   pd_gft_exact_match_flow_entry_create);
+
+    // slab
+    PD_FUNC_LOAD(PD_FUNC_ID_GET_SLAB, pd_get_slab);
+
+    // swphv
+    PD_FUNC_LOAD(PD_FUNC_ID_SWPHV_INJECT, pd_swphv_inject);
+    PD_FUNC_LOAD(PD_FUNC_ID_SWPHV_GET_STATE, pd_swphv_get_state);
+
+#if 0
     g_pd_calls = (pd_call_t *)HAL_CALLOC(HAL_MEM_ALLOC_PD_CALLS,
                                        PD_FUNC_ID_MAX * sizeof(pd_call_t));
 
@@ -425,6 +814,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     // swphv
     PD_SYMBOL_LOAD(PD_FUNC_ID_SWPHV_INJECT, pd_swphv_inject);
     PD_SYMBOL_LOAD(PD_FUNC_ID_SWPHV_GET_STATE, pd_swphv_get_state);
+#endif
 
     return ret;
 }
@@ -446,10 +836,14 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 }
 
 hal_ret_t
-hal_pd_call (pd_func_id_t pd_func_id, void *args)
+hal_pd_call (pd_func_id_t pd_func_id, pd_func_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
+
+    ret = g_pd_funcs[pd_func_id](args);
+
+#if 0
     // init pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_MEM_INIT, pd_mem_init);
     PD_SYMBOL_CALL(PD_FUNC_ID_MEM_INIT_PHASE2, pd_mem_init_phase2);
@@ -815,6 +1209,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_SWPHV_GET_STATE, pd_swphv_get_state);
 
     HAL_ASSERT(0);
+#endif
     return ret;
 }
 
@@ -866,6 +1261,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_pgm_def_entries_args_t           pgm_def_args;
     pd_pgm_def_p4plus_entries_args_t    pgm_p4p_args;
     pd_clock_delta_comp_args_t          clock_args;
+    pd_func_args_t                      pd_func_args = {0};
 
     HAL_ASSERT(hal_cfg != NULL);
 
@@ -884,7 +1280,8 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     }
 
     mem_init_args.cfg_path = hal_cfg->cfg_path.c_str();
-    ret = hal_pd_call(PD_FUNC_ID_MEM_INIT, (void *)&mem_init_args);
+    pd_func_args.pd_mem_init = &mem_init_args;
+    ret = hal_pd_call(PD_FUNC_ID_MEM_INIT, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL PD init failed, err : {}", ret);
         goto cleanup;
@@ -919,27 +1316,31 @@ hal_pd_init (hal_cfg_t *hal_cfg)
 
     ph2_args.cfg_path = mem_init_args.cfg_path;
     ph2_args.hal_cfg = hal_cfg;
-    ret = hal_pd_call(PD_FUNC_ID_MEM_INIT_PHASE2, (void *)&ph2_args);
+    pd_func_args.pd_mem_init_phase2 = &ph2_args;
+    ret = hal_pd_call(PD_FUNC_ID_MEM_INIT_PHASE2, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL PD init failed, err : {}", ret);
         goto cleanup;
     }
 
     pgm_def_args.hal_cfg = hal_cfg;
-    ret = hal_pd_call(PD_FUNC_ID_PGM_DEF_ENTRIES, (void *)&pgm_def_args);
+    pd_func_args.pd_pgm_def_entries = &pgm_def_args;
+    ret = hal_pd_call(PD_FUNC_ID_PGM_DEF_ENTRIES, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL Programming default entries, err : {}", ret);
         goto cleanup;
     }
 
     pgm_p4p_args.hal_cfg = hal_cfg;
-    ret = hal_pd_call(PD_FUNC_ID_PGM_DEF_P4PLUS_ENTRIES, (void *)&pgm_p4p_args);
+    pd_func_args.pd_pgm_def_p4plus_entries = &pgm_p4p_args;
+    ret = hal_pd_call(PD_FUNC_ID_PGM_DEF_P4PLUS_ENTRIES, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL Programming default p4plus entries failed, err : {}", ret);
         goto cleanup;
     }
 
-    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, (void *)&clock_args) == HAL_RET_OK);
+    pd_func_args.pd_clock_delta_comp = &clock_args;
+    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, &pd_func_args) == HAL_RET_OK);
 
     return HAL_RET_OK;
 
@@ -956,6 +1357,7 @@ pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t args = {0};
+    pd_func_args_t pd_func_args = {0};
 
     args.key_idx = key_idx;
     args.p = n;
@@ -972,7 +1374,8 @@ pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
     args.async_args.async_en = async;
     args.async_args.unique_key = unique_key;
 
-    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, (void *)&args);
+    pd_func_args.pd_capri_barco_asym_ecdsa_p256_sig_gen = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, &pd_func_args);
     if(ret != HAL_RET_OK) {
         return -1;
     }
@@ -987,6 +1390,7 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t args = {0};
+    pd_func_args_t pd_func_args = {0};
 
     args.p = p;
     args.n = n;
@@ -1002,7 +1406,8 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     args.async_args.async_en = async;
     args.async_args.unique_key = unique_key;
 
-    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, (void*)&args);
+    pd_func_args.pd_capri_barco_asym_ecdsa_p256_sig_verify = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, &pd_func_args);
     if (ret != HAL_RET_OK) {
         return -1;
     }
@@ -1015,6 +1420,7 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_rsa2k_encrypt_args_t args = {0};
+    pd_func_args_t pd_func_args = {0};
     args.n = n;
     args.e = e;
     args.m = m;
@@ -1022,7 +1428,8 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
     args.async_args.async_en = async;
     args.async_args.unique_key = unique_key;
 
-    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, (void*)&args);
+    pd_func_args.pd_capri_barco_asym_rsa2k_encrypt = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, &pd_func_args);
     if (ret != HAL_RET_OK) {
         return -1;
     }
@@ -1036,6 +1443,7 @@ pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_rsa2k_sig_gen_args_t args = {0};
+    pd_func_args_t pd_func_args = {0};
     args.key_idx = key_idx;
     args.n = n;
     args.d = d;
@@ -1044,7 +1452,8 @@ pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
     args.async_args.async_en = async;
     args.async_args.unique_key = unique_key;
 
-    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, (void*)&args);
+    pd_func_args.pd_capri_barco_asym_rsa2k_sig_gen = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, &pd_func_args);
     if (ret != HAL_RET_OK) {
         return -1;
     }
@@ -1058,6 +1467,7 @@ pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_rsa2k_crt_decrypt_args_t args = {0};
+    pd_func_args_t pd_func_args = {0};
     args.key_idx = key_idx;
     args.p = p;
     args.q = q;
@@ -1069,7 +1479,8 @@ pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *
     args.async_args.async_en = async;
     args.async_args.unique_key = unique_key;
 
-    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, (void*)&args);
+    pd_func_args.pd_capri_barco_asym_rsa2k_crt_decrypt = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, &pd_func_args);
     if (ret != HAL_RET_OK) {
         return -1;
     }

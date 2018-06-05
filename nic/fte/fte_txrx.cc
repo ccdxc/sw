@@ -36,7 +36,7 @@ public:
                        uint8_t* pkt, size_t pkt_len);
     hal_ret_t softq_enqueue(softq_fn_t fn, void *data);
     uint8_t get_id() const {return id_;};
-    ipc_logger *get_ipc_logger() const { return logger_; } 
+    ipc_logger *get_ipc_logger() const { return logger_; }
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -174,7 +174,7 @@ fte_execute(uint8_t fte_id, softq_fn_t fn, void *data)
             ctx->user_fn(ctx->user_data);
             ctx->done.store(true, std::memory_order_release); },
         &ctx);
-    
+
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -211,8 +211,11 @@ hal::pd::cpupkt_ctxt_t *
 fte_cpupkt_ctxt_alloc_init()
 {
     hal::pd::pd_cpupkt_ctxt_alloc_init_args_t args;
+    hal::pd::pd_func_args_t          pd_func_args = {0};
 
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, (void *)&args);
+
+    pd_func_args.pd_cpupkt_ctxt_alloc_init = &args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, &pd_func_args);
 
     return args.ctxt;
 }
@@ -232,17 +235,19 @@ inst_t::inst_t(uint8_t fte_id) :
     rflow_(NULL)
 {
     hal_ret_t ret;
+    hal::pd::pd_func_args_t          pd_func_args = {0};
 
     hal::pd::pd_cpupkt_register_rx_queue_args_t args;
     args.ctxt = arm_ctx_;
     args.type = types::WRING_TYPE_ARQRX;
     args.queue_id = fte_id;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, (void *)&args);
+    pd_func_args.pd_cpupkt_register_rx_queue = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
     // ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQRX, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
     args.type = types::WRING_TYPE_ARQTX;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, (void *)&args);
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
     // ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQTX, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
@@ -250,7 +255,8 @@ inst_t::inst_t(uint8_t fte_id) :
     tx_args.ctxt = arm_ctx_;
     tx_args.type = types::WRING_TYPE_ASQ;
     tx_args.queue_id = fte_id;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&tx_args);
+    pd_func_args.pd_cpupkt_register_tx_queue = &tx_args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, &pd_func_args);
     // ret = cpupkt_register_tx_queue(arm_ctx_, types::WRING_TYPE_ASQ, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 }
@@ -330,6 +336,7 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
 {
     HAL_TRACE_DEBUG("fte: sending pkt to id: {}", id_);
     hal::pd::pd_cpupkt_send_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
     args.ctxt = arm_ctx_;
     args.type = types::WRING_TYPE_ASQ;
     args.queue_id = id_;
@@ -342,7 +349,8 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
     args.qid = id_;
     args.ring_number = CPU_SCHED_RING_ASQ;
 
-    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, (void *)&args);
+    pd_func_args.pd_cpupkt_send = &args;
+    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
 #if 0
     return hal::pd::cpupkt_send(arm_ctx_, types::WRING_TYPE_ASQ, id_,
                                 cpu_header, p4plus_header, pkt, pkt_len,
@@ -372,7 +380,7 @@ inst_t::softq_enqueue(softq_fn_t fn, void *data)
 }
 
 //------------------------------------------------------------------------------
-// Process an event from softq 
+// Process an event from softq
 //------------------------------------------------------------------------------
 void inst_t::process_softq()
 {
@@ -397,11 +405,13 @@ void inst_t::process_arq()
 
     // read the packet
     hal::pd::pd_cpupkt_poll_receive_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
     args.ctxt = arm_ctx_;
     args.flow_miss_hdr = &cpu_rxhdr;
     args.data = &pkt;
     args.data_len = &pkt_len;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_REC, (void *)&args);
+    pd_func_args.pd_cpupkt_poll_receive = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_REC, &pd_func_args);
     // ret = hal::pd::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len);
     if (ret == HAL_RET_RETRY) {
         return;

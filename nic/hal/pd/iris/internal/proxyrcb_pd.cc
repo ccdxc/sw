@@ -23,7 +23,7 @@
 #define PROXYRCB_QSTATE_HEADER_TOTAL_SIZE   \
     (CAPRI_QSTATE_HEADER_COMMON_SIZE +      \
      (HAL_NUM_PROXYRCB_RINGS_MAX * CAPRI_QSTATE_HEADER_RING_SINGLE_SIZE))
-     
+
 
 namespace hal {
 namespace pd {
@@ -72,7 +72,7 @@ p4pd_get_proxyr_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_clear_proxyr_stats_entry(pd_proxyrcb_t* proxyrcb_pd)
 {
     proxyr_stats_err_stat_inc_d data = {0};
@@ -113,7 +113,7 @@ p4pd_proxyr_wring_eval(uint32_t qid,
     return ret;
 }
 
-static hal_ret_t 
+static hal_ret_t
 p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
                                        bool del,
                                        bool qstate_header_overwrite)
@@ -243,7 +243,7 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
         data.u.start_d.proxyrcb_deactivate = (uint8_t)~PROXYRCB_DEACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("PROXYRCB Programming stage0 at hw_addr: {:#x}", hw_addr); 
+    HAL_TRACE_DEBUG("PROXYRCB Programming stage0 at hw_addr: {:#x}", hw_addr);
     if (!p4plus_hbm_write(hw_addr, data_p, data_len,
             P4PLUS_CACHE_INVALIDATE_BOTH)) {
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for PROXYRCB");
@@ -254,7 +254,7 @@ done:
     return ret;
 }
 
-static hal_ret_t 
+static hal_ret_t
 p4pd_add_or_del_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd,
                                       bool del)
 {
@@ -290,7 +290,7 @@ p4pd_add_or_del_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd,
         data.u.flow_key_post_read_d.proxyrcb_activate = PROXYRCB_ACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("PROXYRCB Programming flow_key at hw_addr: {:#x}", hw_addr); 
+    HAL_TRACE_DEBUG("PROXYRCB Programming flow_key at hw_addr: {:#x}", hw_addr);
     if (!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)) {
         HAL_TRACE_ERR("Failed to create flow_key entry for PROXYRCB");
@@ -299,7 +299,7 @@ p4pd_add_or_del_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd,
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_add_or_del_proxyrcb_txdma_entry(pd_proxyrcb_t* proxyrcb_pd,
                                      bool del,
                                      bool qstate_header_overwrite)
@@ -321,7 +321,7 @@ cleanup:
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd)
 {
     proxyr_tx_start_d   data = {0};
@@ -352,7 +352,7 @@ p4pd_get_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd)
 {
     proxyr_flow_key_d   data = {0};
@@ -371,9 +371,9 @@ p4pd_get_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd)
      * Always copy the entire address regardless of AF
      */
     proxyrcb = proxyrcb_pd->proxyrcb;
-    memcpy(&proxyrcb->ip_sa, &data.u.flow_key_post_read_d.ip_sa, 
+    memcpy(&proxyrcb->ip_sa, &data.u.flow_key_post_read_d.ip_sa,
            sizeof(proxyrcb->ip_sa));
-    memcpy(&proxyrcb->ip_da, &data.u.flow_key_post_read_d.ip_da, 
+    memcpy(&proxyrcb->ip_da, &data.u.flow_key_post_read_d.ip_da,
            sizeof(proxyrcb->ip_da));
     proxyrcb->sport    = data.u.flow_key_post_read_d.sport;
     proxyrcb->dport    = data.u.flow_key_post_read_d.dport;
@@ -384,7 +384,7 @@ p4pd_get_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_proxyr_stats_entry(pd_proxyrcb_t* proxyrcb_pd)
 {
     proxyr_stats_err_stat_inc_d data;
@@ -412,11 +412,11 @@ p4pd_get_proxyr_stats_entry(pd_proxyrcb_t* proxyrcb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_proxyrcb_txdma_entry(pd_proxyrcb_t* proxyrcb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_proxyr_tx_stage0_entry(proxyrcb_pd);
     if (ret == HAL_RET_OK) {
         ret = p4pd_get_proxyr_flow_key_entry(proxyrcb_pd);
@@ -440,9 +440,9 @@ proxyrcb_hw_addr_t
 pd_proxyrcb_get_base_hw_addr(pd_proxyrcb_t* proxyrcb_pd)
 {
     HAL_ASSERT(NULL != proxyrcb_pd);
-    
+
     // Get the base address of PROXYR CB from LIF Manager.
-    // Set qtype and qid as 0 to get the start offset. 
+    // Set qtype and qid as 0 to get the start offset.
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_PROXYR_QTYPE, 0);
     HAL_TRACE_DEBUG("PROXYRCB received offset {:#x}", offset);
@@ -456,27 +456,27 @@ p4pd_add_or_del_proxyrcb_entry(pd_proxyrcb_t* proxyrcb_pd,
                                bool qstate_header_overwrite)
 {
     hal_ret_t   ret = HAL_RET_OK;
- 
+
     ret = p4pd_add_or_del_proxyrcb_txdma_entry(proxyrcb_pd, del,
                                                qstate_header_overwrite);
     if(ret != HAL_RET_OK) {
-        goto err;    
+        goto err;
     }
 err:
     return ret;
 }
 
 static hal_ret_t
-p4pd_get_proxyrcb_entry(pd_proxyrcb_t* proxyrcb_pd) 
+p4pd_get_proxyrcb_entry(pd_proxyrcb_t* proxyrcb_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_proxyrcb_txdma_entry(proxyrcb_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get txdma entry for proxyrcb");
-        goto err;    
+        goto err;
     }
-   
+
 err:
     /*TODO: cleanup */
     return ret;
@@ -487,9 +487,10 @@ err:
  *******************************************/
 
 hal_ret_t
-pd_proxyrcb_create (pd_proxyrcb_create_args_t *args)
+pd_proxyrcb_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_proxyrcb_create_args_t *args = pd_func_args->pd_proxyrcb_create;
     pd_proxyrcb_s           *proxyrcb_pd;
     proxyrcb_hw_id_t        hw_id = args->proxyrcb->cb_id;
     bool                    qstate_header_overwrite = false;
@@ -504,7 +505,7 @@ pd_proxyrcb_create (pd_proxyrcb_create_args_t *args)
         proxyrcb_pd = proxyrcb_pd_alloc_init(hw_id);
         if (proxyrcb_pd == NULL) {
             ret = HAL_RET_OOM;
-            goto cleanup;    
+            goto cleanup;
         }
     }
 
@@ -512,12 +513,12 @@ pd_proxyrcb_create (pd_proxyrcb_create_args_t *args)
     proxyrcb_pd->hw_addr = pd_proxyrcb_get_base_hw_addr(proxyrcb_pd);
     printf("PROXYRCB{%u} Received hw_addr: 0x%lx ",
            hw_id, proxyrcb_pd->hw_addr);
-    
+
     // program proxyrcb
     ret = p4pd_add_or_del_proxyrcb_entry(proxyrcb_pd, false,
                                        qstate_header_overwrite);
     if(ret != HAL_RET_OK) {
-        goto cleanup;    
+        goto cleanup;
     }
     // add to db
     ret = add_proxyrcb_pd_to_db(proxyrcb_pd);
@@ -548,6 +549,7 @@ pd_proxyrcb_deactivate (pd_proxyrcb_update_args_t *args)
     proxyrcb_t          curr_proxyrcb;
     pd_proxyrcb_t       curr_proxyrcb_pd;
     pd_proxyrcb_get_args_t  curr_args;
+    pd_func_args_t      pd_func_args = {0};
     proxyrcb_t*         proxyrcb = args->proxyrcb;
 
     pd_proxyrcb_get_args_init(&curr_args);
@@ -560,31 +562,33 @@ pd_proxyrcb_deactivate (pd_proxyrcb_update_args_t *args)
     curr_proxyrcb_pd.hw_addr = pd_proxyrcb_get_base_hw_addr(&curr_proxyrcb_pd);
     HAL_TRACE_DEBUG("PROXYRCB pd deactivate for id: {} hw_addr {:#x}",
                     proxyrcb->cb_id,  curr_proxyrcb_pd.hw_addr);
-    ret = pd_proxyrcb_get(&curr_args);
+    pd_func_args.pd_proxyrcb_get = &curr_args;
+    ret = pd_proxyrcb_get(&pd_func_args);
     if (ret == HAL_RET_OK) {
         ret = p4pd_add_or_del_proxyrcb_entry(&curr_proxyrcb_pd, true, false);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to deactivate proxyrcb entry"); 
+            HAL_TRACE_ERR("Failed to deactivate proxyrcb entry");
         }
     }
-    
+
     return ret;
 }
 
 hal_ret_t
-pd_proxyrcb_update (pd_proxyrcb_update_args_t *args)
+pd_proxyrcb_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
-    
+    pd_proxyrcb_update_args_t *args = pd_func_args->pd_proxyrcb_update;
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     proxyrcb_t      *proxyrcb = args->proxyrcb;
     pd_proxyrcb_t   *proxyrcb_pd = (pd_proxyrcb_t*)proxyrcb->pd;
 
     HAL_TRACE_DEBUG("PROXYRCB pd update for id: {}", proxyrcb_pd->hw_id);
-    
+
     /*
      * First, deactivate the current proxyrcb before programming
      * new values.
@@ -611,26 +615,27 @@ hal_ret_t
 pd_proxyrcb_delete (pd_proxyrcb_args_t *args,
                     bool retain_in_db)
 #endif
-pd_proxyrcb_delete (pd_proxyrcb_delete_args_t *del_args)
+pd_proxyrcb_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
+    pd_proxyrcb_delete_args_t *del_args = pd_func_args->pd_proxyrcb_delete;
     pd_proxyrcb_args_t *args = del_args->r_args;
     bool retain_in_db = del_args->retain_in_db;
-    
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     proxyrcb_t      *proxyrcb = args->proxyrcb;
     pd_proxyrcb_t   *proxyrcb_pd = (pd_proxyrcb_t*)proxyrcb->pd;
 
     HAL_TRACE_DEBUG("PROXYRCB pd delete for id: {}", proxyrcb_pd->hw_id);
-    
+
     ret = p4pd_add_or_del_proxyrcb_entry(proxyrcb_pd, true, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete proxyrcb entry"); 
+        HAL_TRACE_ERR("Failed to delete proxyrcb entry");
     }
-    
+
     if (!retain_in_db) {
         del_proxyrcb_pd_from_db(proxyrcb_pd);
         proxyrcb_pd_free(proxyrcb_pd);
@@ -639,9 +644,10 @@ pd_proxyrcb_delete (pd_proxyrcb_delete_args_t *del_args)
 }
 
 hal_ret_t
-pd_proxyrcb_get (pd_proxyrcb_get_args_t *args)
+pd_proxyrcb_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_proxyrcb_get_args_t *args = pd_func_args->pd_proxyrcb_get;
     pd_proxyrcb_t           proxyrcb_pd;
     proxyrcb_hw_id_t        hw_id = args->proxyrcb->cb_id;
 
@@ -650,7 +656,7 @@ pd_proxyrcb_get (pd_proxyrcb_get_args_t *args)
     // allocate PD proxyrcb state
     proxyrcb_pd_init(&proxyrcb_pd, hw_id);
     proxyrcb_pd.proxyrcb = args->proxyrcb;
-    
+
     proxyrcb_pd.hw_addr = pd_proxyrcb_get_base_hw_addr(&proxyrcb_pd);
     HAL_TRACE_DEBUG("Received hw_addr {:#x}", proxyrcb_pd.hw_addr);
 

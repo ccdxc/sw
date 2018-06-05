@@ -18,51 +18,58 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_get_start_offset (pd_get_start_offset_args_t *args)
+pd_get_start_offset (pd_func_args_t *pd_func_args)
 {
+    pd_get_start_offset_args_t *args = pd_func_args->pd_get_start_offset;
     args->offset = get_start_offset(args->reg_name);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_get_size_kb (pd_get_size_kb_args_t *args)
+pd_get_size_kb (pd_func_args_t *pd_func_args)
 {
+    pd_get_size_kb_args_t *args = pd_func_args->pd_get_size_kb;
     args->size = get_size_kb(args->reg_name);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_push_qstate_to_capri (pd_push_qstate_to_capri_args_t *args)
+pd_push_qstate_to_capri (pd_func_args_t *pd_func_args)
 {
+    pd_push_qstate_to_capri_args_t *args = pd_func_args->pd_push_qstate_to_capri;
     push_qstate_to_capri(args->qstate, args->cos);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_clear_qstate (pd_clear_qstate_args_t *args) 
+pd_clear_qstate (pd_func_args_t *pd_func_args)
 {
+    pd_clear_qstate_args_t *args = pd_func_args->pd_clear_qstate;
     clear_qstate(args->qstate);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_read_qstate (pd_read_qstate_args_t *args)
+pd_read_qstate (pd_func_args_t *pd_func_args)
 {
+    pd_read_qstate_args_t *args = pd_func_args->pd_read_qstate;
     read_qstate(args->q_addr, args->buf, args->q_size);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_write_qstate (pd_write_qstate_args_t *args)
+pd_write_qstate (pd_func_args_t *pd_func_args)
 {
+    pd_write_qstate_args_t *args = pd_func_args->pd_write_qstate;
     write_qstate(args->q_addr, args->buf, args->q_size);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_get_pc_offset (pd_get_pc_offset_args_t *args)
+pd_get_pc_offset (pd_func_args_t *pd_func_args)
 {
-    int32_t ret = get_pc_offset(args->handle, args->prog_name, 
+    pd_get_pc_offset_args_t *args = pd_func_args->pd_get_pc_offset;
+    int32_t ret = get_pc_offset(args->handle, args->prog_name,
                                 args->label, args->offset);
 
     HAL_ASSERT(ret == 0);
@@ -71,93 +78,105 @@ pd_get_pc_offset (pd_get_pc_offset_args_t *args)
 }
 
 hal_ret_t
-pd_capri_hbm_read_mem (pd_capri_hbm_read_mem_args_t *args)
+pd_capri_hbm_read_mem (pd_func_args_t *pd_func_args)
 {
+    pd_capri_hbm_read_mem_args_t *args = pd_func_args->pd_capri_hbm_read_mem;
     capri_hbm_read_mem(args->addr, args->buf, args->size);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_capri_hbm_write_mem (pd_capri_hbm_write_mem_args_t *args)
+pd_capri_hbm_write_mem (pd_func_args_t *pd_func_args)
 {
+    pd_capri_hbm_write_mem_args_t *args = pd_func_args->pd_capri_hbm_write_mem;
     capri_hbm_write_mem(args->addr, args->buf, args->size);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_capri_program_label_to_offset (pd_capri_program_label_to_offset_args_t *args)
+pd_capri_program_label_to_offset (pd_func_args_t *pd_func_args)
 {
+    pd_capri_program_label_to_offset_args_t *args = pd_func_args->pd_capri_program_label_to_offset;
     capri_program_label_to_offset(args->handle, args->prog_name,
                                   args->label_name, args->offset);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_capri_pxb_cfg_lif_bdf (pd_capri_pxb_cfg_lif_bdf_args_t *args)
+pd_capri_pxb_cfg_lif_bdf (pd_func_args_t *pd_func_args)
 {
+    pd_capri_pxb_cfg_lif_bdf_args_t *args = pd_func_args->pd_capri_pxb_cfg_lif_bdf;
     return capri_pxb_cfg_lif_bdf(args->lif, args->bdf);
 }
 
 hal_ret_t
-pd_capri_program_to_base_addr (pd_capri_program_to_base_addr_args_t *args)
+pd_capri_program_to_base_addr (pd_func_args_t *pd_func_args)
 {
-    return (hal_ret_t)capri_program_to_base_addr(args->handle, 
+    pd_capri_program_to_base_addr_args_t *args = pd_func_args->pd_capri_program_to_base_addr;
+    return (hal_ret_t)capri_program_to_base_addr(args->handle,
                                       args->prog_name, args->base_addr);
 }
 
 hal_ret_t
-pd_get_opaque_tag_addr (pd_get_opaque_tag_addr_args_t *args)
+pd_get_opaque_tag_addr (pd_func_args_t *pd_func_args)
 {
+    pd_get_opaque_tag_addr_args_t *args = pd_func_args->pd_get_opaque_tag_addr;
     return get_opaque_tag_addr(args->ring_type, args->addr);
 }
 
 hal_ret_t
-pd_capri_barco_asym_req_descr_get (pd_capri_barco_asym_req_descr_get_args_t *args)
+pd_capri_barco_asym_req_descr_get (pd_func_args_t *pd_func_args)
 {
-    return capri_barco_asym_req_descr_get(args->slot_index,  
+    pd_capri_barco_asym_req_descr_get_args_t *args = pd_func_args->pd_capri_barco_asym_req_descr_get;
+    return capri_barco_asym_req_descr_get(args->slot_index,
                                           args->asym_req_descr);
 }
 
 hal_ret_t
-pd_capri_barco_symm_req_descr_get (pd_capri_barco_symm_req_descr_get_args_t *args)
+pd_capri_barco_symm_req_descr_get (pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_symm_req_descr_get_args_t *args = pd_func_args->pd_capri_barco_symm_req_descr_get;
     return capri_barco_symm_req_descr_get(args->ring_type,
                                           args->slot_index,
                                           args->symm_req_descr);
 }
 
 hal_ret_t
-pd_capri_barco_ring_meta_get (pd_capri_barco_ring_meta_get_args_t *args)
+pd_capri_barco_ring_meta_get (pd_func_args_t *pd_func_args)
 {
-    return capri_barco_ring_meta_get(args->ring_type, 
+    pd_capri_barco_ring_meta_get_args_t *args = pd_func_args->pd_capri_barco_ring_meta_get;
+    return capri_barco_ring_meta_get(args->ring_type,
                                      args->pi, args->ci);
 }
 
 hal_ret_t
-pd_capri_barco_asym_add_pend_req(pd_capri_barco_asym_add_pend_req_args_t *args)
+pd_capri_barco_asym_add_pend_req(pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_add_pend_req_args_t *args = pd_func_args->pd_capri_barco_asym_add_pend_req;
     return capri_barco_asym_add_pend_req(args->hw_id,
                                          args->sw_id);
 }
 
 hal_ret_t
-pd_capri_barco_asym_poll_pend_req(pd_capri_barco_asym_poll_pend_req_args_t *args) 
+pd_capri_barco_asym_poll_pend_req(pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_poll_pend_req_args_t *args = pd_func_args->pd_capri_barco_asym_poll_pend_req;
     return capri_barco_asym_poll_pend_req(args->batch_size,
                                           args->id_count,
                                           args->ids);
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecc_point_mul_p256 (pd_capri_barco_asym_ecc_point_mul_p256_args_t *args)
+pd_capri_barco_asym_ecc_point_mul_p256 (pd_func_args_t *pd_func_args)
 {
-    return capri_barco_asym_ecc_point_mul_p256(args->p, 
+    pd_capri_barco_asym_ecc_point_mul_p256_args_t *args = pd_func_args->pd_capri_barco_asym_ecc_point_mul_p256;
+    return capri_barco_asym_ecc_point_mul_p256(args->p,
                                                args->n,
                                                args->xg,
                                                args->yg,
                                                args->a,
                                                args->b,
-                                               args->x1, 
+                                               args->x1,
                                                args->y1,
                                                args->k,
                                                args->x3,
@@ -165,8 +184,9 @@ pd_capri_barco_asym_ecc_point_mul_p256 (pd_capri_barco_asym_ecc_point_mul_p256_a
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecdsa_p256_setup_priv_key(pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_s *args)
+pd_capri_barco_asym_ecdsa_p256_setup_priv_key(pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_ecdsa_p256_setup_priv_key;
     return capri_barco_asym_ecdsa_p256_setup_priv_key(args->p,
                                                       args->n,
                                                       args->xg,
@@ -178,8 +198,9 @@ pd_capri_barco_asym_ecdsa_p256_setup_priv_key(pd_capri_barco_asym_ecdsa_p256_set
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecdsa_p256_sig_gen (pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s *args)
+pd_capri_barco_asym_ecdsa_p256_sig_gen (pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_ecdsa_p256_sig_gen;
     return capri_barco_asym_ecdsa_p256_sig_gen(args->key_idx,
                                                args->p,
                                                args->n,
@@ -196,8 +217,9 @@ pd_capri_barco_asym_ecdsa_p256_sig_gen (pd_capri_barco_asym_ecdsa_p256_sig_gen_a
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecdsa_p256_sig_verify (pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t *args)
+pd_capri_barco_asym_ecdsa_p256_sig_verify (pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t *args = pd_func_args->pd_capri_barco_asym_ecdsa_p256_sig_verify;
     return capri_barco_asym_ecdsa_p256_sig_verify(args->p,
                                                   args->n,
                                                   args->xg,
@@ -213,8 +235,9 @@ pd_capri_barco_asym_ecdsa_p256_sig_verify (pd_capri_barco_asym_ecdsa_p256_sig_ve
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_encrypt (pd_capri_barco_asym_rsa2k_encrypt_args_t *args)
+pd_capri_barco_asym_rsa2k_encrypt (pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_rsa2k_encrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_encrypt;
     return capri_barco_asym_rsa2k_encrypt(args->n,
                                           args->e,
                                           args->m,
@@ -223,8 +246,9 @@ pd_capri_barco_asym_rsa2k_encrypt (pd_capri_barco_asym_rsa2k_encrypt_args_t *arg
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_decrypt (pd_capri_barco_asym_rsa2k_decrypt_args_t *args)
+pd_capri_barco_asym_rsa2k_decrypt (pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_rsa2k_decrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_decrypt;
     return capri_barco_asym_rsa2k_decrypt(args->n,
                                           args->d,
                                           args->c,
@@ -232,9 +256,10 @@ pd_capri_barco_asym_rsa2k_decrypt (pd_capri_barco_asym_rsa2k_decrypt_args_t *arg
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_crt_decrypt (pd_capri_barco_asym_rsa2k_crt_decrypt_args_t *args)
+pd_capri_barco_asym_rsa2k_crt_decrypt (pd_func_args_t *pd_func_args)
 {
-    return capri_barco_asym_rsa2k_crt_decrypt(args->key_idx, 
+    pd_capri_barco_asym_rsa2k_crt_decrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_crt_decrypt;
+    return capri_barco_asym_rsa2k_crt_decrypt(args->key_idx,
                                               args->p,
                                               args->q,
                                               args->dp,
@@ -246,17 +271,19 @@ pd_capri_barco_asym_rsa2k_crt_decrypt (pd_capri_barco_asym_rsa2k_crt_decrypt_arg
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key (pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t *args)
+pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key (pd_func_args_t *pd_func_args)
 {
-    return capri_barco_asym_rsa2k_setup_sig_gen_priv_key(args->n, 
+    pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key;
+    return capri_barco_asym_rsa2k_setup_sig_gen_priv_key(args->n,
                                                          args->d,
                                                          args->key_idx);
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t *args)
+pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_func_args_t *pd_func_args)
 {
-    return capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(args->p, 
+    pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key;
+    return capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(args->p,
                                                              args->q,
                                                              args->dp,
                                                              args->dq,
@@ -265,10 +292,11 @@ pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_capri_barco_asym_rsa2k_c
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_sig_gen (pd_capri_barco_asym_rsa2k_sig_gen_args_t *args)
+pd_capri_barco_asym_rsa2k_sig_gen (pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_rsa2k_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_sig_gen;
     return capri_barco_asym_rsa2k_sig_gen(args->key_idx,
-                                          args->n, 
+                                          args->n,
                                           args->d,
                                           args->h,
                                           args->s,
@@ -276,8 +304,9 @@ pd_capri_barco_asym_rsa2k_sig_gen (pd_capri_barco_asym_rsa2k_sig_gen_args_t *arg
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_sig_verify (pd_capri_barco_asym_rsa2k_sig_verify_args_t *args)
+pd_capri_barco_asym_rsa2k_sig_verify (pd_func_args_t *pd_func_args)
 {
+    pd_capri_barco_asym_rsa2k_sig_verify_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_sig_verify;
     return capri_barco_asym_rsa2k_sig_verify(args->n,
                                              args->e,
                                              args->h,
@@ -285,9 +314,10 @@ pd_capri_barco_asym_rsa2k_sig_verify (pd_capri_barco_asym_rsa2k_sig_verify_args_
 }
 
 hal_ret_t
-pd_capri_barco_sym_hash_process_request (pd_capri_barco_sym_hash_process_request_args_t *args)
+pd_capri_barco_sym_hash_process_request (pd_func_args_t *pd_func_args)
 {
-    return capri_barco_sym_hash_process_request(args->hash_type, 
+    pd_capri_barco_sym_hash_process_request_args_t *args = pd_func_args->pd_capri_barco_sym_hash_process_request;
+    return capri_barco_sym_hash_process_request(args->hash_type,
                                                 args->generate,
                                                 args->key,
                                                 args->key_len,
@@ -574,8 +604,9 @@ capri_mpu_trace_enable(void)
 }
 
 hal_ret_t
-pd_mpu_trace_enable(pd_mpu_trace_enable_args_t *args)
+pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
 {
+    pd_mpu_trace_enable_args_t *args = pd_func_args->pd_mpu_trace_enable;
     uint64_t base_addr = get_start_offset("mpu-trace");
 
     if (args->base_addr == 0) {

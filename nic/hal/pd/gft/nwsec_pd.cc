@@ -8,9 +8,9 @@ namespace pd {
 // PD Nwsec Create
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_profile_create (pd_nwsec_profile_create_args_t *args)
+pd_nwsec_profile_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
 
     return ret;
 }

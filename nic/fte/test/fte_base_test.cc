@@ -111,7 +111,7 @@ hal_handle_t fte_base_test::add_uplink(uint8_t port_num)
 }
 
 hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh,
-                                         uint32_t ip, uint64_t mac, uint16_t useg_vlan, 
+                                         uint32_t ip, uint64_t mac, uint16_t useg_vlan,
                                          bool enable_e2e)
 {
     hal_ret_t ret;
@@ -144,7 +144,7 @@ hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh
         ep.mac = mac;
         if (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q)
             ep.vlan = l2seg->wire_encap.val;
-        else 
+        else
             ep.vlan = 0;
         eps.insert(std::pair<hal_handle_t, ep_info_t>(resp.endpoint_status().endpoint_handle(),ep));
     }
@@ -324,7 +324,7 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
 
             hal::hal_cfg_db_close();
         }, &fn_ctx );
-    
+
     return fn_ctx.ret;
 }
 
@@ -346,8 +346,10 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
     hal::if_l2seg_get_encap(sif, l2seg, &vlan_valid, &vlan_id);
 
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
     args.l2seg = l2seg;
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+    pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
     hal::pd::l2seg_hw_id_t hwid = args.hwid;
 
     fte::cpu_rxhdr_t cpu_rxhdr = {};
@@ -409,7 +411,7 @@ fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
     return inject_eth_pkt(lifq, sep->if_handle, sep->l2seg_handle, eth);
 }
 
-static 
+static
 int parse_v4_packet (uint8_t *pkt, int len, uint16_t *l3_offset,
                      uint16_t *l4_offset, uint16_t *payload_offset, uint8_t *proto)
 {
@@ -448,7 +450,7 @@ int parse_v4_packet (uint8_t *pkt, int len, uint16_t *l3_offset,
     return 0;
 }
 
-static 
+static
 void fix_checksum(uint8_t *pkt, int len)
 {
     ether_header_t *eth;
@@ -536,8 +538,10 @@ fte_base_test::process_e2e_packets (void)
                 hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
                 EXPECT_NE(l2seg, nullptr);
                 hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+                hal::pd::pd_func_args_t          pd_func_args = {0};
                 args.l2seg = l2seg;
-                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+                pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
                 hal::pd::l2seg_hw_id_t hwid = args.hwid;
 
                 if (!parse_v4_packet((uint8_t *)inp, nread, &l3_offset, &l4_offset, &payload_offset, &proto)) {

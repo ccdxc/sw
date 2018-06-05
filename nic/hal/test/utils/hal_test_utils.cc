@@ -41,13 +41,15 @@ hal_test_utils_get_slab (hal_slab_t slab_id)
     slab *pi_slab = NULL;
     pi_slab = g_hal_state->get_slab(slab_id);
     hal::pd::pd_get_slab_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
 
     if (pi_slab) {
         return pi_slab;
     }
 
     args.slab_id = slab_id;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_SLAB, (void *)&args);
+    pd_func_args.pd_get_slab = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_SLAB, &pd_func_args);
     HAL_ASSERT(ret == HAL_RET_OK);
     return args.slab;
     // return g_hal_state_pd->get_slab(slab_id);

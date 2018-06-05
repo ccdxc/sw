@@ -62,10 +62,11 @@ if_is_tunnel_if(if_t *pi_if)
 // Given a PI LIf, get its lport id
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_lif_get_lport_id(pd_lif_get_lport_id_args_t *args)
+pd_lif_get_lport_id (pd_func_args_t *pd_func_args)
 {
     // uint32_t        lport_id = 0;
     pd_lif_t        *pd_lif = NULL;
+    pd_lif_get_lport_id_args_t *args = pd_func_args->pd_lif_get_lport_id;
     lif_t *pi_lif = args->pi_lif;
 
 
@@ -86,15 +87,18 @@ pd_lif_get_lport_id(pd_lif_get_lport_id_args_t *args)
 uint32_t
 if_get_lport_id(if_t *pi_if)
 {
+    pd_func_args_t pd_func_args = {0};
     pd_if_get_lport_id_args_t args;
     args.pi_if = pi_if;
-    pd_if_get_lport_id(&args);
+    pd_func_args.pd_if_get_lport_id = &args;
+    pd_if_get_lport_id(&pd_func_args);
     return args.lport_id;
 }
 
 hal_ret_t
-pd_if_get_lport_id(pd_if_get_lport_id_args_t *args)
+pd_if_get_lport_id(pd_func_args_t *pd_func_args)
 {
+    pd_if_get_lport_id_args_t *args = pd_func_args->pd_if_get_lport_id;
     pd_enicif_t     *pd_enicif = NULL;
     pd_uplinkif_t   *pd_upif = NULL;
     pd_uplinkpc_t   *pd_uppc = NULL;
@@ -164,9 +168,11 @@ end:
 uint32_t
 if_get_hw_lif_id(if_t *pi_if)
 {
+    pd_func_args_t pd_func_args = {0};
     pd_if_get_hw_lif_id_args_t args;
     args.pi_if = pi_if;
-    pd_if_get_hw_lif_id(&args);
+    pd_func_args.pd_if_get_hw_lif_id = &args;
+    pd_if_get_hw_lif_id(&pd_func_args);
     return args.hw_lif_id;
 }
 
@@ -175,8 +181,9 @@ uint32_t
 if_get_hw_lif_id(if_t *pi_if)
 #endif
 hal_ret_t
-pd_if_get_hw_lif_id(pd_if_get_hw_lif_id_args_t *args)
+pd_if_get_hw_lif_id(pd_func_args_t *pd_func_args)
 {
+    pd_if_get_hw_lif_id_args_t *args = pd_func_args->pd_if_get_hw_lif_id;
     lif_t           *pi_lif = NULL;
     pd_lif_t        *pd_lif = NULL;
     pd_uplinkif_t   *pd_upif = NULL;
@@ -358,8 +365,9 @@ if_get_uplink_lport_id(if_t *pi_if)
 // Given a PI If, get its tm_oport
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
+pd_if_get_tm_oport(pd_func_args_t *pd_func_args)
 {
+    pd_if_get_tm_oport_args_t *args = pd_func_args->pd_if_get_tm_oport;
     intf::IfType               if_type;
     // uint32_t                   tm_port = HAL_PORT_INVALID;
     if_t                       *pi_up_if;
@@ -369,6 +377,7 @@ pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
     pd_if_get_tm_oport_args_t  tmp_args;
     hal_handle_t               *p_hdl_id = NULL;
     if_t *pi_if = args->pi_if;
+    pd_func_args_t             pd_func_args1 = {0};
 
     if (pi_if == NULL) {
         goto end;
@@ -388,7 +397,8 @@ pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
                 pi_up_if = find_if_by_handle(*p_hdl_id);
                 // args->tm_oport = if_get_tm_oport(pi_up_if);
                 tmp_args.pi_if = pi_up_if;
-                pd_if_get_tm_oport(&tmp_args);
+                pd_func_args1.pd_if_get_tm_oport = &tmp_args;
+                pd_if_get_tm_oport(&pd_func_args1);
                 args->tm_oport = tmp_args.tm_oport;
                 break;
             }
@@ -401,7 +411,8 @@ pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
             /* Recursive resolution to get the tm_oport*/
             // args->tm_oport = if_get_tm_oport(ep_if);
             tmp_args.pi_if = ep_if;
-            pd_if_get_tm_oport(&tmp_args);
+            pd_func_args1.pd_if_get_tm_oport = &tmp_args;
+            pd_if_get_tm_oport(&pd_func_args1);
             args->tm_oport = tmp_args.tm_oport;
             break;
         case intf::IF_TYPE_CPU:
@@ -466,14 +477,17 @@ int
 tunnelif_get_rw_idx(pd_tunnelif_t *pd_tif)
 {
     pd_tunnelif_get_rw_idx_args_t args;
+    pd_func_args_t pd_func_args = {0};
     args.hal_if = (if_t *)pd_tif->pi_if;
-    pd_tunnelif_get_rw_idx(&args);
+    pd_func_args.pd_tunnelif_get_rw_idx = &args;
+    pd_tunnelif_get_rw_idx(&pd_func_args);
     return args.tnnl_rw_idx;
 }
 
 hal_ret_t
-pd_tunnelif_get_rw_idx (pd_tunnelif_get_rw_idx_args_t *args)
+pd_tunnelif_get_rw_idx (pd_func_args_t *pd_func_args)
 {
+    pd_tunnelif_get_rw_idx_args_t *args = pd_func_args->pd_tunnelif_get_rw_idx;
     pd_tunnelif_t *pd_tif = (pd_tunnelif_t *)args->hal_if->pd_if;
 
     if (!pd_tif)

@@ -11,7 +11,7 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-capri_barco_asym_poll_pend_req(uint32_t batch_size, uint32_t* id_count, uint32_t *ids) 
+capri_barco_asym_poll_pend_req(uint32_t batch_size, uint32_t* id_count, uint32_t *ids)
 {
     dllist_ctxt_t          *entry = NULL;
     crypto_pend_req_t      *req = NULL;
@@ -29,7 +29,7 @@ capri_barco_asym_poll_pend_req(uint32_t batch_size, uint32_t* id_count, uint32_t
             return HAL_RET_OK;
         }
         ids[*id_count] = req->sw_id;
-        HAL_TRACE_DEBUG("Request completed for count: {} hw-id: {} sw-id: {} id: {}", 
+        HAL_TRACE_DEBUG("Request completed for count: {} hw-id: {} sw-id: {} id: {}",
                         *id_count, req->hw_id, req->sw_id, ids[*id_count]);
         capri_barco_del_pend_req_from_db(req);
         if(++(*id_count) >= batch_size)
@@ -38,14 +38,14 @@ capri_barco_asym_poll_pend_req(uint32_t batch_size, uint32_t* id_count, uint32_t
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 capri_barco_asym_add_pend_req(uint32_t hw_id, uint32_t sw_id)
 {
     return capri_barco_add_pend_req_to_db(hw_id, sw_id);
 }
 
-void 
-capri_barco_wait_for_resp(uint32_t req_tag, pd_capri_barco_asym_async_args_t *async_args) 
+void
+capri_barco_wait_for_resp(uint32_t req_tag, pd_capri_barco_asym_async_args_t *async_args)
 {
     ASYNC_JOB           *job = NULL;
     ASYNC_WAIT_CTX      *wait_ctx = NULL;
@@ -89,6 +89,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     int32_t                     ecc_pm_p256_key_idx = -1;
     crypto_asym_key_t           asym_key;
     uint32_t                    req_tag = 0;
+    pd_func_args_t              pd_func_args = {0};
 
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"p", (char *)p, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"a", (char *)a, 32);
@@ -103,28 +104,30 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = &ecc_pm_p256_key_idx;
     // ret = pd_crypto_asym_alloc_key(&ecc_pm_p256_key_idx);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated Key Descr @ {:x}", ecc_pm_p256_key_idx); 
+    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated Key Descr @ {:x}", ecc_pm_p256_key_idx);
 
     asym_key.key_param_list = 0; /* Barco does not use key space for ECC Point MUL for now */
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(32) |
                             CAPRI_BARCO_ASYM_CMD_ECC_POINT_MUL);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = ecc_pm_p256_key_idx;
     w_args.key = &asym_key;
+    pd_func_args.pd_crypto_asym_write_key= &w_args;
     // ret = pd_crypto_asym_write_key(ecc_pm_p256_key_idx, &asym_key);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write key: {}", ecc_pm_p256_key_idx);
         goto cleanup;
     }
-    HAL_TRACE_DEBUG("ECC Point Mul P256: Setup key @ {:x}", ecc_pm_p256_key_idx); 
+    HAL_TRACE_DEBUG("ECC Point Mul P256: Setup key @ {:x}", ecc_pm_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -133,7 +136,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -141,7 +144,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
+    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -149,7 +152,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -157,55 +160,55 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param p into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param p into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param n into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param n into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)a, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param a into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param a into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)b, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param b into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param b into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)x1, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param x1 into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param x1 into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)y1, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param y1 into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param y1 into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)k, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -224,7 +227,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -242,7 +245,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
+                (uint64_t) olist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -272,17 +275,17 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     /* Copy out the results */
     if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)x3, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to read x3 output from memory @ {:x}",
-                (uint64_t) olist_mem_addr); 
+                (uint64_t) olist_mem_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     if (capri_hbm_read_mem(olist_mem_addr + 32, (uint8_t*)y3, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to read y3 output from memory @ {:x}",
-                (uint64_t) (olist_mem_addr + 32)); 
+                (uint64_t) (olist_mem_addr + 32));
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
-    
+
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"x3", (char *)x3, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"y3", (char *)y3, 32);
 
@@ -326,7 +329,8 @@ cleanup:
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = ecc_pm_p256_key_idx;
         // ret = pd_crypto_asym_free_key(ecc_pm_p256_key_idx);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ECC Point Mul P256: Failed to free key descriptor");
         }
@@ -339,7 +343,7 @@ hal_ret_t
 capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
                                               uint8_t *xg, uint8_t *yg,
                                               uint8_t *a, uint8_t *b,
-                                              uint8_t *da, int32_t *key_idx) 
+                                              uint8_t *da, int32_t *key_idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    key_dma_descr_addr = 0;
@@ -347,6 +351,7 @@ capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
     uint64_t                    key_param_addr = 0;
     barco_asym_dma_descriptor_t key_dma_descr;
     crypto_asym_key_t           asym_key;
+    pd_func_args_t pd_func_args = {0};
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "ECDSA Setup Key: "
@@ -358,7 +363,7 @@ capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"xg", (char *)xg, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"yg", (char *)yg, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"da", (char *)da, 32);
-    
+
     *key_idx = -1;
 
     /* Setup params in the key memory */
@@ -369,54 +374,54 @@ capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
         goto cleanup;
     }
     HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}",
-                        key_param_addr); 
+                        key_param_addr);
 
     curr_ptr = key_param_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)xg, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)yg, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)a, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)b, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)da, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param da into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param da into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -428,7 +433,7 @@ capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", key_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -443,29 +448,31 @@ capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr); 
+                (uint64_t) key_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
 
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = key_idx;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(32) |
                             CAPRI_BARCO_ASYM_ECDSA_SIG_GEN);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = *key_idx;
     w_args.key = &asym_key;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    pd_func_args.pd_crypto_asym_write_key = &w_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", *key_idx);
         goto cleanup;
@@ -478,7 +485,8 @@ cleanup:
     if (*key_idx != -1) {
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = *key_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -491,7 +499,7 @@ cleanup:
                     key_dma_descr_addr);
         }
     }
-    
+
     if (key_param_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr);
         if (ret != HAL_RET_OK) {
@@ -518,7 +526,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "ECDSA Sig Gen: "
-    
+
     HAL_TRACE_DEBUG("Key_idx: {:x}", key_idx);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"k", (char *)k, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"h", (char *)h, 32);
@@ -533,10 +541,10 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
             goto cleanup;
         }
     } else {
-        ecc_p256_key_idx = key_idx;    
+        ecc_p256_key_idx = key_idx;
     }
 
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Key @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Key @ {:x}", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -545,7 +553,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -553,7 +561,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -561,7 +569,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -569,20 +577,20 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)k, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -601,7 +609,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -619,7 +627,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
+                (uint64_t) olist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -646,13 +654,13 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
 
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
-                (uint64_t) asym_req_descr.status_addr); 
+                (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status {:x}",
-                status); 
+                status);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -660,17 +668,17 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     /* Copy out the results */
     if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)r, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read r output from memory @ {:x}",
-                (uint64_t) olist_mem_addr); 
+                (uint64_t) olist_mem_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     if (capri_hbm_read_mem(olist_mem_addr + 32, (uint8_t*)s, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read s output from memory @ {:x}",
-                (uint64_t) (olist_mem_addr + 32)); 
+                (uint64_t) (olist_mem_addr + 32));
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
-    
+
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"r", (char *)r, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"s", (char *)s, 32);
 
@@ -731,6 +739,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     crypto_asym_key_t           asym_key;
     uint32_t                    req_tag = 0;
     uint32_t                    status = 0;
+    pd_func_args_t              pd_func_args = {0};
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "ECDSA Sig Verify: "
@@ -754,61 +763,61 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
 
     curr_ptr = key_param_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)xg, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)yg, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)a, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)b, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)xq, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xq into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xq into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)yq, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yq into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yq into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -820,7 +829,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -835,7 +844,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr); 
+                (uint64_t) key_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -843,28 +852,30 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = &ecc_p256_key_idx;
     // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(32) |
                             CAPRI_BARCO_ASYM_ECDSA_SIG_VERIFY);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = ecc_p256_key_idx;
     w_args.key = &asym_key;
     // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    pd_func_args.pd_crypto_asym_write_key = &w_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -873,7 +884,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -881,7 +892,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -889,27 +900,27 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)r, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param r into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param r into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)s, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param s into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param s into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 32)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -928,7 +939,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -955,13 +966,13 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
 
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
-                (uint64_t) asym_req_descr.status_addr); 
+                (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status {:x}",
-                status); 
+                status);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -1002,7 +1013,8 @@ cleanup:
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = ecc_p256_key_idx;
         // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -1030,7 +1042,7 @@ cleanup:
     return ret;
 }
 
-hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d, 
+hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
                                                           int32_t *key_idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
@@ -1039,13 +1051,14 @@ hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
     uint64_t                    key_param_addr = 0;
     barco_asym_dma_descriptor_t key_dma_descr;
     crypto_asym_key_t           asym_key;
+    pd_func_args_t pd_func_args = {0};
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "RSA 2K Key setup: "
 
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"n", (char *)n, 256);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"d", (char *)d, 256);
-    
+
     *key_idx = -1;
 
     /* Setup params in the key memory */
@@ -1055,19 +1068,19 @@ hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
 
     curr_ptr = key_param_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)d, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1079,7 +1092,7 @@ hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1094,42 +1107,45 @@ hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr); 
+                (uint64_t) key_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
 
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = key_idx;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_SIG_GEN);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = *key_idx;
     w_args.key = &asym_key;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    pd_func_args.pd_crypto_asym_write_key = &w_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", *key_idx);
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", *key_idx); 
-    
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", *key_idx);
+
     return ret;
 
 cleanup:
     if (*key_idx != -1) {
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = *key_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -1168,6 +1184,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     crypto_asym_key_t           asym_key;
     uint32_t                    req_tag = 0;
     uint32_t                    status = 0;
+    pd_func_args_t pd_func_args = {0};
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "RSA 2K Encrypt: "
@@ -1184,19 +1201,19 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
 
     curr_ptr = key_param_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)e, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1208,7 +1225,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1223,7 +1240,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr); 
+                (uint64_t) key_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1231,28 +1248,30 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = &ecc_p256_key_idx;
     // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_ENCRYPT);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = ecc_p256_key_idx;
     w_args.key = &asym_key;
     // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    pd_func_args.pd_crypto_asym_write_key = &w_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1261,7 +1280,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -1269,7 +1288,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -1277,7 +1296,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -1285,13 +1304,13 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)m, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1310,7 +1329,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1328,7 +1347,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
+                (uint64_t) olist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1355,13 +1374,13 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
 
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
-                (uint64_t) asym_req_descr.status_addr); 
+                (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status {:x}",
-                status); 
+                status);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -1369,7 +1388,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         /* Copy out the results */
         if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)c, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output c from memory @ {:x}",
-                    (uint64_t) olist_mem_addr); 
+                    (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
             goto cleanup;
         }
@@ -1416,7 +1435,8 @@ cleanup:
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = ecc_p256_key_idx;
         // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -1459,6 +1479,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     crypto_asym_key_t           asym_key;
     uint32_t                    req_tag = 0;
     uint32_t                    status = 0;
+    pd_func_args_t pd_func_args = {0};
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "RSA 2K Decrypt: "
@@ -1474,19 +1495,19 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
 
     curr_ptr = key_param_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)d, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1498,7 +1519,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1513,36 +1534,38 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr); 
+                (uint64_t) key_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
 
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = &ecc_p256_key_idx;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_DECRYPT);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = ecc_p256_key_idx;
     w_args.key = &asym_key;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    pd_func_args.pd_crypto_asym_write_key = &w_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1551,7 +1574,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -1559,7 +1582,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -1567,7 +1590,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -1575,13 +1598,13 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)c, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1600,7 +1623,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1618,7 +1641,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
+                (uint64_t) olist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1645,13 +1668,13 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     }
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
-                (uint64_t) asym_req_descr.status_addr); 
+                (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status {:x}",
-                status); 
+                status);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -1659,7 +1682,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         /* Copy out the results */
         if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)m, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ {:x}",
-                    (uint64_t) olist_mem_addr); 
+                    (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
             goto cleanup;
         }
@@ -1705,7 +1728,8 @@ cleanup:
     if (ecc_p256_key_idx != -1) {
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = ecc_p256_key_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
@@ -1734,7 +1758,7 @@ cleanup:
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_t *dp,
                                                      uint8_t *dq, uint8_t *qinv, int32_t* key_idx)
 {
@@ -1744,6 +1768,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     uint64_t                    key_param_addr1 = 0, key_param_addr2 = 0, key_param_addr3 = 0;
     barco_asym_dma_descriptor_t key_dma_descr;
     crypto_asym_key_t           asym_key;
+    pd_func_args_t pd_func_args = {0};
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "RSA 2K CRT Key setup: "
@@ -1763,7 +1788,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param 1");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 1 @ {:x}", key_param_addr1); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 1 @ {:x}", key_param_addr1);
     /* Key Param fragment 2 */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &key_param_addr2);
@@ -1771,7 +1796,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param 2");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 2 @ {:x}", key_param_addr2); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 2 @ {:x}", key_param_addr2);
     /* Key Param fragment 3 */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &key_param_addr3);
@@ -1779,7 +1804,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param 3");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 3 @ {:x}", key_param_addr3); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 3 @ {:x}", key_param_addr3);
 
     /* Allocate key DMA descriptor 1 */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1797,7 +1822,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr2");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ {:x}", key_dma_descr_addr2); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ {:x}", key_dma_descr_addr2);
 
     /* Allocate key DMA descriptor 3 */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1806,20 +1831,20 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr3");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr3 @ {:x}", key_dma_descr_addr3); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr3 @ {:x}", key_dma_descr_addr3);
 
     /* Setup params in the key memory 1 */
     curr_ptr = key_param_addr1;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param p into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param p into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)q, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param q into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param q into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1837,23 +1862,23 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     if (capri_hbm_write_mem(key_dma_descr_addr1, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr1); 
+                (uint64_t) key_dma_descr_addr1);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
 
     /* Setup params in the key memory 2 */
     curr_ptr = key_param_addr2;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)dp, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dp into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dp into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)dq, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dq into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dq into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1872,16 +1897,16 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     if (capri_hbm_write_mem(key_dma_descr_addr2, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr2); 
+                (uint64_t) key_dma_descr_addr2);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
 
     /* Setup params in the key memory 3 */
     curr_ptr = key_param_addr3;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)qinv, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param qinv into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param qinv into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1900,29 +1925,31 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     if (capri_hbm_write_mem(key_dma_descr_addr3, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr3); 
+                (uint64_t) key_dma_descr_addr3);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
 
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = key_idx;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr1;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_CRT_DECRYPT);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = *key_idx;
     w_args.key = &asym_key;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    pd_func_args.pd_crypto_asym_write_key = &w_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", *key_idx);
         goto cleanup;
@@ -1935,7 +1962,8 @@ cleanup:
     if (*key_idx != -1) {
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = *key_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
@@ -1989,7 +2017,7 @@ cleanup:
                     key_param_addr1);
         }
     }
-    
+
     return ret;
 }
 
@@ -2018,7 +2046,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"dp", (char *)dp, 256);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"dq", (char *)dq, 256);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"qinv", (char *)qinv, 256);
-        
+
         ret = capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(p, q, dp, dq, qinv, &ecc_p256_key_idx);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to setup private key");
@@ -2028,7 +2056,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         ecc_p256_key_idx = key_idx;
     }
 
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ {:x}", ecc_p256_key_idx);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &ilist_dma_descr_addr);
@@ -2036,7 +2064,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -2044,7 +2072,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -2052,7 +2080,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -2060,13 +2088,13 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)c, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2085,7 +2113,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2103,7 +2131,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
+                (uint64_t) olist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2126,16 +2154,16 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     }
     // Wait for operation to be completed
     capri_barco_wait_for_resp(req_tag, async_args);
-    
+
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
-                (uint64_t) asym_req_descr.status_addr); 
+                (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status {:x}",
-                status); 
+                status);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -2143,7 +2171,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
         /* Copy out the results */
         if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)m, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ {:x}",
-                    (uint64_t) olist_mem_addr); 
+                    (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
             goto cleanup;
         }
@@ -2219,10 +2247,10 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
             goto cleanup;
         }
     } else {
-        ecc_p256_key_idx = key_idx;    
+        ecc_p256_key_idx = key_idx;
     }
-    
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ {:x}", ecc_p256_key_idx); 
+
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ {:x}", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -2231,7 +2259,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -2239,7 +2267,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -2247,7 +2275,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -2255,13 +2283,13 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2280,7 +2308,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2298,7 +2326,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
+                (uint64_t) olist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2322,16 +2350,16 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
 
     // Wait for operation to be completed
     capri_barco_wait_for_resp(req_tag, async_args);
-    
+
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
-                (uint64_t) asym_req_descr.status_addr); 
+                (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status {:x}",
-                status); 
+                status);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -2339,7 +2367,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
         /* Copy out the results */
         if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)s, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output s from memory @ {:x}",
-                    (uint64_t) olist_mem_addr); 
+                    (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
             goto cleanup;
         }
@@ -2403,6 +2431,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     crypto_asym_key_t           asym_key;
     uint32_t                    req_tag = 0;
     uint32_t                    status = 0;
+    pd_func_args_t pd_func_args = {0};
 
 #undef CAPRI_BARCO_API_NAME
 #define CAPRI_BARCO_API_NAME "RSA 2K Sig Verify: "
@@ -2419,19 +2448,19 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
 
     curr_ptr = key_param_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)e, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2443,7 +2472,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -2458,36 +2487,38 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
-                (uint64_t) key_dma_descr_addr); 
+                (uint64_t) key_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
 
     pd_crypto_asym_alloc_key_args_t args;
     args.key_idx = &ecc_p256_key_idx;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
     // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ {:x}", ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_SIG_VERIFY);
-                                
+
     pd_crypto_asym_write_key_args_t w_args;
     w_args.key_idx = ecc_p256_key_idx;
     w_args.key = &asym_key;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    pd_func_args.pd_crypto_asym_write_key = &w_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
     // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -2496,7 +2527,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -2504,7 +2535,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -2512,20 +2543,20 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr); 
+    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)s, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param s into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param s into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 256)) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr); 
+        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2544,7 +2575,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
-                (uint64_t) ilist_dma_descr_addr); 
+                (uint64_t) ilist_dma_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2571,13 +2602,13 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     }
     if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
-                (uint64_t) asym_req_descr.status_addr); 
+                (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status {:x}",
-                status); 
+                status);
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -2616,7 +2647,8 @@ cleanup:
     if (ecc_p256_key_idx != -1) {
         pd_crypto_asym_free_key_args_t f_args;
         f_args.key_idx = ecc_p256_key_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_asym_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
         // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");

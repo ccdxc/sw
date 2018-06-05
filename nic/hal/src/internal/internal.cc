@@ -54,14 +54,15 @@ void getprogram_address(const internal::ProgramAddressReq &req,
                         internal::ProgramAddressResponseMsg *rsp) {
     uint64_t addr;
     internal::ProgramAddressResp *resp = rsp->add_response();
+    pd::pd_func_args_t          pd_func_args = {0};
     if (req.resolve_label()) {
         pd::pd_capri_program_label_to_offset_args_t args = {0};
         args.handle = req.handle().c_str();
         args.prog_name = (char *)req.prog_name().c_str();
         args.label_name = (char *)req.label().c_str();
         args.offset = &addr;
-        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
-                                  (void *)&args);
+        pd_func_args.pd_capri_program_label_to_offset = &args;
+        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
         if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         } else {
@@ -72,8 +73,8 @@ void getprogram_address(const internal::ProgramAddressReq &req,
         base_args.handle = req.handle().c_str();
         base_args.prog_name = (char *)req.prog_name().c_str();
         base_args.base_addr = &addr;
-        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR,
-                                  (void *)&base_args);
+        pd_func_args.pd_capri_program_to_base_addr = &base_args;
+        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR, &pd_func_args);
         if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         } else {
@@ -85,13 +86,16 @@ void getprogram_address(const internal::ProgramAddressReq &req,
 void allochbm_address(const internal::HbmAddressReq &req,
                       internal::HbmAddressResp *resp) {
     pd::pd_get_start_offset_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
     args.reg_name = req.handle().c_str();
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&args);
+    pd_func_args.pd_get_start_offset = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
     uint64_t addr = args.offset;
 
     pd::pd_get_size_kb_args_t size_args;
     size_args.reg_name = req.handle().c_str();
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, (void *)&size_args);
+    pd_func_args.pd_get_size_kb = &size_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, &pd_func_args);
     uint32_t size = size_args.size;
 
 
@@ -110,10 +114,11 @@ void configurelif_bdf(const internal::LifBdfReq &req,
                       internal::LifBdfResp *resp)
 {
     pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.lif = req.lif();
     args.bdf = req.bdf();
-    int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF,
-                                  (void *)&args);
+    pd_func_args.pd_capri_pxb_cfg_lif_bdf = &args;
+    int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF, &pd_func_args);
 
     resp->set_lif(req.lif());
     resp->set_bdf(req.bdf());

@@ -13,17 +13,18 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // l4lb Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
-pd_l4lb_create(pd_l4lb_create_args_t *args)
+hal_ret_t
+pd_l4lb_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t               ret = HAL_RET_OK;; 
+    hal_ret_t               ret = HAL_RET_OK;;
+    pd_l4lb_create_args_t *args = pd_func_args->pd_l4lb_create;
     pd_l4lb_t               *pd_l4lb;
     mac_addr_t              *mac;
 
     mac = &args->l4lb->serv_mac_addr;
 
-    HAL_TRACE_DEBUG("PD-L4LB::{}: Creating pd state for L4LB: serv_mac:{}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("PD-L4LB::{}: Creating pd state for L4LB: serv_mac:{}",
+                    __FUNCTION__,
                     ether_ntoa((struct ether_addr*)*mac));
 
 
@@ -41,8 +42,8 @@ pd_l4lb_create(pd_l4lb_create_args_t *args)
     ret = l4lb_pd_alloc_res(pd_l4lb);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-L4LB::{}: Unable to alloc. resources for L4LB: serv_mac:{}", 
-                __FUNCTION__, 
+        HAL_TRACE_ERR("PD-L4LB::{}: Unable to alloc. resources for L4LB: serv_mac:{}",
+                __FUNCTION__,
                 ether_ntoa((struct ether_addr*)*mac));
         goto end;
     }
@@ -103,7 +104,7 @@ l4lb_pd_init (pd_l4lb_t *l4lb)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD L4LB
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 l4lb_pd_alloc_res(pd_l4lb_t *pd_l4lb)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -152,7 +153,7 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
     memset(mac_sa, 0, sizeof(mac_sa));
     memset(mac_da, 0, sizeof(mac_da));
     memset(&data, 0, sizeof(data));
-    
+
     mac = &pi_l4lb->serv_mac_addr;
 
     rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
@@ -192,12 +193,12 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
         sdk_ret = rw_tbl->insert(&data, &(pd_l4lb->rw_tbl_idx[i]));
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("PD-EP::{}: Unable to program for L4LB: serv_mac:{}", 
-                    __FUNCTION__, 
+            HAL_TRACE_DEBUG("PD-EP::{}: Unable to program for L4LB: serv_mac:{}",
+                    __FUNCTION__,
                     ether_ntoa((struct ether_addr*)*mac));
         } else {
-            HAL_TRACE_DEBUG("PD-EP::{}: Programmed for L4LB: serv_mac:{} at {}", 
-                    __FUNCTION__, 
+            HAL_TRACE_DEBUG("PD-EP::{}: Programmed for L4LB: serv_mac:{} at {}",
+                    __FUNCTION__,
                     ether_ntoa((struct ether_addr*)*mac),
                     pd_l4lb->rw_tbl_idx[i]);
         }
@@ -219,7 +220,7 @@ l4lb_pd_free (pd_l4lb_t *l4lb)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 link_pi_pd(pd_l4lb_t *pd_l4lb, l4lb_service_entry_t *pi_l4lb)
 {
     pd_l4lb->pi_l4lb = pi_l4lb;
@@ -229,7 +230,7 @@ link_pi_pd(pd_l4lb_t *pd_l4lb, l4lb_service_entry_t *pi_l4lb)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 unlink_pi_pd(pd_l4lb_t *pd_l4lb, l4lb_service_entry_t *pi_l4lb)
 {
     pd_l4lb->pi_l4lb = NULL;
@@ -240,7 +241,7 @@ unlink_pi_pd(pd_l4lb_t *pd_l4lb, l4lb_service_entry_t *pi_l4lb)
 // Input: PI L4LB and Rewrite Action
 // Retuns: RW idx in flow table
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 l4lb_pd_get_rw_tbl_idx_from_pi_l4lb(l4lb_service_entry_t *pi_l4lb, rewrite_actions_en rw_act)
 {
     pd_l4lb_t *pd_l4lb = NULL;
@@ -259,7 +260,7 @@ l4lb_pd_get_rw_tbl_idx(pd_l4lb_t *pd_l4lb, rewrite_actions_en rw_act)
 {
     HAL_ASSERT(rw_act < REWRITE_MAX_ID);
 
-    HAL_TRACE_DEBUG("rw_act:{}, rw_idx:{}", rw_act, 
+    HAL_TRACE_DEBUG("rw_act:{}, rw_idx:{}", rw_act,
             pd_l4lb->rw_tbl_idx[rw_act]);
     return pd_l4lb->rw_tbl_idx[rw_act];
 }

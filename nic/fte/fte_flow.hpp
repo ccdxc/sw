@@ -24,7 +24,7 @@ public:
         key_ = key;
         valid_.key = true;
         return HAL_RET_OK;
-    } 
+    }
     const hal::flow_key_t& key() const {
         return key_;
     };
@@ -89,7 +89,7 @@ public:
         if (!memcmp(&mcast_info, &mcast_info_, sizeof(mcast_info_t))) {
             return HAL_RET_ENTRY_EXISTS;
         }
-        
+
         if (mcast_info.mcast_en) {
             if (mcast_info.mcast_ptr) {
                 mcast_info_.mcast_ptr = mcast_info.mcast_ptr;
@@ -112,16 +112,18 @@ public:
     }
     const mcast_info_t& mcast_info() const {
         return mcast_info_;
-    } 
+    }
     bool valid_mcast_info() const {
         return valid_.mcast_info;
     }
 
     hal_ret_t set_ingress_info(const ingress_info_t& ingress_info) {
         hal::pd::pd_if_get_hw_lif_id_args_t args;
+        hal::pd::pd_func_args_t pd_func_args = {0};
 
         args.pi_if = ingress_info.expected_sif;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, (void *)&args);
+        pd_func_args.pd_if_get_hw_lif_id = &args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);
         if (args.hw_lif_id == ingress_info_.hw_lif_id) {
             return HAL_RET_ENTRY_EXISTS;
         }
@@ -134,7 +136,7 @@ public:
     }
     const ingress_info_t& ingress_info() const {
         return ingress_info_;
-    } 
+    }
     bool valid_ingress_info() const {
         return valid_.ingress_info;
     }
@@ -146,7 +148,7 @@ public:
     }
     const lkp_info_t& lkp_info() const {
         return lkp_info_;
-    } 
+    }
     bool valid_lkp_info() const {
         return valid_.lkp_info;
     }
@@ -172,7 +174,7 @@ public:
     }
     const mirror_info_t& mirror_info() const {
         return mirror_info_;
-    } 
+    }
     bool valid_mirror_info() const {
         return valid_.mirror_info;
     }
@@ -188,7 +190,7 @@ public:
     }
     const qos_info_t& qos_info() const {
         return qos_info_;
-    } 
+    }
     bool valid_qos_info() const {
         return valid_.qos_info;
     }
@@ -210,8 +212,8 @@ public:
     }
 
     header_push_info_t header_push_info() const {
-       header_push_info_t info = {}; 
- 
+       header_push_info_t info = {};
+
        for (int i = 0; i < num_header_updates_; i++) {
             const header_update_t *entry = &header_updates_[i];
             if (entry->type == HEADER_PUSH) {
@@ -245,7 +247,7 @@ private:
     hal::flow_pgm_attrs_t     attrs_;               // Restored flow attrs
 
     session::FlowAction       action_;              // firwall action
-    flow_state_t              flow_state_;          // connection tracking 
+    flow_state_t              flow_state_;          // connection tracking
     fwding_info_t             fwding_;              // Fwding info
     mcast_info_t              mcast_info_;          // Mulitcast Enable
     ingress_info_t            ingress_info_;        // Ingress info (src if check)
@@ -269,8 +271,8 @@ private:
                                           const header_rewrite_info_t &rewrite) const;
     hal_ret_t build_push_header_config(hal::flow_pgm_attrs_t &attrs,
                                        const header_push_info_t &header) const;
-    
-    hal_ret_t get_rewrite_config(const hal::flow_cfg_t &flow_cfg, 
+
+    hal_ret_t get_rewrite_config(const hal::flow_cfg_t &flow_cfg,
                                  const hal::flow_pgm_attrs_t  &attrs,
                                  header_rewrite_info_t *rewrite);
 };

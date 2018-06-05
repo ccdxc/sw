@@ -42,7 +42,7 @@ protected:
 
         add_nwsec_policy(vrfh_, rules);
     }
-    
+
     static hal_handle_t eph_, gwh_, vrfh_, nwh_, l2segh1_, l2segh2_, intfh1_, intfh2_;
 
 public:
@@ -76,9 +76,11 @@ TEST_F (fwding_test, route_lookup)
     EXPECT_EQ(ctx_.dl2seg()->hal_handle, l2segh2_);
 
     hal::pd::pd_if_get_lport_id_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
     args.pi_if = hal::find_if_by_handle(intfh2_);
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID, (void *)&args);
-    EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.lport, args.lport_id); 
+    pd_func_args.pd_if_get_lport_id = &args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID, &pd_func_args);
+    EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.lport, args.lport_id);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_sa_rewrite, 1);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_da_rewrite, 1);
 }

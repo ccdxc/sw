@@ -349,6 +349,7 @@ gft_emp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                                *lnode = NULL;
     dhl_entry_t                                  *dhl_entry = NULL;
     gft_exact_match_profile_t                    *profile = NULL;
+    pd::pd_func_args_t                           pd_func_args = {0};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("Failed to create GFT exact match profile");
@@ -365,8 +366,9 @@ gft_emp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // PD Call to allocate PD resources and h/w programming, if any
     args.exact_match_profile = profile;
+    pd_func_args.pd_gft_exact_match_profile = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE,
-                          (void *)&args);
+                          &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create pd exact match profile, err : {}", ret);
     }
@@ -1271,6 +1273,7 @@ gft_emfe_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                                 *dhl_entry = NULL;
     gft_exact_match_flow_entry_t                *flow_entry = NULL;
     gft_emfe_create_app_ctxt_t                  *app_ctxt = NULL;
+    pd::pd_func_args_t                          pd_func_args = {0};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("Failed to create GFT exact match flow entry");
@@ -1289,8 +1292,8 @@ gft_emfe_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and h/w programming, if any
     pd_args.exact_match_flow_entry = flow_entry;
     pd_args.rsp = app_ctxt->rsp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE,
-                          (void *)&pd_args);
+    pd_func_args.pd_gft_exact_match_flow_entry = &pd_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create exact match flow entry pd, err : {}",
                       ret);

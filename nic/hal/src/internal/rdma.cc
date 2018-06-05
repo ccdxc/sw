@@ -29,13 +29,16 @@ extern LIFManager *g_lif_manager;
 RDMAManager::RDMAManager() {
   pd::pd_get_start_offset_args_t off_args = {0};
   pd::pd_get_size_kb_args_t size_args = {0};
+  pd::pd_func_args_t pd_func_args = {0};
 
   off_args.reg_name = kHBMLabel;
-  pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
+  pd_func_args.pd_get_start_offset = &off_args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
   uint64_t hbm_addr = off_args.offset;
 
   size_args.reg_name = kHBMLabel;
-  pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, (void *)&size_args);
+  pd_func_args.pd_get_size_kb = &size_args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, &pd_func_args);
   assert(size_args.size == kHBMSizeKB);
 
 
@@ -112,6 +115,7 @@ hal_ret_t
 rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
 {
     hal_ret_t   ret;
+    pd::pd_func_args_t pd_func_args = {0};
 
 	hal::pd::pd_rxdma_table_entry_add_args_s rx_args;
 	rx_args.idx = lif;
@@ -124,7 +128,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     rx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
     rx_args.sq_qtype = entry_p->sq_qtype;
     rx_args.rq_qtype = entry_p->rq_qtype;
-	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RXDMA_TABLE_ADD, (void *)&rx_args);
+    pd_func_args.pd_rxdma_table_entry_add = &rx_args;
+	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RXDMA_TABLE_ADD, &pd_func_args);
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for rxdma, idx : {}, err : {}",
@@ -144,7 +149,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
     tx_args.sq_qtype = entry_p->sq_qtype;
     tx_args.rq_qtype = entry_p->rq_qtype;
-	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, (void *)&tx_args);
+    pd_func_args.pd_txdma_table_entry_add = &tx_args;
+	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for txdma, idx : {}, err : {}",
                       lif, ret);
@@ -356,6 +362,7 @@ rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
     sram_lif_entry_t    tx_sram_lif_entry = {0};
     uint64_t            pt_table_base_addr;
     uint64_t            key_table_base_addr;
+    pd::pd_func_args_t  pd_func_args = {0};
     hal_ret_t           rc;
 
     rc = rdma_tx_sram_lif_entry_get(lif, &tx_sram_lif_entry);
@@ -391,7 +398,8 @@ rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
     args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + key);
     args.buf = (uint8_t*)entry_p;
     args.size = sizeof(key_entry_t);
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, (void *)&args);
+    pd_func_args.pd_capri_hbm_read_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, &pd_func_args);
     // Convert data before reading from HBM
     memrev((uint8_t*)entry_p, sizeof(key_entry_t));
 }
@@ -416,10 +424,12 @@ rdma_key_entry_write (uint16_t lif, uint32_t key, key_entry_t *entry_p)
                         (uint8_t*)&tmp_key_entry, sizeof(key_entry_t));
 #endif
     pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + key);
     args.buf = (uint8_t*)&tmp_key_entry;
     args.size = sizeof(key_entry_t);
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
+    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 }
 
 void
@@ -438,10 +448,12 @@ rdma_pt_entry_write (uint16_t lif, uint32_t offset, uint64_t pg_ptr)
         (offset * sizeof(uint64_t))), (uint8_t*)&pg_ptr, sizeof(pg_ptr));
 #endif
     pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.addr = (uint64_t)(pt_table_base_addr + (offset * sizeof(uint64_t)));
     args.buf = (uint8_t*)&pg_ptr;
     args.size = sizeof(pg_ptr);
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
+    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 }
 
 void
@@ -455,10 +467,12 @@ rdma_pt_entry_read (uint16_t lif, uint32_t offset, uint64_t *pg_ptr)
     pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
 
     pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.addr = (uint64_t)(pt_table_base_addr + (offset * sizeof(uint64_t)));
     args.buf = (uint8_t*)pg_ptr;
     args.size = sizeof(uint64_t);
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, (void *)&args);
+    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, &pd_func_args);
 }
 
 uint64_t
@@ -688,12 +702,13 @@ stage0_resp_rx_prog_addr(uint64_t* offset)
     char labelname[]= "rdma_resp_rx_stage0";
 
     pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
-                              (void *)&args);
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
     if(ret != HAL_RET_OK) {
@@ -711,12 +726,13 @@ stage0_resp_tx_prog_addr(uint64_t* offset)
     char labelname[]= "rdma_resp_tx_stage0";
 
     pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
-                                    (void *)&args);
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
     if(ret != HAL_RET_OK) {
@@ -735,12 +751,13 @@ stage0_req_rx_prog_addr(uint64_t* offset)
     char labelname[]= "rdma_req_rx_stage0";
 
     pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
-                                    (void *)&args);
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
@@ -760,12 +777,13 @@ stage0_req_tx_prog_addr(uint64_t* offset)
     char labelname[]= "rdma_req_tx_stage0";
 
     pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
-                                    (void *)&args);
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
@@ -1038,8 +1056,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     g_lif_manager->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
 
     pd::pd_get_start_offset_args_t off_args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     off_args.reg_name = "rdma-atomic-resource-addr";
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
+    pd_func_args.pd_get_start_offset = &off_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
     rdma_atomic_res_addr = off_args.offset;
 
     rsp->set_api_status(types::API_STATUS_OK);
@@ -1175,10 +1195,12 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
 
     memrev((uint8_t*)&temp, header_template_size);
     pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.addr = (uint64_t)header_template_addr;
     args.buf = (uint8_t*)&temp;
     args.size = header_template_size;
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
+    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->set_ah_handle(header_template_addr);
@@ -1201,6 +1223,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     rqcb_t       *rqcb_p = &rqcb;
     uint64_t     header_template_addr;
     pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Update for lif {} QID {} oper type {}",
@@ -1279,7 +1302,8 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             args.addr = (uint64_t)header_template_addr;
             args.buf = (uint8_t *)&header_template;
             args.size =  sizeof(header_template_t);
-            pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
+            pd_func_args.pd_capri_hbm_write_mem = &args;
+            pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
             HAL_TRACE_DEBUG("{}: Update: Setting header_template content @addr: {} to: {}",
                             __FUNCTION__, header_template_addr, spec.header_template());
@@ -1423,8 +1447,10 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     // Fill the EQ Interrupt address = Intr_table base + 8 bytes for each intr_num
     pd::pd_get_start_offset_args_t off_args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     off_args.reg_name = "rdma-eq-intr-table";
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
+    pd_func_args.pd_get_start_offset = &off_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
     hbm_eq_intr_table_base = off_args.offset;
     HAL_ASSERT(hbm_eq_intr_table_base > 0);
     rsp->set_eq_intr_tbl_addr(hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t));

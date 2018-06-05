@@ -21,7 +21,7 @@
 #define RAWCCB_QSTATE_HEADER_TOTAL_SIZE     \
     (CAPRI_QSTATE_HEADER_COMMON_SIZE +      \
      (HAL_NUM_RAWCCB_RINGS_MAX * CAPRI_QSTATE_HEADER_RING_SINGLE_SIZE))
-     
+
 
 namespace hal {
 namespace pd {
@@ -70,7 +70,7 @@ p4pd_get_rawc_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_clear_rawc_stats_entry(pd_rawccb_t* rawccb_pd)
 {
     rawc_stats_err_stat_inc_d   data = {0};
@@ -111,7 +111,7 @@ p4pd_rawc_wring_eval(uint32_t qid,
     return ret;
 }
 
-static hal_ret_t 
+static hal_ret_t
 p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
                                      bool del,
                                      bool qstate_header_overwrite)
@@ -204,7 +204,7 @@ p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
         data.u.start_d.rawccb_activate = RAWCCB_ACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("RAWCCB Programming stage0 at hw_addr: {:#x}", hw_addr); 
+    HAL_TRACE_DEBUG("RAWCCB Programming stage0 at hw_addr: {:#x}", hw_addr);
     if (!p4plus_hbm_write(hw_addr, data_p, data_len,
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for RAWCCB");
@@ -215,7 +215,7 @@ done:
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_rawccb_tx_stage0_entry(pd_rawccb_t* rawccb_pd)
 {
     rawc_tx_start_d     data = {0};
@@ -249,7 +249,7 @@ p4pd_get_rawccb_tx_stage0_entry(pd_rawccb_t* rawccb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_rawc_stats_entry(pd_rawccb_t* rawccb_pd)
 {
     rawc_stats_err_stat_inc_d   data;
@@ -276,7 +276,7 @@ p4pd_get_rawc_stats_entry(pd_rawccb_t* rawccb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_add_or_del_rawccb_txdma_entry(pd_rawccb_t* rawccb_pd,
                                    bool del,
                                    bool qstate_header_overwrite)
@@ -295,11 +295,11 @@ cleanup:
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_rawccb_txdma_entry(pd_rawccb_t* rawccb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_rawccb_tx_stage0_entry(rawccb_pd);
     if (ret == HAL_RET_OK) {
         ret = p4pd_get_rawc_stats_entry(rawccb_pd);
@@ -320,9 +320,9 @@ rawccb_hw_addr_t
 pd_rawccb_get_base_hw_addr(pd_rawccb_t* rawccb_pd)
 {
     HAL_ASSERT(NULL != rawccb_pd);
-    
+
     // Get the base address of RAWC CB from LIF Manager.
-    // Set qtype and qid as 0 to get the start offset. 
+    // Set qtype and qid as 0 to get the start offset.
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_RAWC_QTYPE, 0);
     HAL_TRACE_DEBUG("RAWCCB received offset {:#x}", offset);
@@ -336,11 +336,11 @@ p4pd_add_or_del_rawccb_entry(pd_rawccb_t* rawccb_pd,
                              bool qstate_header_overwrite)
 {
     hal_ret_t                   ret = HAL_RET_OK;
- 
+
     ret = p4pd_add_or_del_rawccb_txdma_entry(rawccb_pd, del,
                                              qstate_header_overwrite);
     if(ret != HAL_RET_OK) {
-        goto err;    
+        goto err;
     }
 
 err:
@@ -348,14 +348,14 @@ err:
 }
 
 static hal_ret_t
-p4pd_get_rawccb_entry(pd_rawccb_t* rawccb_pd) 
+p4pd_get_rawccb_entry(pd_rawccb_t* rawccb_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_rawccb_txdma_entry(rawccb_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get txdma entry for rawccb");
-        goto err;    
+        goto err;
     }
 
 err:
@@ -368,9 +368,10 @@ err:
  *******************************************/
 
 hal_ret_t
-pd_rawccb_create (pd_rawccb_create_args_t *args)
+pd_rawccb_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_rawccb_create_args_t *args = pd_func_args->pd_rawccb_create;
     pd_rawccb_s             *rawccb_pd;
     rawccb_hw_id_t          hw_id = args->rawccb->cb_id;
     bool                    qstate_header_overwrite = false;
@@ -385,7 +386,7 @@ pd_rawccb_create (pd_rawccb_create_args_t *args)
         rawccb_pd = rawccb_pd_alloc_init(hw_id);
         if (rawccb_pd == NULL) {
             ret = HAL_RET_OOM;
-            goto cleanup;    
+            goto cleanup;
         }
     }
 
@@ -393,12 +394,12 @@ pd_rawccb_create (pd_rawccb_create_args_t *args)
     rawccb_pd->hw_addr = pd_rawccb_get_base_hw_addr(rawccb_pd);
     printf("RAWCCB{%u} Received hw_addr: 0x%lx ",
            hw_id, rawccb_pd->hw_addr);
-    
+
     // program rawccb
     ret = p4pd_add_or_del_rawccb_entry(rawccb_pd, false,
                                        qstate_header_overwrite);
     if(ret != HAL_RET_OK) {
-        goto cleanup;    
+        goto cleanup;
     }
     // add to db
     ret = add_rawccb_pd_to_db(rawccb_pd);
@@ -425,7 +426,8 @@ pd_rawccb_deactivate (pd_rawccb_update_args_t *args)
     pd_rawccb_t         curr_rawccb_pd;
     pd_rawccb_get_args_t    curr_args;
     rawccb_t*           rawccb = args->rawccb;
-    
+    pd_func_args_t      pd_func_args = {0};
+
     pd_rawccb_get_args_init(&curr_args);
     curr_args.rawccb = &curr_rawccb;
     curr_rawccb.cb_id = rawccb->cb_id;
@@ -436,31 +438,33 @@ pd_rawccb_deactivate (pd_rawccb_update_args_t *args)
     curr_rawccb_pd.hw_addr = pd_rawccb_get_base_hw_addr(&curr_rawccb_pd);
     HAL_TRACE_DEBUG("RAWCCB pd deactivate for id: {} hw_addr {:#x}",
                     rawccb->cb_id,  curr_rawccb_pd.hw_addr);
-    ret = pd_rawccb_get(&curr_args);
+    pd_func_args.pd_rawccb_get = &curr_args;
+    ret = pd_rawccb_get(&pd_func_args);
     if (ret == HAL_RET_OK) {
         ret = p4pd_add_or_del_rawccb_entry(&curr_rawccb_pd, true, false);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to deactivate rawccb entry"); 
+            HAL_TRACE_ERR("Failed to deactivate rawccb entry");
         }
     }
-    
+
     return ret;
 }
 
 hal_ret_t
-pd_rawccb_update (pd_rawccb_update_args_t *args)
+pd_rawccb_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
-    
+    pd_rawccb_update_args_t *args = pd_func_args->pd_rawccb_update;
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     rawccb_t        *rawccb = args->rawccb;
     pd_rawccb_t     *rawccb_pd = (pd_rawccb_t*)rawccb->pd;
 
     HAL_TRACE_DEBUG("RAWCCB pd update for id: {}", rawccb_pd->hw_id);
-    
+
     /*
      * First, deactivate the current rawccb
      */
@@ -482,26 +486,27 @@ hal_ret_t
 pd_rawccb_delete (pd_rawccb_args_t *args,
                   bool retain_in_db)
 #endif
-pd_rawccb_delete (pd_rawccb_delete_args_t *del_args)
+pd_rawccb_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
+    pd_rawccb_delete_args_t *del_args = pd_func_args->pd_rawccb_delete;
     pd_rawccb_args_t *args = del_args->r_args;
     bool retain_in_db = del_args->retain_in_db;
-    
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     rawccb_t        *rawccb = args->rawccb;
     pd_rawccb_t     *rawccb_pd = (pd_rawccb_t*)rawccb->pd;
 
     HAL_TRACE_DEBUG("RAWCCB pd delete for id: {}", rawccb_pd->hw_id);
-    
+
     ret = p4pd_add_or_del_rawccb_entry(rawccb_pd, true, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete rawccb entry"); 
+        HAL_TRACE_ERR("Failed to delete rawccb entry");
     }
-    
+
     if (!retain_in_db) {
         del_rawccb_pd_from_db(rawccb_pd);
         rawccb_pd_free(rawccb_pd);
@@ -511,9 +516,10 @@ pd_rawccb_delete (pd_rawccb_delete_args_t *del_args)
 }
 
 hal_ret_t
-pd_rawccb_get (pd_rawccb_get_args_t *args)
+pd_rawccb_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
+    pd_rawccb_get_args_t *args = pd_func_args->pd_rawccb_get;
     pd_rawccb_t     rawccb_pd;
     rawccb_hw_id_t  hw_id = args->rawccb->cb_id;
 
@@ -522,7 +528,7 @@ pd_rawccb_get (pd_rawccb_get_args_t *args)
     // allocate PD rawccb state
     rawccb_pd_init(&rawccb_pd, hw_id);
     rawccb_pd.rawccb = args->rawccb;
-    
+
     rawccb_pd.hw_addr = pd_rawccb_get_base_hw_addr(&rawccb_pd);
     HAL_TRACE_DEBUG("Received hw_addr {:#x}", rawccb_pd.hw_addr);
 

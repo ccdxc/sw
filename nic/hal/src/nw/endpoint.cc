@@ -476,6 +476,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t             *dhl_entry = NULL;
     ep_t                    *ep        = NULL;
     ep_create_app_ctxt_t    *app_ctxt  = NULL;
+    pd::pd_func_args_t      pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -493,7 +494,8 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.vrf = app_ctxt->vrf;
     pd_ep_args.l2seg = app_ctxt->l2seg;
     pd_ep_args.intf = app_ctxt->hal_if;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_CREATE, (void *)&pd_ep_args);
+    pd_func_args.pd_ep_create = &pd_ep_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create ep pd, err : {}", ret);
     }
@@ -629,13 +631,15 @@ hal_ret_t
 endpoint_create_abort_cleanup (ep_t *ep, hal_handle_t hal_handle)
 {
     pd::pd_ep_delete_args_t         pd_ep_args = { 0 };
-    hal_ret_t                       ret = HAL_RET_OK;           
+    hal_ret_t                       ret = HAL_RET_OK;
+    pd::pd_func_args_t              pd_func_args = {0};
 
     HAL_TRACE_DEBUG("EP create abort cb");
     if (ep->pd) {
         pd::pd_ep_delete_args_init(&pd_ep_args);
         pd_ep_args.ep = ep;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_DELETE, (void *)&pd_ep_args);
+        pd_func_args.pd_ep_delete = &pd_ep_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_DELETE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete ep pd, err : {}", ret);
         }
@@ -666,7 +670,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle = dhl_entry->handle;
 
     ret = endpoint_create_abort_cleanup(ep, hal_handle);
-    
+
     return ret;
 }
 
@@ -1038,6 +1042,7 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                     *dhl_entry = NULL;
     ep_t                            *ep = NULL/*, *ep_clone = NULL*/;
     ep_update_app_ctxt_t            *app_ctxt = NULL;
+    pd::pd_func_args_t              pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode     = cfg_ctxt->dhl.next;
@@ -1052,7 +1057,8 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.add_iplist    = app_ctxt->add_iplist;
     pd_ep_args.del_iplist    = app_ctxt->del_iplist;
     pd_ep_args.app_ctxt      = app_ctxt;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_UPDATE, (void *)&pd_ep_args);
+    pd_func_args.pd_ep_update = &pd_ep_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update ep pd, err : {}", ret);
     }
@@ -1077,6 +1083,7 @@ hal_ret_t
 ep_make_clone (ep_t *ep, ep_t **ep_clone)
 {
     pd::pd_ep_make_clone_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     *ep_clone = ep_alloc_init();
 
@@ -1084,7 +1091,8 @@ ep_make_clone (ep_t *ep, ep_t **ep_clone)
 
     args.ep = ep;
     args.clone = *ep_clone;
-    pd::hal_pd_call(pd::PD_FUNC_ID_EP_MAKE_CLONE, (void *)&args);
+    pd_func_args.pd_ep_make_clone = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_EP_MAKE_CLONE, &pd_func_args);
 
     // after clone always reset lists
     dllist_reset(&(*ep_clone)->session_list_head);
@@ -1120,11 +1128,12 @@ hal_ret_t
 endpoint_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_ep_mem_free_args_t            pd_ep_args = { 0 };
+    pd::pd_ep_mem_free_args_t   pd_ep_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     ep_t                        *ep = NULL, *ep_clone = NULL;
     ep_update_app_ctxt_t        *app_ctxt = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -1144,7 +1153,8 @@ endpoint_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free PD
     pd::pd_ep_mem_free_args_init(&pd_ep_args);
     pd_ep_args.ep = ep;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_MEM_FREE, (void *)&pd_ep_args);
+    pd_func_args.pd_ep_mem_free = &pd_ep_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_MEM_FREE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete ep pd, err : {}", ret);
     }
@@ -1169,6 +1179,7 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     ep_t                        *ep = NULL;
     ep_update_app_ctxt_t        *app_ctxt = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -1183,7 +1194,8 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // free PD
     pd::pd_ep_mem_free_args_init(&pd_ep_args);
     pd_ep_args.ep = ep;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_MEM_FREE, (void *)&pd_ep_args);
+    pd_func_args.pd_ep_mem_free = &pd_ep_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_MEM_FREE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete ep pd, err : {}", ret);
     }
@@ -1960,6 +1972,7 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     ep_t                        *ep = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -1977,7 +1990,8 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_ep_delete_args_init(&pd_ep_args);
     pd_ep_args.ep = ep;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_DELETE, (void *)&pd_ep_args);
+    pd_func_args.pd_ep_delete = &pd_ep_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete ep pd, err : {}", ret);
     }
@@ -2123,6 +2137,7 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     EplearnStatus                      *ep_learn_status;
     pd::pd_ep_get_args_t               args = {0};
     hal_ret_t                          ret = HAL_RET_OK;
+    pd::pd_func_args_t                 pd_func_args = {0};
 
     auto vrf       = vrf_lookup_by_handle(ep->vrf_handle);
     auto interface = find_if_by_handle(ep->if_handle);
@@ -2169,7 +2184,8 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     // Getting PD information
     args.ep = ep;
     args.rsp = response;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_GET, (void *)&args);
+    pd_func_args.pd_ep_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to do PD get for Endpoint err: {}",
                       ret);
@@ -2499,8 +2515,9 @@ ep_restore_add (ep_t *ep, vrf_t *vrf,
                 l2seg_t *l2seg, if_t *hal_if,
                 const EndpointGetResponse& ep_info)
 {
-    hal_ret_t                    ret;
+    hal_ret_t                   ret;
     pd::pd_ep_restore_args_t    pd_ep_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     // restore pd state
     pd::pd_ep_restore_args_init(&pd_ep_args);
@@ -2510,7 +2527,8 @@ ep_restore_add (ep_t *ep, vrf_t *vrf,
     pd_ep_args.intf = hal_if;
 
     pd_ep_args.ep_status = &ep_info.status();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_RESTORE, &pd_ep_args);
+    pd_func_args.pd_ep_restore = &pd_ep_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_RESTORE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to restore EP {} pd, err : {}",
                        ep_l2_key_to_str(ep), ret);
@@ -2580,7 +2598,7 @@ ep_restore_cb (void *obj, uint32_t len)
     vrf_t                   *vrf = NULL;
     l2seg_t                 *l2seg = NULL;
     if_t                    *hal_if = NULL;
- 
+
     HAL_TRACE_DEBUG("Restoring EPs");
 
     // de-serialize the object

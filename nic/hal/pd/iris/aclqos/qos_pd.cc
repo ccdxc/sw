@@ -387,7 +387,7 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     dscp_map.dot1q_pcp = qos_class->uplink_cmap.dot1q_pcp;
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        ret = capri_tm_uplink_input_map_update(port, 
+        ret = capri_tm_uplink_input_map_update(port,
                                                qos_class->uplink_cmap.dot1q_pcp,
                                                iq);
         if (ret != HAL_RET_OK) {
@@ -433,7 +433,7 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         if (dot1q_remove) {
-            ret = capri_tm_uplink_input_map_update(port, 
+            ret = capri_tm_uplink_input_map_update(port,
                                                    dot1q_pcp,
                                                    default_qos_class_iq);
             if (ret != HAL_RET_OK) {
@@ -468,7 +468,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
     }
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq, 
+        ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq,
                                         qos_class->no_drop, qos_class->pfc.cos);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the xoff params for "
@@ -651,7 +651,7 @@ qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
 }
 
 static void
-qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd, 
+qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
                              pd_qos_iq_t *iqs, uint32_t iq_cnt,
                              pd_qos_oq_t *oqs, uint32_t oq_cnt)
 {
@@ -735,14 +735,14 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
     }
 }
 
-static void 
+static void
 qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
 {
     pd_qos_iq_t              iqs[HAL_PD_QOS_MAX_IQS_PER_CLASS] = {};
     pd_qos_oq_t              oqs[HAL_PD_QOS_MAX_OQS_PER_CLASS] = {};
 
-    qos_class_pd_get_all_queues(qos_class_pd, 
-                                iqs, HAL_ARRAY_SIZE(iqs), 
+    qos_class_pd_get_all_queues(qos_class_pd,
+                                iqs, HAL_ARRAY_SIZE(iqs),
                                 oqs, HAL_ARRAY_SIZE(oqs));
 
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(iqs); i++) {
@@ -756,9 +756,10 @@ qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
 // Qos-class Create
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_create (pd_qos_class_create_args_t *args)
+pd_qos_class_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;;
+    pd_qos_class_create_args_t *args = pd_func_args->pd_qos_class_create;
     pd_qos_class_t *pd_qos_class;
 
     HAL_TRACE_DEBUG("creating pd state for qos_class: {}",
@@ -810,9 +811,10 @@ end:
 // Qos-class Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_update (pd_qos_class_update_args_t *args)
+pd_qos_class_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_qos_class_update_args_t *args = pd_func_args->pd_qos_class_update;
     pd_qos_class_t *pd_qos_class;
     qos_class_t *qos_class;
 
@@ -842,7 +844,7 @@ pd_qos_class_update (pd_qos_class_update_args_t *args)
             return ret;
         }
 
-        ret = qos_class_pd_update_uplink_iq_map_remove(args->dot1q_pcp_changed, 
+        ret = qos_class_pd_update_uplink_iq_map_remove(args->dot1q_pcp_changed,
                                                        args->dot1q_pcp_src,
                                                        args->ip_dscp_remove,
                                                        HAL_ARRAY_SIZE(args->ip_dscp_remove));
@@ -891,9 +893,10 @@ pd_qos_class_update (pd_qos_class_update_args_t *args)
 // PD Qos-class Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_delete (pd_qos_class_delete_args_t *args)
+pd_qos_class_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret;
+    pd_qos_class_delete_args_t *args = pd_func_args->pd_qos_class_delete;
     pd_qos_class_t *qos_class_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -919,9 +922,10 @@ pd_qos_class_delete (pd_qos_class_delete_args_t *args)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_make_clone (pd_qos_class_make_clone_args_t *args)
+pd_qos_class_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_qos_class_make_clone_args_t *args = pd_func_args->pd_qos_class_make_clone;
     pd_qos_class_t *pd_qos_class_clone = NULL;
     qos_class_t *qos_class = args->qos_class;
     qos_class_t *clone = args->clone;
@@ -960,7 +964,7 @@ qos_class_pd_port_to_packet_buffer_port (tm_port_t port, qos::PacketBufferPort *
     }
 }
 
-static void 
+static void
 qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *epd_status)
 {
     pd_qos_iq_t              iqs[HAL_PD_QOS_MAX_IQS_PER_CLASS] = {};
@@ -968,14 +972,14 @@ qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *e
     qos::QosClassInputQueue  *input_queue;
     qos::QosClassOutputQueue *output_queue;
 
-    qos_class_pd_get_all_queues(qos_class_pd, 
-                                iqs, HAL_ARRAY_SIZE(iqs), 
+    qos_class_pd_get_all_queues(qos_class_pd,
+                                iqs, HAL_ARRAY_SIZE(iqs),
                                 oqs, HAL_ARRAY_SIZE(oqs));
 
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(iqs); i++) {
         if (iqs[i].valid) {
             input_queue = epd_status->add_input_queues();
-            qos_class_pd_port_to_packet_buffer_port(iqs[i].port, 
+            qos_class_pd_port_to_packet_buffer_port(iqs[i].port,
                                                     input_queue->mutable_packet_buffer_port());
             input_queue->set_input_queue_idx(iqs[i].iq);
         }
@@ -983,7 +987,7 @@ qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *e
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(oqs); i++) {
         if (oqs[i].valid) {
             output_queue = epd_status->add_output_queues();
-            qos_class_pd_port_to_packet_buffer_port(oqs[i].port, 
+            qos_class_pd_port_to_packet_buffer_port(oqs[i].port,
                                                     output_queue->mutable_packet_buffer_port());
             output_queue->set_output_queue_idx(oqs[i].oq);
         }
@@ -1000,8 +1004,8 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
     tm_iq_stats_t            iq_stats;
     tm_oq_stats_t            oq_stats;
 
-    qos_class_pd_get_all_queues(qos_class_pd, 
-                                iqs, HAL_ARRAY_SIZE(iqs), 
+    qos_class_pd_get_all_queues(qos_class_pd,
+                                iqs, HAL_ARRAY_SIZE(iqs),
                                 oqs, HAL_ARRAY_SIZE(oqs));
 
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(iqs); i++) {
@@ -1017,7 +1021,7 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
             }
 
             auto input_stats = stats->add_input_queue_stats();
-            qos_class_pd_port_to_packet_buffer_port(iqs[i].port, 
+            qos_class_pd_port_to_packet_buffer_port(iqs[i].port,
                                                     input_stats->mutable_input_queue()->mutable_packet_buffer_port());
             input_stats->mutable_input_queue()->set_input_queue_idx(iqs[i].iq);
             input_stats->set_good_pkts_in(iq_stats.good_pkts_in);
@@ -1041,7 +1045,7 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
                 }
             }
             auto output_stats = stats->add_output_queue_stats();
-            qos_class_pd_port_to_packet_buffer_port(oqs[i].port, 
+            qos_class_pd_port_to_packet_buffer_port(oqs[i].port,
                                                     output_stats->mutable_output_queue()->mutable_packet_buffer_port());
             output_stats->mutable_output_queue()->set_output_queue_idx(oqs[i].oq);
             output_stats->set_queue_depth(oq_stats.queue_depth);
@@ -1054,9 +1058,10 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
 // pd qos_class get
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_get (pd_qos_class_get_args_t *args)
+pd_qos_class_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_qos_class_get_args_t *args = pd_func_args->pd_qos_class_get;
     qos_class_t         *qos_class = args->qos_class;
     pd_qos_class_t      *qos_class_pd = (pd_qos_class_t *)qos_class->pd;
     QosClassGetResponse *rsp = args->rsp;
@@ -1088,9 +1093,10 @@ qos_class_pd_restore_data (pd_qos_class_restore_args_t *args)
 // pd qos_class restore
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_restore (pd_qos_class_restore_args_t *args)
+pd_qos_class_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret;
+    pd_qos_class_restore_args_t *args = pd_func_args->pd_qos_class_restore;
     pd_qos_class_t *qos_class_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -1137,9 +1143,10 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_mem_free (pd_qos_class_mem_free_args_t *args)
+pd_qos_class_mem_free (pd_func_args_t *pd_func_args)
 {
     pd_qos_class_t        *pd_qos_class;
+    pd_qos_class_mem_free_args_t *args = pd_func_args->pd_qos_class_mem_free;
 
     pd_qos_class = (pd_qos_class_t *)args->qos_class->pd;
     qos_class_pd_mem_free(pd_qos_class);
@@ -1153,9 +1160,11 @@ qos_class_get_qos_class_id (qos_class_t *qos_class,
                             if_t *dest_if,
                             uint32_t *qos_class_id)
 #endif
-pd_qos_class_get_qos_class_id (pd_qos_class_get_qos_class_id_args_t *q_args)
+pd_qos_class_get_qos_class_id (pd_func_args_t *pd_func_args)
 {
     pd_qos_class_t *pd_qos_class;
+    pd_qos_class_get_qos_class_id_args_t *q_args = pd_func_args->pd_qos_class_get_qos_class_id;
+    pd_func_args_t pd_func_args1 = {0};
     tm_port_t      dest_port;
     uint32_t       group = 0;
     pd_if_get_tm_oport_args_t args;
@@ -1170,7 +1179,8 @@ pd_qos_class_get_qos_class_id (pd_qos_class_get_qos_class_id_args_t *q_args)
 
     if (dest_if) {
         args.pi_if = dest_if;
-        pd_if_get_tm_oport(&args);
+        pd_func_args1.pd_if_get_tm_oport = &args;
+        pd_if_get_tm_oport(&pd_func_args1);
         dest_port = args.tm_oport;
         // dest_port = if_get_tm_oport(dest_if);
     } else {
@@ -1213,8 +1223,9 @@ qos_class_get_admin_cos (void)
 }
 
 hal_ret_t
-pd_qos_class_get_admin_cos (pd_qos_class_get_admin_cos_args_t *args)
+pd_qos_class_get_admin_cos (pd_func_args_t *pd_func_args)
 {
+    pd_qos_class_get_admin_cos_args_t *args = pd_func_args->pd_qos_class_get_admin_cos;
     args->cos = HAL_QOS_ADMIN_COS;
     return HAL_RET_OK;
 }
@@ -1223,7 +1234,7 @@ pd_qos_class_get_admin_cos (pd_qos_class_get_admin_cos_args_t *args)
 // pd qos_class periodic_stats_update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_periodic_stats_update (pd_qos_class_periodic_stats_update_args_t *args)
+pd_qos_class_periodic_stats_update (pd_func_args_t *pd_func_args)
 {
     return capri_tm_periodic_stats_update();
 }

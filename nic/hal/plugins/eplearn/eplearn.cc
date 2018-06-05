@@ -43,6 +43,7 @@ static bool is_arp_learning_required(fte::ctx_t &ctx)
 {
     const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::pd::pd_func_args_t          pd_func_args = {0};
     hal::hal_obj_id_t obj_id;
     void *obj;
     hal_ret_t ret = HAL_RET_OK;
@@ -58,7 +59,8 @@ static bool is_arp_learning_required(fte::ctx_t &ctx)
     args.flow_lkupid = cpu_hdr->lkp_vrf;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+    pd_func_args.pd_get_object_from_flow_lkupid = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
     if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
         HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
         return false;

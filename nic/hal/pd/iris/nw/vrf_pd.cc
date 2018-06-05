@@ -37,9 +37,10 @@ hal_ret_t vrf_pd_del_from_db(pd_vrf_t *pd_vrf);
 // PD vrf Create
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_create (pd_vrf_create_args_t *args)
+pd_vrf_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_vrf_create_args_t *args = pd_func_args->pd_vrf_create;
     pd_vrf_t                *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -86,9 +87,10 @@ end:
 // PD vrf Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_update (pd_vrf_update_args_t *args)
+pd_vrf_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret     = HAL_RET_OK;
+    pd_vrf_update_args_t *args = pd_func_args->pd_vrf_update;
     pd_vrf_t    *vrf_pd = (pd_vrf_t *)args->vrf->pd;
 
     if (args->gipo_prefix_change) {
@@ -115,9 +117,10 @@ end:
 // PD vrf Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_delete (pd_vrf_delete_args_t *args)
+pd_vrf_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_vrf_delete_args_t *args = pd_func_args->pd_vrf_delete;
     pd_vrf_t    *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -153,9 +156,10 @@ end:
 // pd vrf get
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_get (pd_vrf_get_args_t *args)
+pd_vrf_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_vrf_get_args_t *args = pd_func_args->pd_vrf_get;
     vrf_t           *vrf = args->vrf;
     pd_vrf_t        *vrf_pd = (pd_vrf_t *)vrf->pd;
     VrfGetResponse  *rsp = args->rsp;
@@ -200,9 +204,10 @@ pd_vrf_restore_data (pd_vrf_restore_args_t *args)
 // pd vrf restore
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_restore (pd_vrf_restore_args_t *args)
+pd_vrf_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret;
+    pd_vrf_restore_args_t *args = pd_func_args->pd_vrf_restore;
     pd_vrf_t    *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -896,9 +901,10 @@ delink_pi_pd(pd_vrf_t *pd_vrf, vrf_t *pi_vrf)
 // makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_make_clone(pd_vrf_make_clone_args_t *args)
+pd_vrf_make_clone(pd_func_args_t *pd_func_args)
 {
     hal_ret_t     ret = HAL_RET_OK;
+    pd_vrf_make_clone_args_t *args = pd_func_args->pd_vrf_make_clone;
     pd_vrf_t      *pd_vrf_clone = NULL;
     vrf_t         *vrf, *clone;
 
@@ -923,9 +929,10 @@ end:
 // frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_mem_free(pd_vrf_mem_free_args_t *args)
+pd_vrf_mem_free(pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_vrf_mem_free_args_t *args = pd_func_args->pd_vrf_mem_free;
     pd_vrf_t    *vrf_pd;
 
     vrf_pd = (pd_vrf_t *)args->vrf->pd;
@@ -939,9 +946,10 @@ pd_vrf_mem_free(pd_vrf_mem_free_args_t *args)
 // Note: Currently being used only for IPSec packets.
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_get_fromcpu_vlanid(pd_vrf_get_fromcpu_vlanid_args_t *args)
+pd_vrf_get_fromcpu_vlanid(pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_vrf_get_fromcpu_vlanid_args_t *args = pd_func_args->pd_vrf_get_fromcpu_vlanid;
     vrf_t *vrf    = args->vrf;
     uint16_t *vid = args->vid;
 
@@ -960,8 +968,9 @@ end:
 // Returns the vrf lookupid of the vrf (used as lkp_vrf in flow key)
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_get_lookup_id(pd_vrf_get_lookup_id_args_t *args)
+pd_vrf_get_lookup_id(pd_func_args_t *pd_func_args)
 {
+    pd_vrf_get_lookup_id_args_t *args = pd_func_args->pd_vrf_get_lookup_id;
     vrf_t *vrf = args->vrf;
     args->lkup_id = ((pd_vrf_t *)vrf->pd)->vrf_fl_lkup_id;
     return HAL_RET_OK;

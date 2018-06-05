@@ -23,11 +23,13 @@ software_phv_get (internal::SoftwarePhvGetRequest &req, internal::SoftwarePhvGet
 {
     pd::pd_swphv_get_state_args_t   state;
     hal_ret_t                       ret = HAL_RET_OK;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_TRACE_DEBUG("swphv_get: got called for type {}", req.pipeline());
 
     state.type = (pd::pd_swphv_type_t)req.pipeline();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SWPHV_GET_STATE, (void *)&state);
+    pd_func_args.pd_swphv_get_state = &state;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SWPHV_GET_STATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to get swphv state, err : {}", __FUNCTION__, ret);
 	return ret;
@@ -52,10 +54,12 @@ software_phv_inject (internal::SoftwarePhvInject &req, internal::SoftwarePhvResp
 {
     pd::pd_swphv_inject_args_t args;
     hal_ret_t                   ret = HAL_RET_OK;
+    pd::pd_func_args_t          pd_func_args = {0};
 
 
     args.type = (pd::pd_swphv_type_t)req.pipeline();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SWPHV_INJECT, (void *)&args);
+    pd_func_args.pd_swphv_inject = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SWPHV_INJECT, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to inject swphv, err : {}",
                       __FUNCTION__, ret);

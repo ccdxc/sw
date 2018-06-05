@@ -146,6 +146,7 @@ hal_ret_t
 mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 {
     hal::pd::pd_mpu_trace_enable_args_t args;
+    pd::pd_func_args_t                  pd_func_args = {0};
 
     memset(&args, 0, sizeof(hal::pd::pd_mpu_trace_enable_args_t));
 
@@ -211,8 +212,9 @@ mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
         args.reset = 1;
     }
 
+    pd_func_args.pd_mpu_trace_enable = &args;
     return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_MPU_TRACE_ENABLE,
-                                (void *)&args);
+                                &pd_func_args);
 }
 
 //------------------------------------------------------------------------------

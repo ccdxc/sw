@@ -65,7 +65,7 @@ TEST_F(rw_test, test1) {
     MAC_UINT64_TO_ADDR(key.mac_da, mac_da1);
     ret = rw_entry_alloc(&key, NULL, &rw_idx);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     MAC_UINT64_TO_ADDR(key.mac_da, mac_da);
     ret = rw_entry_delete(&key);
     ASSERT_TRUE(ret == HAL_RET_OK);
@@ -85,7 +85,7 @@ TEST_F(rw_test, test1) {
     dm.actionid = 1;
 
     hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
+    rt = test_dm.insert(&dm, &index);
     ASSERT_TRUE(rt == HAL_RET_OK);
 
 }
@@ -93,9 +93,11 @@ TEST_F(rw_test, test1) {
 
 int main(int argc, char **argv) {
     hal::pd::pd_mem_init_args_t    args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
 
     ::testing::InitGoogleTest(&argc, argv);
     args.cfg_path = std::getenv("HAL_CONFIG_PATH");
-    hal::pd::pd_mem_init(&args);
+    pd_func_args.pd_mem_init = &args;
+    hal::pd::pd_mem_init(&pd_func_args);
     return RUN_ALL_TESTS();
 }

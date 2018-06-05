@@ -26,6 +26,7 @@ tls_exec(fte::ctx_t& ctx)
     TlsCbGetRequest     get_req;
     TlsCbGetResponse    get_resp;
     TlsCbGetResponseMsg resp_msg;
+    hal::pd::pd_func_args_t pd_func_args = {0};
 
     // Give the data to SSL/TLS library
     ret = hal::tls::tls_api_data_receive(cpu_rxhdr->qid, data, datalen);
@@ -35,7 +36,7 @@ tls_exec(fte::ctx_t& ctx)
     } else if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls-proxy: failed to process tls packet: {}", ret);
     }
-    
+
     // get tlscb
     get_req.mutable_key_or_handle()->set_tlscb_id(cpu_rxhdr->qid);
     ret = tlscb_get(get_req, &resp_msg);
@@ -50,7 +51,8 @@ tls_exec(fte::ctx_t& ctx)
         HAL_TRACE_DEBUG("tls-proxy: debug_dol to loop ctrl pkacet set. Transmit the packet");
         if (asesq_ctx == NULL)   {
             hal::pd::pd_cpupkt_ctxt_alloc_init_args_t args;
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, (void *)&args);
+            pd_func_args.pd_cpupkt_ctxt_alloc_init = &args;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, &pd_func_args);
             asesq_ctx = args.ctxt;
             // asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
             HAL_ASSERT_RETURN(asesq_ctx != NULL, fte::PIPELINE_CONTINUE);
@@ -60,7 +62,8 @@ tls_exec(fte::ctx_t& ctx)
         t_args.ctxt = asesq_ctx;
         t_args.type = types::WRING_TYPE_ASESQ;
         t_args.queue_id = cpu_rxhdr->qid;
-        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&t_args);
+        pd_func_args.pd_cpupkt_register_tx_queue = &t_args;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, &pd_func_args);
 #if 0
         ret = hal::pd::cpupkt_register_tx_queue(asesq_ctx,
                                                 types::WRING_TYPE_ASESQ,
@@ -80,7 +83,8 @@ tls_exec(fte::ctx_t& ctx)
         s_args.qtype = 0;
         s_args.qid = cpu_rxhdr->qid;
         s_args.ring_number = TCP_SCHED_RING_ASESQ;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, (void *)&s_args);
+        pd_func_args.pd_cpupkt_send = &s_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
 #if 0
         hal::pd::cpupkt_send(asesq_ctx,
                             types::WRING_TYPE_ASESQ,
@@ -98,19 +102,21 @@ tls_exec(fte::ctx_t& ctx)
 	return fte::PIPELINE_CONTINUE;
 }
 
-hal_ret_t 
-tls_poll_asym_pend_req_q(void) 
+hal_ret_t
+tls_poll_asym_pend_req_q(void)
 {
     hal_ret_t      ret = HAL_RET_OK;
     uint32_t       batch_size = 1;
     uint32_t       qid_count = 0;
     uint32_t       qid[batch_size] = {0};
-    
+    pd::pd_func_args_t pd_func_args = {0};
+
     hal::pd::pd_capri_barco_asym_poll_pend_req_args_t args = {0};
     args.batch_size = batch_size;
     args.id_count = &qid_count;
     args.ids = qid;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, (void *)&args);
+    pd_func_args.pd_capri_barco_asym_poll_pend_req = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to poll barco pending queue: {}", ret);
         return ret;

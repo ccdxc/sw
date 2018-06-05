@@ -242,6 +242,7 @@ dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
     dos_policy_t                    *dosp = NULL;
+    pd::pd_func_args_t              pd_func_args = {0};
     // dos_policy_create_app_ctx_t         *app_ctx = NULL;
 
     if (cfg_ctx == NULL) {
@@ -262,8 +263,8 @@ dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
     // PD Call to allocate PD resources and HW programming
     pd::pd_dos_policy_create_args_init(&pd_dosp_args);
     pd_dosp_args.dos_policy = dosp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DOS_POLICY_CREATE,
-                          (void *)&pd_dosp_args);
+    pd_func_args.pd_dos_policy_create = &pd_dosp_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DOS_POLICY_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to create dosp pd, err : {}",
                 __FUNCTION__, ret);

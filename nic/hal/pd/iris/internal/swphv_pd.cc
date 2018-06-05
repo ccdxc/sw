@@ -25,10 +25,11 @@ namespace pd {
 // Iris PHV size in bytes
 #define PD_IRIS_PHV_SIZE (4096 / 8)
 
-// pd_swphv_inject injects software PHV into a pipeline 
+// pd_swphv_inject injects software PHV into a pipeline
 hal_ret_t
-pd_swphv_inject (pd_swphv_inject_args_t *args)
+pd_swphv_inject (pd_func_args_t *pd_func_args)
 {
+    pd_swphv_inject_args_t *args = pd_func_args->pd_swphv_inject;
     uint8_t data[PD_IRIS_PHV_SIZE];
     hal_ret_t ret = HAL_RET_OK;
     bzero(data, PD_IRIS_PHV_SIZE);
@@ -110,8 +111,9 @@ pd_swphv_inject (pd_swphv_inject_args_t *args)
 // pd_swphv_get_state
 // get the current state of SW phv
 hal_ret_t
-pd_swphv_get_state (pd_swphv_get_state_args_t *state)
+pd_swphv_get_state (pd_func_args_t *pd_func_args)
 {
+    pd_swphv_get_state_args_t *state = pd_func_args->pd_swphv_get_state;
     asicpd_sw_phv_state_t    hw_state;
     hal_ret_t   ret = HAL_RET_OK;
 

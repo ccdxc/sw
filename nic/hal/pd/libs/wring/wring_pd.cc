@@ -467,7 +467,7 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
 		return HAL_RET_HW_FAIL;
     }
 #endif
-    HAL_TRACE_DEBUG("ARQRX id: {} pi addr {:#x}, value: {}", 
+    HAL_TRACE_DEBUG("ARQRX id: {} pi addr {:#x}, value: {}",
                         wring_pd->wring->wring_id,
                         addr,
                         pindex);
@@ -599,9 +599,10 @@ wring_pd_compare_hw_key_func (void *key1, void *key2)
 }
 
 hal_ret_t
-pd_wring_create (pd_wring_create_args_t *args)
+pd_wring_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_wring_create_args_t *args = pd_func_args->pd_wring_create;
     pd_wring_s              *wring_pd;
 
     HAL_TRACE_DEBUG("WRING pd create");
@@ -640,9 +641,10 @@ cleanup:
 }
 
 hal_ret_t
-pd_wring_get_entry (pd_wring_get_entry_args_t *args)
+pd_wring_get_entry (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_wring_get_entry_args_t *args = pd_func_args->pd_wring_get_entry;
     pd_wring_t              wring_pd;
 
     // allocate PD wring state
@@ -661,9 +663,10 @@ cleanup:
 }
 
 hal_ret_t
-pd_wring_get_meta (pd_wring_get_meta_args_t *args)
+pd_wring_get_meta (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_wring_get_meta_args_t *args = pd_func_args->pd_wring_get_meta;
     pd_wring_t              wring_pd;
 
     HAL_TRACE_DEBUG("Wring pd get meta");
@@ -684,9 +687,10 @@ cleanup:
 }
 
 hal_ret_t
-pd_wring_set_meta (pd_wring_set_meta_args_t *args)
+pd_wring_set_meta (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_wring_set_meta_args_t *args = pd_func_args->pd_wring_set_meta;
     pd_wring_t              wring_pd;
 
     HAL_TRACE_DEBUG("Wring pd set meta");

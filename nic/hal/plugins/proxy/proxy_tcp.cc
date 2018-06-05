@@ -93,7 +93,7 @@ proxy_create_hdr_template(TcpCbSpec &spec,
     HAL_TRACE_DEBUG("tcp-proxy: header template eth={}", hex_dump((uint8_t*)eth, 18));
     HAL_TRACE_DEBUG("tcp-proxy: header template ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
     HAL_TRACE_DEBUG("tcp-proxy: header template tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
-    
+
     if (is_itor_dir) {
         sport = tcp->sport;
         dport = tcp->dport;
@@ -111,7 +111,7 @@ proxy_create_hdr_template(TcpCbSpec &spec,
     }
 
     vlan_id = htons(src_vlan_id);
-    HAL_TRACE_DEBUG("tcp-proxy: src_vlan_id: {}, htons(vlan_id): {:#x}", src_vlan_id, vlan_id);   
+    HAL_TRACE_DEBUG("tcp-proxy: src_vlan_id: {}, htons(vlan_id): {:#x}", src_vlan_id, vlan_id);
     HAL_TRACE_DEBUG("tcp-proxy: sport={}", hex_dump((uint8_t*)&sport, sizeof(sport)));
     HAL_TRACE_DEBUG("tcp-proxy: dport={}", hex_dump((uint8_t*)&dport, sizeof(dport)));
     HAL_TRACE_DEBUG("tcp-proxy: sip={}", hex_dump((uint8_t*)&sip, sizeof(sip)));
@@ -181,7 +181,7 @@ proxy_create_v6_hdr_template(TcpCbSpec &spec,
     }
 
     vlan_id = htons(src_vlan_id);
-    HAL_TRACE_DEBUG("tcp-proxy: src_vlan_id: {}, htons(vlan_id): {:#x}", src_vlan_id, vlan_id);   
+    HAL_TRACE_DEBUG("tcp-proxy: src_vlan_id: {}, htons(vlan_id): {:#x}", src_vlan_id, vlan_id);
     HAL_TRACE_DEBUG("tcp-proxy: sport={}", hex_dump((uint8_t*)&sport, sizeof(sport)));
     HAL_TRACE_DEBUG("tcp-proxy: dport={}", hex_dump((uint8_t*)&dport, sizeof(dport)));
     HAL_TRACE_DEBUG("tcp-proxy: sip={}", hex_dump((uint8_t*)&sip, sizeof(sip)));
@@ -375,7 +375,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_header_template(data, sizeof(data));
 
     spec->set_state(hal::pd::lkl_get_tcpcb_state(tcpcb));
-    if(src_lif == 0) 
+    if(src_lif == 0)
         src_lif = get_rsp.mutable_spec()->source_lif();
     HAL_TRACE_DEBUG("Calling TCPCB Update with src_lif: {}", src_lif);
     spec->set_source_lif(src_lif);
@@ -456,11 +456,13 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     ret = tcpcb_update(*spec, &rsp);
 
     hal::pd::pd_cpupkt_program_send_ring_doorbell_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     args.dest_lif = SERVICE_LIF_TCP_PROXY;
     args.qtype = 0;
     args.qid = qid;
     args.ring_number = TCP_SCHED_RING_PENDING_RX2TX;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_PGM_SEND_RING_DBELL, (void *)&args);
+    pd_func_args.pd_cpupkt_program_send_ring_doorbell = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_PGM_SEND_RING_DBELL, &pd_func_args);
 #if 0
     ret = hal::pd::cpupkt_program_send_ring_doorbell(SERVICE_LIF_TCP_PROXY,
                                                      0,
@@ -476,11 +478,13 @@ void tcp_ring_doorbell(uint32_t qid)
 {
     hal_ret_t ret = HAL_RET_OK;
     hal::pd::pd_cpupkt_program_send_ring_doorbell_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     args.dest_lif = SERVICE_LIF_TCP_PROXY;
     args.qtype = 0;
     args.qid = qid;
     args.ring_number = TCP_SCHED_RING_PENDING_RX2TX;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_PGM_SEND_RING_DBELL, (void *)&args);
+    pd_func_args.pd_cpupkt_program_send_ring_doorbell = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_PGM_SEND_RING_DBELL, &pd_func_args);
 #if 0
     ret = hal::pd::cpupkt_program_send_ring_doorbell(SERVICE_LIF_TCP_PROXY,
                                                      0,
@@ -596,22 +600,24 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-static hal_ret_t 
+static hal_ret_t
 tcp_get_flow_encap_for_h2n_flow(const fte::ctx_t &ctx,
                                 const proxy_flow_info_t& pfi,
                                 hal::lklshim_flow_encap_t& flow_encap)
 {
     uint16_t hw_vlan_id = 0;
     hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
 
     HAL_TRACE_DEBUG("tcp-proxy: Host -> Uplink connection");
-    
-    // Get CPU hw vlan-id 
+
+    // Get CPU hw vlan-id
     args.l2seg = ctx.dl2seg();
     args.vid = &hw_vlan_id;
-    
+
+    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
     if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                             (void*)&args) != HAL_RET_OK) {
+                             &pd_func_args) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get CPU VLAN-id");
     } else {
         HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", hw_vlan_id);
@@ -627,7 +633,7 @@ tcp_get_flow_encap_for_h2n_flow(const fte::ctx_t &ctx,
     return HAL_RET_OK;
 }
 
-static hal_ret_t 
+static hal_ret_t
 tcp_get_flow_encap_for_n2h_flow(const fte::ctx_t &ctx,
                                 const proxy_flow_info_t& pfi,
                                 hal::lklshim_flow_encap_t& flow_encap)
@@ -635,16 +641,18 @@ tcp_get_flow_encap_for_n2h_flow(const fte::ctx_t &ctx,
     hal_ret_t ret = HAL_RET_OK;
     uint16_t hw_vlan_id = 0, hw_lif_id = 0;
     hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
     hal::lif_t *lif = NULL;
     hal::pd::pd_lif_get_args_t hwlif_args = {0};
 
     HAL_TRACE_DEBUG("tcp-proxy: Uplink -> host connection");
-    
-    // Get CPU hw vlan-id 
+
+    // Get CPU hw vlan-id
     args.l2seg = ctx.sl2seg();
     args.vid = &hw_vlan_id;
+    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
     if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                             (void*)&args) != HAL_RET_OK) {
+                             &pd_func_args) != HAL_RET_OK) {
         HAL_TRACE_ERR("tcp-proxy: Failed to get CPU VLAN-id");
     } else {
         HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", hw_vlan_id);
@@ -656,15 +664,16 @@ tcp_get_flow_encap_for_n2h_flow(const fte::ctx_t &ctx,
         HAL_TRACE_ERR("Failed to find for the handle: {}", ctx.dif()->lif_handle);
         return HAL_RET_LIF_NOT_FOUND;
     }
-    
+
     hwlif_args.lif = lif;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET, (void *)&hwlif_args);
+    pd_func_args.pd_lif_get = &hwlif_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get hw_lif_id for lif {}", lif->lif_id);
         return ret;
     }
     hw_lif_id = hwlif_args.hw_lif_id;
-    HAL_TRACE_DEBUG("tcp-proxy: Found lif id: {}, hw_lif-id: {}", 
+    HAL_TRACE_DEBUG("tcp-proxy: Found lif id: {}, hw_lif-id: {}",
                     lif->lif_id, hw_lif_id);
 
     flow_encap.i_src_lif = hw_lif_id;
@@ -678,21 +687,23 @@ tcp_get_flow_encap_for_n2h_flow(const fte::ctx_t &ctx,
     return HAL_RET_OK;
 }
 
-static hal_ret_t 
+static hal_ret_t
 tcp_get_flow_encap_for_n2n_flow(const fte::ctx_t &ctx,
                                 const proxy_flow_info_t& pfi,
                                 hal::lklshim_flow_encap_t& flow_encap)
 {
     uint16_t shw_vlan_id = 0, dhw_vlan_id = 0;
     hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
 
     HAL_TRACE_DEBUG("tcp-proxy: Uplink -> Uplink connection");
-    
-    // Get CPU hw vlan-id 
+
+    // Get CPU hw vlan-id
     args.l2seg = ctx.sl2seg();
     args.vid = &shw_vlan_id;
+    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
     if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                             (void*)&args) != HAL_RET_OK) {
+                             &pd_func_args) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get CPU VLAN-id");
     } else {
         HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
@@ -700,13 +711,14 @@ tcp_get_flow_encap_for_n2n_flow(const fte::ctx_t &ctx,
 
     args.l2seg = ctx.dl2seg();
     args.vid = &dhw_vlan_id;
+    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
     if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                             (void*)&args) != HAL_RET_OK) {
+                             &pd_func_args) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get CPU VLAN-id");
     } else {
         HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", dhw_vlan_id);
     }
-    
+
     flow_encap.i_src_lif = hal::SERVICE_LIF_CPU;
     flow_encap.i_src_vlan_id = dhw_vlan_id;
     flow_encap.r_src_lif = hal::SERVICE_LIF_CPU;
@@ -714,11 +726,11 @@ tcp_get_flow_encap_for_n2n_flow(const fte::ctx_t &ctx,
     flow_encap.encrypt_qid = pfi.qid1;
     flow_encap.decrypt_qid = pfi.qid2;
     flow_encap.is_server_ctxt = false;
-    
+
     return HAL_RET_OK;
 }
 
-static hal_ret_t 
+static hal_ret_t
 tcp_get_flow_encap(const fte::ctx_t& ctx,
                    const proxy_flow_info_t& pfi,
                    hal::lklshim_flow_encap_t& flow_encap)
@@ -840,14 +852,14 @@ tcp_transmit_pkt(unsigned char* pkt,
 {
     if (gl_ctx) {
         HAL_TRACE_DEBUG("tcp-proxy: txpkt src_lif={} src_vlan_id={}", src_lif, src_vlan_id);
-        
+
         hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
         hal::pd::p4plus_to_p4_header_t  p4plus_header = {0};
         cpu_header.src_lif = src_lif;
         cpu_header.hw_vlan_id = src_vlan_id;
         cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
         p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
-        
+
         gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
     } else {
         HAL_TRACE_DEBUG("tcp-proxy: gl_ctx is NULL");

@@ -18,9 +18,10 @@ static hal_ret_t vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd);
 // PD vrf Create
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_create (pd_vrf_create_args_t *args)
+pd_vrf_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_vrf_create_args_t *args = pd_func_args->pd_vrf_create;
     pd_vrf_t                *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -64,7 +65,7 @@ end:
 // PD vrf Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_update (pd_vrf_update_args_t *args)
+pd_vrf_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -75,9 +76,10 @@ pd_vrf_update (pd_vrf_update_args_t *args)
 // PD vrf Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_delete (pd_vrf_delete_args_t *args)
+pd_vrf_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_vrf_delete_args_t *args = pd_func_args->pd_vrf_delete;
     pd_vrf_t    *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -206,9 +208,10 @@ delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_make_clone(pd_vrf_make_clone_args_t *args)
+pd_vrf_make_clone(pd_func_args_t *pd_func_args)
 {
     hal_ret_t     ret           = HAL_RET_OK;
+    pd_vrf_make_clone_args_t *args = pd_func_args->pd_vrf_make_clone;
     pd_vrf_t      *pd_ten_clone = NULL;
     vrf_t         *ten, *clone;
 
@@ -233,9 +236,10 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_mem_free(pd_vrf_mem_free_args_t *args)
+pd_vrf_mem_free(pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_vrf_mem_free_args_t *args = pd_func_args->pd_vrf_mem_free;
     pd_vrf_t    *vrf_pd;
 
     vrf_pd = (pd_vrf_t *)args->vrf->pd;

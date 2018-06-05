@@ -63,9 +63,10 @@ end:
 }
 
 hal_ret_t
-pd_drop_stats_get (pd_drop_stats_get_args_t *args)
+pd_drop_stats_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_drop_stats_get_args_t *args = pd_func_args->pd_drop_stats_get;
     pd_system_args_t        *pd_sys_args = args->pd_sys_args;
     SystemResponse          *rsp = pd_sys_args->rsp;
     DropStatsEntry          *stats_entry = NULL;
@@ -156,9 +157,10 @@ end:
 }
 
 hal_ret_t
-pd_egress_drop_stats_get (pd_egress_drop_stats_get_args_t *args)
+pd_egress_drop_stats_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_egress_drop_stats_get_args_t *args = pd_func_args->pd_egress_drop_stats_get;
     pd_system_args_t        *pd_sys_args = args->pd_sys_args;
     SystemResponse          *rsp = pd_sys_args->rsp;
     EgressDropStatsEntry    *stats_entry = NULL;
@@ -478,9 +480,10 @@ pd_system_populate_table_stats (sys::TableStatsEntry *stats_entry,
 }
 
 hal_ret_t
-pd_table_stats_get(pd_table_stats_get_args_t *args)
+pd_table_stats_get(pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_table_stats_get_args_t *args = pd_func_args->pd_table_stats_get;
     pd_system_args_t        *pd_sys_args = args->pd_sys_args;
     SystemResponse          *rsp = pd_sys_args->rsp;
     sys::TableStatsEntry    *stats_entry = NULL;
@@ -504,8 +507,9 @@ pd_table_stats_get(pd_table_stats_get_args_t *args)
 // convert hardware timestamp to software timestamp
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_conv_hw_clock_to_sw_clock (pd_conv_hw_clock_to_sw_clock_args_t *args)
+pd_conv_hw_clock_to_sw_clock (pd_func_args_t *pd_func_args)
 {
+    pd_conv_hw_clock_to_sw_clock_args_t *args = pd_func_args->pd_conv_hw_clock_to_sw_clock;
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
         HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick),
                          (HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta()));
@@ -521,8 +525,9 @@ pd_conv_hw_clock_to_sw_clock (pd_conv_hw_clock_to_sw_clock_args_t *args)
 // convert hardware timestamp to software timestamp
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_conv_sw_clock_to_hw_clock (pd_conv_sw_clock_to_hw_clock_args_t *args)
+pd_conv_sw_clock_to_hw_clock (pd_func_args_t *pd_func_args)
 {
+    pd_conv_sw_clock_to_hw_clock_args_t *args = pd_func_args->pd_conv_sw_clock_to_hw_clock;
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
         *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns - g_hal_state_pd->clock_delta()));
     } else {
@@ -570,8 +575,9 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 // start a periodic timer for Hw and sw clock delta computation
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_clock_delta_comp (pd_clock_delta_comp_args_t *args)
+pd_clock_delta_comp (pd_func_args_t *pd_func_args)
 {
+    // pd_clock_delta_comp_args_t *args = pd_func_args->pd_clock_delta_comp;
     // wait until the periodic thread is ready
     while (!hal::periodic::periodic_thread_is_running()) {
         pthread_yield();

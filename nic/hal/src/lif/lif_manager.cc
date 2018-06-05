@@ -23,14 +23,17 @@ namespace hal {
 LIFManager::LIFManager() {
   pd::pd_get_start_offset_args_t off_args = {0};
   pd::pd_get_size_kb_args_t size_args = {0};
+  pd::pd_func_args_t pd_func_args = {0};
 
   off_args.reg_name = kHBMLabel;
-  pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
+  pd_func_args.pd_get_start_offset = &off_args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
   uint64_t hbm_addr = off_args.offset;
   assert(hbm_addr > 0);
 
   size_args.reg_name = kHBMLabel;
-  pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, (void *)&size_args);
+  pd_func_args.pd_get_size_kb = &size_args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, &pd_func_args);
 
   uint32_t num_units = (size_args.size * 1024) / kAllocUnit;
   if (hbm_addr & 0xFFF) {
@@ -55,17 +58,21 @@ int32_t LIFManager::InitLIFQStateImpl(LIFQState *qstate, int cos) {
   qstate->hbm_address = hbm_base_ + alloc_offset;
 
   pd::pd_push_qstate_to_capri_args_t args = {0};
+  pd::pd_func_args_t          pd_func_args = {0};
   args.qstate = qstate;
   args.cos = cos;
-  pd::hal_pd_call(pd::PD_FUNC_ID_PUSH_QSTATE, (void*)&args);
+  pd_func_args.pd_push_qstate_to_capri = &args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_PUSH_QSTATE, &pd_func_args);
 
   return 0;
 }
 
 void LIFManager::DeleteLIFQStateImpl(LIFQState *qstate) {
   pd::pd_clear_qstate_args_t args = {0};
+  pd::pd_func_args_t          pd_func_args = {0};
   args.qstate = qstate;
-  pd::hal_pd_call(pd::PD_FUNC_ID_CLEAR_QSTATE, (void*)&args);
+  pd_func_args.pd_clear_qstate = &args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_CLEAR_QSTATE, &pd_func_args);
   int alloc_offset = qstate->hbm_address - hbm_base_;
   if (allocation_sizes_.find(alloc_offset) != allocation_sizes_.end()) {
     hbm_allocator_->Free(alloc_offset, allocation_sizes_[alloc_offset]);
@@ -76,10 +83,12 @@ void LIFManager::DeleteLIFQStateImpl(LIFQState *qstate) {
 int32_t LIFManager::ReadQStateImpl(
     uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
     pd::pd_read_qstate_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
     args.q_addr = q_addr;
     args.buf = buf;
     args.q_size = q_size;
-    pd::hal_pd_call(pd::PD_FUNC_ID_READ_QSTATE, (void*)&args);
+    pd_func_args.pd_read_qstate = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_READ_QSTATE, &pd_func_args);
 
   return 0;
 }
@@ -87,10 +96,12 @@ int32_t LIFManager::ReadQStateImpl(
 int32_t LIFManager::WriteQStateImpl(
     uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
   pd::pd_write_qstate_args_t args = {0};
+  pd::pd_func_args_t          pd_func_args = {0};
   args.q_addr = q_addr;
   args.buf = buf;
   args.q_size = q_size;
-  pd::hal_pd_call(pd::PD_FUNC_ID_WRITE_QSTATE, (void*)&args);
+  pd_func_args.pd_write_qstate = &args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_WRITE_QSTATE, &pd_func_args);
 
   return 0;
 }
@@ -99,11 +110,13 @@ int32_t LIFManager::GetPCOffset(
     const char *handle, const char *prog_name,
     const char *label, uint8_t *ret_offset) {
   pd::pd_get_pc_offset_args_t args;
+  pd::pd_func_args_t          pd_func_args = {0};
   args.handle = handle;
   args.prog_name = prog_name;
   args.label = label;
   args.offset = ret_offset;
-  return pd::hal_pd_call(pd::PD_FUNC_ID_GET_PC_OFFSET, (void*)&args);
+  pd_func_args.pd_get_pc_offset = &args;
+  return pd::hal_pd_call(pd::PD_FUNC_ID_GET_PC_OFFSET, &pd_func_args);
 }
 
 }  // namespace hal

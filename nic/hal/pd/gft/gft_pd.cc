@@ -533,8 +533,9 @@ gft_hdr_group_xposition_link_pi_pd (pd_gft_hdr_xposition_profile_t *pd,
 }
 
 hal_ret_t
-pd_gft_hdr_group_xposition_profile_create (pd_gft_hdr_group_xposition_profile_args_t *gft_args)
+pd_gft_hdr_group_xposition_profile_create (pd_func_args_t *pd_func_args)
 {
+    pd_gft_hdr_group_xposition_profile_args_t *gft_args = pd_func_args->pd_gft_hdr_group_xposition_profile;
     pd_gft_hdr_xposition_profile_t    *gft_hdr_xposition_profile_pd = NULL;
 
     if (!gft_args || !gft_args->profile) {
@@ -625,33 +626,34 @@ pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *gft_
 #endif
 
 hal_ret_t
-pd_asic_init (pd_asic_init_args_t *args)
+pd_asic_init (pd_func_args_t *pd_func_args)
 {
+    pd_asic_init_args_t *args = pd_func_args->pd_asic_init;
     args->cfg->pgm_name = std::string("gft");
     asic_init(args->cfg);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_lif_get_lport_id (pd_lif_get_lport_id_args_t *args)
+pd_lif_get_lport_id (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_acl_create (pd_acl_create_args_t *args)
+pd_acl_create (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_qos_class_create (pd_qos_class_create_args_t *args)
+pd_qos_class_create (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_copp_create (pd_copp_create_args_t *args)
+pd_copp_create (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
@@ -659,7 +661,7 @@ pd_copp_create (pd_copp_create_args_t *args)
 // TODO: this one also doesn't belong here .. we need to get the cpu tx/rx
 // driver story right
 hal_ret_t
-pd_cpupkt_poll_receive (pd_cpupkt_poll_receive_args_t *args)
+pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_RETRY;
 }

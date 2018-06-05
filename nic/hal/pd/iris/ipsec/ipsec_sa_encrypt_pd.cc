@@ -61,7 +61,7 @@ p4pd_get_ipsec_sa_rx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
-static hal_ret_t 
+static hal_ret_t
 p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
 {
     common_p4plus_stage0_app_header_table_d     data = {0};
@@ -72,7 +72,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
     uint16_t                                    key_index;
     ipsec_sa_t*                                 ipsec_sa = ipsec_sa_pd->ipsec_sa;
     // hardware index for this entry
-    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id + 
+    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_QSTATE1);
 
     if(!del) {
@@ -98,8 +98,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.ipsec_encap_rxdma_initial_table_d.esn_lo = htonl(ipsec_sa->esn_lo);
         data.u.ipsec_encap_rxdma_initial_table_d.spi = htonl(ipsec_sa->spi);
         data.u.ipsec_encap_rxdma_initial_table_d.ipsec_cb_index = htons(ipsec_sa->sa_id);
- 
-        HAL_TRACE_DEBUG("iv {:#x} salt {:#x} iv_size {} block_size {} icv_size {} barco_cmd {:#x}  esn_lo {} spi {}", 
+
+        HAL_TRACE_DEBUG("iv {:#x} salt {:#x} iv_size {} block_size {} icv_size {} barco_cmd {:#x}  esn_lo {} spi {}",
             data.u.ipsec_encap_rxdma_initial_table_d.iv,
             data.u.ipsec_encap_rxdma_initial_table_d.iv_salt,
             data.u.ipsec_encap_rxdma_initial_table_d.iv_size,
@@ -112,7 +112,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         key_index = ipsec_sa->key_index;
         data.u.ipsec_encap_rxdma_initial_table_d.key_index = htons(key_index);
         HAL_TRACE_DEBUG("key_index = {}", ipsec_sa->key_index);
-   
+
         ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ,
                                      ipsec_sa_pd->ipsec_sa->sa_id,
                                      &ipsec_cb_ring_addr);
@@ -122,6 +122,11 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         }
         HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
 
+#if 0
+        ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+        ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipsec_sa->sa_id * IPSEC_CB_RING_ENTRY_SIZE));
+        HAL_TRACE_DEBUG("Ring base {:#x} CB Ring Addr {:#x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
+#endif
         data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr = htonl((uint32_t)(ipsec_cb_ring_addr & 0xFFFFFFFF));
         data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex = 0;
         data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex = 0;
@@ -134,7 +139,13 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
             return ret;
         }
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
-         
+
+#if 0
+        ipsec_barco_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB_BARCO);
+        ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipsec_sa_pd->ipsec_sa->sa_id * IPSEC_BARCO_RING_ENTRY_SIZE));
+        HAL_TRACE_DEBUG("Ring base {:#x} Barco Ring Addr {:#x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
+        ipsec_barco_ring_addr = htonl(ipsec_barco_ring_addr);
+#endif
 
         data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = htonl((uint32_t) (ipsec_barco_ring_addr & 0xFFFFFFFF));
         data.u.ipsec_encap_rxdma_initial_table_d.barco_cindex = 0;
@@ -164,8 +175,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         }
         HAL_TRACE_DEBUG("is_v6 {} is_nat_t {} is_random {} extra_pad {}", ipsec_sa->is_v6, ipsec_sa->is_nat_t, ipsec_sa->is_random, ipsec_sa->extra_pad);
     }
-    
-    HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid); 
+
+    HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
@@ -183,7 +194,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
     hal_ret_t                  ret = HAL_RET_OK;
 
     // hardware index for this entry
-    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id + 
+    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_ETH_IP_HDR);
 
     if (!del) {
@@ -194,7 +205,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
             eth_ip_hdr.version_ihl = 0x45;
             eth_ip_hdr.tos = 0;
             //p4 will update/correct this part - fixed for now.
-            eth_ip_hdr.tot_len = htons(64); 
+            eth_ip_hdr.tot_len = htons(64);
             eth_ip_hdr.id = 0;
             eth_ip_hdr.frag_off = 0;
             eth_ip_hdr.ttl = 255;
@@ -206,7 +217,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
             eth_ip_hdr.check = 0; // P4 to fill the right checksum
             eth_ip_hdr.saddr = htonl(ipsec_sa_pd->ipsec_sa->tunnel_sip4.addr.v4_addr);
             eth_ip_hdr.daddr = htonl(ipsec_sa_pd->ipsec_sa->tunnel_dip4.addr.v4_addr);
-            HAL_TRACE_DEBUG("Tunnel SIP {:#x} Tunnel DIP {:#x}", eth_ip_hdr.saddr, eth_ip_hdr.daddr); 
+            HAL_TRACE_DEBUG("Tunnel SIP {:#x} Tunnel DIP {:#x}", eth_ip_hdr.saddr, eth_ip_hdr.daddr);
         } else {
             memcpy(eth_ip6_hdr.smac, ipsec_sa_pd->ipsec_sa->smac, ETH_ADDR_LEN);
             memcpy(eth_ip6_hdr.dmac, ipsec_sa_pd->ipsec_sa->dmac, ETH_ADDR_LEN);
@@ -217,10 +228,10 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
             eth_ip6_hdr.hop_limit = 255;
             //memcpy(eth_ip6_hdr.src, ipsec_sa_pd->ipsec_sa->sip6.addr.v6_addr.addr8, IP6_ADDR8_LEN);
             //memcpy(eth_ip6_hdr.dst, ipsec_sa_pd->ipsec_sa->dip6.addr.v6_addr.addr8, IP6_ADDR8_LEN);
-            HAL_TRACE_DEBUG("Adding IPV6 header"); 
+            HAL_TRACE_DEBUG("Adding IPV6 header");
         }
     }
-    HAL_TRACE_DEBUG("Programming stage0 at hw-id: {:#x}", hwid); 
+    HAL_TRACE_DEBUG("Programming stage0 at hw-id: {:#x}", hwid);
     if (ipsec_sa_pd->ipsec_sa->is_v6 == 0) {
         if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip_hdr, sizeof(eth_ip_hdr),
                     P4PLUS_CACHE_INVALIDATE_BOTH)){
@@ -235,7 +246,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
                 HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
                 ret = HAL_RET_HW_FAIL;
             }
-        }    
+        }
     } else {
         if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip6_hdr, sizeof(eth_ip6_hdr),
                     P4PLUS_CACHE_INVALIDATE_BOTH)){
@@ -250,12 +261,12 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
                 HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
                 ret = HAL_RET_HW_FAIL;
             }
-        }    
+        }
     }
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_add_or_del_ipseccb_rxdma_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -275,16 +286,16 @@ cleanup:
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
 {
     common_p4plus_stage0_app_header_table_d data = {0};
     uint64_t                                    ipsec_cb_ring_addr, ipsec_barco_ring_addr;
-   
+
     ipsec_sa_t  *ipsec_sa = ipsec_sa_pd->ipsec_sa;
- 
+
     // hardware index for this entry
-    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id + 
+    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_QSTATE1);
 
     HAL_TRACE_DEBUG("Getting from hw-id {:#x}", hwid);
@@ -309,24 +320,24 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
     ipsec_sa->is_v6 = data.u.ipsec_encap_rxdma_initial_table_d.flags & 0x1;
     ipsec_sa->is_nat_t = data.u.ipsec_encap_rxdma_initial_table_d.flags & 0x2;
     ipsec_sa->is_random = data.u.ipsec_encap_rxdma_initial_table_d.flags & 0x4;
-    HAL_TRACE_DEBUG("CB Ring Addr {:#x} Barco Ring Addr {:#x} Pindex {} CIndex {}", 
-                   ipsec_cb_ring_addr, ipsec_barco_ring_addr, 
-                   data.u.ipsec_encap_rxdma_initial_table_d.barco_pindex, 
+    HAL_TRACE_DEBUG("CB Ring Addr {:#x} Barco Ring Addr {:#x} Pindex {} CIndex {}",
+                   ipsec_cb_ring_addr, ipsec_barco_ring_addr,
+                   data.u.ipsec_encap_rxdma_initial_table_d.barco_pindex,
                    data.u.ipsec_encap_rxdma_initial_table_d.barco_cindex);
-    HAL_TRACE_DEBUG("Flags : is_v6 : {} is_nat_t : {} is_random : {}", ipsec_sa->is_v6, 
-                    ipsec_sa->is_nat_t, ipsec_sa->is_random); 
+    HAL_TRACE_DEBUG("Flags : is_v6 : {} is_nat_t : {} is_random : {}", ipsec_sa->is_v6,
+                    ipsec_sa->is_nat_t, ipsec_sa->is_random);
     return HAL_RET_OK;
 }
 
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_ipsec_rx_stage0_entry_part2(pd_ipsec_t* ipsec_sa_pd)
 {
     ipsec_sa_t  *ipsec_sa = ipsec_sa_pd->ipsec_sa;
     pd_ipsec_qstate_addr_part2_t data = {0};
 
     // hardware index for this entry
-    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id + 
+    ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_ETH_IP_HDR);
 
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -340,11 +351,11 @@ p4pd_get_ipsec_rx_stage0_entry_part2(pd_ipsec_t* ipsec_sa_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_ipsec_sa_rxdma_entry(pd_ipsec_t* ipsec_sa_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_ipsec_rx_stage0_entry(ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get ipsec_rx entry");
@@ -388,9 +399,9 @@ pd_ipsec_encrypt_get_base_hw_index(pd_ipsec_t* ipsec_sa_pd)
 {
     HAL_ASSERT(NULL != ipsec_sa_pd);
     HAL_ASSERT(NULL != ipsec_sa_pd->ipsec_sa);
-    
+
     // Get the base address of IPSEC CB from LIF Manager.
-    // Set qtype and qid as 0 to get the start offset. 
+    // Set qtype and qid as 0 to get the start offset.
     uint64_t base = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 0, 0);
     uint64_t offset = (ipsec_sa_pd->ipsec_sa->sa_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
     HAL_TRACE_DEBUG("For PD SA ID {} received base {:#x} offset {:#x}", ipsec_sa_pd->ipsec_sa->sa_id, base, offset);
@@ -398,31 +409,31 @@ pd_ipsec_encrypt_get_base_hw_index(pd_ipsec_t* ipsec_sa_pd)
 }
 
 hal_ret_t
-p4pd_add_or_del_ipsec_entry(pd_ipsec_t* ipsec_sa_pd, bool del) 
+p4pd_add_or_del_ipsec_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
 {
     hal_ret_t                   ret = HAL_RET_OK;
- 
+
     ret = p4pd_add_or_del_ipseccb_rxdma_entry(ipsec_sa_pd, del);
     if(ret != HAL_RET_OK) {
-        goto err;    
+        goto err;
     }
-   
+
 err:
     return ret;
 }
 
 static
 hal_ret_t
-p4pd_get_ipsec_sa_entry(pd_ipsec_t* ipsec_sa_pd) 
+p4pd_get_ipsec_sa_entry(pd_ipsec_t* ipsec_sa_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_ipsec_sa_rxdma_entry(ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get rxdma entry for ipseccb");
-        goto err;    
+        goto err;
     }
-   
+
 err:
     /*TODO: cleanup */
     return ret;
@@ -433,9 +444,11 @@ err:
  *******************************************/
 
 hal_ret_t
-pd_ipsec_encrypt_create (pd_ipsec_encrypt_create_args_t *args)
+pd_ipsec_encrypt_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                  ret;
+    pd_ipsec_encrypt_create_args_t *args = pd_func_args->pd_ipsec_encrypt_create;
+    pd_func_args_t             pd_func_args1 = {0};
     pd_ipsec_s                 *ipsec_sa_pd;
     pd_crypto_alloc_key_args_t key_index_args;
     pd_crypto_write_key_args_t write_key_args;
@@ -462,10 +475,11 @@ pd_ipsec_encrypt_create (pd_ipsec_encrypt_create_args_t *args)
 
     key_index_args.key_idx = &key_index;
 
-    ret = pd_crypto_alloc_key(&key_index_args);    
+    pd_func_args1.pd_crypto_alloc_key = &key_index_args;
+    ret = pd_crypto_alloc_key(&pd_func_args1);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create key index");
-        goto cleanup;    
+        goto cleanup;
     }
     ipsec_sa_pd->ipsec_sa->key_index = *(key_index_args.key_idx);
     crypto_key.key_type = (types::CryptoKeyType)ipsec_sa->key_type;
@@ -473,16 +487,17 @@ pd_ipsec_encrypt_create (pd_ipsec_encrypt_create_args_t *args)
     memcpy(crypto_key.key, ipsec_sa->key, ipsec_sa->key_size);
     write_key_args.key_idx = ipsec_sa->key_index;
     write_key_args.key = &crypto_key;
-    ret = pd_crypto_write_key(&write_key_args);
+    pd_func_args1.pd_crypto_write_key = &write_key_args;
+    ret = pd_crypto_write_key(&pd_func_args1);
 
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to write key at index {}", ipsec_sa->key_index);
-        goto cleanup;    
+        goto cleanup;
     }
     // program ipseccb
     ret = p4pd_add_or_del_ipsec_entry(ipsec_sa_pd, false);
     if(ret != HAL_RET_OK) {
-        goto cleanup;    
+        goto cleanup;
     }
     // add to db
     ret = add_ipsec_pd_to_db(ipsec_sa_pd);
@@ -502,14 +517,16 @@ cleanup:
 }
 
 hal_ret_t
-pd_ipsec_encrypt_update (pd_ipsec_encrypt_update_args_t *args)
+pd_ipsec_encrypt_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_ipsec_encrypt_update_args_t *args = pd_func_args->pd_ipsec_encrypt_update;
+    pd_func_args_t             pd_func_args1 = {0};
     pd_crypto_write_key_args_t write_key_args;
     crypto_key_t crypto_key;
- 
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     ipsec_sa_t*                ipsec_sa = args->ipsec_sa;
@@ -522,8 +539,9 @@ pd_ipsec_encrypt_update (pd_ipsec_encrypt_update_args_t *args)
     memcpy(crypto_key.key, ipsec_sa->key, ipsec_sa->key_size);
     write_key_args.key_idx = ipsec_sa->key_index;
     write_key_args.key = &crypto_key;
+    pd_func_args1.pd_crypto_write_key = &write_key_args;
 
-    ret = pd_crypto_write_key(&write_key_args);
+    ret = pd_crypto_write_key(&pd_func_args1);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to write key at index");
     }
@@ -536,13 +554,15 @@ pd_ipsec_encrypt_update (pd_ipsec_encrypt_update_args_t *args)
 }
 
 hal_ret_t
-pd_ipsec_encrypt_delete (pd_ipsec_encrypt_delete_args_t *args)
+pd_ipsec_encrypt_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                  ret;
+    pd_ipsec_encrypt_delete_args_t *args = pd_func_args->pd_ipsec_encrypt_delete;
+    pd_func_args_t             pd_func_args1 = {0};
     pd_crypto_free_key_args_t  free_key_args;
- 
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     ipsec_sa_t*                ipsec_sa = args->ipsec_sa;
@@ -551,16 +571,17 @@ pd_ipsec_encrypt_delete (pd_ipsec_encrypt_delete_args_t *args)
     HAL_TRACE_DEBUG("IPSECCB pd delete");
 
     free_key_args.key_idx = ipsec_sa->key_index;
-    ret = pd_crypto_free_key(&free_key_args);    
+    pd_func_args1.pd_crypto_free_key = &free_key_args;
+    ret = pd_crypto_free_key(&pd_func_args1);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete ipsec key at key_index {}", ipsec_sa->key_index); 
+        HAL_TRACE_ERR("Failed to delete ipsec key at key_index {}", ipsec_sa->key_index);
     }
     // program ipsec_sa
     ret = p4pd_add_or_del_ipsec_entry(ipsec_sa_pd, true);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete ipsec_sa entry"); 
+        HAL_TRACE_ERR("Failed to delete ipsec_sa entry");
     }
-    
+
     del_ipsec_pd_from_db(ipsec_sa_pd);
 
     ipsec_pd_free(ipsec_sa_pd);
@@ -569,9 +590,11 @@ pd_ipsec_encrypt_delete (pd_ipsec_encrypt_delete_args_t *args)
 }
 
 hal_ret_t
-pd_ipsec_encrypt_get (pd_ipsec_encrypt_get_args_t *args)
+pd_ipsec_encrypt_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_ipsec_encrypt_get_args_t *args = pd_func_args->pd_ipsec_encrypt_get;
+    pd_func_args_t             pd_func_args1 = {0};
     pd_ipsec_t              ipsec_sa_pd;
 
     pd_crypto_read_key_args_t read_key;
@@ -582,7 +605,7 @@ pd_ipsec_encrypt_get (pd_ipsec_encrypt_get_args_t *args)
     // allocate PD ipsec_sa state
     ipsec_pd_encrypt_init(&ipsec_sa_pd);
     ipsec_sa_pd.ipsec_sa = args->ipsec_sa;
-    
+
     // get hw-id for this IPSECCB
     ipsec_sa_pd.hw_id = pd_ipsec_encrypt_get_base_hw_index(&ipsec_sa_pd);
     HAL_TRACE_DEBUG("Received hw-id {:#x}", ipsec_sa_pd.hw_id);
@@ -597,7 +620,8 @@ pd_ipsec_encrypt_get (pd_ipsec_encrypt_get_args_t *args)
     memset(&key, 0, sizeof(crypto_key_t));
     read_key.key = &key;
 
-    ret = pd_crypto_read_key(&read_key);
+    pd_func_args1.pd_crypto_read_key = &read_key;
+    ret = pd_crypto_read_key(&pd_func_args1);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Get request failed for key_index: {}", ipsec_sa_pd.ipsec_sa->key_index);
         //return ret;
@@ -608,7 +632,7 @@ pd_ipsec_encrypt_get (pd_ipsec_encrypt_get_args_t *args)
     if ((read_key.key->key_size > 0) && (read_key.key->key_size <= 32)) {
         memcpy(ipsec_sa_pd.ipsec_sa->key, read_key.key->key, read_key.key->key_size);
     }
-   
+
     return ret;
 }
 

@@ -259,6 +259,7 @@ hal_ret_t
 p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_role_t role, bool aug)
 {
     pd_conv_sw_clock_to_hw_clock_args_t     clock_args;
+    pd_func_args_t                          pd_func_args = {0};
     hal_ret_t                               ret;
     sdk_ret_t                               sdk_ret;
     directmap                              *dm, *dmstats;
@@ -383,7 +384,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     sdk::timestamp_to_nsecs(&ts, &sw_ns);
     clock_args.hw_tick = &hw_tick;
     clock_args.sw_ns = sw_ns;
-    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, (void *)&clock_args);
+    pd_func_args.pd_conv_sw_clock_to_hw_clock = &clock_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, &pd_func_args);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = hw_tick;
     HAL_TRACE_DEBUG("Sw ns: {} hw tick: {}", sw_ns, hw_tick);
 
@@ -771,9 +773,10 @@ p4pd_del_flow_hash_table_entries (pd_session_t *session_pd)
 // program all PD tables for given session and maintain meta data in PD state
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_session_create (pd_session_create_args_t *args)
+pd_session_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t          ret;
+    pd_session_create_args_t *args = pd_func_args->pd_session_create;
     pd_session_t       *session_pd;
     session_t          *session = args->session;
 
@@ -845,9 +848,10 @@ cleanup:
 // update PD tables for given session
 //------------------------------------------
 hal_ret_t
-pd_session_update (pd_session_update_args_t *args)
+pd_session_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t          ret;
+    pd_session_update_args_t *args = pd_func_args->pd_session_update;
     pd_session_t       *session_pd = NULL;
     session_t          *session = args->session;
 
@@ -911,9 +915,10 @@ cleanup:
 // Delete PD tables for given session
 //------------------------------------------
 hal_ret_t
-pd_session_delete (pd_session_delete_args_t *args)
+pd_session_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t          ret = HAL_RET_OK;
+    pd_session_delete_args_t *args = pd_func_args->pd_session_delete;
     pd_session_t       *session_pd = NULL;
 
     HAL_TRACE_DEBUG("Deleting pd state for session");
@@ -944,9 +949,11 @@ pd_session_delete (pd_session_delete_args_t *args)
 // get all session related information
 //------------------------------------------
 hal_ret_t
-pd_session_get (pd_session_get_args_t *args)
+pd_session_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                               ret = HAL_RET_OK;
+    pd_session_get_args_t *args = pd_func_args->pd_session_get;
+    pd_func_args_t pd_func_args1 = {0};
     sdk_ret_t                               sdk_ret;
     session_state_actiondata                d = {0};
     directmap                              *dm = NULL;
@@ -1000,7 +1007,8 @@ pd_session_get (pd_session_get_args_t *args)
     flow_get_args.pd_session = pd_session;
     flow_get_args.role = FLOW_ROLE_INITIATOR;
     flow_get_args.flow_state = &ss->iflow_state;
-    ret = pd_flow_get(&flow_get_args);
+    pd_func_args1.pd_flow_get = &flow_get_args;
+    ret = pd_flow_get(&pd_func_args1);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Initiator Flow get failed session {}",
                       args->session->config.session_id);
@@ -1010,7 +1018,8 @@ pd_session_get (pd_session_get_args_t *args)
     flow_get_args.pd_session = pd_session;
     flow_get_args.role = FLOW_ROLE_RESPONDER;
     flow_get_args.flow_state = &ss->rflow_state;
-    ret = pd_flow_get(&flow_get_args);
+    pd_func_args1.pd_flow_get = &flow_get_args;
+    ret = pd_flow_get(&pd_func_args1);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Responder Flow get failed session {}",
                       args->session->config.session_id);
@@ -1024,9 +1033,10 @@ pd_session_get (pd_session_get_args_t *args)
 // get all flow related information
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_flow_get (pd_flow_get_args_t *args)
+pd_flow_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                 ret = HAL_RET_OK;
+    pd_flow_get_args_t *args = pd_func_args->pd_flow_get;
     sdk_ret_t                 sdk_ret;
     flow_stats_actiondata     d = {0};
     directmap                *dm = NULL;
@@ -1095,9 +1105,10 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
 // Get bypass flow info entry
 //------------------------------------------------------------------------------------
 hal_ret_t
-pd_get_cpu_bypass_flowid (pd_get_cpu_bypass_flowid_args_t *args)
+pd_get_cpu_bypass_flowid (pd_func_args_t *pd_func_args)
 {
     uint32_t   flow_info_hwid = 0;
+    pd_get_cpu_bypass_flowid_args_t *args = pd_func_args->pd_get_cpu_bypass_flowid;
 
     if (!g_hal_state_pd->cpu_bypass_flowid()) {
         pd_add_cpu_bypass_flow_info(&flow_info_hwid);

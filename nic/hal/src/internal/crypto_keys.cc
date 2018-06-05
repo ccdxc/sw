@@ -18,10 +18,12 @@ hal_ret_t   cryptokey_create(cryptokey::CryptoKeyCreateRequest &request,
     hal_ret_t           ret = HAL_RET_OK;
     int32_t             key_idx = -1;
     pd::pd_crypto_alloc_key_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     args.key_idx = &key_idx;
     // ret = pd::pd_crypto_alloc_key(&key_idx);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, &pd_func_args);
 
     if ((ret != HAL_RET_OK) || (key_idx < 0)) {
         response->set_api_status(types::API_STATUS_OUT_OF_MEM);
@@ -41,13 +43,15 @@ hal_ret_t   cryptokey_read(cryptokey::CryptoKeyReadRequest &request,
     crypto_key_t                pd_key;
     string                      *key;
     pd::pd_crypto_read_key_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     key_idx = request.keyindex();
     if (key_idx >= 0) {
         args.key_idx = key_idx;
         args.key = &pd_key;
         //ret = pd::pd_crypto_read_key(key_idx, &pd_key);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_READ_KEY, (void *)&args);
+        pd_func_args.pd_crypto_read_key = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_READ_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             response->set_api_status(types::API_STATUS_NOT_FOUND);
         }
@@ -73,6 +77,7 @@ hal_ret_t   cryptokey_update(cryptokey::CryptoKeyUpdateRequest &request,
     int32_t                     key_idx = -1;
     crypto_key_t                pd_key;
     pd::pd_crypto_write_key_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     const CryptoKeySpec &key = request.key();
     key_idx = key.keyindex();
@@ -84,7 +89,8 @@ hal_ret_t   cryptokey_update(cryptokey::CryptoKeyUpdateRequest &request,
         args.key_idx = key_idx;
         args.key = &pd_key;
         // ret = pd::pd_crypto_write_key(key_idx, &pd_key);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_WRITE_KEY, (void *)&args);
+        pd_func_args.pd_crypto_write_key = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_WRITE_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             response->set_api_status(types::API_STATUS_ERR);
         }
@@ -105,11 +111,13 @@ hal_ret_t   cryptokey_delete(cryptokey::CryptoKeyDeleteRequest &request,
     hal_ret_t                   ret = HAL_RET_OK;
     int32_t                     key_idx = -1;
     pd::pd_crypto_free_key_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     key_idx = request.keyindex();
     args.key_idx = key_idx;
     // ret = pd::pd_crypto_free_key(key_idx);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, (void *)&args);
+    pd_func_args.pd_crypto_free_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, &pd_func_args);
     if (ret != HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_INVALID_ARG);
     }

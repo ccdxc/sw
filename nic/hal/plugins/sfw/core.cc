@@ -236,8 +236,10 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
         // Get Hw bypass flow idx to send out TCP RST
         // or ICMP error for Firewall rejects
         pd_get_cpu_bypass_flowid_args_t args;
+        pd::pd_func_args_t          pd_func_args = {0};
         args.hw_flowid = 0;
-        ret = hal_pd_call(PD_FUNC_ID_BYPASS_FLOWID_GET, &args);
+        pd_func_args.pd_get_cpu_bypass_flowid = &args;
+        ret = hal_pd_call(PD_FUNC_ID_BYPASS_FLOWID_GET, &pd_func_args);
         if (ret == HAL_RET_OK) {
             g_cpu_bypass_flowid = args.hw_flowid;
         }
@@ -310,7 +312,7 @@ sfw_exec(ctx_t& ctx)
                         sfw_info->skip_sfw, sfw_info->sfw_done);
     }
 
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && 
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR &&
         !sfw_info->skip_sfw && !sfw_info->sfw_done) {
         ret = net_sfw_pol_check_sg_policy(ctx, &match_rslt);
         if (ret == HAL_RET_OK) {

@@ -17,9 +17,10 @@ namespace pd {
 // PD If Create
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_create (pd_if_create_args_t *args)
+pd_if_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_create_args_t *args = pd_func_args->pd_if_create;
     intf::IfType    if_type;
 
     HAL_TRACE_DEBUG("{}: if create ", __FUNCTION__);
@@ -44,9 +45,10 @@ pd_if_create (pd_if_create_args_t *args)
 // PD If Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_update (pd_if_update_args_t *args)
+pd_if_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_update_args_t *args = pd_func_args->pd_if_update;
     intf::IfType    if_type;
 
     HAL_TRACE_DEBUG("{}: if update", __FUNCTION__);
@@ -70,9 +72,10 @@ pd_if_update (pd_if_update_args_t *args)
 // PD If Delete
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_delete (pd_if_delete_args_t *args)
+pd_if_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_delete_args_t *args = pd_func_args->pd_if_delete;
     intf::IfType    if_type;
 
     HAL_TRACE_DEBUG("{}: if delete", __FUNCTION__);
@@ -96,9 +99,10 @@ pd_if_delete (pd_if_delete_args_t *args)
 // PD If mem free
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_if_mem_free (pd_if_mem_free_args_t *args)
+pd_if_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_mem_free_args_t *args = pd_func_args->pd_if_mem_free;
     intf::IfType    if_type;
 
     HAL_TRACE_DEBUG("{}: if mem_free", __FUNCTION__);
@@ -119,9 +123,10 @@ pd_if_mem_free (pd_if_mem_free_args_t *args)
 }
 
 hal_ret_t
-pd_if_make_clone (pd_if_make_clone_args_t *args)
+pd_if_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_if_make_clone_args_t *args = pd_func_args->pd_if_make_clone;
     intf::IfType    if_type;
     if_t *hal_if = args->hal_if;
     // if_t *clone = args->clone;

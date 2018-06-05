@@ -32,8 +32,7 @@ static hal_ret_t efe_pd_populate_response(pd_gft_efe_t *pd_efe,
 static void link_pi_pd(pd_gft_efe_t *pd_efe, gft_exact_match_flow_entry_t *pi_efe);
 static void delink_pi_pd(pd_gft_efe_t *pd_efe, gft_exact_match_flow_entry_t *pi_efe);
 static hal_ret_t efe_pd_cleanup(pd_gft_efe_t *efe_pd);
-static inline hal_ret_t pd_gft_efe_make_clone(
-                        pd_gft_exact_match_flow_entry_make_clone_args_t *args);
+static inline hal_ret_t pd_gft_efe_make_clone(pd_func_args_t *pd_func_args);
 static hal_ret_t efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe);
 static hal_ret_t efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe);
 static hal_ret_t efe_pd_program_tx_transpositions(pd_gft_efe_t *pd_gft_efe);
@@ -43,9 +42,10 @@ static hal_ret_t efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe);
 // EFE Create in PD
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *args)
+pd_gft_exact_match_flow_entry_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    pd_gft_exact_match_flow_entry_args_t *args = pd_func_args->pd_gft_exact_match_flow_entry;
     pd_gft_efe_t         *pd_gft_efe = NULL;
 
     // Create efe PD
@@ -82,7 +82,7 @@ end:
 // PD EFE Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_gft_exact_match_flow_entry_update (pd_gft_exact_match_flow_entry_args_t *args)
+pd_gft_exact_match_flow_entry_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -93,7 +93,7 @@ pd_gft_exact_match_flow_entry_update (pd_gft_exact_match_flow_entry_args_t *args
 // PD EFE Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_gft_exact_match_flow_entry_delete (pd_gft_exact_match_flow_entry_args_t *args)
+pd_gft_exact_match_flow_entry_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
 
@@ -1474,9 +1474,11 @@ delink_pi_pd (pd_gft_efe_t *pd_gft_efe, gft_exact_match_flow_entry_t *pi_efe)
 // Makes a clone
 //-----------------------------------------------------------------------------
 static inline hal_ret_t
-pd_gft_efe_make_clone (pd_gft_exact_match_flow_entry_make_clone_args_t *args)
+pd_gft_efe_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_gft_exact_match_flow_entry_make_clone_args_t *args =
+        pd_func_args->pd_gft_exact_match_flow_entry_make_clone;
     pd_gft_efe_t        *pd_gft_efe_clone = NULL;
 
     gft_exact_match_flow_entry_t *efe = args->exact_match_flow_entry;
@@ -1500,9 +1502,10 @@ end:
 // Frees PD memory without indexer free.
 //-----------------------------------------------------------------------------
 static inline hal_ret_t
-pd_gft_efe_mem_free (pd_gft_exact_match_flow_entry_args_t *args)
+pd_gft_efe_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_gft_exact_match_flow_entry_args_t *args = pd_func_args->pd_gft_exact_match_flow_entry;
     pd_gft_efe_t    *efe_pd;
 
     efe_pd = (pd_gft_efe_t *)args->exact_match_flow_entry->pd;

@@ -534,6 +534,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     asic_cfg_t             asic_cfg;
     pd_asic_init_args_t    args;
     pal_ret_t              palrv;
+    pd::pd_func_args_t     pd_func_args = {0};
 
     // initialize PAL
     palrv = sdk::lib::pal_init(
@@ -549,7 +550,8 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     asic_cfg.cfg_path = hal_cfg->cfg_path;
     asic_cfg.catalog = hal_cfg->catalog;
     args.cfg = &asic_cfg;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, (void *)&args);
+    pd_func_args.pd_asic_init = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);
     HAL_ABORT(ret == HAL_RET_OK);
 
     return;

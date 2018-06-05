@@ -118,6 +118,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t                *ipsec;
     pd::pd_ipsec_encrypt_create_args_t    pd_ipsec_encrypt_args;
+    pd::pd_func_args_t pd_func_args = {0};
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
@@ -136,7 +137,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     }
 
     ipsec->sa_id = spec.key_or_handle().cb_id();
-   
+
     HAL_TRACE_DEBUG("Got with SA ID {}", ipsec->sa_id);
 
     if ((spec.encryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
@@ -153,11 +154,11 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ipsec->barco_enc_cmd = IPSEC_BARCO_ENCRYPT_AES_GCM_256;
     ipsec->key_size = 32;
     ipsec->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
-   
+
     ipsec->iv = spec.iv();
     ipsec->iv_salt = spec.salt();
     ipsec->spi = spec.spi();
-    
+
     memcpy((uint8_t*)ipsec->key, (uint8_t*)spec.encryption_key().key().c_str(), 32);
 
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
@@ -195,7 +196,8 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     // allocate all PD resources and finish programming
     pd::pd_ipsec_encrypt_create_args_init(&pd_ipsec_encrypt_args);
     pd_ipsec_encrypt_args.ipsec_sa = ipsec;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_CREATE, (void *)&pd_ipsec_encrypt_args);
+    pd_func_args.pd_ipsec_encrypt_create = &pd_ipsec_encrypt_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSEC CB create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -227,6 +229,7 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t*               ipsec;
     pd::pd_ipsec_encrypt_update_args_t    pd_ipsec_encrypt_args;
+    pd::pd_func_args_t pd_func_args = {0};
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
@@ -288,7 +291,8 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     } else {
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE, (void *)&pd_ipsec_encrypt_args);
+    pd_func_args.pd_ipsec_encrypt_update = &pd_ipsec_encrypt_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
@@ -309,6 +313,7 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     ipsec_sa_t                ripsec;
     ipsec_sa_t*               ipsec;
     pd::pd_ipsec_encrypt_get_args_t    pd_ipsec_encrypt_args;
+    pd::pd_func_args_t pd_func_args = {0};
     IpsecSAEncryptGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
@@ -325,7 +330,8 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     pd::pd_ipsec_encrypt_get_args_init(&pd_ipsec_encrypt_args);
     pd_ipsec_encrypt_args.ipsec_sa = &ripsec;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_GET, (void *)&pd_ipsec_encrypt_args);
+    pd_func_args.pd_ipsec_encrypt_get = &pd_ipsec_encrypt_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_GET, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
@@ -348,7 +354,7 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     rsp->mutable_spec()->set_total_pkts(ripsec.total_pkts);
     rsp->mutable_spec()->set_total_bytes(ripsec.total_bytes);
     rsp->mutable_spec()->set_total_drops(ripsec.total_drops);
- 
+
     ripsec.tunnel_sip4.af = IP_AF_IPV4;
     ip_addr_to_spec(rsp->mutable_spec()->mutable_local_gateway_ip(), &ripsec.tunnel_sip4);
     ripsec.tunnel_dip4.af = IP_AF_IPV4;
@@ -372,6 +378,7 @@ ipsec_saencrypt_delete (ipsec::IpsecSAEncryptDeleteRequest& req, ipsec::IpsecSAE
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t*               ipsec;
     pd::pd_ipsec_encrypt_delete_args_t    pd_ipsec_encrypt_args;
+    pd::pd_func_args_t pd_func_args = {0};
 
     auto kh = req.key_or_handle();
     ipsec = find_ipsec_sa_by_id(kh.cb_id());
@@ -383,7 +390,8 @@ ipsec_saencrypt_delete (ipsec::IpsecSAEncryptDeleteRequest& req, ipsec::IpsecSAE
     pd::pd_ipsec_encrypt_delete_args_init(&pd_ipsec_encrypt_args);
     pd_ipsec_encrypt_args.ipsec_sa = ipsec;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_DELETE, (void *)&pd_ipsec_encrypt_args);
+    pd_func_args.pd_ipsec_encrypt_delete = &pd_ipsec_encrypt_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_DELETE, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);

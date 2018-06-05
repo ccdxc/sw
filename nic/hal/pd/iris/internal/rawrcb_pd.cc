@@ -23,7 +23,7 @@
 #define RAWRCB_QSTATE_HEADER_TOTAL_SIZE     \
     (CAPRI_QSTATE_HEADER_COMMON_SIZE +      \
      (HAL_NUM_RAWRCB_RINGS_MAX * CAPRI_QSTATE_HEADER_RING_SINGLE_SIZE))
-     
+
 namespace hal {
 namespace pd {
 
@@ -71,7 +71,7 @@ p4pd_get_rawr_rx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_clear_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
 {
     rawr_stats_err_stat_inc_d   data = {0};
@@ -112,7 +112,7 @@ p4pd_rawr_wring_eval(uint32_t qid,
     return ret;
 }
 
-static hal_ret_t 
+static hal_ret_t
 p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
                                      bool del,
                                      bool qstate_header_overwrite)
@@ -231,7 +231,7 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
         data.u.rawr_rx_start_d.rawrcb_activate = RAWRCB_ACTIVATE;
     }
 
-    HAL_TRACE_DEBUG("RAWRCB Programming stage0 at hw_addr: {:#x}", hw_addr); 
+    HAL_TRACE_DEBUG("RAWRCB Programming stage0 at hw_addr: {:#x}", hw_addr);
     if (!p4plus_hbm_write(hw_addr, data_p, data_len,
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for RAWRCB");
@@ -242,7 +242,7 @@ done:
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_add_or_del_rawrcb_rxdma_entry(pd_rawrcb_t* rawrcb_pd,
                                    bool del,
                                    bool qstate_header_overwrite)
@@ -261,7 +261,7 @@ cleanup:
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
 {
     common_p4plus_stage0_app_header_table_d data = {0};
@@ -294,7 +294,7 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
 {
     rawr_stats_err_stat_inc_d   data;
@@ -324,11 +324,11 @@ p4pd_get_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_rawrcb_rxdma_entry(pd_rawrcb_t* rawrcb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_rawr_rx_stage0_entry(rawrcb_pd);
     if (ret == HAL_RET_OK) {
         ret = p4pd_get_rawr_stats_entry(rawrcb_pd);
@@ -349,9 +349,9 @@ rawrcb_hw_addr_t
 pd_rawrcb_get_base_hw_addr(pd_rawrcb_t* rawrcb_pd)
 {
     HAL_ASSERT(NULL != rawrcb_pd);
-    
+
     // Get the base address of RAWR CB from LIF Manager.
-    // Set qtype and qid as 0 to get the start offset. 
+    // Set qtype and qid as 0 to get the start offset.
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_RAWR_QTYPE, 0);
     HAL_TRACE_DEBUG("RAWRCB received offset {:#x}", offset);
@@ -365,27 +365,27 @@ p4pd_add_or_del_rawrcb_entry(pd_rawrcb_t* rawrcb_pd,
                              bool qstate_header_overwrite)
 {
     hal_ret_t   ret = HAL_RET_OK;
- 
+
     ret = p4pd_add_or_del_rawrcb_rxdma_entry(rawrcb_pd, del,
                                              qstate_header_overwrite);
     if(ret != HAL_RET_OK) {
-        goto err;    
+        goto err;
     }
 err:
     return ret;
 }
 
 static hal_ret_t
-p4pd_get_rawrcb_entry(pd_rawrcb_t* rawrcb_pd) 
+p4pd_get_rawrcb_entry(pd_rawrcb_t* rawrcb_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_rawrcb_rxdma_entry(rawrcb_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get rxdma entry for rawrcb");
-        goto err;    
+        goto err;
     }
-   
+
 err:
     /*TODO: cleanup */
     return ret;
@@ -396,9 +396,10 @@ err:
  *******************************************/
 
 hal_ret_t
-pd_rawrcb_create (pd_rawrcb_create_args_t *args)
+pd_rawrcb_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_rawrcb_create_args_t *args = pd_func_args->pd_rawrcb_create;
     pd_rawrcb_s             *rawrcb_pd;
     rawrcb_hw_id_t          hw_id = args->rawrcb->cb_id;
     bool                    qstate_header_overwrite = false;
@@ -413,7 +414,7 @@ pd_rawrcb_create (pd_rawrcb_create_args_t *args)
         rawrcb_pd = rawrcb_pd_alloc_init(hw_id);
         if (rawrcb_pd == NULL) {
             ret = HAL_RET_OOM;
-            goto cleanup;    
+            goto cleanup;
         }
     }
 
@@ -421,12 +422,12 @@ pd_rawrcb_create (pd_rawrcb_create_args_t *args)
     rawrcb_pd->hw_addr = pd_rawrcb_get_base_hw_addr(rawrcb_pd);
     printf("RAWRCB{%u} Received hw_addr: 0x%lx ",
            hw_id, rawrcb_pd->hw_addr);
-    
+
     // program rawrcb
     ret = p4pd_add_or_del_rawrcb_entry(rawrcb_pd, false,
                                        qstate_header_overwrite);
     if(ret != HAL_RET_OK) {
-        goto cleanup;    
+        goto cleanup;
     }
     // add to db
     ret = add_rawrcb_pd_to_db(rawrcb_pd);
@@ -458,6 +459,7 @@ pd_rawrcb_deactivate (pd_rawrcb_update_args_t *args)
     pd_rawrcb_t         curr_rawrcb_pd;
     pd_rawrcb_get_args_t    curr_args;
     rawrcb_t*           rawrcb = args->rawrcb;
+    pd_func_args_t pd_func_args = {0};
 
     pd_rawrcb_get_args_init(&curr_args);
     curr_args.rawrcb = &curr_rawrcb;
@@ -469,31 +471,33 @@ pd_rawrcb_deactivate (pd_rawrcb_update_args_t *args)
     curr_rawrcb_pd.hw_addr = pd_rawrcb_get_base_hw_addr(&curr_rawrcb_pd);
     HAL_TRACE_DEBUG("RAWRCB pd deactivate for id: {} hw_addr {:#x}",
                     rawrcb->cb_id,  curr_rawrcb_pd.hw_addr);
-    ret = pd_rawrcb_get(&curr_args);
+    pd_func_args.pd_rawrcb_get = &curr_args;
+    ret = pd_rawrcb_get(&pd_func_args);
     if (ret == HAL_RET_OK) {
         ret = p4pd_add_or_del_rawrcb_entry(&curr_rawrcb_pd, true, false);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to deactivate rawrcb entry"); 
+            HAL_TRACE_ERR("Failed to deactivate rawrcb entry");
         }
     }
-    
+
     return ret;
 }
 
 hal_ret_t
-pd_rawrcb_update (pd_rawrcb_update_args_t *args)
+pd_rawrcb_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
-    
+    pd_rawrcb_update_args_t *args = pd_func_args->pd_rawrcb_update;
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     rawrcb_t       *rawrcb = args->rawrcb;
     pd_rawrcb_t    *rawrcb_pd = (pd_rawrcb_t*)rawrcb->pd;
 
     HAL_TRACE_DEBUG("RAWRCB pd update for id: {}", rawrcb_pd->hw_id);
-    
+
     /*
      * First, deactivate the current rawrcb
      */
@@ -515,26 +519,27 @@ hal_ret_t
 pd_rawrcb_delete (pd_rawrcb_delete_args_t *args,
                   bool retain_in_db)
 #endif
-pd_rawrcb_delete (pd_rawrcb_delete_args_t *del_args)
+pd_rawrcb_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
+    pd_rawrcb_delete_args_t *del_args = pd_func_args->pd_rawrcb_delete;
     pd_rawrcb_args_t *args = del_args->r_args;
     bool retain_in_db = del_args->retain_in_db;
-    
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     rawrcb_t        *rawrcb = args->rawrcb;
     pd_rawrcb_t     *rawrcb_pd = (pd_rawrcb_t*)rawrcb->pd;
 
     HAL_TRACE_DEBUG("RAWRCB pd delete for id: {}", rawrcb_pd->hw_id);
-    
+
     ret = p4pd_add_or_del_rawrcb_entry(rawrcb_pd, true, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete rawrcb entry"); 
+        HAL_TRACE_ERR("Failed to delete rawrcb entry");
     }
-    
+
     if (!retain_in_db) {
         del_rawrcb_pd_from_db(rawrcb_pd);
         rawrcb_pd_free(rawrcb_pd);
@@ -543,9 +548,10 @@ pd_rawrcb_delete (pd_rawrcb_delete_args_t *del_args)
 }
 
 hal_ret_t
-pd_rawrcb_get (pd_rawrcb_get_args_t *args)
+pd_rawrcb_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret;
+    pd_rawrcb_get_args_t *args = pd_func_args->pd_rawrcb_get;
     pd_rawrcb_t     rawrcb_pd;
     rawrcb_hw_id_t  hw_id = args->rawrcb->cb_id;
 
@@ -554,7 +560,7 @@ pd_rawrcb_get (pd_rawrcb_get_args_t *args)
     // allocate PD rawrcb state
     rawrcb_pd_init(&rawrcb_pd, hw_id);
     rawrcb_pd.rawrcb = args->rawrcb;
-    
+
     rawrcb_pd.hw_addr = pd_rawrcb_get_base_hw_addr(&rawrcb_pd);
     HAL_TRACE_DEBUG("Received hw_addr {:#x}", rawrcb_pd.hw_addr);
 

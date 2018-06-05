@@ -170,6 +170,7 @@ pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
     lif_t                         *lif;
     hal_ret_t                     ret = HAL_RET_OK;
     pd_lif_get_lport_id_args_t    args = { 0 };
+    pd_func_args_t pd_func_args = {0};
 
     /*
      * PD resources should have already allocated when the LIF was created
@@ -177,7 +178,8 @@ pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
     lif = if_get_lif(intf);
     if (lif) {
         args.pi_lif = lif;
-        pd_lif_get_lport_id(&args);
+        pd_func_args.pd_lif_get_lport_id = &args;
+        pd_lif_get_lport_id(&pd_func_args);
         pd_app_redir_if->lport_id = args.lport_id;
         // pd_app_redir_if->lport_id = lif_get_lport_id(lif);
         HAL_TRACE_DEBUG("if_id:{} lif_id:{} lport_id:{}",

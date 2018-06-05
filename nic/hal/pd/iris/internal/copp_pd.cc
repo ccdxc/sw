@@ -152,8 +152,8 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
         COPP_ACTION(d, pkt_rate) =
             pi_copp->policer.type == POLICER_TYPE_PPS ? 1 : 0;
 
-        ret = policer_to_token_rate(&pi_copp->policer, 
-                                    refresh_interval_us, 
+        ret = policer_to_token_rate(&pi_copp->policer,
+                                    refresh_interval_us,
                                     &rate_tokens, &burst_tokens);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error converting rate to token rate ret {}", ret);
@@ -161,14 +161,14 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
         }
 
         memcpy(COPP_ACTION(d, burst), &burst_tokens,
-               std::min(sizeof(COPP_ACTION(d, burst)), 
+               std::min(sizeof(COPP_ACTION(d, burst)),
                         sizeof(burst_tokens)));
         memcpy(COPP_ACTION(d, rate), &rate_tokens,
                std::min(sizeof(COPP_ACTION(d, rate)), sizeof(rate_tokens)));
 
         uint64_t tbkt = burst_tokens;
-        memcpy(COPP_ACTION(d, tbkt), &tbkt, 
-               std::min(sizeof(COPP_ACTION(d, tbkt)), 
+        memcpy(COPP_ACTION(d, tbkt), &tbkt,
+               std::min(sizeof(COPP_ACTION(d, tbkt)),
                         sizeof(burst_tokens)));
     }
 
@@ -177,7 +177,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
     COPP_ACTION(d_mask, rsvd) = 0;
     COPP_ACTION(d_mask, axi_wr_pend) = 0;
     if (update) {
-        memset(COPP_ACTION(d_mask, tbkt), 0, 
+        memset(COPP_ACTION(d_mask, tbkt), 0,
                sizeof(COPP_ACTION(d_mask, tbkt)));
     }
 
@@ -198,7 +198,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
     HAL_TRACE_DEBUG("Copp: {} hw_policer_id: {} policer: {} "
                     "rate_tokens: {} burst_tokens: {} programmed",
                     pi_copp->key,
-                    pd_copp->hw_policer_id, 
+                    pd_copp->hw_policer_id,
                     pi_copp->policer,
                     rate_tokens, burst_tokens);
     return HAL_RET_OK;
@@ -286,9 +286,10 @@ end:
 // Copp Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_update (pd_copp_update_args_t *args)
+pd_copp_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_copp_update_args_t *args = pd_func_args->pd_copp_update;
     pd_copp_t  *pd_copp;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -308,7 +309,7 @@ pd_copp_update (pd_copp_update_args_t *args)
 // PD Copp Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_delete (pd_copp_delete_args_t *args)
+pd_copp_delete (pd_func_args_t *pd_func_args)
 {
     // Deletion of copp is not allowed
     return HAL_RET_INVALID_ARG;
@@ -339,9 +340,10 @@ pd_copp_delete (pd_copp_delete_args_t *args)
 // Copp Create
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_create (pd_copp_create_args_t *args)
+pd_copp_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;;
+    pd_copp_create_args_t *args = pd_func_args->pd_copp_create;
     pd_copp_t *pd_copp;
 
     HAL_TRACE_DEBUG("creating pd state for copp: {}",
@@ -390,9 +392,10 @@ end:
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_make_clone (pd_copp_make_clone_args_t *args)
+pd_copp_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd_copp_make_clone_args_t *args = pd_func_args->pd_copp_make_clone;
     pd_copp_t *pd_copp_clone = NULL;
     copp_t *copp = args->copp;
     copp_t *clone = args->clone;
@@ -415,7 +418,7 @@ end:
 // pd copp get
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_get (pd_copp_get_args_t *args)
+pd_copp_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 #if 0
@@ -450,9 +453,10 @@ copp_pd_restore_data (pd_copp_restore_args_t *args)
 // pd copp restore
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_restore (pd_copp_restore_args_t *args)
+pd_copp_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret;
+    pd_copp_restore_args_t *args = pd_func_args->pd_copp_restore;
     pd_copp_t *copp_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -499,9 +503,10 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_mem_free (pd_copp_mem_free_args_t *args)
+pd_copp_mem_free (pd_func_args_t *pd_func_args)
 {
     pd_copp_t        *pd_copp;
+    pd_copp_mem_free_args_t *args = pd_func_args->pd_copp_mem_free;
 
     pd_copp = (pd_copp_t *)args->copp->pd;
     copp_pd_mem_free(pd_copp);

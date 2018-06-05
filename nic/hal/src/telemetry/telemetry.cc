@@ -42,6 +42,7 @@ hal_ret_t
 mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 {
     pd_mirror_session_create_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     mirror_session_t session;
     kh::InterfaceKeyHandle ifid;
     hal_ret_t ret;
@@ -146,7 +147,8 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     }
     }
     args.session = &session;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_CREATE, (void *)&args);
+    pd_func_args.pd_mirror_session_create = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Create failed {}", ret);
     } else {
@@ -160,11 +162,13 @@ mirror_session_process_get (MirrorSessionGetRequest &req,
                             pd_mirror_session_get_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
+    pd::pd_func_args_t pd_func_args = {0};
 
     HAL_TRACE_DEBUG("{}: Mirror Session ID {}", __FUNCTION__,
             req.key_or_handle().mirrorsession_id());
     memset(args->session, 0, sizeof(mirror_session_t));
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, (void *)&args);
+    pd_func_args.pd_mirror_session_get = args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: PD API failed {}", __FUNCTION__, ret);
         return ret;
@@ -179,7 +183,7 @@ mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rs
     mirror_session_t session;
     hal_ret_t ret;
     bool exists = false;
-    
+
     args.session = &session;
     if (!req.has_key_or_handle()) {
         /* Iterate over all the sessions */
@@ -230,6 +234,7 @@ hal_ret_t
 mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteResponse *rsp)
 {
     pd_mirror_session_delete_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     mirror_session_t session;
     hal_ret_t ret;
 
@@ -238,7 +243,8 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
     memset(&session, 0, sizeof(session));
     session.id = req.key_or_handle().mirrorsession_id();
     args.session = &session;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_DELETE, (void *)&args);
+    pd_func_args.pd_mirror_session_delete = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: PD API failed {}", __FUNCTION__, ret);
         rsp->set_api_status(types::API_STATUS_OK);
@@ -252,6 +258,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
 {
     collector_config_t cfg;
     pd::pd_collector_create_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     hal_ret_t ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
@@ -300,7 +307,8 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     }
     memcpy(cfg.src_mac, *dmac, sizeof(cfg.src_mac));
     args.cfg = &cfg;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_CREATE, (void *)&args);
+    pd_func_args.pd_collector_create = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-Collector:{}: PD API failed {}", __FUNCTION__, ret);
     }
@@ -354,7 +362,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
 {
     hal_ret_t   ret = HAL_RET_OK;
     rule_data_t *rule_data;
-    
+
     // Populate the rule_match structure
     ret = rule_match_spec_extract(spec.match(), &rule->rule_match);
     if (ret != HAL_RET_OK) {
@@ -425,6 +433,7 @@ hal_ret_t
 flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDeleteResponse *rsp)
 {
     pd_flow_monitor_rule_create_args_t args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
     flow_monitor_rule_t rule = {0};
     hal_ret_t ret;
 
@@ -437,7 +446,8 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     rule.vrf_id = req.meta().vrf_id();
     rule.rule_id = req.key_or_handle().flowmonitorrule_id();
     args.rule = &rule;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, (void *)&args);
+    pd_func_args.pd_flow_monitor_rule_create = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-FlowMonitor delete failed {}", ret);
     } else {
@@ -489,6 +499,7 @@ hal_ret_t
 drop_monitor_rule_create (DropMonitorRuleSpec &spec, DropMonitorRuleResponse *rsp)
 {
     pd_drop_monitor_rule_create_args_t args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
     drop_monitor_rule_t rule = {0};
     hal_ret_t ret = HAL_RET_OK;
     int sess_id;
@@ -506,7 +517,8 @@ drop_monitor_rule_create (DropMonitorRuleSpec &spec, DropMonitorRuleResponse *rs
         rule.mirror_destinations[sess_id] = true;
     }
     args.rule = &rule;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, (void *)&args);
+    pd_func_args.pd_drop_monitor_rule_create = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-DropMonitor create failed {}", ret);
         goto end;
@@ -528,12 +540,14 @@ hal_ret_t
 drop_monitor_rule_delete (DropMonitorRuleDeleteRequest &req, DropMonitorRuleDeleteResponse *rsp)
 {
     pd_drop_monitor_rule_create_args_t args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
     drop_monitor_rule_t rule = {0};
     hal_ret_t ret;
 
     rule.rule_id = req.key_or_handle().dropmonitorrule_id();
     args.rule = &rule;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, (void *)&args);
+    pd_func_args.pd_drop_monitor_rule_create = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-DropMonitor delete failed {}", ret);
         goto end;

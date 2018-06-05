@@ -80,6 +80,7 @@ DebugServiceImpl::MemoryGet(ServerContext *context,
     int                                     num_indices  = 0;
     hal::pd::pd_debug_cli_read_args_t       args;
     hal::pd::pd_table_properties_get_args_t table_prop_args;
+    hal::pd::pd_func_args_t                 pd_func_args = {0};
     debug::MemoryResponse                   *rsp = NULL;
 
     for (int i = 0; i < req_msg->request_size(); ++i) {
@@ -88,8 +89,8 @@ DebugServiceImpl::MemoryGet(ServerContext *context,
         if (req.index() == 0xffffffff) {
             table_prop_args.tableid = req.table_id();
 
-            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TABLE_PROPERTIES_GET,
-                                       (void *)&table_prop_args);
+            pd_func_args.pd_table_properties_get = &table_prop_args;
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TABLE_PROPERTIES_GET, &pd_func_args);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_DEBUG("Failed to get table properties for"
                                 " table: {}, err: {}",
@@ -118,7 +119,8 @@ DebugServiceImpl::MemoryGet(ServerContext *context,
             args.swkey = (void *)req.swkey().c_str();
             args.swkey_mask = (void *)req.swkey_mask().c_str();
             args.actiondata = (void *)req.actiondata().c_str();
-            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, (void *)&args);
+            pd_func_args.pd_debug_cli_read = &args;
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, &pd_func_args);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_DEBUG("Hardware read failure, err: {}", ret);
                 rsp->set_api_status(types::API_STATUS_HW_READ_ERROR);
@@ -142,6 +144,7 @@ DebugServiceImpl::MemoryUpdate(ServerContext *context,
 {
     hal_ret_t                          ret = HAL_RET_OK;
     hal::pd::pd_debug_cli_read_args_t  args;
+    hal::pd::pd_func_args_t            pd_func_args = {0};
 
     for (int i = 0; i < req_msg->request_size(); ++i) {
         debug::MemoryRequest req = req_msg->request(i);
@@ -154,7 +157,8 @@ DebugServiceImpl::MemoryUpdate(ServerContext *context,
         args.swkey = (void *)req.swkey().c_str();
         args.swkey_mask = (void *)req.swkey_mask().c_str();
         args.actiondata = (void *)req.actiondata().c_str();
-        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_WRITE, (void *)&args);
+        pd_func_args.pd_debug_cli_read = &args;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_WRITE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("Hardware write failure, err: {}", ret);
             rsp->set_api_status(types::API_STATUS_HW_READ_ERROR);

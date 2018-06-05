@@ -549,10 +549,12 @@ system_get_fill_rsp (session_t *session, SessionGetResponse *response)
     pd::pd_session_get_args_t   args;
     session_state_t             session_state;
     hal_ret_t                   ret = HAL_RET_OK;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     args.session = session;
     args.session_state = &session_state;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
+    pd_func_args.pd_session_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch session state for session {}",
                       session->hal_handle);
@@ -652,6 +654,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     nwsec_profile_t              *nwsec_prof;
     pd::pd_session_create_args_t  pd_session_args;
     session_t                    *session;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(args->vrf && args->iflow && args->iflow_attrs);
 
@@ -739,7 +742,8 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     pd_session_args.rsp = args->rsp;
     pd_session_args.update_iflow = true;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_CREATE, (void *)&pd_session_args);
+    pd_func_args.pd_session_create = &pd_session_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session create failure, err : {}", ret);
         goto end;
@@ -788,8 +792,9 @@ session_lookup(flow_key_t key, flow_role_t *role)
 hal_ret_t
 session_update(const session_args_t *args, session_t *session)
 {
-    hal_ret_t                ret;
+    hal_ret_t                       ret;
     pd::pd_session_update_args_t    pd_session_args;
+    pd::pd_func_args_t              pd_func_args = {0};
 
     HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
@@ -828,7 +833,8 @@ session_update(const session_args_t *args, session_t *session)
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_UPDATE, (void *)&pd_session_args);
+    pd_func_args.pd_session_update = &pd_session_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session update failure, err : {}", ret);
     }
@@ -839,8 +845,10 @@ session_update(const session_args_t *args, session_t *session)
 hal_ret_t
 session_delete(const session_args_t *args, session_t *session)
 {
-    hal_ret_t                ret;
+    hal_ret_t                       ret;
     pd::pd_session_delete_args_t    pd_session_args;
+    pd::pd_func_args_t              pd_func_args = {0};
+
 
     HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
@@ -858,7 +866,8 @@ session_delete(const session_args_t *args, session_t *session)
     pd_session_args.session_state = args ? args->session_state : NULL;
     pd_session_args.rsp = args ? args->rsp : NULL;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_DELETE, (void *)&pd_session_args);
+    pd_func_args.pd_session_delete = &pd_session_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session delete failure, err : {}", ret);
     }
@@ -957,6 +966,7 @@ build_tcp_packet (hal::flow_key_t key, flow_state_t state,
     hal_ret_t                                ret = HAL_RET_OK;
     ep_t                                    *sep = NULL, *dep = NULL;
     l2seg_t                                 *sl2seg = NULL;
+    pd::pd_func_args_t                      pd_func_args = {0};
 
     if (!pkt) {
         return HAL_RET_INVALID_ARG;
@@ -976,8 +986,9 @@ build_tcp_packet (hal::flow_key_t key, flow_state_t state,
     args.l2seg = sl2seg;
     args.vid = &cpu_header->hw_vlan_id;
 
+    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
     if (pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                      (void*)&args) == HAL_RET_OK) {
+                                      &pd_func_args) == HAL_RET_OK) {
         cpu_header->flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
     }
 
@@ -1043,6 +1054,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     SessionResponse                            rsp;
     hal_ret_t                                  ret;
     session_aged_ret_t                         retval = SESSION_AGED_NONE;
+    pd::pd_func_args_t                         pd_func_args = {0};
 
     // Check if its a TCP flow with connection tracking enabled.
     // And connection tracking timer is not NULL. This means the session
@@ -1068,7 +1080,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     rflow = session->rflow;
     args.session = session;
     args.session_state = &session_state;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
+    pd_func_args.pd_session_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch session state for session {}",
                       session->hal_handle);
@@ -1088,8 +1101,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // Convert hw clock to sw clock resolving any deltas
     clock_args.hw_tick = session_state.iflow_state.last_pkt_ts;
     clock_args.sw_ns = &last_pkt_ts;
-    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK,
-                    (void *)&clock_args);
+    pd_func_args.pd_conv_hw_clock_to_sw_clock = &clock_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, &pd_func_args);
     HAL_TRACE_DEBUG("Hw tick: {}", session_state.iflow_state.last_pkt_ts);
     HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
                     last_pkt_ts, ctime_ns, session_timeout);
@@ -1102,8 +1115,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
         //check responder flow
         clock_args.hw_tick = session_state.rflow_state.last_pkt_ts;
         clock_args.sw_ns = &last_pkt_ts;
-        pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK,
-                        (void *)&clock_args);
+        pd_func_args.pd_conv_hw_clock_to_sw_clock = &clock_args;
+        pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, &pd_func_args);
         if ((ctime_ns - last_pkt_ts) >= session_timeout) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
@@ -1533,6 +1546,7 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     session_t                *session = NULL;
     pd::pd_session_get_args_t args;
     session_state_t           state;
+    pd::pd_func_args_t        pd_func_args = {0};
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
@@ -1543,7 +1557,8 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     args.session = session;
     args.session_state = &state;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
+    pd_func_args.pd_session_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
                        session->config.session_id);
@@ -1607,6 +1622,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
     pd::pd_session_get_args_t args;
     session_state_t           state;
     session_t                *session = NULL;
+    pd::pd_func_args_t       pd_func_args = {0};
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
@@ -1616,7 +1632,8 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     args.session = session;
     args.session_state = &state;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
+    pd_func_args.pd_session_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
                        session->hal_handle);

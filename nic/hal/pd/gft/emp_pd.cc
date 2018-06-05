@@ -32,8 +32,7 @@ static void link_pi_pd(pd_gft_emp_t *pd_emp,
 static void delink_pi_pd(pd_gft_emp_t *pd_emp,
                          gft_exact_match_profile_t *pi_emp);
 static hal_ret_t emp_pd_cleanup(pd_gft_emp_t *emp_pd);
-static hal_ret_t pd_gft_emp_make_clone(
-                        pd_gft_exact_match_profile_make_clone_args_t *args);
+static hal_ret_t pd_gft_emp_make_clone(pd_func_args_t *pd_func_args);
 static hal_ret_t emp_pd_rx_keys_program_hw (pd_gft_emp_t *pd_gft_emp);
 static hal_ret_t emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp);
 
@@ -41,9 +40,10 @@ static hal_ret_t emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp);
 // EMP Create in PD
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *args)
+pd_gft_exact_match_profile_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    pd_gft_exact_match_profile_args_t *args = pd_func_args->pd_gft_exact_match_profile;
     pd_gft_emp_t         *pd_gft_emp = NULL;
 
     // Alloc memory
@@ -77,7 +77,7 @@ end:
 // PD EMP Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_gft_exact_match_profile_update (pd_gft_exact_match_profile_args_t *args)
+pd_gft_exact_match_profile_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -88,7 +88,7 @@ pd_gft_exact_match_profile_update (pd_gft_exact_match_profile_args_t *args)
 // PD EMP Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_gft_exact_match_profile_delete (pd_gft_exact_match_profile_args_t *args)
+pd_gft_exact_match_profile_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
 
@@ -725,9 +725,11 @@ delink_pi_pd (pd_gft_emp_t *pd_gft_emp, gft_exact_match_profile_t *pi_emp)
 // Makes a clone
 //-----------------------------------------------------------------------------
 static inline hal_ret_t
-pd_gft_emp_make_clone (pd_gft_exact_match_profile_make_clone_args_t *args)
+pd_gft_emp_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_gft_exact_match_profile_make_clone_args_t *args =
+        pd_func_args->pd_gft_exact_match_profile_make_clone;
     pd_gft_emp_t        *pd_gft_emp_clone = NULL;
 
     gft_exact_match_profile_t *emp = args->exact_match_profile;
@@ -751,9 +753,10 @@ end:
 // Frees PD memory without indexer free.
 //-----------------------------------------------------------------------------
 static inline hal_ret_t
-pd_gft_emp_mem_free (pd_gft_exact_match_profile_args_t *args)
+pd_gft_emp_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_gft_exact_match_profile_args_t *args = pd_func_args->pd_gft_exact_match_profile;
     pd_gft_emp_t    *emp_pd;
 
     emp_pd = (pd_gft_emp_t *)args->exact_match_profile->pd;

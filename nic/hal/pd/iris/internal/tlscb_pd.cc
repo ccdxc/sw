@@ -43,15 +43,15 @@ tlscb_pd_compare_hw_key_func (void *key1, void *key2)
  * TxDMA
  * ******************************************/
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
 {
     tx_table_s0_t0_d        data = {0};
 
     // hardware index for this entry
-    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
-    
+
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: s0_t0_read_tls_stg0 entry for TLS CB");
         return HAL_RET_HW_FAIL;
@@ -80,16 +80,16 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd)
 {
     tx_table_s1_t0_d                   data = {0};
     hal_ret_t                          ret = HAL_RET_OK;
 
     // hardware index for this entry
-    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S1_T0_READ_TLS_ST1_7);
-    
+
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create tx: s1_t0_read_tls_stg1_7 entry for TLS CB");
         return HAL_RET_HW_FAIL;
@@ -102,16 +102,16 @@ p4pd_get_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd)
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
 {
     tx_table_s6_t0_d                   data = {0};
     hal_ret_t                          ret = HAL_RET_OK;
 
     // hardware index for this entry
-    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS_U16);
-    
+
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create tx: s6_t0_pre_crypto_stats_entry for TLS CB");
         return HAL_RET_HW_FAIL;
@@ -121,10 +121,10 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->enc_requests = ntohs(data.u.tls_pre_crypto_stats6_d.enc_requests);
     tlscb_pd->tlscb->dec_requests = ntohs(data.u.tls_pre_crypto_stats6_d.dec_requests);
     tlscb_pd->tlscb->mac_requests = ntohs(data.u.tls_pre_crypto_stats6_d.mac_requests);
-    tlscb_pd->tlscb->pre_debug_stage0_7_thread = 
+    tlscb_pd->tlscb->pre_debug_stage0_7_thread =
       (ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage4_7_thread) << 16) |
       ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage0_3_thread);
-    HAL_TRACE_DEBUG("hwid : {:#x}", hwid);    
+    HAL_TRACE_DEBUG("hwid : {:#x}", hwid);
     HAL_TRACE_DEBUG("Received tnmdr alloc: 0x{:x}", tlscb_pd->tlscb->tnmdr_alloc);
     HAL_TRACE_DEBUG("Received tnmpr alloc: 0x{:x}", tlscb_pd->tlscb->tnmpr_alloc);
     HAL_TRACE_DEBUG("Received enc requests: 0x{:x}", tlscb_pd->tlscb->enc_requests);
@@ -135,16 +135,16 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_tls_tx_config_entry(pd_tlscb_t* tlscb_pd)
 {
     tx_table_s2_t0_d                data = {0};
     hal_ret_t                       ret = HAL_RET_OK;
 
     // hardware index for this entry
-    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_CONFIG);
-    
+
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: config entry for TLS CB");
         return HAL_RET_HW_FAIL;
@@ -162,16 +162,16 @@ p4pd_get_tls_tx_config_entry(pd_tlscb_t* tlscb_pd)
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_get_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
- 
+
     ret = p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(tlscb_pd);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
-    
+
     ret = p4pd_get_tls_tx_s1_t0_read_tls_stg1_7_entry(tlscb_pd);
     if(ret != HAL_RET_OK) {
         goto cleanup;
@@ -191,7 +191,7 @@ p4pd_get_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd)
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
-   
+
 cleanup:
     return ret;
 }
@@ -213,7 +213,7 @@ p4pd_get_tls_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 {
     tx_table_s0_t0_d        data = {0};
@@ -221,9 +221,9 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
     wring_hw_id_t           q_base;
 
     // hardware index for this entry
-    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
-    
+
     if(!del) {
         HAL_TRACE_DEBUG("TLS TXDMA Stage0 Received debug_dol 0x{:x}", tlscb_pd->tlscb->debug_dol);
 
@@ -244,12 +244,12 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
                                      tlscb_pd->tlscb->cb_id,
                                      &serq_base);
         if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to receive serq base for tlscbcb: {}", 
+            HAL_TRACE_ERR("Failed to receive serq base for tlscbcb: {}",
                         tlscb_pd->tlscb->cb_id);
         } else {
             HAL_TRACE_DEBUG("Serq id: 0x{:x}", tlscb_pd->tlscb->cb_id);
             HAL_TRACE_DEBUG("Serq base: 0x{:x}", serq_base);
-            data.u.read_tls_stg0_d.serq_base = htonl(serq_base);    
+            data.u.read_tls_stg0_d.serq_base = htonl(serq_base);
         }
         // Get Sesq address
         wring_hw_id_t  sesq_base;
@@ -258,12 +258,12 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
                                       tlscb_pd->tlscb->cb_id : tlscb_pd->tlscb->other_fid),
                                      &sesq_base);
         if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to receive sesq base for tlscbcb: {}", 
+            HAL_TRACE_ERR("Failed to receive sesq base for tlscbcb: {}",
                         tlscb_pd->tlscb->cb_id);
         } else {
             HAL_TRACE_DEBUG("Sesq id: 0x{:x}", tlscb_pd->tlscb->other_fid);
             HAL_TRACE_DEBUG("Sesq base: 0x{:x}", sesq_base);
-            data.u.read_tls_stg0_d.sesq_base = htonl(sesq_base);    
+            data.u.read_tls_stg0_d.sesq_base = htonl(sesq_base);
         }
         data.u.read_tls_stg0_d.debug_dol = htonl(tlscb_pd->tlscb->debug_dol);
         HAL_TRACE_DEBUG("debug_dol = 0x{:x}", data.u.read_tls_stg0_d.debug_dol);
@@ -310,16 +310,16 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 }
 
 
-hal_ret_t 
+hal_ret_t
 p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool del)
 {
     tx_table_s1_t0_d                   data = {0};
     hal_ret_t                          ret = HAL_RET_OK;
 
     // hardware index for this entry
-    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S1_T0_READ_TLS_ST1_7);
-    
+
     if(!del) {
         data.u.read_tls_stg1_7_d.other_fid = htons(tlscb_pd->tlscb->other_fid);
         HAL_TRACE_DEBUG("other fid = 0x{:x}", data.u.read_tls_stg1_7_d.other_fid);
@@ -356,7 +356,7 @@ p4pd_add_or_del_tls_tx_config_entry(pd_tlscb_t* tlscb_pd, bool del)
     tx_table_s2_t0_d                data = {0};
     hal_ret_t                       ret = HAL_RET_OK;
 
-    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_CONFIG);
 
     if (!del) {
@@ -383,7 +383,7 @@ p4pd_add_or_del_tls_tx_config_entry(pd_tlscb_t* tlscb_pd, bool del)
 }
 
 
-hal_ret_t 
+hal_ret_t
 p4pd_add_or_del_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -392,7 +392,7 @@ p4pd_add_or_del_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd, bool del)
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
-    
+
     ret = p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(tlscb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
@@ -417,9 +417,9 @@ pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
 {
     HAL_ASSERT(NULL != tlscb_pd);
     HAL_ASSERT(NULL != tlscb_pd->tlscb);
-    
+
     // Get the base address of TLS CB from LIF Manager.
-    // Set qtype and qid as 0 to get the start offset. 
+    // Set qtype and qid as 0 to get the start offset.
     uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
             tlscb_pd->tlscb->cb_id);
     HAL_TRACE_DEBUG("received offset 0x{:x}", offset);
@@ -427,10 +427,10 @@ pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
 }
 
 hal_ret_t
-p4pd_add_or_del_tlscb_entry(pd_tlscb_t* tlscb_pd, bool del) 
+p4pd_add_or_del_tlscb_entry(pd_tlscb_t* tlscb_pd, bool del)
 {
     hal_ret_t                   ret = HAL_RET_OK;
- 
+
     ret = p4pd_add_or_del_tlscb_txdma_entry(tlscb_pd, del);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to add/delete TLS TxDMA Entry {}", ret);
@@ -441,10 +441,10 @@ p4pd_add_or_del_tlscb_entry(pd_tlscb_t* tlscb_pd, bool del)
 
 static
 hal_ret_t
-p4pd_get_tlscb_entry(pd_tlscb_t* tlscb_pd) 
+p4pd_get_tlscb_entry(pd_tlscb_t* tlscb_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    
+
     ret = p4pd_get_tlscb_txdma_entry(tlscb_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get txdma entry for tlscb");
@@ -458,9 +458,10 @@ p4pd_get_tlscb_entry(pd_tlscb_t* tlscb_pd)
  *******************************************/
 
 hal_ret_t
-pd_tlscb_create (pd_tlscb_create_args_t *args)
+pd_tlscb_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_tlscb_create_args_t *args = pd_func_args->pd_tlscb_create;
     pd_tlscb_s              *tlscb_pd;
 
     HAL_TRACE_DEBUG("Creating pd state for TLS CB.");
@@ -474,11 +475,11 @@ pd_tlscb_create (pd_tlscb_create_args_t *args)
     tlscb_pd->tlscb = args->tlscb;
     // get hw-id for this TLSCB
     tlscb_pd->hw_id = pd_tlscb_get_base_hw_index(tlscb_pd);
-    
+
     // program tlscb
     ret = p4pd_add_or_del_tlscb_entry(tlscb_pd, false);
     if(ret != HAL_RET_OK) {
-        goto cleanup;    
+        goto cleanup;
     }
     HAL_TRACE_DEBUG("Programming done");
     // add to db
@@ -500,19 +501,20 @@ cleanup:
 }
 
 hal_ret_t
-pd_tlscb_update (pd_tlscb_update_args_t *args)
+pd_tlscb_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
-    
+    pd_tlscb_update_args_t *args = pd_func_args->pd_tlscb_update;
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     tlscb_t*                tlscb = args->tlscb;
     pd_tlscb_t*             tlscb_pd = (pd_tlscb_t*)tlscb->pd;
 
     HAL_TRACE_DEBUG("TLSCB pd update");
-    
+
     // program tlscb
     ret = p4pd_add_or_del_tlscb_entry(tlscb_pd, false);
     if(ret != HAL_RET_OK) {
@@ -522,25 +524,26 @@ pd_tlscb_update (pd_tlscb_update_args_t *args)
 }
 
 hal_ret_t
-pd_tlscb_delete (pd_tlscb_delete_args_t *args)
+pd_tlscb_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
-    
+    pd_tlscb_delete_args_t *args = pd_func_args->pd_tlscb_delete;
+
     if(!args) {
-       return HAL_RET_INVALID_ARG; 
+       return HAL_RET_INVALID_ARG;
     }
 
     tlscb_t*                tlscb = args->tlscb;
     pd_tlscb_t*             tlscb_pd = (pd_tlscb_t*)tlscb->pd;
 
     HAL_TRACE_DEBUG("TLSCB pd delete");
-    
+
     // program tlscb
     ret = p4pd_add_or_del_tlscb_entry(tlscb_pd, true);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete tlscb entry"); 
+        HAL_TRACE_ERR("Failed to delete tlscb entry");
     }
-    
+
     del_tlscb_pd_from_db(tlscb_pd);
 
     tlscb_pd_free(tlscb_pd);
@@ -549,9 +552,10 @@ pd_tlscb_delete (pd_tlscb_delete_args_t *args)
 }
 
 hal_ret_t
-pd_tlscb_get (pd_tlscb_get_args_t *args)
+pd_tlscb_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_tlscb_get_args_t *args = pd_func_args->pd_tlscb_get;
     pd_tlscb_t              tlscb_pd;
 
     HAL_TRACE_DEBUG("TLSCB pd get for id: {}", args->tlscb->cb_id);
@@ -559,7 +563,7 @@ pd_tlscb_get (pd_tlscb_get_args_t *args)
     // allocate PD tlscb state
     tlscb_pd_init(&tlscb_pd);
     tlscb_pd.tlscb = args->tlscb;
-    
+
     // get hw-id for this TLSCB
     tlscb_pd.hw_id = pd_tlscb_get_base_hw_index(&tlscb_pd);
     HAL_TRACE_DEBUG("Received hw-id 0x{:x}", tlscb_pd.hw_id);

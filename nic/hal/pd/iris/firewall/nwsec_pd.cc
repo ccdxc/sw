@@ -14,9 +14,10 @@ namespace pd {
 // PD Nwsec Create
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_profile_create (pd_nwsec_profile_create_args_t *args)
+pd_nwsec_profile_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    pd_nwsec_profile_create_args_t *args = pd_func_args->pd_nwsec_profile_create;
     pd_nwsec_profile_t   *pd_nwsec;
 
     HAL_TRACE_DEBUG("{}: creating pd state ",
@@ -55,9 +56,10 @@ end:
 // PD Nwsec Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
+pd_nwsec_profile_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t            ret = HAL_RET_OK;;
+    pd_nwsec_profile_update_args_t *args = pd_func_args->pd_nwsec_profile_update;
     pd_nwsec_profile_t   *pd_nwsec;
 
     HAL_TRACE_DEBUG("{}: updating pd state ",
@@ -96,9 +98,10 @@ pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
 // PD Nwsec Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_profile_delete (pd_nwsec_profile_delete_args_t *args)
+pd_nwsec_profile_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_nwsec_profile_delete_args_t *args = pd_func_args->pd_nwsec_profile_delete;
     pd_nwsec_profile_t  *nwsec_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -128,9 +131,10 @@ pd_nwsec_profile_delete (pd_nwsec_profile_delete_args_t *args)
 // pd nwsec profile get pd data
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_profile_get (pd_nwsec_profile_get_args_t *args)
+pd_nwsec_profile_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    pd_nwsec_profile_get_args_t *args = pd_func_args->pd_nwsec_profile_get;
     nwsec_profile_t *nwsec = args->nwsec_profile;
     pd_nwsec_profile_t  *nwsec_pd = (pd_nwsec_profile_t *)nwsec->pd;
     SecurityProfileGetResponse *rsp = args->rsp;
@@ -161,9 +165,10 @@ pd_nwsec_profile_restore_data (pd_nwsec_profile_restore_args_t *args)
 // pd nwsec profile restore
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_profile_restore (pd_nwsec_profile_restore_args_t *args)
+pd_nwsec_profile_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret;
+    pd_nwsec_profile_restore_args_t *args = pd_func_args->pd_nwsec_profile_restore;
     pd_nwsec_profile_t  *nwsec_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -441,9 +446,10 @@ nwsec_delink_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t  *pi_nw)
 // ----------------------------------------------------------------------------
 hal_ret_t
 // pd_nwsec_profile_make_clone(nwsec_profile_t *nwsec, nwsec_profile_t *clone)
-pd_nwsec_profile_make_clone(pd_nwsec_profile_make_clone_args_t *args)
+pd_nwsec_profile_make_clone(pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret             = HAL_RET_OK;
+    pd_nwsec_profile_make_clone_args_t *args = pd_func_args->pd_nwsec_profile_make_clone;
     pd_nwsec_profile_t  *pd_nwsec_clone = NULL;
     nwsec_profile_t     *nwsec          = args->nwsec_profile;
     nwsec_profile_t     *clone          = args->clone_profile;
@@ -466,9 +472,10 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_profile_mem_free(pd_nwsec_profile_mem_free_args_t *args)
+pd_nwsec_profile_mem_free(pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_nwsec_profile_mem_free_args_t *args = pd_func_args->pd_nwsec_profile_mem_free;
     pd_nwsec_profile_t      *nwsec_pd;
 
     nwsec_pd = (pd_nwsec_profile_t *)args->nwsec_profile->pd;

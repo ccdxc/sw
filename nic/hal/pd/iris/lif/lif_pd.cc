@@ -40,9 +40,10 @@ pd_lif_copy_asicpd_sched_params (pd_lif_t *lif_pd, asicpd_scheduler_lif_params_t
 // Lif Create in PD
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_lif_create (pd_lif_create_args_t *args)
+pd_lif_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t            ret;
+    pd_lif_create_args_t *args = pd_func_args->pd_lif_create;
     pd_lif_t             *pd_lif;
 
     // Create lif PD
@@ -76,9 +77,10 @@ end:
 // PD Lif Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_lif_update (pd_lif_update_args_t *args)
+pd_lif_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_lif_update_args_t *args = pd_func_args->pd_lif_update;
     lif_t               *lif = args->lif;
     pd_lif_t            *pd_lif = (pd_lif_t *)args->lif->pd_lif;
 
@@ -150,9 +152,10 @@ end:
 // PD Lif Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_lif_delete (pd_lif_delete_args_t *args)
+pd_lif_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_lif_delete_args_t *args = pd_func_args->pd_lif_delete;
     pd_lif_t       *lif_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -928,9 +931,10 @@ delink_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 // Makes a clone
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_lif_make_clone(pd_lif_make_clone_args_t *args)
+pd_lif_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_lif_make_clone_args_t *args = pd_func_args->pd_lif_make_clone;
     pd_lif_t            *pd_lif_clone = NULL;
 
     lif_t *lif = args->lif;
@@ -954,9 +958,10 @@ end:
 // Frees PD memory without indexer free.
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_lif_mem_free(pd_lif_mem_free_args_t *args)
+pd_lif_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_lif_mem_free_args_t *args = pd_func_args->pd_lif_mem_free;
     pd_lif_t    *lif_pd;
 
     lif_pd = (pd_lif_t *)args->lif->pd_lif;
@@ -971,8 +976,9 @@ pd_lif_mem_free(pd_lif_mem_free_args_t *args)
 
 // uint32_t pd_lif_get(lif_t *lif)
 hal_ret_t
-pd_lif_get (pd_lif_get_args_t *args)
+pd_lif_get (pd_func_args_t *pd_func_args)
 {
+    pd_lif_get_args_t *args = pd_func_args->pd_lif_get;
     lif_t *lif = args->lif;
 
     pd_lif_t  *lif_pd = (pd_lif_t *)lif->pd_lif;

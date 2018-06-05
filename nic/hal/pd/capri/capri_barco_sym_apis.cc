@@ -25,6 +25,7 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     barco_sym_msg_descriptor_t  ilist_msg_descr;
     uint32_t                    req_tag = 0;
     int32_t                     hmac_key_descr_idx = -1;
+    pd_func_args_t pd_func_args = {0};
 
 
     HAL_TRACE_DEBUG("Running {}-{} test:\n",
@@ -84,8 +85,9 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     if (key_len) {
         pd_crypto_alloc_key_args_t args;
         args.key_idx = &hmac_key_descr_idx;
+        pd_func_args.pd_crypto_alloc_key = &args;
         // ret = pd_crypto_alloc_key(&hmac_key_descr_idx);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, (void *)&args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, &pd_func_args);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate key descriptor",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
@@ -318,8 +320,9 @@ cleanup:
     if (hmac_key_descr_idx != -1) {
         hal::pd::pd_crypto_free_key_args_t args;
         args.key_idx = hmac_key_descr_idx;
+        pd_func_args.pd_crypto_free_key = &args;
         // ret = pd_crypto_free_key(hmac_key_descr_idx);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, (void *)&args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free key descriptor @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
@@ -347,6 +350,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     barco_sym_msg_descriptor_t  ilist_msg_descr, olist_msg_descr;
     uint32_t                    req_tag = 0;
     int32_t                     aes_key_descr_idx = -1;
+    pd_func_args_t pd_func_args = {0};
 
     HAL_TRACE_DEBUG("Running {}-{} test:\n",
                     capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
@@ -444,7 +448,8 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     if (key_len) {
     pd_crypto_alloc_key_args_t args;
     args.key_idx = &aes_key_descr_idx;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, (void *)&args);
+    pd_func_args.pd_crypto_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, &pd_func_args);
         // ret = pd_crypto_alloc_key(&aes_key_descr_idx);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate key descriptor",
@@ -833,7 +838,8 @@ cleanup:
     if (aes_key_descr_idx != -1) {
         pd_crypto_free_key_args_t f_args;
         f_args.key_idx = aes_key_descr_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, (void *)&f_args);
+        pd_func_args.pd_crypto_free_key = &f_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, &pd_func_args);
         // ret = pd_crypto_free_key(aes_key_descr_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free key descriptor @ {:x}",
@@ -1069,7 +1075,7 @@ static inline void cap_trng_set_key3(int chip_id, int value, bool refresh)
     TRNG_SET(key3);
 }
 
-static inline 
+static inline
 void cap_trng_set_test_data(int chip_id, int value, bool refresh)
 {
     TRNG_SET(testdata);

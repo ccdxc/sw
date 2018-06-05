@@ -79,6 +79,7 @@ TEST_F(vrf_test, test1)
     VrfGetResponseMsg       get_rsp_msg;
     VrfGetRequest           get_req;
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -103,8 +104,9 @@ TEST_F(vrf_test, test1)
     args.flow_lkupid = 4096;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
+    pd_func_args.pd_get_object_from_flow_lkupid = &args;
     // ret = hal::pd::pd_get_object_from_flow_lkupid(4096, &obj_id, &obj);
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     vrf = (hal::vrf_t *)obj;
@@ -208,6 +210,7 @@ TEST_F(vrf_test, test2)
     void                    *obj;
     hal::l2seg_t                 *l2seg;
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -280,7 +283,8 @@ TEST_F(vrf_test, test2)
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
     // ret = hal::pd::pd_get_object_from_flow_lkupid(4097, &obj_id, &obj);
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+    pd_func_args.pd_get_object_from_flow_lkupid = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     l2seg = (hal::l2seg_t *)obj;

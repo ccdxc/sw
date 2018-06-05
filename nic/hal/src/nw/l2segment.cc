@@ -439,6 +439,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                     *l2seg = NULL;
     l2seg_create_app_ctxt_t     *app_ctxt = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -464,7 +465,8 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_l2seg_create_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
     pd_l2seg_args.vrf = app_ctxt->vrf;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
+    pd_func_args.pd_l2seg_create = &pd_l2seg_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create l2seg pd, err : {}", ret);
     }
@@ -674,14 +676,16 @@ end:
 static hal_ret_t
 l2seg_create_abort_cleanup (l2seg_t *l2seg, hal_handle_t hal_handle)
 {
-    hal_ret_t                       ret;
-    pd::pd_l2seg_delete_args_t      pd_l2seg_args = { 0 };
+    hal_ret_t                   ret;
+    pd::pd_l2seg_delete_args_t  pd_l2seg_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     // delete call to PD
     if (l2seg->pd) {
         pd::pd_l2seg_delete_args_init(&pd_l2seg_args);
         pd_l2seg_args.l2seg = l2seg;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
+        pd_func_args.pd_l2seg_delete = &pd_l2seg_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}",
                           ret);
@@ -754,6 +758,8 @@ hal_ret_t
 l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
 {
     pd::pd_l2seg_get_flow_lkupid_args_t args;
+    pd::pd_func_args_t                  pd_func_args = {0};
+
     if (ret == HAL_RET_OK) {
         // No error, hance l2seg is valid
 #if 0
@@ -764,7 +770,8 @@ l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
         rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg->hal_handle);
         // TODO: REMOVE DOL test only
         args.l2seg = l2seg;
-        pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+        pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+        pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
         rsp->mutable_l2segment_status()->set_vrf_id(args.hwid);
 
     }
@@ -1194,6 +1201,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                    *l2seg = NULL, *l2seg_clone = NULL;
     l2seg_update_app_ctxt_t    *app_ctxt = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1213,11 +1221,13 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_update_args_init(&pd_l2seg_args);
+    // pd_l2seg_args.l2seg = l2seg;
     pd_l2seg_args.l2seg = l2seg_clone;
     pd_l2seg_args.iflist_change = app_ctxt->iflist_change;
     pd_l2seg_args.add_iflist = app_ctxt->add_iflist;
     pd_l2seg_args.del_iflist = app_ctxt->del_iflist;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_UPDATE, (void *)&pd_l2seg_args);
+    pd_func_args.pd_l2seg_update = &pd_l2seg_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update l2seg pd, err : {}", ret);
     }
@@ -1241,14 +1251,16 @@ end:
 hal_ret_t
 l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
 {
-    pd::pd_l2seg_make_clone_args_t args;
+    pd::pd_l2seg_make_clone_args_t  args;
+    pd::pd_func_args_t              pd_func_args = {0};
 
     *l2seg_clone = l2seg_alloc_init();
     memcpy(*l2seg_clone, l2seg, sizeof(l2seg_t));
 
     args.l2seg = l2seg;
     args.clone = *l2seg_clone;
-    pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MAKE_CLONE, (void *)&args);
+    pd_func_args.pd_l2seg_make_clone = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MAKE_CLONE, &pd_func_args);
 
     // Lists are copied into clone.
     //  - Update Success:
@@ -1319,6 +1331,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                     *dhl_entry = NULL;
     l2seg_update_app_ctxt_t         *app_ctxt = NULL;
     l2seg_t                         *l2seg = NULL, *l2seg_clone = NULL;
+    pd::pd_func_args_t              pd_func_args = {0};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1370,7 +1383,8 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free PD
     pd::pd_l2seg_mem_free_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, (void *)&pd_l2seg_args);
+    pd_func_args.pd_l2seg_mem_free = &pd_l2seg_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}", ret);
     }
@@ -1394,6 +1408,8 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                     *dhl_entry = NULL;
     l2seg_update_app_ctxt_t         *app_ctxt = NULL;
     l2seg_t                         *l2seg = NULL;
+    pd::pd_func_args_t              pd_func_args = {0};
+
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1414,7 +1430,8 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free PD
     pd::pd_l2seg_mem_free_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, (void *)&pd_l2seg_args);
+    pd_func_args.pd_l2seg_mem_free = &pd_l2seg_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}",
                       ret);
@@ -1832,6 +1849,7 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode        = NULL;
     dhl_entry_t                 *dhl_entry    = NULL;
     l2seg_t                     *l2seg        = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1856,7 +1874,8 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_delete_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
+    pd_func_args.pd_l2seg_delete = &pd_l2seg_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}", ret);
         goto end;
@@ -2074,6 +2093,7 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     NetworkKeyHandle            *nkh        = NULL;
     pd::pd_l2seg_get_args_t     args        = {0};
     hal_ret_t                   ret         = HAL_RET_OK;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     // fill config spec of this L2 segment
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
@@ -2118,7 +2138,8 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     // Getting PD information
     args.l2seg = l2seg;
     args.rsp = rsp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_GET, (void *)&args);
+    pd_func_args.pd_l2seg_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to do PD get for L2Segment id : {}. err : {}",
                       l2seg->seg_id, ret);
@@ -2460,12 +2481,14 @@ l2seg_restore_add (l2seg_t *l2seg, const L2SegmentGetResponse& l2seg_info)
 {
     hal_ret_t                       ret;
     pd::pd_l2seg_restore_args_t     pd_l2seg_args = { 0 };
+    pd::pd_func_args_t              pd_func_args = {0};
 
     // restore pd state
     pd::pd_l2seg_restore_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
     pd_l2seg_args.l2seg_status = &l2seg_info.status();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_RESTORE, &pd_l2seg_args);
+    pd_func_args.pd_l2seg_restore = &pd_l2seg_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_RESTORE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to restore l2seg {} pd, err : {}",
                       l2seg->seg_id, ret);

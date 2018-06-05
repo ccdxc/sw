@@ -11,7 +11,8 @@ namespace pd {
 
 hal_ret_t
 // p4pt_pd_init() {
-p4pt_pd_init(p4pt_pd_init_args_t *args) {
+p4pt_pd_init(pd_func_args_t *pd_func_args) {
+    // p4pt_pd_init_args_t *args = pd_func_args->p4pt_pd_init;
     lif_id_t lif_id = SERVICE_LIF_P4PT;
     uint32_t qid = 0;
 

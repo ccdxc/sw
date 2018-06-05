@@ -24,6 +24,7 @@ protected:
     static void SetUpTestCase() {
         hal::pd::pd_if_get_lport_id_args_t lport_args;
         hal::pd::pd_l2seg_get_flow_lkupid_args_t lkupid_args;
+        hal::pd::pd_func_args_t          pd_func_args = {0};
         fte_base_test::SetUpTestCase();
 
         // create topo
@@ -52,23 +53,27 @@ protected:
 
         // read lport/lkup ids
         lport_args.pi_if = hal::find_if_by_handle(intfh1_);
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID, (void *)&lport_args);
+        pd_func_args.pd_if_get_lport_id = &lport_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID, &pd_func_args);
         lport1_ = lport_args.lport_id;
 
         lport_args.pi_if = hal::find_if_by_handle(intfh2_);
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID, (void *)&lport_args);
+        pd_func_args.pd_if_get_lport_id = &lport_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID, &pd_func_args);
         lport2_ = lport_args.lport_id;
 
         lkupid_args.l2seg = hal::l2seg_lookup_by_handle(l2segh1_);
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&lkupid_args);
+        pd_func_args.pd_l2seg_get_flow_lkupid = &lkupid_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
         lkupid1_ =  lkupid_args.hwid;
 
         lkupid_args.l2seg = hal::l2seg_lookup_by_handle(l2segh2_);
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&lkupid_args);
+        pd_func_args.pd_l2seg_get_flow_lkupid = &lkupid_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
         lkupid2_ =  lkupid_args.hwid;
 
     }
-    
+
     static hal_handle_t gwh1_, gwh2_, vrfh1_, vrfh2_, nwh1_, nwh2_,
         l2segh1_, l2segh2_, intfh1_, intfh2_, poolh_;
     static uint32_t lport1_, lport2_, lkupid1_, lkupid2_;
@@ -130,7 +135,7 @@ TEST_F(nat_test, dnat)
     EXPECT_EQ(config->nat_sport, 0);
     EXPECT_EQ(config->nat_dport, 0);
 
-    EXPECT_EQ(attrs->lport, lport2_); 
+    EXPECT_EQ(attrs->lport, lport2_);
     EXPECT_EQ(attrs->mac_sa_rewrite, 1);
     EXPECT_EQ(attrs->mac_da_rewrite, 1);
     EXPECT_EQ(attrs->vrf_hwid, lkupid1_);
@@ -155,7 +160,7 @@ TEST_F(nat_test, dnat)
     EXPECT_EQ(config->nat_sport, 0);
     EXPECT_EQ(config->nat_dport, 0);
 
-    EXPECT_EQ(attrs->lport, lport1_); 
+    EXPECT_EQ(attrs->lport, lport1_);
     EXPECT_EQ(attrs->mac_sa_rewrite, 1);
     EXPECT_EQ(attrs->mac_da_rewrite, 1);
     EXPECT_EQ(attrs->vrf_hwid, lkupid2_);
@@ -218,7 +223,7 @@ TEST_F(nat_test, snat)
     EXPECT_EQ(config->nat_sport, 0);
     EXPECT_EQ(config->nat_dport, 0);
 
-    EXPECT_EQ(attrs->lport, lport1_); 
+    EXPECT_EQ(attrs->lport, lport1_);
     EXPECT_EQ(attrs->mac_sa_rewrite, 1);
     EXPECT_EQ(attrs->mac_da_rewrite, 1);
     EXPECT_EQ(attrs->vrf_hwid, lkupid2_);

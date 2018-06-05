@@ -354,9 +354,10 @@ err:
  *******************************************/
 
 hal_ret_t
-pd_cpucb_create (pd_cpucb_create_args_t *args)
+pd_cpucb_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_cpucb_create_args_t *args = pd_func_args->pd_cpucb_create;
     pd_cpucb_s              *cpucb_pd;
 
     HAL_TRACE_DEBUG("Creating pd state for CPU CB.");
@@ -408,9 +409,10 @@ cleanup:
 }
 
 hal_ret_t
-pd_cpucb_update (pd_cpucb_update_args_t *args)
+pd_cpucb_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_cpucb_update_args_t *args = pd_func_args->pd_cpucb_update;
 
     if(!args) {
        return HAL_RET_INVALID_ARG;
@@ -430,9 +432,10 @@ pd_cpucb_update (pd_cpucb_update_args_t *args)
 }
 
 hal_ret_t
-pd_cpucb_delete (pd_cpucb_delete_args_t *args)
+pd_cpucb_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_cpucb_delete_args_t *args = pd_func_args->pd_cpucb_delete;
 
     if(!args) {
        return HAL_RET_INVALID_ARG;
@@ -457,9 +460,10 @@ pd_cpucb_delete (pd_cpucb_delete_args_t *args)
 }
 
 hal_ret_t
-pd_cpucb_get (pd_cpucb_get_args_t *args)
+pd_cpucb_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_cpucb_get_args_t *args = pd_func_args->pd_cpucb_get;
     pd_cpucb_t              cpucb_pd;
 
     HAL_TRACE_DEBUG("CPUCB pd get for id: {}", args->cpucb->cb_id);

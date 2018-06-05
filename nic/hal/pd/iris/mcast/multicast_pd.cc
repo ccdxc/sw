@@ -188,9 +188,10 @@ end:
 // pd mc_entry create
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_mc_entry_create (pd_mc_entry_create_args_t *args)
+pd_mc_entry_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret;
+    pd_mc_entry_create_args_t *args = pd_func_args->pd_mc_entry_create;
     pd_mc_entry_t           *mc_entry_pd = NULL;
 
     HAL_TRACE_DEBUG("Creating pd state for mc_entry {}",
@@ -225,9 +226,10 @@ end:
 // PD mc_entry Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_mc_entry_update (pd_mc_entry_update_args_t *args)
+pd_mc_entry_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_mc_entry_update_args_t *args = pd_func_args->pd_mc_entry_update;
     pd_mc_entry_t           *mc_entry_pd = NULL;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -255,9 +257,10 @@ pd_mc_entry_update (pd_mc_entry_update_args_t *args)
 // PD mc_entry Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_mc_entry_delete (pd_mc_entry_delete_args_t *args)
+pd_mc_entry_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_mc_entry_delete_args_t *args = pd_func_args->pd_mc_entry_delete;
     pd_mc_entry_t     *mc_entry_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);

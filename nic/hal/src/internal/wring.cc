@@ -101,7 +101,8 @@ wring_create (WRingSpec& spec, WRingResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     wring_t                *wring;
-    pd::pd_wring_create_args_t    pd_wring_args;
+    pd::pd_wring_create_args_t  pd_wring_args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     // validate the request message
     ret = validate_wring_create(spec, rsp);
@@ -124,7 +125,8 @@ wring_create (WRingSpec& spec, WRingResponse *rsp)
     // allocate all PD resources and finish programming
     pd::pd_wring_create_args_init(&pd_wring_args);
     pd_wring_args.wring = wring;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_CREATE, (void *)&pd_wring_args);
+    pd_func_args.pd_wring_create = &pd_wring_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -164,6 +166,7 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
     hal_ret_t               ret = HAL_RET_OK;
     wring_t                 wring;
     pd::pd_wring_get_entry_args_t     pd_wring_args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     if(req.type() <= types::WRING_TYPE_NONE) {
         HAL_TRACE_ERR("Invalid wring type");
@@ -179,7 +182,8 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
     pd::pd_wring_get_entry_args_init(&pd_wring_args);
     pd_wring_args.wring = &wring;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_ENTRY, (void *)&pd_wring_args);
+    pd_func_args.pd_wring_get_entry = &pd_wring_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_ENTRY, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
@@ -230,6 +234,7 @@ wring_get_meta (WRingSpec& spec, WRingGetMetaResponse *rsp)
     hal_ret_t               ret = HAL_RET_OK;
     wring_t                 wring;
     pd::pd_wring_get_meta_args_t     pd_wring_args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     if(spec.type() <= types::WRING_TYPE_NONE) {
         HAL_TRACE_ERR("Invalid wring type");
@@ -244,7 +249,8 @@ wring_get_meta (WRingSpec& spec, WRingGetMetaResponse *rsp)
     pd::pd_wring_get_meta_args_init(&pd_wring_args);
     pd_wring_args.wring = &wring;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_META, (void *)&pd_wring_args);
+    pd_func_args.pd_wring_get_meta = &pd_wring_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_META, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
@@ -272,6 +278,7 @@ wring_set_meta (WRingSpec& spec, WRingSetMetaResponse *rsp)
     hal_ret_t               ret = HAL_RET_OK;
     wring_t                 wring;
     pd::pd_wring_set_meta_args_t     pd_wring_args;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     if(spec.type() <= types::WRING_TYPE_NONE) {
         HAL_TRACE_ERR("Invalid wring type");
@@ -287,7 +294,8 @@ wring_set_meta (WRingSpec& spec, WRingSetMetaResponse *rsp)
     pd::pd_wring_set_meta_args_init(&pd_wring_args);
     pd_wring_args.wring = &wring;
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_SET_META, (void *)&pd_wring_args);
+    pd_func_args.pd_wring_set_meta = &pd_wring_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_SET_META, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);

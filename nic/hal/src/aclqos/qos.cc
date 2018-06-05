@@ -268,6 +268,7 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
     hal_ret_t                   ret    = HAL_RET_OK;
     pd::pd_qos_class_get_args_t args   = {0};
     QosClassSpec                *spec;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_qos_class_handle(qos_class->hal_handle);
@@ -301,7 +302,8 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
     // Getting PD information
     args.qos_class = qos_class;
     args.rsp = rsp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_GET, (void *)&args);
+    pd_func_args.pd_qos_class_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to do PD get for qos_class : {}. ret : {}",
                       qos_class->key, ret);
@@ -357,13 +359,16 @@ qos_class_free (qos_class_t *qos_class, bool free_pd)
 {
     hal_ret_t         ret = HAL_RET_OK;
     pd::pd_qos_class_mem_free_args_t pd_qos_class_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
+
     if (!qos_class) {
         return HAL_RET_OK;
     }
     if (free_pd) {
         pd::pd_qos_class_mem_free_args_init(&pd_qos_class_args);
         pd_qos_class_args.qos_class = qos_class;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_MEM_FREE, (void *)&pd_qos_class_args);
+        pd_func_args.pd_qos_class_mem_free = &pd_qos_class_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_MEM_FREE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to delete qos_class pd, err : {}",
                           ret);
@@ -585,6 +590,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     qos_class_t                 *qos_class = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -600,7 +606,8 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_qos_class_create_args_init(&pd_qos_class_args);
     pd_qos_class_args.qos_class = qos_class;
     // ret = pd::pd_qos_class_create(&pd_qos_class_args);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_CREATE, (void *)&pd_qos_class_args);
+    pd_func_args.pd_qos_class_create = &pd_qos_class_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to create qos_class pd, err : {}",
                       ret);
@@ -661,12 +668,14 @@ qos_class_create_abort_cleanup (qos_class_t *qos_class, hal_handle_t hal_handle)
 {
     hal_ret_t                   ret;
     pd::pd_qos_class_delete_args_t    pd_qos_class_args = { 0 };
+    pd::pd_func_args_t                pd_func_args = {0};
 
     // 1. delete call to PD
     if (qos_class->pd) {
         pd::pd_qos_class_delete_args_init(&pd_qos_class_args);
         pd_qos_class_args.qos_class = qos_class;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
+        pd_func_args.pd_qos_class_delete = &pd_qos_class_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete qos_class {} pd, err : {}", qos_class->key, ret);
         }
@@ -1003,6 +1012,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                    *dhl_entry = NULL;
     qos_class_t                    *qos_class_clone = NULL;
     qos_class_update_app_ctxt_t    *app_ctxt = NULL;
+    pd::pd_func_args_t             pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -1030,7 +1040,8 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_qos_class_args.pfc_changed = app_ctxt->pfc_changed;
     pd_qos_class_args.scheduler_changed = app_ctxt->scheduler_changed;
     pd_qos_class_args.marking_changed = app_ctxt->marking_changed;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_UPDATE, (void *)&pd_qos_class_args);
+    pd_func_args.pd_qos_class_update = &pd_qos_class_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to update qos_class pd, err : {}",
                       ret);
@@ -1052,6 +1063,7 @@ qos_class_make_clone (qos_class_t *qos_class,
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_qos_class_make_clone_args_t args;
     qos_class_t *qos_class_clone;
+    pd::pd_func_args_t pd_func_args = {0};
 
     *qos_class_clone_p = qos_class_alloc_init();
     qos_class_clone = *qos_class_clone_p;
@@ -1062,7 +1074,8 @@ qos_class_make_clone (qos_class_t *qos_class,
 
     args.qos_class = qos_class;
     args.clone = *qos_class_clone_p;
-    pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, (void *)&args);
+    pd_func_args.pd_qos_class_make_clone = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, &pd_func_args);
 
     // Update with the new spec
     ret = qos_class_init_from_spec(qos_class_clone, spec);
@@ -1342,6 +1355,7 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                  *lnode      = NULL;
     dhl_entry_t                    *dhl_entry  = NULL;
     qos_class_t                    *qos_class        = NULL;
+    pd::pd_func_args_t             pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -1360,7 +1374,8 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_qos_class_delete_args_init(&pd_qos_class_args);
     pd_qos_class_args.qos_class = qos_class;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
+    pd_func_args.pd_qos_class_delete = &pd_qos_class_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to delete qos_class pd, err : {}",
                       ret);
@@ -1523,6 +1538,7 @@ find_qos_cos_info_from_spec (QosClassKeyHandle kh, hal_handle_t pinned_uplink,
     hal_ret_t               ret = HAL_RET_OK;
     qos_class_t             *qos_class;
     pd::pd_qos_class_get_qos_class_id_args_t q_args;
+    pd::pd_func_args_t pd_func_args = {0};
 
     pinned_uplink_if = find_if_by_handle(pinned_uplink);
 
@@ -1535,7 +1551,8 @@ find_qos_cos_info_from_spec (QosClassKeyHandle kh, hal_handle_t pinned_uplink,
     q_args.qos_class= qos_class;
     q_args.dest_if = pinned_uplink_if;
     q_args.qos_class_id = cos;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_QOS_CLASSID, (void *)&q_args);
+    pd_func_args.pd_qos_class_get_qos_class_id = &q_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_QOS_CLASSID, &pd_func_args);
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
@@ -1682,12 +1699,14 @@ qos_class_restore_add (qos_class_t *qos_class, const QosClassGetResponse& qos_cl
 {
     hal_ret_t                       ret;
     pd::pd_qos_class_restore_args_t pd_qos_class_args = { 0 };
+    pd::pd_func_args_t pd_func_args = {0};
 
     // restore pd state
     pd::pd_qos_class_restore_args_init(&pd_qos_class_args);
     pd_qos_class_args.qos_class = qos_class;
     pd_qos_class_args.qos_class_status = &qos_class_info.status();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_RESTORE, &pd_qos_class_args);
+    pd_func_args.pd_qos_class_restore = &pd_qos_class_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_RESTORE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to restore qos_class {} pd, err : {}",
                       qos_class->key, ret);
@@ -1948,13 +1967,16 @@ copp_free (copp_t *copp, bool free_pd)
 {
     hal_ret_t         ret = HAL_RET_OK;
     pd::pd_copp_mem_free_args_t pd_copp_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
+
     if (!copp) {
         return HAL_RET_OK;
     }
     if (free_pd) {
         pd::pd_copp_mem_free_args_init(&pd_copp_args);
         pd_copp_args.copp = copp;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_MEM_FREE, (void *)&pd_copp_args);
+        pd_func_args.pd_copp_mem_free = &pd_copp_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_MEM_FREE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to delete copp pd, err : {}",
                           ret);
@@ -2049,6 +2071,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t      *lnode = NULL;
     dhl_entry_t        *dhl_entry = NULL;
     copp_t             *copp = NULL;
+    pd::pd_func_args_t pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -2064,7 +2087,8 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_copp_create_args_init(&pd_copp_args);
     pd_copp_args.copp = copp;
     // ret = pd::pd_copp_create(&pd_copp_args);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_CREATE, (void *)&pd_copp_args);
+    pd_func_args.pd_copp_create = &pd_copp_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to create copp pd, err : {}",
                       ret);
@@ -2124,13 +2148,15 @@ static hal_ret_t
 copp_create_abort_cleanup (copp_t *copp, hal_handle_t hal_handle)
 {
     hal_ret_t                   ret;
-    pd::pd_copp_delete_args_t    pd_copp_args = { 0 };
+    pd::pd_copp_delete_args_t   pd_copp_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     // 1. delete call to PD
     if (copp->pd) {
         pd::pd_copp_delete_args_init(&pd_copp_args);
         pd_copp_args.copp = copp;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, (void *)&pd_copp_args);
+        pd_func_args.pd_copp_delete = &pd_copp_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete copp {} pd, err : {}", copp->key, ret);
         }
@@ -2351,6 +2377,7 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t             *lnode = NULL;
     dhl_entry_t               *dhl_entry = NULL;
     copp_t                    *copp_clone = NULL;
+    pd::pd_func_args_t        pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -2365,7 +2392,8 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_copp_update_args_init(&pd_copp_args);
     pd_copp_args.copp = copp_clone;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_UPDATE, (void *)&pd_copp_args);
+    pd_func_args.pd_copp_update = &pd_copp_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to update copp pd, err : {}",
                       ret);
@@ -2385,6 +2413,7 @@ copp_make_clone (copp_t *copp, copp_t **copp_clone_p, CoppSpec& spec)
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_copp_make_clone_args_t args;
     copp_t *copp_clone;
+    pd::pd_func_args_t pd_func_args = {0};
 
     *copp_clone_p = copp_alloc_init();
     copp_clone = *copp_clone_p;
@@ -2395,7 +2424,8 @@ copp_make_clone (copp_t *copp, copp_t **copp_clone_p, CoppSpec& spec)
 
     args.copp = copp;
     args.clone = *copp_clone_p;
-    pd::hal_pd_call(pd::PD_FUNC_ID_COPP_MAKE_CLONE, (void *)&args);
+    pd_func_args.pd_copp_make_clone = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_COPP_MAKE_CLONE, &pd_func_args);
 
     // Update with the new spec
     ret = copp_init_from_spec(copp_clone, spec);
@@ -2572,6 +2602,7 @@ copp_process_get (copp_t *copp, qos::CoppGetResponse *rsp)
     hal_ret_t              ret    = HAL_RET_OK;
     pd::pd_copp_get_args_t args   = {0};
     CoppSpec               *spec;
+    pd::pd_func_args_t     pd_func_args = {0};
 
     spec = rsp->mutable_spec();
 
@@ -2590,7 +2621,8 @@ copp_process_get (copp_t *copp, qos::CoppGetResponse *rsp)
     // Getting PD information
     args.copp = copp;
     args.rsp = rsp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_GET, (void *)&args);
+    pd_func_args.pd_copp_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to do PD get for copp : {}. ret : {}",
                       copp->key, ret);
@@ -2691,12 +2723,14 @@ copp_restore_add (copp_t *copp, const CoppGetResponse& copp_info)
 {
     hal_ret_t                  ret;
     pd::pd_copp_restore_args_t pd_copp_args = { 0 };
+    pd::pd_func_args_t         pd_func_args = {0};
 
     // restore pd state
     pd::pd_copp_restore_args_init(&pd_copp_args);
     pd_copp_args.copp = copp;
     pd_copp_args.copp_status = &copp_info.status();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_RESTORE, &pd_copp_args);
+    pd_func_args.pd_copp_restore = &pd_copp_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_RESTORE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to restore copp {} pd, err : {}",
                       copp->key, ret);

@@ -120,13 +120,15 @@ acl_free (acl_t *acl, bool free_pd)
 {
     hal_ret_t         ret = HAL_RET_OK;
     pd::pd_acl_mem_free_args_t pd_acl_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
     if (!acl) {
         return HAL_RET_OK;
     }
     if (free_pd) {
         pd::pd_acl_mem_free_args_init(&pd_acl_args);
         pd_acl_args.acl = acl;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MEM_FREE, (void *)&pd_acl_args);
+        pd_func_args.pd_acl_mem_free = &pd_acl_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MEM_FREE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to delete acl pd, err : {}",
                           ret);
@@ -278,6 +280,7 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t     *lnode = NULL;
     dhl_entry_t       *dhl_entry = NULL;
     acl_t             *acl = NULL;
+    pd::pd_func_args_t  pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -292,7 +295,8 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_acl_create_args_init(&pd_acl_args);
     pd_acl_args.acl = acl;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_CREATE, (void *)&pd_acl_args);
+    pd_func_args.pd_acl_create = &pd_acl_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to create acl pd, err : {}",
                       ret);
@@ -363,12 +367,14 @@ acl_create_abort_cleanup (acl_t *acl, hal_handle_t hal_handle)
 {
     hal_ret_t                   ret;
     pd::pd_acl_delete_args_t    pd_acl_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     // 1. delete call to PD
     if (acl->pd) {
         pd::pd_acl_delete_args_init(&pd_acl_args);
         pd_acl_args.acl = acl;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
+        pd_func_args.pd_acl_delete = &pd_acl_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete acl {} pd, err : {}", acl->key, ret);
         }
@@ -1245,10 +1251,12 @@ extract_action_spec (acl_action_spec_t *as,
         }
 
         pd::pd_rw_entry_find_or_alloc_args_t r_args;
+        pd::pd_func_args_t pd_func_args = {0};
         rw_key.rw_act = REWRITE_REWRITE_ID;
         r_args.args = &rw_key;
         r_args.rw_idx = &as->int_as.rw_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, (void *)&r_args);
+        pd_func_args.pd_rw_entry_find_or_alloc = &r_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Unable to find/alloc rw entry");
             goto end;
@@ -1337,6 +1345,7 @@ acl_process_get (acl_t *acl, AclGetResponse *rsp)
     AclSpec               *spec;
     hal_ret_t             ret = HAL_RET_OK;
     pd::pd_acl_get_args_t args   = {0};
+    pd::pd_func_args_t    pd_func_args = {0};
 
     // fill config spec of this acl
     spec = rsp->mutable_spec();
@@ -1364,7 +1373,8 @@ acl_process_get (acl_t *acl, AclGetResponse *rsp)
     // Getting PD information
     args.acl = acl;
     args.rsp = rsp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_GET, (void *)&args);
+    pd_func_args.pd_acl_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to do PD get for acl : {}. ret : {}",
                       acl->key, ret);
@@ -1504,6 +1514,7 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t         *lnode = NULL;
     dhl_entry_t           *dhl_entry = NULL;
     acl_t                 *acl_clone = NULL;
+    pd::pd_func_args_t    pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -1518,7 +1529,8 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_acl_update_args_init(&pd_acl_args);
     pd_acl_args.acl = acl_clone;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_UPDATE, (void *)&pd_acl_args);
+    pd_func_args.pd_acl_update = &pd_acl_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to update acl pd, err : {}",
                       ret);
@@ -1538,6 +1550,7 @@ acl_make_clone (acl_t *acl, acl_t **acl_clone_p, AclSpec& spec)
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_acl_make_clone_args_t args;
     acl_t *acl_clone;
+    pd::pd_func_args_t pd_func_args = {0};
 
     *acl_clone_p = acl_alloc_init();
     acl_clone = *acl_clone_p;
@@ -1548,7 +1561,8 @@ acl_make_clone (acl_t *acl, acl_t **acl_clone_p, AclSpec& spec)
 
     args.acl = acl;
     args.clone = *acl_clone_p;
-    pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MAKE_CLONE, (void *)&args);
+    pd_func_args.pd_acl_make_clone = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MAKE_CLONE, &pd_func_args);
 
     // Update with the new spec
     ret = acl_init_from_spec(acl_clone, spec);
@@ -1790,6 +1804,7 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode      = NULL;
     dhl_entry_t                 *dhl_entry  = NULL;
     acl_t                       *acl        = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -1808,7 +1823,8 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_acl_delete_args_init(&pd_acl_args);
     pd_acl_args.acl = acl;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
+    pd_func_args.pd_acl_delete = &pd_acl_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to delete acl pd, err : {}",
                       ret);
@@ -1994,12 +2010,14 @@ acl_restore_add (acl_t *acl, const AclGetResponse& acl_info)
 {
     hal_ret_t                 ret;
     pd::pd_acl_restore_args_t pd_acl_args = { 0 };
+    pd::pd_func_args_t        pd_func_args = {0};
 
     // restore pd state
     pd::pd_acl_restore_args_init(&pd_acl_args);
     pd_acl_args.acl = acl;
     pd_acl_args.acl_status = &acl_info.status();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_RESTORE, &pd_acl_args);
+    pd_func_args.pd_acl_restore = &pd_acl_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_RESTORE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to restore acl {} pd, err : {}",
                       acl->key, ret);

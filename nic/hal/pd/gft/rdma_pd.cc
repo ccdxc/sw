@@ -12,7 +12,8 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_rxdma_table_entry_add(pd_rxdma_table_entry_add_args_t *args) {
+pd_rxdma_table_entry_add(pd_func_args_t *pd_func_args) {
+    pd_rxdma_table_entry_add_args_t *args = pd_func_args->pd_rxdma_table_entry_add;
     return p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(args->idx,
                                                                        args->rdma_en_qtype_mask,
                                                                        args->pt_base_addr_page_id,
@@ -38,7 +39,7 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t sq_qtype,
                                                       uint8_t rq_qtype)
 {
-    hal_ret_t                    ret;       
+    hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
     rx_stage0_load_rdma_params_actiondata data = { 0 };
@@ -78,12 +79,12 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_st
     hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
-    
+
     HAL_ASSERT(idx < MAX_LIFS);
-    
+
     dm = g_hal_state_pd->p4plus_rxdma_dm_table(P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_LOAD_RDMA_PARAMS);
     HAL_ASSERT(dm != NULL);
-    
+
     sdk_ret = dm->retrieve(idx, data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -99,7 +100,8 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_st
 
 
 hal_ret_t
-pd_txdma_table_entry_add(pd_txdma_table_entry_add_args_t *args) {
+pd_txdma_table_entry_add(pd_func_args_t *pd_func_args) {
+    pd_txdma_table_entry_add_args_t *args = pd_func_args->pd_txdma_table_entry_add;
     return p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(args->idx,
                                                                        args->rdma_en_qtype_mask,
                                                                        args->pt_base_addr_page_id,
@@ -164,12 +166,12 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get (uint32_t idx, tx_st
     hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
-    
+
     HAL_ASSERT(idx < MAX_LIFS);
-    
+
     dm = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_LIF_PARAMS_TABLE);
     HAL_ASSERT(dm != NULL);
-    
+
     sdk_ret = dm->retrieve(idx, data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {

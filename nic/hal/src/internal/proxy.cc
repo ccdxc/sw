@@ -295,6 +295,7 @@ proxy_program_lif(proxy_t* proxy)
     proxy_meta_lif_t                  *meta_lif_info = NULL;
     proxy_meta_qtype_t                *meta_qtype_info = NULL;
     pd::pd_lif_get_lport_id_args_t    args = { 0 };
+    pd::pd_func_args_t                pd_func_args = {0};
 
     // program LIF(s)
     for(uint i = 0; i < meta->num_lif; i++) {
@@ -345,7 +346,8 @@ proxy_program_lif(proxy_t* proxy)
         meta_lif_info->lport_id = lif_args.lport_id;
 #endif
         args.pi_lif = lif;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET_LPORTID, (void *)&args);
+        pd_func_args.pd_lif_get_lport_id = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET_LPORTID, &pd_func_args);
         meta_lif_info->lport_id = args.lport_id;
         HAL_TRACE_DEBUG("Received lport-id: {} for lif: {}",
                         meta_lif_info->lport_id, meta_lif_info->lif_id);
@@ -448,7 +450,9 @@ proxy_post_lif_program_init(proxy_t* proxy)
         //       the only interface between PI and PD is via p4pd_api.hpp
         //       can't directly go to iris !!!
         pd::p4pt_pd_init_args_t args;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_P4PT_INIT, (void *)&args);
+        hal::pd::pd_func_args_t pd_func_args;
+        pd_func_args.p4pt_pd_init = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_P4PT_INIT, &pd_func_args);
 #endif
         break;
     default:
@@ -731,13 +735,13 @@ proxy_flow_handle_tls_config(types::ProxyType proxy_type,
     pfi->u.tlsproxy.key_type = tls_flow_config.key_type();
     switch(tls_flow_config.key_type()) {
     case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:
-        pfi->u.tlsproxy.u.ecdsa_keys.sign_key_id = 
+        pfi->u.tlsproxy.u.ecdsa_keys.sign_key_id =
             tls_flow_config.ecdsa_keys().sign_key_idx();
         break;
     case types::CRYPTO_ASYM_KEY_TYPE_RSA:
-        pfi->u.tlsproxy.u.rsa_keys.sign_key_id = 
+        pfi->u.tlsproxy.u.rsa_keys.sign_key_id =
             tls_flow_config.rsa_keys().sign_key_idx();
-        pfi->u.tlsproxy.u.rsa_keys.decrypt_key_id = 
+        pfi->u.tlsproxy.u.rsa_keys.decrypt_key_id =
             tls_flow_config.rsa_keys().decrypt_key_idx();
         break;
     default:

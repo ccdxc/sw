@@ -7,6 +7,7 @@
 namespace hal {
 namespace pd {
 
+#if 0
 #define PD_FUNC_STUB(API)                                               \
 hal_ret_t                                                               \
 API (API ## _args_t *args)                                              \
@@ -14,7 +15,16 @@ API (API ## _args_t *args)                                              \
     HAL_ASSERT(FALSE);                                                  \
     return HAL_RET_OK;                                                  \
 }
+#endif
+#define PD_FUNC_STUB(API)                                               \
+hal_ret_t                                                               \
+API (pd_func_args_t *args)                                              \
+{                                                                       \
+    HAL_ASSERT(FALSE);                                                  \
+    return HAL_RET_OK;                                                  \
+}
 
+// Deprecated. Cleanup
 #define PD_FUNC_STUB_ARGS(API, ARGS)                                    \
 hal_ret_t                                                               \
 API (ARGS ## _args_t *args)                                             \
@@ -369,12 +379,9 @@ PD_FUNC_STUB(pd_conv_sw_clock_to_hw_clock);
 PD_FUNC_STUB(pd_clock_delta_comp);
 
 // gft
-PD_FUNC_STUB_ARGS(pd_gft_exact_match_profile_create,
-                  pd_gft_exact_match_profile);
-PD_FUNC_STUB_ARGS(pd_gft_hdr_group_xposition_profile_create,
-                  pd_gft_hdr_group_xposition_profile);
-PD_FUNC_STUB_ARGS(pd_gft_exact_match_flow_entry_create,
-                  pd_gft_exact_match_flow_entry);
+PD_FUNC_STUB(pd_gft_exact_match_profile_create)
+PD_FUNC_STUB(pd_gft_hdr_group_xposition_profile_create)
+PD_FUNC_STUB(pd_gft_exact_match_flow_entry_create)
 
 // slab
 PD_FUNC_STUB(pd_get_slab);

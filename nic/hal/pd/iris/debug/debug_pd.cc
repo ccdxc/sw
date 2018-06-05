@@ -14,9 +14,10 @@ pd_debug_cli_read(uint32_t tableid,
                   void     *swkey_mask,
                   void     *actiondata)
 #endif
-pd_debug_cli_read(pd_debug_cli_read_args_t *args)
+pd_debug_cli_read(pd_func_args_t *pd_func_args)
 {
     hal_ret_t    ret    = HAL_RET_OK;
+    pd_debug_cli_read_args_t *args = pd_func_args->pd_debug_cli_read;
     p4pd_error_t pd_err = P4PD_SUCCESS;
     uint32_t tableid = args->tableid;
     uint32_t index = args->index;
@@ -47,9 +48,10 @@ pd_debug_cli_write(uint32_t tableid,
                    void     *swkey_mask,
                    void     *actiondata)
 #endif
-pd_debug_cli_write(pd_debug_cli_write_args_t *args)
+pd_debug_cli_write(pd_func_args_t *pd_func_args)
 {
     hal_ret_t    ret              = HAL_RET_OK;
+    pd_debug_cli_write_args_t *args = pd_func_args->pd_debug_cli_write;
     p4pd_error_t pd_err           = P4PD_SUCCESS;
     uint32_t     hwkey_len        = 0;
     uint32_t     hwkeymask_len    = 0;
@@ -106,9 +108,10 @@ pd_debug_cli_write(pd_debug_cli_write_args_t *args)
 }
 
 hal_ret_t
-pd_table_properties_get (hal::pd::pd_table_properties_get_args_t *args)
+pd_table_properties_get (pd_func_args_t *pd_func_args)
 {
     p4pd_error_t            pd_err = P4PD_SUCCESS;
+    hal::pd::pd_table_properties_get_args_t *args = pd_func_args->pd_table_properties_get;
     p4pd_table_properties_t tbl_ctx;
 
     memset(&tbl_ctx, 0 , sizeof(p4pd_table_properties_t));

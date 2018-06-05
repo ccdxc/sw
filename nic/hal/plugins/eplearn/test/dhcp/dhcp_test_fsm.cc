@@ -136,8 +136,10 @@ void dhcp_topo_setup()
 
     hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(l2seg_hdl);
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     args.l2seg = l2seg;
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+    pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
     lkup_vrf = args.hwid;
 
 

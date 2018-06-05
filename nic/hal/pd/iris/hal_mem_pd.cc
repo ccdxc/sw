@@ -676,9 +676,9 @@ hal_state_pd::factory (void)
 }
 
 hal_ret_t
-pd_get_slab (pd_get_slab_args_t *args)
+pd_get_slab (pd_func_args_t *pd_func_args)
 {
-
+    pd_get_slab_args_t *args = pd_func_args->pd_get_slab;
     args->slab = g_hal_state_pd->get_slab(args->slab_id);
     return HAL_RET_OK;
 }
@@ -1037,9 +1037,10 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_mem_init (pd_mem_init_args_t *args)
+pd_mem_init (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    pd_mem_init_args_t *args = pd_func_args->pd_mem_init;
 
     g_hal_state_pd = hal_state_pd::factory();
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
@@ -1069,8 +1070,9 @@ pd_mem_init (pd_mem_init_args_t *args)
 // Phase 2 memory related initialization for HAL - after the ASIC is ready
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
+pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
 {
+    // pd_mem_init_phase2_args_t *args = pd_func_args->pd_mem_init_phase2;
     p4pd_cfg_t    p4pd_cfg = {
         .table_map_cfg_file = "iris/capri_p4_table_map.json",
         .p4pd_pgm_name = "iris"
@@ -1102,10 +1104,11 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
 // program default entries in tables
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
+pd_pgm_def_entries (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
     p4pd_def_cfg_t  p4pd_def_cfg;
+    pd_pgm_def_entries_args_t *args = pd_func_args->pd_pgm_def_entries;
 
     HAL_TRACE_DEBUG("Programming table default entries ...");
     p4pd_def_cfg.admin_cos = qos_class_get_admin_cos();
@@ -1122,9 +1125,10 @@ pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 // program default entries for P4Plus tables
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_pgm_def_p4plus_entries (pd_pgm_def_p4plus_entries_args_t *args)
+pd_pgm_def_p4plus_entries (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    // pd_pgm_def_p4plus_entries_args_t *args = pd_func_args->pd_pgm_def_p4plus_entries;
 
     HAL_TRACE_DEBUG("Programming p4plus default entries ...");
     ret = wring_pd_init_global_rings();

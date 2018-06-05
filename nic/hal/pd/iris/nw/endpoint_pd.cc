@@ -25,9 +25,10 @@ hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
 // EP Create
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_create(pd_ep_create_args_t *args)
+pd_ep_create (pd_func_args_t *pd_func_args)
 {
     hal_ret_t            ret = HAL_RET_OK;;
+    pd_ep_create_args_t *args = pd_func_args->pd_ep_create;
     pd_ep_t             *pd_ep;
     mac_addr_t           *mac;
 
@@ -81,9 +82,10 @@ end:
 // EP Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
+pd_ep_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_ep_update_args_t *pd_ep_upd_args = pd_func_args->pd_ep_update;
 
     HAL_TRACE_DEBUG("updating pd state for ep:{}",
                     ep_l2_key_to_str(pd_ep_upd_args->ep));
@@ -99,9 +101,10 @@ pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 // PD Endpoint Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_delete (pd_ep_delete_args_t *args)
+pd_ep_delete (pd_func_args_t *pd_func_args)
 {
     hal_ret_t    ret = HAL_RET_OK;
+    pd_ep_delete_args_t *args = pd_func_args->pd_ep_delete;
     pd_ep_t      *ep_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
@@ -142,9 +145,10 @@ end:
 // EP Get
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_get(pd_ep_get_args_t *args)
+pd_ep_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_ep_get_args_t *args = pd_func_args->pd_ep_get;
     ep_t                    *ep = args->ep;
     pd_ep_t                 *ep_pd = (pd_ep_t *)ep->pd;
     EndpointGetResponse     *rsp = args->rsp;
@@ -242,9 +246,10 @@ ep_pd_restore_data (pd_ep_restore_args_t *args)
 // EP Restore
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_restore (pd_ep_restore_args_t *args)
+pd_ep_restore (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;;
+    pd_ep_restore_args_t *args = pd_func_args->pd_ep_restore;
     pd_ep_t             *pd_ep;
     mac_addr_t          *mac;
 
@@ -878,9 +883,10 @@ ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_make_clone(pd_ep_make_clone_args_t *args)
+pd_ep_make_clone (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    pd_ep_make_clone_args_t *args = pd_func_args->pd_ep_make_clone;
     pd_ep_t             *pd_ep_clone = NULL;
     ep_t *ep = args->ep;
     ep_t *clone = args->clone;
@@ -903,9 +909,10 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_mem_free(pd_ep_mem_free_args_t *args)
+pd_ep_mem_free (pd_func_args_t *pd_func_args)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    pd_ep_mem_free_args_t *args = pd_func_args->pd_ep_mem_free;
     pd_ep_t        *ep_pd;
 
     ep_pd = (pd_ep_t *)args->ep->pd;

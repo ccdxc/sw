@@ -139,7 +139,7 @@ update_fwding_info(fte::ctx_t&ctx)
             flowupd.fwding.dif = dif;
             flowupd.fwding.dl2seg = ctx.sl2seg();
         }
-    } 
+    }
 
     if (dif == NULL) {
         ret = route_lookup(&ctx.get_key(), &flowupd.fwding.dep,
@@ -153,8 +153,10 @@ update_fwding_info(fte::ctx_t&ctx)
 
     // update fwding info
     pd::pd_if_get_lport_id_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
     args.pi_if = dif;
-    pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET_LPORT_ID, (void *)&args);
+    pd_func_args.pd_if_get_lport_id = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET_LPORT_ID, &pd_func_args);
     flowupd.fwding.lport = args.lport_id;
     // flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
     return ctx.update_flow(flowupd);

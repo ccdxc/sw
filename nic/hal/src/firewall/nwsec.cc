@@ -524,6 +524,7 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                       *lnode = NULL;
     dhl_entry_t                         *dhl_entry = NULL;
     nwsec_profile_t                     *nwsec = NULL;
+    pd::pd_func_args_t                  pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -538,8 +539,8 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_nwsec_profile_create_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_CREATE,
-                          (void *)&pd_nwsec_args);
+    pd_func_args.pd_nwsec_profile_create = &pd_nwsec_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create nwsec pd, err : {}", ret);
     }
@@ -591,13 +592,14 @@ nwsec_create_abort_cleanup (nwsec_profile_t *nwsec, hal_handle_t hal_handle)
 {
     hal_ret_t                           ret = HAL_RET_OK;
     pd::pd_nwsec_profile_delete_args_t  pd_nwsec_args = { 0 };
+    pd::pd_func_args_t                  pd_func_args = {0};
 
     // 1. delete call to PD
     if (nwsec->pd) {
         pd::pd_nwsec_profile_delete_args_init(&pd_nwsec_args);
         pd_nwsec_args.nwsec_profile = nwsec;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE,
-                              (void *)&pd_nwsec_args);
+        pd_func_args.pd_nwsec_profile_delete = &pd_nwsec_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
         }
@@ -936,6 +938,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                         *dhl_entry = NULL;
     nwsec_profile_t                     *nwsec = NULL, *nwsec_clone = NULL;
     nwsec_update_app_ctxt_t             *app_ctxt = NULL;
+    pd::pd_func_args_t                  pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -952,8 +955,8 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_nwsec_profile_update_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
     pd_nwsec_args.clone_profile = nwsec_clone;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_UPDATE,
-                          (void *)&pd_nwsec_args);
+    pd_func_args.pd_nwsec_profile_update = &pd_nwsec_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update nwsec pd, err : {}", ret);
         goto end;
@@ -985,6 +988,7 @@ nwsec_make_clone (nwsec_profile_t *nwsec, nwsec_profile_t **nwsec_clone,
                   SecurityProfileSpec& spec)
 {
     pd::pd_nwsec_profile_make_clone_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
 
     *nwsec_clone = nwsec_profile_alloc_init();
     memcpy(*nwsec_clone, nwsec, sizeof(nwsec_profile_t));
@@ -994,7 +998,8 @@ nwsec_make_clone (nwsec_profile_t *nwsec, nwsec_profile_t **nwsec_clone,
 
     args.nwsec_profile = nwsec;
     args.clone_profile = *nwsec_clone;
-    pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MAKE_CLONE, (void *)&args);
+    pd_func_args.pd_nwsec_profile_make_clone = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MAKE_CLONE, &pd_func_args);
 
     // Keep new values in the clone
     nwsec_profile_init_from_spec(*nwsec_clone, spec);
@@ -1014,6 +1019,7 @@ nwsec_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                       *lnode = NULL;
     dhl_entry_t                         *dhl_entry = NULL;
     nwsec_profile_t                     *nwsec = NULL, *nwsec_clone = NULL;
+    pd::pd_func_args_t                  pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -1040,8 +1046,8 @@ nwsec_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // free PD
     pd::pd_nwsec_profile_mem_free_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
-                          (void *)&pd_nwsec_args);
+    pd_func_args.pd_nwsec_profile_mem_free = &pd_nwsec_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
     }
@@ -1064,6 +1070,7 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     nwsec_profile_t             *nwsec = NULL;
     pd::pd_nwsec_profile_mem_free_args_t pd_nwsec_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -1078,8 +1085,8 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // free PD
     pd::pd_nwsec_profile_mem_free_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
-                          (void *)&pd_nwsec_args);
+    pd_func_args.pd_nwsec_profile_mem_free = &pd_nwsec_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
     }
@@ -1200,6 +1207,7 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     nwsec_profile_t             *nwsec = NULL;
     pd::pd_nwsec_profile_delete_args_t pd_nwsec_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -1212,8 +1220,8 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_nwsec_profile_delete_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE,
-                          (void *)&pd_nwsec_args);
+    pd_func_args.pd_nwsec_profile_delete = &pd_nwsec_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE, &pd_func_args);
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
@@ -1370,6 +1378,7 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
     hal_ret_t                         ret = HAL_RET_OK;
     nwsec::SecurityProfileSpec        *spec;
     pd::pd_nwsec_profile_get_args_t   args   = {0};
+    pd::pd_func_args_t                pd_func_args = {0};
 
     // fill in the config spec of this profile
     spec = rsp->mutable_spec();
@@ -1450,7 +1459,8 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
     // Get PD information
     args.nwsec_profile = sec_prof;
     args.rsp = rsp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_GET, (void *)&args);
+    pd_func_args.pd_nwsec_profile_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to do PD get for nwsec profile id : {}. ret : {}",
                       sec_prof->profile_id, ret);
@@ -1732,14 +1742,15 @@ static hal_ret_t
 nwsec_prof_restore_add (nwsec_profile_t *nwsec,
                         const SecurityProfileGetResponse& nwsec_info)
 {
-    hal_ret_t                               ret;
+    hal_ret_t                              ret;
     pd::pd_nwsec_profile_restore_args_t    pd_nwsec_prof_args = { 0 };
+    pd::pd_func_args_t                     pd_func_args = {0};
 
     // restore pd state
     pd_nwsec_prof_args.nwsec_profile = nwsec;
     pd_nwsec_prof_args.status = &nwsec_info.status();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_RESTORE,
-                          &pd_nwsec_prof_args);
+    pd_func_args.pd_nwsec_profile_restore = &pd_nwsec_prof_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_RESTORE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to restore Nwsec profile {} pd, err : {}",
                       nwsec->profile_id, ret);

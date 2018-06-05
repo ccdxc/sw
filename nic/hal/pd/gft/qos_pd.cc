@@ -9,21 +9,22 @@
 namespace hal {
 namespace pd {
 
-hal_ret_t 
-pd_qos_class_get_admin_cos (pd_qos_class_get_admin_cos_args_t *args)
+hal_ret_t
+pd_qos_class_get_admin_cos (pd_func_args_t *pd_func_args)
 {
+    pd_qos_class_get_admin_cos_args_t *args  = pd_func_args->pd_qos_class_get_admin_cos;
     args->cos = HAL_QOS_ADMIN_COS;
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_qos_class_get_qos_class_id (pd_qos_class_get_qos_class_id_args_t *q_args)
+pd_qos_class_get_qos_class_id (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_qos_class_periodic_stats_update (pd_qos_class_periodic_stats_update_args_t *args)
+pd_qos_class_periodic_stats_update (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;
 }

@@ -473,6 +473,7 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry_t                    *mc_entry = NULL;
     dllist_ctxt_t                 *lnode = NULL;
     pd::pd_mc_entry_create_args_t pd_mc_entry_args = { };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -495,7 +496,8 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_mc_entry_create_args_init(&pd_mc_entry_args);
     pd_mc_entry_args.mc_entry = mc_entry;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_CREATE, (void *)&pd_mc_entry_args);
+    pd_func_args.pd_mc_entry_create = &pd_mc_entry_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create mc_entry pd, err : {}", ret);
     }
@@ -565,6 +567,7 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry_t                    *mc_entry = NULL;
     dhl_entry_t                   *dhl_entry = NULL;
     pd::pd_mc_entry_delete_args_t pd_mc_entry_args = { };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -579,7 +582,8 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (mc_entry->pd) {
         pd::pd_mc_entry_delete_args_init(&pd_mc_entry_args);
         pd_mc_entry_args.mc_entry = mc_entry;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, (void *)&pd_mc_entry_args);
+        pd_func_args.pd_mc_entry_delete = &pd_mc_entry_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete mc_entry pd, err : {}", ret);
         }
@@ -789,6 +793,7 @@ mc_entry_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry_t                    *mc_entry = NULL;
     dllist_ctxt_t                 *lnode = NULL;
     pd::pd_mc_entry_delete_args_s pd_mc_entry_args = { };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -803,7 +808,8 @@ mc_entry_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_mc_entry_delete_args_init(&pd_mc_entry_args);
     pd_mc_entry_args.mc_entry = mc_entry;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, (void *)&pd_mc_entry_args);
+    pd_func_args.pd_mc_entry_delete = &pd_mc_entry_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete mc_entry pd, err : {}", ret);
         goto end;
@@ -1018,6 +1024,7 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry_t                    *mc_entry, *upd_entry;
     dllist_ctxt_t                 *lnode = NULL;
     pd::pd_mc_entry_update_args_t pd_mc_entry_args = { };
+    pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -1042,7 +1049,8 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_mc_entry_update_args_init(&pd_mc_entry_args);
     pd_mc_entry_args.mc_entry = mc_entry;
     pd_mc_entry_args.upd_entry = upd_entry;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_UPDATE, (void *)&pd_mc_entry_args);
+    pd_func_args.pd_mc_entry_update = &pd_mc_entry_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update mc_entry pd, err : {}", ret);
         goto end;
