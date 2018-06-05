@@ -28,8 +28,6 @@ using barcoRings::BarcoRings;
 
 std::shared_ptr<Channel> hal_channel;
 
-#define SET_DEADLINE(x) set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(x))
-
 namespace {
 
 std::unique_ptr<Internal::Stub> internal_stub;
@@ -115,7 +113,6 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
     req->set_rdma_max_pt_entries(params->rdma_max_pt_entries);
   }
 
-  context.SET_DEADLINE(60);
   auto status = interface_stub->LifCreate(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("LIF create failed: %s\n", status.error_message().c_str());
@@ -137,7 +134,6 @@ int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id) {
   req->set_lif(hw_lif_id);
   req->set_bdf(bdf_id);
 
-  context.SET_DEADLINE(60);
   auto status = internal_stub->ConfigureLifBdf(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("set_lif_bdf failed: %s\n", status.error_message().c_str());
@@ -162,7 +158,6 @@ int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {
   req->set_prog_name(prog_name);
   req->set_resolve_label(false);
 
-  context.SET_DEADLINE(60);
   auto status = internal_stub->GetProgramAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_pgm_base_addr failed: %s\n", status.error_message().c_str());
@@ -188,7 +183,6 @@ int get_pgm_label_offset(const char *prog_name, const char *label, uint8_t *off)
   req->set_resolve_label(true);
   req->set_label(label);
 
-  context.SET_DEADLINE(60);
   auto status = internal_stub->GetProgramAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_pgm_label_offset failed: %s\n", status.error_message().c_str());
@@ -213,7 +207,6 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid, uint64_t *qa
   req->set_type_num(qtype);
   req->set_qid(qid);
 
-  context.SET_DEADLINE(60);
   auto status = interface_stub->LifGetQState(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_lif_qstate_addr failed: %s\n", status.error_message().c_str());
@@ -243,7 +236,6 @@ int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) 
   req->set_qid(qid);
   req->set_ret_data_size(kDefaultQStateSize);
 
-  context.SET_DEADLINE(60);
   auto status = interface_stub->LifGetQState(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_lif_qstate failed: %s\n", status.error_message().c_str());
@@ -274,7 +266,6 @@ int set_lif_qstate_size(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qst
   req->set_qid(qid);
   req->set_queue_state((const char *) qstate, size);
 
-  context.SET_DEADLINE(60);
   auto status = interface_stub->LifSetQState(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_lif_qstate_size failed: %s\n", status.error_message().c_str());
@@ -305,7 +296,6 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
   auto req = req_msg.add_request();
   req->set_handle("storage");
 
-  context.SET_DEADLINE(60);
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("alloc_hbm_address failed: %s\n", status.error_message().c_str());
@@ -335,7 +325,6 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr, bool is_gcm) {
     if(!is_gcm) req->set_handle("brq-ring-xts0");
     else req->set_handle("brq-ring-gcm0");
 
-  context.SET_DEADLINE(60);
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_xts_ring_base_address failed: %s\n", status.error_message().c_str());
@@ -355,7 +344,6 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
   cryptokey::CryptoKeyCreateResponseMsg cr_resp_msg;
   cr_req_msg.add_request();
 
-  context.SET_DEADLINE(60);
   auto status = crypto_stub->CryptoKeyCreate(&context, cr_req_msg, &cr_resp_msg);
   if (!status.ok()) {
     printf("Create request failed \n");
@@ -376,7 +364,6 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
   spec->set_key_size(key_size);
   spec->set_key_type(key_type);
 
-  context2.SET_DEADLINE(60);
   status = crypto_stub->CryptoKeyUpdate(&context2, upd_req_msg, &upd_resp_msg);
   if (!status.ok()) {
     printf("Update request failed \n");
@@ -397,7 +384,6 @@ int delete_key(uint32_t key_index) {
   cryptokey::CryptoKeyDeleteResponseMsg del_resp_msg;
   auto req = del_req_msg.add_request();
   req->set_keyindex(key_index);
-  context.SET_DEADLINE(60);
   auto status = crypto_stub->CryptoKeyDelete(&context, del_req_msg, &del_resp_msg);
   if (!status.ok()) {
     printf("Delete request failed \n");
@@ -423,7 +409,6 @@ int get_xts_opaque_tag_addr(bool is_decr, uint64_t* addr, bool is_gcm) {
   else
     if(!is_gcm) req->set_ring_type(types::BARCO_RING_XTS0);
     else req->set_ring_type(types::BARCO_RING_GCM0);
-  context.SET_DEADLINE(60);
   auto status = brings_stub->GetOpaqueTagAddr(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_xts_opaque_tag_addr request failed \n");
