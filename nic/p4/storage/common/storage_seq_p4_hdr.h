@@ -78,7 +78,7 @@ header_type seq_comp_status_desc0_t {
     barco_desc_size : 4;    // log2(descriptor size)
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
-    barco_num_descs : 6;    // initial number of descriptors to xfer to Barco
+    barco_num_descs : 10;   // initial number of descriptors to xfer to Barco
     status_addr0    : 64;   // Address where compression status will be placed
     status_addr1    : 64;   // 2nd address where compression status will be placed
     intr_addr       : 64;   // Address where interrupt needs to be written
@@ -164,7 +164,7 @@ header_type seq_xts_status_desc0_t {
     barco_desc_size : 4;    // log2(descriptor size)
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
-    barco_num_descs : 6;    // log2(descriptor set size)
+    barco_num_descs : 10;   // log2(descriptor set size)
     status_addr0    : 64;   // Address where HW crypto status was placed
     status_addr1    : 64;   // 2nd address where a copy of above status can be made
     intr_addr       : 64;   // Address where interrupt needs to be written
@@ -319,6 +319,7 @@ header_type seq_kivec3_t {
   fields {
     comp_buf_addr       : 64;
     pad_len             : 16;
+    last_blk_len        : 16;
     num_blks            : 5;
     pad_boundary_shift  : 5;
   }
@@ -341,7 +342,7 @@ header_type seq_kivec4_t {
     barco_desc_size         : 4;
     barco_pndx_size         : 3;
     barco_ring_size         : 5;
-    barco_num_descs         : 6;
+    barco_num_descs         : 10;
     pad_boundary_shift      : 5;
   }
 }
@@ -407,22 +408,6 @@ header_type seq_kivec7xts_t {
   }
 }
 
-// kivec8: header union with to_stage_4 (128 bits max)
-header_type seq_kivec8_t {
-  fields {
-    pad_len             : 16;
-    last_blk_len        : 16;
-  }
-}
-
-// kivec8: header union with to_stage_4 (128 bits max)
-// used by XTS status handler
-header_type seq_kivec8xts_t {
-  fields {
-    datain_len          : 16;
-  }
-}
-
 #define SEQ_Q_STATE_COPY_INTRINSIC(q_state)                             \
   modify_field(q_state.rsvd, rsvd);                                     \
   modify_field(q_state.cosA, cosA);                                     \
@@ -478,6 +463,7 @@ header_type seq_kivec8xts_t {
 #define SEQ_KIVEC3_USE(scratch, kivec)                                  \
   modify_field(scratch.comp_buf_addr, kivec.comp_buf_addr);             \
   modify_field(scratch.pad_len, kivec.pad_len);                         \
+  modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
   modify_field(scratch.pad_boundary_shift, kivec.pad_boundary_shift);   \
 
@@ -535,13 +521,6 @@ header_type seq_kivec8xts_t {
   modify_field(scratch.comp_desc_addr, kivec.comp_desc_addr);           \
   modify_field(scratch.comp_sgl_src_addr, kivec.comp_sgl_src_addr);     \
 
-#define SEQ_KIVEC8_USE(scratch, kivec)                                  \
-  modify_field(scratch.pad_len, kivec.pad_len);                         \
-  modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
-
-#define SEQ_KIVEC8XTS_USE(scratch, kivec)                               \
-  modify_field(scratch.datain_len, kivec.datain_len);                   \
-
 // Macros for ASM param addresses (hardcoded in P4)
 #define seq_barco_chain_action_start	    0x82000000
 #define seq_comp_status_handler_start       0x82010000
@@ -549,8 +528,6 @@ header_type seq_kivec8xts_t {
 #define seq_xts_status_handler_start        0x82030000
 #define seq_barco_ring_pndx_pre_read0_start 0x82040000
 #define seq_barco_ring_pndx_read_start      0x82050000
-#define seq_comp_aol_src_pad_start          0x82060000
-#define seq_comp_aol_dst_pad_start          0x82070000
 
 
 #endif     // STORAGE_SEQ_P4_HDR_H

@@ -16,8 +16,8 @@ struct phv_ p;
  * Registers usage
  * CAUTION: r1 is also implicitly used by LOAD_TABLE1_FOR_ADDR_PC_IMM()
  */
-#define r_comp_data_len             r1  // compression output data length
-#define r_total_len                 r2  // above length plus padding
+#define r_total_len                 r1  // above length plus padding
+#define r_comp_data_len             r2  // compression output data length
 #define r_pad_len                   r3  // padding length
 #define r_pad_boundary              r4  // user specified padding boundary
 #define r_num_blks                  r5  // number of hash blocks
@@ -27,12 +27,12 @@ struct phv_ p;
 /*
  * Registers reuse, post padding calculations
  */
-#define r_last_blk_len              r1  // length of last block
-#define r_status                    r7  // comp status, briefly used at beginning
+#define r_last_blk_len              r_comp_data_len  // length of last block
+#define r_status                    r_sgl_field_p    // comp status, briefly used at beginning
 
 %%
     .param storage_seq_barco_ring_pndx_read
-    .param storage_seq_comp_aol_pad_prep
+    .param storage_seq_comp_aol_pad_handler
     .param storage_seq_comp_sgl_pdma_xfer
     .param storage_seq_comp_sgl_pad_only_xfer
 
@@ -76,21 +76,21 @@ storage_seq_comp_status_handler:
     // for encryption (compression uses SGL format while encryption uses AOL).
                      
     bbeq        SEQ_KIVEC5_AOL_PAD_EN, 0, possible_sgl_padding
-    phvwrpair   p.seq_kivec8_pad_len, r_pad_len, \
-                p.seq_kivec8_last_blk_len, r_last_blk_len       // delay slot
+    phvwrpair   p.seq_kivec3_pad_len, r_pad_len, \
+                p.seq_kivec3_last_blk_len, r_last_blk_len       // delay slot
     
 aol_padding:
     
     // AOL padding enabled: handle in the next stage due to low availability
     // of k-vec space which forces usage of a stage_2_stage (seq_kivec6).
-    LOAD_TABLE_NO_LKUP_PC_IMM(3, storage_seq_comp_aol_pad_prep) 
+    LOAD_TABLE_NO_LKUP_PC_IMM(3, storage_seq_comp_aol_pad_handler) 
 
     // Tell possible_sgl_pdma_xfer that padding is enabled
     setcf       c6, [c0]
 
 possible_sgl_padding:
     bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, possible_per_block_descs
-    phvwr       p.seq_kivec3_num_blks, r_num_blks        // delay slot
+    phvwr       p.seq_kivec3_num_blks, r_num_blks       // delay slot
 
     // SGL padding enabled:
     // Given a vector of SGLs, each prefilled with exactly one block addr and len,
@@ -142,7 +142,7 @@ possible_sgl_pdma_xfer:
     // PDMA compressed data only for non-error case (c4 was set)
     seq.c4      c4, SEQ_KIVEC5_SGL_PDMA_EN, 1
     bcf         [!c4], possible_barco_push
-    phvwr.c6    p.seq_kivec3_pad_len, r_pad_len          // delay slot
+    phvwr.!c6   p.seq_kivec3_pad_len, r0        // delay slot
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop
     

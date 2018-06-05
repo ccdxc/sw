@@ -30,7 +30,7 @@ typedef struct {
   uint8_t  barco_desc_size;     // log2(descriptor size)
   uint8_t  barco_pndx_size;     // log2)producer index size)
   uint8_t  barco_ring_size;     // log2(ring size)
-  uint8_t  barco_num_descs;     // initial number of descriptors to xfer to Barco.
+  uint16_t barco_num_descs;     // initial number of descriptors to xfer to Barco.
                                 // In some error cases, it also serves as a count
                                 // beyond which P4+ may locate the "alternate" set
                                 // of descriptors.

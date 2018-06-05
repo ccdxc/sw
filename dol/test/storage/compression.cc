@@ -394,22 +394,22 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
       seq_status_desc->write_bit_fields(196, 4, chain_params.push_spec.barco_desc_size);
       seq_status_desc->write_bit_fields(200, 3, chain_params.push_spec.barco_pndx_size);
       seq_status_desc->write_bit_fields(203, 5, chain_params.push_spec.barco_ring_size);
-      seq_status_desc->write_bit_fields(208, 6, chain_params.push_spec.barco_num_descs);
+      seq_status_desc->write_bit_fields(208, 10, chain_params.push_spec.barco_num_descs);
     } else {
       seq_status_desc->write_bit_fields(0, 64, chain_params.db_spec.next_doorbell_addr);
       seq_status_desc->write_bit_fields(64, 64, chain_params.db_spec.next_doorbell_data);
     }
 
-    seq_status_desc->write_bit_fields(214, 64, chain_params.status_addr0);
-    seq_status_desc->write_bit_fields(278, 64, chain_params.status_addr1);
-    seq_status_desc->write_bit_fields(342, 64, chain_params.intr_addr);
-    seq_status_desc->write_bit_fields(406, 32, chain_params.intr_data);
-    seq_status_desc->write_bit_fields(438, 16, chain_params.status_len);
-    seq_status_desc->write_bit_fields(454, 7, chain_params.status_offset0);
-    seq_status_desc->write_bit_fields(461, 1, chain_params.status_dma_en);
-    seq_status_desc->write_bit_fields(462, 1, chain_params.next_doorbell_en);
-    seq_status_desc->write_bit_fields(463, 1, chain_params.intr_en);
-    seq_status_desc->write_bit_fields(464, 1, chain_params.next_db_action_barco_push);
+    seq_status_desc->write_bit_fields(218, 64, chain_params.status_addr0);
+    seq_status_desc->write_bit_fields(282, 64, chain_params.status_addr1);
+    seq_status_desc->write_bit_fields(346, 64, chain_params.intr_addr);
+    seq_status_desc->write_bit_fields(410, 32, chain_params.intr_data);
+    seq_status_desc->write_bit_fields(442, 16, chain_params.status_len);
+    seq_status_desc->write_bit_fields(458, 7, chain_params.status_offset0);
+    seq_status_desc->write_bit_fields(465, 1, chain_params.status_dma_en);
+    seq_status_desc->write_bit_fields(466, 1, chain_params.next_doorbell_en);
+    seq_status_desc->write_bit_fields(467, 1, chain_params.intr_en);
+    seq_status_desc->write_bit_fields(468, 1, chain_params.next_db_action_barco_push);
 
     // desc bytes 64-127
     seq_status_desc->write_bit_fields(512 + 0, 64, 0); // reserved

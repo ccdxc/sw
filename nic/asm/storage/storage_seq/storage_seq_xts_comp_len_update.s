@@ -29,7 +29,6 @@ struct phv_ p;
 #define r_desc_datain_len           r_num_blks      // descriptor datain_len
 
 %%
-    .param storage_seq_comp_desc_datain_len_update
 
 storage_seq_xts_comp_len_update:
 
@@ -63,25 +62,22 @@ if0:
     seq         c3, SEQ_KIVEC5XTS_DESC_VEC_PUSH_EN, 1
     phvwr.c3    p.seq_kivec4_barco_num_descs, r_num_blks
     bcf         [!c3], endif0
-    phvwr       p.seq_kivec8xts_datain_len, r_data_len  // delay slot
+    add         r_desc_datain_len, r_data_len, r0       // delay slot
 
     // Case of vector of next-in-chain descriptors: find the last descriptor
     // and update its datain_len to r_last_blk_len
     
     add         r_comp_desc_p, r_comp_desc_p, r_last_blk_no, COMP_DESC_SIZE_SHIFT
-    phvwr       p.seq_kivec8xts_datain_len, r_last_blk_len
+    add         r_desc_datain_len, r_last_blk_len, r0
 
 endif0:
 
-    // Launch table read to do in-stage datain_len update in the descriptor.
+    // Do in-stage datain_len update in the descriptor.
     // This memory update must complete before storage_seq_barco_chain_action
     // transfers the decriptor(s) to Barco.
-    //
-    // Note: unlike memwr, tblwr is guaranteed to be written to memory
-    // by the time the writing stage terminates.
-    LOAD_TABLE1_FOR_ADDR_PC_IMM(r_comp_desc_p, 
-                                STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                                storage_seq_comp_desc_datain_len_update)
+    add         r_field_p, r_comp_desc_p, \
+                SIZE_IN_BYTES(offsetof(struct comp_desc_le_t, datain_len))
+    memwr.hx    r_field_p, r_desc_datain_len            
     
     // Now, prepare to update length fields in the accompanying
     // SGL (or SGL vector), if any. These don't have any order
@@ -110,5 +106,6 @@ endif2:
                              r_field_p, dma_p2m_4)
 endif1:
 
-    CLEAR_TABLE2_e
+    wrfence.e
+    CLEAR_TABLE2 // delay slot
     
