@@ -39,12 +39,9 @@
 #define tx_table_s3_t1_action1  seq_xts_sgl_pdma_xfer
 #define tx_table_s3_t2_action   seq_comp_sgl_pad_only_xfer
 #define tx_table_s3_t2_action1  seq_xts_comp_len_update
-#define tx_table_s3_t3_action   seq_comp_aol_pad_prep
+#define tx_table_s3_t3_action   seq_comp_aol_pad_handler
 
 #define tx_table_s4_t0_action   seq_barco_chain_action
-#define tx_table_s4_t1_action   seq_comp_aol_src_pad
-#define tx_table_s4_t1_action1  seq_comp_desc_datain_len_update
-#define tx_table_s4_t2_action   seq_comp_aol_dst_pad
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -87,10 +84,6 @@ metadata seq_kivec3xts_t seq_kivec3xts;
 metadata seq_kivec6_t seq_kivec6;
 @pragma pa_header_union ingress common_t2_s2s
 metadata seq_kivec7xts_t seq_kivec7xts;
-@pragma pa_header_union ingress to_stage_4
-metadata seq_kivec8_t seq_kivec8;
-@pragma pa_header_union ingress to_stage_4
-metadata seq_kivec8xts_t seq_kivec8xts;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -300,12 +293,6 @@ metadata seq_kivec6_t seq_kivec6_scratch;
 
 @pragma scratch_metadata
 metadata seq_kivec7xts_t seq_kivec7xts_scratch;
-
-@pragma scratch_metadata
-metadata seq_kivec8_t seq_kivec8_scratch;
-
-@pragma scratch_metadata
-metadata seq_kivec8xts_t seq_kivec8xts_scratch;
 
 @pragma scratch_metadata
 metadata seq_barco_entry_t seq_barco_entry_scratch;
@@ -842,79 +829,15 @@ action seq_comp_sgl_pad_only_xfer(addr0, len0, rsvd0,
 
 
 /*****************************************************************************
- *  seq_comp_aol_pad_prep: Launch seq_comp_aol_src_pad and seq_comp_aol_dst_pad
+ *  seq_comp_aol_pad_handler: apply padding to source AOL and destination AOL
  *****************************************************************************/
 
-action seq_comp_aol_pad_prep() {
+action seq_comp_aol_pad_handler() {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC3_USE(seq_kivec3_scratch, seq_kivec3)
+  SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
   SEQ_KIVEC6_USE(seq_kivec6_scratch, seq_kivec6)
-  
-  CAPRI_LOAD_TABLE_ADDR(common_te1_phv, 
-                        ((seq_kivec3_scratch.num_blks - 1) * 64) +
-			seq_kivec6_scratch.aol_src_vec_addr,
-                        STORAGE_DEFAULT_TBL_LOAD_SIZE, 
-                        seq_comp_aol_src_pad_start)
-  CAPRI_LOAD_TABLE_ADDR(common_te2_phv, 
-                        ((seq_kivec3_scratch.num_blks - 1) * 64) +
-			seq_kivec6_scratch.aol_dst_vec_addr,
-                        STORAGE_DEFAULT_TBL_LOAD_SIZE, 
-                        seq_comp_aol_dst_pad_start)
-}
-
-/*****************************************************************************
- *  seq_comp_aol_src_pad: apply padding to source AOL
- *****************************************************************************/
-
-@pragma little_endian A0 O0 L0 A1 O1 L1 A2 O2 L2 next_addr
-action seq_comp_aol_src_pad(A0, O0, L0,
-                            A1, O1, L1,
-			    A2, O2, L2,
-			    next_addr, rsvd) {
-
-  // Store the K+I vector into scratch to get the K+I generated correctly
-  SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
-  SEQ_KIVEC8_USE(seq_kivec8_scratch, seq_kivec8)
-  
-  modify_field(barco_aol_scratch.A0, A0);
-  modify_field(barco_aol_scratch.O0, O0);
-  modify_field(barco_aol_scratch.L0, L0);
-  modify_field(barco_aol_scratch.A1, A1);
-  modify_field(barco_aol_scratch.O1, O1);
-  modify_field(barco_aol_scratch.L1, L1);
-  modify_field(barco_aol_scratch.A2, A2);
-  modify_field(barco_aol_scratch.O2, O2);
-  modify_field(barco_aol_scratch.L2, L2);
-  modify_field(barco_aol_scratch.next_addr, next_addr);
-  modify_field(barco_aol_scratch.rsvd, rsvd);
-}
-
-/*****************************************************************************
- *  seq_comp_aol_dst_pad: apply padding to destination AOL
- *****************************************************************************/
-
-@pragma little_endian A0 O0 L0 A1 O1 L1 A2 O2 L2 next_addr
-action seq_comp_aol_dst_pad(A0, O0, L0,
-                            A1, O1, L1,
-			    A2, O2, L2,
-			    next_addr, rsvd) {
-
-  // Store the K+I vector into scratch to get the K+I generated correctly
-  SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
-  SEQ_KIVEC8_USE(seq_kivec8_scratch, seq_kivec8)
-  
-  modify_field(barco_aol_scratch.A0, A0);
-  modify_field(barco_aol_scratch.O0, O0);
-  modify_field(barco_aol_scratch.L0, L0);
-  modify_field(barco_aol_scratch.A1, A1);
-  modify_field(barco_aol_scratch.O1, O1);
-  modify_field(barco_aol_scratch.L1, L1);
-  modify_field(barco_aol_scratch.A2, A2);
-  modify_field(barco_aol_scratch.O2, O2);
-  modify_field(barco_aol_scratch.L2, L2);
-  modify_field(barco_aol_scratch.next_addr, next_addr);
-  modify_field(barco_aol_scratch.rsvd, rsvd);
 }
 
 /*****************************************************************************
@@ -1185,30 +1108,3 @@ action seq_xts_comp_len_update(cksum, data_len, version) {
   modify_field(seq_comp_hdr.version, version);
 }
 
-
-/*****************************************************************************
- *  seq_comp_desc_datain_len_update: update datain_len field in cp_dest_t
- *****************************************************************************/
-
-@pragma little_endian datain_len threshold_len 
-action seq_comp_desc_datain_len_update(src, dst, cmd,
-                                       datain_len, extended_len, threshold_len,
-                                       status_addr, doorbell_addr, doorbell_data,
-                                       opaque_tag_addr, opaque_tag_data, status_data) {
-
-  // Store the K+I vector into scratch to get the K+I generated correctly
-  SEQ_KIVEC8XTS_USE(seq_kivec8xts_scratch, seq_kivec8xts)
-  
-  modify_field(cp_desc_scratch.src, src);
-  modify_field(cp_desc_scratch.dst, dst);
-  modify_field(cp_desc_scratch.cmd, cmd);
-  modify_field(cp_desc_scratch.datain_len, datain_len);
-  modify_field(cp_desc_scratch.extended_len, extended_len);
-  modify_field(cp_desc_scratch.threshold_len, threshold_len);
-  modify_field(cp_desc_scratch.status_addr, status_addr);
-  modify_field(cp_desc_scratch.doorbell_addr, doorbell_addr);
-  modify_field(cp_desc_scratch.doorbell_data, doorbell_data);
-  modify_field(cp_desc_scratch.opaque_tag_addr, opaque_tag_addr);
-  modify_field(cp_desc_scratch.opaque_tag_data, opaque_tag_data);
-  modify_field(cp_desc_scratch.status_data, status_data);
-}

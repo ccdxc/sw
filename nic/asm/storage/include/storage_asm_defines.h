@@ -212,6 +212,8 @@
     k.seq_kivec3_comp_buf_addr
 #define SEQ_KIVEC3_PAD_LEN                      \
     k.seq_kivec3_pad_len
+#define SEQ_KIVEC3_LAST_BLK_LEN                 \
+    k.{seq_kivec3_last_blk_len}
 #define SEQ_KIVEC3_PAD_BOUNDARY_SHIFT           \
     k.{seq_kivec3_pad_boundary_shift_sbit0_ebit2...seq_kivec3_pad_boundary_shift_sbit3_ebit4}
 #define SEQ_KIVEC3_NUM_BLKS                     \
@@ -233,9 +235,9 @@
 #define SEQ_KIVEC4_BARCO_RING_SIZE              \
     k.seq_kivec4_barco_ring_size
 #define SEQ_KIVEC4_BARCO_NUM_DESCS              \
-    k.seq_kivec4_barco_num_descs
+    k.{seq_kivec4_barco_num_descs_sbit0_ebit7...seq_kivec4_barco_num_descs_sbit8_ebit9}
 #define SEQ_KIVEC4_PAD_BOUNDARY_SHIFT           \
-    k.{seq_kivec4_pad_boundary_shift_sbit0_ebit1...seq_kivec4_pad_boundary_shift_sbit2_ebit4}
+    k.seq_kivec4_pad_boundary_shift
 
 #define SEQ_KIVEC5_INTR_ADDR                    \
     k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
@@ -307,14 +309,6 @@
 #define SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR         \
     k.seq_kivec7xts_comp_sgl_src_addr
 
-#define SEQ_KIVEC8_PAD_LEN                      \
-    k.{seq_kivec8_pad_len}
-#define SEQ_KIVEC8_LAST_BLK_LEN                 \
-    k.{seq_kivec8_last_blk_len}
-    
-#define SEQ_KIVEC8XTS_DATAIN_LEN                \
-    k.{seq_kivec8xts_datain_len}
-    
 /*
  * Debug flags
  */
