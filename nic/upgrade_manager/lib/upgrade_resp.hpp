@@ -27,7 +27,7 @@ public:
     delphi::error DeleteUpgMgrResp(void);
 
     //UpgradeFinish is the API that will respond to the agent with success/fail
-    delphi::error UpgradeFinish(bool success, vector<string> &str);
+    delphi::error UpgradeFinish(UpgRespType respType, vector<string> &str);
 };
 typedef std::shared_ptr<UpgMgrResp> UpgMgrRespPtr;
 

@@ -10,8 +10,9 @@ enum UpgReqType {
 }
 
 enum UpgRespType {
-    UpgPass   = 0;
-    UpgFail   = 1;
+    UpgRespPass   = 0;
+    UpgRespFail   = 1;
+    UpgRespAbort  = 2;
 }
 
 // Upgrade Request Status
@@ -27,6 +28,7 @@ enum UpgReqStateType {
     UpgSuccess                        = 8;
     UpgFailed                         = 9;
     UpgAborted                        = 10;
+    //Always to be last
     UpgStateTerminal                  = 11;
 }
 

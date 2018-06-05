@@ -62,4 +62,12 @@ void UpgAgentHandler::UpgFailed(vector<string> &errStrList) {
     return;
 }
 
+void UpgAgentHandler::UpgAborted(vector<string> &errStrList) {
+    LogInfo("Upgrade aborted!!!!");
+    for (uint i=0; i<errStrList.size(); i++) {
+        LogInfo("Application failed response: {}", errStrList[i]);
+    }
+    return;
+}
+
 } // namespace upgrade

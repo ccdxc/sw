@@ -11,10 +11,12 @@ using namespace std;
 
 string UpgMgrAgentRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
     switch (resp->upgrespval()) {
-        case UpgPass:
+        case UpgRespPass:
             return ("Upgrade Successful");
-        case UpgFail:
+        case UpgRespFail:
             return ("Upgrade Failed");
+        case UpgRespAbort:
+            return ("Upgrade Aborted");
         default:
             return ("");
     }
@@ -36,14 +38,20 @@ delphi::error UpgMgrAgentRespReact::DeleteUpgReqSpec(void) {
 void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
     vector<string> errStrList;
     switch (resp->upgrespval()) {
-        case UpgPass:
+        case UpgRespPass:
             upgAgentHandler_->UpgSuccessful();
             break;
-        case UpgFail:
+        case UpgRespFail:
             for (int i=0; i<resp->upgrespfailstr_size(); i++) {
                 errStrList.push_back(resp->upgrespfailstr(i));
             }
             upgAgentHandler_->UpgFailed(errStrList);
+            break;
+        case UpgRespAbort:
+            for (int i=0; i<resp->upgrespfailstr_size(); i++) {
+                errStrList.push_back(resp->upgrespfailstr(i));
+            }
+            upgAgentHandler_->UpgAborted(errStrList);
             break;
         default:
             break;

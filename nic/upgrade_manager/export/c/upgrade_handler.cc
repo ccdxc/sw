@@ -81,10 +81,9 @@ HdlrResp UpgHandler::HandleStateUpgFailed(UpgCtx& upgCtx) {
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateUpgAborted(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+void UpgHandler::HandleStateUpgAborted(UpgCtx& upgCtx) {
     LogInfo("UpgHandler HandleStateUpgAborted not implemented by service");
-    return resp;
+    return;
 }
 
 } // namespace upgrade

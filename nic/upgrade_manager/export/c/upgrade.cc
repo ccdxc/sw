@@ -165,10 +165,15 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
     delphi::objects::UpgRespPtr upgResp = upgMgrAgentRespPtr_->FindUpgRespSpec();
     if (upgResp == NULL) {
         retStr.push_back( "Upgrade Manager has not replied back to agent yet.");
-    } else if (upgResp->upgrespval() == UpgPass) {
+    } else if (upgResp->upgrespval() == UpgRespPass) {
         retStr.push_back( "Upgrade completed successfully.");
-    } else if (upgResp->upgrespval() == UpgFail) {
+    } else if (upgResp->upgrespval() == UpgRespFail) {
         retStr.push_back( "Upgrade completed with failure.");
+        for (int i=0; i<upgResp->upgrespfailstr_size(); i++) {
+            retStr.push_back(upgResp->upgrespfailstr(i));
+        }
+    } else if (upgResp->upgrespval() == UpgRespAbort) {
+        retStr.push_back( "Upgrade aborted.");
         for (int i=0; i<upgResp->upgrespfailstr_size(); i++) {
             retStr.push_back(upgResp->upgrespfailstr(i));
         }

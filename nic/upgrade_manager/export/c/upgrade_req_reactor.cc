@@ -10,6 +10,7 @@ namespace upgrade {
 using namespace std;
 
 void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgCtx &ctx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     switch (type) {
         case UpgReqRcvd:
             LogInfo("Upgrade: Request Received");
@@ -53,7 +54,8 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgC
             break;
         case UpgAborted:
             LogInfo("Upgrade: Aborted");
-            hdlrResp = upgHdlrPtr_->HandleStateUpgAborted(ctx);
+            hdlrResp = resp;
+            upgHdlrPtr_->HandleStateUpgAborted(ctx);
             break;
         default:
             LogInfo("Upgrade: Default state");
@@ -87,7 +89,7 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
 // OnUpgStateReqDelete gets called when UpgStateReq object is deleted
 delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
     UpgCtx   ctx;
-    LogInfo("UpgReqReactor UpgStateReq got deleted");
+    LogInfo("UpgReqReactor UpgStateReq got deleted with {}", req->upgreqstate());
     //delete the object
     UpgReqReactor::GetUpgCtx(ctx, req);
     upgAppRespPtr_->DeleteUpgAppResp();

@@ -45,9 +45,8 @@ delphi::error UpgMgrResp::DeleteUpgMgrResp(void) {
     return delphi::error::OK();
 }
 
-delphi::error UpgMgrResp::UpgradeFinish(bool success, vector<string> &str) {
-    UpgRespType respType = success ? UpgPass : UpgFail; 
-    LogInfo("Returning response {} to agent", (respType==UpgPass)?"Upgrade successful":"Upgrade Fail");
+delphi::error UpgMgrResp::UpgradeFinish(UpgRespType respType, vector<string> &str) {
+    LogInfo("Returning response {} to agent", respType);
     auto upgResp = findUpgMgrRespObj(10);
     if (upgResp == NULL) {
         LogInfo("Sending Following String to Agent");

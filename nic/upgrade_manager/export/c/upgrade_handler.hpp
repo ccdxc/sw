@@ -26,7 +26,7 @@ public:
     virtual HdlrResp HandleStateCleanup(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateUpgSuccess(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateUpgFailed(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateUpgAborted(UpgCtx& upgCtx);
+    virtual void HandleStateUpgAborted(UpgCtx& upgCtx);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

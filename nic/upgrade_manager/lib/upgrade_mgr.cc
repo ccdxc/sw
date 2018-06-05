@@ -121,7 +121,18 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     }
     if ((type == UpgSuccess) || (type == UpgFailed) || (type == UpgStateTerminal)) {
         //Notify Agent
-        upgMgrResp_->UpgradeFinish(type == UpgSuccess, appRespFailStrList_);
+        UpgRespType respType = UpgRespPass;
+        switch (type) {
+            case UpgFailed:
+                respType = UpgRespFail;
+                break;
+            case UpgStateTerminal:
+                respType = UpgRespAbort;
+                break;
+            default:
+                break;
+        } 
+        upgMgrResp_->UpgradeFinish(respType, appRespFailStrList_);
         if (appRespFailStrList_.empty()) {
             LogInfo("Emptied all the responses from applications to agent");
             ResetAppResp();

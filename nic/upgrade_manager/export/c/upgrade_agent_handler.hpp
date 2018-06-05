@@ -25,7 +25,7 @@ public:
 
     virtual void UpgSuccessful(void);
     virtual void UpgFailed(vector<string> &errStrList);
-
+    virtual void UpgAborted(vector<string> &errStrList);
 };
 typedef std::shared_ptr<UpgAgentHandler> UpgAgentHandlerPtr;
 
