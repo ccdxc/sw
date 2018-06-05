@@ -118,6 +118,7 @@ class ${classname} : public cap_sw_${base}_base {
     c_headerfile_field_array_info = Template("""
         ${field_typename} __${field_name}${field_array}${field_wide};
         uint8_t *${field_name}${field_name_sffx}(){return (uint8_t*)__${field_name};}
+        void ${field_name}${field_name_sffx}_zero(void){memset(__${field_name},0x00,sizeof(__${field_name}));}
         void ${field_name}${field_name_sffx}(uint8_t *bytes){memcpy(__${field_name},bytes,sizeof(__${field_name}));}
         void pack_${field_name}(uint8_t *bytes, uint32_t start=0);
         void unpack_${field_name}(uint8_t *bytes, uint32_t start=0);
