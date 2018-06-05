@@ -11,8 +11,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// CreateNetwork creates a l2 segment in datapath if vlan id is specified and a network if IPSubnet is specified.
-// ToDo Investigate if HAL needs network updates and deletes.
+// CreateNetwork creates network in datapath if spec has IPv4Subnet
+// creates the l2segment and adds the l2segment on all the uplinks in datapath.
 func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
 	var nwKey halproto.NetworkKeyHandle
 	var macAddr uint64
@@ -98,7 +98,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		} else {
 			_, err := hd.Hal.Netclient.NetworkCreate(context.Background(), &halNwReq)
 			if err != nil {
-				log.Errorf("Error creating tenant. Err: %v", err)
+				log.Errorf("Error creating network. Err: %v", err)
 				return err
 			}
 		}
@@ -241,8 +241,16 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) 
 	return nil
 }
 
-// DeleteNetwork deletes a network from datapath
-func (hd *Datapath) DeleteNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
+// DeleteNetwork deletes a network from datapath.
+// It will remove the l2seg from all the uplinks, delete the l2seg and if the spec has IPv4Subnet it will delete the
+// network in the datapath.
+func (hd *Datapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
+	// build vrf key
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 	// build the segment message
 	seg := halproto.L2SegmentDeleteRequest{
 		Meta: &halproto.ObjectMeta{},
@@ -251,17 +259,114 @@ func (hd *Datapath) DeleteNetwork(nw *netproto.Network, ns *netproto.Namespace) 
 				SegmentId: nw.Status.NetworkID,
 			},
 		},
+		VrfKeyHandle: vrfKey,
 	}
 
 	segDelReqMsg := halproto.L2SegmentDeleteRequestMsg{
 		Request: []*halproto.L2SegmentDeleteRequest{&seg},
 	}
 
-	// delete the l2 segment
-	_, err := hd.Hal.L2SegClient.L2SegmentDelete(context.Background(), &segDelReqMsg)
-	if err != nil {
-		log.Errorf("Error deleting network. Err: %v", err)
-		return err
+	if hd.Kind == "hal" {
+		// remove the l2segment from all the uplinks.
+		var ifL2SegReqMsg halproto.InterfaceL2SegmentRequestMsg
+
+		for _, uplink := range uplinks {
+			req := halproto.InterfaceL2SegmentSpec{
+				L2SegmentKeyOrHandle: seg.KeyOrHandle,
+				IfKeyHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: uplink.Status.InterfaceID,
+					},
+				},
+			}
+			ifL2SegReqMsg.Request = append(ifL2SegReqMsg.Request, &req)
+		}
+
+		// Perform batched remove only if uplinks exist
+		if len(uplinks) != 0 {
+			l2SegDelResp, err := hd.Hal.Ifclient.DelL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
+			if err != nil {
+				log.Errorf("Error deleting l2 segments on uplinks. Err %v", err)
+				return err
+			}
+			// ensure all the uplinks were correctly removed.
+			for _, r := range l2SegDelResp.Response {
+				if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					log.Errorf("HAL returned non ok status. %v", err)
+					return ErrHALNotOK
+				}
+			}
+		} else {
+			log.Errorf("could not find uplinks")
+		}
+
+		// delete the l2 seg
+		resp, err := hd.Hal.L2SegClient.L2SegmentDelete(context.Background(), &segDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting l2 segment. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+			return ErrHALNotOK
+		}
+
+	} else {
+		_, err := hd.Hal.L2SegClient.L2SegmentDelete(context.Background(), &segDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting l2segment. Err: %v", err)
+			return err
+		}
+	}
+
+	// Check if we need to perform network deletes as well
+	if len(nw.Spec.IPv4Subnet) != 0 {
+		ip, network, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
+		if err != nil {
+			return fmt.Errorf("error parsing the subnet mask from {%v}. Err: %v", nw.Spec.IPv4Subnet, err)
+		}
+		prefixLen, _ := network.Mask.Size()
+
+		nwKey := &halproto.NetworkKeyHandle{
+			KeyOrHandle: &halproto.NetworkKeyHandle_NwKey{
+				NwKey: &halproto.NetworkKey{
+					IpPrefix: &halproto.IPPrefix{
+						Address: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: ipv4Touint32(ip),
+							},
+						},
+						PrefixLen: uint32(prefixLen),
+					},
+					VrfKeyHandle: vrfKey,
+				},
+			},
+		}
+		nwDel := halproto.NetworkDeleteRequest{
+			KeyOrHandle:  nwKey,
+			VrfKeyHandle: vrfKey,
+		}
+		netDelReq := halproto.NetworkDeleteRequestMsg{
+			Request: []*halproto.NetworkDeleteRequest{&nwDel},
+		}
+		if hd.Kind == "hal" {
+			resp, err := hd.Hal.Netclient.NetworkDelete(context.Background(), &netDelReq)
+			if err != nil {
+				log.Errorf("Error deleting network. Err: %v", err)
+				return err
+			}
+			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+				return ErrHALNotOK
+			}
+		} else {
+			_, err := hd.Hal.Netclient.NetworkDelete(context.Background(), &netDelReq)
+			if err != nil {
+				log.Errorf("Error deleting network. Err: %v", err)
+				return err
+			}
+		}
 	}
 
 	return nil

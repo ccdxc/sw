@@ -152,10 +152,14 @@ func (na *Nagent) DeleteNetwork(nt *netproto.Network) error {
 		return errors.New("network not found")
 	}
 
+	// get all the uplinks
+	uplinks := na.getUplinks()
+
 	// delete the network in datapath
-	err = na.Datapath.DeleteNetwork(nw, ns)
+	err = na.Datapath.DeleteNetwork(nw, uplinks, ns)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
+		return err
 	}
 
 	// delete from db

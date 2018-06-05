@@ -177,7 +177,7 @@ type NetDatapathAPI interface {
 	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                                                                // deletes a remote endpoint in datapath
 	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error                                                                 // creates a network
 	UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error                                                                                                // updates a network in datapath
-	DeleteNetwork(nw *netproto.Network, ns *netproto.Namespace) error                                                                                                // deletes a network from datapath
+	DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error                                                                 // deletes a network from datapath
 	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                            // creates a security group
 	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                            // updates a security group
 	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                            // deletes a security group
