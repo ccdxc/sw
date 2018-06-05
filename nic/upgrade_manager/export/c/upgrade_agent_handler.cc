@@ -44,6 +44,11 @@ void UpgAgentHandler::UpgStateCleanupComplete(HdlrResp &resp, string svcName) {
     return;
 }
 
+void UpgAgentHandler::UpgStateAbortedComplete(HdlrResp &resp, string svcName) {
+    LogInfo("Aborted completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+    return;
+}
+
 void UpgAgentHandler::UpgSuccessful(void) {
     LogInfo("Upgrade completed with status successfully!!!!");
     return;

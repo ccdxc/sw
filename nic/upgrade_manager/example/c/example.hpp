@@ -31,12 +31,12 @@ public:
 
     void OnMountComplete(void) {
         LogInfo("ExUpgSvc OnMountComplete called!!");
-        this->upgsdk_->OnMountComplete();
+        upgsdk_->OnMountComplete();
     }
 };
 typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;
 
-class ExSvcHandler : public upgrade::UpgHandler {
+class ExSvcHandler : public UpgHandler {
 public:
     ExSvcHandler(){}
     HdlrResp UpgStateReqCreate(UpgCtx& upgCtx) {

@@ -14,14 +14,14 @@ class UpgMgrResp {
     delphi::SdkPtr     sdk_;
 public:
     UpgMgrResp(delphi::SdkPtr sk) {
-        this->sdk_ = sk;
+        sdk_ = sk;
     }
 
     // findUpgMgrRespObj used to find UpgMgrResp object in delphi db
     delphi::objects::UpgRespPtr findUpgMgrRespObj (uint32_t id);
 
     // createUpgMgrResp will create the upgResp API and set the right value
-    delphi::error createUpgMgrResp(uint32_t id, upgrade::UpgRespType val, vector<string> &str);
+    delphi::error createUpgMgrResp(uint32_t id, UpgRespType val, vector<string> &str);
 
     // DeleteUpgMgrResp will delete the UpgResp object
     delphi::error DeleteUpgMgrResp(void);

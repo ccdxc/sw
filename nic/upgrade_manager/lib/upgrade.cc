@@ -19,8 +19,8 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk) : UpgradeService(sk, "UpgradeS
 // UpgradeService constructor
 UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     // save a pointer to sdk
-    this->sdk_ = sk;
-    this->svcName_ = name;
+    sdk_ = sk;
+    svcName_ = name;
 
     // mount objects
     delphi::objects::UpgReq::Mount(sdk_, delphi::ReadMode);

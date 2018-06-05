@@ -15,14 +15,14 @@ using namespace std;
 // OnUpgAppRespCreate gets called when UpgAppResp object is created
 delphi::error UpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
     LogInfo("UpgAppResp got created for {}/{}", resp, resp->meta().ShortDebugString());
-    if (this->upgMgr_->IsRespTypeFail(resp->upgapprespval())) {
+    if (upgMgr_->IsRespTypeFail(resp->upgapprespval())) {
         string appRespStr = "App " + resp->key() + " returned failure: " + resp->upgapprespstr();
-        this->upgMgr_->AppendAppRespFailStr(appRespStr);
-        this->upgMgr_->SetAppRespFail();
+        upgMgr_->AppendAppRespFailStr(appRespStr);
+        upgMgr_->SetAppRespFail();
         LogInfo("Adding string {} to list", appRespStr);
     }
-    if (this->upgMgr_->CanMoveStateMachine()) {
-        return (this->upgMgr_->MoveStateMachine(this->upgMgr_->GetNextState()));
+    if (upgMgr_->CanMoveStateMachine()) {
+        return (upgMgr_->MoveStateMachine(upgMgr_->GetNextState()));
     } else {
         LogInfo("Cannot move state machine yet");
         return delphi::error::OK();
@@ -37,7 +37,7 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr 
     vector<delphi::objects::UpgAppRespPtr> upgAppResplist = delphi::objects::UpgAppResp::List(sdk_);
     if (upgAppResplist.empty()) {
         LogInfo("All UpgAppResp objects got deleted");
-        this->upgMgr_->DeleteUpgMgrResp();
+        upgMgr_->DeleteUpgMgrResp();
     }
 
     return delphi::error::OK();
@@ -53,15 +53,15 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr res
     //LogInfo("UpgAppRespHdlr OnUpgAppRespVal got called for {}/{}/{}", 
                          //resp, resp->meta().ShortDebugString(), resp->upgapprespval());
 
-    if (this->upgMgr_->IsRespTypeFail(resp->upgapprespval())) {
+    if (upgMgr_->IsRespTypeFail(resp->upgapprespval())) {
         string appRespStr = "App " + resp->key() + " returned failure: " + resp->upgapprespstr();
-        this->upgMgr_->AppendAppRespFailStr(appRespStr);
-        this->upgMgr_->SetAppRespFail();
+        upgMgr_->AppendAppRespFailStr(appRespStr);
+        upgMgr_->SetAppRespFail();
         LogInfo("Adding string {} to list", appRespStr);
     }
 
-    if (this->upgMgr_->CanMoveStateMachine()) {
-        return (this->upgMgr_->MoveStateMachine(this->upgMgr_->GetNextState()));
+    if (upgMgr_->CanMoveStateMachine()) {
+        return (upgMgr_->MoveStateMachine(upgMgr_->GetNextState()));
     } else {
         LogInfo("Cannot move state machine yet");
         return delphi::error::OK();

@@ -38,7 +38,7 @@ public:
 };
 typedef std::shared_ptr<NMDService> NMDServicePtr;
 
-class NMDSvcHandler : public upgrade::UpgHandler {
+class NMDSvcHandler : public UpgHandler {
 public:
     NMDSvcHandler() {}
 

@@ -17,8 +17,8 @@ class UpgAppRespHdlr {
     delphi::SdkPtr sdk_;
 public:
     UpgAppRespHdlr(delphi::SdkPtr sk, string name) {
-        this->appName_ = name;
-        this->sdk_ = sk;
+        appName_ = name;
+        sdk_ = sk;
     }
 
     //CreateUpgAppResp creates the object UpgAppResp
@@ -38,7 +38,7 @@ public:
 
     //GetUpgStateReqPtr will return the pointer for UpgStateReq object
     delphi::objects::UpgStateReqPtr GetUpgStateReqPtr(void) {
-        delphi::objects::UpgStateReqPtr ret;
+        delphi::objects::UpgStateReqPtr ret = NULL;
         vector<delphi::objects::UpgStateReqPtr> upgReqStatuslist = delphi::objects::UpgStateReq::List(sdk_);
         for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
             ret = *reqStatus;

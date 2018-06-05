@@ -38,8 +38,8 @@ NMDService::NMDService(delphi::SdkPtr sk) : NMDService(sk, "NMDService") {
 }
 
 NMDService::NMDService(delphi::SdkPtr sk, string name) {
-    this->sdk_ = sk;
-    this->svcName_ = name;
+    sdk_ = sk;
+    svcName_ = name;
 
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<NMDSvcHandler>(), name, AGENT);
 
@@ -48,16 +48,17 @@ NMDService::NMDService(delphi::SdkPtr sk, string name) {
 
 // createTimerHandler creates a dummy code upgrade request
 void NMDService::createTimerHandler(ev::timer &watcher, int revents) {
-    this->upgsdk_->StartUpgrade();
+    upgsdk_->StartUpgrade();
     LogInfo("NMD: called start upgrade");
 }
 
 void NMDService::createTimerHandlerV2(ev::timer &watcher, int revents) {
     vector<string> checkHealth;
-    this->upgsdk_->GetUpgradeStatus(checkHealth);
+    upgsdk_->GetUpgradeStatus(checkHealth);
     for (uint i=0; i<checkHealth.size(); i++) {
         LogInfo("{}", checkHealth[i]);
     }
+    //upgsdk_->AbortUpgrade();
     LogInfo("NMD: Reported Upgrade Manager health.");
 }
 

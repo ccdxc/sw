@@ -21,24 +21,24 @@ delphi::objects::UpgAppRespPtr UpgAppRespHdlr::findUpgAppResp(string name) {
 
 delphi::error UpgAppRespHdlr::CreateUpgAppResp(void) {
     LogInfo("UpgAppRespHdlr::CreateUpgAppResp called");
-    auto upgAppResp = this->findUpgAppResp(this->appName_);
+    auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
         upgAppResp = make_shared<delphi::objects::UpgAppResp>();
-        upgAppResp->set_key(this->appName_);
+        upgAppResp->set_key(appName_);
         if (upgAppResp == NULL)
             return delphi::error("application unable to create response object");
     }
-    this->sdk_->SetObject(upgAppResp);
+    sdk_->SetObject(upgAppResp);
     return delphi::error::OK();
 }
 
 delphi::error UpgAppRespHdlr::DeleteUpgAppResp(void) {
     LogInfo("UpgAppRespHdlr::DeleteUpgAppResp called");
-    auto upgAppResp = this->findUpgAppResp(this->appName_);
+    auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
         return delphi::error("Response object does not exist");
     }
-    this->sdk_->DeleteObject(upgAppResp);
+    sdk_->DeleteObject(upgAppResp);
     return delphi::error::OK();
 }
 
@@ -48,19 +48,19 @@ string UpgAppRespHdlr::UpgAppRespValToStr(UpgRespStateType type) {
 }
 
 delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type, HdlrResp appHdlrResp) {
-    //LogInfo("UpgAppRespHdlr::UpdateUpgAppResp called for {} with type {}", this->appName_, type);
-    auto upgAppResp = this->findUpgAppResp(this->appName_);
+    //LogInfo("UpgAppRespHdlr::UpdateUpgAppResp called for {} with type {}", appName_, type);
+    auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
-        LogInfo("UpgAppRespHdlr::UpdateUpgAppResp returning error for {}", this->appName_);
+        LogInfo("UpgAppRespHdlr::UpdateUpgAppResp returning error for {}", appName_);
         return delphi::error("application unable to find response object");
     }
-    if (this->UpgAppRespValToStr(type) != "")
+    if (UpgAppRespValToStr(type) != "")
         LogInfo("{}", UpgAppRespValToStr(type));
     upgAppResp->set_upgapprespval(type);
     if (appHdlrResp.resp == FAIL) {
         upgAppResp->set_upgapprespstr(appHdlrResp.errStr);
     }
-    this->sdk_->SetObject(upgAppResp);
+    sdk_->SetObject(upgAppResp);
     return delphi::error::OK();
 }
 

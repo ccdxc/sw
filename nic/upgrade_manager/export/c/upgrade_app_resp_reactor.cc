@@ -38,7 +38,8 @@ void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &
         case DataplaneDowntimeAdminQHandlingPass:
         case DataplaneDowntimePhase2StartPass:
         case CleanupPass:
-            this->SetAppRespSuccess(hdlrResp);
+        case UpgAbortedPass:
+            SetAppRespSuccess(hdlrResp);
             break;
         case PreUpgStateFail:
         case ProcessesQuiescedFail:
@@ -47,7 +48,8 @@ void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &
         case DataplaneDowntimeAdminQHandlingFail:
         case DataplaneDowntimePhase2StartFail:
         case CleanupFail:
-            this->SetAppRespFail(hdlrResp, GetAppRespStr(resp));
+        case UpgAbortedFail:
+            SetAppRespFail(hdlrResp, GetAppRespStr(resp));
             break;
         default:
             break;
@@ -85,6 +87,10 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
         case CleanupPass:
         case CleanupFail:
             upgAgentHandler_->UpgStateCleanupComplete(hdlrResp, resp->key());
+            break;
+        case UpgAbortedPass:
+        case UpgAbortedFail:
+            upgAgentHandler_->UpgStateAbortedComplete(hdlrResp, resp->key());
             break;
         default:
             break;

@@ -21,6 +21,7 @@ public:
     virtual void UpgStateDataplaneDowntimeAdminQComplete(HdlrResp &resp, string svcName);
     virtual void UpgStateDataplaneDowntimePhase2Complete(HdlrResp &resp, string svcName);
     virtual void UpgStateCleanupComplete(HdlrResp &resp, string svcName);
+    virtual void UpgStateAbortedComplete(HdlrResp &resp, string svcName);
 
     virtual void UpgSuccessful(void);
     virtual void UpgFailed(vector<string> &errStrList);

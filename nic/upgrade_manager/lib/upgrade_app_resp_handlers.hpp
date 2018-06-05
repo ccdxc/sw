@@ -16,8 +16,8 @@ class UpgAppRespHdlr : public delphi::objects::UpgAppRespReactor {
     UpgradeMgrPtr      upgMgr_;
 public:
     UpgAppRespHdlr(delphi::SdkPtr sk, UpgradeMgrPtr upgmgr) {
-        this->sdk_ = sk;
-        this->upgMgr_ = upgmgr;
+        sdk_ = sk;
+        upgMgr_ = upgmgr;
     }
 
     // OnUpgAppRespCreate gets called when UpgAppResp object is created

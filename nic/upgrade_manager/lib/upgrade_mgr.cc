@@ -14,7 +14,7 @@ using namespace std;
 
 UpgReqStateType UpgradeMgr::GetNextState(void) {
     UpgReqStateType  reqType;
-    if (this->GetAppRespFail()) {
+    if (GetAppRespFail()) {
         LogInfo("Some application(s) responded with failure");
         return UpgFailed;
     }
@@ -39,6 +39,7 @@ bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
         case CleanupFail:
         case UpgSuccessFail:
         case UpgFailedFail:
+        case UpgAbortedFail:
             ret = true;
         default:
             break;
@@ -92,38 +93,38 @@ string UpgradeMgr::UpgReqStateTypeToStr(UpgReqStateType type) {
 }
 
 bool UpgradeMgr::GetAppRespFail(void) {
-    return this->appRespFail_;
+    return appRespFail_;
 }
 
 void UpgradeMgr::ResetAppResp(void) {
-    this->appRespFail_ = false;
+    appRespFail_ = false;
 }
 
 void UpgradeMgr::SetAppRespFail(void) {
-    this->appRespFail_ = true;
+    appRespFail_ = true;
 }
 
 void UpgradeMgr::AppendAppRespFailStr (string str) {
-    this->appRespFailStrList_.push_back(str);
+    appRespFailStrList_.push_back(str);
 }
 
 delphi::error UpgradeMgr::DeleteUpgMgrResp (void) {
-    return this->upgMgrResp_->DeleteUpgMgrResp();
+    return upgMgrResp_->DeleteUpgMgrResp();
 }
 delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     //Find UpgStateReq object
-    LogInfo("UpgradeMgr::MoveStateMachine");
+    LogInfo("UpgradeMgr::MoveStateMachine {}", type);
     vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
     for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
         (*reqStatus)->set_upgreqstate(type);
         sdk_->SetObject(*reqStatus);
     }
-    if ((type == UpgSuccess) || (type == UpgFailed)) {
+    if ((type == UpgSuccess) || (type == UpgFailed) || (type == UpgStateTerminal)) {
         //Notify Agent
-        this->upgMgrResp_->UpgradeFinish(type == UpgSuccess, this->appRespFailStrList_);
-        if (this->appRespFailStrList_.empty()) {
+        upgMgrResp_->UpgradeFinish(type == UpgSuccess, appRespFailStrList_);
+        if (appRespFailStrList_.empty()) {
             LogInfo("Emptied all the responses from applications to agent");
-            this->ResetAppResp();
+            ResetAppResp();
         }
     }
     if (type != UpgStateTerminal)
@@ -136,10 +137,10 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
     // find the status object
-    auto upgReqStatus = this->findUpgStateReq(req->key());
+    auto upgReqStatus = findUpgStateReq(req->key());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        RETURN_IF_FAILED(this->createUpgStateReq(req->key(), upgrade::UpgReqRcvd));
+        RETURN_IF_FAILED(createUpgStateReq(req->key(), UpgReqRcvd));
     }
 
     return delphi::error::OK();
@@ -148,7 +149,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
 // OnUpgReqDelete gets called when UpgReq object is deleted
 delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got deleted");
-    auto upgReqStatus = this->findUpgStateReq(req->key());
+    auto upgReqStatus = findUpgStateReq(req->key());
     if (upgReqStatus != NULL) {
         LogInfo("Deleting Upgrade Request Status");
         sdk_->DeleteObject(upgReqStatus);
@@ -156,28 +157,43 @@ delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
     return delphi::error::OK();
 }
 
+delphi::error UpgradeMgr::StartUpgrade(uint32_t key) {
+    delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
+    if (upgReqStatus != NULL) {
+        upgReqStatus->set_upgreqstate(UpgReqRcvd);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status UpgReqRcvd");
+        return delphi::error::OK();
+    }
+    return delphi::error("Did not find UpgStateReqPtr");
+}
+
+delphi::error UpgradeMgr::AbortUpgrade(uint32_t key) {
+    delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
+    if (upgReqStatus != NULL) {
+        upgReqStatus->set_upgreqstate(UpgAborted);
+        sdk_->SetObject(upgReqStatus);
+        LogInfo("Updated Upgrade Request Status UpgAborted");
+        return delphi::error::OK();
+    }
+    return delphi::error("Did not find UpgStateReqPtr");
+}
+
 // OnUpgReqCmd gets called when UpgReqCmd attribute changes
 delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     // start or abort?
-    if (req->upgreqcmd() == upgrade::UpgStart) {
+    if (req->upgreqcmd() == UpgStart) {
         LogInfo("Start Upgrade");
-    } else {
+        return StartUpgrade(req->key());
+    } else if (req->upgreqcmd() == UpgAbort) {
         LogInfo("Abort Upgrade");
+        return AbortUpgrade(req->key());
     }
-
-    // set the oper state on status object
-    delphi::objects::UpgStateReqPtr upgReqStatus = this->findUpgStateReq(req->key());
-    if (upgReqStatus != NULL) {
-        upgReqStatus->set_upgreqstate(upgrade::UpgReqRcvd);
-        sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status UpgReqRcvd");
-    }
-
-    return delphi::error::OK();
+    return delphi::error("Cannot decipher the upgreqcmd");
 }
 
 // createUpgStateReq creates a upgrade request status object
-delphi::error UpgradeMgr::createUpgStateReq(uint32_t id, upgrade::UpgReqStateType status) {
+delphi::error UpgradeMgr::createUpgStateReq(uint32_t id, UpgReqStateType status) {
     // create an object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_key(id);

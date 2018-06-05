@@ -119,17 +119,29 @@ void InitStateMachineVector(void) {
                 "", 
                 ""
                 };
-    StateMachine[Cleanup] = 
+    StateMachine[Cleanup] =
                {
-                Cleanup, 
-                UpgStateTerminal, 
-                CleanupPass, 
-                CleanupFail, 
-                "Sending pass to upg-mgr after cleaning up stale state", 
-                "Sending fail to upg-mgr after cleaning up stale state", 
-                "Cleanup State", 
-                "Cleanup Pass", 
+                Cleanup,
+                UpgStateTerminal,
+                CleanupPass,
+                CleanupFail,
+                "Sending pass to upg-mgr after cleaning up stale state",
+                "Sending fail to upg-mgr after cleaning up stale state",
+                "Cleanup State",
+                "Cleanup Pass",
                 "Cleanup Fail"
+               };
+    StateMachine[UpgAborted] = 
+               {
+                UpgAborted, 
+                UpgStateTerminal, 
+                UpgAbortedPass, 
+                UpgAbortedFail, 
+                "Sending pass to upg-mgr after handling upgrade aborted",
+                "Sending fail to upg-mgr after handling upgrade aborted", 
+                "Upgrade Aborted State", 
+                "Upgrade Aborted Pass", 
+                "Upgrade Aborted Fail"
                };
 }
 }

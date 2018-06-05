@@ -14,24 +14,34 @@ void UpgSdk::OnMountComplete(void) {
 
     vector<delphi::objects::UpgStateReqPtr> upgReqStatuslist = delphi::objects::UpgStateReq::List(sdk_);
     for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
-        this->upgReqReactPtr_->OnUpgStateReqCreate(*reqStatus);
+        upgReqReactPtr_->OnUpgStateReqCreate(*reqStatus);
     }
 }
 
 void UpgSdk::SendAppRespSuccess(void) {
     LogInfo("Application returning success via UpgSdk");
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    this->upgAppRespPtr_->UpdateUpgAppResp(
-          this->upgAppRespPtr_->GetUpgAppRespNextPass(
-                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()), resp);
+    auto upgStateReqPtr = upgAppRespPtr_->GetUpgStateReqPtr();
+    if (upgStateReqPtr == NULL) {
+        LogInfo("upgStateReqPtr is NULL");
+        return;
+    }
+    UpgReqStateType reqType = upgStateReqPtr->upgreqstate(); 
+    UpgRespStateType respType = upgAppRespPtr_->GetUpgAppRespNextPass(reqType);
+    upgAppRespPtr_->UpdateUpgAppResp(respType, resp);
 }
 
 void UpgSdk::SendAppRespFail(string str) {
     LogInfo("UpgSdk::SendAppRespFail");
-    HdlrResp resp = {.resp=SUCCESS, .errStr=str};
-    this->upgAppRespPtr_->UpdateUpgAppResp(
-          this->upgAppRespPtr_->GetUpgAppRespNextFail(
-                this->upgAppRespPtr_->GetUpgStateReqPtr()->upgreqstate()), resp);
+    HdlrResp resp = {.resp=FAIL, .errStr=str};
+    auto upgStateReqPtr = upgAppRespPtr_->GetUpgStateReqPtr();
+    if (upgStateReqPtr == NULL) {
+        LogInfo("upgStateReqPtr is NULL");
+        return;
+    }
+    UpgReqStateType reqType = upgStateReqPtr->upgreqstate();
+    UpgRespStateType respType = upgAppRespPtr_->GetUpgAppRespNextFail(reqType);
+    upgAppRespPtr_->UpdateUpgAppResp(respType, resp);
 }
 
 delphi::error UpgSdk::IsRoleAgent (SvcRole role, const char* errStr) {
@@ -54,7 +64,7 @@ delphi::objects::UpgReqPtr UpgSdk::FindUpgReqSpec(void) {
 delphi::objects::UpgReqPtr UpgSdk::CreateUpgReqSpec(void) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
-    req->set_upgreqcmd(upgrade::InvalidCmd);
+    req->set_upgreqcmd(InvalidCmd);
 
     // add it to database
     sdk_->SetObject(req);
@@ -72,21 +82,35 @@ delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqTyp
 delphi::error UpgSdk::StartUpgrade(void) {
     delphi::error err = delphi::error::OK();
     LogInfo("UpgSdk::StartUpgrade");
-    RETURN_IF_FAILED(this->IsRoleAgent(this->svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
+    RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
 
-    delphi::objects::UpgReqPtr req = this->FindUpgReqSpec();
+    delphi::objects::UpgReqPtr req = FindUpgReqSpec();
     if (req == NULL) {
-        req = this->CreateUpgReqSpec();
+        req = CreateUpgReqSpec();
     }
-    this->UpdateUpgReqSpec(req, upgrade::UpgStart);
+    UpdateUpgReqSpec(req, UpgStart);
     
     return err; 
+}
+
+delphi::error UpgSdk::AbortUpgrade(void) {
+    delphi::error err = delphi::error::OK();
+    LogInfo("UpgSdk::AbortUpgrade");
+    RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
+
+    delphi::objects::UpgReqPtr req = FindUpgReqSpec();
+    if (req == NULL) {
+        return delphi::error("No upgrade in progress. Nothing to abort.");
+    }
+    UpdateUpgReqSpec(req, UpgAbort);
+
+    return err;
 }
 
 bool UpgSdk::IsUpgradeInProgress(void) {
     LogInfo("UpgSdk::IsUpgradeInProgress");
 
-    delphi::objects::UpgReqPtr upgReq = this->FindUpgReqSpec();
+    delphi::objects::UpgReqPtr upgReq = FindUpgReqSpec();
     if (upgReq && upgReq->upgreqcmd() == UpgStart) {
         LogInfo("Upgrade in progress");
         return true;
@@ -98,11 +122,11 @@ bool UpgSdk::IsUpgradeInProgress(void) {
 
 delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
     LogInfo("UpgSdk::GetUpgradeStatus");
-    RETURN_IF_FAILED(this->IsRoleAgent(this->svcRole_, "Cannot get upgrade status because service is not of role Agent"));
+    RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Cannot get upgrade status because service is not of role Agent"));
 
     //Check if upgrade is initiated
     retStr.push_back("======= Checking if Upgrade is initiated =======");
-    delphi::objects::UpgReqPtr upgReq = this->FindUpgReqSpec();
+    delphi::objects::UpgReqPtr upgReq = FindUpgReqSpec();
     if (upgReq == NULL) {
         retStr.push_back("No active upgrade detected from agent side.");
     } else if (upgReq->upgreqcmd() == UpgStart) {
@@ -113,7 +137,7 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
 
     //Check if Upgrade Manager is running the state machine
     retStr.push_back("======= Checking if Upgrade Manager State Machine is running =======");
-    delphi::objects::UpgStateReqPtr upgStateReq = this->upgAppRespPtr_->GetUpgStateReqPtr();
+    delphi::objects::UpgStateReqPtr upgStateReq = upgAppRespPtr_->GetUpgStateReqPtr();
     if (upgStateReq == NULL) {
         retStr.push_back("Upgrade Manager not running state machine");
     } else {
@@ -138,7 +162,7 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
 
     //Check if upgrade manager replied back to the agent 
     retStr.push_back("======= Checking status upgrade manager reply to agent =======");
-    delphi::objects::UpgRespPtr upgResp = this->upgMgrAgentRespPtr_->FindUpgRespSpec();
+    delphi::objects::UpgRespPtr upgResp = upgMgrAgentRespPtr_->FindUpgRespSpec();
     if (upgResp == NULL) {
         retStr.push_back( "Upgrade Manager has not replied back to agent yet.");
     } else if (upgResp->upgrespval() == UpgPass) {

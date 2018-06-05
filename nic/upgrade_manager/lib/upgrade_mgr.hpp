@@ -20,9 +20,9 @@ class UpgradeMgr : public delphi::objects::UpgReqReactor {
     bool              appRespFail_;
 public:
     UpgradeMgr(delphi::SdkPtr sk) {
-        this->sdk_ = sk;
-        this->appRespFail_ = false;
-        this->upgMgrResp_ = make_shared<UpgMgrResp>(sk);
+        sdk_ = sk;
+        appRespFail_ = false;
+        upgMgrResp_ = make_shared<UpgMgrResp>(sk);
     }
 
     // OnUpgReqCreate gets called when UpgReq object is created
@@ -35,7 +35,7 @@ public:
     virtual delphi::error OnUpgReqCmd(delphi::objects::UpgReqPtr upgreq);
 
     // createUpgStateReq creates an upgrade request status object
-    delphi::error createUpgStateReq(uint32_t id, upgrade::UpgReqStateType status);
+    delphi::error createUpgStateReq(uint32_t id, UpgReqStateType status);
 
     // findUpgStateReq finds the upgrade request status object
     delphi::objects::UpgStateReqPtr findUpgStateReq(uint32_t id);
@@ -58,6 +58,9 @@ public:
     bool GetAppRespFail(void);
     void SetAppRespFail(void);
     void ResetAppResp(void);
+
+    delphi::error StartUpgrade(uint32_t key);
+    delphi::error AbortUpgrade(uint32_t key);
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
 

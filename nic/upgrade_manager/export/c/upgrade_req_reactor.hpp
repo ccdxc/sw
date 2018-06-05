@@ -20,15 +20,15 @@ class UpgReqReactor : public delphi::objects::UpgStateReqReactor {
     delphi::objects::UpgStateReqPtr upgReqStatus_;
 public:
     UpgReqReactor(delphi::SdkPtr sk, string name, UpgAppRespHdlrPtr ptr) {
-        this->sdk_ = sk;
-        this->upgHdlrPtr_ = make_shared<UpgHandler>();
-        this->upgAppRespPtr_ = ptr;
+        sdk_ = sk;
+        upgHdlrPtr_ = make_shared<UpgHandler>();
+        upgAppRespPtr_ = ptr;
     }
 
     UpgReqReactor(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, UpgAppRespHdlrPtr ptr) {
-        this->sdk_ = sk;
-        this->upgHdlrPtr_ = uh;
-        this->upgAppRespPtr_ = ptr;
+        sdk_ = sk;
+        upgHdlrPtr_ = uh;
+        upgAppRespPtr_ = ptr;
     }
 
     // OnUpgStateReqCreate gets called when UpgStateReq object is created

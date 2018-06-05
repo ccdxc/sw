@@ -19,7 +19,7 @@ delphi::objects::UpgRespPtr UpgMgrResp::findUpgMgrRespObj (uint32_t id) {
     return static_pointer_cast<delphi::objects::UpgResp>(obj);
 }
 
-delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, upgrade::UpgRespType val, vector<string> &str) {
+delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, UpgRespType val, vector<string> &str) {
     // create an object
     delphi::objects::UpgRespPtr resp = make_shared<delphi::objects::UpgResp>();
     resp->set_key(id);
@@ -37,7 +37,7 @@ delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, upgrade::UpgRespType val
 }
 
 delphi::error UpgMgrResp::DeleteUpgMgrResp(void) {
-    auto upgResp = this->findUpgMgrRespObj(10);
+    auto upgResp = findUpgMgrRespObj(10);
     if (upgResp != NULL) {
         LogInfo("UpgResp object got deleted for agent");
         sdk_->DeleteObject(upgResp);
@@ -48,13 +48,13 @@ delphi::error UpgMgrResp::DeleteUpgMgrResp(void) {
 delphi::error UpgMgrResp::UpgradeFinish(bool success, vector<string> &str) {
     UpgRespType respType = success ? UpgPass : UpgFail; 
     LogInfo("Returning response {} to agent", (respType==UpgPass)?"Upgrade successful":"Upgrade Fail");
-    auto upgResp = this->findUpgMgrRespObj(10);
+    auto upgResp = findUpgMgrRespObj(10);
     if (upgResp == NULL) {
         LogInfo("Sending Following String to Agent");
         for (uint i=0; i<str.size(); i++) {
             LogInfo("{}", str[i]);
         }
-        RETURN_IF_FAILED(this->createUpgMgrResp(10, respType, str));
+        RETURN_IF_FAILED(createUpgMgrResp(10, respType, str));
     }
     LogInfo("Responded back to the agent");
     return delphi::error::OK();

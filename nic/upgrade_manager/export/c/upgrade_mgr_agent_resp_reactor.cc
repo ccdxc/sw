@@ -11,9 +11,9 @@ using namespace std;
 
 string UpgMgrAgentRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
     switch (resp->upgrespval()) {
-        case upgrade::UpgPass:
+        case UpgPass:
             return ("Upgrade Successful");
-        case upgrade::UpgFail:
+        case UpgFail:
             return ("Upgrade Failed");
         default:
             return ("");
@@ -36,10 +36,10 @@ delphi::error UpgMgrAgentRespReact::DeleteUpgReqSpec(void) {
 void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
     vector<string> errStrList;
     switch (resp->upgrespval()) {
-        case upgrade::UpgPass:
+        case UpgPass:
             upgAgentHandler_->UpgSuccessful();
             break;
-        case upgrade::UpgFail:
+        case UpgFail:
             for (int i=0; i<resp->upgrespfailstr_size(); i++) {
                 errStrList.push_back(resp->upgrespfailstr(i));
             }
@@ -48,22 +48,22 @@ void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) 
         default:
             break;
     }
-    if (this->DeleteUpgReqSpec() == delphi::error::OK()) {
+    if (DeleteUpgReqSpec() == delphi::error::OK()) {
         LogInfo("Upgrade Req Object deleted for next request");
     }
 }
 
 delphi::error UpgMgrAgentRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
-    LogInfo("UpgRespHdlr::OnUpgRespCreate called with status {}", this->GetRespStr(resp));
-    this->InvokeAgentHandler(resp);
+    LogInfo("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
+    InvokeAgentHandler(resp);
     return delphi::error::OK();
 }
 
 delphi::error UpgMgrAgentRespReact::OnUpgRespVal(delphi::objects::UpgRespPtr
 resp) {
-    if (this->GetRespStr(resp) != "")
-        LogInfo("UpgRespHdlr::OnUpgRespVal called with status: {}", this->GetRespStr(resp));
-    this->InvokeAgentHandler(resp);
+    if (GetRespStr(resp) != "")
+        LogInfo("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
+    InvokeAgentHandler(resp);
     return delphi::error::OK();
 }
 

@@ -13,8 +13,8 @@ using namespace upgrade;
 // ExUpgSvc constructor
 ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
     // save a pointer to sdk
-    this->sdk_ = sk;
-    this->svcName_ = name;
+    sdk_ = sk;
+    svcName_ = name;
 
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<ExSvcHandler>(), name, NON_AGENT);
 
@@ -24,6 +24,6 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
 // createTimerHandler creates a dummy code upgrade request
 void ExUpgSvc::createTimerHandler(ev::timer &watcher, int revents) {
     LogInfo("Processing finished by application. Going to ask UpgSdk to respond with success.");
-    this->upgsdk_->SendAppRespSuccess();
+    upgsdk_->SendAppRespSuccess();
 }
 } // namespace example 
