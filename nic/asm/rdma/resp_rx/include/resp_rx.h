@@ -13,7 +13,7 @@
     CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_FIELD(to_s3_wb1_info, cqcb_base_addr_hi));
 
 #define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s5_cqpt_info_cqcb_base_addr_hi}, k.{to_s5_cqpt_info_log_num_cq_entries});
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s5_cqcb_info_cqcb_base_addr_hi}, k.{to_s5_cqcb_info_log_num_cq_entries});
 
 // currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
 // dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will

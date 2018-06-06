@@ -2,7 +2,7 @@
 #include "cqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s5_t2_k k;
+struct req_rx_s6_t2_k k;
 
 #define CQCB_PA_ADDR    r2
 #define CQCB_PA_INDEX   r2
@@ -13,20 +13,15 @@ struct req_rx_s5_t2_k k;
 //#define PHV_CQWQE_END   cqwqe.r_key
 
 #define IN_P t2_s2s_cqcb_to_pt_info
-#define IN_TO_S_P to_s5_to_stage
 
 #define EQ_INFO_P t2_s2s_cqcb_to_eq_info
-#define TMP r3
 
 #define K_PAGE_SEG_OFFSET CAPRI_KEY_FIELD(IN_P, page_seg_offset)
-#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit0, pt_next_pg_index_sbit9_ebit15)
-#define K_CQCB_ADDR       CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit2, cqcb_addr_sbit27_ebit33)
+#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit2, pt_next_pg_index_sbit11_ebit15)
+#define K_CQCB_ADDR       CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit4, cqcb_addr_sbit29_ebit33)
 #define K_PAGE_OFFSET     CAPRI_KEY_FIELD(IN_P, page_offset)
-#define K_EQ_ID           CAPRI_KEY_FIELD(IN_P, eq_id)
 #define K_CQ_ID           CAPRI_KEY_FIELD(IN_P, cq_id)
-
-#define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
-#define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
+#define K_EQCB_ADDR       CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit2, eqcb_addr_sbit27_ebit33)
 
 %%
     .param  req_rx_eqcb_process
@@ -54,7 +49,7 @@ req_rx_cqpt_process:
     memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 
     bcf             [c2], fire_eqcb
-    DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
+    DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ) //BD Slot
     
     // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
     add             r1, r1, K_PAGE_OFFSET
@@ -63,24 +58,8 @@ req_rx_cqpt_process:
 
 fire_eqcb:    
 
-    //if (wakeup_dpath) skip fire_eqcb
-    bbeq CAPRI_KEY_FIELD(IN_P, wakeup_dpath), 1, cqpt_exit
-
-    #c3 - arm
-    #c2 - sarm
-    crestore        [c3, c2], CAPRI_KEY_RANGE(IN_P, arm, sarm), 0x3 //BD Slot
-
-    setcf c4, [c2 & !c3]
-
-    //if (sarm == 1) && (arm = 0) && (bth_se == 0), skip fire_eqcb
-    bbeq.c4 CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0, cqpt_exit
-
-    nop //BD Slot
-
-    //if (arm == 0), skip fire_eqcb
-    bcf     [!c3], cqpt_exit
-
-    REQ_RX_EQCB_ADDR_GET(r5, TMP, K_EQ_ID, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
+    bbne CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit
+    add   r5, r0, K_EQCB_ADDR //BD Slot
 
     CAPRI_RESET_TABLE_2_ARG()
 

@@ -2,7 +2,7 @@
 #include "cqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s4_t2_k k;
+struct req_rx_s5_t2_k k;
 struct cqcb_t d;
 
 #define NUM_LOG_WQE         r2
@@ -15,11 +15,14 @@ struct cqcb_t d;
 #define NUM_LOG_PAGES       r6
     
 #define IN_P t2_s2s_rrqwqe_to_cq_info
-#define IN_TO_S_P to_s4_to_stage
+#define IN_TO_S_P to_s5_to_stage
 
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
 
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
+#define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
+#define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
+
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
     
 %%
@@ -28,10 +31,13 @@ struct cqcb_t d;
 .align
 req_rx_cqcb_process:
 
-    // Pin cqcb process to stage 4 as it runs in stage 4 in resp_rx path
+    // Pin cqcb process to stage 5 as it runs in stage 5 in resp_rx path
     mfspr            r1, spr_mpuid
-    seq              c1, r1[4:2], STAGE_4
+    seq              c1, r1[4:2], STAGE_5
     bcf              [!c1], bubble_to_next_stage
+
+    #Initialize c3(no_dma) to False
+    setcf            c3, [!c0] //BD Slot
 
     seq             c1, d.proxy_pindex, 0
     // flip the color if cq is wrap around
@@ -65,7 +71,7 @@ translate_next:
     mincr          PT_PINDEX, NUM_LOG_PAGES, 1
     sll            PT_PINDEX, PT_PINDEX, NUM_LOG_WQE
 
-    crestore        [c3], 0x4, 0x4
+    setcf          c3, [c0]
     
 fire_cqpt:
     
@@ -95,11 +101,12 @@ fire_cqpt:
     // now r3 has page_p to load
     
     phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_seg_offset), r4, \
-              CAPRI_PHV_RANGE(CQ_PT_INFO_P, cq_id, wakeup_dpath), d.{cq_id...wakeup_dpath}
+              CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), d.cq_id
     phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_offset), r1, \
               CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0
     phvwr.c3  CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_dma), 1
     
+
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
 
     bcf     [!c3], incr_pindex
@@ -110,8 +117,8 @@ fire_cqpt:
 no_translate_dma:
 
     CAPRI_RESET_TABLE_2_ARG()
-    //cq_id, eq_id, arm, wakeup_dpath
-    phvwrpair CAPRI_PHV_RANGE(CQ_PT_INFO_P, cq_id, wakeup_dpath), d.{cq_id...wakeup_dpath}, \
+    //cq_id
+    phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), d.cq_id, \
               CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), 0x3
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqpt_process, r0)
     
@@ -129,18 +136,44 @@ do_dma:
     DMA_PHV2MEM_SETUP(r2, c1, cqwqe, cqwqe, r1)    
     
 incr_pindex: 
-    
-    // increment p_index
-    tblmincri       d.proxy_pindex, d.log_num_wqes, 1
-    // if arm, disarm.
-    crestore        [c2, c1], d.{arm...sarm}, 0x3
+
+eqcb_eval:
+
+    //if (wakeup_dpath == 1), do not fire_eqcb
+    bbeq            d.wakeup_dpath, 1, skip_eqcb
+
+    #c6 is used to specify whether to fire eqcb or not(1: fire, 0: no)
+    setcf           c6, [!c0] //BD Slot
+
     #c2 - arm
     #c1 - sarm
+    crestore        [c2, c1], d.{arm...sarm}, 0x3
 
-    //TBD: Need to qualify this with bth_se = 1
-    tblwr.c1    d.sarm, 0
+    //if (arm = 1), fire_eqcb
+    bcf             [c2], eqcb_setup
+    setcf.c2        c6, [c0] //BD Slot
+
+    //if (sarm == 1) && (arm = 0) && (bth_se == 1), fire_eqcb
+    bbeq.c1         CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 1, eqcb_setup
+    setcf           c6, [c0] //BD Slot
+
+    setcf           c6, [!c0]
+
+eqcb_setup:
+
+    REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
+    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
+    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), r5
+
+skip_eqcb:
+   
+    // increment p_index
+    tblmincri       d.proxy_pindex, d.log_num_wqes, 1
+    crestore        [c1], CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0x1
+    tblwr.c1        d.proxy_s_pindex, d.proxy_pindex
+
     bbne        d.wakeup_dpath, 1, skip_wakeup
-    tblwr.c2    d.arm, 0 //Branch Delay Slot
+    tblwr.c6    d.{arm...sarm}, 0 //Branch Delay Slot
 
 
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_WAKEUP_DPATH)
@@ -151,7 +184,7 @@ incr_pindex:
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
 
 bubble_to_next_stage:
-    seq         c1, r1[4:2], STAGE_3    
+    seq         c1, r1[4:2], STAGE_4
     bcf         [!c1], exit
 
     //invoke the same routine, but with valid d[]
@@ -160,9 +193,6 @@ bubble_to_next_stage:
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 skip_wakeup:
-    nop.e
-    nop
-
 exit:
     nop.e
     nop

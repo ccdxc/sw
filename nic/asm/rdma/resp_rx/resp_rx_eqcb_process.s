@@ -5,7 +5,7 @@
 #include "capri-macros.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s6_t2_k k;
+struct resp_rx_s7_t2_k k;
 struct eqcb_t d;
 
 #define EQWQE_P r1

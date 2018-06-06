@@ -5,7 +5,7 @@
 #include "capri-macros.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s6_t2_k k;
+struct req_rx_s7_t2_k k;
 struct eqcb_t d;
 
 
@@ -33,7 +33,7 @@ struct eqcb_t d;
 .align
 req_rx_eqcb_process:
 
-    add             DMA_CMD_INDEX, r0, REQ_RX_DMA_CMD_EQ
+    #add             DMA_CMD_INDEX, r0, REQ_RX_DMA_CMD_EQ
 
     seq             c1, EQ_P_INDEX, 0
     // flip the color if cq is wrap around
@@ -58,10 +58,6 @@ req_rx_eqcb_process:
     //add             DMA_CMD_BASE, DMA_CMD_BASE, DMA_CMD_SIZE_BITS
     //DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_NUM_START, PHV_EQ_INT_NUM_END, EQ_INT_ADDR)
     
-    CAPRI_SET_TABLE_2_VALID(0)
-
     // increment p_index
-    tblmincri       EQ_P_INDEX, d.log_num_wqes, 1
-    nop.e
-    nop
-
+    tblmincri.e     EQ_P_INDEX, d.log_num_wqes, 1
+    CAPRI_SET_TABLE_2_VALID(0) //Exit Slot

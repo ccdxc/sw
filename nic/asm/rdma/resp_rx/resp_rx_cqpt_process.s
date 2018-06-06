@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s5_t2_k k;
+struct resp_rx_s6_t2_k k;
 
 #define PAGE_ADDR_P     r1
 #define CQWQE_P         r1
@@ -26,8 +26,9 @@ struct resp_rx_s5_t2_k k;
 #define EQ_INFO_P t2_s2s_cqcb_to_eq_info
 
 #define IN_P t2_s2s_cqcb_to_pt_info
-#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit7, pt_next_pg_index_sbit8_ebit15)
-#define IN_TO_S_P to_s5_cqpt_info
+#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit2, pt_next_pg_index_sbit11_ebit15)
+#define K_CQCB_ADDR CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit4, cqcb_addr_sbit29_ebit33)
+#define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit2, eqcb_addr_sbit27_ebit33)
 
 %%
     .param  resp_rx_eqcb_process
@@ -48,9 +49,9 @@ resp_rx_cqpt_process:
     
     // Lets cache the translated page physical address
     // *cq_cb->pt_next_pa = page_addr_p
-    add             CQCB_PA_ADDR, CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit23, cqcb_addr_sbit32_ebit33), offsetof(struct cqcb_t, pt_next_pa) 
+    add             CQCB_PA_ADDR, K_CQCB_ADDR, offsetof(struct cqcb_t, pt_next_pa) 
     memwr.d         CQCB_PA_ADDR, PAGE_ADDR_P
-    add             CQCB_PA_INDEX, CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit23, cqcb_addr_sbit32_ebit33), offsetof(struct cqcb_t, pt_next_pg_index)
+    add             CQCB_PA_INDEX, K_CQCB_ADDR, offsetof(struct cqcb_t, pt_next_pg_index)
     //memwr.h         CQCB_PA_INDEX, CAPRI_KEY_FIELD(IN_P, pa_next_index)
     memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 
@@ -63,24 +64,8 @@ resp_rx_cqpt_process:
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqwqe, cqwqe, CQWQE_P)
 
 fire_eqcb:
-    //if (wakeup_dpath), skip fire_eqcb
-    bbeq CAPRI_KEY_FIELD(IN_P, wakeup_dpath), 1, cqpt_exit
-
-    #c3 - arm
-    #c2 - sarm
-    crestore        [c3, c2], CAPRI_KEY_RANGE(IN_P, arm, sarm), 0x3 //BD Slot
-
-    setcf c4, [c2 & !c3] 
-
-    //if (sarm == 1) && (arm = 0) && (bth_se == 0), skip fire_eqcb
-    bbeq.c4 CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0, cqpt_exit
-
-    nop //BD Slot
-
-    //if (arm == 0), skip fire_eqcb
-    bcf     [!c3], cqpt_exit
-
-    RESP_RX_EQCB_ADDR_GET(EQCB_ADDR, TMP, CAPRI_KEY_FIELD(IN_P, eq_id)) // BD Slot
+    bbne CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit
+    add  EQCB_ADDR, r0, K_EQCB_ADDR // BD Slot
 
     CAPRI_RESET_TABLE_2_ARG()
     CAPRI_SET_FIELD2(EQ_INFO_P, cq_id, CAPRI_KEY_FIELD(IN_P,cq_id))

@@ -24,6 +24,7 @@ struct rqcb1_t d;
 #define KEY_ADDR r6
 #define NEW_RSQ_P_INDEX r6
 
+#define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit48_ebit63)
 %%
     .param  resp_rx_cqcb_process
     .param  resp_rx_inv_rkey_process
@@ -59,7 +60,7 @@ resp_rx_rqcb1_write_back_process:
     crestore    [c3, c2], CAPRI_KEY_RANGE(IN_P, update_wqe_ptr, update_num_sges), 0x3
     #c3 - update_wqe_ptr
     #c2 - update_num_sges
-    tblwr.c3    d.curr_wqe_ptr, CAPRI_KEY_RANGE(IN_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit40_ebit63)
+    tblwr.c3    d.curr_wqe_ptr, K_CURR_WQE_PTR
     tblwr.c2    d.num_sges, CAPRI_KEY_FIELD(IN_P, num_sges)
 
     

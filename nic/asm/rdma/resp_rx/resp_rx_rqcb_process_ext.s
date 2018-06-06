@@ -9,7 +9,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 #define TO_S_STATS_INFO_P to_s7_stats_info
 
-#define TO_S_CQPT_INFO_P to_s5_cqpt_info
+#define TO_S_CQCB_INFO_P to_s5_cqcb_info
 
 #define PHV_GLOBAL_COMMON_P phv_global_common
 
@@ -29,7 +29,7 @@ resp_rx_rqcb_process_ext:
                 CAPRI_PHV_FIELD(PHV_GLOBAL_COMMON_P, cb_addr), \
                 CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT)
 
-    phvwr       CAPRI_PHV_FIELD(TO_S_CQPT_INFO_P, bth_se), CAPRI_APP_DATA_BTH_SE 
+    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_INFO_P, bth_se), CAPRI_APP_DATA_BTH_SE 
 
     //Temporary code to test UDP options
     //For now, checking on ts flag for both options ts and mss to avoid performance cost
