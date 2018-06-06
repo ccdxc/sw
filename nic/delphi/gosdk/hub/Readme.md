@@ -1,0 +1,1 @@
+An embeddable hub instance to be used for testing the sdk
