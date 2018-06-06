@@ -683,13 +683,13 @@ enum rxq_comp_rss_type {
  * @rss_type:     RSS type for @rss_hash:
  *                   0 = RSS hash not calcuated
  *                   1 = L3 IPv4
- *                   2 = L3 IPv6
- *                   3 = L3 IPv6 w/ extensions
- *                   4 = L4 IPv4/TCP
+ *                   2 = L4 IPv4/TCP
+ *                   3 = L4 IPv4/UDP
+ *                   4 = L3 IPv6
  *                   5 = L4 IPv6/TCP
- *                   6 = L4 IPv6/TCP w/ extensions
- *                   7 = L4 IPv4/UDP
- *                   8 = L4 IPv6/UDP
+ *                   6 = L4 IPv6/UDP
+ *                   7 = L3 IPv6 w/ extensions
+ *                   8 = L4 IPv6/TCP w/ extensions
  *                   9 = L4 IPv6/UDP w/ extensions
  * @csum_tcp_ok:  The TCP checksum calculated by the device
  *                matched the checksum in the receive packet's
