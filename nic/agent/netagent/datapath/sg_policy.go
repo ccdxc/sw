@@ -70,12 +70,51 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []u
 }
 
 // UpdateSGPolicy updates a security group policy in the datapath
-func (hd *Datapath) UpdateSGPolicy(np *netproto.SGPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateSGPolicy(np *netproto.SGPolicy, vrfID uint64) error {
 	return nil
 }
 
 // DeleteSGPolicy deletes a security group policy in the datapath
-func (hd *Datapath) DeleteSGPolicy(np *netproto.SGPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: vrfID,
+		},
+	}
+
+	sgPolicyDelReq := &halproto.SecurityPolicyDeleteRequestMsg{
+		Request: []*halproto.SecurityPolicyDeleteRequest{
+			{
+				PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle{
+					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
+						SecurityPolicyKey: &halproto.SecurityPolicyKey{
+							SecurityPolicyId: sgp.Status.SGPolicyID,
+							VrfIdOrHandle:    vrfKey,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Sgclient.SecurityPolicyDelete(context.Background(), sgPolicyDelReq)
+		if err != nil {
+			log.Errorf("Error deleting security policy. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Sgclient.SecurityPolicyDelete(context.Background(), sgPolicyDelReq)
+		if err != nil {
+			log.Errorf("Error deleting security policy. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 

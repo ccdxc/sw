@@ -134,7 +134,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateSGPolicy(sgp, ns)
+	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID)
 	key := objectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
 	na.SGPolicyDB[key] = sgp
@@ -162,9 +162,10 @@ func (na *Nagent) DeleteSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteSGPolicy(existingSGPolicy, ns)
+	err = na.Datapath.DeleteSGPolicy(existingSGPolicy, ns.Status.NamespaceID)
 	if err != nil {
 		log.Errorf("Error deleting security group policy {%+v}. Err: %v", sgp, err)
+		return err
 	}
 
 	// delete from db
