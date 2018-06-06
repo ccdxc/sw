@@ -8,6 +8,19 @@
 
 using hal::pd::utils::Flow;
 
+thread_local boost::crc_basic<32> *g_crc32_hash_poly0 =
+                                      new boost::crc_basic<32>(0x04C11DB7, 0, 0,
+                                                               false, false);
+thread_local boost::crc_basic<32> *g_crc32_hash_poly1 =
+                                      new boost::crc_basic<32>(0x1EDC6F41, 0, 0,
+                                                               false, false);
+thread_local boost::crc_basic<32> *g_crc32_hash_poly2 =
+                                      new boost::crc_basic<32>(0x741B8CD7, 0, 0,
+                                                               false, false);
+thread_local boost::crc_basic<32> *g_crc32_hash_poly3 =
+                                      new boost::crc_basic<32>(0x814141AB, 0, 0,
+                                                               false, false);
+
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
@@ -239,8 +252,8 @@ Flow::insert(void *key, void *data, uint32_t *index)
     rs = alloc_flow_entry_index_(&fe_idx);
     if (rs != HAL_RET_OK) goto end;
 
-    HAL_TRACE_DEBUG("Flow::{}: Insert flow_entry_pi_idx: {} for tbl_id:{}",
-                    __FUNCTION__, fe_idx, table_id_);
+    HAL_TRACE_DEBUG("Insert flow_entry_pi_idx: {} for tbl_id:{}",
+                    fe_idx, table_id_);
 
     // create a flow entry
     // entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, true);
@@ -265,23 +278,22 @@ Flow::insert(void *key, void *data, uint32_t *index)
     // check if flow table entry exists
     ft_bits = fetch_flow_table_bits_(hash_val);
     itr = flow_table_.find(ft_bits);
-    HAL_TRACE_DEBUG("Flow::{}: hash_val: {:#x}, flow_table_index: {:#x}",
-                    __FUNCTION__, hash_val, ft_bits);
+    HAL_TRACE_DEBUG("hash_val: {:#x}, flow_table_index: {:#x}",
+                    hash_val, ft_bits);
     if (itr != flow_table_.end()) {
         // flow table entry already exists
-        HAL_TRACE_DEBUG("Flow::{}: FT Entry exist ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("FT Entry exist ...");
         ft_entry = itr->second;
         rs = ft_entry->insert(entry);
         // TODO: No need to send flow coll return status
         if (rs == HAL_RET_OK) {
-            HAL_TRACE_DEBUG("Flow::{} Setting collision return code",
-                    __FUNCTION__);
+            HAL_TRACE_DEBUG("Setting collision return code");
             rs = HAL_RET_FLOW_COLL;
         }
 
     } else {
         // flow table entry doesnt exist
-        HAL_TRACE_DEBUG("Flow::{}: New FT Entry ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("New FT Entry ...");
         // ft_entry = new FlowTableEntry(ft_bits, this);
         ft_entry = FlowTableEntry::factory(ft_bits, this);
         rs = ft_entry->insert(entry);
@@ -302,7 +314,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
         *index = fe_idx;
     } else {
         // insert failed
-        HAL_TRACE_DEBUG("Flow::{}: Insert FAIL ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("Insert FAIL ...");
 
         // delete flow entry
         // delete entry;
@@ -317,7 +329,7 @@ end:
 
     // Uncomment for debugging
     // print_flow();
-    //HAL_TRACE_DEBUG("Flow::{} ret:{}", __FUNCTION__, rs);
+    //HAL_TRACE_DEBUG("ret:{}", rs);
     stats_update(INSERT, rs);
     return rs;
 }
@@ -332,7 +344,7 @@ Flow::update(uint32_t index, void *data)
     FlowEntry               *f_entry      = NULL;
     FlowEntryMap::iterator  itr;
 
-    HAL_TRACE_DEBUG("Flow::{}: Update {} ...", __FUNCTION__, index);
+    HAL_TRACE_DEBUG("Update {} ...", index);
     // check if entry exists.
     itr = flow_entry_map_.find(index);
     if (itr != flow_entry_map_.end()) {
@@ -343,7 +355,7 @@ Flow::update(uint32_t index, void *data)
         HAL_ASSERT(rs == HAL_RET_OK);
     } else {
         // entry doesn't exist
-        HAL_TRACE_DEBUG("Flow::{}: Error: Not Present {} ...", __FUNCTION__, index);
+        HAL_TRACE_DEBUG("Error: Not Present {} ...", index);
         rs = HAL_RET_ENTRY_NOT_FOUND;
     }
 
@@ -415,58 +427,53 @@ Flow::remove(uint32_t index)
 uint32_t
 Flow::generate_hash_(void *key, uint32_t key_len, bool log)
 {
-    // TODO - Replace this with whatever hardware implements
-    // return crc32((uint32_t)HAL_INTERNAL_MCAST_CRC32_HASH_SEED, (const void *)key,
-    //         (uint32_t)key_len) % flow_hash_capacity_;
     uint32_t hash_val = 0;
-    uint32_t crc_init_val = 0x00000000;
-    boost::crc_basic<32> *crc_hash;
-    fmt::MemoryWriter buf;
-
-    uint8_t *tmp = (uint8_t *)key;
-    for (uint32_t i = 0; i < key_len; i++, tmp++) {
-        buf.write("{:#x} ", (uint8_t)*tmp);
-    }
 
     if (log) {
+        uint8_t *tmp = (uint8_t *)key;
+        fmt::MemoryWriter buf;
+
+        for (uint32_t i = 0; i < key_len; i++, tmp++) {
+            buf.write("{:#x} ", (uint8_t)*tmp);
+        }
         HAL_TRACE_DEBUG("Key:");
         HAL_TRACE_DEBUG("{}", buf.c_str());
     }
 
     switch(hash_poly_) {
-        case HASH_POLY0:
-            crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        case HASH_POLY1:
-            crc_hash = new boost::crc_basic<32>(0x1EDC6F41, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        case HASH_POLY2:
-            crc_hash = new boost::crc_basic<32>(0x741B8CD7, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        case HASH_POLY3:
-            crc_hash = new boost::crc_basic<32>(0x814141AB, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        default:
-            HAL_ASSERT_GOTO(0, end);
+    case HASH_POLY0:
+        g_crc32_hash_poly0->reset();
+        g_crc32_hash_poly0->process_bytes(key, key_len);
+        hash_val = g_crc32_hash_poly0->checksum();
+        break;
+
+    case HASH_POLY1:
+        g_crc32_hash_poly1->reset();
+        g_crc32_hash_poly1->process_bytes(key, key_len);
+        hash_val = g_crc32_hash_poly1->checksum();
+        break;
+
+    case HASH_POLY2:
+        g_crc32_hash_poly2->reset();
+        g_crc32_hash_poly2->process_bytes(key, key_len);
+        hash_val = g_crc32_hash_poly2->checksum();
+        break;
+
+    case HASH_POLY3:
+        g_crc32_hash_poly3->reset();
+        g_crc32_hash_poly3->process_bytes(key, key_len);
+        hash_val = g_crc32_hash_poly3->checksum();
+        break;
+
+    default:
+        HAL_ASSERT_GOTO(0, end);
     }
 
 end:
-    delete crc_hash;
+
 #if 0
-    HAL_TRACE_DEBUG("Flow::{}: flow_hash: {}, ft_capacity: {}",
-                    __FUNCTION__, hash_val, flow_hash_capacity_);
+    HAL_TRACE_DEBUG("flow_hash: {}, ft_capacity: {}",
+                    hash_val, flow_hash_capacity_);
 #endif
     return hash_val;
 }
@@ -573,13 +580,12 @@ Flow::alloc_flow_entry_index_(uint32_t *idx)
     // Allocate an index in repl. table
     indexer::status irs = flow_entry_indexer_->alloc((uint32_t *)idx);
     if (irs != indexer::SUCCESS) {
-        HAL_TRACE_DEBUG("Flow::{}: Flow Entry Capacity reached: {}",
-                        __FUNCTION__, flow_entry_indexer_->get_size());
+        HAL_TRACE_DEBUG("Flow Entry Capacity reached: {}",
+                        flow_entry_indexer_->get_size());
         return HAL_RET_NO_RESOURCE;
     }
 
-    HAL_TRACE_DEBUG("Flow::{}: Alloc Flow_entry_index: {}",
-                    __FUNCTION__, *idx);
+    HAL_TRACE_DEBUG("Alloc Flow_entry_index: {}", *idx);
     return rs;
 }
 
@@ -598,8 +604,7 @@ Flow::free_flow_entry_index_(uint32_t idx)
     if (irs != indexer::SUCCESS) {
         return HAL_RET_ERR;
     }
-    HAL_TRACE_DEBUG("Flow::{}: Free Flow_entry_index: {}",
-                    __FUNCTION__, idx);
+    HAL_TRACE_DEBUG("Free Flow_entry_index: {}", idx);
 
      return rs;
 }
@@ -617,8 +622,7 @@ Flow::alloc_fhct_index(uint32_t *idx)
     if (irs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("Flow::{}: alloc_coll_indexer: {}",
-                    __FUNCTION__, *idx);
+    HAL_TRACE_DEBUG("alloc_coll_indexer: {}", *idx);
 
     return rs;
 }
@@ -639,8 +643,7 @@ Flow::free_fhct_index(uint32_t idx)
         return HAL_RET_ERR;
     }
 
-    HAL_TRACE_DEBUG("Flow::{}: free_coll_indexer: {}",
-                    __FUNCTION__, idx);
+    HAL_TRACE_DEBUG("free_coll_indexer: {}", idx);
      return rs;
 }
 

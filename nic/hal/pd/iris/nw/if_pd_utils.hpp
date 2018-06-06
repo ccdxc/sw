@@ -32,7 +32,7 @@ vrf_t *l2seg_get_pi_vrf(l2seg_t *pi_l2seg);
 
 // Vrf APIs
 uint32_t ten_get_nwsec_prof_hw_id(vrf_t *pi_ten);
-hal_ret_t pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask, 
+hal_ret_t pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask,
                                  uint8_t *ten_shift);
 
 // Nwsec APIs

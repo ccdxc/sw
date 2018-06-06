@@ -118,7 +118,7 @@ FlowHintGroup::get_next_flow_entry(FlowEntry *fe)
             itr != flow_entry_list_.end(); itr++) {
         if (*itr == fe) {
             if (std::next(itr) == flow_entry_list_.end()) {
-                HAL_TRACE_DEBUG("FE:{}: Last element", __FUNCTION__);
+                HAL_TRACE_DEBUG("Last element");
                 return NULL;
             } else {
                 return (*std::next(itr));

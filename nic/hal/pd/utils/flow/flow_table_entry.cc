@@ -70,19 +70,18 @@ FlowTableEntry::insert(FlowEntry *f_entry)
     bool                is_new_fse = FALSE;
     std::map<uint32_t, FlowHintGroup*>::iterator itr;
 
-    HAL_TRACE_DEBUG("FlowTE::{}: Hash_Table_Entry:{:#x} ...", __FUNCTION__,
-                    get_ft_bits());
+    HAL_TRACE_DEBUG("Hash_Table_Entry:{:#x} ...", get_ft_bits());
 
     hint_bits = get_flow()->fetch_hint_bits_(f_entry->get_hash_val());
     itr = hint_groups_map_.find(hint_bits);
     // Check if Hint Group exists for the flow entry
     if (itr != hint_groups_map_.end()) {
         // Hint Group exists
-        HAL_TRACE_DEBUG("FlowTE::{}: HG Entry exist ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("HG Entry exist ...");
         fh_grp = itr->second;
 
         if(fh_grp->check_flow_entry_exists(f_entry)) {
-            HAL_TRACE_DEBUG("FlowTE::{}: Duplicate Insert", __FUNCTION__);
+            HAL_TRACE_DEBUG("Duplicate Insert");
             return HAL_RET_DUP_INS_FAIL;
         }
 
@@ -97,7 +96,7 @@ FlowTableEntry::insert(FlowEntry *f_entry)
         }
     } else {
         // Hint Group doesnt exist
-        HAL_TRACE_DEBUG("FlowTE::{}: New HG Entry ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("New HG Entry ...");
         // Check if we can put this new HG in the existing Spine Entry
         fse = get_spine_entry_for_new_hg(&is_new_fse);
         //   - Create Hint Group
@@ -145,23 +144,22 @@ FlowTableEntry::remove(FlowEntry *f_entry)
 
     rs = f_entry->remove();
 
-    HAL_TRACE_DEBUG("{}: After Removal: fhg_num_fes: {}, fhg_num_anchors:{}",
-            __FUNCTION__, fhg->get_num_flow_entries(),
-            fhg->get_num_anchor_flow_entries());
+    HAL_TRACE_DEBUG("After Removal: fhg_num_fes: {}, fhg_num_anchors:{}",
+                    fhg->get_num_flow_entries(),
+                    fhg->get_num_anchor_flow_entries());
     // Check if this is last in Hint group.
     if (!fhg->get_num_flow_entries() && !fhg->get_num_anchor_flow_entries()) {
-        HAL_TRACE_DEBUG("{}: hint_bits:{:#x} Removing fhg", __FUNCTION__,
-                fhg->get_hint_bits());
+        HAL_TRACE_DEBUG("hint_bits:{:#x} Removing fhg", fhg->get_hint_bits());
         remove_fhg(fhg);
     }
-    HAL_TRACE_DEBUG("{}: After Removal: fspe_has_anchor: {:#x}, fspe_num_hgs:{}",
-            __FUNCTION__, fspe->get_anchor_entry() ? true : false,
-            fspe->get_num_hgs());
+    HAL_TRACE_DEBUG("After Removal: fspe_has_anchor: {:#x}, fspe_num_hgs:{}",
+                    fspe->get_anchor_entry() ? true : false,
+                    fspe->get_num_hgs());
     // Check if this is last in Spine entry.
     if (!fspe->get_anchor_entry() && !fspe->get_num_hgs()) {
         // Reset & Programming of Prev would have been done in FlowEntry.
         // Just free up
-        HAL_TRACE_DEBUG("{}: Removing spine entry", __FUNCTION__);
+        HAL_TRACE_DEBUG("Removing spine entry");
         // delete fspe;
         FlowSpineEntry::destroy(fspe);
         num_spine_entries_--;
@@ -202,7 +200,7 @@ FlowTableEntry::get_spine_entry_for_new_hg(bool *is_new)
     if (!sp_entry ||
             (sp_entry->get_num_hgs() ==
             flow_->get_num_hints_per_flow_entry())) {
-        HAL_TRACE_DEBUG("FlowTE::{}: New Spine Entry ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("New Spine Entry ...");
         *is_new = TRUE;
         // new_sp_entry = new FlowSpineEntry(this);
         new_sp_entry = FlowSpineEntry::factory(this);
@@ -221,7 +219,7 @@ FlowTableEntry::get_spine_entry_for_new_hg(bool *is_new)
         num_spine_entries_++;
         return new_sp_entry;
     } else {
-        HAL_TRACE_DEBUG("FlowTE::{}: Spine Entry exist...", __FUNCTION__);
+        HAL_TRACE_DEBUG("Spine Entry exist...");
         return sp_entry;
     }
 }

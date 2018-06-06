@@ -395,7 +395,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
        if (ret != HAL_RET_OK) {
            HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
-                      flow_pd->flow_stats_hw_id, ret);
+                         flow_pd->flow_stats_hw_id, ret);
            return ret;
        }
     } else {
@@ -412,7 +412,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
            if (ret != HAL_RET_OK) {
                HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
-                            flow_pd->flow_stats_hw_id, ret);
+                             flow_pd->flow_stats_hw_id, ret);
            }
        }
 
@@ -523,7 +523,6 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
     hal_ret_t                ret;
     flow_hash_swkey_t        key = { 0 };
     p4pd_flow_hash_data_t    flow_data = { 0 };
-    fmt::MemoryWriter src_buf, dst_buf;
 
     // initialize all the key fields of flow
     if (flow_key->flow_type == FLOW_TYPE_V4 || flow_key->flow_type == FLOW_TYPE_V6) {
@@ -581,16 +580,19 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
     flow_data.export_en = TRUE;     // TODO: when analytics APIs are ready,
                                     // set this appropriately
-    for (uint32_t i = 0; i < 16; i++) {
-        src_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_src[i]);
+    if (hal::utils::hal_trace_level() >= hal::utils::trace_debug) {
+        fmt::MemoryWriter src_buf, dst_buf;
+        for (uint32_t i = 0; i < 16; i++) {
+            src_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_src[i]);
+        }
+        HAL_TRACE_DEBUG("Src:");
+        HAL_TRACE_DEBUG("{}", src_buf.c_str());
+        for (uint32_t i = 0; i < 16; i++) {
+            dst_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_dst[i]);
+        }
+        HAL_TRACE_DEBUG("Dst:");
+        HAL_TRACE_DEBUG("{}", dst_buf.c_str());
     }
-    HAL_TRACE_DEBUG("Src:");
-    HAL_TRACE_DEBUG("{}", src_buf.c_str());
-    for (uint32_t i = 0; i < 16; i++) {
-        dst_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_dst[i]);
-    }
-    HAL_TRACE_DEBUG("Dst:");
-    HAL_TRACE_DEBUG("{}", dst_buf.c_str());
     ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
                                                &flow_pd->flow_hash_hw_id);
     // TODO: Cleanup. Dont return flow coll from lib.

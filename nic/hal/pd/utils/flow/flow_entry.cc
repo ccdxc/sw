@@ -95,11 +95,11 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
 {
     hal_ret_t rs = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("FlowE::{}: Insert ...", __FUNCTION__);
+    HAL_TRACE_DEBUG("Insert ...");
 
     if (fse->get_is_in_ft() && !fse->get_anchor_entry()) {
         // Case 1: First Entry in Flow Table Entry. Anchor Entry
-        HAL_TRACE_DEBUG("FlowE::{}: Insert:Anchor ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("Insert:Anchor ...");
         // Install FSE in FT.
 
         // Set fields in FlowEntry
@@ -121,12 +121,12 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         //       - HG doesnt have anchor and this is first entry.
         // Install FEntry in FHCT
         // Install FSE in FT pointing to the above entry in FHCT
-        HAL_TRACE_DEBUG("FlowE::{}: Insert:HG SE Attach Entry...", __FUNCTION__);
+        HAL_TRACE_DEBUG("Insert:HG SE Attach Entry...");
 
         // Allocate an entry in Flow Hash Coll. Table.
         rs = alloc_fhct_index(fse, &fhct_index_);
         if (rs != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("FlowE::{}: Failed to alloc fhct idx", __FUNCTION__);
+            HAL_TRACE_DEBUG("Failed to alloc fhct idx");
             return rs;
         }
 
@@ -145,21 +145,20 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         // Write the flow entry in FHCT
         // P4-PI: fhct_index_ => [hw_key_, data_,]
         rs = program_table_non_anchor_entry(NULL);
-        HAL_TRACE_DEBUG("FlowE::{}: {} Done Programming non-anchor entry",
-                __FUNCTION__, rs);
+        HAL_TRACE_DEBUG("{} Done Programming non-anchor entry", rs);
         if (rs != HAL_RET_OK) {
             free_fhct_index(fse, fhct_index_);
             goto end;
         }
 
-        HAL_TRACE_DEBUG("FlowE::{}: Program Spine Entry ", __FUNCTION__);
+        HAL_TRACE_DEBUG("Program Spine Entry ");
         // Program FT / FHCT Spine Entry
         fse->program_table();
 
         // Have to check if this is the first entry in spine then reprogram prev as well
         // Prevent for first spine entry
         if (fse->get_num_hgs() == 1 && fse->get_prev()) {
-            HAL_TRACE_DEBUG("FlowE:: FSE being programmed for first time...");
+            HAL_TRACE_DEBUG("FSE being programmed for first time...");
             // Link prev to this
             fse->get_prev()->set_next(fse);
             // Reprogram prev FSE
@@ -171,7 +170,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         //      - FEntry will be installed at the end of HG.
         // Install FEntry in FHCT.
         // Re-Install last entry in the FHG to point to the above entry.
-        HAL_TRACE_DEBUG("FlowE::{}: Insert:HG Chain Entry ...", __FUNCTION__);
+        HAL_TRACE_DEBUG("Insert:HG Chain Entry ...");
 
         // Allocate an entry in Flow Hash Coll. Table.
         rs = alloc_fhct_index(fse, &fhct_index_);
@@ -218,22 +217,21 @@ hal_ret_t
 FlowEntry::update(void *data)
 {
     hal_ret_t rs = HAL_RET_OK;
-    HAL_TRACE_DEBUG("FlowE::{}: Update...", __FUNCTION__);
+    HAL_TRACE_DEBUG("Update...");
 
     // Updates Data in the entry
     std::memcpy(data_, data, data_len_);
 
     if (is_anchor_entry_) { // Case 1: FT Entry Re-Install
 
-        HAL_TRACE_DEBUG("FlowE::{}: Update anchor", __FUNCTION__);
+        HAL_TRACE_DEBUG("Update anchor");
 
         // Program FT/FHCT Spine entry.
         spine_entry_->program_table();
 
     } else { // Case 2: FHCT Single Flow Entry Rewrite
 
-        HAL_TRACE_DEBUG("FlowE::{}: Update FHCT: {}",
-                __FUNCTION__, fhct_index_);
+        HAL_TRACE_DEBUG("Update FHCT: {}", fhct_index_);
         // P4-PI: FHCT Table Write
         FlowEntry *next_fe = fh_group_->get_next_flow_entry(this);
         program_table_non_anchor_entry(next_fe);
@@ -259,7 +257,7 @@ FlowEntry::remove()
     // Step 1: Replace the entry & reprogram
     if (is_anchor_entry_) {
         // Case 1: Anchor entry.
-        HAL_TRACE_DEBUG("FlowE:{} Removing anchor entry", __FUNCTION__);
+        HAL_TRACE_DEBUG("Removing anchor entry");
 
         // Get the entry which will be moved
         last_flow_entry = eff_spine_entry->get_ft_entry()->get_last_flow_entry();
@@ -267,7 +265,7 @@ FlowEntry::remove()
         if (this == last_flow_entry) {
             // No need to move.
             // This is the last entry in the spine entry.
-            HAL_TRACE_DEBUG("FlowE:{} Removing the only existing entry", __FUNCTION__);
+            HAL_TRACE_DEBUG("Removing the only existing entry");
 
             // Program previous spine entry as this spine entry is going away
             // May not happen as anchor is only in FT's spine entry
@@ -328,8 +326,8 @@ FlowEntry::remove()
 
                 if (last_fhg->get_num_flow_entries()) {
                     // ----------
-                    HAL_TRACE_DEBUG("FlowE:{} Move: Hint Group Chain prev entry "
-                            "reprogram & deprogram ", __FUNCTION__);
+                    HAL_TRACE_DEBUG("Move: Hint Group Chain prev entry "
+                                    "reprogram & deprogram ");
                     // Re-program prev entry in the chain.
                     last_fhg->get_last_flow_entry()->
                         program_table_non_anchor_entry(NULL);
@@ -347,8 +345,7 @@ FlowEntry::remove()
                     // Remove FHG from FSE and FTE
                     // fte->remove_fhg(last_fhg);
                     if (last_fse->get_num_hgs() || last_fse->get_anchor_entry()) {
-                        HAL_TRACE_DEBUG("FlowE:{} Move: HG Remove: "
-                                "Reprogram last spine", __FUNCTION__);
+                        HAL_TRACE_DEBUG("Move: HG Remove: Reprogram last spine");
                         // Re-program last_fse
                         last_fse->program_table();
                         // Un-program last_flow_entry
@@ -356,8 +353,8 @@ FlowEntry::remove()
                         // Free up FHCT index of last flow
                         free_fhct_index(last_fse, last_flow_entry->get_fhct_index());
                     } else {
-                        HAL_TRACE_DEBUG("FlowE:{} Move: HG Remove, Spine Remove: "
-                                "Reprogram last spine, Deprogram prev spine", __FUNCTION__);
+                        HAL_TRACE_DEBUG("Move: HG Remove, Spine Remove: "
+                                        "Reprogram last spine, Deprogram prev spine");
                         // Reprogram prev. last fse entry as last fse is going away.
                         FlowSpineEntry *last_fse_prev = last_fse->get_prev();
                         last_fse_prev->set_next(NULL);
@@ -409,17 +406,15 @@ FlowEntry::remove()
         }
     } else if (fh_group_->get_first_flow_entry() == this) {
         // Case 2: Flow entry is attached to spine entry.
-        HAL_TRACE_DEBUG("FlowE:{} Removing flow attached to spine entry",
-                __FUNCTION__);
+        HAL_TRACE_DEBUG("Removing flow attached to spine entry");
 
         if (fh_group_->get_num_flow_entries() > 1) {
             // ----------
             // No need to move
             // At fhct_index_ program all 0s
             //    TODO-P4-PI: fhct_index_ => [hw_key_, data_,]
-            HAL_TRACE_DEBUG("FlowE:{} HS has extra entries..."
-                    "just reprogram spine entry",
-                    __FUNCTION__);
+            HAL_TRACE_DEBUG("HS has extra entries..."
+                            "just reprogram spine entry");
 
             // Remove flow entry from FHG flow_entry_list_
             fh_group_->del_flow_entry(this);
@@ -429,9 +424,7 @@ FlowEntry::remove()
 
         } else {
             // FHG rooted on spine entry is getting detached.
-            HAL_TRACE_DEBUG("FlowE:{} FHG rooted on spine entry "
-                    "is getting detached",
-                    __FUNCTION__);
+            HAL_TRACE_DEBUG("FHG rooted on spine entry is getting detached");
 
             // Remove flow entry from FHG flow_entry_list_
             fh_group_->del_flow_entry(this);
@@ -441,9 +434,8 @@ FlowEntry::remove()
             // Get Last FHG
             last_fhg = fse_last->get_last_fhg();
             if (last_fhg == fh_group_) {
-                HAL_TRACE_DEBUG("FlowE:{} Current is last FHG: Last FHG is removed."
-                        "Reprogram last spine entry",
-                        __FUNCTION__);
+                HAL_TRACE_DEBUG("Current is last FHG: Last FHG is removed."
+                                "Reprogram last spine entry");
                 // No need to move
                 // Remove fhg from fse
                 eff_spine_entry->del_fhg(fh_group_);
@@ -451,9 +443,8 @@ FlowEntry::remove()
                 eff_spine_entry->program_table();
                 if (!eff_spine_entry->get_anchor_entry() &&
                         !eff_spine_entry->get_num_hgs()) {
-                HAL_TRACE_DEBUG("FlowE:{} Current is last FHG: Last Spine entry is removed."
-                        "Reprogram last prev. spine entry",
-                        __FUNCTION__);
+                HAL_TRACE_DEBUG("Current is last FHG: Last Spine entry is removed."
+                                "Reprogram last prev. spine entry");
                     fse_prev = eff_spine_entry->get_prev();
                     if (fse_prev) {
                         fse_prev->set_next(NULL);
@@ -709,8 +700,8 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
         memcpy(loc + 2, &fhct_idx, hint_mem_len_B);
     }
 
-    HAL_TRACE_DEBUG("FE::{}: OflowTID: {} P4 FHCT Write: {}",
-                    __FUNCTION__, oflow_table_id, fhct_index_);
+    HAL_TRACE_DEBUG("OflowTID: {} P4 FHCT Write: {}",
+                    oflow_table_id, fhct_index_);
 
     hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_HW_KEY, hwkey_len_);
     p4pd_hwkey_hwmask_build(oflow_table_id, key_,
@@ -741,8 +732,7 @@ FlowEntry::deprogram_table_non_anchor_entry()
     uint32_t                        entire_data_len = 0;
     void                            *swdata = NULL;
 
-    HAL_TRACE_DEBUG("{}: Deprogram Coll. Table idx: {}", __FUNCTION__,
-            fhct_index_);
+    HAL_TRACE_DEBUG("Deprogram Coll. Table idx: {}", fhct_index_);
 
     entire_data_len = get_flow_table_entry()->get_flow()->
                       get_flow_entire_data_len();

@@ -73,9 +73,7 @@ FlowSpineEntry::form_action_data(void *action_data)
     uint32_t        hint_mem_len_B = get_ft_entry()->get_flow()->get_hint_mem_len_B();
     FlowHintGroupList::iterator itr;
 
-    HAL_TRACE_DEBUG("FlowSE::{}: P4-API: Table: FT Call ...", __FUNCTION__);
-
-
+    HAL_TRACE_DEBUG("P4-API: Table: FT Call ...");
     get_ft_entry()->get_flow()->flow_action_data_offsets(action_data,
                                                          &action_id,
                                                          &entry_valid,
@@ -152,7 +150,7 @@ FlowSpineEntry::program_table()
     sw_key = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_SW_KEY,
                         sw_key_len);
 
-    HAL_TRACE_DEBUG("FSE::{}: Before forming action data", __FUNCTION__);
+    HAL_TRACE_DEBUG("Before forming action data");
     if (is_in_ft_) {
         form_action_data(action_data);
         // Form Hw key for anchor
@@ -166,7 +164,7 @@ FlowSpineEntry::program_table()
         }
 
         uint32_t ft_index = get_ft_entry()->get_ft_bits();
-        HAL_TRACE_DEBUG("FSE::{}: P4 FT Write: {}", __FUNCTION__, ft_index);
+        HAL_TRACE_DEBUG("P4 FT Write: {}", ft_index);
 
         // Entry trace
         if (anchor_entry_ &&
@@ -193,8 +191,7 @@ FlowSpineEntry::program_table()
                                     NULL, (uint8_t *)hwkey, NULL);
         }
 
-        HAL_TRACE_DEBUG("FSE::{}: P4 FHCT Write: {}",
-                        __FUNCTION__, fhct_index_);
+        HAL_TRACE_DEBUG("P4 FHCT Write: {}", fhct_index_);
 
         // Entry trace
         if (get_ft_entry()->get_flow()->get_entry_trace_en()) {
