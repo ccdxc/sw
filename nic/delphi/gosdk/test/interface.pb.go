@@ -213,8 +213,8 @@ func (o *InterfaceSpec) GetMessage() proto.Message {
 	return o.GetProtoMsg()
 }
 
-func (o *InterfaceSpec) GetKeyString() string {
-	return o.key.GetProtoMsg().String()
+func (obj *InterfaceSpec) GetKeyString() string {
+	return obj.key.GetProtoMsg().String()
 }
 
 func (obj *InterfaceSpec) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
@@ -239,6 +239,10 @@ type InterfaceSpecReactor interface {
 	OnInterfaceSpecCreate(obj *InterfaceSpec)
 	OnInterfaceSpecUpdate(obj *InterfaceSpec)
 	OnInterfaceSpecDelete(obj *InterfaceSpec)
+}
+
+func (obj *InterfaceSpec) GetPath() string {
+	return "InterfaceSpec" + "|" + obj.GetKeyString()
 }
 
 func newInterfaceSpecFromMessage(msg *InterfaceSpec_) *InterfaceSpec {

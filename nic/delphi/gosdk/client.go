@@ -98,8 +98,12 @@ func (c *client) Dial() error {
 // call this explicitly. It is getting called automatically when there is a
 // change in any object.
 func (c *client) SetObject(obj BaseObject) error {
-	obj.GetMeta().Key = obj.GetKeyString()
-	obj.GetMeta().Handle = c.newHandle()
+	meta := obj.GetMeta()
+	if meta.Handle == 0 {
+		meta.Key = obj.GetKeyString()
+		meta.Handle = c.newHandle()
+		meta.Path = obj.GetPath()
+	}
 
 	c.changeQueue <- &change{
 		obj: obj,

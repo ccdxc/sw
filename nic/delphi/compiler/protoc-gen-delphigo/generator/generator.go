@@ -3111,22 +3111,25 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 	g.Out()
 	g.P("}\n")
 
-	// GetKeyString
-	for _, field := range msg.Field {
-		fieldname := *field.Name
-		if fieldname == "Key" {
-			g.P("func (o *" + wrapperName + ") GetKeyString() string {")
-			if g.isMessage(field) {
-				g.P("return o." + lowerFirst(fieldname) + ".GetProtoMsg()" + ".String()")
-			} else {
-				g.P("return string(o." + lowerFirst(fieldname) + ")")
-			}
-			g.P("}\n")
-		}
-	}
-
 	// TriggerEvent
 	if g.isDelphiObj(msg) {
+
+		// GetKeyString
+		for _, field := range msg.Field {
+			fieldname := *field.Name
+			if fieldname == "Key" {
+				g.P("func (obj *" + wrapperName + ") GetKeyString() string {")
+				if g.isMessage(field) {
+					g.P("return obj." + lowerFirst(fieldname) + ".GetProtoMsg()" + ".String()")
+				} else {
+					// FIXME: This has to be per type and not just %v
+					g.P("// FIXME: This has to be per type and not just %v")
+					g.P("return fmt.Sprintf(\"%v\", (obj." + lowerFirst(fieldname) + "))")
+				}
+				g.P("}\n")
+			}
+		}
+
 		g.P("func (obj *" + wrapperName + ") TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {")
 		g.P("  for _, r := range rl {")
 		g.P("    rctr, ok := r.(" + wrapperName + "Reactor)")
@@ -3150,6 +3153,11 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 		g.P("  On" + wrapperName + "Create(obj *" + wrapperName + ")")
 		g.P("  On" + wrapperName + "Update(obj *" + wrapperName + ")")
 		g.P("  On" + wrapperName + "Delete(obj *" + wrapperName + ")")
+		g.P("}\n")
+
+		// GetPath
+		g.P("func (obj *" + wrapperName + ") GetPath() string {")
+		g.P("  return \"" + wrapperName + "\" + \"|\" + obj.GetKeyString()")
 		g.P("}\n")
 	}
 

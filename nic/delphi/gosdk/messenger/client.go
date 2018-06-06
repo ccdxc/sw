@@ -38,6 +38,8 @@ type client struct {
 	connection net.Conn
 	receiver   *receiver
 	handler    Handler
+	msgid      uint64
+	svcid      uint32
 }
 
 // NewClient creates a new messenger instance
@@ -72,7 +74,7 @@ func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.Mou
 
 	mountRequest := delphi_messanger.MountReqMsg{
 		ServiceName: serviceName,
-		ServiceID:   1,
+		ServiceID:   c.svcid,
 		Mounts:      mounts,
 	}
 
@@ -91,9 +93,10 @@ func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.Mou
 		},
 	}
 
+	c.msgid++
 	message := delphi_messanger.Message{
 		Type:      delphi_messanger.MessageType_MountReq,
-		MessageId: 1,
+		MessageId: c.msgid,
 		Objects:   objects,
 	}
 
@@ -112,9 +115,10 @@ func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.Mou
 
 func (c *client) SendChangeReq(objlist []*delphi_messanger.ObjectData) error {
 
+	c.msgid++
 	message := delphi_messanger.Message{
 		Type:      delphi_messanger.MessageType_ChangeReq,
-		MessageId: 1,
+		MessageId: c.msgid,
 		Objects:   objlist,
 	}
 
@@ -145,7 +149,8 @@ func (c *client) HandleMessage(message *delphi_messanger.Message) error {
 		}
 		var mountResp delphi_messanger.MountRespMsg
 		proto.Unmarshal(objects[0].GetData(), &mountResp)
-		c.handler.HandleMountResp(uint16(mountResp.GetServiceID()),
+		c.svcid = mountResp.GetServiceID()
+		c.handler.HandleMountResp(uint16(c.svcid),
 			message.GetStatus(), mountResp.GetObjects())
 	case delphi_messanger.MessageType_Notify:
 		c.handler.HandleNotify(message.GetObjects())

@@ -22,6 +22,7 @@ type BaseObject interface {
 	SetMeta(meta *delphi.ObjectMeta)
 	GetMessage() proto.Message
 	GetKeyString() string
+	GetPath() string
 	TriggerEvent(oldObj BaseObject, op delphi.ObjectOperation, rl []BaseReactor)
 }
 
