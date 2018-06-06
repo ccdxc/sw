@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -18,6 +19,16 @@ import (
 
 // ErrEndpointNotFound is returned when endpoint is not found
 var ErrEndpointNotFound = errors.New("endpoint not found")
+
+// EndpointType holds either local or remote endpoint type
+type EndpointType int
+
+const (
+	// Local Endpoints where NodeUUID on endpoint spec matches the NAPLES NodeUUID
+	Local = iota // 0
+	// Remote Endpoints where NodeUUID on endpoint spec doesn't match the NAPLES NodeUUID
+	Remote
+)
 
 // EndpointCreateReq creates an endpoint
 func (na *Nagent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *types.IntfInfo, error) {
@@ -101,21 +112,12 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 	var intfInfo *types.IntfInfo
 	if ep.Status.NodeUUID == na.NodeUUID {
 		// User specified a local ep create on a specific lif
-		var epLIF string
-		if len(ep.Spec.Interface) > 0 {
-			epLIF = ep.Spec.Interface
-		} else {
-			lifCount, err := na.countIntfs("LIF")
-			if err != nil {
-				return nil, err
-			}
-			epLIF, err = na.findAvailableInterface(lifCount, ep.Status.IPv4Address, "LIF")
+		lifID, err := na.findIntfID(ep, Local)
+		if err != nil {
+			log.Errorf("could not find an interface to associate to the endpoint")
+			return nil, err
 		}
-		lif, ok := na.findIntfByName(epLIF)
-		if !ok {
-			log.Errorf("could not find a lif")
-			return nil, fmt.Errorf("could not find the specified interface %v", epLIF)
-		}
+
 		// Allocate an ENIC ID. ToDo capture the allocated enic ID in status to ensure that this can be deleted in the datapath
 		enicID, err := na.Store.GetNextID(types.InterfaceID)
 		if err != nil {
@@ -124,29 +126,19 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		}
 		// Ensure the ID is non-overlapping with existing hw interfaces.
 		enicID = enicID + maxNumUplinks
-		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lif.Status.InterfaceID, enicID, ns)
+		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, ns)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
 		}
 
 	} else {
-		var pinnedUplink string
-		if len(ep.Spec.Interface) > 0 {
-			pinnedUplink = ep.Spec.Interface
-		} else {
-			uplinkCount, err := na.countIntfs("UPLINK")
-			if err != nil {
-				return nil, err
-			}
-			pinnedUplink, err = na.findAvailableInterface(uplinkCount, ep.Status.IPv4Address, "UPLINK")
+		intfID, err := na.findIntfID(ep, Remote)
+		if err != nil {
+			log.Errorf("could not find an interface to associate to the endpoint")
+			return nil, err
 		}
-		uplink, ok := na.findIntfByName(pinnedUplink)
-		if !ok {
-			log.Errorf("could not find an uplink")
-			return nil, fmt.Errorf("could not find the specified interface %v", pinnedUplink)
-		}
-		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink.Status.InterfaceID, ns)
+		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, intfID, ns)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -301,15 +293,15 @@ func (na *Nagent) findAvailableInterface(count uint64, IPAddress, intfType strin
 		log.Errorf("Error parsing the IP Address. Err: %v", err)
 		return "", err
 	}
-	switch intfType {
-	case "UPLINK":
+	switch strings.ToLower(intfType) {
+	case "uplink":
 		if len(IPAddress) == 16 {
 			intIP := binary.BigEndian.Uint32(ip[12:16])
 			return fmt.Sprintf("default-uplink-%d", uint64(intIP)%count), nil
 		}
 		intIP := binary.BigEndian.Uint32(ip)
 		return fmt.Sprintf("default-uplink-%d", uint64(intIP)%count), nil
-	case "LIF":
+	case "lif":
 		if len(IPAddress) == 16 {
 			intIP := binary.BigEndian.Uint32(ip[12:16])
 			return fmt.Sprintf("default-lif-%d", uint64(intIP)%count), nil
@@ -320,4 +312,116 @@ func (na *Nagent) findAvailableInterface(count uint64, IPAddress, intfType strin
 		log.Errorf("Invalid interface type.")
 		return "", fmt.Errorf("invalid interface type specified. %v", intfType)
 	}
+}
+
+// findTunnelID associates an remote ep to a tunnel ID
+func (na *Nagent) findTunnelID(epMeta api.ObjectMeta, intfName string) (uint64, error) {
+	var tunMeta api.ObjectMeta
+
+	tun := strings.Split(intfName, "/")
+	switch len(tun) {
+	// tunnel in local namespace
+	case 1:
+		tunMeta.Tenant = epMeta.Tenant
+		tunMeta.Namespace = epMeta.Namespace
+		tunMeta.Name = intfName
+		t, err := na.FindTunnel(tunMeta)
+		if err != nil {
+			log.Errorf("could not find the tunnel %v. Err: %v", intfName, err)
+			return 0, fmt.Errorf("could not find a tunnel %v interface to associate to the endpoint. Err: %v ", intfName, err)
+		}
+		return t.Status.TunnelID, nil
+	// tunnel in remote namespace
+	case 2:
+		tunMeta.Tenant = epMeta.Tenant
+		tunMeta.Namespace = tun[0]
+		tunMeta.Name = tun[1]
+		t, err := na.FindTunnel(tunMeta)
+		if err != nil {
+			log.Errorf("could not find the tunnel %v. Err: %v", intfName, err)
+			return 0, fmt.Errorf("could not find a tunnel %v interface to associate to the endpoint. Err: %v ", intfName, err)
+		}
+		return t.Status.TunnelID, nil
+	default:
+		return 0, fmt.Errorf("endpoint interface %v should point to a valid tunnel", intfName)
+	}
+}
+
+func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64, error) {
+	// perform pre-flight checks
+	if len(ep.Spec.InterfaceType) > 0 && !((strings.ToLower(ep.Spec.InterfaceType) == "lif") ||
+		(strings.ToLower(ep.Spec.InterfaceType) == "uplink") ||
+		(strings.ToLower(ep.Spec.InterfaceType) == "tunnel")) {
+		return 0, fmt.Errorf("invalid interface type %v", ep.Spec.InterfaceType)
+
+	}
+	// Spec should not have specify an interface name without specifying interface type.
+	if len(ep.Spec.Interface) > 0 && len(ep.Spec.InterfaceType) == 0 {
+		return 0, fmt.Errorf("user specified interfaces should be qualified with interface type")
+	}
+
+	switch {
+	// Local EP Create, interface types unspecified by user. Associate available lif
+	case epType == Local && len(ep.Spec.InterfaceType) == 0 && len(ep.Spec.Interface) == 0:
+		lifCount, err := na.countIntfs("LIF")
+		if err != nil {
+			log.Errorf("could not enumerate lifs. Err: %v", err)
+			return 0, fmt.Errorf("could not enumerate lifs. Err: %v", err)
+		}
+		epLIF, err := na.findAvailableInterface(lifCount, ep.Status.IPv4Address, "lif")
+		if err != nil {
+			log.Errorf("could not find an available lif. Err: %v", err)
+			return 0, fmt.Errorf("could not find an available lif. Err: %v", err)
+		}
+		lif, ok := na.findIntfByName(epLIF)
+		if !ok {
+			log.Errorf("could not find lif %v in state", epLIF)
+			return 0, fmt.Errorf("could not find lif %v in state", epLIF)
+		}
+		return lif.Status.InterfaceID, nil
+
+		// Remote EP Create, interface types unspecified by user. Associate available uplink
+	case epType == Remote && len(ep.Spec.InterfaceType) == 0 && len(ep.Spec.Interface) == 0:
+		uplinkCount, err := na.countIntfs("UPLINK")
+		if err != nil {
+			log.Errorf("could not enumerate uplinks. Err: %v", err)
+			return 0, fmt.Errorf("could not enumerate uplinks. Err: %v", err)
+		}
+		epUplink, err := na.findAvailableInterface(uplinkCount, ep.Status.IPv4Address, "uplink")
+		if err != nil {
+			log.Errorf("could not find an available uplink. Err: %v", err)
+			return 0, fmt.Errorf("could not find an available uplink. Err: %v", err)
+		}
+		uplink, ok := na.findIntfByName(epUplink)
+		if !ok {
+			log.Errorf("could not find uplink %v in state", uplink)
+			return 0, fmt.Errorf("could not find uplink %v in state", epUplink)
+		}
+		return uplink.Status.InterfaceID, nil
+
+	// Local EP Create, associate with the user specified lif
+	case epType == Local && len(ep.Spec.Interface) > 0:
+		lif, ok := na.findIntfByName(ep.Spec.Interface)
+		if !ok {
+			log.Errorf("could not find lif %v in state", ep.Spec.Interface)
+			return 0, fmt.Errorf("could not find lif %v in state", ep.Spec.Interface)
+		}
+		return lif.Status.InterfaceID, nil
+
+	// Remote EP Create on an Uplink, associate with the user specified uplink
+	case epType == Remote && strings.ToLower(ep.Spec.InterfaceType) == "uplink" && len(ep.Spec.Interface) > 0:
+		uplink, ok := na.findIntfByName(ep.Spec.Interface)
+		if !ok {
+			log.Errorf("could not find uplink %v in state", uplink)
+			return 0, fmt.Errorf("could not find uplink %v in state", ep.Spec.Interface)
+		}
+		return uplink.Status.InterfaceID, nil
+
+	// Remote EP Create on an a tunnel, associate with the user specified tunnel
+	case epType == Remote && strings.ToLower(ep.Spec.InterfaceType) == "tunnel" && len(ep.Spec.Interface) > 0:
+		return na.findTunnelID(ep.ObjectMeta, ep.Spec.Interface)
+
+	}
+	log.Errorf("invalid endpoint create spec. {%v} ", ep)
+	return 0, fmt.Errorf("ep create should either be remote or local. Remote EPs should point to either a valid uplink or a tunnel")
 }

@@ -358,6 +358,350 @@ func TestEndpointConcurrency(t *testing.T) {
 		AssertOk(t, <-waitCh, "Error deleting endpoint")
 	}
 }
+func TestLocalEndpointPointingToAnyLif(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    ag.NodeUUID,
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "creating a local ep pointing to any lif failed")
+}
+
+func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			//WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			InterfaceType: "lif",
+			Interface:     "default-lif-0",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    ag.NodeUUID,
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "creating local ep pointing to pre defined lif failed")
+}
+
+func TestRemoteEndpointPointingToAnyUplink(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    "different-uuid-than-agent",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "creating a local ep pointing to any lif failed")
+}
+
+func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			//WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			InterfaceType: "uplink",
+			Interface:     "default-uplink-0",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    "some-different-uuid-than-agent",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "creating local ep pointing to pre defined lif failed")
+}
+
+func TestRemoteEndpointPointingToLocalTunnel(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// create a tunnel in the same namespace
+	tun := netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "public-tunnel",
+		},
+		Spec: netproto.TunnelSpec{
+			Type:        "VXLAN",
+			AdminStatus: "UP",
+			Src:         "10.1.1.1",
+			Dst:         "192.168.1.1",
+		},
+	}
+	// make create tunnel call
+	err = ag.CreateTunnel(&tun)
+	AssertOk(t, err, "Error creating tunnel")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			InterfaceType: "tunnel",
+			Interface:     "public-tunnel",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    "remote",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "creating a remote ep pointing to a tunnel failed")
+}
+
+func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create a namespace
+	publicNS := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "public-ns",
+		},
+	}
+	err := ag.CreateNamespace(&publicNS)
+	AssertOk(t, err, "error creating namespace")
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err = ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// create a tunnel in the same namespace
+	tun := netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "public-ns",
+			Name:      "public-tunnel",
+		},
+		Spec: netproto.TunnelSpec{
+			Type:        "VXLAN",
+			AdminStatus: "UP",
+			Src:         "10.1.1.1",
+			Dst:         "192.168.1.1",
+		},
+	}
+	// make create tunnel call
+	err = ag.CreateTunnel(&tun)
+	AssertOk(t, err, "Error creating tunnel")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			Interface:     "public-ns/public-tunnel",
+			InterfaceType: "tunnel",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    "remote",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "creating a remote ep pointing to a tunnel failed")
+}
 
 //--------------------- Corner Case Tests ---------------------//
 
@@ -599,4 +943,53 @@ func TestNonExistentEndpointUpdate(t *testing.T) {
 	// update the endpoint
 	err = ag.UpdateEndpoint(epinfo)
 	Assert(t, err != nil, "Creating an endpoint with non existent interfaces should fail.")
+}
+
+func TestRemoteEndpointOnNonExistentRemoteTunnel(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			Interface:    "remoteNS/nonExistentRemoteNatPool",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/16",
+			NodeUUID:    "remote",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	Assert(t, err != nil, "remote ep creates on non-existent tunnels should fail")
 }

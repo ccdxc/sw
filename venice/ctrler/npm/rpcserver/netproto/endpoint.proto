@@ -39,13 +39,21 @@ message Endpoint {
 
 // endpoint spec
 message EndpointSpec {
-    string EndpointUUID = 1 [(gogoproto.jsontag) = "endpoint-uuid,omitempty"];
-    string WorkloadUUID = 2 [(gogoproto.jsontag) = "workload-uuid,omitempty"];
-    string WorkloadName = 3 [(gogoproto.jsontag) = "workload-name,omitempty"];
-    string NetworkName  = 4 [(gogoproto.jsontag) = "network-name,omitempty"];
+    enum Type{
+        NONE    = 0;
+        LIF     = 1; // For local EPs
+        UPLINK  = 2; // For Remote EPs
+        TUNNEL  = 3; // For Remote EPs going over tunnels
+    }
+    string EndpointUUID  = 1 [(gogoproto.jsontag) = "endpoint-uuid,omitempty"];
+    string WorkloadUUID  = 2 [(gogoproto.jsontag) = "workload-uuid,omitempty"];
+    string WorkloadName  = 3 [(gogoproto.jsontag) = "workload-name,omitempty"];
+    string NetworkName   = 4 [(gogoproto.jsontag) = "network-name,omitempty"];
     map<string,string> WorkloadAttributes = 5 [(gogoproto.jsontag) = "workload-attributes,omitempty"];
     repeated string SecurityGroups = 6 [(gogoproto.jsontag) = "security-groups,omitempty"];
-    string Interface = 7 [(gogoproto.jsontag) = "interface,omitempty"];
+    string InterfaceType = 7 [(venice.check) = "StrEnum(EndpointSpec.IFType)",
+                              (gogoproto.jsontag) = "interface-type,omitempty"];
+    string Interface     = 8 [(gogoproto.jsontag) = "interface,omitempty"];
 }
 
 // endpoint status

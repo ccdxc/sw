@@ -134,7 +134,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"kg1-router\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"10.0.2.1/16\",\"mac-address\":\"00:22:0A:00:02:01\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"kg1-router\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"uplink\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"10.0.2.1/16\",\"mac-address\":\"00:22:0A:00:02:01\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},
@@ -153,7 +153,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"kg2-router\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"network-name\":\"kg2\",\"interface\":\"default-uplink-0\"},\"status\":{\"ipv4-address\":\"10.0.2.1/16\",\"mac-address\":\"00:22:0A:00:02:01\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"kg2-router\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"network-name\":\"kg2\",\"interface-type\":\"uplink\",\"interface\":\"default-uplink-0\"},\"status\":{\"ipv4-address\":\"10.0.2.1/16\",\"mac-address\":\"00:22:0A:00:02:01\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},
@@ -172,7 +172,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"public-router\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"20.1.1.2/16\",\"mac-address\":\"00:22:14:01:01:01\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"public-router\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface-type\":\"uplink\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"20.1.1.2/16\",\"mac-address\":\"00:22:14:01:01:01\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},

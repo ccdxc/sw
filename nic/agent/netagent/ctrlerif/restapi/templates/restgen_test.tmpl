@@ -111,6 +111,8 @@ import (
                                     EndpointUUID:   "testEndpointUUID",
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
+                                    InterfaceType:  "UPLINK",
+                                    Interface:      "default-uplink-0",
                                 },
                                 Status: netproto.{{title $crudObject}}Status{
                                     NodeUUID:   "dummy-node-uuid",
@@ -675,8 +677,10 @@ import (
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
                                 		                                EndpointUUID: "testEndpointUUID",
-                                			                            WorkloadUUID: "updatedWorkloadUUID",
-                                			                            NetworkName:  "preCreatedNetwork",
+                                			                              WorkloadUUID: "updatedWorkloadUUID",
+                                			                              NetworkName:  "preCreatedNetwork",
+                                                                    InterfaceType:  "UPLINK",
+                                                                    Interface:      "default-uplink-0",
                                 		                            }
                                 {{lower .}}Data := netproto.Endpoint{
                                     TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -1056,6 +1060,8 @@ import (
                                     EndpointUUID:   "testEndpointUUID",
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
+                                    InterfaceType:  "UPLINK",
+                                    Interface:      "default-uplink-0",
                                 },
                                 Status: netproto.{{title $crudObject}}Status{
                                     NodeUUID:   "dummy-node-uuid",

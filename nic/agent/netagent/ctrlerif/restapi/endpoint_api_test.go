@@ -49,9 +49,11 @@ func TestEndpointPost(t *testing.T) {
 			Name:      "testPostEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "preCreatedNetwork",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "preCreatedNetwork",
+			InterfaceType: "UPLINK",
+			Interface:     "default-uplink-0",
 		},
 		Status: netproto.EndpointStatus{
 			NodeUUID:    "dummy-node-uuid",
@@ -82,9 +84,11 @@ func TestEndpointUpdate(t *testing.T) {
 
 	var actualEndpointSpec netproto.EndpointSpec
 	updatedEndpointSpec := netproto.EndpointSpec{
-		EndpointUUID: "testEndpointUUID",
-		WorkloadUUID: "updatedWorkloadUUID",
-		NetworkName:  "preCreatedNetwork",
+		EndpointUUID:  "testEndpointUUID",
+		WorkloadUUID:  "updatedWorkloadUUID",
+		NetworkName:   "preCreatedNetwork",
+		InterfaceType: "UPLINK",
+		Interface:     "default-uplink-0",
 	}
 	putData := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -129,9 +133,11 @@ func TestEndpointDelete(t *testing.T) {
 			Name:      "testDeleteEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "preCreatedNetwork",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "preCreatedNetwork",
+			InterfaceType: "UPLINK",
+			Interface:     "default-uplink-0",
 		},
 		Status: netproto.EndpointStatus{
 			NodeUUID:    "dummy-node-uuid",
