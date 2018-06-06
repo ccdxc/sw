@@ -19,7 +19,7 @@ cc_library(
         "-xc"
     ],
     hdrs = [
-        "include/pnso_api.h",
+        "include/pnso_sim_api.h",
         "include/pnso_wafl.h",
         "src/sim/pnso_sim.h"
     ],

@@ -2,7 +2,7 @@
 #include <vector>
 #include <unistd.h>
 
-//#include "pnso_api.h"
+#include "pnso_sim_api.h"
 #include "storage/offload/src/sim/pnso_sim.h"
 #include "storage/offload/include/pnso_wafl.h"
 

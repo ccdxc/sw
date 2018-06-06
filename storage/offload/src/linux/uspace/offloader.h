@@ -4,7 +4,7 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
-#include "pnso_api.h"
+#include "pnso_sim_api.h"
 #include "pnso_sim.h"
 
 enum  thread_types {

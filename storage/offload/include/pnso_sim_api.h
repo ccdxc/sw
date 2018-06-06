@@ -40,19 +40,27 @@ enum pnso_service_type {
 	PNSO_SVC_TYPE_MAX
 };
 
-/* Algorithms for encrption/decryption */
-enum pnso_crypto_type {
-	PNSO_CRYPTO_TYPE_NONE = 0,
-	PNSO_CRYPTO_TYPE_XTS = 1,
-	PNSO_CRYPTO_TYPE_GCM = 2,
-	PNSO_CRYPTO_TYPE_MAX
+/**
+ * Pensando accelerators can be exercised by submitting one request at a time or
+ * a batch of requests.
+ *
+ * Following constants enable to distinguish the mode of request submission.
+ * When requests are submitted in batch mode, the beginning and ending phase is
+ * indicated by continue/flush markers.
+ *
+ */
+enum pnso_batch_request {
+	PNSO_BATCH_REQ_NONE = 0,
+	PNSO_BATCH_REQ_FLUSH = PNSO_BATCH_REQ_NONE,
+	PNSO_BATCH_REQ_CONTINUE = 1,
+	PNSO_BATCH_REQ_MAX
 };
 
 /* Algorithms for compression/decompression */
-enum pnso_compression_type {
-	PNSO_COMPRESSION_TYPE_NONE = 0,
-	PNSO_COMPRESSION_TYPE_LZRW1A = 1,
-	PNSO_COMPRESSION_TYPE_MAX
+enum pnso_compressor_type {
+	PNSO_COMPRESSOR_TYPE_NONE = 0,
+	PNSO_COMPRESSOR_TYPE_LZRW1A = 1,
+	PNSO_COMPRESSOR_TYPE_MAX
 };
 
 /* Algorithms for deduplication hash */
@@ -86,8 +94,6 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_CPDC_DATA_TOO_LONG		20005
 #define PNSO_ERR_CPDC_CHECKSUM_FAILED		20006
 #define PNSO_ERR_CPDC_SGL_DESC_ERROR		20007
-#define PNSO_ERR_CPDC_HDR_IDX_INVALID		20008
-#define PNSO_ERR_CPDC_ALGO_INVALID		20009
 
 /* Error codes for encryption/decryption */
 #define PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG	30001
@@ -95,9 +101,8 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_XTS_AXI_ERROR			30003
 #define PNSO_ERR_XTS_AXI_STATUS_ERROR		30004
 #define PNSO_ERR_XTS_AOL_DESC_ERROR		30005
-#define PNSO_ERR_XTS_KEY_NOT_REGISTERED		30006
 
-/* Error codes for hash/chksum */
+/* Error codes for hash/cksum */
 #define PNSO_ERR_SHA_FAILED			40001
 
 /**
@@ -109,7 +114,7 @@ typedef int32_t pnso_error_t;
 struct pnso_flat_buffer {
 	uint32_t len;
 	uint64_t buf;
-} __packed;
+} __attribute__ ((packed));
 
 /**
  * struct pnso_buffer_list - describes a scatter/gather buffer list.
@@ -125,84 +130,39 @@ struct pnso_buffer_list {
 	struct pnso_flat_buffer buffers[0];
 };
 
-#define PNSO_MAX_HEADER_FIELDS	8
-
 /**
- * enum pnso_header_field_type - defines the source for the compression header
- * fields.
- *	PNSO_HDR_FIELD_TYPE_STATIC - the field is used as input to set a fixed
- *	value in the compression header (ex: version).
+ * struct pnso_compression_header - represents the result of compression and
+ * decompression operation.
+ * @chksum: specifies the data integrity field, i.e. the checksum calculation on
+ * input data before compression.
+ * @data_len: specifies the compressed length.
+ * @version: specifies the version of the compression algorithm.
  *
- *	PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM - the field is used as input to set
- *	checksum value in the compression header derived from previous service.
+ * Compression operation will insert a 8-byte header (populating the compressed
+ * length, the checksum and the version number) at the beginning of the
+ * compressed buffer.
  *
- *	PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH - the field is used as input to set
- *	length of the compressed buffer as the value in the compression header.
- *
- */
-enum pnso_header_field_type {
-	PNSO_HDR_FIELD_TYPE_NONE = 0,
-	PNSO_HDR_FIELD_TYPE_STATIC = 1,
-	PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM = 2,
-	PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH = 3,
-	PNSO_HDR_FIELD_TYPE_MAX
-};
-
-/*
- * Following header field flags describe actions on decompression:
- *
- *	PNSO_HDR_FIELD_FLAG_CHECK_ALGO - the field is used as input to check,
- *	if the data is compressed by algorithm supported by Pensando
- *	accelerator.
- *
- *	PNSO_HDR_FIELD_FLAG_OUTDATA_CHKSUM_IF_NONZERO - the field is used as
- *	input to conditionally compute checksum on output data.
+ * Decompression operation will extract the 'checksum' and remove the header.
+ * The 'data_len' does not include the length of the header.
  *
  */
-#define	PNSO_HDR_FIELD_FLAG_CHECK_ALGO			(1 << 0)
-#define PNSO_HDR_FIELD_FLAG_OUTDATA_CHKSUM_IF_NONZERO	(1 << 1)
-
-/**
- * struct pnso_header_field - defines the value for each field in the
- * compression header.
- * @type: specifies the source for the header fields. Refer to 'enum
- * pnso_header_field_type' section for more details on the type.
- * @flags: specifies the header field operations on decompression
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
- * @offset: specifies the offset of the value from the beginning of the header.
- * @length: specifies the length of the value.
- * @value: specifies the value.
- *
- */
-struct pnso_header_field {
-	enum pnso_header_field_type type;
-	uint16_t flags;
-	uint16_t rsvd;
-	uint32_t offset;
-	uint32_t length;
-	uint32_t value;
-};
-
-/**
- * struct pnso_compression_header_format - represents the format of the
- * compression header.
- * @num_fields: specifies the number of fields in the bounded array.
- * @fields: specifies an array of fields.
- *
- */
-struct pnso_compression_header_format {
-	uint32_t num_fields;
-	struct pnso_header_field fields[PNSO_MAX_HEADER_FIELDS];
+struct pnso_compression_header {
+	uint32_t chksum;
+	uint16_t data_len;
+	uint16_t version;
 };
 
 /**
  * struct pnso_init_params - represents the initialization parameters for
  * Pensando accelerators.
+ * @cp_hdr_version: specifies the version of the compression algorithm that to
+ * be populated in compression header.
  * @per_core_qdepth: specifies the maximum number of parallel requests per core.
  * @block_size: specifies the size of a block in bytes.
  *
  */
 struct pnso_init_params {
+	uint16_t cp_hdr_version;
 	uint16_t per_core_qdepth;
 	uint32_t block_size;
 };
@@ -226,60 +186,55 @@ pnso_error_t pnso_init(struct pnso_init_params *init_params);
 /**
  * struct pnso_crypto_desc - represents the descriptor for encryption or
  * decryption operation.
- * @algo_type: specifies one of the enumerated values of the crypto type
- * (i.e. pnso_crypto_type).
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @key_desc_idx: specifies the key index in the descriptor table.
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @iv_addr: specifies the physical address of the initialization vector.
  *
  */
 struct pnso_crypto_desc {
-	uint16_t algo_type;
-	uint16_t rsvd;
 	uint32_t key_desc_idx;
+	uint32_t rsvd;
 	uint64_t iv_addr;
 };
 
-/* compression descriptor flags */
-#define PNSO_CP_DFLAG_ZERO_PAD				(1 << 0)
-#define PNSO_CP_DFLAG_INSERT_HEADER			(1 << 1)
-#define PNSO_CP_DFLAG_BYPASS_ONFAIL			(1 << 2)
+/*  descriptor flags */
+#define PNSO_DFLAG_ZERO_PAD		(1 << 0)
+#define PNSO_DFLAG_INSERT_HEADER	(1 << 1)
+#define PNSO_DFLAG_BYPASS_ONFAIL	(1 << 2)
+#define PNSO_DFLAG_HEADER_PRESENT	(1 << 3)
+#define PNSO_DFLAG_HASH_PER_BLOCK	(1 << 4)
+#define PNSO_DFLAG_CHKSUM_PER_BLOCK	(1 << 5)
 
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
  * service.
  * @algo_type: specifies one of the enumerated values of the compressor
  * algorithm (i.e. pnso_compressor_type).
- * @flags: specifies the following applicable descriptor flags to compression
- * descriptor.
- *	PNSO_CP_DFLAG_ZERO_PAD - indicates to zero fill the compressed output
- *	buffer aligning to block size.
- *
- *	PNSO_CP_DFLAG_INSERT_HEADER - indicates to insert compression header
- *	defined by the format supplied in 'struct pnso_init_params'.
- *
- *	PNSO_CP_DFLAG_BYPASS_ONFAIL - indicates to use the source buffer as
- *	input buffer to hash and/or checksum, services, when compression
- *	operation fails.  This flag is effective only when compression, hash
- *	and/or checksum operation is requested.
- *
  * @threshold_len: specifies the expected compressed buffer length in bytes.
  * This is to instruct the compression operation, upon its completion, to
  * compress the buffer to a length that must be less than or equal to
  * 'threshold_len'.
- * @hdr_fmt_idx: specifies the index for the header format in the header format
- * array.
+ * @flags: specifies the following applicable descriptor flags to compression
+ * descriptor.
+ *	PNSO_DFLAG_ZERO_PAD - indicates whether or not to zero fill the
+ *	compressed output buffer aligning to block size.
+ *
+ *	PNSO_DFLAG_INSERT_HEADER - indicates whether or not to insert
+ *	compression header compressed output buffer.
+ *
+ *	PNSO_DFLAG_BYPASS_ONFAIL - indicates whether or not to use the source
+ *	buffer as input buffer to hash and/or checksum, services, when
+ *	compression operation fails.  This flag is effective only when
+ *	compression, hash and/or checksum operation is requested.
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_compression_desc {
 	uint16_t algo_type;
-	uint16_t flags;
 	uint16_t threshold_len;
-	uint16_t hdr_fmt_idx;
+	uint16_t flags;
+	uint16_t rsvd;
 };
-
-/* decompression descriptor flag(s) */
-#define PNSO_DC_DFLAG_HEADER_PRESENT		(1 << 0)
 
 /**
  * struct pnso_decompression_desc - represents the descriptor for decompression
@@ -288,22 +243,15 @@ struct pnso_compression_desc {
  * algorithm (i.e. pnso_compressor_type) for decompression.
  * @flags: specifies the following applicable descriptor flags to decompression
  * descriptor.
- *	PNSO_DC_DFLAG_HEADER_PRESENT - indicates the compression header is
- *	present.
- * @hdr_fmt_idx: specifies the index for the header format in the header format
- * array.
+ *	PNSO_DFLAG_HEADER_PRESENT - indicates whether or not the compression
+ *	header is present.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_decompression_desc {
 	uint16_t algo_type;
 	uint16_t flags;
-	uint16_t hdr_fmt_idx;
-	uint16_t rsvd;
 };
-
-/* hash descriptor flag(s) */
-#define PNSO_HASH_DFLAG_PER_BLOCK		(1 << 0)
 
 /**
  * struct pnso_hash_desc - represents the descriptor for data deduplication hash
@@ -312,9 +260,8 @@ struct pnso_decompression_desc {
  * (i.e. pnso_hash_type) for data deduplication.
  * @flags: specifies the following applicable descriptor flag(s) to hash
  * descriptor.
- *	PNSO_HASH_DFLAG_PER_BLOCK - indicates to produce one hash per block.
- *	When this flag is not specified, hash for the entire buffer will be
- *	produced.
+ *	PNSO_DFLAG_HASH_PER_BLOCK - indicates whether to produce one hash per
+ *	block or one for the entire buffer.
  *
  */
 struct pnso_hash_desc {
@@ -322,18 +269,14 @@ struct pnso_hash_desc {
 	uint16_t flags;
 };
 
-/* chksum descriptor flag(s) */
-#define PNSO_CHKSUM_DFLAG_PER_BLOCK		(1 << 0)
-
 /**
  * struct pnso_checksum_desc - represents the descriptor for checksum operation.
  * @algo_type: specifies one of the enumerated values of the checksum
  * algorithm (i.e. pnso_chksum_type).
  * @flags: specifies the following applicable descriptor flag(s) to checksum
  * descriptor.
- *	PNSO_CHKSUM_DFLAG_PER_BLOCK - indicates to produce one checksum
- *	per block. When this flag is not specified, checksum for the entire
- *	buffer will be produced.
+ *	PNSO_DFLAG_CHKSUM_PER_BLOCK - indicates whether to produce one checksum
+ *	per block or one for the entire buffer.
  *
  */
 struct pnso_checksum_desc {
@@ -399,7 +342,7 @@ struct pnso_chksum_tag {
  * @hash: specifies a pointer to an allocated memory for number of
  * hashes as specified in 'num_hashes'.  When 'num_hashes' is 0, this
  * parameter is NULL.
- * @chksum: specifies a pointer to an allocated memory for number of
+ * @chksum: specifies a pointer to an allocated memory for number of 
  * checksums as specified in 'num_chksums'.  When 'num_chksums' is 0, this
  * parameter is NULL.
  * @dst: specifies a sgl that to be used as output buffer for this service.
@@ -494,7 +437,7 @@ struct pnso_service_request {
 };
 
 /**
- * typedef completion_cb_t: caller-supplied completion callback.
+ * typedef completion_t: caller-supplied completion callback.
  * @cb_ctx: specifies the callback args for the caller-supplied callback
  * routine.
  * @svc_res: specifies a set of service results structures to report the status
@@ -503,15 +446,14 @@ struct pnso_service_request {
  * TODO: discuss further on SPDK-model/pnso_poll_fn integration with Netapp.
  *
  */
-typedef void (*completion_cb_t) (void *cb_ctx,
-			      struct pnso_service_result *svc_res);
+typedef void (*completion_t) (void *cb_ctx,
+			      struct pnso_service_result * svc_res);
 
 /**
  * typedef pnso_poll_fn_t: the caller to use this polling function to detect
  * completion of a request.
  * @pnso_poll_ctx:	[in]	specifies the context passed as arg to the
- *				polling function. This context becomes invalid
- *				after exiting from completion callback.
+ *				polling function.
  *
  * Return:
  *	PNSO_OK - on success
@@ -521,7 +463,9 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
 
 /**
  * pnso_submit_request() - routine that accepts one or more service(s) as a
- * request and submits the request for further processing.
+ * request, and batches two or more such requests internally.
+ * @batch_req:		[in]	specifies whether the request is an independent
+ *				one or belongs to a group of requests.
  * @svc_req:		[in]	specifies a set of service requests that to be
  *				used to complete the services within the
  *				request.
@@ -550,68 +494,13 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  *	-ENOMEM - on failing to allocate memory
  *
  */
-pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
+pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
+				 struct pnso_service_request *svc_req,
 				 struct pnso_service_result *svc_res,
-				 completion_cb_t cb,
+				 completion_t cb,
 				 void *cb_ctx,
 				 pnso_poll_fn_t *pnso_poll_fn,
 				 void **pnso_poll_ctx);
-/**
- * pnso_add_to_batch() - routine that batches multiple requests and defers
- * processing.
- * @svc_req:		[in]	specifies a set of service requests that to be
- *				used to complete the services within the
- *				request.
- * @svc_res:		[out]	specifies a set of service results structures to
- *				report the status of each service within a
- *				request upon its completion.
- *
- * Caller is responsible for allocation and deallocation of memory for both
- * input and output parameters. Caller should keep the memory intact (ex:
- * svc_req/svc_res) until the Pensando accelerator returns the result via
- * completion callback.
- *
- * None of the requests will be processed until the caller triggers a 'post'
- * operation.
- *
- * Even if any one of the request processing fails, the entire batch of requests
- * will be dropped from further processing.
- *
- * Return:
- *	PNSO_OK - on success
- *	-EINVAL - on invalid input parameters
- *	-ENOMEM - on failing to allocate memory
- *
- */
-pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
-		struct pnso_service_result *svc_res);
-
-/**
- * pnso_flush_batch() - routine that starts submitting the batched requests for
- * further processing.
- * @cb:			[in]	specifies the caller-supplied completion
- *				callback routine.
- * @cb_ctx:		[in]	specifies the caller-supplied context
- *				information.
- * @pnso_poll_fn:	[in]	specifies the polling function, which the caller
- *				will use to poll for completion of the request.
- * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
- *
- * Refer to 'pnso_service_result' and 'pnso_service_status' notes above for
- * handling the output data.
- *
- * Even if just the processing of flush request fails, the entire batch of
- * requests will be dropped from further processing.
- *
- * Return:
- *	PNSO_OK - on success
- *	-EINVAL - on invalid input parameters
- *
- */
-pnso_error_t pnso_flush_batch(completion_cb_t cb,
-		void *cb_ctx,
-		pnso_poll_fn_t *pnso_poll_fn,
-		void **pnso_poll_ctx);
 
 /**
  * pnso_set_key_desc_idx() - sets the key descriptor index.
@@ -633,44 +522,6 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
 pnso_error_t pnso_set_key_desc_idx(const void *key1,
 				   const void *key2,
 				   uint32_t key_size, uint32_t key_idx);
-
-/**
- * pnso_register_compression_header_format - Register a new header format.
- * Needs to be done once during initialization.
- * @cp_hdr_fmt:		[in]	specified the header format to be embedded at
- *				beginning of compressed data.
- * @hdr_fmt_idx:	[in]	Non-zero index to uniquely identify the header
- *				format.
- *
- * Caller is responsible for managing the hdr_fmt_idx space and
- * allocation/deallocation of memory for input parameters
- *
- * Return:
- *	PNSO_OK - on success
- *	-EINVAL - on invalid input parameters
- *
- */
-pnso_error_t pnso_register_compression_header_format(
-		struct pnso_compression_header_format *cp_hdr_fmt,
-		uint32_t hdr_fmt_idx);
-
-/**
- * pnso_add_compression_algo_mapping - Creates a mapping of Pensando compression
- * algorithm number to algorithm number in compression header.  Need to be done
- * once during initialization.
- * @pnso_algo:		[in]	specifies the Pensando compression algorithm
- *				number.
- * @header_algo:	[in]	specifies the compression header algorithm
- *				number.
- *
- * Return:
- *	PNSO_OK - on success
- *	-EINVAL - on invalid input parameters
- *
- */
-pnso_error_t pnso_add_compression_algo_mapping(
-		enum pnso_compression_type pnso_algo,
-		uint32_t header_algo);
 
 #ifdef __cplusplus
 }

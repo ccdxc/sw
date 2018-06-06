@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <stdbool.h>
-#include "pnso_api.h"
+#include "pnso_sim_api.h"
 
 #ifdef __cplusplus
 extern "C" {
