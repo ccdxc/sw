@@ -103,11 +103,8 @@ iob_free:
    // Store fields needed in the K+I vector into the PHV
    phvwr	p.{nvme_kivec_t0_s2s_dst_lif...nvme_kivec_t0_s2s_dst_qtype}, \
                 d.{arm_lif...arm_qtype}
-   phvwr	p.{nvme_kivec_t0_s2s_dst_lif...nvme_kivec_t0_s2s_dst_qtype}, \
-                d.{arm_lif...arm_qtype}
    add		r1, d.arm_base_qid, ARM_QID_OFFSET_CMD_FREE_IOB_Q
    add		r2, d.arm_base_qaddr, ARM_QID_OFFSET_CMD_FREE_IOB_Q, ARM_QSTATE_ENTRY_SIZE_LOG2
-   phvwrpair	p.nvme_kivec_t0_s2s_dst_qid, r1, p.nvme_kivec_t0_s2s_dst_qaddr, r2
    phvwrpair	p.nvme_kivec_t0_s2s_dst_qid, r1, p.nvme_kivec_t0_s2s_dst_qaddr, r2
    phvwr	p.nvme_kivec_t0_s2s_w_ndx, d.w_ndx
 

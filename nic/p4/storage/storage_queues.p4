@@ -458,8 +458,8 @@ action pri_q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                        w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                        hi_weight, med_weight, lo_weight, hi_running, 
                        med_running, lo_running, num_running, max_cmds,
-                       next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
-                       ssd_bm_addr, pad) {
+                       dst_lif, dst_qtype, dst_qid, dst_qaddr, ssd_bm_addr, 
+                       wp_ndx_hi, wp_ndx_med, wp_ndx_lo, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   PRI_Q_STATE_COPY_STAGE0(pri_q_state_scratch)
@@ -518,8 +518,8 @@ action pri_q_state_incr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                         w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                         hi_weight, med_weight, lo_weight, hi_running, 
                         med_running, lo_running, num_running, max_cmds,
-                        next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
-                        ssd_bm_addr, pad) {
+                        dst_lif, dst_qtype, dst_qid, dst_qaddr, ssd_bm_addr, 
+                        wp_ndx_hi, wp_ndx_med, wp_ndx_lo, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   PRI_Q_STATE_COPY(pri_q_state_scratch)
@@ -565,8 +565,8 @@ action pri_q_state_decr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                         w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                         hi_weight, med_weight, lo_weight, hi_running, 
                         med_running, lo_running, num_running, max_cmds,
-                        next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
-                        ssd_bm_addr, pad) {
+                        dst_lif, dst_qtype, dst_qid, dst_qaddr, ssd_bm_addr, 
+                        wp_ndx_hi, wp_ndx_med, wp_ndx_lo, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   PRI_Q_STATE_COPY(pri_q_state_scratch)
@@ -613,8 +613,8 @@ action pri_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                         w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                         hi_weight, med_weight, lo_weight, hi_running, 
                         med_running, lo_running, num_running, max_cmds,
-                        next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
-                        ssd_bm_addr, pad) {
+                        dst_lif, dst_qtype, dst_qid, dst_qaddr, ssd_bm_addr, 
+                        wp_ndx_hi, wp_ndx_med, wp_ndx_lo, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   PRI_Q_STATE_COPY(pri_q_state_scratch)

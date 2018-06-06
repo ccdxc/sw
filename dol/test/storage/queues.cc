@@ -66,7 +66,6 @@ const static uint32_t	kArmNumEntries		 = 6;
 const static char	*kNvmePvmSqHandler	 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
 const static char	*kR2nSqHandler		 = "storage_tx_r2n_sq_handler.bin";
-const static char	*kNvmeBeSqHandler	 = "storage_tx_nvme_be_sq_handler.bin";
 const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
@@ -795,7 +794,7 @@ pvm_queues_setup() {
     printf("Initialized PVM NVME backend SQ %d \n", i);
 
     // Setup the queue state in Capri: 
-    if (qstate_if::setup_pri_q_state(pvm_lif, SQ_TYPE, i, (char *) kNvmeBeSqHandler, 
+    if (qstate_if::setup_pri_q_state(pvm_lif, SQ_TYPE, i,
                                      kNvmeBeTotalRings, kDefaultNoHostRings, 
                                      kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                      kDefaultEntrySize, true, pvm_lif, SQ_TYPE,

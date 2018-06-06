@@ -15,6 +15,7 @@ struct s3_tbl_pri_q_state_push_d d;
 struct phv_ p;
 
 %%
+   .param storage_tx_nvme_be_sq_handler_start
 
 storage_tx_pri_q_state_pop_start:
    // Store fields needed in the K+I vector into the PHV
@@ -40,20 +41,20 @@ storage_tx_pri_q_state_pop_start:
    // priority queue
    PRI_QUEUE_CAN_POP(d.p_ndx_hi, d.w_ndx_hi, d.hi_running, d.hi_weight, 
                      check_med)
-   SERVICE_PRI_QUEUE(d.w_ndx_hi, NVME_BE_PRIORITY_HI)
+   SERVICE_PRI_QUEUE(d.w_ndx_hi, NVME_BE_PRIORITY_HI, storage_tx_nvme_be_sq_handler_start)
 
 check_med:
    // If medium priority queue can be serviced, go with it, else check low
    // priority queue
    PRI_QUEUE_CAN_POP(d.p_ndx_med, d.w_ndx_med, d.med_running, d.med_weight,
                      check_lo)
-   SERVICE_PRI_QUEUE(d.w_ndx_med, NVME_BE_PRIORITY_MED)
+   SERVICE_PRI_QUEUE(d.w_ndx_med, NVME_BE_PRIORITY_MED, storage_tx_nvme_be_sq_handler_start)
 
 check_lo:
    // If medium priority queue can be serviced, go with it, else exit
    PRI_QUEUE_CAN_POP(d.p_ndx_lo, d.w_ndx_lo, d.lo_running, d.lo_weight,
                      clear_doorbell)
-   SERVICE_PRI_QUEUE(d.w_ndx_lo, NVME_BE_PRIORITY_LO)
+   SERVICE_PRI_QUEUE(d.w_ndx_lo, NVME_BE_PRIORITY_LO, storage_tx_nvme_be_sq_handler_start)
 
 
 clear_doorbell:
