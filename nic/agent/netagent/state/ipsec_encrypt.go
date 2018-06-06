@@ -38,6 +38,17 @@ func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) 
 		return err
 	}
 
+	// validate that the spec has a tep name
+	if len(ipSecSAEncrypt.Spec.TepNS) == 0 {
+		return fmt.Errorf("IPSecSAEncrypt needs to specify a tep-name")
+	}
+
+	// ensure that the tep-name resolves to a valid namespace.
+	tep, err := na.FindNamespace(ipSecSAEncrypt.Tenant, ipSecSAEncrypt.Spec.TepNS)
+	if err != nil {
+		return fmt.Errorf("tep-name %v doesn't refer to a valid namespace", ipSecSAEncrypt.Spec.TepNS)
+	}
+
 	// Only ESP Protocol supported for encrypt SA
 	if ipSecSAEncrypt.Spec.Protocol != "ESP" {
 		return fmt.Errorf("ipsec sa encrypt protocol should be ESP")
@@ -51,7 +62,7 @@ func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) 
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateIPSecSAEncrypt(ipSecSAEncrypt, ns)
+	err = na.Datapath.CreateIPSecSAEncrypt(ipSecSAEncrypt, ns, tep)
 	if err != nil {
 		log.Errorf("Error creating IPSec Encrypt rule in datapath. IPSecSAEncrypt {%+v}. Err: %v", ipSecSAEncrypt, err)
 		return err

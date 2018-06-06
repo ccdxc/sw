@@ -1198,6 +1198,7 @@ func createIPSecSAEncrypt(baseURL string) error {
 			LocalGwIP:     "20.1.1.1",
 			RemoteGwIP:    "20.1.1.2",
 			SPI:           1,
+			TepNS:         "infra",
 		},
 	}
 	// Create the nat pool
@@ -1252,6 +1253,7 @@ func createIPSecSADecrypt(baseURL string) error {
 			DecryptAlgo:   "AES_GCM_256",
 			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
 			SPI:           1,
+			TepNS:         "infra",
 		},
 	}
 	// Create the nat pool

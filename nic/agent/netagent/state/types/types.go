@@ -203,10 +203,10 @@ type NetDatapathAPI interface {
 	CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*IPSecRuleRef) error                                                     // creates a IPSec policy in the datapath
 	UpdateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error                                                                                        // updates a IPSec policy in the datapath
 	DeleteIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error                                                                                        // deletes a IPSec policy in the datapath
-	CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error                                                                                  // creates a IPSecSA encrypt rule in the datapath
+	CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns, tep *netproto.Namespace) error                                                                             // creates a IPSecSA encrypt rule in the datapath
 	UpdateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error                                                                                  // updates a IPSecSA encrypt rule in the datapath
 	DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error                                                                                  // deletes a IPSecSA encrypt rule in the datapath
-	CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // creates a IPSecSA decrypt rule in the datapath
+	CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns, tep *netproto.Namespace) error                                                                             // creates a IPSecSA decrypt rule in the datapath
 	UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // updates a IPSecSA decrypt rule in the datapath
 	DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // deletes a IPSecSA decrypt rule in the datapath
 	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []uint64) error                                                                                         // creates a security group policy in the datapath

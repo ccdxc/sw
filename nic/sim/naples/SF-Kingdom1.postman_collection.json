@@ -307,7 +307,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"20.1.1.1\",\"remote-gateway-ip\":\"20.1.1.2\", \"spi\":1}}"
+                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"20.1.1.1\",\"remote-gateway-ip\":\"20.1.1.2\", \"spi\":1,\"tep-namespace\":\"public\"}}"
                 },
                 "description": ""
             },
@@ -327,7 +327,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\", \"spi\":1}}"
+                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\", \"spi\":1,\"tep-namespace\":\"public\"}}"
                 },
                 "description": ""
             },

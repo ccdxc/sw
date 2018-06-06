@@ -34,6 +34,7 @@ func TestIPSecSADecryptCreateDelete(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
+			TepNS:              "default",
 		},
 	}
 
@@ -55,6 +56,7 @@ func TestIPSecSADecryptCreateDelete(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                42,
+			TepNS:              "default",
 		},
 	}
 	err := ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -112,6 +114,7 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
+			TepNS:              "default",
 		},
 	}
 	saDecryptUpdate := netproto.IPSecSADecrypt{
@@ -132,6 +135,7 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                42,
+			TepNS:              "default",
 		},
 	}
 	err := ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -143,6 +147,51 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 
 	err = ag.UpdateIPSecSADecrypt(&saDecryptUpdate)
 	AssertOk(t, err, "Error updating IPSec SA Decrypt rule")
+}
+
+func TestIPSecSADecryptCreateOnValidTep(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create backing namespace
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "public",
+		},
+	}
+
+	err := ag.CreateNamespace(&ns)
+	AssertOk(t, err, "Creating namespace failed")
+
+	// Create backing Decrypt and Decrypt rules
+	saDecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:           "ESP",
+			AuthAlgo:           "AES_GCM",
+			AuthKey:            "someRandomString",
+			DecryptAlgo:        "AES_GCM_256",
+			DecryptionKey:      "someRandomKey",
+			RekeyDecryptAlgo:   "DES3",
+			RekeyDecryptionKey: "someRandomString",
+			LocalGwIP:          "10.0.0.1",
+			RemoteGwIP:         "192.168.1.1",
+			SPI:                42,
+			TepNS:              "public",
+		},
+	}
+
+	err = ag.CreateIPSecSADecrypt(&saDecrypt)
+	AssertOk(t, err, "IPSec Decrypt Rule creation pointing to a valid tep failed")
 }
 
 //--------------------- Corner Case Tests ---------------------//
@@ -171,6 +220,7 @@ func TestIPSecSADecryptCreateOnNonExistingNamespace(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
+			TepNS:              "default",
 		},
 	}
 
@@ -203,6 +253,7 @@ func TestIPSecSADecryptCreateOnInvalidProtocol(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
+			TepNS:              "default",
 		},
 	}
 
@@ -235,9 +286,75 @@ func TestIPSecSADecryptUpdateOnNonExistingRule(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
+			TepNS:              "default",
 		},
 	}
 
 	err := ag.UpdateIPSecSADecrypt(&saDecrypt)
 	Assert(t, err != nil, "IPSec Decrypt Rule creation on invalid protocol spec")
+}
+
+func TestIPSecSADecryptCreateOnEmptyTep(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// Create backing Decrypt and Decrypt rules
+	saDecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:           "ESP",
+			AuthAlgo:           "AES_GCM",
+			AuthKey:            "someRandomString",
+			DecryptAlgo:        "AES_GCM_256",
+			DecryptionKey:      "someRandomKey",
+			RekeyDecryptAlgo:   "DES3",
+			RekeyDecryptionKey: "someRandomString",
+			LocalGwIP:          "10.0.0.1",
+			RemoteGwIP:         "192.168.1.1",
+			SPI:                42,
+		},
+	}
+
+	err := ag.CreateIPSecSADecrypt(&saDecrypt)
+	Assert(t, err != nil, "IPSec Decrypt Rule creation on empty tep succeeded")
+}
+
+func TestIPSecSADecryptCreateOnInValidTep(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// Create backing Decrypt and Decrypt rules
+	saDecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:           "ESP",
+			AuthAlgo:           "AES_GCM",
+			AuthKey:            "someRandomString",
+			DecryptAlgo:        "AES_GCM_256",
+			DecryptionKey:      "someRandomKey",
+			RekeyDecryptAlgo:   "DES3",
+			RekeyDecryptionKey: "someRandomString",
+			LocalGwIP:          "10.0.0.1",
+			RemoteGwIP:         "192.168.1.1",
+			SPI:                42,
+			TepNS:              "badTep",
+		},
+	}
+
+	err := ag.CreateIPSecSADecrypt(&saDecrypt)
+	Assert(t, err != nil, "IPSec Decrypt Rule creation pointing to an invalid tep succeeded")
 }

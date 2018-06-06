@@ -259,6 +259,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err = nagent.CreateIPSecSAEncrypt(&ipSecEncrypt)
@@ -282,6 +283,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			DecryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err = nagent.CreateIPSecSADecrypt(&ipSecDecrypt)

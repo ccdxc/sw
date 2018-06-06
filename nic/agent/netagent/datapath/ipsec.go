@@ -15,7 +15,18 @@ import (
 // ----------------------- IPSec Encrypt SA CRUDs ----------------------- //
 
 // CreateIPSecSAEncrypt creates an IPSecSA encrypt rule in the datapath
-func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns, tep *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+	tepVrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: tep.Status.NamespaceID,
+		},
+	}
+
 	localGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.LocalGwIP))
 	if len(localGwIP) == 0 {
 		return fmt.Errorf("could not parse IP from {%v}", localGwIP)
@@ -42,10 +53,12 @@ func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 	ipSecSAEncryptReqMsg := &halproto.IpsecSAEncryptRequestMsg{
 		Request: []*halproto.IpsecSAEncrypt{
 			{
+				TepVrf: tepVrfKey,
 				KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle{
 					KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle_CbId{
 						CbId: sa.Status.IPSecSAEncryptID,
 					},
+					VrfKeyOrHandle: vrfKey,
 				},
 				Protocol:                halproto.IpsecProtocol_IPSEC_PROTOCOL_ESP,
 				AuthenticationAlgorithm: convertAuthAlgorithm(sa.Spec.AuthAlgo),
@@ -102,14 +115,27 @@ func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 // ----------------------- IPSec Encrypt SA CRUDs ----------------------- //
 
 // CreateIPSecSADecrypt creates an IPSecSA decrypt rule in the datapath
-func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns, tep *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+	tepVrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: tep.Status.NamespaceID,
+		},
+	}
+
 	ipSecSADecryptReqMsg := &halproto.IpsecSADecryptRequestMsg{
 		Request: []*halproto.IpsecSADecrypt{
 			{
+				TepVrf: tepVrfKey,
 				KeyOrHandle: &halproto.IpsecSADecryptKeyHandle{
 					KeyOrHandle: &halproto.IpsecSADecryptKeyHandle_CbId{
 						CbId: sa.Status.IPSecSADecryptID,
 					},
+					VrfKeyOrHandle: vrfKey,
 				},
 				Protocol:                halproto.IpsecProtocol_IPSEC_PROTOCOL_ESP,
 				AuthenticationAlgorithm: convertAuthAlgorithm(sa.Spec.AuthAlgo),

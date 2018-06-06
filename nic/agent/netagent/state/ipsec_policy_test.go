@@ -31,6 +31,7 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -53,6 +54,7 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			RekeyDecryptionKey: "someRandomString",
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
+			TepNS:              "infra",
 		},
 	}
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -140,6 +142,7 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -234,6 +237,7 @@ func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {
 			LocalGwIP:     "20.1.1.1",
 			RemoteGwIP:    "20.1.1.2",
 			SPI:           1,
+			TepNS:         "infra",
 		},
 	}
 	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -253,6 +257,7 @@ func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {
 			DecryptAlgo:   "AES_GCM_256",
 			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
 			SPI:           1,
+			TepNS:         "infra",
 		},
 	}
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -329,6 +334,7 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 
@@ -349,6 +355,7 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			DecryptAlgo:   "AES_GCM_256",
 			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
 			SPI:           1,
+			TepNS:         "infra",
 		},
 	}
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -509,6 +516,7 @@ func TestIPSecPolicyCreateInvalidRule(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -563,6 +571,7 @@ func TestIPSecPolicyDatapathFailure(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -617,6 +626,7 @@ func TestIPSecPolicyCreateOnNonExistentNamespace(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -670,6 +680,7 @@ func TestIPSecPolicyUpdateOnNonExistentIPSecPolicy(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -723,6 +734,7 @@ func TestIPSecPolicyCreateOnInvalidEncryptSA(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
+			TepNS:         "infra",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -774,6 +786,7 @@ func TestIPSecPolicyCreateOnInvalidDecryptSA(t *testing.T) {
 			AuthKey:    "someRandomString",
 			LocalGwIP:  "10.0.0.1",
 			RemoteGwIP: "192.168.1.1",
+			TepNS:      "infra",
 		},
 	}
 	err := ag.CreateIPSecSADecrypt(&saDecrypt)

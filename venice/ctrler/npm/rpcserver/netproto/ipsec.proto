@@ -133,6 +133,9 @@ message IPSecSAEncryptSpec {
     // SPI Value
     uint32 SPI              = 8 [(gogoproto.jsontag) = "spi,omitempty"];
 
+    // TepNS holds the namespace that holds outer IP for the tunnel
+    string TepNS          = 9 [(gogoproto.jsontag) = "tep-namespace,omitempty"];
+
 }
 
 message Protocol{
@@ -247,6 +250,9 @@ message IPSecSADecryptSpec {
 
     // SPI information
     uint32 SPI                  = 11 [(gogoproto.jsontag) = "spi,omitempty"];
+
+    // TepNS holds the namespace that holds outer IP for the tunnel
+    string TepNS              = 12 [(gogoproto.jsontag) = "tep-namespace,omitempty"];
 
 }
 
