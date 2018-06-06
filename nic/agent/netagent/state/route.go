@@ -147,6 +147,7 @@ func (na *Nagent) DeleteRoute(rt *netproto.Route) error {
 	err = na.Datapath.DeleteRoute(route, ns)
 	if err != nil {
 		log.Errorf("Error deleting route {%+v}. Err: %v", rt, err)
+		return err
 	}
 
 	// delete from db

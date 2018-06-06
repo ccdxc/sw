@@ -144,6 +144,93 @@ func (hd *Datapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 
 // DeleteRoute deletes a Route in the datapath
 func (hd *Datapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
+	// Build next hop key
+	nextHopKey := &halproto.NexthopKeyHandle{
+		KeyOrHandle: &halproto.NexthopKeyHandle_NexthopId{
+			NexthopId: rt.Status.RouteID,
+		},
+	}
+
+	// Build route key
+	ip, net, err := net.ParseCIDR(rt.Spec.IPPrefix)
+	if err != nil {
+		return fmt.Errorf("error parsing the IP Prefix mask from %v. Err: %v", rt.Spec.IPPrefix, err)
+
+	}
+	prefixLen, _ := net.Mask.Size()
+	ipPrefix := &halproto.IPPrefix{
+		Address: &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(ip),
+			},
+		},
+		PrefixLen: uint32(prefixLen),
+	}
+
+	routeKey := &halproto.RouteKeyHandle{
+		KeyOrHandle: &halproto.RouteKeyHandle_RouteKey{
+			RouteKey: &halproto.RouteKey{
+				VrfKeyHandle: vrfKey,
+				IpPrefix:     ipPrefix,
+			},
+		},
+	}
+
+	nhDelReq := &halproto.NexthopDeleteRequestMsg{
+		Request: []*halproto.NexthopDeleteRequest{
+			{
+				KeyOrHandle: nextHopKey,
+			},
+		},
+	}
+
+	rtDelReq := &halproto.RouteDeleteRequestMsg{
+		Request: []*halproto.RouteDeleteRequest{
+			{
+				KeyOrHandle: routeKey,
+			},
+		},
+	}
+
+	// delete hal objects
+	if hd.Kind == "hal" {
+		// delete route
+		rtResp, err := hd.Hal.Netclient.RouteDelete(context.Background(), rtDelReq)
+		if err != nil {
+			log.Errorf("Error deleting route. Err: %v", err)
+			return err
+		}
+		if rtResp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", rtResp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+
+		// delete next hop
+		nhResp, err := hd.Hal.Netclient.NexthopDelete(context.Background(), nhDelReq)
+		if err != nil {
+			log.Errorf("Error deleting next hop. Err: %v", err)
+			return err
+		}
+		if nhResp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", nhResp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Netclient.RouteDelete(context.Background(), rtDelReq)
+		if err != nil {
+			log.Errorf("Error creating route. Err: %v", err)
+			return err
+		}
+	}
 
 	return nil
 }
