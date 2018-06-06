@@ -38,6 +38,7 @@ var apiObjects = []string{
 	// cmd objects
 	"Cluster",
 	"Node",
+	"Host",
 	"SmartNIC",
 
 	// events objects
@@ -51,6 +52,7 @@ var apiObjects = []string{
 	"Service",
 	"Sgpolicy",
 	"Tenant",
+	"Workload",
 
 	// networkencryption objects
 	"TrafficEncryptionPolicy",
@@ -129,6 +131,13 @@ func (idr *Indexer) createWatchers() error {
 	}
 	idr.channels["Node"] = idr.watchers["Node"].EventChan()
 
+	idr.watchers["Host"], err = idr.apiClient.ClusterV1().Host().Watch(idr.ctx, &opts)
+	if err != nil {
+		idr.logger.Errorf("Error starting watcher for cmd.Host object, err: %v", err)
+		return err
+	}
+	idr.channels["Host"] = idr.watchers["Host"].EventChan()
+
 	idr.watchers["SmartNIC"], err = idr.apiClient.ClusterV1().SmartNIC().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for cmd.SmartNIC object, err: %v", err)
@@ -145,10 +154,17 @@ func (idr *Indexer) createWatchers() error {
 
 	idr.watchers["Endpoint"], err = idr.apiClient.WorkloadV1().Endpoint().Watch(idr.ctx, &opts)
 	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.Endpoint object, err: %v", err)
+		idr.logger.Errorf("Error starting watcher for workload.Endpoint object, err: %v", err)
 		return err
 	}
 	idr.channels["Endpoint"] = idr.watchers["Endpoint"].EventChan()
+
+	idr.watchers["Workload"], err = idr.apiClient.WorkloadV1().Workload().Watch(idr.ctx, &opts)
+	if err != nil {
+		idr.logger.Errorf("Error starting watcher for workload.Workload object, err: %v", err)
+		return err
+	}
+	idr.channels["Workload"] = idr.watchers["Workload"].EventChan()
 
 	idr.watchers["LbPolicy"], err = idr.apiClient.NetworkV1().LbPolicy().Watch(idr.ctx, &opts)
 	if err != nil {

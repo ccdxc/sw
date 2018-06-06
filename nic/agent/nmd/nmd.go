@@ -27,12 +27,12 @@ type Agent struct {
 
 // NewAgent creates an agent instance
 func NewAgent(platform state.PlatformAPI,
-	nmdDbPath, nodeUUID, cmdRegURL, cmdUpdURL, nmdListenURL, mode string,
+	nmdDbPath, hostName, macAddr, cmdRegURL, cmdUpdURL, nmdListenURL, mode string,
 	regInterval, updInterval time.Duration,
 	resolverClient resolver.Interface) (*Agent, error) {
 
 	// create new NMD instance
-	nm, err := state.NewNMD(platform, nmdDbPath, nodeUUID, nmdListenURL, mode, regInterval, updInterval)
+	nm, err := state.NewNMD(platform, nmdDbPath, hostName, macAddr, nmdListenURL, mode, regInterval, updInterval)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err

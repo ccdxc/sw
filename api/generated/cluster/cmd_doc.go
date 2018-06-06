@@ -10,6 +10,11 @@ The following Messages are defined.
   Cluster
   ClusterSpec
   ClusterStatus
+  Host
+  HostIntfSpec
+  HostIntfStatus
+  HostSpec
+  HostStatus
   Node
   NodeCondition
   NodeSpec

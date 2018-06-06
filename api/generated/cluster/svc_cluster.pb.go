@@ -67,6 +67,48 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) GetObject() *Cluster {
 	return nil
 }
 
+type AutoMsgHostWatchHelper struct {
+	Events []*AutoMsgHostWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
+}
+
+func (m *AutoMsgHostWatchHelper) Reset()                    { *m = AutoMsgHostWatchHelper{} }
+func (m *AutoMsgHostWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgHostWatchHelper) ProtoMessage()               {}
+func (*AutoMsgHostWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{1} }
+
+func (m *AutoMsgHostWatchHelper) GetEvents() []*AutoMsgHostWatchHelper_WatchEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type AutoMsgHostWatchHelper_WatchEvent struct {
+	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Host  `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgHostWatchHelper_WatchEvent) Reset()         { *m = AutoMsgHostWatchHelper_WatchEvent{} }
+func (m *AutoMsgHostWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgHostWatchHelper_WatchEvent) ProtoMessage()    {}
+func (*AutoMsgHostWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcCluster, []int{1, 0}
+}
+
+func (m *AutoMsgHostWatchHelper_WatchEvent) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgHostWatchHelper_WatchEvent) GetObject() *Host {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 type AutoMsgNodeWatchHelper struct {
 	Events []*AutoMsgNodeWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -74,7 +116,7 @@ type AutoMsgNodeWatchHelper struct {
 func (m *AutoMsgNodeWatchHelper) Reset()                    { *m = AutoMsgNodeWatchHelper{} }
 func (m *AutoMsgNodeWatchHelper) String() string            { return proto.CompactTextString(m) }
 func (*AutoMsgNodeWatchHelper) ProtoMessage()               {}
-func (*AutoMsgNodeWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{1} }
+func (*AutoMsgNodeWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{2} }
 
 func (m *AutoMsgNodeWatchHelper) GetEvents() []*AutoMsgNodeWatchHelper_WatchEvent {
 	if m != nil {
@@ -92,7 +134,7 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Reset()         { *m = AutoMsgNodeWa
 func (m *AutoMsgNodeWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgNodeWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgNodeWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{1, 0}
+	return fileDescriptorSvcCluster, []int{2, 0}
 }
 
 func (m *AutoMsgNodeWatchHelper_WatchEvent) GetType() string {
@@ -117,7 +159,7 @@ func (m *AutoMsgSmartNICWatchHelper) Reset()         { *m = AutoMsgSmartNICWatch
 func (m *AutoMsgSmartNICWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgSmartNICWatchHelper) ProtoMessage()    {}
 func (*AutoMsgSmartNICWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{2}
+	return fileDescriptorSvcCluster, []int{3}
 }
 
 func (m *AutoMsgSmartNICWatchHelper) GetEvents() []*AutoMsgSmartNICWatchHelper_WatchEvent {
@@ -136,7 +178,7 @@ func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Reset()         { *m = AutoMsgSm
 func (m *AutoMsgSmartNICWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgSmartNICWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgSmartNICWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{2, 0}
+	return fileDescriptorSvcCluster, []int{3, 0}
 }
 
 func (m *AutoMsgSmartNICWatchHelper_WatchEvent) GetType() string {
@@ -161,7 +203,7 @@ func (m *AutoMsgTenantWatchHelper) Reset()         { *m = AutoMsgTenantWatchHelp
 func (m *AutoMsgTenantWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgTenantWatchHelper) ProtoMessage()    {}
 func (*AutoMsgTenantWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{3}
+	return fileDescriptorSvcCluster, []int{4}
 }
 
 func (m *AutoMsgTenantWatchHelper) GetEvents() []*AutoMsgTenantWatchHelper_WatchEvent {
@@ -180,7 +222,7 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Reset()         { *m = AutoMsgTena
 func (m *AutoMsgTenantWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgTenantWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgTenantWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{3, 0}
+	return fileDescriptorSvcCluster, []int{4, 0}
 }
 
 func (m *AutoMsgTenantWatchHelper_WatchEvent) GetType() string {
@@ -206,9 +248,27 @@ type ClusterList struct {
 func (m *ClusterList) Reset()                    { *m = ClusterList{} }
 func (m *ClusterList) String() string            { return proto.CompactTextString(m) }
 func (*ClusterList) ProtoMessage()               {}
-func (*ClusterList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{4} }
+func (*ClusterList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{5} }
 
 func (m *ClusterList) GetItems() []*Cluster {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type HostList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Host `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *HostList) Reset()                    { *m = HostList{} }
+func (m *HostList) String() string            { return proto.CompactTextString(m) }
+func (*HostList) ProtoMessage()               {}
+func (*HostList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{6} }
+
+func (m *HostList) GetItems() []*Host {
 	if m != nil {
 		return m.Items
 	}
@@ -224,7 +284,7 @@ type NodeList struct {
 func (m *NodeList) Reset()                    { *m = NodeList{} }
 func (m *NodeList) String() string            { return proto.CompactTextString(m) }
 func (*NodeList) ProtoMessage()               {}
-func (*NodeList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{5} }
+func (*NodeList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{7} }
 
 func (m *NodeList) GetItems() []*Node {
 	if m != nil {
@@ -242,7 +302,7 @@ type SmartNICList struct {
 func (m *SmartNICList) Reset()                    { *m = SmartNICList{} }
 func (m *SmartNICList) String() string            { return proto.CompactTextString(m) }
 func (*SmartNICList) ProtoMessage()               {}
-func (*SmartNICList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{6} }
+func (*SmartNICList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{8} }
 
 func (m *SmartNICList) GetItems() []*SmartNIC {
 	if m != nil {
@@ -260,7 +320,7 @@ type TenantList struct {
 func (m *TenantList) Reset()                    { *m = TenantList{} }
 func (m *TenantList) String() string            { return proto.CompactTextString(m) }
 func (*TenantList) ProtoMessage()               {}
-func (*TenantList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{7} }
+func (*TenantList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{9} }
 
 func (m *TenantList) GetItems() []*Tenant {
 	if m != nil {
@@ -272,6 +332,8 @@ func (m *TenantList) GetItems() []*Tenant {
 func init() {
 	proto.RegisterType((*AutoMsgClusterWatchHelper)(nil), "cluster.AutoMsgClusterWatchHelper")
 	proto.RegisterType((*AutoMsgClusterWatchHelper_WatchEvent)(nil), "cluster.AutoMsgClusterWatchHelper.WatchEvent")
+	proto.RegisterType((*AutoMsgHostWatchHelper)(nil), "cluster.AutoMsgHostWatchHelper")
+	proto.RegisterType((*AutoMsgHostWatchHelper_WatchEvent)(nil), "cluster.AutoMsgHostWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgNodeWatchHelper)(nil), "cluster.AutoMsgNodeWatchHelper")
 	proto.RegisterType((*AutoMsgNodeWatchHelper_WatchEvent)(nil), "cluster.AutoMsgNodeWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgSmartNICWatchHelper)(nil), "cluster.AutoMsgSmartNICWatchHelper")
@@ -279,6 +341,7 @@ func init() {
 	proto.RegisterType((*AutoMsgTenantWatchHelper)(nil), "cluster.AutoMsgTenantWatchHelper")
 	proto.RegisterType((*AutoMsgTenantWatchHelper_WatchEvent)(nil), "cluster.AutoMsgTenantWatchHelper.WatchEvent")
 	proto.RegisterType((*ClusterList)(nil), "cluster.ClusterList")
+	proto.RegisterType((*HostList)(nil), "cluster.HostList")
 	proto.RegisterType((*NodeList)(nil), "cluster.NodeList")
 	proto.RegisterType((*SmartNICList)(nil), "cluster.SmartNICList")
 	proto.RegisterType((*TenantList)(nil), "cluster.TenantList")
@@ -296,26 +359,32 @@ const _ = grpc.SupportPackageIsVersion4
 
 type ClusterV1Client interface {
 	AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoAddHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	AutoAddNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
 	AutoAddSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoAddTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoDeleteHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
 	AutoDeleteSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoDeleteTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoGetHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
 	AutoGetSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoGetTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ClusterList, error)
+	AutoListHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*HostList, error)
 	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NodeList, error)
 	AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SmartNICList, error)
 	AutoListTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*TenantList, error)
 	AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoUpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
 	AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoUpdateTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchClusterClient, error)
+	AutoWatchHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchHostClient, error)
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchNodeClient, error)
 	AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSmartNICClient, error)
 	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchTenantClient, error)
@@ -332,6 +401,15 @@ func NewClusterV1Client(cc *grpc.ClientConn) ClusterV1Client {
 func (c *clusterV1Client) AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoAddCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoAddHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error) {
+	out := new(Host)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoAddHost", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -374,6 +452,15 @@ func (c *clusterV1Client) AutoDeleteCluster(ctx context.Context, in *Cluster, op
 	return out, nil
 }
 
+func (c *clusterV1Client) AutoDeleteHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error) {
+	out := new(Host)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoDeleteHost", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
 	out := new(Node)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoDeleteNode", in, out, c.cc, opts...)
@@ -404,6 +491,15 @@ func (c *clusterV1Client) AutoDeleteTenant(ctx context.Context, in *Tenant, opts
 func (c *clusterV1Client) AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoGetCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoGetHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error) {
+	out := new(Host)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoGetHost", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -446,6 +542,15 @@ func (c *clusterV1Client) AutoListCluster(ctx context.Context, in *api.ListWatch
 	return out, nil
 }
 
+func (c *clusterV1Client) AutoListHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*HostList, error) {
+	out := new(HostList)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoListHost", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NodeList, error) {
 	out := new(NodeList)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoListNode", in, out, c.cc, opts...)
@@ -476,6 +581,15 @@ func (c *clusterV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchO
 func (c *clusterV1Client) AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoUpdateCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoUpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error) {
+	out := new(Host)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoUpdateHost", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -541,8 +655,40 @@ func (x *clusterV1AutoWatchClusterClient) Recv() (*AutoMsgClusterWatchHelper, er
 	return m, nil
 }
 
+func (c *clusterV1Client) AutoWatchHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchHostClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[1], c.cc, "/cluster.ClusterV1/AutoWatchHost", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &clusterV1AutoWatchHostClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ClusterV1_AutoWatchHostClient interface {
+	Recv() (*AutoMsgHostWatchHelper, error)
+	grpc.ClientStream
+}
+
+type clusterV1AutoWatchHostClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterV1AutoWatchHostClient) Recv() (*AutoMsgHostWatchHelper, error) {
+	m := new(AutoMsgHostWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *clusterV1Client) AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchNodeClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[1], c.cc, "/cluster.ClusterV1/AutoWatchNode", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[2], c.cc, "/cluster.ClusterV1/AutoWatchNode", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +720,7 @@ func (x *clusterV1AutoWatchNodeClient) Recv() (*AutoMsgNodeWatchHelper, error) {
 }
 
 func (c *clusterV1Client) AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSmartNICClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[2], c.cc, "/cluster.ClusterV1/AutoWatchSmartNIC", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[3], c.cc, "/cluster.ClusterV1/AutoWatchSmartNIC", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -606,7 +752,7 @@ func (x *clusterV1AutoWatchSmartNICClient) Recv() (*AutoMsgSmartNICWatchHelper, 
 }
 
 func (c *clusterV1Client) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchTenantClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[3], c.cc, "/cluster.ClusterV1/AutoWatchTenant", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[4], c.cc, "/cluster.ClusterV1/AutoWatchTenant", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -641,26 +787,32 @@ func (x *clusterV1AutoWatchTenantClient) Recv() (*AutoMsgTenantWatchHelper, erro
 
 type ClusterV1Server interface {
 	AutoAddCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoAddHost(context.Context, *Host) (*Host, error)
 	AutoAddNode(context.Context, *Node) (*Node, error)
 	AutoAddSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoAddTenant(context.Context, *Tenant) (*Tenant, error)
 	AutoDeleteCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoDeleteHost(context.Context, *Host) (*Host, error)
 	AutoDeleteNode(context.Context, *Node) (*Node, error)
 	AutoDeleteSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoDeleteTenant(context.Context, *Tenant) (*Tenant, error)
 	AutoGetCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoGetHost(context.Context, *Host) (*Host, error)
 	AutoGetNode(context.Context, *Node) (*Node, error)
 	AutoGetSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoGetTenant(context.Context, *Tenant) (*Tenant, error)
 	AutoListCluster(context.Context, *api.ListWatchOptions) (*ClusterList, error)
+	AutoListHost(context.Context, *api.ListWatchOptions) (*HostList, error)
 	AutoListNode(context.Context, *api.ListWatchOptions) (*NodeList, error)
 	AutoListSmartNIC(context.Context, *api.ListWatchOptions) (*SmartNICList, error)
 	AutoListTenant(context.Context, *api.ListWatchOptions) (*TenantList, error)
 	AutoUpdateCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoUpdateHost(context.Context, *Host) (*Host, error)
 	AutoUpdateNode(context.Context, *Node) (*Node, error)
 	AutoUpdateSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoUpdateTenant(context.Context, *Tenant) (*Tenant, error)
 	AutoWatchCluster(*api.ListWatchOptions, ClusterV1_AutoWatchClusterServer) error
+	AutoWatchHost(*api.ListWatchOptions, ClusterV1_AutoWatchHostServer) error
 	AutoWatchNode(*api.ListWatchOptions, ClusterV1_AutoWatchNodeServer) error
 	AutoWatchSmartNIC(*api.ListWatchOptions, ClusterV1_AutoWatchSmartNICServer) error
 	AutoWatchTenant(*api.ListWatchOptions, ClusterV1_AutoWatchTenantServer) error
@@ -684,6 +836,24 @@ func _ClusterV1_AutoAddCluster_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoAddCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoAddHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Host)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoAddHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoAddHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoAddHost(ctx, req.(*Host))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -760,6 +930,24 @@ func _ClusterV1_AutoDeleteCluster_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterV1_AutoDeleteHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Host)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoDeleteHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoDeleteHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoDeleteHost(ctx, req.(*Host))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_AutoDeleteNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Node)
 	if err := dec(in); err != nil {
@@ -828,6 +1016,24 @@ func _ClusterV1_AutoGetCluster_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoGetCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoGetHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Host)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoGetHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoGetHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoGetHost(ctx, req.(*Host))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -904,6 +1110,24 @@ func _ClusterV1_AutoListCluster_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterV1_AutoListHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoListHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoListHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoListHost(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_AutoListNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -972,6 +1196,24 @@ func _ClusterV1_AutoUpdateCluster_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoUpdateCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoUpdateHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Host)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoUpdateHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoUpdateHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoUpdateHost(ctx, req.(*Host))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1051,6 +1293,27 @@ func (x *clusterV1AutoWatchClusterServer) Send(m *AutoMsgClusterWatchHelper) err
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ClusterV1_AutoWatchHost_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ClusterV1Server).AutoWatchHost(m, &clusterV1AutoWatchHostServer{stream})
+}
+
+type ClusterV1_AutoWatchHostServer interface {
+	Send(*AutoMsgHostWatchHelper) error
+	grpc.ServerStream
+}
+
+type clusterV1AutoWatchHostServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterV1AutoWatchHostServer) Send(m *AutoMsgHostWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 func _ClusterV1_AutoWatchNode_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(api.ListWatchOptions)
 	if err := stream.RecvMsg(m); err != nil {
@@ -1123,6 +1386,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoAddCluster_Handler,
 		},
 		{
+			MethodName: "AutoAddHost",
+			Handler:    _ClusterV1_AutoAddHost_Handler,
+		},
+		{
 			MethodName: "AutoAddNode",
 			Handler:    _ClusterV1_AutoAddNode_Handler,
 		},
@@ -1137,6 +1404,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoDeleteCluster",
 			Handler:    _ClusterV1_AutoDeleteCluster_Handler,
+		},
+		{
+			MethodName: "AutoDeleteHost",
+			Handler:    _ClusterV1_AutoDeleteHost_Handler,
 		},
 		{
 			MethodName: "AutoDeleteNode",
@@ -1155,6 +1426,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoGetCluster_Handler,
 		},
 		{
+			MethodName: "AutoGetHost",
+			Handler:    _ClusterV1_AutoGetHost_Handler,
+		},
+		{
 			MethodName: "AutoGetNode",
 			Handler:    _ClusterV1_AutoGetNode_Handler,
 		},
@@ -1169,6 +1444,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoListCluster",
 			Handler:    _ClusterV1_AutoListCluster_Handler,
+		},
+		{
+			MethodName: "AutoListHost",
+			Handler:    _ClusterV1_AutoListHost_Handler,
 		},
 		{
 			MethodName: "AutoListNode",
@@ -1187,6 +1466,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoUpdateCluster_Handler,
 		},
 		{
+			MethodName: "AutoUpdateHost",
+			Handler:    _ClusterV1_AutoUpdateHost_Handler,
+		},
+		{
 			MethodName: "AutoUpdateNode",
 			Handler:    _ClusterV1_AutoUpdateNode_Handler,
 		},
@@ -1203,6 +1486,11 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AutoWatchCluster",
 			Handler:       _ClusterV1_AutoWatchCluster_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchHost",
+			Handler:       _ClusterV1_AutoWatchHost_Handler,
 			ServerStreams: true,
 		},
 		{
@@ -1288,6 +1576,70 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, erro
 	return i, nil
 }
 
+func (m *AutoMsgHostWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgHostWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, msg := range m.Events {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgHostWatchHelper_WatchEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgHostWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSvcCluster(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
+		n2, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
 func (m *AutoMsgNodeWatchHelper) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1343,11 +1695,11 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) 
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n2, err := m.Object.MarshalTo(dAtA[i:])
+		n3, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n3
 	}
 	return i, nil
 }
@@ -1407,11 +1759,11 @@ func (m *AutoMsgSmartNICWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, err
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n3, err := m.Object.MarshalTo(dAtA[i:])
+		n4, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n4
 	}
 	return i, nil
 }
@@ -1471,11 +1823,11 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n4, err := m.Object.MarshalTo(dAtA[i:])
+		n5, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
 	}
 	return i, nil
 }
@@ -1498,19 +1850,65 @@ func (m *ClusterList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
-	n5, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n5
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
-	n6, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n6
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
+	n7, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *HostList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *HostList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
+	n8, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
+	n9, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n9
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1544,19 +1942,19 @@ func (m *NodeList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
-	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n10, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
+	i += n10
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
-	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n11, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n8
+	i += n11
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1590,19 +1988,19 @@ func (m *SmartNICList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
-	n9, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n12, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n9
+	i += n12
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
-	n10, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n13, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n10
+	i += n13
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1636,19 +2034,19 @@ func (m *TenantList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
-	n11, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n14, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n11
+	i += n14
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
-	n12, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n15, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n12
+	i += n15
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1686,6 +2084,32 @@ func (m *AutoMsgClusterWatchHelper) Size() (n int) {
 }
 
 func (m *AutoMsgClusterWatchHelper_WatchEvent) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovSvcCluster(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovSvcCluster(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgHostWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovSvcCluster(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgHostWatchHelper_WatchEvent) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Type)
@@ -1778,6 +2202,22 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Size() (n int) {
 }
 
 func (m *ClusterList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSvcCluster(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovSvcCluster(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovSvcCluster(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *HostList) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -2021,6 +2461,199 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
 			}
 			if m.Object == nil {
 				m.Object = &Cluster{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgHostWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgHostWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgHostWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, &AutoMsgHostWatchHelper_WatchEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgHostWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Host{}
 			}
 			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2767,6 +3400,147 @@ func (m *ClusterList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *HostList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HostList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HostList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Host{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *NodeList) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3298,77 +4072,83 @@ var (
 func init() { proto.RegisterFile("svc_cluster.proto", fileDescriptorSvcCluster) }
 
 var fileDescriptorSvcCluster = []byte{
-	// 1147 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0x5d, 0x6f, 0xdb, 0x54,
-	0x18, 0xee, 0x69, 0xbb, 0x2c, 0x3d, 0x49, 0x9b, 0xe6, 0x94, 0x8e, 0xd8, 0x1a, 0x49, 0xea, 0xb1,
-	0x29, 0x0b, 0x6b, 0xcc, 0xca, 0x15, 0x65, 0x43, 0xda, 0xba, 0xa9, 0x4c, 0x62, 0x2d, 0xd2, 0xca,
-	0x18, 0x1f, 0x1a, 0x73, 0xec, 0x43, 0xea, 0x29, 0xb1, 0xad, 0xf8, 0xa4, 0x13, 0x42, 0xdc, 0x90,
-	0x4c, 0x5c, 0x20, 0x84, 0x04, 0x77, 0x5c, 0xa1, 0x5e, 0x20, 0x31, 0x71, 0xd5, 0x2b, 0x7e, 0xc2,
-	0xae, 0xd0, 0x24, 0xee, 0x26, 0x51, 0xa1, 0x8a, 0x1f, 0x32, 0x9d, 0x0f, 0x3b, 0xce, 0xb1, 0xf3,
-	0x75, 0xd1, 0x3b, 0xfb, 0xe8, 0x7d, 0x9f, 0xe7, 0xf1, 0xf3, 0x7e, 0xd8, 0x86, 0x79, 0xff, 0xc0,
-	0xfc, 0xd2, 0x6c, 0x76, 0x7c, 0x82, 0xdb, 0x35, 0xaf, 0xed, 0x12, 0x17, 0x9d, 0x15, 0xb7, 0xea,
-	0xf9, 0x86, 0xeb, 0x36, 0x9a, 0x58, 0x37, 0x3c, 0x5b, 0x37, 0x1c, 0xc7, 0x25, 0x06, 0xb1, 0x5d,
-	0xc7, 0xe7, 0x61, 0xea, 0xed, 0x86, 0x4d, 0xf6, 0x3b, 0xf5, 0x9a, 0xe9, 0xb6, 0x74, 0x0f, 0x3b,
-	0xbe, 0xe1, 0x58, 0xae, 0xee, 0x3f, 0xd1, 0x0f, 0xb0, 0x63, 0x9b, 0x58, 0xef, 0x10, 0xbb, 0xe9,
-	0xd3, 0xd4, 0x06, 0x76, 0xa2, 0xd9, 0xba, 0xed, 0x98, 0xcd, 0x8e, 0x85, 0x03, 0x98, 0xf5, 0x08,
-	0x4c, 0xc3, 0x6d, 0xb8, 0x3a, 0x3b, 0xae, 0x77, 0xbe, 0x62, 0x77, 0xec, 0x86, 0x5d, 0x89, 0xf0,
-	0x05, 0xb3, 0x65, 0x89, 0xcb, 0x2c, 0xc1, 0x8e, 0xe1, 0x10, 0x71, 0x77, 0x71, 0x88, 0x1c, 0x2a,
-	0xbe, 0x85, 0x89, 0xc1, 0xc3, 0xb4, 0x3f, 0x00, 0x54, 0x6e, 0x74, 0x88, 0x7b, 0xd7, 0x6f, 0x6c,
-	0xf1, 0xc7, 0xfc, 0xc4, 0x20, 0xe6, 0xfe, 0x07, 0xb8, 0xe9, 0xe1, 0x36, 0xba, 0x0e, 0x53, 0xb7,
-	0x0f, 0xb0, 0x43, 0xfc, 0x02, 0x28, 0xcf, 0x55, 0x32, 0x1b, 0xeb, 0xb5, 0xc0, 0x9a, 0xa1, 0x39,
-	0x35, 0x76, 0xcd, 0xb2, 0xd4, 0x6b, 0x10, 0xf6, 0xef, 0x50, 0x16, 0xce, 0xef, 0x7d, 0xed, 0xe1,
-	0x02, 0x28, 0x83, 0xca, 0x02, 0x2a, 0xc3, 0xd4, 0x6e, 0xfd, 0x31, 0x36, 0x49, 0x61, 0xb6, 0x0c,
-	0x2a, 0x99, 0x8d, 0xe5, 0x10, 0x5a, 0x60, 0x6e, 0xe6, 0x5e, 0x3e, 0x55, 0x32, 0x4f, 0x68, 0xfe,
-	0x3e, 0x43, 0xd6, 0x7e, 0x03, 0xf0, 0x9c, 0xe0, 0xdd, 0x71, 0x2d, 0x1c, 0x15, 0xba, 0x29, 0x09,
-	0xad, 0xca, 0x42, 0xa5, 0x84, 0xa8, 0xca, 0x77, 0x47, 0xa8, 0x7c, 0x43, 0x52, 0xb9, 0x18, 0xe2,
-	0x52, 0xc0, 0xb8, 0xc4, 0x3f, 0x01, 0x54, 0x05, 0xe3, 0xbd, 0x96, 0xd1, 0x26, 0x3b, 0x77, 0xb6,
-	0xa2, 0x32, 0xdf, 0x97, 0x64, 0xd6, 0x64, 0x99, 0x09, 0x49, 0x51, 0xa9, 0xd7, 0x47, 0x48, 0x5d,
-	0x93, 0xa4, 0xe6, 0x43, 0xec, 0x00, 0x34, 0x2e, 0xf7, 0x77, 0x00, 0x0b, 0x82, 0x79, 0x8f, 0x35,
-	0x4f, 0x54, 0xec, 0x35, 0x49, 0xec, 0x15, 0x59, 0x6c, 0x2c, 0x25, 0x2a, 0xf5, 0xbd, 0x11, 0x52,
-	0x4b, 0x92, 0xd4, 0x5c, 0x88, 0xcc, 0x21, 0xe3, 0x42, 0x7f, 0x04, 0x30, 0x23, 0xfa, 0xe2, 0x43,
-	0xdb, 0x27, 0x48, 0x83, 0x60, 0x2f, 0x2c, 0x89, 0xe1, 0xd9, 0x35, 0x8a, 0x7e, 0x17, 0x13, 0xe3,
-	0x66, 0xfa, 0xf9, 0x71, 0x69, 0xe6, 0xc5, 0x71, 0x09, 0xa0, 0xcb, 0x30, 0x4d, 0x63, 0xe9, 0x69,
-	0x61, 0x2e, 0x12, 0x1a, 0x1c, 0x46, 0x42, 0x4b, 0xf0, 0xcc, 0x1d, 0x82, 0x5b, 0x7e, 0x61, 0x9e,
-	0x3d, 0x69, 0xbc, 0x17, 0x97, 0x5e, 0x3e, 0x55, 0x60, 0xd3, 0xf6, 0x89, 0xd0, 0xf3, 0x3d, 0x80,
-	0x69, 0xda, 0x01, 0xa7, 0x21, 0xe6, 0xfc, 0xa0, 0x18, 0xa9, 0xe5, 0x64, 0x25, 0x3f, 0x01, 0x98,
-	0x0d, 0x0a, 0x7c, 0x1a, 0x6a, 0xca, 0x83, 0x6a, 0x12, 0xba, 0x4a, 0x56, 0xf4, 0x03, 0x80, 0x90,
-	0xd7, 0xf1, 0x34, 0xf4, 0x14, 0x07, 0xf5, 0xc4, 0x5a, 0x47, 0x52, 0xb3, 0xf1, 0xf7, 0x0a, 0x5c,
-	0x10, 0x55, 0xbc, 0x7f, 0x15, 0xdd, 0x82, 0x4b, 0xb4, 0x79, 0x6f, 0x58, 0x96, 0x38, 0x43, 0xb1,
-	0x5a, 0xab, 0xb1, 0x13, 0x6d, 0xe9, 0xa8, 0xa7, 0xa4, 0xcc, 0x36, 0x36, 0x08, 0xfe, 0xab, 0xa7,
-	0x00, 0xb4, 0x03, 0x33, 0x02, 0x85, 0x96, 0x04, 0x0d, 0x56, 0x48, 0x1d, 0xbc, 0xd5, 0xd6, 0x06,
-	0x93, 0xbf, 0xfb, 0xe7, 0xff, 0x5f, 0x66, 0x17, 0xe1, 0xcc, 0x26, 0xa8, 0x6a, 0x29, 0xdd, 0x71,
-	0x2d, 0xec, 0xa3, 0x87, 0x30, 0x27, 0xf0, 0x02, 0x53, 0x51, 0xdc, 0x67, 0x35, 0x7e, 0xa4, 0x5d,
-	0x4c, 0xc0, 0xce, 0x73, 0x6c, 0xa8, 0xfb, 0x34, 0xca, 0xb1, 0x4d, 0x1f, 0xdd, 0x87, 0x8b, 0x02,
-	0x9f, 0x9b, 0x84, 0x64, 0xd7, 0x54, 0xf9, 0x40, 0xbb, 0x90, 0x80, 0x9c, 0xe3, 0xc8, 0x69, 0x9d,
-	0xbf, 0x68, 0x7c, 0x64, 0xc1, 0x3c, 0xc5, 0xbd, 0x85, 0x9b, 0x98, 0xe0, 0x69, 0x0c, 0x7d, 0x8b,
-	0xa2, 0x5b, 0x2c, 0x2d, 0x44, 0x7f, 0x1d, 0xce, 0x6c, 0xce, 0x54, 0xf3, 0xba, 0x88, 0xd5, 0xbf,
-	0xd9, 0xad, 0xed, 0x18, 0x2d, 0xfc, 0x2d, 0xfa, 0x94, 0xd7, 0x8c, 0xb3, 0x4c, 0x60, 0xf8, 0xe5,
-	0x04, 0xf0, 0x55, 0x06, 0x9e, 0xe3, 0x7e, 0xf7, 0xa1, 0x6d, 0x88, 0xfa, 0xd0, 0x53, 0x7a, 0xbf,
-	0x9e, 0x40, 0xa3, 0x30, 0x9a, 0x95, 0xbe, 0xf5, 0x7d, 0x2a, 0x03, 0x2e, 0xf7, 0xa9, 0x26, 0x2e,
-	0xc3, 0x28, 0xa3, 0x44, 0x15, 0xfa, 0x14, 0x0f, 0xb9, 0x51, 0xdb, 0x98, 0x4c, 0x53, 0x8b, 0xca,
-	0x51, 0x4f, 0x99, 0x6b, 0x60, 0x32, 0x88, 0x8f, 0x12, 0x0a, 0x71, 0x8f, 0xb7, 0xfd, 0x36, 0x26,
-	0x13, 0x54, 0xe1, 0x92, 0x0c, 0xcb, 0x4a, 0x80, 0x62, 0x25, 0x30, 0x79, 0xef, 0x6f, 0x63, 0x32,
-	0xa5, 0xff, 0x55, 0x99, 0x80, 0x99, 0x8f, 0x12, 0xcd, 0xff, 0x9c, 0x0f, 0xc0, 0x36, 0x26, 0x13,
-	0x3b, 0x3f, 0xd4, 0x96, 0x98, 0xed, 0x8f, 0xf8, 0x13, 0xd0, 0x5d, 0x15, 0xf8, 0xbe, 0x1a, 0x6e,
-	0x2f, 0xf6, 0x0e, 0xdc, 0xf5, 0xd8, 0xa7, 0x9e, 0xfa, 0x9a, 0x6c, 0x3e, 0x8d, 0xd0, 0xca, 0x47,
-	0x3d, 0x65, 0x9e, 0x6e, 0xac, 0x90, 0x6a, 0x89, 0x51, 0xa5, 0x83, 0x0a, 0xa0, 0x07, 0x30, 0x1b,
-	0x30, 0x30, 0xe7, 0x87, 0xc0, 0xe7, 0x07, 0x2a, 0xc0, 0xb0, 0x8b, 0x31, 0xec, 0x2c, 0xc3, 0x0e,
-	0x36, 0x8f, 0xc5, 0xbb, 0x92, 0xc6, 0x86, 0xf6, 0x0f, 0x41, 0x5f, 0x8d, 0x95, 0x80, 0x31, 0x68,
-	0x31, 0x86, 0x65, 0xc6, 0x10, 0xdd, 0x3f, 0xa2, 0x31, 0x69, 0xbc, 0xf0, 0x7f, 0x08, 0xc7, 0x8a,
-	0x54, 0x85, 0x31, 0xfe, 0x04, 0x7b, 0x08, 0xf3, 0x3d, 0xf4, 0xb1, 0x67, 0x19, 0xd3, 0xed, 0xa1,
-	0x2b, 0x74, 0xbc, 0x3a, 0x2c, 0x2d, 0x04, 0x2f, 0xb0, 0x2d, 0xa7, 0x26, 0xf4, 0xff, 0x67, 0xfc,
-	0x31, 0x38, 0xcd, 0x04, 0x23, 0x50, 0x4d, 0x40, 0x3f, 0xc7, 0xd1, 0x63, 0x63, 0xf0, 0x98, 0x6f,
-	0x22, 0x8e, 0x3d, 0xe5, 0x24, 0xd4, 0x12, 0x78, 0x54, 0xce, 0x93, 0x38, 0x0d, 0x75, 0x5e, 0x74,
-	0xce, 0x35, 0xf1, 0x40, 0x8c, 0xf4, 0x2a, 0x61, 0x17, 0x31, 0x0e, 0x56, 0xdd, 0x31, 0x53, 0xa1,
-	0x8d, 0xff, 0xa9, 0xd0, 0x16, 0x8f, 0x7a, 0xca, 0x19, 0xf6, 0x41, 0x48, 0xb9, 0xdf, 0x06, 0xe8,
-	0x01, 0x9f, 0x68, 0x16, 0x33, 0x6a, 0x26, 0x4a, 0x63, 0x7e, 0x04, 0xe2, 0xc8, 0x8f, 0x78, 0x33,
-	0xb1, 0x98, 0x71, 0x33, 0x71, 0x61, 0x82, 0xef, 0xf7, 0x38, 0xc3, 0x17, 0x7c, 0x61, 0xb0, 0x98,
-	0xd1, 0xf3, 0xb0, 0x36, 0xf6, 0x93, 0x3b, 0x86, 0xae, 0xfe, 0x0b, 0x7e, 0xee, 0x2a, 0xb3, 0x07,
-	0x57, 0x7f, 0xed, 0x2a, 0xc1, 0x9f, 0xeb, 0x61, 0x57, 0x39, 0xbb, 0x15, 0x5e, 0xce, 0x53, 0x0b,
-	0x0e, 0xbb, 0x4a, 0x3a, 0x10, 0x7b, 0xd8, 0x55, 0x52, 0x1c, 0xf8, 0x59, 0x57, 0x59, 0x83, 0x41,
-	0x28, 0x9a, 0xf3, 0x3a, 0x04, 0xd1, 0x1d, 0x88, 0xc4, 0x2b, 0x08, 0xb1, 0x31, 0x7c, 0xd6, 0x55,
-	0xde, 0x84, 0x0c, 0x24, 0x29, 0xc2, 0x73, 0x7d, 0x12, 0xc6, 0x55, 0x60, 0x48, 0x32, 0x36, 0xf6,
-	0x12, 0x14, 0x22, 0x78, 0x10, 0x0b, 0x4f, 0x88, 0xbc, 0x99, 0x7d, 0x7e, 0x52, 0x04, 0x2f, 0x4e,
-	0x8a, 0xe0, 0xbf, 0x93, 0x22, 0xf8, 0x08, 0xd4, 0x53, 0xec, 0x47, 0xf6, 0x9d, 0x57, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0x1f, 0x01, 0xcd, 0xe4, 0xba, 0x0f, 0x00, 0x00,
+	// 1244 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x98, 0xcf, 0x6f, 0xdc, 0x44,
+	0x14, 0xc7, 0x33, 0x49, 0xba, 0xdd, 0x4e, 0x36, 0x3f, 0x76, 0x4a, 0xca, 0xda, 0x2a, 0xd9, 0x8d,
+	0x4b, 0xab, 0x34, 0x34, 0x6b, 0x1a, 0x4e, 0x84, 0x16, 0xa9, 0x4d, 0xab, 0xb4, 0x12, 0x4d, 0x90,
+	0x1a, 0x4a, 0xf9, 0xa1, 0x52, 0xc7, 0x1e, 0x36, 0xae, 0x76, 0x6d, 0x2b, 0x9e, 0x4d, 0x85, 0x10,
+	0x17, 0x76, 0x2b, 0x0e, 0xa8, 0x20, 0xc1, 0x8d, 0x13, 0xca, 0x01, 0x89, 0x8a, 0x53, 0x4e, 0xfc,
+	0x09, 0x3d, 0x56, 0xe2, 0xd6, 0x43, 0x85, 0x22, 0xfe, 0x10, 0x34, 0x3f, 0xec, 0xb5, 0xc7, 0x5e,
+	0xdb, 0x2b, 0x14, 0x4e, 0xb1, 0xad, 0x37, 0x9f, 0xf7, 0xf5, 0x7c, 0xdf, 0x7b, 0xce, 0x2c, 0xac,
+	0xfa, 0xfb, 0xe6, 0x17, 0x66, 0xbb, 0xeb, 0x13, 0xbc, 0xd7, 0xf4, 0xf6, 0x5c, 0xe2, 0xa2, 0x93,
+	0xe2, 0x56, 0x3d, 0xdb, 0x72, 0xdd, 0x56, 0x1b, 0xeb, 0x86, 0x67, 0xeb, 0x86, 0xe3, 0xb8, 0xc4,
+	0x20, 0xb6, 0xeb, 0xf8, 0x3c, 0x4c, 0xbd, 0xd9, 0xb2, 0xc9, 0x6e, 0x77, 0xa7, 0x69, 0xba, 0x1d,
+	0xdd, 0xc3, 0x8e, 0x6f, 0x38, 0x96, 0xab, 0xfb, 0x8f, 0xf5, 0x7d, 0xec, 0xd8, 0x26, 0xd6, 0xbb,
+	0xc4, 0x6e, 0xfb, 0x74, 0x69, 0x0b, 0x3b, 0xd1, 0xd5, 0xba, 0xed, 0x98, 0xed, 0xae, 0x85, 0x03,
+	0xcc, 0x4a, 0x04, 0xd3, 0x72, 0x5b, 0xae, 0xce, 0x1e, 0xef, 0x74, 0xbf, 0x64, 0x77, 0xec, 0x86,
+	0x5d, 0x89, 0xf0, 0x53, 0x66, 0xc7, 0x12, 0x97, 0x15, 0x82, 0x1d, 0xc3, 0x21, 0xe2, 0xee, 0xfc,
+	0x10, 0x39, 0x54, 0x7c, 0x07, 0x13, 0x83, 0x87, 0x69, 0xbf, 0x03, 0xa8, 0x5c, 0xeb, 0x12, 0xf7,
+	0x8e, 0xdf, 0x5a, 0xe7, 0xaf, 0xf9, 0xb1, 0x41, 0xcc, 0xdd, 0x5b, 0xb8, 0xed, 0xe1, 0x3d, 0x74,
+	0x15, 0x96, 0x6e, 0xee, 0x63, 0x87, 0xf8, 0x35, 0xd0, 0x98, 0x58, 0x9a, 0x5a, 0x5d, 0x69, 0x06,
+	0x5b, 0x33, 0x74, 0x4d, 0x93, 0x5d, 0xb3, 0x55, 0xea, 0x15, 0x08, 0x07, 0x77, 0xa8, 0x02, 0x27,
+	0xb7, 0xbf, 0xf2, 0x70, 0x0d, 0x34, 0xc0, 0xd2, 0x29, 0xd4, 0x80, 0xa5, 0xad, 0x9d, 0x47, 0xd8,
+	0x24, 0xb5, 0xf1, 0x06, 0x58, 0x9a, 0x5a, 0x9d, 0x0b, 0xd1, 0x82, 0xb9, 0x36, 0xfb, 0xf2, 0x89,
+	0x32, 0xf5, 0x98, 0xae, 0xdf, 0x65, 0x64, 0xed, 0x57, 0x00, 0xcf, 0x88, 0xbc, 0xb7, 0x5c, 0x9f,
+	0x44, 0x85, 0xae, 0x49, 0x42, 0x97, 0x65, 0xa1, 0xd2, 0x82, 0xa8, 0xca, 0x77, 0x33, 0x54, 0xbe,
+	0x21, 0xa9, 0x9c, 0x0e, 0xb9, 0x14, 0x98, 0x29, 0x71, 0xd3, 0xb5, 0xf0, 0x48, 0x12, 0xa5, 0x05,
+	0xff, 0x5d, 0x22, 0x05, 0x26, 0x25, 0xfe, 0x01, 0xa0, 0x2a, 0x32, 0xde, 0xed, 0x18, 0x7b, 0x64,
+	0xf3, 0xf6, 0x7a, 0x54, 0xe6, 0xfb, 0x92, 0xcc, 0xa6, 0x2c, 0x33, 0x65, 0x51, 0x54, 0xea, 0xd5,
+	0x0c, 0xa9, 0x8b, 0x92, 0xd4, 0x6a, 0xc8, 0x0e, 0xa0, 0x49, 0xb9, 0xbf, 0x01, 0x58, 0x13, 0x99,
+	0xb7, 0x59, 0x7d, 0x47, 0xc5, 0x5e, 0x91, 0xc4, 0x5e, 0x92, 0xc5, 0x26, 0x96, 0x44, 0xa5, 0xbe,
+	0x97, 0x21, 0xb5, 0x2e, 0x49, 0x9d, 0x0d, 0xc9, 0x1c, 0x99, 0x14, 0xfa, 0x14, 0xc0, 0x29, 0x51,
+	0xba, 0x1f, 0xd8, 0x3e, 0x41, 0x1a, 0x04, 0xdb, 0xa1, 0x25, 0x86, 0x67, 0x37, 0x29, 0xfd, 0x0e,
+	0x26, 0xc6, 0xf5, 0xf2, 0xf3, 0x57, 0xf5, 0xb1, 0x17, 0xaf, 0xea, 0x00, 0x5d, 0x84, 0x65, 0x1a,
+	0x4b, 0x9f, 0xd6, 0x26, 0x22, 0xa1, 0xc1, 0xc3, 0x48, 0x68, 0x1d, 0x9e, 0xb8, 0x4d, 0x70, 0xc7,
+	0xaf, 0x4d, 0xb2, 0x37, 0x4d, 0xb6, 0xcb, 0xcc, 0xcb, 0x27, 0x0a, 0x6c, 0xdb, 0x3e, 0x11, 0x7a,
+	0xbe, 0x03, 0xb0, 0x4c, 0x8b, 0xf4, 0x38, 0xc4, 0x9c, 0x8d, 0x8b, 0x91, 0xba, 0x22, 0x4d, 0x09,
+	0xad, 0xc5, 0xff, 0x55, 0x09, 0x2b, 0x7e, 0x59, 0xc9, 0x8f, 0x00, 0x56, 0x82, 0x52, 0x3b, 0x0e,
+	0x35, 0x8d, 0xb8, 0x9a, 0x94, 0xfa, 0x96, 0x15, 0x7d, 0x0f, 0x20, 0xe4, 0x15, 0x75, 0x1c, 0x7a,
+	0x16, 0xe2, 0x7a, 0x12, 0x45, 0x2c, 0xa9, 0x59, 0xfd, 0xa1, 0x06, 0x4f, 0x89, 0x7a, 0xba, 0x77,
+	0x19, 0xdd, 0x80, 0x33, 0xb4, 0x8d, 0xae, 0x59, 0x96, 0x78, 0x86, 0x12, 0x55, 0xa7, 0x26, 0x9e,
+	0x68, 0x33, 0x87, 0x7d, 0xa5, 0x64, 0xee, 0x61, 0x83, 0xe0, 0x3f, 0xfb, 0x0a, 0x40, 0x9b, 0x70,
+	0x4a, 0x50, 0x68, 0x71, 0xa0, 0x78, 0xad, 0xa8, 0xf1, 0x5b, 0x6d, 0x31, 0xbe, 0xf8, 0xdb, 0xbf,
+	0xfe, 0xf9, 0x79, 0x7c, 0x1a, 0x8e, 0xad, 0x81, 0x65, 0xad, 0xa4, 0xef, 0xba, 0x3e, 0xf1, 0x23,
+	0x3c, 0x6a, 0x31, 0x8a, 0x3b, 0xae, 0xc6, 0x6f, 0xb3, 0x79, 0x8e, 0x6b, 0x61, 0x1f, 0x3d, 0x80,
+	0xb3, 0x82, 0x17, 0x98, 0x84, 0x92, 0xbe, 0xa9, 0xc9, 0x47, 0xda, 0xf9, 0x14, 0x76, 0x95, 0xb3,
+	0xa1, 0xee, 0xd3, 0x28, 0xc7, 0x36, 0x7d, 0x74, 0x0f, 0x4e, 0x0b, 0x3e, 0xdf, 0x74, 0x24, 0xbb,
+	0xa0, 0xca, 0x0f, 0xb4, 0x73, 0x29, 0xe4, 0x59, 0x4e, 0x2e, 0xeb, 0xfc, 0x2b, 0xef, 0x23, 0x0b,
+	0x56, 0x29, 0xf7, 0x06, 0x6e, 0x63, 0x82, 0x47, 0x31, 0xe8, 0x2d, 0x4a, 0xb7, 0xd8, 0xb2, 0x90,
+	0xfe, 0x3a, 0x1c, 0x5b, 0x1b, 0x5b, 0xae, 0xea, 0x22, 0x56, 0xff, 0x7a, 0xab, 0xb9, 0x69, 0x74,
+	0xf0, 0x37, 0xe8, 0x13, 0x5e, 0x03, 0x3c, 0x4b, 0x01, 0x03, 0x2f, 0xa6, 0xc0, 0xe7, 0x19, 0x7c,
+	0x96, 0xfb, 0x37, 0x04, 0x5d, 0xc0, 0xcb, 0x2c, 0x34, 0xb3, 0x72, 0x80, 0xb6, 0x21, 0x1a, 0xa0,
+	0x47, 0xb4, 0x75, 0x25, 0x25, 0x8d, 0xc2, 0xd2, 0x9c, 0x1e, 0xb8, 0x3a, 0x48, 0x65, 0xc0, 0xb9,
+	0x41, 0xaa, 0xc2, 0x0e, 0x67, 0x79, 0x20, 0x0c, 0x1e, 0xa4, 0x78, 0xc0, 0x37, 0x6a, 0x03, 0x93,
+	0x51, 0x6c, 0x5e, 0x3a, 0xec, 0x2b, 0x13, 0x2d, 0x4c, 0xe2, 0x7c, 0x94, 0xe2, 0xf1, 0x5d, 0xde,
+	0x51, 0x1b, 0x98, 0x14, 0x30, 0xf8, 0x82, 0x8c, 0x65, 0x16, 0xa0, 0x84, 0xbb, 0x03, 0x68, 0x01,
+	0x6b, 0x87, 0x42, 0x25, 0x5f, 0x4d, 0xde, 0xab, 0x1b, 0x98, 0x8c, 0x68, 0xea, 0xb2, 0x9c, 0x80,
+	0x39, 0x8a, 0x52, 0x1d, 0xfd, 0x8c, 0x37, 0xec, 0x06, 0x26, 0x85, 0xed, 0x1c, 0xba, 0xd7, 0x09,
+	0x2f, 0x1f, 0xf2, 0x37, 0xa0, 0xb3, 0x3a, 0x30, 0x73, 0x3e, 0x9c, 0xde, 0xec, 0xbf, 0x91, 0x2d,
+	0x8f, 0x9d, 0x0b, 0xd4, 0xd7, 0x64, 0x47, 0x69, 0x84, 0xd6, 0x38, 0xec, 0x2b, 0x93, 0x74, 0x62,
+	0x87, 0xa9, 0x66, 0x58, 0xaa, 0x72, 0x60, 0x2b, 0xba, 0x0f, 0x2b, 0x41, 0x06, 0x66, 0xe7, 0x10,
+	0x7c, 0x35, 0x66, 0x2b, 0x63, 0x2f, 0x24, 0xd8, 0x15, 0xc6, 0x0e, 0x26, 0x6f, 0x84, 0xcc, 0x3c,
+	0xcd, 0x25, 0x07, 0x1f, 0xfd, 0x0c, 0x32, 0x9f, 0xc1, 0x16, 0x6f, 0x22, 0x1a, 0x1b, 0x1a, 0x3b,
+	0x84, 0x3e, 0x9f, 0x30, 0x97, 0x65, 0xd0, 0x12, 0x19, 0xe6, 0x58, 0x86, 0xe8, 0x24, 0x16, 0x7d,
+	0x44, 0xe3, 0x85, 0xb3, 0x43, 0x72, 0x9c, 0x96, 0xfc, 0xcd, 0xd9, 0xf9, 0x60, 0x22, 0x63, 0x3e,
+	0x91, 0x3f, 0xf2, 0x2c, 0x63, 0xb4, 0x89, 0x7c, 0x89, 0x4e, 0x83, 0x2e, 0x5b, 0x16, 0xc2, 0x6b,
+	0x6c, 0xde, 0xab, 0x29, 0xed, 0xfa, 0x29, 0x7f, 0x0d, 0x9e, 0xa6, 0x40, 0xc7, 0x2e, 0xa7, 0xd0,
+	0xcf, 0x70, 0x7a, 0xa2, 0x6b, 0x63, 0xec, 0x02, 0x8d, 0x9b, 0xc9, 0x96, 0x9a, 0xf7, 0x11, 0x1f,
+	0xca, 0x9c, 0x3d, 0x62, 0xff, 0x36, 0x53, 0xf2, 0xa8, 0x3c, 0x4f, 0x6a, 0x0f, 0xef, 0xf0, 0x82,
+	0xe2, 0xb9, 0x0a, 0xb7, 0x71, 0xa6, 0x0f, 0x29, 0x63, 0x99, 0xe5, 0x60, 0x95, 0x93, 0xd3, 0xcb,
+	0x5a, 0xfe, 0xb9, 0x59, 0x9b, 0x3e, 0xec, 0x2b, 0x27, 0xd8, 0x81, 0x82, 0xe6, 0x7e, 0x1b, 0xa0,
+	0xfb, 0x7c, 0x0e, 0xf1, 0x98, 0x8c, 0x4e, 0xae, 0xe7, 0x9c, 0x75, 0xb3, 0xc9, 0x59, 0x9d, 0x5c,
+	0xcf, 0x39, 0xa2, 0x26, 0xc9, 0x0f, 0x79, 0x0b, 0xb0, 0x98, 0xbc, 0x4e, 0x3e, 0x57, 0xe0, 0x64,
+	0x99, 0xcc, 0xf0, 0x39, 0x1f, 0xa0, 0x2c, 0x26, 0xbb, 0x8b, 0x17, 0x73, 0x0f, 0x83, 0x09, 0xba,
+	0xfa, 0x74, 0xfc, 0xa7, 0x9e, 0x32, 0xbe, 0x7f, 0xf9, 0x97, 0x9e, 0x12, 0xfc, 0xec, 0x73, 0xd0,
+	0x53, 0x4e, 0xae, 0x87, 0x97, 0x93, 0x74, 0x0b, 0xe8, 0x5f, 0xba, 0xc9, 0x07, 0x3d, 0xa5, 0x1c,
+	0x88, 0x3e, 0xe8, 0x29, 0x25, 0x9e, 0xe0, 0x59, 0x4f, 0x59, 0x84, 0xc1, 0x12, 0x34, 0xe1, 0x75,
+	0x09, 0xa2, 0xdf, 0x06, 0x24, 0xbe, 0xf7, 0x88, 0x0d, 0x91, 0x67, 0x3d, 0xe5, 0x4d, 0xc8, 0x60,
+	0x69, 0x11, 0x1e, 0xb5, 0x3b, 0x12, 0xc7, 0xec, 0xcf, 0x8b, 0x5b, 0x82, 0xa1, 0x98, 0xdc, 0xd8,
+	0x0b, 0x50, 0x88, 0xe5, 0x41, 0x2c, 0x3c, 0x25, 0xf2, 0x7a, 0xe5, 0xf9, 0xd1, 0x02, 0x78, 0x71,
+	0xb4, 0x00, 0xfe, 0x3e, 0x5a, 0x00, 0x1f, 0x82, 0x9d, 0x12, 0xfb, 0xd5, 0xe8, 0x9d, 0x7f, 0x03,
+	0x00, 0x00, 0xff, 0xff, 0x85, 0xdf, 0xdd, 0x56, 0x27, 0x13, 0x00, 0x00,
 }

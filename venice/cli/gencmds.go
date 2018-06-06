@@ -1168,16 +1168,16 @@ var CreateSgpolicyFlags = []cli.Flag{
 // CreateSmartNICFlags specifies flagsfor smartNIC create operation
 var CreateSmartNICFlags = []cli.Flag{
 
+	cli.StringFlag{
+		Name: "host-name",
+	},
+
 	cli.StringSliceFlag{
 		Name: "mac-address",
 	},
 
 	cli.StringFlag{
 		Name: "mgmt-ip",
-	},
-
-	cli.StringFlag{
-		Name: "node-name",
 	},
 
 	cli.StringFlag{

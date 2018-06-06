@@ -44,12 +44,18 @@ type eWorkloadV1Endpoints struct {
 	Svc sworkloadSvc_workloadBackend
 
 	fnAutoAddEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddWorkload    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteWorkload func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetWorkload    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListEndpoint   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListWorkload   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateWorkload func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchEndpoint func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchWorkload func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
@@ -57,6 +63,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 	s.Messages = map[string]apiserver.Message{
 
 		"workload.AutoMsgEndpointWatchHelper": apisrvpkg.NewMessage("workload.AutoMsgEndpointWatchHelper"),
+		"workload.AutoMsgWorkloadWatchHelper": apisrvpkg.NewMessage("workload.AutoMsgWorkloadWatchHelper"),
 		"workload.EndpointList": apisrvpkg.NewMessage("workload.EndpointList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := workload.EndpointList{}
@@ -71,6 +78,25 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(workload.EndpointList)
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+			}
+			return r, nil
+		}),
+		"workload.WorkloadList": apisrvpkg.NewMessage("workload.WorkloadList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := workload.WorkloadList{}
+			r := workload.Workload{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(workload.WorkloadList)
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
 			}
@@ -104,6 +130,15 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/endpoints/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsWorkloadV1.fnAutoAddWorkload = srv.AddMethod("AutoAddWorkload",
+			apisrvpkg.NewMethod(pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "AutoAddWorkload")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsWorkloadV1.fnAutoDeleteEndpoint = srv.AddMethod("AutoDeleteEndpoint",
 			apisrvpkg.NewMethod(pkgMessages["workload.Endpoint"], pkgMessages["workload.Endpoint"], "workload", "AutoDeleteEndpoint")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(workload.Endpoint)
@@ -111,6 +146,15 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/endpoints/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsWorkloadV1.fnAutoDeleteWorkload = srv.AddMethod("AutoDeleteWorkload",
+			apisrvpkg.NewMethod(pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "AutoDeleteWorkload")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/workloads/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsWorkloadV1.fnAutoGetEndpoint = srv.AddMethod("AutoGetEndpoint",
@@ -122,6 +166,15 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/endpoints/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsWorkloadV1.fnAutoGetWorkload = srv.AddMethod("AutoGetWorkload",
+			apisrvpkg.NewMethod(pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "AutoGetWorkload")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsWorkloadV1.fnAutoListEndpoint = srv.AddMethod("AutoListEndpoint",
 			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["workload.EndpointList"], "workload", "AutoListEndpoint")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
@@ -129,6 +182,15 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/endpoints/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsWorkloadV1.fnAutoListWorkload = srv.AddMethod("AutoListWorkload",
+			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["workload.WorkloadList"], "workload", "AutoListWorkload")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/workloads/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsWorkloadV1.fnAutoUpdateEndpoint = srv.AddMethod("AutoUpdateEndpoint",
@@ -140,7 +202,18 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/endpoints/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsWorkloadV1.fnAutoUpdateWorkload = srv.AddMethod("AutoUpdateWorkload",
+			apisrvpkg.NewMethod(pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "AutoUpdateWorkload")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "workload/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsWorkloadV1.fnAutoWatchEndpoint = pkgMessages["workload.Endpoint"].WatchFromKv
+
+		s.endpointsWorkloadV1.fnAutoWatchWorkload = pkgMessages["workload.Workload"].WatchFromKv
 
 		s.Services = map[string]apiserver.Service{
 			"workload.WorkloadV1": srv,
@@ -244,6 +317,93 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			}
 		})
 
+		pkgMessages["workload.Workload"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := workload.Workload{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(workload.WorkloadV1_AutoWatchWorkloadServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Workload")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &workload.AutoMsgWorkloadWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					return err
+				}
+				events = &workload.AutoMsgWorkloadWatchHelper{}
+				return nil
+			}
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.DebugLog("Channel closed for Workload Watcher")
+						return nil
+					}
+					in, ok := ev.Object.(*workload.Workload)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+
+					strEvent := &workload.AutoMsgWorkloadWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received Workload watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "Workload", "fromver", in.APIVersion, "tover", version)
+							break
+						}
+						strEvent.Object = i.(*workload.Workload)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Workload Watcher")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -271,12 +431,28 @@ func (e *eWorkloadV1Endpoints) AutoAddEndpoint(ctx context.Context, t workload.E
 	return workload.Endpoint{}, err
 
 }
+func (e *eWorkloadV1Endpoints) AutoAddWorkload(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnAutoAddWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
 func (e *eWorkloadV1Endpoints) AutoDeleteEndpoint(ctx context.Context, t workload.Endpoint) (workload.Endpoint, error) {
 	r, err := e.fnAutoDeleteEndpoint(ctx, t)
 	if err == nil {
 		return r.(workload.Endpoint), err
 	}
 	return workload.Endpoint{}, err
+
+}
+func (e *eWorkloadV1Endpoints) AutoDeleteWorkload(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnAutoDeleteWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
 
 }
 func (e *eWorkloadV1Endpoints) AutoGetEndpoint(ctx context.Context, t workload.Endpoint) (workload.Endpoint, error) {
@@ -287,12 +463,28 @@ func (e *eWorkloadV1Endpoints) AutoGetEndpoint(ctx context.Context, t workload.E
 	return workload.Endpoint{}, err
 
 }
+func (e *eWorkloadV1Endpoints) AutoGetWorkload(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnAutoGetWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
 func (e *eWorkloadV1Endpoints) AutoListEndpoint(ctx context.Context, t api.ListWatchOptions) (workload.EndpointList, error) {
 	r, err := e.fnAutoListEndpoint(ctx, t)
 	if err == nil {
 		return r.(workload.EndpointList), err
 	}
 	return workload.EndpointList{}, err
+
+}
+func (e *eWorkloadV1Endpoints) AutoListWorkload(ctx context.Context, t api.ListWatchOptions) (workload.WorkloadList, error) {
+	r, err := e.fnAutoListWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.WorkloadList), err
+	}
+	return workload.WorkloadList{}, err
 
 }
 func (e *eWorkloadV1Endpoints) AutoUpdateEndpoint(ctx context.Context, t workload.Endpoint) (workload.Endpoint, error) {
@@ -303,9 +495,20 @@ func (e *eWorkloadV1Endpoints) AutoUpdateEndpoint(ctx context.Context, t workloa
 	return workload.Endpoint{}, err
 
 }
+func (e *eWorkloadV1Endpoints) AutoUpdateWorkload(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnAutoUpdateWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
 
 func (e *eWorkloadV1Endpoints) AutoWatchEndpoint(in *api.ListWatchOptions, stream workload.WorkloadV1_AutoWatchEndpointServer) error {
 	return e.fnAutoWatchEndpoint(in, stream, "workload")
+}
+func (e *eWorkloadV1Endpoints) AutoWatchWorkload(in *api.ListWatchOptions, stream workload.WorkloadV1_AutoWatchWorkloadServer) error {
+	return e.fnAutoWatchWorkload(in, stream, "workload")
 }
 
 func init() {

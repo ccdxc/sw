@@ -116,6 +116,7 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 	nm, err := NewNMD(ag,
 		dbPath,
 		nodeID,
+		nodeID,
 		"localhost:0",
 		mode,
 		globals.NicRegIntvl*time.Second,
@@ -386,7 +387,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 			Mode:           nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac:     nicKey1,
 			ClusterAddress: []string{"192.168.30.10:9002"},
-			NodeName:       "esx-001",
+			HostName:       "esx-001",
 			MgmtIp:         "10.10.10.10",
 		},
 	}
@@ -468,7 +469,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:       nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac: nicKey2,
-			NodeName:   "esx-001",
+			HostName:   "esx-001",
 		},
 	}
 
@@ -536,7 +537,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:       nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac: nicKey3,
-			NodeName:   "esx-001",
+			HostName:   "esx-001",
 		},
 	}
 
@@ -608,7 +609,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:       nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac: nicKey1,
-			NodeName:   "esx-001",
+			HostName:   "esx-001",
 		},
 	}
 

@@ -609,6 +609,11 @@ func (ma *APIClient) Node() cmd.ClusterV1NodeInterface {
 	return nil
 }
 
+// Host return mock HostInterface - nil till we need this functionality
+func (ma *APIClient) Host() cmd.ClusterV1HostInterface {
+	return nil
+}
+
 // SmartNIC returns mock SmartNICInterface - nill till we need this functionality
 func (ma *APIClient) SmartNIC() cmd.ClusterV1SmartNICInterface {
 	return nil

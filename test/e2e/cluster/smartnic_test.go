@@ -30,7 +30,7 @@ var _ = Describe("SmartNIC tests", func() {
 			// Validate smartNIC object creation
 			Eventually(func() bool {
 				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
-				if len(snics) != ts.tu.NumNaplesNodes {
+				if len(snics) != ts.tu.NumNaplesHosts {
 					return false
 				}
 				By(fmt.Sprintf("ts:%s SmartNIC creation validated for [%d] nics", time.Now().String(), len(snics)))
@@ -49,7 +49,7 @@ var _ = Describe("SmartNIC tests", func() {
 					By(fmt.Sprintf("SmartNIC [%s] is created & admitted", snic.Name))
 				}
 
-				if numAdmittedNICs != ts.tu.NumNaplesNodes {
+				if numAdmittedNICs != ts.tu.NumNaplesHosts {
 					return false
 				}
 
@@ -69,10 +69,10 @@ var _ = Describe("SmartNIC tests", func() {
 		BeforeEach(func() {
 			snIf = ts.tu.APIClient.ClusterV1().SmartNIC()
 			health = make(map[string](*cmd.SmartNICCondition))
-			snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
 		})
 
 		It("SmartNIC should be in healthy state", func() {
+			snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
 			// Validate nic is healthy
@@ -90,7 +90,7 @@ var _ = Describe("SmartNIC tests", func() {
 					}
 				}
 
-				if numHealthySmartNICs != ts.tu.NumNaplesNodes {
+				if numHealthySmartNICs != ts.tu.NumNaplesHosts {
 					return false
 				}
 
@@ -104,7 +104,6 @@ var _ = Describe("SmartNIC tests", func() {
 
 			// Validate periodic health updates
 			Eventually(func() bool {
-
 				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
 				numHealthySmartNICs := 0
 				for _, snic := range snics {
@@ -129,14 +128,13 @@ var _ = Describe("SmartNIC tests", func() {
 					}
 				}
 
-				if numHealthySmartNICs != ts.tu.NumNaplesNodes {
+				if numHealthySmartNICs != ts.tu.NumNaplesHosts {
 					return false
 				}
 
 				By(fmt.Sprintf("ts: %s SmartNIC periodic health update validated for [%d] nics", time.Now().String(), numHealthySmartNICs))
 				return true
 			}, 90, 1).Should(BeTrue(), "SmartNIC periodic health update check failed")
-
 		})
 
 	})

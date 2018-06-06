@@ -50,8 +50,8 @@ message NaplesSpec {
                                         (gogoproto.jsontag) = "primaryMac,omitempty"];
 
     // Name of the Host
-    string NodeName                 = 4 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "nodeName,omitempty"];
+    string HostName                 = 4 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "hostName,omitempty"];
 
     // Management IP address of the naples node
     string MgmtIp                   = 5 [(gogoproto.nullable) = true,

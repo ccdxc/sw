@@ -134,11 +134,11 @@ class NaplesNode(Node):
     def startCluster(self):
         # start nmd as a native process on NaplesNode
         if self.testMode == "HAL":
-            runCommand("""docker exec -d {} nmd -cmdregistration 192.168.30.10:9002 -cmdupdates 192.168.30.10:9009 -hostif eth1 -resolver 192.168.30.10:9009 -mode managed -updinterval 5 & """.format(self.name))
+            runCommand("""docker exec -d {} nmd -cmdregistration 192.168.30.10:9002 -cmdupdates 192.168.30.10:9009 -hostif eth1 -hostname {}-host -resolver 192.168.30.10:9009 -mode managed & """.format(self.name, self.name))
             runCommand("""docker exec -d {} make e2e-sanity-hal-bringup""".format(self.name))
             runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent -npm pen-npm -resolver-urls 192.168.30.10:9009 -hostif eth1 -datapath hal -mode managed &" """.format(self.name))
         else:
-            runCommand("""docker exec -d {} /nmd -cmdregistration 192.168.30.10:9002 -cmdupdates 192.168.30.10:9009 -hostif eth1 -resolver 192.168.30.10:9009 -mode managed -mode managed -updinterval 5  & """.format(self.name))
+            runCommand("""docker exec -d {} /nmd -cmdregistration 192.168.30.10:9002 -cmdupdates 192.168.30.10:9009 -hostif eth1 -hostname {}-host -resolver 192.168.30.10:9009 -mode managed -mode managed & """.format(self.name, self.name))
             runCommand("""docker exec -d {} /netagent -npm pen-npm -resolver-urls 192.168.30.10:9009 -hostif eth1 -datapath mock &""".format(self.name))
 
 def initCluster(nodeAddr, quorumNodes, clustervip):
@@ -149,7 +149,9 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
         "kind": "Cluster",
         "api-version": "v1",
         "meta": {
-            "name": "testCluster"
+            "name": "testCluster",
+            "tenant": "default",
+            "namespace": "default"
         },
         "spec": {
             "auto-admit-nics": True,
@@ -241,7 +243,7 @@ if args.configFile:
 clustervip = datastore.get("ClusterVIP", args.clustervip)
 num_nodes = int(datastore.get("NumVeniceNodes", args.num_nodes))
 num_quorum =  int(datastore.get("NumQuorumNodes", args.num_quorum))
-num_naples =  int(datastore.get("NumNaplesNodes", args.num_naples))
+num_naples =  int(datastore.get("NumNaplesHosts", args.num_naples))
 test_mode = datastore.get("E2EMode", args.test_mode)
 
 quorumNames = []

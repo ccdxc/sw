@@ -49,10 +49,12 @@ mock_cluster.go: ../generated/cluster/svc_cluster_crudinterface.go Makefile
 	mockgen -destination=$@ -package=mock --source $< cluster
 	sed -i.bak_ -e 's/\*Cluster/\*cluster.Cluster/g' $@
 	sed -i.bak_ -e 's/\*Node/\*cluster.Node/g' $@
+	sed -i.bak_ -e 's/\*Host/\*cluster.Host/g' $@
 	sed -i.bak_ -e 's/\*SmartNIC/\*cluster.SmartNIC/g' $@
 	sed -i.bak_ -e 's/\*Tenant/\*cluster.Tenant/g' $@
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1ClusterInterface[[:space:])]/ (cluster.ClusterV1ClusterInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1NodeInterface[[:space:])]/ (cluster.ClusterV1NodeInterface)/g' $@
+	sed -i.bak_ -e 's/[[:space:](]ClusterV1HostInterface[[:space:])]/ (cluster.ClusterV1HostInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1SmartNICInterface[[:space:])]/ (cluster.ClusterV1SmartNICInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1TenantInterface[[:space:])]/ (cluster.ClusterV1TenantInterface)/g' $@
 	goimports -local "github.com/pensando/sw" -w $@

@@ -6,4 +6,4 @@ true monitoring alerts.proto events.proto mirror.proto svc_monitoring.proto tele
 true network lb.proto network.proto service.proto svc_network.proto 
 true search search.proto svc_search.proto 
 true security app.proto networkencryption.proto securitygroup.proto sgpolicy.proto svc_security.proto x509.proto 
-true workload endpoint.proto svc_workload.proto 
+true workload endpoint.proto svc_workload.proto workload.proto 

@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/globals"
 	perror "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -157,100 +158,98 @@ func (s *RPCServer) GetCluster() (*cluster.Cluster, error) {
 	return clusterObjs[0], nil
 }
 
-// CreateNode creates the Node object based on object meta
-func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cluster.Node, error) {
+// CreateHost creates the Host object based on object meta
+func (s *RPCServer) CreateHost(ometa api.ObjectMeta) (*cluster.Host, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
-	node := &cluster.Node{
-		TypeMeta:   api.TypeMeta{Kind: "Node"},
-		ObjectMeta: ometa,
-		Spec: cluster.NodeSpec{
-			Roles: []string{cluster.NodeSpec_WORKLOAD.String()},
-		},
-		Status: cluster.NodeStatus{
-			Phase: cluster.NodeStatus_JOINED.String(),
-		},
+	host := &cluster.Host{}
+	host.Defaults("v1")
+	host.TypeMeta = api.TypeMeta{Kind: "Host"}
+	host.ObjectMeta = ometa
+
+	hostObj, err := cl.Host().Create(context.Background(), host)
+	if err != nil || hostObj == nil {
+		log.Errorf("Host create failed, host: %+v error: %+v", host, err)
+		return nil, perror.NewNotFound("Host", ometa.Name)
 	}
 
-	nodeObj, err := cl.Node().Create(context.Background(), node)
-	if err != nil || nodeObj == nil {
-		return nil, perror.NewNotFound("Node", ometa.Name)
-	}
-
-	return nodeObj, nil
+	return hostObj, nil
 }
 
-// GetNode fetches the Node object based on object meta
-func (s *RPCServer) GetNode(om api.ObjectMeta) (*cluster.Node, error) {
+// GetHost fetches the Host object based on object meta
+func (s *RPCServer) GetHost(om api.ObjectMeta) (*cluster.Host, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
-	nodeObj, err := cl.Node().Get(context.Background(), &om)
-	if err != nil || nodeObj == nil {
-		return nil, perror.NewNotFound("Node", om.Name)
+	hostObj, err := cl.Host().Get(context.Background(), &om)
+	if err != nil || hostObj == nil {
+		return nil, perror.NewNotFound("Host", om.Name)
 	}
 
-	return nodeObj, nil
+	return hostObj, nil
 }
 
-// UpdateNode updates the list of Nics in status of Node object
-// Node object is  created if it does not exist.
-func (s *RPCServer) UpdateNode(nic *cluster.SmartNIC) (*cluster.Node, error) {
+// UpdateHost updates the list of Nics in spec of Host object
+// Host object is created if it does not exist.
+func (s *RPCServer) UpdateHost(nic *cluster.SmartNIC) (*cluster.Host, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
 	// Check if object exists
-	var nodeObj *cluster.Node
+	var hostObj *cluster.Host
 	ometa := api.ObjectMeta{
-		Name: nic.Spec.NodeName,
+		Name: nic.Spec.HostName,
 	}
-	refObj, err := s.GetNode(ometa)
+	refObj, err := s.GetHost(ometa)
 	if err != nil || refObj == nil {
 
-		// Create Node object
-		node := &cluster.Node{
-			TypeMeta: api.TypeMeta{Kind: "Node"},
-			ObjectMeta: api.ObjectMeta{
-				Name: nic.Spec.NodeName,
-			},
-			Spec: cluster.NodeSpec{
-				Roles: []string{cluster.NodeSpec_WORKLOAD.String()},
-			},
-			Status: cluster.NodeStatus{
-				Nics:  []string{nic.ObjectMeta.Name},
-				Phase: cluster.NodeStatus_JOINED.String(),
+		// Create Host object
+		host := &cluster.Host{}
+		host.Defaults("v1")
+		host.Kind = "Host"
+		host.Name = nic.Spec.HostName
+		host.Tenant = globals.DefaultTenant
+		host.Namespace = globals.DefaultNamespace
+		host.Spec.Interfaces = map[string]cluster.HostIntfSpec{
+			nic.Name: cluster.HostIntfSpec{
+				MacAddrs: []string{nic.Name},
 			},
 		}
 
-		nodeObj, err = cl.Node().Create(context.Background(), node)
+		hostObj, err = cl.Host().Create(context.Background(), host)
 	} else {
 
-		// Update the Nics list in Node status
-		refObj.Status.Nics = append(refObj.Status.Nics, nic.ObjectMeta.Name)
-		log.Debugf("Updating Node: %+v", refObj)
-		nodeObj, err = cl.Node().Update(context.Background(), refObj)
+		// Update the Nics list in Host Spec
+		if refObj.Spec.Interfaces == nil {
+			refObj.Spec.Interfaces = make(map[string]cluster.HostIntfSpec)
+		}
+		refObj.Spec.Interfaces[nic.Name] = cluster.HostIntfSpec{
+			MacAddrs: []string{nic.Name},
+		}
+		log.Debugf("Updating Host: %+v", refObj)
+		hostObj, err = cl.Host().Update(context.Background(), refObj)
 	}
 
-	return nodeObj, err
+	return hostObj, err
 }
 
-// DeleteNode deletes the Node object based on object meta name
-func (s *RPCServer) DeleteNode(om api.ObjectMeta) error {
+// DeleteHost deletes the Host object based on object meta name
+func (s *RPCServer) DeleteHost(om api.ObjectMeta) error {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return errAPIServerDown
 	}
 
-	_, err := cl.Node().Delete(context.Background(), &om)
+	_, err := cl.Host().Delete(context.Background(), &om)
 	if err != nil {
-		log.Errorf("Error deleting Node object name:%s err: %v", om.Name, err)
+		log.Errorf("Error deleting Host object name:%s err: %v", om.Name, err)
 		return err
 	}
 
@@ -366,16 +365,15 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		nic.Spec.Phase = phase
 		_, err = s.UpdateSmartNIC(&nic)
 		if err != nil {
-			log.Errorf("Error updating smartNIC object, mac: %s err: %v", nic.ObjectMeta.Name, err)
+			log.Errorf("Error updating smartNIC object: %+v err: %v", nic, err)
 			return &grpc.RegisterNICResponse{Phase: phase}, err
 		}
 
-		// Create or Update the Node object for Workload nodes
-		// to link the NICs to Nodes.
-		_, err = s.UpdateNode(&nic)
+		// Create or Update the Host
+		_, err = s.UpdateHost(&nic)
 		if err != nil {
-			log.Errorf("Error creating or updating Node object, node: %s mac: %s err: %v",
-				nic.Spec.NodeName, nic.ObjectMeta.Name, err)
+			log.Errorf("Error creating or updating Host object, host: %s mac: %s err: %v",
+				nic.Spec.HostName, nic.ObjectMeta.Name, err)
 		}
 	}
 
@@ -605,7 +603,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 					Mode:           nmd.NaplesMode_MANAGED_MODE,
 					PrimaryMac:     nicObj.Name,
 					ClusterAddress: []string{env.UnauthRPCServer.GetListenURL()},
-					NodeName:       nicObj.Spec.NodeName,
+					HostName:       nicObj.Spec.HostName,
 					MgmtIp:         nicObj.Spec.MgmtIp,
 				},
 			}

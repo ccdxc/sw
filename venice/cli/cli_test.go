@@ -139,7 +139,7 @@ func TestSmartNICCreate(t *testing.T) {
 
 	snic.Name = "naples1"
 	snic.Status.PrimaryMacAddress = "0029.ef38.8a01"
-	snic.Spec.NodeName = "vm221"
+	snic.Spec.HostName = "vm221"
 	addSnic(t, snic)
 
 	/*
@@ -155,18 +155,18 @@ func TestSmartNICCreate(t *testing.T) {
 
 	snic.Name = "naples2"
 	snic.Status.PrimaryMacAddress = "0029.ef38.8a02"
-	snic.Spec.NodeName = "vm222"
+	snic.Spec.HostName = "vm222"
 	addSnic(t, snic)
 
 	snic.Name = "naples3"
 	snic.Status.PrimaryMacAddress = "0029.ef38.8a03"
-	snic.Spec.NodeName = "vm223"
+	snic.Spec.HostName = "vm223"
 	addSnic(t, snic)
 
 }
 
 func TestNodeCreate(t *testing.T) {
-	out := veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s --roles %s vm233", cluster.NodeSpec_QUORUM.String(), cluster.NodeSpec_WORKLOAD))
+	out := veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s vm233", cluster.NodeSpec_CONTROLLER.String()))
 
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update: garbled output '%s'", out)
@@ -179,7 +179,7 @@ func TestNodeCreate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["foo"] != "bar" || node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cluster.NodeSpec_WORKLOAD.String() {
+	if node.Labels["foo"] != "bar" || node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Create operation failed: %+v \n", node)
 	}
 
@@ -188,7 +188,7 @@ func TestNodeCreate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cluster.NodeSpec_WORKLOAD.String() {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Single read read failed: %+v \n", node)
 	}
 
@@ -200,7 +200,7 @@ func TestNodeCreate(t *testing.T) {
 }
 
 func TestNodeUpdate(t *testing.T) {
-	out := veniceCLI(fmt.Sprintf("update node --roles %s vm233", cluster.NodeSpec_CONTROLLER.String()))
+	out := veniceCLI(fmt.Sprintf("update node --roles %s vm233", cluster.NodeSpec_QUORUM.String()))
 
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("Update: garbled output '%s'", out)
@@ -210,7 +210,7 @@ func TestNodeUpdate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || len(node.Spec.Roles) != 1 || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
+	if node.Labels["vCenter"] != "vc2" || len(node.Spec.Roles) != 1 || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() {
 		t.Fatalf("Update operation failed: %+v \n", node)
 	}
 }
@@ -712,12 +712,12 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --mac-address --mgmt-ip --node-name --phase {smartNIC}") {
+	if !strings.Contains(out, "--label --dry-run --file --host-name --mac-address --mgmt-ip --phase {smartNIC}") {
 		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
 	}
 
 	out = veniceCLI("update smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --mac-address --mgmt-ip --node-name --phase") {
+	if !strings.Contains(out, "--label --dry-run --file --host-name --mac-address --mgmt-ip --phase") {
 		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
 	}
 
@@ -1178,7 +1178,7 @@ func matchLineFields(out string, fields []string) bool {
 
 func TestList(t *testing.T) {
 	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test1", cluster.NodeSpec_QUORUM.String()))
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test2", cluster.NodeSpec_WORKLOAD.String()))
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test2", cluster.NodeSpec_CONTROLLER.String()))
 
 	out := veniceCLI("read node")
 	if !matchLineFields(out, []string{"test1", "vCenter:vc2", "test1", "QUORUM"}) {
@@ -1324,7 +1324,7 @@ func TestSnapshot(t *testing.T) {
 	veniceCLI("create tenant snap-tenant --admin-user snap-admin")
 	veniceCLI("create lbPolicy --algorithm llatency --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 snap-lbpolicy")
 	//veniceCLI("create node --label vCenter:vc2 --roles 1 snap-node")
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s snap-node", cluster.NodeSpec_WORKLOAD.String()))
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s snap-node", cluster.NodeSpec_CONTROLLER.String()))
 
 	// take a snapshot
 	out := veniceCLI("snapshot -f " + snapshotDir)
@@ -1367,7 +1367,7 @@ func TestSnapshot(t *testing.T) {
 	if err = json.Unmarshal([]byte(b), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_WORKLOAD.String() {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Unable to decode object: %+v \n", node)
 	}
 
@@ -1391,7 +1391,7 @@ func TestSnapshot(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "modified-vc1" || node.Spec.Roles[0] != cluster.NodeSpec_WORKLOAD.String() {
+	if node.Labels["vCenter"] != "modified-vc1" || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Restore object different from expectation: %+v \n", node)
 	}
 	os.RemoveAll(snapshotDir)
@@ -1571,8 +1571,8 @@ func TestNodeDelete(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
-		t.Fatalf("Update operation failed: %+v \n", node)
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() {
+		t.Fatalf("node delete operation failed: %+v \n", node)
 	}
 
 	out = veniceCLI("read node vm233")

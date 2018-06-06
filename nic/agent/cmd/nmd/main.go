@@ -30,6 +30,7 @@ func main() {
 		updInterval        = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
 		res                = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
 		mode               = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
+		hostName           = flag.String("hostname", "", "Hostname of Naples Host")
 		debugflag          = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag    = flag.Bool("logtostdout", false, "enable logging to stdout")
 		logToFile          = flag.String("logtofile", "/tmp/nmd.log", "Redirect logs to file")
@@ -87,9 +88,16 @@ func main() {
 		log.Fatalf("Error creating platform agent. Err: %v", err)
 	}
 
+	// If hose name is not configured, use the MAC-addr of the host interface
+	host := *hostName
+	if host == "" {
+		host = macAddr.String()
+	}
+
 	// create the new NMD
 	nm, err := nmd.NewAgent(pa,
 		*nmdDbPath,
+		host,
 		macAddr.String(),
 		*cmdRegistrationURL,
 		*cmdUpdatesURL,

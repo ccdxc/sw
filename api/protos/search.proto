@@ -17,11 +17,13 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 // Cluster
 //        Cluster
 //        Node
+//        Host
 //        SmartNIC
 //        Rollout
 //        Tenant
 //
 // Workload
+//        Workload
 //        Endpoint
 //
 // Security

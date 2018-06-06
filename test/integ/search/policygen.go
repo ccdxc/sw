@@ -68,7 +68,7 @@ func createTenant(name string) *cluster.Tenant {
 	return &tnt
 }
 
-func createNIC(mac, phase, node string, condition *cluster.SmartNICCondition) *cluster.SmartNIC {
+func createNIC(mac, phase, host string, condition *cluster.SmartNICCondition) *cluster.SmartNIC {
 
 	creationTime, _ := types.TimestampProto(time.Now())
 	nic := cluster.SmartNIC{
@@ -94,7 +94,7 @@ func createNIC(mac, phase, node string, condition *cluster.SmartNICCondition) *c
 		},
 		Spec: cluster.SmartNICSpec{
 			Phase:    phase,
-			NodeName: node,
+			HostName: host,
 			MgmtIp:   "0.0.0.0",
 		},
 		Status: cluster.SmartNICStatus{

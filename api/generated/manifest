@@ -23,4 +23,5 @@ svc_security.proto security true
 svc_workload.proto workload true
 telemetry.proto monitoring true
 tenant.proto cluster true
+workload.proto workload true
 x509.proto security true

@@ -241,6 +241,119 @@ func (_mr *MockClusterV1NodeInterfaceMockRecorder) Allowed(arg0 interface{}) *go
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1NodeInterface)(nil).Allowed), arg0)
 }
 
+// MockClusterV1HostInterface is a mock of (cluster.ClusterV1HostInterface)interface
+type MockClusterV1HostInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockClusterV1HostInterfaceMockRecorder
+}
+
+// MockClusterV1HostInterfaceMockRecorder is the mock recorder for MockClusterV1HostInterface
+type MockClusterV1HostInterfaceMockRecorder struct {
+	mock *MockClusterV1HostInterface
+}
+
+// NewMockClusterV1HostInterface creates a new mock instance
+func NewMockClusterV1HostInterface(ctrl *gomock.Controller) *MockClusterV1HostInterface {
+	mock := &MockClusterV1HostInterface{ctrl: ctrl}
+	mock.recorder = &MockClusterV1HostInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockClusterV1HostInterface) EXPECT() *MockClusterV1HostInterfaceMockRecorder {
+	return _m.recorder
+}
+
+// Create mocks base method
+func (_m *MockClusterV1HostInterface) Create(ctx context.Context, in *cluster.Host) (*cluster.Host, error) {
+	ret := _m.ctrl.Call(_m, "Create", ctx, in)
+	ret0, _ := ret[0].(*cluster.Host)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (_mr *MockClusterV1HostInterfaceMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Create", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Create), arg0, arg1)
+}
+
+// Update mocks base method
+func (_m *MockClusterV1HostInterface) Update(ctx context.Context, in *cluster.Host) (*cluster.Host, error) {
+	ret := _m.ctrl.Call(_m, "Update", ctx, in)
+	ret0, _ := ret[0].(*cluster.Host)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (_mr *MockClusterV1HostInterfaceMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Update", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Update), arg0, arg1)
+}
+
+// Get mocks base method
+func (_m *MockClusterV1HostInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Host, error) {
+	ret := _m.ctrl.Call(_m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.Host)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (_mr *MockClusterV1HostInterfaceMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Get", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Get), arg0, arg1)
+}
+
+// Delete mocks base method
+func (_m *MockClusterV1HostInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Host, error) {
+	ret := _m.ctrl.Call(_m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.Host)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (_mr *MockClusterV1HostInterfaceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Delete", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Delete), arg0, arg1)
+}
+
+// List mocks base method
+func (_m *MockClusterV1HostInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.Host, error) {
+	ret := _m.ctrl.Call(_m, "List", ctx, options)
+	ret0, _ := ret[0].([]*cluster.Host)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (_mr *MockClusterV1HostInterfaceMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "List", reflect.TypeOf((*MockClusterV1HostInterface)(nil).List), arg0, arg1)
+}
+
+// Watch mocks base method
+func (_m *MockClusterV1HostInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := _m.ctrl.Call(_m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (_mr *MockClusterV1HostInterfaceMockRecorder) Watch(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Watch", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Watch), arg0, arg1)
+}
+
+// Allowed mocks base method
+func (_m *MockClusterV1HostInterface) Allowed(oper apiserver.APIOperType) bool {
+	ret := _m.ctrl.Call(_m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (_mr *MockClusterV1HostInterfaceMockRecorder) Allowed(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Allowed), arg0)
+}
+
 // MockClusterV1SmartNICInterface is a mock of (cluster.ClusterV1SmartNICInterface)interface
 type MockClusterV1SmartNICInterface struct {
 	ctrl     *gomock.Controller
@@ -512,6 +625,18 @@ func (_m *MockClusterV1Interface) Node() cluster.ClusterV1NodeInterface {
 // Node indicates an expected call of Node
 func (_mr *MockClusterV1InterfaceMockRecorder) Node() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Node", reflect.TypeOf((*MockClusterV1Interface)(nil).Node))
+}
+
+// Host mocks base method
+func (_m *MockClusterV1Interface) Host() cluster.ClusterV1HostInterface {
+	ret := _m.ctrl.Call(_m, "Host")
+	ret0, _ := ret[0].(cluster.ClusterV1HostInterface)
+	return ret0
+}
+
+// Host indicates an expected call of Host
+func (_mr *MockClusterV1InterfaceMockRecorder) Host() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Host", reflect.TypeOf((*MockClusterV1Interface)(nil).Host))
 }
 
 // SmartNIC mocks base method

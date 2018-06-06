@@ -21,6 +21,7 @@ type NMD struct {
 
 	store    emstore.Emstore // Embedded DB
 	nodeUUID string          // Node's UUID
+	macAddr  string          // Primary MAC addr
 	cmd      CmdAPI          // CMD API object
 	platform PlatformAPI     // Platform Agent object
 

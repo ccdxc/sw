@@ -391,20 +391,306 @@
           "WorkloadV1"
         ]
       }
+    },
+    "/{O.Tenant}/workloads": {
+      "get": {
+        "operationId": "AutoListWorkload",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkloadList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "WorkloadV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddWorkload",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          }
+        ],
+        "tags": [
+          "WorkloadV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/workloads/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetWorkload",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.HostName",
+            "description": "Micro-segmentation vlan assigned for this interface.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Endpoints",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "WorkloadV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteWorkload",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "WorkloadV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateWorkload",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          }
+        ],
+        "tags": [
+          "WorkloadV1"
+        ]
+      }
     }
   },
   "definitions": {
-    "AutoMsgEndpointWatchHelperWatchEvent": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "Object": {
-          "$ref": "#/definitions/workloadEndpoint"
-        }
-      }
-    },
     "apiListMeta": {
       "type": "object",
       "properties": {
@@ -513,8 +799,41 @@
         "Events": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/AutoMsgEndpointWatchHelperWatchEvent"
+            "$ref": "#/definitions/workloadAutoMsgEndpointWatchHelperWatchEvent"
           }
+        }
+      }
+    },
+    "workloadAutoMsgEndpointWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/workloadEndpoint"
+        }
+      }
+    },
+    "workloadAutoMsgWorkloadWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/workloadAutoMsgWorkloadWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "workloadAutoMsgWorkloadWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/workloadWorkload"
         }
       }
     },
@@ -619,6 +938,109 @@
         }
       },
       "title": "Endpoint represents a network endpoint"
+    },
+    "workloadWorkload": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/workloadWorkloadSpec",
+          "description": "Spec contains the configuration of the Workload."
+        },
+        "Status": {
+          "$ref": "#/definitions/workloadWorkloadStatus",
+          "description": "Status contains the current state of the Workload."
+        }
+      },
+      "description": "Workload represents a VM, container/pod or Baremetal.",
+      "title": "----------------------------- Workload Object -----------------------------"
+    },
+    "workloadWorkloadIntfSpec": {
+      "type": "object",
+      "properties": {
+        "MicroSegVlan": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Hostname of the server where the workload is running."
+        },
+        "ExternalVlan": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Spec of all interfaces in the Workload identified by Primary MAC"
+        }
+      },
+      "title": "Spec part of Workload object"
+    },
+    "workloadWorkloadIntfStatus": {
+      "type": "object",
+      "properties": {
+        "IpAddrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Status of all interfaces in the Workload identified by Primary MAC"
+        }
+      },
+      "title": "Status part of Workload object"
+    },
+    "workloadWorkloadList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/workloadWorkload"
+          }
+        }
+      }
+    },
+    "workloadWorkloadSpec": {
+      "type": "object",
+      "properties": {
+        "HostName": {
+          "type": "string",
+          "title": "Micro-segmentation vlan assigned for this interface"
+        },
+        "Interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/workloadWorkloadIntfSpec"
+          },
+          "title": "External vlan assigned for this interface"
+        }
+      },
+      "title": "Spec of a Workload interface"
+    },
+    "workloadWorkloadStatus": {
+      "type": "object",
+      "properties": {
+        "Interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/workloadWorkloadIntfStatus"
+          },
+          "title": "List of all IP addresses configured and discovered on a Workload Interface"
+        },
+        "Endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Status of a Workload interface"
     }
   }
 }

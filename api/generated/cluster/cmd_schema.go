@@ -43,6 +43,57 @@ var typesMapCmd = map[string]*runtime.Struct{
 			"LastLeaderTransitionTime": runtime.Field{Name: "LastLeaderTransitionTime", JSONTag: "last-leader-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
+	"cluster.Host": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostSpec"},
+
+			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostStatus"},
+		},
+	},
+	"cluster.HostIntfSpec": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"MacAddrs": runtime.Field{Name: "MacAddrs", JSONTag: "mac-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"cluster.HostIntfStatus": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"IpAddrs": runtime.Field{Name: "IpAddrs", JSONTag: "ip-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"cluster.HostSpec": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Interfaces": runtime.Field{Name: "Interfaces", JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "cluster.HostIntfSpec"},
+		},
+	},
+	"cluster.HostSpec.InterfacesEntry": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostIntfSpec"},
+		},
+	},
+	"cluster.HostStatus": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"OperatingSystem": runtime.Field{Name: "OperatingSystem", JSONTag: "operating-system", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Orchestrator": runtime.Field{Name: "Orchestrator", JSONTag: "orchestrator", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Interfaces": runtime.Field{Name: "Interfaces", JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "cluster.HostIntfStatus"},
+		},
+	},
+	"cluster.HostStatus.InterfacesEntry": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostIntfStatus"},
+		},
+	},
 	"cluster.Node": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
@@ -77,8 +128,6 @@ var typesMapCmd = map[string]*runtime.Struct{
 			"Phase": runtime.Field{Name: "Phase", JSONTag: "phase", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Conditions": runtime.Field{Name: "Conditions", JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.NodeCondition"},
-
-			"Nics": runtime.Field{Name: "Nics", JSONTag: "nics", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.PortCondition": &runtime.Struct{
@@ -101,7 +150,7 @@ var typesMapCmd = map[string]*runtime.Struct{
 	},
 	"cluster.PortStatus": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"MacAddress": runtime.Field{Name: "MacAddress", JSONTag: "mac-address", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MacAddrs": runtime.Field{Name: "MacAddrs", JSONTag: "mac-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"LinkSpeed": runtime.Field{Name: "LinkSpeed", JSONTag: "link-speed", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -138,7 +187,7 @@ var typesMapCmd = map[string]*runtime.Struct{
 
 			"MgmtIp": runtime.Field{Name: "MgmtIp", JSONTag: "mgmt-ip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NodeName": runtime.Field{Name: "NodeName", JSONTag: "node-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"HostName": runtime.Field{Name: "HostName", JSONTag: "host-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Ports": runtime.Field{Name: "Ports", JSONTag: "ports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.PortSpec"},
 		},

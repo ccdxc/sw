@@ -39,6 +39,16 @@ func (m *Cluster) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *Host) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "hosts/", m.Name)
+}
+
+func (m *Host) MakeURI(ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", ver, "/", prefix, "/hosts/", in.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *Node) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "nodes/", m.Name)
 }
@@ -119,6 +129,119 @@ func (m *ClusterStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *ClusterStatus) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *Host) Clone(into interface{}) (interface{}, error) {
+	var out *Host
+	var ok bool
+	if into == nil {
+		out = &Host{}
+	} else {
+		out, ok = into.(*Host)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Host) Defaults(ver string) bool {
+	var ret bool
+	ret = m.Status.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *HostIntfSpec) Clone(into interface{}) (interface{}, error) {
+	var out *HostIntfSpec
+	var ok bool
+	if into == nil {
+		out = &HostIntfSpec{}
+	} else {
+		out, ok = into.(*HostIntfSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *HostIntfSpec) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *HostIntfStatus) Clone(into interface{}) (interface{}, error) {
+	var out *HostIntfStatus
+	var ok bool
+	if into == nil {
+		out = &HostIntfStatus{}
+	} else {
+		out, ok = into.(*HostIntfStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *HostIntfStatus) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *HostSpec) Clone(into interface{}) (interface{}, error) {
+	var out *HostSpec
+	var ok bool
+	if into == nil {
+		out = &HostSpec{}
+	} else {
+		out, ok = into.(*HostSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *HostSpec) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *HostStatus) Clone(into interface{}) (interface{}, error) {
+	var out *HostStatus
+	var ok bool
+	if into == nil {
+		out = &HostStatus{}
+	} else {
+		out, ok = into.(*HostStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *HostStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = HostStatus_HostType_name[0]
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -438,6 +561,55 @@ func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *HostIntfSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *HostIntfStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapCmd["HostStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapCmd["HostStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
 func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
@@ -655,11 +827,22 @@ func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
 		&Cluster{},
+		&Host{},
 		&Node{},
 		&SmartNIC{},
 	)
 
 	validatorMapCmd = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapCmd["HostStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCmd["HostStatus"]["all"] = append(validatorMapCmd["HostStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*HostStatus)
+
+		if _, ok := HostStatus_HostType_value[m.Type]; !ok {
+			return errors.New("HostStatus.Type did not match allowed strings")
+		}
+		return nil
+	})
 
 	validatorMapCmd["NodeCondition"] = make(map[string][]func(string, interface{}) error)
 	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(path string, i interface{}) error {
@@ -741,15 +924,6 @@ func init() {
 	})
 
 	validatorMapCmd["SmartNICSpec"] = make(map[string][]func(string, interface{}) error)
-
-	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICSpec)
-		if !validators.HostAddr(m.MgmtIp) {
-			return fmt.Errorf("%v validation failed", path+"."+"MgmtIp")
-		}
-		return nil
-	})
-
 	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICSpec)
 

@@ -312,6 +312,290 @@
         ]
       }
     },
+    "/hosts": {
+      "get": {
+        "operationId": "AutoListHost",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterHostList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddHost",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterHost"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterHost"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/hosts/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetHost",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterHost"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.OperatingSystem",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Orchestrator",
+            "description": "Spec contains the configuration of the host.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteHost",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterHost"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateHost",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterHost"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterHost"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
     "/nodes": {
       "get": {
         "operationId": "AutoListNode",
@@ -521,7 +805,7 @@
           },
           {
             "name": "Spec.Roles",
-            "description": "Current lifecycle phase of the node.",
+            "description": "List of all MAC addresses configured and discovered on a Host Interface.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -531,20 +815,10 @@
           },
           {
             "name": "Status.Phase",
-            "description": "Type indicates a certain node condition.",
+            "description": "List of all IP addresses configured on a Host Interface.",
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "Status.Nics",
-            "description": "The last time the condition transitioned.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         ],
         "tags": [
@@ -813,7 +1087,7 @@
           },
           {
             "name": "Spec.Phase",
-            "description": "Mac address of the Port, which is key identifier of the port.",
+            "description": "List of all Mac addresses of the Port.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -826,7 +1100,7 @@
             "type": "string"
           },
           {
-            "name": "Spec.NodeName",
+            "name": "Spec.HostName",
             "description": "List of current Port conditions.",
             "in": "query",
             "required": false,
@@ -1301,6 +1575,28 @@
         }
       }
     },
+    "clusterAutoMsgHostWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgHostWatchHelperWatchEvent"
+          }
+        }
+      }
+    },
+    "clusterAutoMsgHostWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/clusterHost"
+        }
+      }
+    },
     "clusterAutoMsgNodeWatchHelper": {
       "type": "object",
       "properties": {
@@ -1452,7 +1748,7 @@
       },
       "description": "ClusterStatus contains the current state of the Cluster."
     },
-    "clusterNode": {
+    "clusterHost": {
       "type": "object",
       "properties": {
         "T": {
@@ -1462,38 +1758,140 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/clusterNodeSpec",
+          "$ref": "#/definitions/clusterHostSpec",
           "description": "Spec contains the configuration of the node."
         },
         "Status": {
-          "$ref": "#/definitions/clusterNodeStatus",
+          "$ref": "#/definitions/clusterHostStatus",
           "description": "Status contains the current state of the node."
         }
       },
-      "description": "Node is representation of a single node in the system.\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial node creation for Baremetal node\n         o CMD\n             - auto created when Hypervisor Node and NIC are\n               discovered via Orchestrator interface, NIC registration\n     Modify:\n         o NetOps-admin\n             - update spec for Baremetal node\n         o CMD\n             - update spec attributes for Hypervisor node\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - when Baremetal node is decommissioned\n         o CMD\n             - TBD",
+      "description": "Node is representation of a single Venice node in the system.",
       "title": "---------------------------------- NODE -------------------------------------------"
+    },
+    "clusterHostIntfSpec": {
+      "type": "object",
+      "properties": {
+        "MacAddrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Roles is of list of roles a node can be configured with."
+        }
+      },
+      "description": "NodeSpec contains the configuration of the node."
+    },
+    "clusterHostIntfStatus": {
+      "type": "object",
+      "properties": {
+        "IpAddrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Current lifecycle phase of the node."
+        }
+      },
+      "description": "NodeStatus contains the current state of the node."
+    },
+    "clusterHostList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterHost"
+          }
+        }
+      }
+    },
+    "clusterHostSpec": {
+      "type": "object",
+      "properties": {
+        "Interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/clusterHostIntfSpec"
+          },
+          "title": "Type indicates a certain node condition"
+        }
+      },
+      "description": "NodeCondition describes the state of a Node at a certain point."
+    },
+    "clusterHostStatus": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "OperatingSystem": {
+          "type": "string"
+        },
+        "Orchestrator": {
+          "type": "string",
+          "description": "Spec contains the configuration of the host."
+        },
+        "Interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/clusterHostIntfStatus"
+          },
+          "description": "Status contains the current state of the host."
+        }
+      },
+      "description": "Host represents a Baremetal or Hypervisor server.",
+      "title": "---------------------------------- HOST ------------------------------------"
+    },
+    "clusterNode": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Spec of all interfaces in the Host identified by Primary MAC"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/clusterNodeSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/clusterNodeStatus"
+        }
+      },
+      "description": "HostSpec contains the configuration of the Host."
     },
     "clusterNodeCondition": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string",
-          "description": "Roles is of list of roles a node can be configured with."
+          "title": "Type of the host"
         },
         "Status": {
-          "type": "string"
+          "type": "string",
+          "title": "Operating system info - name of OS with version, eg: \"Linux 3.10.0.xyz\""
         },
         "LastTransitionTime": {
-          "type": "string"
+          "type": "string",
+          "description": "Orchestrator is the name of associated Compute controller\n(like VCenter) managing this host."
         },
         "Reason": {
-          "type": "string"
+          "type": "string",
+          "title": "Status of all interfaces in the Host identified by Primary MAC"
         },
         "Message": {
           "type": "string"
         }
       },
-      "description": "NodeSpec contains the configuration of the node."
+      "description": "HostStatus contains the current state of the Host."
     },
     "clusterNodeList": {
       "type": "object",
@@ -1520,34 +1918,26 @@
           "items": {
             "type": "string"
           },
-          "description": "Current lifecycle phase of the node."
+          "title": "List of all MAC addresses configured and discovered on a Host Interface"
         }
       },
-      "description": "NodeStatus contains the current state of the node."
+      "title": "Spec of a Host interface"
     },
     "clusterNodeStatus": {
       "type": "object",
       "properties": {
         "Phase": {
           "type": "string",
-          "title": "Type indicates a certain node condition"
+          "title": "List of all IP addresses configured on a Host Interface"
         },
         "Conditions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterNodeCondition"
-          },
-          "title": "Condition Status"
-        },
-        "Nics": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "The last time the condition transitioned"
+          }
         }
       },
-      "description": "NodeCondition describes the state of a Node at a certain point."
+      "title": "Status of a Host interface"
     },
     "clusterPortCondition": {
       "type": "object",
@@ -1587,8 +1977,11 @@
     "clusterPortStatus": {
       "type": "object",
       "properties": {
-        "MacAddress": {
-          "type": "string",
+        "MacAddrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "List of current NIC conditions"
         },
         "LinkSpeed": {
@@ -1632,7 +2025,7 @@
       "properties": {
         "Type": {
           "type": "string",
-          "title": "Mac address of the Port, which is key identifier of the port"
+          "title": "Primary Mac address of the Port, which is key identifier of the port"
         },
         "Status": {
           "type": "string"
@@ -1671,13 +2064,13 @@
       "properties": {
         "Phase": {
           "type": "string",
-          "title": "Mac address of the Port, which is key identifier of the port"
+          "title": "List of all Mac addresses of the Port"
         },
         "MgmtIp": {
           "type": "string",
           "title": "LinkSpeed of the Port"
         },
-        "NodeName": {
+        "HostName": {
           "type": "string",
           "title": "List of current Port conditions"
         },

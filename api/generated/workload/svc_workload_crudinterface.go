@@ -26,7 +26,19 @@ type WorkloadV1EndpointInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// WorkloadV1WorkloadInterface exposes the CRUD methods for Workload
+type WorkloadV1WorkloadInterface interface {
+	Create(ctx context.Context, in *Workload) (*Workload, error)
+	Update(ctx context.Context, in *Workload) (*Workload, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Workload, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Workload, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Workload, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // WorkloadV1Interface exposes objects with CRUD operations allowed by the service
 type WorkloadV1Interface interface {
 	Endpoint() WorkloadV1EndpointInterface
+	Workload() WorkloadV1WorkloadInterface
 }

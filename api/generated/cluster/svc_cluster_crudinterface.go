@@ -37,6 +37,17 @@ type ClusterV1NodeInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// ClusterV1HostInterface exposes the CRUD methods for Host
+type ClusterV1HostInterface interface {
+	Create(ctx context.Context, in *Host) (*Host, error)
+	Update(ctx context.Context, in *Host) (*Host, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Host, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Host, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Host, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // ClusterV1SmartNICInterface exposes the CRUD methods for SmartNIC
 type ClusterV1SmartNICInterface interface {
 	Create(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
@@ -63,6 +74,7 @@ type ClusterV1TenantInterface interface {
 type ClusterV1Interface interface {
 	Cluster() ClusterV1ClusterInterface
 	Node() ClusterV1NodeInterface
+	Host() ClusterV1HostInterface
 	SmartNIC() ClusterV1SmartNICInterface
 	Tenant() ClusterV1TenantInterface
 }

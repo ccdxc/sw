@@ -84,27 +84,7 @@ message ClusterStatus {
 
 //---------------------------------- NODE -------------------------------------------
 //
-// Node is representation of a single node in the system.
-//
-// Entity responsible & scenarios involved in managing this object:
-//
-//      Create:
-//          o NetOps-admin
-//              - initial node creation for Baremetal node
-//          o CMD
-//              - auto created when Hypervisor Node and NIC are
-//                discovered via Orchestrator interface, NIC registration
-//      Modify:
-//          o NetOps-admin
-//              - update spec for Baremetal node
-//          o CMD
-//              - update spec attributes for Hypervisor node
-//              - update status attributes
-//      Delete:
-//          o NetOps-admin
-//              - when Baremetal node is decommissioned
-//          o CMD
-//              - TBD
+// Node is representation of a single Venice node in the system.
 //
 message Node {
 
@@ -133,8 +113,7 @@ message NodeSpec {
     // NodeRole Type
     enum NodeRole {
         CONTROLLER  = 0x0;  // Node which is part of Venice cluster
-        WORKLOAD    = 0x1;  // Node which runs workloads
-        QUORUM      = 0x2;  // Node which is part of quorum in Venice cluster
+        QUORUM      = 0x1;  // Node which is part of quorum in Venice cluster
     }
 
     // Roles is of list of roles a node can be configured with.
@@ -162,14 +141,7 @@ message NodeStatus {
     // List of current node conditions
     repeated NodeCondition Conditions   = 2 [(gogoproto.nullable) = true,
                                             (gogoproto.jsontag) = "conditions,omitempty"];
-
-    // Nics holds a list of Mac addresses each uniquely identifying
-    // a SmartNIC subsystem that is part of the Node
-    repeated string Nics                = 3 [(gogoproto.nullable) = true,
-                                            (gogoproto.jsontag) = "nics,omitempty"];
 }
-
-
 
 // NodeCondition describes the state of a Node at a certain point.
 message NodeCondition {
@@ -207,6 +179,84 @@ enum ConditionStatus {
     UNKNOWN   = 0; // Condition is unknown
     TRUE      = 1; // Condition is met
     FALSE     = 2; // Condition is not met
+}
+
+//---------------------------------- HOST ------------------------------------
+//
+// Host represents a Baremetal or Hypervisor server.
+//
+message Host {
+
+    option (venice.objectPrefix) = {Collection: "hosts"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the host.
+    HostSpec Spec       = 3 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the host.
+    HostStatus Status   = 4 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// HostSpec contains the configuration of the Host.
+message HostSpec {
+
+    // Spec of all interfaces in the Host identified by Primary MAC
+    map<string, HostIntfSpec> Interfaces    = 1 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "interfaces,omitempty"];
+}
+
+// HostStatus contains the current state of the Host.
+message HostStatus {
+
+    // Type of Host
+    enum HostType {
+        UNKNOWN     = 0; // Unknown type
+        BAREMETAL   = 1; // Baremetal server
+        HYPERVISOR  = 2; // Hypervisor (virtualized) server
+    }
+
+    // Type of the host
+    string Type                             = 1 [(gogoproto.nullable) = true,
+                                                (venice.check) = "StrEnum(HostStatus.HostType)",
+                                                (gogoproto.jsontag) = "type,omitempty"];
+
+    // Operating system info - name of OS with version, eg: "Linux 3.10.0.xyz"
+    string OperatingSystem                  = 2 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "operating-system,omitempty"];
+
+    // Orchestrator is the name of associated Compute controller
+    // (like VCenter) managing this host.
+    string Orchestrator                     = 3 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "orchestrator,omitempty"];
+
+    // Status of all interfaces in the Host identified by Primary MAC
+    map<string, HostIntfStatus> Interfaces  = 4 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "interfaces,omitempty"];
+}
+
+// Spec of a Host interface
+message HostIntfSpec {
+
+    // List of all MAC addresses configured and discovered on a Host Interface
+    repeated string MacAddrs = 1 [(gogoproto.nullable) = true,
+                                  (gogoproto.jsontag) = "mac-addrs,omitempty"];
+}
+
+// Status of a Host interface
+message HostIntfStatus {
+
+    // List of all IP addresses configured on a Host Interface
+    repeated string IpAddrs = 1 [(gogoproto.nullable) = true,
+                                 (gogoproto.jsontag) = "ip-addrs,omitempty"];
 }
 
 //------------------------------------ SMART NIC  -------------------------------------------
@@ -276,12 +326,11 @@ message SmartNICSpec {
 
     // Management IP address of the naples node
     string MgmtIp           = 2 [(gogoproto.nullable) = true,
-                                (venice.check) = "HostAddr()",
                                 (gogoproto.jsontag) = "mgmt-ip,omitempty"];
 
-    // Workload node or Controller node.
-    string NodeName         = 3 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "node-name,omitempty"];
+    // Host name
+    string HostName         = 3 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "host-name,omitempty"];
 
     // Ports holds a list of Port Specs
     repeated PortSpec Ports = 4 [(gogoproto.nullable) = false,
@@ -304,7 +353,7 @@ message SmartNICStatus {
                                                 (gogoproto.jsontag) = "primary-mac-address,omitempty"];
 
     // Ports holds a list of PortStatus
-    repeated PortStatus Ports               = 5 [(gogoproto.nullable) = true,
+    repeated PortStatus Ports               = 4 [(gogoproto.nullable) = true,
                                                 (gogoproto.jsontag) = "ports,omitempty"];
 }
 
@@ -343,7 +392,7 @@ message SmartNICCondition {
 // PortSpec contains configuration of a port in SmartNIC
 message PortSpec {
 
-    // Mac address of the Port, which is key identifier of the port
+    // Primary Mac address of the Port, which is key identifier of the port
     string MacAddress   = 1 [(gogoproto.nullable) = true,
                             (gogoproto.jsontag) = "mac-address,omitempty"];
 
@@ -352,9 +401,9 @@ message PortSpec {
 // PortStatus contains current status of a Port
 message PortStatus {
 
-    // Mac address of the Port, which is key identifier of the port
-    string MacAddress                   = 1 [(gogoproto.nullable) = true,
-                                            (gogoproto.jsontag) = "mac-address,omitempty"];
+    // List of all Mac addresses of the Port
+    repeated string MacAddrs            = 1 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "mac-addrs,omitempty"];
 
     // LinkSpeed of the Port
     string LinkSpeed                    = 2 [(gogoproto.nullable) = true,

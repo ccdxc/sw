@@ -26,22 +26,27 @@ type grpcServerClusterV1 struct {
 	Endpoints EndpointsClusterV1Server
 
 	AutoAddClusterHdlr     grpctransport.Handler
+	AutoAddHostHdlr        grpctransport.Handler
 	AutoAddNodeHdlr        grpctransport.Handler
 	AutoAddSmartNICHdlr    grpctransport.Handler
 	AutoAddTenantHdlr      grpctransport.Handler
 	AutoDeleteClusterHdlr  grpctransport.Handler
+	AutoDeleteHostHdlr     grpctransport.Handler
 	AutoDeleteNodeHdlr     grpctransport.Handler
 	AutoDeleteSmartNICHdlr grpctransport.Handler
 	AutoDeleteTenantHdlr   grpctransport.Handler
 	AutoGetClusterHdlr     grpctransport.Handler
+	AutoGetHostHdlr        grpctransport.Handler
 	AutoGetNodeHdlr        grpctransport.Handler
 	AutoGetSmartNICHdlr    grpctransport.Handler
 	AutoGetTenantHdlr      grpctransport.Handler
 	AutoListClusterHdlr    grpctransport.Handler
+	AutoListHostHdlr       grpctransport.Handler
 	AutoListNodeHdlr       grpctransport.Handler
 	AutoListSmartNICHdlr   grpctransport.Handler
 	AutoListTenantHdlr     grpctransport.Handler
 	AutoUpdateClusterHdlr  grpctransport.Handler
+	AutoUpdateHostHdlr     grpctransport.Handler
 	AutoUpdateNodeHdlr     grpctransport.Handler
 	AutoUpdateSmartNICHdlr grpctransport.Handler
 	AutoUpdateTenantHdlr   grpctransport.Handler
@@ -60,6 +65,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqCluster,
 			EncodeGrpcRespCluster,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCluster", logger)))...,
+		),
+
+		AutoAddHostHdlr: grpctransport.NewServer(
+			endpoints.AutoAddHostEndpoint,
+			DecodeGrpcReqHost,
+			EncodeGrpcRespHost,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddHost", logger)))...,
 		),
 
 		AutoAddNodeHdlr: grpctransport.NewServer(
@@ -90,6 +102,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCluster", logger)))...,
 		),
 
+		AutoDeleteHostHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteHostEndpoint,
+			DecodeGrpcReqHost,
+			EncodeGrpcRespHost,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteHost", logger)))...,
+		),
+
 		AutoDeleteNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNodeEndpoint,
 			DecodeGrpcReqNode,
@@ -116,6 +135,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqCluster,
 			EncodeGrpcRespCluster,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCluster", logger)))...,
+		),
+
+		AutoGetHostHdlr: grpctransport.NewServer(
+			endpoints.AutoGetHostEndpoint,
+			DecodeGrpcReqHost,
+			EncodeGrpcRespHost,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetHost", logger)))...,
 		),
 
 		AutoGetNodeHdlr: grpctransport.NewServer(
@@ -146,6 +172,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCluster", logger)))...,
 		),
 
+		AutoListHostHdlr: grpctransport.NewServer(
+			endpoints.AutoListHostEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespHostList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListHost", logger)))...,
+		),
+
 		AutoListNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoListNodeEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -172,6 +205,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqCluster,
 			EncodeGrpcRespCluster,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCluster", logger)))...,
+		),
+
+		AutoUpdateHostHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateHostEndpoint,
+			DecodeGrpcReqHost,
+			EncodeGrpcRespHost,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateHost", logger)))...,
 		),
 
 		AutoUpdateNodeHdlr: grpctransport.NewServer(
@@ -211,6 +251,24 @@ func decodeHTTPrespClusterV1AutoAddCluster(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoAddHost(ctx oldcontext.Context, req *Host) (*Host, error) {
+	_, resp, err := s.AutoAddHostHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoAddHost).V
+	return &r, resp.(respClusterV1AutoAddHost).Err
+}
+
+func decodeHTTPrespClusterV1AutoAddHost(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Host
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -287,6 +345,24 @@ func decodeHTTPrespClusterV1AutoDeleteCluster(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoDeleteHost(ctx oldcontext.Context, req *Host) (*Host, error) {
+	_, resp, err := s.AutoDeleteHostHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoDeleteHost).V
+	return &r, resp.(respClusterV1AutoDeleteHost).Err
+}
+
+func decodeHTTPrespClusterV1AutoDeleteHost(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Host
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoDeleteNode(ctx oldcontext.Context, req *Node) (*Node, error) {
 	_, resp, err := s.AutoDeleteNodeHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -355,6 +431,24 @@ func decodeHTTPrespClusterV1AutoGetCluster(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoGetHost(ctx oldcontext.Context, req *Host) (*Host, error) {
+	_, resp, err := s.AutoGetHostHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoGetHost).V
+	return &r, resp.(respClusterV1AutoGetHost).Err
+}
+
+func decodeHTTPrespClusterV1AutoGetHost(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Host
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -431,6 +525,24 @@ func decodeHTTPrespClusterV1AutoListCluster(_ context.Context, r *http.Response)
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoListHost(ctx oldcontext.Context, req *api.ListWatchOptions) (*HostList, error) {
+	_, resp, err := s.AutoListHostHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoListHost).V
+	return &r, resp.(respClusterV1AutoListHost).Err
+}
+
+func decodeHTTPrespClusterV1AutoListHost(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp HostList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoListNode(ctx oldcontext.Context, req *api.ListWatchOptions) (*NodeList, error) {
 	_, resp, err := s.AutoListNodeHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -503,6 +615,24 @@ func decodeHTTPrespClusterV1AutoUpdateCluster(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoUpdateHost(ctx oldcontext.Context, req *Host) (*Host, error) {
+	_, resp, err := s.AutoUpdateHostHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoUpdateHost).V
+	return &r, resp.(respClusterV1AutoUpdateHost).Err
+}
+
+func decodeHTTPrespClusterV1AutoUpdateHost(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Host
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoUpdateNode(ctx oldcontext.Context, req *Node) (*Node, error) {
 	_, resp, err := s.AutoUpdateNodeHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -565,6 +695,10 @@ func (s *grpcServerClusterV1) AutoWatchNode(in *api.ListWatchOptions, stream Clu
 	return s.Endpoints.AutoWatchNode(in, stream)
 }
 
+func (s *grpcServerClusterV1) AutoWatchHost(in *api.ListWatchOptions, stream ClusterV1_AutoWatchHostServer) error {
+	return s.Endpoints.AutoWatchHost(in, stream)
+}
+
 func (s *grpcServerClusterV1) AutoWatchSmartNIC(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSmartNICServer) error {
 	return s.Endpoints.AutoWatchSmartNIC(in, stream)
 }
@@ -604,6 +738,40 @@ func EncodeGrpcRespClusterList(ctx context.Context, response interface{}) (inter
 
 // DecodeGrpcRespClusterList decodes the GRPC response
 func DecodeGrpcRespClusterList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPHostList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPHostList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req HostList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqHostList encodes GRPC request
+func EncodeGrpcReqHostList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*HostList)
+	return req, nil
+}
+
+// DecodeGrpcReqHostList decodes GRPC request
+func DecodeGrpcReqHostList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*HostList)
+	return req, nil
+}
+
+// EncodeGrpcRespHostList endodes the GRPC response
+func EncodeGrpcRespHostList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespHostList decodes the GRPC response
+func DecodeGrpcRespHostList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

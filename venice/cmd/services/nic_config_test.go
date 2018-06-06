@@ -150,7 +150,7 @@ func createCMD(m *testing.M) *rpckit.RPCServer {
 }
 
 // Create NMD and Agent
-func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error) {
+func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error) {
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -162,7 +162,8 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 	// create the new NMD
 	ag, err := nmd.NewAgent(pa,
 		dbPath,
-		nodeID,
+		hostID,
+		hostID,
 		*cmdURL,
 		"",
 		restURL,
@@ -200,7 +201,7 @@ func TestNICConfig(t *testing.T) {
 			for j := 0; j < batchSize && i <= *numNaples; i, j = i+1, j+1 {
 
 				tcName := fmt.Sprintf("TestNMD-%d", i)
-				nodeID := getNodeID(i)
+				hostID := getNodeID(i)
 				dbPath := getDBPath(i)
 				restURL := getRESTUrl(i)
 
@@ -210,13 +211,13 @@ func TestNICConfig(t *testing.T) {
 					// Execute Agent/NMD creation and registration tests in parallel
 					t.Parallel()
 					log.Infof("#### Started TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d",
-						tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
+						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
 					// Cleanup any prior DB files
 					os.Remove(dbPath)
 
 					// create Agent and NMD
-					ag, err := createNMD(t, dbPath, nodeID, restURL)
+					ag, err := createNMD(t, dbPath, hostID, restURL)
 					defer stopNMD(t, ag, dbPath)
 					Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
 
@@ -238,12 +239,12 @@ func TestNICConfig(t *testing.T) {
 					nic := cmd.SmartNIC{
 						TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 						ObjectMeta: api.ObjectMeta{
-							Name: nodeID,
+							Name: hostID,
 						},
 						Spec: cmd.SmartNICSpec{
 							MgmtIp:   "localhost",
 							Phase:    "UNKNOWN",
-							NodeName: nodeID,
+							HostName: hostID,
 						},
 					}
 
@@ -266,7 +267,7 @@ func TestNICConfig(t *testing.T) {
 						// Fetch smartnic object
 						nic, err := nm.GetSmartNIC()
 						if nic == nil || err != nil {
-							log.Errorf("NIC not found in nicDB, mac:%s", nodeID)
+							log.Errorf("NIC not found in nicDB, mac:%s", hostID)
 							return false, nil
 						}
 
@@ -295,12 +296,12 @@ func TestNICConfig(t *testing.T) {
 					f5 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
-							Name: nodeID,
+							Name: hostID,
 						}
 						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 						if err != nil || nicObj == nil || nicObj.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
 							log.Errorf("Failed to validate phase of SmartNIC object, mac:%s, phase: %s err: %v",
-								nodeID, nicObj.Spec.Phase, err)
+								hostID, nicObj.Spec.Phase, err)
 							return false, nil
 						}
 
@@ -312,20 +313,20 @@ func TestNICConfig(t *testing.T) {
 					f6 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
-							Name: nodeID,
+							Name: hostID,
 						}
-						nodeObj, err := tInfo.apiClient.ClusterV1().Node().Get(context.Background(), &meta)
-						if err != nil || nodeObj == nil {
-							log.Errorf("Failed to GET Node object, mac:%s, %v", nodeID, err)
+						hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
+						if err != nil || hostObj == nil {
+							log.Errorf("Failed to GET Host object, mac:%s, %v", hostID, err)
 							return false, nil
 						}
 
 						return true, nil
 					}
-					AssertEventually(t, f6, "Failed to verify creation of required Node object", string("10ms"), string("30s"))
+					AssertEventually(t, f6, "Failed to verify creation of required Host object", string("10ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
-						tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
+						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
 				})
 			}

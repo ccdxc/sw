@@ -68,6 +68,50 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) GetObject() *Endpoint {
 	return nil
 }
 
+type AutoMsgWorkloadWatchHelper struct {
+	Events []*AutoMsgWorkloadWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
+}
+
+func (m *AutoMsgWorkloadWatchHelper) Reset()         { *m = AutoMsgWorkloadWatchHelper{} }
+func (m *AutoMsgWorkloadWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgWorkloadWatchHelper) ProtoMessage()    {}
+func (*AutoMsgWorkloadWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcWorkload, []int{1}
+}
+
+func (m *AutoMsgWorkloadWatchHelper) GetEvents() []*AutoMsgWorkloadWatchHelper_WatchEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type AutoMsgWorkloadWatchHelper_WatchEvent struct {
+	Type   string    `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Workload `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Reset()         { *m = AutoMsgWorkloadWatchHelper_WatchEvent{} }
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgWorkloadWatchHelper_WatchEvent) ProtoMessage()    {}
+func (*AutoMsgWorkloadWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcWorkload, []int{1, 0}
+}
+
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) GetObject() *Workload {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 type EndpointList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
@@ -77,9 +121,27 @@ type EndpointList struct {
 func (m *EndpointList) Reset()                    { *m = EndpointList{} }
 func (m *EndpointList) String() string            { return proto.CompactTextString(m) }
 func (*EndpointList) ProtoMessage()               {}
-func (*EndpointList) Descriptor() ([]byte, []int) { return fileDescriptorSvcWorkload, []int{1} }
+func (*EndpointList) Descriptor() ([]byte, []int) { return fileDescriptorSvcWorkload, []int{2} }
 
 func (m *EndpointList) GetItems() []*Endpoint {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type WorkloadList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Workload `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *WorkloadList) Reset()                    { *m = WorkloadList{} }
+func (m *WorkloadList) String() string            { return proto.CompactTextString(m) }
+func (*WorkloadList) ProtoMessage()               {}
+func (*WorkloadList) Descriptor() ([]byte, []int) { return fileDescriptorSvcWorkload, []int{3} }
+
+func (m *WorkloadList) GetItems() []*Workload {
 	if m != nil {
 		return m.Items
 	}
@@ -89,7 +151,10 @@ func (m *EndpointList) GetItems() []*Endpoint {
 func init() {
 	proto.RegisterType((*AutoMsgEndpointWatchHelper)(nil), "workload.AutoMsgEndpointWatchHelper")
 	proto.RegisterType((*AutoMsgEndpointWatchHelper_WatchEvent)(nil), "workload.AutoMsgEndpointWatchHelper.WatchEvent")
+	proto.RegisterType((*AutoMsgWorkloadWatchHelper)(nil), "workload.AutoMsgWorkloadWatchHelper")
+	proto.RegisterType((*AutoMsgWorkloadWatchHelper_WatchEvent)(nil), "workload.AutoMsgWorkloadWatchHelper.WatchEvent")
 	proto.RegisterType((*EndpointList)(nil), "workload.EndpointList")
+	proto.RegisterType((*WorkloadList)(nil), "workload.WorkloadList")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -104,11 +169,17 @@ const _ = grpc.SupportPackageIsVersion4
 
 type WorkloadV1Client interface {
 	AutoAddEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoAddWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
 	AutoDeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoDeleteWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
 	AutoGetEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoGetWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
 	AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*EndpointList, error)
+	AutoListWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*WorkloadList, error)
 	AutoUpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoUpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
 	AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchEndpointClient, error)
+	AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchWorkloadClient, error)
 }
 
 type workloadV1Client struct {
@@ -128,9 +199,27 @@ func (c *workloadV1Client) AutoAddEndpoint(ctx context.Context, in *Endpoint, op
 	return out, nil
 }
 
+func (c *workloadV1Client) AutoAddWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error) {
+	out := new(Workload)
+	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoAddWorkload", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *workloadV1Client) AutoDeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
 	out := new(Endpoint)
 	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoDeleteEndpoint", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadV1Client) AutoDeleteWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error) {
+	out := new(Workload)
+	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoDeleteWorkload", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +235,15 @@ func (c *workloadV1Client) AutoGetEndpoint(ctx context.Context, in *Endpoint, op
 	return out, nil
 }
 
+func (c *workloadV1Client) AutoGetWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error) {
+	out := new(Workload)
+	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoGetWorkload", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *workloadV1Client) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*EndpointList, error) {
 	out := new(EndpointList)
 	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoListEndpoint", in, out, c.cc, opts...)
@@ -155,9 +253,27 @@ func (c *workloadV1Client) AutoListEndpoint(ctx context.Context, in *api.ListWat
 	return out, nil
 }
 
+func (c *workloadV1Client) AutoListWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*WorkloadList, error) {
+	out := new(WorkloadList)
+	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoListWorkload", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *workloadV1Client) AutoUpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
 	out := new(Endpoint)
 	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoUpdateEndpoint", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadV1Client) AutoUpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error) {
+	out := new(Workload)
+	err := grpc.Invoke(ctx, "/workload.WorkloadV1/AutoUpdateWorkload", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,15 +312,53 @@ func (x *workloadV1AutoWatchEndpointClient) Recv() (*AutoMsgEndpointWatchHelper,
 	return m, nil
 }
 
+func (c *workloadV1Client) AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchWorkloadClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_WorkloadV1_serviceDesc.Streams[1], c.cc, "/workload.WorkloadV1/AutoWatchWorkload", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &workloadV1AutoWatchWorkloadClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type WorkloadV1_AutoWatchWorkloadClient interface {
+	Recv() (*AutoMsgWorkloadWatchHelper, error)
+	grpc.ClientStream
+}
+
+type workloadV1AutoWatchWorkloadClient struct {
+	grpc.ClientStream
+}
+
+func (x *workloadV1AutoWatchWorkloadClient) Recv() (*AutoMsgWorkloadWatchHelper, error) {
+	m := new(AutoMsgWorkloadWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Server API for WorkloadV1 service
 
 type WorkloadV1Server interface {
 	AutoAddEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoAddWorkload(context.Context, *Workload) (*Workload, error)
 	AutoDeleteEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoDeleteWorkload(context.Context, *Workload) (*Workload, error)
 	AutoGetEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoGetWorkload(context.Context, *Workload) (*Workload, error)
 	AutoListEndpoint(context.Context, *api.ListWatchOptions) (*EndpointList, error)
+	AutoListWorkload(context.Context, *api.ListWatchOptions) (*WorkloadList, error)
 	AutoUpdateEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoUpdateWorkload(context.Context, *Workload) (*Workload, error)
 	AutoWatchEndpoint(*api.ListWatchOptions, WorkloadV1_AutoWatchEndpointServer) error
+	AutoWatchWorkload(*api.ListWatchOptions, WorkloadV1_AutoWatchWorkloadServer) error
 }
 
 func RegisterWorkloadV1Server(s *grpc.Server, srv WorkloadV1Server) {
@@ -229,6 +383,24 @@ func _WorkloadV1_AutoAddEndpoint_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WorkloadV1_AutoAddWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Workload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadV1Server).AutoAddWorkload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/workload.WorkloadV1/AutoAddWorkload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadV1Server).AutoAddWorkload(ctx, req.(*Workload))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WorkloadV1_AutoDeleteEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Endpoint)
 	if err := dec(in); err != nil {
@@ -243,6 +415,24 @@ func _WorkloadV1_AutoDeleteEndpoint_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WorkloadV1Server).AutoDeleteEndpoint(ctx, req.(*Endpoint))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WorkloadV1_AutoDeleteWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Workload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadV1Server).AutoDeleteWorkload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/workload.WorkloadV1/AutoDeleteWorkload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadV1Server).AutoDeleteWorkload(ctx, req.(*Workload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -265,6 +455,24 @@ func _WorkloadV1_AutoGetEndpoint_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WorkloadV1_AutoGetWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Workload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadV1Server).AutoGetWorkload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/workload.WorkloadV1/AutoGetWorkload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadV1Server).AutoGetWorkload(ctx, req.(*Workload))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WorkloadV1_AutoListEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -283,6 +491,24 @@ func _WorkloadV1_AutoListEndpoint_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WorkloadV1_AutoListWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadV1Server).AutoListWorkload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/workload.WorkloadV1/AutoListWorkload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadV1Server).AutoListWorkload(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WorkloadV1_AutoUpdateEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Endpoint)
 	if err := dec(in); err != nil {
@@ -297,6 +523,24 @@ func _WorkloadV1_AutoUpdateEndpoint_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WorkloadV1Server).AutoUpdateEndpoint(ctx, req.(*Endpoint))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WorkloadV1_AutoUpdateWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Workload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadV1Server).AutoUpdateWorkload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/workload.WorkloadV1/AutoUpdateWorkload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadV1Server).AutoUpdateWorkload(ctx, req.(*Workload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -322,6 +566,27 @@ func (x *workloadV1AutoWatchEndpointServer) Send(m *AutoMsgEndpointWatchHelper) 
 	return x.ServerStream.SendMsg(m)
 }
 
+func _WorkloadV1_AutoWatchWorkload_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(WorkloadV1Server).AutoWatchWorkload(m, &workloadV1AutoWatchWorkloadServer{stream})
+}
+
+type WorkloadV1_AutoWatchWorkloadServer interface {
+	Send(*AutoMsgWorkloadWatchHelper) error
+	grpc.ServerStream
+}
+
+type workloadV1AutoWatchWorkloadServer struct {
+	grpc.ServerStream
+}
+
+func (x *workloadV1AutoWatchWorkloadServer) Send(m *AutoMsgWorkloadWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _WorkloadV1_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "workload.WorkloadV1",
 	HandlerType: (*WorkloadV1Server)(nil),
@@ -331,26 +596,51 @@ var _WorkloadV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _WorkloadV1_AutoAddEndpoint_Handler,
 		},
 		{
+			MethodName: "AutoAddWorkload",
+			Handler:    _WorkloadV1_AutoAddWorkload_Handler,
+		},
+		{
 			MethodName: "AutoDeleteEndpoint",
 			Handler:    _WorkloadV1_AutoDeleteEndpoint_Handler,
+		},
+		{
+			MethodName: "AutoDeleteWorkload",
+			Handler:    _WorkloadV1_AutoDeleteWorkload_Handler,
 		},
 		{
 			MethodName: "AutoGetEndpoint",
 			Handler:    _WorkloadV1_AutoGetEndpoint_Handler,
 		},
 		{
+			MethodName: "AutoGetWorkload",
+			Handler:    _WorkloadV1_AutoGetWorkload_Handler,
+		},
+		{
 			MethodName: "AutoListEndpoint",
 			Handler:    _WorkloadV1_AutoListEndpoint_Handler,
 		},
 		{
+			MethodName: "AutoListWorkload",
+			Handler:    _WorkloadV1_AutoListWorkload_Handler,
+		},
+		{
 			MethodName: "AutoUpdateEndpoint",
 			Handler:    _WorkloadV1_AutoUpdateEndpoint_Handler,
+		},
+		{
+			MethodName: "AutoUpdateWorkload",
+			Handler:    _WorkloadV1_AutoUpdateWorkload_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "AutoWatchEndpoint",
 			Handler:       _WorkloadV1_AutoWatchEndpoint_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchWorkload",
+			Handler:       _WorkloadV1_AutoWatchWorkload_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -421,6 +711,70 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, err
 	return i, nil
 }
 
+func (m *AutoMsgWorkloadWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgWorkloadWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, msg := range m.Events {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSvcWorkload(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSvcWorkload(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSvcWorkload(dAtA, i, uint64(m.Object.Size()))
+		n2, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
 func (m *EndpointList) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -439,19 +793,65 @@ func (m *EndpointList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcWorkload(dAtA, i, uint64(m.TypeMeta.Size()))
-	n2, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintSvcWorkload(dAtA, i, uint64(m.ListMeta.Size()))
-	n3, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n3
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcWorkload(dAtA, i, uint64(m.ListMeta.Size()))
+	n4, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n4
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcWorkload(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *WorkloadList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *WorkloadList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcWorkload(dAtA, i, uint64(m.TypeMeta.Size()))
+	n5, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n5
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcWorkload(dAtA, i, uint64(m.ListMeta.Size()))
+	n6, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -502,7 +902,49 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Size() (n int) {
 	return n
 }
 
+func (m *AutoMsgWorkloadWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovSvcWorkload(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovSvcWorkload(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovSvcWorkload(uint64(l))
+	}
+	return n
+}
+
 func (m *EndpointList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSvcWorkload(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovSvcWorkload(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovSvcWorkload(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *WorkloadList) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -724,6 +1166,199 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AutoMsgWorkloadWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcWorkload
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgWorkloadWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgWorkloadWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcWorkload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, &AutoMsgWorkloadWatchHelper_WatchEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcWorkload(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcWorkload
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcWorkload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcWorkload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Workload{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcWorkload(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *EndpointList) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -865,6 +1500,147 @@ func (m *EndpointList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *WorkloadList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcWorkload
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WorkloadList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WorkloadList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcWorkload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcWorkload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcWorkload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Workload{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcWorkload(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcWorkload
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipSvcWorkload(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -973,46 +1749,53 @@ var (
 func init() { proto.RegisterFile("svc_workload.proto", fileDescriptorSvcWorkload) }
 
 var fileDescriptorSvcWorkload = []byte{
-	// 650 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x4d, 0x6f, 0xd3, 0x4c,
-	0x10, 0xc7, 0xb3, 0x4d, 0x1a, 0xe5, 0xd9, 0xbe, 0x3d, 0xac, 0x54, 0x14, 0x9b, 0x2a, 0x2d, 0x56,
-	0x2b, 0x85, 0x4a, 0xb5, 0xdb, 0x22, 0x24, 0xe8, 0x01, 0xd4, 0x8a, 0x8a, 0x17, 0x51, 0xca, 0xa1,
-	0xd0, 0x23, 0xda, 0xd8, 0x83, 0x6b, 0xea, 0xec, 0x5a, 0xd9, 0x75, 0x22, 0x84, 0x7a, 0x21, 0xe9,
-	0x1d, 0xc1, 0x8d, 0x23, 0x47, 0x0e, 0x1c, 0x72, 0xe2, 0x23, 0xf4, 0x58, 0x89, 0x5b, 0x0f, 0x15,
-	0xaa, 0xf8, 0x1a, 0x48, 0x68, 0x37, 0xb6, 0x1b, 0x44, 0x4a, 0x29, 0x37, 0xcf, 0x78, 0xfe, 0xff,
-	0xdf, 0xee, 0x8c, 0xc7, 0x98, 0x88, 0xa6, 0xfb, 0xbc, 0xc5, 0x1b, 0xbb, 0x21, 0xa7, 0x9e, 0x1d,
-	0x35, 0xb8, 0xe4, 0xa4, 0x94, 0xc6, 0xe6, 0x94, 0xcf, 0xb9, 0x1f, 0x82, 0x43, 0xa3, 0xc0, 0xa1,
-	0x8c, 0x71, 0x49, 0x65, 0xc0, 0x99, 0xe8, 0xd5, 0x99, 0xeb, 0x7e, 0x20, 0x77, 0xe2, 0x9a, 0xed,
-	0xf2, 0xba, 0x13, 0x01, 0x13, 0x94, 0x79, 0xdc, 0x11, 0x2d, 0xa7, 0x09, 0x2c, 0x70, 0xc1, 0x89,
-	0x65, 0x10, 0x0a, 0x25, 0xf5, 0x81, 0xf5, 0xab, 0x9d, 0x80, 0xb9, 0x61, 0xec, 0x41, 0x6a, 0xb3,
-	0xd0, 0x67, 0xe3, 0x73, 0x9f, 0x3b, 0x3a, 0x5d, 0x8b, 0x5f, 0xe8, 0x48, 0x07, 0xfa, 0x29, 0x29,
-	0x5f, 0x3c, 0x83, 0xaa, 0xce, 0x18, 0xd2, 0x1a, 0x84, 0xc2, 0x11, 0x10, 0x82, 0x2b, 0x79, 0x23,
-	0x51, 0x8c, 0x03, 0xf3, 0x22, 0x1e, 0x30, 0x99, 0xc4, 0x73, 0x7f, 0x70, 0xa8, 0x83, 0xa4, 0xbd,
-	0x32, 0xeb, 0x33, 0xc2, 0xe6, 0x6a, 0x2c, 0xf9, 0x86, 0xf0, 0xd7, 0x13, 0x83, 0x6d, 0x2a, 0xdd,
-	0x9d, 0xfb, 0x10, 0x46, 0xd0, 0x20, 0x77, 0x70, 0x71, 0xbd, 0x09, 0x4c, 0x8a, 0x32, 0x9a, 0xc9,
-	0x57, 0x47, 0x96, 0x1d, 0x3b, 0x6b, 0xe3, 0xd9, 0x2a, 0x5b, 0x3f, 0x6b, 0x9d, 0x79, 0x1b, 0xe3,
-	0xd3, 0x88, 0x8c, 0xe2, 0xc2, 0xd6, 0xab, 0x08, 0xca, 0x68, 0x06, 0x55, 0xff, 0x23, 0x16, 0x2e,
-	0x6e, 0xd6, 0x5e, 0x82, 0x2b, 0xcb, 0x43, 0x33, 0xa8, 0x3a, 0xb2, 0x4c, 0x4e, 0xcd, 0x53, 0xd7,
-	0x95, 0x89, 0xa3, 0x7d, 0x63, 0xa4, 0xa5, 0x1c, 0x76, 0xb4, 0xb7, 0xf5, 0x16, 0xe1, 0xd1, 0xf4,
-	0xed, 0xa3, 0x40, 0x48, 0x62, 0x61, 0xb4, 0x95, 0x18, 0x8c, 0xd9, 0x34, 0x0a, 0x6c, 0x45, 0xd8,
-	0x00, 0x49, 0xd7, 0x4a, 0x07, 0xc7, 0xd3, 0xb9, 0xc3, 0xe3, 0x69, 0x44, 0xae, 0xe1, 0x92, 0xaa,
-	0x55, 0xd9, 0x72, 0xbe, 0xaf, 0x34, 0x4d, 0xf6, 0x95, 0x5e, 0xc5, 0xc3, 0x0f, 0x24, 0xd4, 0x45,
-	0xb9, 0xa0, 0x2f, 0x3c, 0xe8, 0x4c, 0xe3, 0x47, 0xfb, 0x06, 0x0e, 0x03, 0x21, 0x7b, 0x47, 0x5a,
-	0xfe, 0x31, 0x8c, 0xf1, 0x76, 0x52, 0xf5, 0x6c, 0x89, 0xec, 0xe2, 0x09, 0xd5, 0x9b, 0x55, 0xcf,
-	0x4b, 0x15, 0x64, 0x80, 0x8b, 0x39, 0x20, 0x67, 0x2d, 0x76, 0x3b, 0x46, 0xd1, 0x6d, 0x00, 0x95,
-	0xf0, 0xa5, 0x63, 0xa0, 0x37, 0x5f, 0xbf, 0xbf, 0x1f, 0x9a, 0xc2, 0xb9, 0x15, 0x34, 0x6f, 0x4d,
-	0x3a, 0xaf, 0x37, 0xed, 0x2d, 0x60, 0x94, 0xc9, 0x3d, 0x27, 0x9d, 0xb5, 0x20, 0x4d, 0x4c, 0x14,
-	0xec, 0x2e, 0x84, 0x20, 0xe1, 0xc2, 0xbc, 0x9b, 0x8a, 0xe7, 0x69, 0x6d, 0xc6, 0x9b, 0xc5, 0xb9,
-	0x95, 0xdc, 0x7c, 0x65, 0x20, 0x4e, 0x25, 0x1f, 0xd3, 0x3a, 0xec, 0x91, 0xa8, 0x77, 0xc9, 0x7b,
-	0x20, 0x2f, 0x0c, 0xbd, 0xd1, 0xed, 0x18, 0x79, 0x1f, 0xe4, 0xaf, 0x44, 0x72, 0x3e, 0xf1, 0x7f,
-	0x45, 0x54, 0x23, 0xcb, 0x90, 0x93, 0xd9, 0x14, 0xf5, 0x47, 0xb6, 0x19, 0xe9, 0xdd, 0x33, 0x2f,
-	0xff, 0x4e, 0x55, 0x35, 0xd6, 0x42, 0xb7, 0x63, 0x14, 0xd4, 0xe0, 0x32, 0xf4, 0x15, 0x8d, 0x3e,
-	0xa3, 0xb7, 0xad, 0x5e, 0x6f, 0x9f, 0x46, 0x1e, 0xfd, 0x87, 0xde, 0xde, 0x52, 0xbd, 0x8d, 0xb5,
-	0x36, 0xc3, 0xcd, 0xe9, 0x59, 0x9a, 0xe7, 0x5d, 0x95, 0xe2, 0x4b, 0x0a, 0xdc, 0x5b, 0x9c, 0x73,
-	0xee, 0x3a, 0xfb, 0x37, 0x1b, 0x69, 0x8d, 0x75, 0x3b, 0xc6, 0xb0, 0x5e, 0x23, 0x75, 0x96, 0x45,
-	0x64, 0x3e, 0x7c, 0xd7, 0x36, 0x86, 0x9a, 0x4b, 0x1f, 0xda, 0x46, 0xf6, 0x23, 0xfc, 0xd8, 0x36,
-	0x4a, 0xa9, 0xf6, 0x53, 0xdb, 0xa8, 0xe2, 0x2c, 0x22, 0x6a, 0x5c, 0x24, 0x1f, 0xc5, 0x92, 0x24,
-	0x5f, 0x0b, 0x29, 0x44, 0x5c, 0x48, 0xa2, 0x9b, 0xb9, 0x36, 0x7a, 0x70, 0x52, 0x41, 0x87, 0x27,
-	0x15, 0xf4, 0xed, 0xa4, 0x82, 0x9e, 0xa0, 0x5a, 0x51, 0xff, 0x5a, 0xae, 0xff, 0x0c, 0x00, 0x00,
-	0xff, 0xff, 0xa7, 0x49, 0x1b, 0x98, 0x77, 0x05, 0x00, 0x00,
+	// 758 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x96, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xc7, 0x3b, 0xb4, 0x34, 0x75, 0xca, 0x0f, 0x9d, 0x04, 0xd3, 0x5d, 0x49, 0xc1, 0x06, 0x92,
+	0x4a, 0x42, 0x17, 0x30, 0x26, 0xca, 0x41, 0x03, 0x91, 0xa8, 0x89, 0x88, 0x07, 0x94, 0xa3, 0x99,
+	0xee, 0x8e, 0xcb, 0xca, 0x76, 0x67, 0xd3, 0x99, 0xb6, 0x31, 0x86, 0x0b, 0x2d, 0x77, 0xa3, 0x37,
+	0x8f, 0x1e, 0x3d, 0x78, 0xe8, 0xc9, 0x3f, 0x81, 0x23, 0x89, 0x37, 0x4c, 0x88, 0x21, 0xfe, 0x21,
+	0x66, 0xa6, 0x9d, 0xed, 0x56, 0x16, 0xba, 0x35, 0xc6, 0xdb, 0xcc, 0xf4, 0xbd, 0xf7, 0xf9, 0x7e,
+	0x67, 0xe6, 0x75, 0x16, 0x22, 0x56, 0x37, 0x5f, 0x35, 0x68, 0x75, 0xcf, 0xa5, 0xd8, 0x2a, 0xf9,
+	0x55, 0xca, 0x29, 0xca, 0xa8, 0xb9, 0x3e, 0x6d, 0x53, 0x6a, 0xbb, 0xc4, 0xc0, 0xbe, 0x63, 0x60,
+	0xcf, 0xa3, 0x1c, 0x73, 0x87, 0x7a, 0xac, 0x13, 0xa7, 0x6f, 0xd8, 0x0e, 0xdf, 0xad, 0x95, 0x4b,
+	0x26, 0xad, 0x18, 0x3e, 0xf1, 0x18, 0xf6, 0x2c, 0x6a, 0xb0, 0x86, 0x51, 0x27, 0x9e, 0x63, 0x12,
+	0xa3, 0xc6, 0x1d, 0x97, 0x89, 0x54, 0x9b, 0x78, 0xe1, 0x6c, 0xc3, 0xf1, 0x4c, 0xb7, 0x66, 0x11,
+	0x55, 0x66, 0x31, 0x54, 0xc6, 0xa6, 0x36, 0x35, 0xe4, 0x72, 0xb9, 0xf6, 0x5a, 0xce, 0xe4, 0x44,
+	0x8e, 0xba, 0xe1, 0x4b, 0x17, 0x50, 0x85, 0x46, 0x17, 0x97, 0x89, 0xcb, 0x0c, 0x46, 0x5c, 0x62,
+	0x72, 0x5a, 0xed, 0x66, 0x4c, 0x10, 0xcf, 0xf2, 0xa9, 0xe3, 0xf1, 0xee, 0x7c, 0xfe, 0x92, 0x0a,
+	0x15, 0xc2, 0x71, 0x27, 0xac, 0xf0, 0x15, 0x40, 0x7d, 0xad, 0xc6, 0xe9, 0x26, 0xb3, 0x37, 0xba,
+	0x05, 0x76, 0x30, 0x37, 0x77, 0x1f, 0x13, 0xd7, 0x27, 0x55, 0xf4, 0x00, 0xa6, 0x37, 0xea, 0xc4,
+	0xe3, 0x2c, 0x07, 0x66, 0x93, 0xc5, 0xec, 0x8a, 0x51, 0x0a, 0xb6, 0xf1, 0xe2, 0xac, 0x92, 0x1c,
+	0xcb, 0x3c, 0xfd, 0x3e, 0x84, 0xbd, 0x19, 0x1a, 0x83, 0xa9, 0xed, 0xb7, 0x3e, 0xc9, 0x81, 0x59,
+	0x50, 0xbc, 0x82, 0x0a, 0x30, 0xbd, 0x55, 0x7e, 0x43, 0x4c, 0x9e, 0x1b, 0x99, 0x05, 0xc5, 0xec,
+	0x0a, 0xea, 0x15, 0x57, 0x55, 0x57, 0x27, 0x4f, 0x0e, 0xb5, 0x6c, 0x43, 0x54, 0xd8, 0x95, 0xb5,
+	0xc3, 0x82, 0x77, 0xba, 0xd1, 0xc3, 0x09, 0x8e, 0xc8, 0xfa, 0x07, 0x82, 0x55, 0xd5, 0xf3, 0x82,
+	0xdf, 0x03, 0x38, 0xa6, 0xec, 0x3c, 0x75, 0x18, 0x47, 0x05, 0x08, 0xb6, 0xbb, 0x05, 0xc6, 0x4b,
+	0xd8, 0x77, 0x4a, 0x82, 0xb0, 0x49, 0x38, 0x5e, 0xcf, 0x1c, 0x9d, 0xce, 0x24, 0x8e, 0x4f, 0x67,
+	0x00, 0xba, 0x05, 0x33, 0x22, 0x56, 0xac, 0xe6, 0x92, 0xa1, 0x50, 0xb5, 0x18, 0x0a, 0xbd, 0x09,
+	0x47, 0x9f, 0x70, 0x52, 0x61, 0xb9, 0x94, 0x34, 0x1c, 0xb5, 0x89, 0x13, 0x27, 0x87, 0x1a, 0x74,
+	0x1d, 0xc6, 0x43, 0x92, 0x94, 0xe0, 0xff, 0x2b, 0x29, 0xd8, 0xa6, 0x3f, 0x24, 0xad, 0xfc, 0xc8,
+	0x42, 0xa8, 0x7e, 0x7c, 0xb9, 0x8c, 0xf6, 0xe0, 0xa4, 0x38, 0xae, 0x35, 0xcb, 0x52, 0x26, 0x50,
+	0x84, 0x31, 0x3d, 0x62, 0xad, 0xb0, 0xd4, 0x6e, 0x69, 0x69, 0xb3, 0x4a, 0x30, 0x27, 0xdf, 0x5a,
+	0x1a, 0x38, 0xf8, 0xfe, 0xeb, 0xe3, 0xc8, 0x34, 0x4c, 0xac, 0x82, 0x85, 0xc2, 0x94, 0xf1, 0x6e,
+	0xab, 0xb4, 0x4d, 0x3c, 0xec, 0xf1, 0x7d, 0x43, 0xf5, 0x0b, 0x0b, 0xc1, 0x94, 0x02, 0x14, 0x21,
+	0x59, 0x8f, 0x58, 0x8b, 0x0d, 0x53, 0x99, 0x0c, 0xd5, 0x21, 0x12, 0xb0, 0x87, 0xc4, 0x25, 0x9c,
+	0x0c, 0x6d, 0xee, 0xae, 0xe0, 0x59, 0x32, 0x37, 0xe0, 0xcd, 0xc1, 0xc4, 0x6a, 0x62, 0x21, 0x1f,
+	0xe9, 0x4d, 0x2c, 0x3e, 0xc3, 0x15, 0xb2, 0xdf, 0xcf, 0x1d, 0xda, 0x67, 0x4c, 0x6e, 0x60, 0xb3,
+	0xc7, 0xf5, 0x3b, 0x9b, 0xfb, 0x88, 0xf0, 0xa1, 0xcd, 0xde, 0x69, 0xb7, 0xb4, 0xa4, 0x4d, 0x78,
+	0x3f, 0x11, 0x0d, 0x72, 0xda, 0x23, 0x0e, 0x6d, 0x33, 0x0e, 0x31, 0xd2, 0xe3, 0x55, 0x41, 0x14,
+	0x9d, 0x10, 0x98, 0x9c, 0x0a, 0x9a, 0x43, 0xfe, 0x9d, 0x6c, 0xf9, 0xf2, 0x59, 0xd0, 0xaf, 0x9f,
+	0xf7, 0x29, 0x62, 0x0a, 0x8b, 0xed, 0x96, 0x96, 0x12, 0xfd, 0x10, 0xa0, 0x6f, 0x48, 0xf4, 0x05,
+	0x57, 0x36, 0x44, 0x0c, 0x4c, 0x0e, 0x26, 0x86, 0x7b, 0x3e, 0x1e, 0xb1, 0x77, 0x6f, 0x1b, 0x9d,
+	0xfb, 0xf3, 0xc2, 0xb7, 0xf0, 0x5f, 0xdc, 0xdb, 0x7b, 0xe2, 0xfe, 0xd4, 0x64, 0x6e, 0x80, 0x9b,
+	0x97, 0x7d, 0xa2, 0x0f, 0x3a, 0xce, 0x3e, 0xf0, 0xd0, 0x27, 0x1a, 0x17, 0x1c, 0x71, 0xaa, 0x18,
+	0x5e, 0x13, 0xe0, 0xce, 0x6b, 0x30, 0xe0, 0x58, 0xe7, 0xe2, 0xbc, 0x8b, 0x85, 0xf1, 0x76, 0x4b,
+	0x1b, 0x95, 0x6f, 0x83, 0xd0, 0xb2, 0x04, 0xfa, 0x10, 0x83, 0xce, 0x71, 0x2e, 0xce, 0x4b, 0x76,
+	0x0e, 0xa1, 0x1f, 0x80, 0x0f, 0x4d, 0x6d, 0xa4, 0xbe, 0xfc, 0xa9, 0xa9, 0x05, 0x9f, 0x3c, 0x9f,
+	0x9b, 0x5a, 0x46, 0xe9, 0x13, 0x63, 0x55, 0xe8, 0x4b, 0x53, 0x2b, 0xc2, 0xe0, 0x17, 0x24, 0x3a,
+	0x01, 0x25, 0xfd, 0x1a, 0x47, 0xdd, 0xd6, 0x47, 0x29, 0x9f, 0x32, 0x8e, 0xe4, 0xad, 0xe9, 0xc4,
+	0x06, 0xa2, 0x2f, 0x8d, 0x5d, 0x1f, 0x3b, 0x3a, 0xcb, 0x83, 0xe3, 0xb3, 0x3c, 0xf8, 0x79, 0x96,
+	0x07, 0xcf, 0x41, 0x39, 0x2d, 0x3f, 0x3e, 0x6e, 0xff, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x0b, 0xfc,
+	0x1c, 0xad, 0x99, 0x09, 0x00, 0x00,
 }

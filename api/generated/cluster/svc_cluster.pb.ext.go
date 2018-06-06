@@ -31,6 +31,16 @@ func (m *ClusterList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *HostList) MakeKey(prefix string) string {
+	obj := Host{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *HostList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *NodeList) MakeKey(prefix string) string {
 	obj := Node{}
 	return obj.MakeKey(prefix)
@@ -63,6 +73,12 @@ func (m *TenantList) MakeURI(ver, prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 	obj := Cluster{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgHostWatchHelper) MakeKey(prefix string) string {
+	obj := Host{}
 	return obj.MakeKey(prefix)
 }
 
@@ -123,6 +139,48 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Clone(into interface{}) (interfac
 
 // Default sets up the defaults for the object
 func (m *AutoMsgClusterWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgHostWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgHostWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgHostWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgHostWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgHostWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgHostWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgHostWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgHostWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgHostWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgHostWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -274,6 +332,27 @@ func (m *ClusterList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *HostList) Clone(into interface{}) (interface{}, error) {
+	var out *HostList
+	var ok bool
+	if into == nil {
+		out = &HostList{}
+	} else {
+		out, ok = into.(*HostList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *HostList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *NodeList) Clone(into interface{}) (interface{}, error) {
 	var out *NodeList
 	var ok bool
@@ -345,6 +424,36 @@ func (m *AutoMsgClusterWatchHelper) Validate(ver, path string, ignoreStatus bool
 
 func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	return ret
+}
+
+func (m *AutoMsgHostWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgHostWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -420,6 +529,21 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 
 func (m *ClusterList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	return ret
+}
+
+func (m *HostList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 

@@ -65,6 +65,24 @@ func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workloa
 	return ret.(*workload.Endpoint), err
 }
 
+func (a adapterWorkloadV1) AutoAddWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddWorkload")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.AutoAddWorkload(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
+}
+
 func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -81,6 +99,24 @@ func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *work
 		return nil, err
 	}
 	return ret.(*workload.Endpoint), err
+}
+
+func (a adapterWorkloadV1) AutoDeleteWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteWorkload")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.AutoDeleteWorkload(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
 }
 
 func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
@@ -101,6 +137,24 @@ func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workloa
 	return ret.(*workload.Endpoint), err
 }
 
+func (a adapterWorkloadV1) AutoGetWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetWorkload")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.AutoGetWorkload(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
+}
+
 func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*workload.EndpointList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -117,6 +171,24 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 		return nil, err
 	}
 	return ret.(*workload.EndpointList), err
+}
+
+func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*workload.WorkloadList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListWorkload")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListWorkload(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.WorkloadList), err
 }
 
 func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
@@ -137,9 +209,32 @@ func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *work
 	return ret.(*workload.Endpoint), err
 }
 
+func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateWorkload")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.AutoUpdateWorkload(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
+}
+
 func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchEndpointClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchEndpoint(ctx, in)
+}
+
+func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchWorkloadClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchWorkload(ctx, in)
 }
 
 func (e *sWorkloadV1GwService) setupSvcProfile() {
@@ -148,10 +243,15 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
 	e.svcProf["AutoAddEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

@@ -155,6 +155,122 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 
 		"cluster.ClusterSpec":   apisrvpkg.NewMessage("cluster.ClusterSpec"),
 		"cluster.ClusterStatus": apisrvpkg.NewMessage("cluster.ClusterStatus"),
+		"cluster.Host": apisrvpkg.NewMessage("cluster.Host").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := cluster.Host{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(cluster.Host)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(cluster.Host)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+			r := i.(cluster.Host)
+			key := r.MakeKey(prefix)
+			r.Kind = "Host"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
+			} else {
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*cluster.Host)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &cluster.Host{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+				} else {
+					if r.ResourceVersion != "" {
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
+				}
+
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(cluster.Host)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
+			} else {
+				err = txn.Update(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
+			}
+			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(cluster.Host)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(cluster.Host)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(cluster.Host)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.Host)
+			r.SelfLink = path
+			return r, nil
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := cluster.Host{}
+			err := kvs.Get(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := cluster.Host{}
+			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+			}
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(cluster.Host)
+			return r.Validate(ver, "", ignoreStatus)
+		}),
+
+		"cluster.HostIntfSpec":   apisrvpkg.NewMessage("cluster.HostIntfSpec"),
+		"cluster.HostIntfStatus": apisrvpkg.NewMessage("cluster.HostIntfStatus"),
+		"cluster.HostSpec":       apisrvpkg.NewMessage("cluster.HostSpec"),
+		"cluster.HostStatus":     apisrvpkg.NewMessage("cluster.HostStatus"),
 		"cluster.Node": apisrvpkg.NewMessage("cluster.Node").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := cluster.Node{}

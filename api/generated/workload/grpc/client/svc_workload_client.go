@@ -42,6 +42,20 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		).Endpoint()
 		lAutoAddEndpointEndpoint = trace.ClientEndPoint("WorkloadV1:AutoAddEndpoint")(lAutoAddEndpointEndpoint)
 	}
+	var lAutoAddWorkloadEndpoint endpoint.Endpoint
+	{
+		lAutoAddWorkloadEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AutoAddWorkload",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoAddWorkload")(lAutoAddWorkloadEndpoint)
+	}
 	var lAutoDeleteEndpointEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteEndpointEndpoint = grpctransport.NewClient(
@@ -55,6 +69,20 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteEndpointEndpoint = trace.ClientEndPoint("WorkloadV1:AutoDeleteEndpoint")(lAutoDeleteEndpointEndpoint)
+	}
+	var lAutoDeleteWorkloadEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteWorkloadEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AutoDeleteWorkload",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoDeleteWorkload")(lAutoDeleteWorkloadEndpoint)
 	}
 	var lAutoGetEndpointEndpoint endpoint.Endpoint
 	{
@@ -70,6 +98,20 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		).Endpoint()
 		lAutoGetEndpointEndpoint = trace.ClientEndPoint("WorkloadV1:AutoGetEndpoint")(lAutoGetEndpointEndpoint)
 	}
+	var lAutoGetWorkloadEndpoint endpoint.Endpoint
+	{
+		lAutoGetWorkloadEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AutoGetWorkload",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoGetWorkload")(lAutoGetWorkloadEndpoint)
+	}
 	var lAutoListEndpointEndpoint endpoint.Endpoint
 	{
 		lAutoListEndpointEndpoint = grpctransport.NewClient(
@@ -83,6 +125,20 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListEndpointEndpoint = trace.ClientEndPoint("WorkloadV1:AutoListEndpoint")(lAutoListEndpointEndpoint)
+	}
+	var lAutoListWorkloadEndpoint endpoint.Endpoint
+	{
+		lAutoListWorkloadEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AutoListWorkload",
+			workload.EncodeGrpcReqListWatchOptions,
+			workload.DecodeGrpcRespWorkloadList,
+			&workload.WorkloadList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoListWorkload")(lAutoListWorkloadEndpoint)
 	}
 	var lAutoUpdateEndpointEndpoint endpoint.Endpoint
 	{
@@ -98,14 +154,33 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		).Endpoint()
 		lAutoUpdateEndpointEndpoint = trace.ClientEndPoint("WorkloadV1:AutoUpdateEndpoint")(lAutoUpdateEndpointEndpoint)
 	}
+	var lAutoUpdateWorkloadEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateWorkloadEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AutoUpdateWorkload",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoUpdateWorkload")(lAutoUpdateWorkloadEndpoint)
+	}
 	return workload.EndpointsWorkloadV1Client{
 		Client: workload.NewWorkloadV1Client(conn),
 
 		AutoAddEndpointEndpoint:    lAutoAddEndpointEndpoint,
+		AutoAddWorkloadEndpoint:    lAutoAddWorkloadEndpoint,
 		AutoDeleteEndpointEndpoint: lAutoDeleteEndpointEndpoint,
+		AutoDeleteWorkloadEndpoint: lAutoDeleteWorkloadEndpoint,
 		AutoGetEndpointEndpoint:    lAutoGetEndpointEndpoint,
+		AutoGetWorkloadEndpoint:    lAutoGetWorkloadEndpoint,
 		AutoListEndpointEndpoint:   lAutoListEndpointEndpoint,
+		AutoListWorkloadEndpoint:   lAutoListWorkloadEndpoint,
 		AutoUpdateEndpointEndpoint: lAutoUpdateEndpointEndpoint,
+		AutoUpdateWorkloadEndpoint: lAutoUpdateWorkloadEndpoint,
 	}
 }
 
@@ -287,8 +362,180 @@ func (a *restObjWorkloadV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
 	}
 }
 
+type grpcObjWorkloadV1Workload struct {
+	logger log.Logger
+	client workload.ServiceWorkloadV1Client
+}
+
+func (a *grpcObjWorkloadV1Workload) Create(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddWorkload(nctx, in)
+}
+
+func (a *grpcObjWorkloadV1Workload) Update(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateWorkload(nctx, in)
+}
+
+func (a *grpcObjWorkloadV1Workload) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := workload.Workload{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetWorkload(nctx, &in)
+}
+
+func (a *grpcObjWorkloadV1Workload) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := workload.Workload{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteWorkload(nctx, &in)
+}
+
+func (a *grpcObjWorkloadV1Workload) List(ctx context.Context, options *api.ListWatchOptions) ([]*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListWorkload(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjWorkloadV1Workload) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchWorkload(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(workload.WorkloadV1_AutoWatchWorkloadClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjWorkloadV1Workload) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjWorkloadV1Workload struct {
+	endpoints workload.EndpointsWorkloadV1RestClient
+	instance  string
+}
+
+func (a *restObjWorkloadV1Workload) Create(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddWorkload(ctx, in)
+}
+
+func (a *restObjWorkloadV1Workload) Update(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateWorkload(ctx, in)
+}
+
+func (a *restObjWorkloadV1Workload) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Workload, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := workload.Workload{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetWorkload(ctx, &in)
+}
+
+func (a *restObjWorkloadV1Workload) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Workload, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := workload.Workload{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteWorkload(ctx, &in)
+}
+
+func (a *restObjWorkloadV1Workload) List(ctx context.Context, options *api.ListWatchOptions) ([]*workload.Workload, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListWorkload(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjWorkloadV1Workload) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjWorkloadV1Workload) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientWorkloadV1 struct {
 	grpcEndpoint workload.WorkloadV1EndpointInterface
+	grpcWorkload workload.WorkloadV1WorkloadInterface
 }
 
 // NewGrpcCrudClientWorkloadV1 creates a GRPC client for the service
@@ -297,6 +544,7 @@ func NewGrpcCrudClientWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workl
 	return &crudClientWorkloadV1{
 
 		grpcEndpoint: &grpcObjWorkloadV1Endpoint{client: client, logger: logger},
+		grpcWorkload: &grpcObjWorkloadV1Workload{client: client, logger: logger},
 	}
 }
 
@@ -304,8 +552,13 @@ func (a *crudClientWorkloadV1) Endpoint() workload.WorkloadV1EndpointInterface {
 	return a.grpcEndpoint
 }
 
+func (a *crudClientWorkloadV1) Workload() workload.WorkloadV1WorkloadInterface {
+	return a.grpcWorkload
+}
+
 type crudRestClientWorkloadV1 struct {
 	restEndpoint workload.WorkloadV1EndpointInterface
+	restWorkload workload.WorkloadV1WorkloadInterface
 }
 
 // NewRestCrudClientWorkloadV1 creates a REST client for the service.
@@ -317,9 +570,14 @@ func NewRestCrudClientWorkloadV1(url string) workload.WorkloadV1Interface {
 	return &crudRestClientWorkloadV1{
 
 		restEndpoint: &restObjWorkloadV1Endpoint{endpoints: endpoints, instance: url},
+		restWorkload: &restObjWorkloadV1Workload{endpoints: endpoints, instance: url},
 	}
 }
 
 func (a *crudRestClientWorkloadV1) Endpoint() workload.WorkloadV1EndpointInterface {
 	return a.restEndpoint
+}
+
+func (a *crudRestClientWorkloadV1) Workload() workload.WorkloadV1WorkloadInterface {
+	return a.restWorkload
 }

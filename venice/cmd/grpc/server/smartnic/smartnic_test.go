@@ -138,7 +138,7 @@ func createRPCServerClient() (*rpckit.RPCServer, *rpckit.RPCClient) {
 }
 
 // Create NMD and Agent
-func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error) {
+func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error) {
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -150,7 +150,8 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 	// create the new NMD
 	ag, err := nmd.NewAgent(pa,
 		dbPath,
-		nodeID,
+		hostID,
+		hostID,
 		smartNICServerURL,
 		smartNICServerURL,
 		restURL,
@@ -175,7 +176,7 @@ func stopNMD(t *testing.T, ag *nmd.Agent, dbPath string) {
 	}
 }
 
-func getNodeID(index int) string {
+func getHostID(index int) string {
 	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
 }
 
@@ -207,7 +208,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 		expected    string
 		condition   cmd.SmartNICCondition
 		approvedNIC string
-		nodeName    string
+		hostName    string
 	}{
 		{
 			"TestAutoAdmitValidNIC",
@@ -273,17 +274,17 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 		},
 	}
 
-	// Pre-create some Nodes to simulate the case of prior
-	// Node creation by Orchestrator (VC-hub)
-	nodes := []string{
+	// Pre-create some Hosts to simulate the case of prior
+	// Host creation by Orchestrator (VC-hub)
+	hosts := []string{
 		"esx-003",
 	}
-	for _, nodeName := range nodes {
+	for _, hostName := range hosts {
 		ometa := api.ObjectMeta{
-			Name: nodeName,
+			Name: hostName,
 		}
-		_, err := tInfo.smartNICServer.CreateNode(ometa)
-		AssertOk(t, err, "Error creating Node object")
+		_, err := tInfo.smartNICServer.CreateHost(ometa)
+		AssertOk(t, err, "Error creating Host object")
 	}
 
 	// Execute the testcases
@@ -317,7 +318,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				ObjectMeta: ometa,
 				Spec: cmd.SmartNICSpec{
 					Phase:    cmd.SmartNICSpec_REGISTERING.String(),
-					NodeName: tc.nodeName,
+					HostName: tc.hostName,
 					MgmtIp:   "0.0.0.0",
 				},
 			}
@@ -354,22 +355,22 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				}
 				AssertEventually(t, f1, fmt.Sprintf("Failed to verify presence of smartNIC object"))
 
-				// verify Node object is created
+				// verify Host object is created
 				f2 := func() (bool, interface{}) {
-					ometa := api.ObjectMeta{Name: tc.nodeName}
-					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
+					ometa := api.ObjectMeta{Name: tc.hostName}
+					hostObj, err := tInfo.smartNICServer.GetHost(ometa)
 					if err != nil {
-						t.Errorf("Error getting Node object for node:%s", tc.nodeName)
+						t.Errorf("Error getting Host object for host:%s", tc.hostName)
 						return false, nil
 					}
-					if nodeObj.ObjectMeta.Name != tc.nodeName {
-						t.Errorf("Got incorrect Node object, expected: %s obtained: %s",
-							nodeObj.ObjectMeta.Name, tc.nodeName)
+					if hostObj.ObjectMeta.Name != tc.hostName {
+						t.Errorf("Got incorrect Host object, expected: %s obtained: %s",
+							hostObj.ObjectMeta.Name, tc.hostName)
 						return false, nil
 					}
 					return true, nil
 				}
-				AssertEventually(t, f2, fmt.Sprintf("Failed to verify presence of Node object"))
+				AssertEventually(t, f2, fmt.Sprintf("Failed to verify presence of Host object"))
 
 				// verify watch api is invoked
 				f3 := func() (bool, interface{}) {
@@ -461,26 +462,26 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				}
 				AssertEventually(t, f5, fmt.Sprintf("Failed to verify NIC health status going to UNKNOWN"))
 
-				// Verify Node object has its status updated with list of registered NICs
+				// Verify Host object has its status updated with list of registered NICs
 				f6 := func() (bool, interface{}) {
-					ometa = api.ObjectMeta{Name: tc.nodeName}
-					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
+					ometa = api.ObjectMeta{Name: tc.hostName}
+					hostObj, err := tInfo.smartNICServer.GetHost(ometa)
 					if err != nil {
-						t.Errorf("Error getting Node object for node:%s", tc.nodeName)
+						t.Errorf("Error getting Host object for host:%s", tc.hostName)
 						return false, nil
 					}
-					nicList := nodeObj.Status.Nics
-					t.Logf("\n++++++ Node nic list, Node: %s \nnics: %s\n", nodeObj, nicList)
+					intfs := hostObj.Spec.Interfaces
+					t.Logf("\n++++++ Host mac list, host: %+v \nIntfs: %+v\n", hostObj, intfs)
 
-					for _, nic := range nicList {
-						if nic == tc.mac {
+					for mac, _ := range intfs {
+						if mac == tc.mac {
 							return true, nil
 						}
 
 					}
 					return false, nil
 				}
-				AssertEventually(t, f6, fmt.Sprintf("Failed to verify that Node object is updated with registered nic"))
+				AssertEventually(t, f6, fmt.Sprintf("Failed to verify that Host object is updated with registered nic"))
 
 				// Verify Deletion of SmartNIC object
 				f7 := func() (bool, interface{}) {
@@ -497,16 +498,16 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 					t.Fatalf("Error deleteing SmartNIC object mac:%s err: %v", tc.mac, err)
 				}
 
-				// Verify Deletion of Node object
+				// Verify Deletion of Host object
 				f8 := func() (bool, interface{}) {
-					ometa = api.ObjectMeta{Name: tc.nodeName}
-					err = tInfo.smartNICServer.DeleteNode(ometa)
+					ometa = api.ObjectMeta{Name: tc.hostName}
+					err = tInfo.smartNICServer.DeleteHost(ometa)
 					if err != nil {
 						return false, nil
 					}
 					return true, nil
 				}
-				AssertEventually(t, f8, fmt.Sprintf("Failed to verify deletion of Node object"))
+				AssertEventually(t, f8, fmt.Sprintf("Failed to verify deletion of Host object"))
 
 			} else {
 
@@ -588,7 +589,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	nodeID := getNodeID(1)
+	hostID := getHostID(1)
 	dbPath := getDBPath(1)
 	restURL := getRESTUrl(1)
 
@@ -596,7 +597,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	os.Remove(dbPath)
 
 	// create Agent and NMD
-	ag, err := createNMD(t, dbPath, nodeID, restURL)
+	ag, err := createNMD(t, dbPath, hostID, restURL)
 	defer stopNMD(t, ag, dbPath)
 	Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
 
@@ -618,12 +619,12 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	nic := cmd.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name: nodeID,
+			Name: hostID,
 		},
 		Spec: cmd.SmartNICSpec{
 			MgmtIp:   "localhost",
 			Phase:    "UNKNOWN",
-			NodeName: nodeID,
+			HostName: hostID,
 		},
 	}
 
@@ -646,7 +647,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		// Fetch smartnic object
 		nic, err := nm.GetSmartNIC()
 		if nic == nil || err != nil {
-			log.Errorf("NIC not found in nicDB, mac:%s", nodeID)
+			log.Errorf("NIC not found in nicDB, mac:%s", hostID)
 			return false, nil
 		}
 
@@ -675,12 +676,12 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	f5 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
-			Name: nodeID,
+			Name: hostID,
 		}
 		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 		if err != nil || nicObj == nil || nicObj.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
 			log.Errorf("Failed to validate phase of SmartNIC object, mac:%s, phase: %s err: %v",
-				nodeID, nicObj.Spec.Phase, err)
+				hostID, nicObj.Spec.Phase, err)
 			return false, nil
 		}
 
@@ -688,25 +689,25 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	}
 	AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
 
-	// Validate Workload Node object is created
+	// Validate Host object is created
 	f6 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
-			Name: nodeID,
+			Name: hostID,
 		}
-		nodeObj, err := tInfo.apiClient.ClusterV1().Node().Get(context.Background(), &meta)
-		if err != nil || nodeObj == nil {
-			log.Errorf("Failed to GET Node object, mac:%s, %v", nodeID, err)
+		hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
+		if err != nil || hostObj == nil {
+			log.Errorf("Failed to GET Host object, mac:%s, %v", hostID, err)
 			return false, nil
 		}
 
 		return true, nil
 	}
-	AssertEventually(t, f6, "Failed to verify creation of required Node object", string("10ms"), string("30s"))
+	AssertEventually(t, f6, "Failed to verify creation of required Host object", string("10ms"), string("30s"))
 
 	// Verify Deletion of SmartNIC object
 	f7 := func() (bool, interface{}) {
-		ometa := api.ObjectMeta{Name: nodeID}
+		ometa := api.ObjectMeta{Name: hostID}
 		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 		if err != nil {
 			return false, nil
@@ -715,16 +716,16 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	}
 	AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
 
-	// Verify Deletion of Node object
+	// Verify Deletion of Host object
 	f8 := func() (bool, interface{}) {
-		ometa := api.ObjectMeta{Name: nodeID}
-		err = tInfo.smartNICServer.DeleteNode(ometa)
+		ometa := api.ObjectMeta{Name: hostID}
+		err = tInfo.smartNICServer.DeleteHost(ometa)
 		if err != nil {
 			return false, nil
 		}
 		return true, nil
 	}
-	AssertEventually(t, f8, fmt.Sprintf("Failed to verify deletion of Node object"))
+	AssertEventually(t, f8, fmt.Sprintf("Failed to verify deletion of Host object"))
 }
 
 func TestSmartNICConfigByUserErrorCases(t *testing.T) {
@@ -733,7 +734,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	nodeID := getNodeID(1)
+	hostID := getHostID(1)
 	dbPath := getDBPath(1)
 	restURL := getRESTUrl(1)
 
@@ -741,7 +742,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	os.Remove(dbPath)
 
 	// create Agent and NMD
-	ag, err := createNMD(t, dbPath, nodeID, restURL)
+	ag, err := createNMD(t, dbPath, hostID, restURL)
 	defer stopNMD(t, ag, dbPath)
 	Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
 
@@ -763,12 +764,12 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	nic := cmd.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name: nodeID,
+			Name: hostID,
 		},
 		Spec: cmd.SmartNICSpec{
 			MgmtIp:   "remotehost", // unreachable hostname for testing error case
 			Phase:    "UNKNOWN",
-			NodeName: nodeID,
+			HostName: hostID,
 		},
 	}
 
@@ -781,7 +782,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	f2 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
-			Name: nodeID,
+			Name: hostID,
 		}
 		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 		if err != nil || nicObj == nil || len(nicObj.Status.Conditions) == 0 ||
@@ -799,7 +800,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 
 	// Verify Deletion of SmartNIC object
 	f3 := func() (bool, interface{}) {
-		ometa := api.ObjectMeta{Name: nodeID}
+		ometa := api.ObjectMeta{Name: hostID}
 		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 		if err != nil {
 			return false, nil

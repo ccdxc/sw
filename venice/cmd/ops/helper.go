@@ -28,8 +28,10 @@ func makeQuorumNode(name string) *cmd.Node {
 			APIVersion: "v1",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: name,
-			UUID: uuid.NewV4().String(),
+			Name:      name,
+			UUID:      uuid.NewV4().String(),
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
 		},
 	}
 

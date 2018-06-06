@@ -37,10 +37,15 @@ type EndpointsWorkloadV1Client struct {
 	Client WorkloadV1Client
 
 	AutoAddEndpointEndpoint    endpoint.Endpoint
+	AutoAddWorkloadEndpoint    endpoint.Endpoint
 	AutoDeleteEndpointEndpoint endpoint.Endpoint
+	AutoDeleteWorkloadEndpoint endpoint.Endpoint
 	AutoGetEndpointEndpoint    endpoint.Endpoint
+	AutoGetWorkloadEndpoint    endpoint.Endpoint
 	AutoListEndpointEndpoint   endpoint.Endpoint
+	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
+	AutoUpdateWorkloadEndpoint endpoint.Endpoint
 }
 
 // EndpointsWorkloadV1RestClient is the REST client
@@ -50,11 +55,17 @@ type EndpointsWorkloadV1RestClient struct {
 	instance string
 
 	AutoAddEndpointEndpoint    endpoint.Endpoint
+	AutoAddWorkloadEndpoint    endpoint.Endpoint
 	AutoDeleteEndpointEndpoint endpoint.Endpoint
+	AutoDeleteWorkloadEndpoint endpoint.Endpoint
 	AutoGetEndpointEndpoint    endpoint.Endpoint
+	AutoGetWorkloadEndpoint    endpoint.Endpoint
 	AutoListEndpointEndpoint   endpoint.Endpoint
+	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
+	AutoUpdateWorkloadEndpoint endpoint.Endpoint
 	AutoWatchEndpointEndpoint  endpoint.Endpoint
+	AutoWatchWorkloadEndpoint  endpoint.Endpoint
 }
 
 // MiddlewareWorkloadV1Server adds middle ware to the server
@@ -63,12 +74,18 @@ type MiddlewareWorkloadV1Server func(ServiceWorkloadV1Server) ServiceWorkloadV1S
 // EndpointsWorkloadV1Server is the server endpoints
 type EndpointsWorkloadV1Server struct {
 	AutoAddEndpointEndpoint    endpoint.Endpoint
+	AutoAddWorkloadEndpoint    endpoint.Endpoint
 	AutoDeleteEndpointEndpoint endpoint.Endpoint
+	AutoDeleteWorkloadEndpoint endpoint.Endpoint
 	AutoGetEndpointEndpoint    endpoint.Endpoint
+	AutoGetWorkloadEndpoint    endpoint.Endpoint
 	AutoListEndpointEndpoint   endpoint.Endpoint
+	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
+	AutoUpdateWorkloadEndpoint endpoint.Endpoint
 
 	watchHandlerEndpoint func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerWorkload func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddEndpoint is endpoint for AutoAddEndpoint
@@ -82,6 +99,20 @@ func (e EndpointsWorkloadV1Client) AutoAddEndpoint(ctx context.Context, in *Endp
 
 type respWorkloadV1AutoAddEndpoint struct {
 	V   Endpoint
+	Err error
+}
+
+// AutoAddWorkload is endpoint for AutoAddWorkload
+func (e EndpointsWorkloadV1Client) AutoAddWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.AutoAddWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1AutoAddWorkload struct {
+	V   Workload
 	Err error
 }
 
@@ -99,6 +130,20 @@ type respWorkloadV1AutoDeleteEndpoint struct {
 	Err error
 }
 
+// AutoDeleteWorkload is endpoint for AutoDeleteWorkload
+func (e EndpointsWorkloadV1Client) AutoDeleteWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.AutoDeleteWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1AutoDeleteWorkload struct {
+	V   Workload
+	Err error
+}
+
 // AutoGetEndpoint is endpoint for AutoGetEndpoint
 func (e EndpointsWorkloadV1Client) AutoGetEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
 	resp, err := e.AutoGetEndpointEndpoint(ctx, in)
@@ -110,6 +155,20 @@ func (e EndpointsWorkloadV1Client) AutoGetEndpoint(ctx context.Context, in *Endp
 
 type respWorkloadV1AutoGetEndpoint struct {
 	V   Endpoint
+	Err error
+}
+
+// AutoGetWorkload is endpoint for AutoGetWorkload
+func (e EndpointsWorkloadV1Client) AutoGetWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.AutoGetWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1AutoGetWorkload struct {
+	V   Workload
 	Err error
 }
 
@@ -127,6 +186,20 @@ type respWorkloadV1AutoListEndpoint struct {
 	Err error
 }
 
+// AutoListWorkload is endpoint for AutoListWorkload
+func (e EndpointsWorkloadV1Client) AutoListWorkload(ctx context.Context, in *api.ListWatchOptions) (*WorkloadList, error) {
+	resp, err := e.AutoListWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return &WorkloadList{}, err
+	}
+	return resp.(*WorkloadList), nil
+}
+
+type respWorkloadV1AutoListWorkload struct {
+	V   WorkloadList
+	Err error
+}
+
 // AutoUpdateEndpoint is endpoint for AutoUpdateEndpoint
 func (e EndpointsWorkloadV1Client) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
 	resp, err := e.AutoUpdateEndpointEndpoint(ctx, in)
@@ -141,9 +214,28 @@ type respWorkloadV1AutoUpdateEndpoint struct {
 	Err error
 }
 
+// AutoUpdateWorkload is endpoint for AutoUpdateWorkload
+func (e EndpointsWorkloadV1Client) AutoUpdateWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.AutoUpdateWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1AutoUpdateWorkload struct {
+	V   Workload
+	Err error
+}
+
 // AutoWatchEndpoint performs Watch for Endpoint
 func (e EndpointsWorkloadV1Client) AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchEndpointClient, error) {
 	return e.Client.AutoWatchEndpoint(ctx, in)
+}
+
+// AutoWatchWorkload performs Watch for Workload
+func (e EndpointsWorkloadV1Client) AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchWorkloadClient, error) {
+	return e.Client.AutoWatchWorkload(ctx, in)
 }
 
 // AutoAddEndpoint implementation on server Endpoint
@@ -168,6 +260,28 @@ func MakeWorkloadV1AutoAddEndpointEndpoint(s ServiceWorkloadV1Server, logger log
 	return trace.ServerEndpoint("WorkloadV1:AutoAddEndpoint")(f)
 }
 
+// AutoAddWorkload implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AutoAddWorkload(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.AutoAddWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1AutoAddWorkloadEndpoint creates  AutoAddWorkload endpoints for the service
+func MakeWorkloadV1AutoAddWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.AutoAddWorkload(ctx, *req)
+		return respWorkloadV1AutoAddWorkload{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AutoAddWorkload")(f)
+}
+
 // AutoDeleteEndpoint implementation on server Endpoint
 func (e EndpointsWorkloadV1Server) AutoDeleteEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
 	resp, err := e.AutoDeleteEndpointEndpoint(ctx, in)
@@ -188,6 +302,28 @@ func MakeWorkloadV1AutoDeleteEndpointEndpoint(s ServiceWorkloadV1Server, logger 
 		}, nil
 	}
 	return trace.ServerEndpoint("WorkloadV1:AutoDeleteEndpoint")(f)
+}
+
+// AutoDeleteWorkload implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AutoDeleteWorkload(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.AutoDeleteWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1AutoDeleteWorkloadEndpoint creates  AutoDeleteWorkload endpoints for the service
+func MakeWorkloadV1AutoDeleteWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.AutoDeleteWorkload(ctx, *req)
+		return respWorkloadV1AutoDeleteWorkload{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AutoDeleteWorkload")(f)
 }
 
 // AutoGetEndpoint implementation on server Endpoint
@@ -212,6 +348,28 @@ func MakeWorkloadV1AutoGetEndpointEndpoint(s ServiceWorkloadV1Server, logger log
 	return trace.ServerEndpoint("WorkloadV1:AutoGetEndpoint")(f)
 }
 
+// AutoGetWorkload implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AutoGetWorkload(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.AutoGetWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1AutoGetWorkloadEndpoint creates  AutoGetWorkload endpoints for the service
+func MakeWorkloadV1AutoGetWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.AutoGetWorkload(ctx, *req)
+		return respWorkloadV1AutoGetWorkload{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AutoGetWorkload")(f)
+}
+
 // AutoListEndpoint implementation on server Endpoint
 func (e EndpointsWorkloadV1Server) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (EndpointList, error) {
 	resp, err := e.AutoListEndpointEndpoint(ctx, in)
@@ -232,6 +390,28 @@ func MakeWorkloadV1AutoListEndpointEndpoint(s ServiceWorkloadV1Server, logger lo
 		}, nil
 	}
 	return trace.ServerEndpoint("WorkloadV1:AutoListEndpoint")(f)
+}
+
+// AutoListWorkload implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AutoListWorkload(ctx context.Context, in api.ListWatchOptions) (WorkloadList, error) {
+	resp, err := e.AutoListWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return WorkloadList{}, err
+	}
+	return *resp.(*WorkloadList), nil
+}
+
+// MakeWorkloadV1AutoListWorkloadEndpoint creates  AutoListWorkload endpoints for the service
+func MakeWorkloadV1AutoListWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListWorkload(ctx, *req)
+		return respWorkloadV1AutoListWorkload{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AutoListWorkload")(f)
 }
 
 // AutoUpdateEndpoint implementation on server Endpoint
@@ -256,6 +436,28 @@ func MakeWorkloadV1AutoUpdateEndpointEndpoint(s ServiceWorkloadV1Server, logger 
 	return trace.ServerEndpoint("WorkloadV1:AutoUpdateEndpoint")(f)
 }
 
+// AutoUpdateWorkload implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AutoUpdateWorkload(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.AutoUpdateWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1AutoUpdateWorkloadEndpoint creates  AutoUpdateWorkload endpoints for the service
+func MakeWorkloadV1AutoUpdateWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.AutoUpdateWorkload(ctx, *req)
+		return respWorkloadV1AutoUpdateWorkload{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AutoUpdateWorkload")(f)
+}
+
 // AutoWatchEndpoint is the watch handler for Endpoint on the server side.
 func (e EndpointsWorkloadV1Server) AutoWatchEndpoint(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchEndpointServer) error {
 	return e.watchHandlerEndpoint(in, stream)
@@ -269,17 +471,36 @@ func MakeAutoWatchEndpointEndpoint(s ServiceWorkloadV1Server, logger log.Logger)
 	}
 }
 
+// AutoWatchWorkload is the watch handler for Workload on the server side.
+func (e EndpointsWorkloadV1Server) AutoWatchWorkload(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchWorkloadServer) error {
+	return e.watchHandlerWorkload(in, stream)
+}
+
+// MakeAutoWatchWorkloadEndpoint creates the Watch endpoint
+func MakeAutoWatchWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(WorkloadV1_AutoWatchWorkloadServer)
+		return s.AutoWatchWorkload(options, wstream)
+	}
+}
+
 // MakeWorkloadV1ServerEndpoints creates server endpoints
 func MakeWorkloadV1ServerEndpoints(s ServiceWorkloadV1Server, logger log.Logger) EndpointsWorkloadV1Server {
 	return EndpointsWorkloadV1Server{
 
 		AutoAddEndpointEndpoint:    MakeWorkloadV1AutoAddEndpointEndpoint(s, logger),
+		AutoAddWorkloadEndpoint:    MakeWorkloadV1AutoAddWorkloadEndpoint(s, logger),
 		AutoDeleteEndpointEndpoint: MakeWorkloadV1AutoDeleteEndpointEndpoint(s, logger),
+		AutoDeleteWorkloadEndpoint: MakeWorkloadV1AutoDeleteWorkloadEndpoint(s, logger),
 		AutoGetEndpointEndpoint:    MakeWorkloadV1AutoGetEndpointEndpoint(s, logger),
+		AutoGetWorkloadEndpoint:    MakeWorkloadV1AutoGetWorkloadEndpoint(s, logger),
 		AutoListEndpointEndpoint:   MakeWorkloadV1AutoListEndpointEndpoint(s, logger),
+		AutoListWorkloadEndpoint:   MakeWorkloadV1AutoListWorkloadEndpoint(s, logger),
 		AutoUpdateEndpointEndpoint: MakeWorkloadV1AutoUpdateEndpointEndpoint(s, logger),
+		AutoUpdateWorkloadEndpoint: MakeWorkloadV1AutoUpdateWorkloadEndpoint(s, logger),
 
 		watchHandlerEndpoint: MakeAutoWatchEndpointEndpoint(s, logger),
+		watchHandlerWorkload: MakeAutoWatchWorkloadEndpoint(s, logger),
 	}
 }
 
@@ -326,6 +547,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoAddEndpoint(ctx context.Context, 
 	resp, err = m.next.AutoAddEndpoint(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareClient) AutoAddWorkload(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoAddWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddWorkload(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareClient) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -337,6 +571,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoDeleteEndpoint(ctx context.Contex
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoDeleteEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteEndpoint(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareClient) AutoDeleteWorkload(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoDeleteWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteWorkload(ctx, in)
 	return
 }
 func (m loggingWorkloadV1MiddlewareClient) AutoGetEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
@@ -352,6 +599,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoGetEndpoint(ctx context.Context, 
 	resp, err = m.next.AutoGetEndpoint(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareClient) AutoGetWorkload(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetWorkload(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareClient) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp *EndpointList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -365,6 +625,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoListEndpoint(ctx context.Context,
 	resp, err = m.next.AutoListEndpoint(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareClient) AutoListWorkload(ctx context.Context, in *api.ListWatchOptions) (resp *WorkloadList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoListWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListWorkload(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -376,6 +649,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoUpdateEndpoint(ctx context.Contex
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateEndpoint(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareClient) AutoUpdateWorkload(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateWorkload(ctx, in)
 	return
 }
 
@@ -392,6 +678,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoWatchEndpoint(ctx context.Context
 	resp, err = m.next.AutoWatchEndpoint(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareClient) AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions) (resp WorkloadV1_AutoWatchWorkloadClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchWorkload(ctx, in)
+	return
+}
 
 func (m loggingWorkloadV1MiddlewareServer) AutoAddEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
 	defer func(begin time.Time) {
@@ -404,6 +703,19 @@ func (m loggingWorkloadV1MiddlewareServer) AutoAddEndpoint(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoAddEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddEndpoint(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareServer) AutoAddWorkload(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoAddWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddWorkload(ctx, in)
 	return
 }
 func (m loggingWorkloadV1MiddlewareServer) AutoDeleteEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
@@ -419,6 +731,19 @@ func (m loggingWorkloadV1MiddlewareServer) AutoDeleteEndpoint(ctx context.Contex
 	resp, err = m.next.AutoDeleteEndpoint(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareServer) AutoDeleteWorkload(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoDeleteWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteWorkload(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareServer) AutoGetEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -430,6 +755,19 @@ func (m loggingWorkloadV1MiddlewareServer) AutoGetEndpoint(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetEndpoint(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareServer) AutoGetWorkload(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetWorkload(ctx, in)
 	return
 }
 func (m loggingWorkloadV1MiddlewareServer) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (resp EndpointList, err error) {
@@ -445,6 +783,19 @@ func (m loggingWorkloadV1MiddlewareServer) AutoListEndpoint(ctx context.Context,
 	resp, err = m.next.AutoListEndpoint(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareServer) AutoListWorkload(ctx context.Context, in api.ListWatchOptions) (resp WorkloadList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoListWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListWorkload(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareServer) AutoUpdateEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -456,6 +807,19 @@ func (m loggingWorkloadV1MiddlewareServer) AutoUpdateEndpoint(ctx context.Contex
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateEndpoint(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareServer) AutoUpdateWorkload(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateWorkload(ctx, in)
 	return
 }
 
@@ -470,6 +834,19 @@ func (m loggingWorkloadV1MiddlewareServer) AutoWatchEndpoint(in *api.ListWatchOp
 		m.logger.Audit(stream.Context(), "service", "WorkloadV1", "method", "AutoWatchEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	err = m.next.AutoWatchEndpoint(in, stream)
+	return
+}
+func (m loggingWorkloadV1MiddlewareServer) AutoWatchWorkload(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchWorkloadServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "WorkloadV1", "method", "AutoWatchWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchWorkload(in, stream)
 	return
 }
 func (r *EndpointsWorkloadV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
@@ -498,8 +875,18 @@ func makeURIWorkloadV1AutoAddEndpointCreateOper(in *Endpoint) string {
 }
 
 //
+func makeURIWorkloadV1AutoAddWorkloadCreateOper(in *Workload) string {
+	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads")
+}
+
+//
 func makeURIWorkloadV1AutoDeleteEndpointDeleteOper(in *Endpoint) string {
 	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints/", in.Name)
+}
+
+//
+func makeURIWorkloadV1AutoDeleteWorkloadDeleteOper(in *Workload) string {
+	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads/", in.Name)
 }
 
 //
@@ -508,13 +895,28 @@ func makeURIWorkloadV1AutoGetEndpointGetOper(in *Endpoint) string {
 }
 
 //
+func makeURIWorkloadV1AutoGetWorkloadGetOper(in *Workload) string {
+	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads/", in.Name)
+}
+
+//
 func makeURIWorkloadV1AutoListEndpointListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints")
 }
 
 //
+func makeURIWorkloadV1AutoListWorkloadListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads")
+}
+
+//
 func makeURIWorkloadV1AutoUpdateEndpointUpdateOper(in *Endpoint) string {
 	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints/", in.Name)
+}
+
+//
+func makeURIWorkloadV1AutoUpdateWorkloadUpdateOper(in *Workload) string {
+	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads/", in.Name)
 }
 
 // AutoAddEndpoint CRUD method for Endpoint
@@ -609,6 +1011,101 @@ func (r *EndpointsWorkloadV1RestClient) AutoListEndpoint(ctx context.Context, op
 
 // AutoWatchEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoWatchEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoAddWorkload CRUD method for Workload
+func (r *EndpointsWorkloadV1RestClient) AutoAddWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	path := makeURIWorkloadV1AutoAddWorkloadCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespWorkloadV1AutoAddWorkload(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), nil
+}
+
+// AutoUpdateWorkload CRUD method for Workload
+func (r *EndpointsWorkloadV1RestClient) AutoUpdateWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	path := makeURIWorkloadV1AutoUpdateWorkloadUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespWorkloadV1AutoUpdateWorkload(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
+}
+
+// AutoGetWorkload CRUD method for Workload
+func (r *EndpointsWorkloadV1RestClient) AutoGetWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	path := makeURIWorkloadV1AutoGetWorkloadGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespWorkloadV1AutoGetWorkload(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
+}
+
+// AutoDeleteWorkload CRUD method for Workload
+func (r *EndpointsWorkloadV1RestClient) AutoDeleteWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	path := makeURIWorkloadV1AutoDeleteWorkloadDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespWorkloadV1AutoDeleteWorkload(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
+}
+
+// AutoListWorkload CRUD method for Workload
+func (r *EndpointsWorkloadV1RestClient) AutoListWorkload(ctx context.Context, options *api.ListWatchOptions) (*WorkloadList, error) {
+	path := makeURIWorkloadV1AutoListWorkloadListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespWorkloadV1AutoListWorkload(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*WorkloadList), err
+}
+
+// AutoWatchWorkload CRUD method for Workload
+func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, in *Workload) (*Workload, error) {
 	return nil, errors.New("not allowed")
 }
 

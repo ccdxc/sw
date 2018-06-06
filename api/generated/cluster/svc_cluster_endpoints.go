@@ -37,22 +37,27 @@ type EndpointsClusterV1Client struct {
 	Client ClusterV1Client
 
 	AutoAddClusterEndpoint     endpoint.Endpoint
+	AutoAddHostEndpoint        endpoint.Endpoint
 	AutoAddNodeEndpoint        endpoint.Endpoint
 	AutoAddSmartNICEndpoint    endpoint.Endpoint
 	AutoAddTenantEndpoint      endpoint.Endpoint
 	AutoDeleteClusterEndpoint  endpoint.Endpoint
+	AutoDeleteHostEndpoint     endpoint.Endpoint
 	AutoDeleteNodeEndpoint     endpoint.Endpoint
 	AutoDeleteSmartNICEndpoint endpoint.Endpoint
 	AutoDeleteTenantEndpoint   endpoint.Endpoint
 	AutoGetClusterEndpoint     endpoint.Endpoint
+	AutoGetHostEndpoint        endpoint.Endpoint
 	AutoGetNodeEndpoint        endpoint.Endpoint
 	AutoGetSmartNICEndpoint    endpoint.Endpoint
 	AutoGetTenantEndpoint      endpoint.Endpoint
 	AutoListClusterEndpoint    endpoint.Endpoint
+	AutoListHostEndpoint       endpoint.Endpoint
 	AutoListNodeEndpoint       endpoint.Endpoint
 	AutoListSmartNICEndpoint   endpoint.Endpoint
 	AutoListTenantEndpoint     endpoint.Endpoint
 	AutoUpdateClusterEndpoint  endpoint.Endpoint
+	AutoUpdateHostEndpoint     endpoint.Endpoint
 	AutoUpdateNodeEndpoint     endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint endpoint.Endpoint
 	AutoUpdateTenantEndpoint   endpoint.Endpoint
@@ -65,26 +70,32 @@ type EndpointsClusterV1RestClient struct {
 	instance string
 
 	AutoAddClusterEndpoint     endpoint.Endpoint
+	AutoAddHostEndpoint        endpoint.Endpoint
 	AutoAddNodeEndpoint        endpoint.Endpoint
 	AutoAddSmartNICEndpoint    endpoint.Endpoint
 	AutoAddTenantEndpoint      endpoint.Endpoint
 	AutoDeleteClusterEndpoint  endpoint.Endpoint
+	AutoDeleteHostEndpoint     endpoint.Endpoint
 	AutoDeleteNodeEndpoint     endpoint.Endpoint
 	AutoDeleteSmartNICEndpoint endpoint.Endpoint
 	AutoDeleteTenantEndpoint   endpoint.Endpoint
 	AutoGetClusterEndpoint     endpoint.Endpoint
+	AutoGetHostEndpoint        endpoint.Endpoint
 	AutoGetNodeEndpoint        endpoint.Endpoint
 	AutoGetSmartNICEndpoint    endpoint.Endpoint
 	AutoGetTenantEndpoint      endpoint.Endpoint
 	AutoListClusterEndpoint    endpoint.Endpoint
+	AutoListHostEndpoint       endpoint.Endpoint
 	AutoListNodeEndpoint       endpoint.Endpoint
 	AutoListSmartNICEndpoint   endpoint.Endpoint
 	AutoListTenantEndpoint     endpoint.Endpoint
 	AutoUpdateClusterEndpoint  endpoint.Endpoint
+	AutoUpdateHostEndpoint     endpoint.Endpoint
 	AutoUpdateNodeEndpoint     endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint endpoint.Endpoint
 	AutoUpdateTenantEndpoint   endpoint.Endpoint
 	AutoWatchClusterEndpoint   endpoint.Endpoint
+	AutoWatchHostEndpoint      endpoint.Endpoint
 	AutoWatchNodeEndpoint      endpoint.Endpoint
 	AutoWatchSmartNICEndpoint  endpoint.Endpoint
 	AutoWatchTenantEndpoint    endpoint.Endpoint
@@ -96,28 +107,34 @@ type MiddlewareClusterV1Server func(ServiceClusterV1Server) ServiceClusterV1Serv
 // EndpointsClusterV1Server is the server endpoints
 type EndpointsClusterV1Server struct {
 	AutoAddClusterEndpoint     endpoint.Endpoint
+	AutoAddHostEndpoint        endpoint.Endpoint
 	AutoAddNodeEndpoint        endpoint.Endpoint
 	AutoAddSmartNICEndpoint    endpoint.Endpoint
 	AutoAddTenantEndpoint      endpoint.Endpoint
 	AutoDeleteClusterEndpoint  endpoint.Endpoint
+	AutoDeleteHostEndpoint     endpoint.Endpoint
 	AutoDeleteNodeEndpoint     endpoint.Endpoint
 	AutoDeleteSmartNICEndpoint endpoint.Endpoint
 	AutoDeleteTenantEndpoint   endpoint.Endpoint
 	AutoGetClusterEndpoint     endpoint.Endpoint
+	AutoGetHostEndpoint        endpoint.Endpoint
 	AutoGetNodeEndpoint        endpoint.Endpoint
 	AutoGetSmartNICEndpoint    endpoint.Endpoint
 	AutoGetTenantEndpoint      endpoint.Endpoint
 	AutoListClusterEndpoint    endpoint.Endpoint
+	AutoListHostEndpoint       endpoint.Endpoint
 	AutoListNodeEndpoint       endpoint.Endpoint
 	AutoListSmartNICEndpoint   endpoint.Endpoint
 	AutoListTenantEndpoint     endpoint.Endpoint
 	AutoUpdateClusterEndpoint  endpoint.Endpoint
+	AutoUpdateHostEndpoint     endpoint.Endpoint
 	AutoUpdateNodeEndpoint     endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint endpoint.Endpoint
 	AutoUpdateTenantEndpoint   endpoint.Endpoint
 
 	watchHandlerCluster  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerNode     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerHost     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerSmartNIC func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTenant   func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
@@ -133,6 +150,20 @@ func (e EndpointsClusterV1Client) AutoAddCluster(ctx context.Context, in *Cluste
 
 type respClusterV1AutoAddCluster struct {
 	V   Cluster
+	Err error
+}
+
+// AutoAddHost is endpoint for AutoAddHost
+func (e EndpointsClusterV1Client) AutoAddHost(ctx context.Context, in *Host) (*Host, error) {
+	resp, err := e.AutoAddHostEndpoint(ctx, in)
+	if err != nil {
+		return &Host{}, err
+	}
+	return resp.(*Host), nil
+}
+
+type respClusterV1AutoAddHost struct {
+	V   Host
 	Err error
 }
 
@@ -192,6 +223,20 @@ type respClusterV1AutoDeleteCluster struct {
 	Err error
 }
 
+// AutoDeleteHost is endpoint for AutoDeleteHost
+func (e EndpointsClusterV1Client) AutoDeleteHost(ctx context.Context, in *Host) (*Host, error) {
+	resp, err := e.AutoDeleteHostEndpoint(ctx, in)
+	if err != nil {
+		return &Host{}, err
+	}
+	return resp.(*Host), nil
+}
+
+type respClusterV1AutoDeleteHost struct {
+	V   Host
+	Err error
+}
+
 // AutoDeleteNode is endpoint for AutoDeleteNode
 func (e EndpointsClusterV1Client) AutoDeleteNode(ctx context.Context, in *Node) (*Node, error) {
 	resp, err := e.AutoDeleteNodeEndpoint(ctx, in)
@@ -245,6 +290,20 @@ func (e EndpointsClusterV1Client) AutoGetCluster(ctx context.Context, in *Cluste
 
 type respClusterV1AutoGetCluster struct {
 	V   Cluster
+	Err error
+}
+
+// AutoGetHost is endpoint for AutoGetHost
+func (e EndpointsClusterV1Client) AutoGetHost(ctx context.Context, in *Host) (*Host, error) {
+	resp, err := e.AutoGetHostEndpoint(ctx, in)
+	if err != nil {
+		return &Host{}, err
+	}
+	return resp.(*Host), nil
+}
+
+type respClusterV1AutoGetHost struct {
+	V   Host
 	Err error
 }
 
@@ -304,6 +363,20 @@ type respClusterV1AutoListCluster struct {
 	Err error
 }
 
+// AutoListHost is endpoint for AutoListHost
+func (e EndpointsClusterV1Client) AutoListHost(ctx context.Context, in *api.ListWatchOptions) (*HostList, error) {
+	resp, err := e.AutoListHostEndpoint(ctx, in)
+	if err != nil {
+		return &HostList{}, err
+	}
+	return resp.(*HostList), nil
+}
+
+type respClusterV1AutoListHost struct {
+	V   HostList
+	Err error
+}
+
 // AutoListNode is endpoint for AutoListNode
 func (e EndpointsClusterV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (*NodeList, error) {
 	resp, err := e.AutoListNodeEndpoint(ctx, in)
@@ -360,6 +433,20 @@ type respClusterV1AutoUpdateCluster struct {
 	Err error
 }
 
+// AutoUpdateHost is endpoint for AutoUpdateHost
+func (e EndpointsClusterV1Client) AutoUpdateHost(ctx context.Context, in *Host) (*Host, error) {
+	resp, err := e.AutoUpdateHostEndpoint(ctx, in)
+	if err != nil {
+		return &Host{}, err
+	}
+	return resp.(*Host), nil
+}
+
+type respClusterV1AutoUpdateHost struct {
+	V   Host
+	Err error
+}
+
 // AutoUpdateNode is endpoint for AutoUpdateNode
 func (e EndpointsClusterV1Client) AutoUpdateNode(ctx context.Context, in *Node) (*Node, error) {
 	resp, err := e.AutoUpdateNodeEndpoint(ctx, in)
@@ -412,6 +499,11 @@ func (e EndpointsClusterV1Client) AutoWatchNode(ctx context.Context, in *api.Lis
 	return e.Client.AutoWatchNode(ctx, in)
 }
 
+// AutoWatchHost performs Watch for Host
+func (e EndpointsClusterV1Client) AutoWatchHost(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchHostClient, error) {
+	return e.Client.AutoWatchHost(ctx, in)
+}
+
 // AutoWatchSmartNIC performs Watch for SmartNIC
 func (e EndpointsClusterV1Client) AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSmartNICClient, error) {
 	return e.Client.AutoWatchSmartNIC(ctx, in)
@@ -442,6 +534,28 @@ func MakeClusterV1AutoAddClusterEndpoint(s ServiceClusterV1Server, logger log.Lo
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoAddCluster")(f)
+}
+
+// AutoAddHost implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoAddHost(ctx context.Context, in Host) (Host, error) {
+	resp, err := e.AutoAddHostEndpoint(ctx, in)
+	if err != nil {
+		return Host{}, err
+	}
+	return *resp.(*Host), nil
+}
+
+// MakeClusterV1AutoAddHostEndpoint creates  AutoAddHost endpoints for the service
+func MakeClusterV1AutoAddHostEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Host)
+		v, err := s.AutoAddHost(ctx, *req)
+		return respClusterV1AutoAddHost{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoAddHost")(f)
 }
 
 // AutoAddNode implementation on server Endpoint
@@ -532,6 +646,28 @@ func MakeClusterV1AutoDeleteClusterEndpoint(s ServiceClusterV1Server, logger log
 	return trace.ServerEndpoint("ClusterV1:AutoDeleteCluster")(f)
 }
 
+// AutoDeleteHost implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoDeleteHost(ctx context.Context, in Host) (Host, error) {
+	resp, err := e.AutoDeleteHostEndpoint(ctx, in)
+	if err != nil {
+		return Host{}, err
+	}
+	return *resp.(*Host), nil
+}
+
+// MakeClusterV1AutoDeleteHostEndpoint creates  AutoDeleteHost endpoints for the service
+func MakeClusterV1AutoDeleteHostEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Host)
+		v, err := s.AutoDeleteHost(ctx, *req)
+		return respClusterV1AutoDeleteHost{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoDeleteHost")(f)
+}
+
 // AutoDeleteNode implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoDeleteNode(ctx context.Context, in Node) (Node, error) {
 	resp, err := e.AutoDeleteNodeEndpoint(ctx, in)
@@ -618,6 +754,28 @@ func MakeClusterV1AutoGetClusterEndpoint(s ServiceClusterV1Server, logger log.Lo
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoGetCluster")(f)
+}
+
+// AutoGetHost implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoGetHost(ctx context.Context, in Host) (Host, error) {
+	resp, err := e.AutoGetHostEndpoint(ctx, in)
+	if err != nil {
+		return Host{}, err
+	}
+	return *resp.(*Host), nil
+}
+
+// MakeClusterV1AutoGetHostEndpoint creates  AutoGetHost endpoints for the service
+func MakeClusterV1AutoGetHostEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Host)
+		v, err := s.AutoGetHost(ctx, *req)
+		return respClusterV1AutoGetHost{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoGetHost")(f)
 }
 
 // AutoGetNode implementation on server Endpoint
@@ -708,6 +866,28 @@ func MakeClusterV1AutoListClusterEndpoint(s ServiceClusterV1Server, logger log.L
 	return trace.ServerEndpoint("ClusterV1:AutoListCluster")(f)
 }
 
+// AutoListHost implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoListHost(ctx context.Context, in api.ListWatchOptions) (HostList, error) {
+	resp, err := e.AutoListHostEndpoint(ctx, in)
+	if err != nil {
+		return HostList{}, err
+	}
+	return *resp.(*HostList), nil
+}
+
+// MakeClusterV1AutoListHostEndpoint creates  AutoListHost endpoints for the service
+func MakeClusterV1AutoListHostEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListHost(ctx, *req)
+		return respClusterV1AutoListHost{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoListHost")(f)
+}
+
 // AutoListNode implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoListNode(ctx context.Context, in api.ListWatchOptions) (NodeList, error) {
 	resp, err := e.AutoListNodeEndpoint(ctx, in)
@@ -794,6 +974,28 @@ func MakeClusterV1AutoUpdateClusterEndpoint(s ServiceClusterV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoUpdateCluster")(f)
+}
+
+// AutoUpdateHost implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoUpdateHost(ctx context.Context, in Host) (Host, error) {
+	resp, err := e.AutoUpdateHostEndpoint(ctx, in)
+	if err != nil {
+		return Host{}, err
+	}
+	return *resp.(*Host), nil
+}
+
+// MakeClusterV1AutoUpdateHostEndpoint creates  AutoUpdateHost endpoints for the service
+func MakeClusterV1AutoUpdateHostEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Host)
+		v, err := s.AutoUpdateHost(ctx, *req)
+		return respClusterV1AutoUpdateHost{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoUpdateHost")(f)
 }
 
 // AutoUpdateNode implementation on server Endpoint
@@ -888,6 +1090,19 @@ func MakeAutoWatchNodeEndpoint(s ServiceClusterV1Server, logger log.Logger) func
 	}
 }
 
+// AutoWatchHost is the watch handler for Host on the server side.
+func (e EndpointsClusterV1Server) AutoWatchHost(in *api.ListWatchOptions, stream ClusterV1_AutoWatchHostServer) error {
+	return e.watchHandlerHost(in, stream)
+}
+
+// MakeAutoWatchHostEndpoint creates the Watch endpoint
+func MakeAutoWatchHostEndpoint(s ServiceClusterV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(ClusterV1_AutoWatchHostServer)
+		return s.AutoWatchHost(options, wstream)
+	}
+}
+
 // AutoWatchSmartNIC is the watch handler for SmartNIC on the server side.
 func (e EndpointsClusterV1Server) AutoWatchSmartNIC(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSmartNICServer) error {
 	return e.watchHandlerSmartNIC(in, stream)
@@ -919,28 +1134,34 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 	return EndpointsClusterV1Server{
 
 		AutoAddClusterEndpoint:     MakeClusterV1AutoAddClusterEndpoint(s, logger),
+		AutoAddHostEndpoint:        MakeClusterV1AutoAddHostEndpoint(s, logger),
 		AutoAddNodeEndpoint:        MakeClusterV1AutoAddNodeEndpoint(s, logger),
 		AutoAddSmartNICEndpoint:    MakeClusterV1AutoAddSmartNICEndpoint(s, logger),
 		AutoAddTenantEndpoint:      MakeClusterV1AutoAddTenantEndpoint(s, logger),
 		AutoDeleteClusterEndpoint:  MakeClusterV1AutoDeleteClusterEndpoint(s, logger),
+		AutoDeleteHostEndpoint:     MakeClusterV1AutoDeleteHostEndpoint(s, logger),
 		AutoDeleteNodeEndpoint:     MakeClusterV1AutoDeleteNodeEndpoint(s, logger),
 		AutoDeleteSmartNICEndpoint: MakeClusterV1AutoDeleteSmartNICEndpoint(s, logger),
 		AutoDeleteTenantEndpoint:   MakeClusterV1AutoDeleteTenantEndpoint(s, logger),
 		AutoGetClusterEndpoint:     MakeClusterV1AutoGetClusterEndpoint(s, logger),
+		AutoGetHostEndpoint:        MakeClusterV1AutoGetHostEndpoint(s, logger),
 		AutoGetNodeEndpoint:        MakeClusterV1AutoGetNodeEndpoint(s, logger),
 		AutoGetSmartNICEndpoint:    MakeClusterV1AutoGetSmartNICEndpoint(s, logger),
 		AutoGetTenantEndpoint:      MakeClusterV1AutoGetTenantEndpoint(s, logger),
 		AutoListClusterEndpoint:    MakeClusterV1AutoListClusterEndpoint(s, logger),
+		AutoListHostEndpoint:       MakeClusterV1AutoListHostEndpoint(s, logger),
 		AutoListNodeEndpoint:       MakeClusterV1AutoListNodeEndpoint(s, logger),
 		AutoListSmartNICEndpoint:   MakeClusterV1AutoListSmartNICEndpoint(s, logger),
 		AutoListTenantEndpoint:     MakeClusterV1AutoListTenantEndpoint(s, logger),
 		AutoUpdateClusterEndpoint:  MakeClusterV1AutoUpdateClusterEndpoint(s, logger),
+		AutoUpdateHostEndpoint:     MakeClusterV1AutoUpdateHostEndpoint(s, logger),
 		AutoUpdateNodeEndpoint:     MakeClusterV1AutoUpdateNodeEndpoint(s, logger),
 		AutoUpdateSmartNICEndpoint: MakeClusterV1AutoUpdateSmartNICEndpoint(s, logger),
 		AutoUpdateTenantEndpoint:   MakeClusterV1AutoUpdateTenantEndpoint(s, logger),
 
 		watchHandlerCluster:  MakeAutoWatchClusterEndpoint(s, logger),
 		watchHandlerNode:     MakeAutoWatchNodeEndpoint(s, logger),
+		watchHandlerHost:     MakeAutoWatchHostEndpoint(s, logger),
 		watchHandlerSmartNIC: MakeAutoWatchSmartNICEndpoint(s, logger),
 		watchHandlerTenant:   MakeAutoWatchTenantEndpoint(s, logger),
 	}
@@ -987,6 +1208,19 @@ func (m loggingClusterV1MiddlewareClient) AutoAddCluster(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoAddHost(ctx context.Context, in *Host) (resp *Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddHost(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoAddNode(ctx context.Context, in *Node) (resp *Node, err error) {
@@ -1041,6 +1275,19 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteCluster(ctx context.Context,
 	resp, err = m.next.AutoDeleteCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoDeleteHost(ctx context.Context, in *Host) (resp *Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteHost(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoDeleteNode(ctx context.Context, in *Node) (resp *Node, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1091,6 +1338,19 @@ func (m loggingClusterV1MiddlewareClient) AutoGetCluster(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoGetHost(ctx context.Context, in *Host) (resp *Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetHost(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoGetNode(ctx context.Context, in *Node) (resp *Node, err error) {
@@ -1145,6 +1405,19 @@ func (m loggingClusterV1MiddlewareClient) AutoListCluster(ctx context.Context, i
 	resp, err = m.next.AutoListCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoListHost(ctx context.Context, in *api.ListWatchOptions) (resp *HostList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListHost(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (resp *NodeList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1195,6 +1468,19 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateCluster(ctx context.Context,
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoUpdateHost(ctx context.Context, in *Host) (resp *Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateHost(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoUpdateNode(ctx context.Context, in *Node) (resp *Node, err error) {
@@ -1263,6 +1549,19 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchNode(ctx context.Context, in 
 	resp, err = m.next.AutoWatchNode(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoWatchHost(ctx context.Context, in *api.ListWatchOptions) (resp ClusterV1_AutoWatchHostClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchHost(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions) (resp ClusterV1_AutoWatchSmartNICClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1301,6 +1600,19 @@ func (m loggingClusterV1MiddlewareServer) AutoAddCluster(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoAddHost(ctx context.Context, in Host) (resp Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddHost(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoAddNode(ctx context.Context, in Node) (resp Node, err error) {
@@ -1355,6 +1667,19 @@ func (m loggingClusterV1MiddlewareServer) AutoDeleteCluster(ctx context.Context,
 	resp, err = m.next.AutoDeleteCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoDeleteHost(ctx context.Context, in Host) (resp Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteHost(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoDeleteNode(ctx context.Context, in Node) (resp Node, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1405,6 +1730,19 @@ func (m loggingClusterV1MiddlewareServer) AutoGetCluster(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoGetHost(ctx context.Context, in Host) (resp Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetHost(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoGetNode(ctx context.Context, in Node) (resp Node, err error) {
@@ -1459,6 +1797,19 @@ func (m loggingClusterV1MiddlewareServer) AutoListCluster(ctx context.Context, i
 	resp, err = m.next.AutoListCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoListHost(ctx context.Context, in api.ListWatchOptions) (resp HostList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListHost(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoListNode(ctx context.Context, in api.ListWatchOptions) (resp NodeList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1509,6 +1860,19 @@ func (m loggingClusterV1MiddlewareServer) AutoUpdateCluster(ctx context.Context,
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoUpdateHost(ctx context.Context, in Host) (resp Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateHost(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoUpdateNode(ctx context.Context, in Node) (resp Node, err error) {
@@ -1577,6 +1941,19 @@ func (m loggingClusterV1MiddlewareServer) AutoWatchNode(in *api.ListWatchOptions
 	err = m.next.AutoWatchNode(in, stream)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoWatchHost(in *api.ListWatchOptions, stream ClusterV1_AutoWatchHostServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "ClusterV1", "method", "AutoWatchHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchHost(in, stream)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoWatchSmartNIC(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSmartNICServer) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1624,6 +2001,11 @@ func (r *EndpointsClusterV1RestClient) getHTTPRequest(ctx context.Context, in in
 }
 
 //
+func makeURIClusterV1AutoAddHostCreateOper(in *Host) string {
+	return fmt.Sprint("/v1/cluster", "/hosts")
+}
+
+//
 func makeURIClusterV1AutoAddNodeCreateOper(in *Node) string {
 	return fmt.Sprint("/v1/cluster", "/nodes")
 }
@@ -1641,6 +2023,11 @@ func makeURIClusterV1AutoAddTenantCreateOper(in *Tenant) string {
 //
 func makeURIClusterV1AutoDeleteClusterDeleteOper(in *Cluster) string {
 	return fmt.Sprint("/v1/cluster", "/cluster/", in.Name)
+}
+
+//
+func makeURIClusterV1AutoDeleteHostDeleteOper(in *Host) string {
+	return fmt.Sprint("/v1/cluster", "/hosts/", in.Name)
 }
 
 //
@@ -1664,6 +2051,11 @@ func makeURIClusterV1AutoGetClusterGetOper(in *Cluster) string {
 }
 
 //
+func makeURIClusterV1AutoGetHostGetOper(in *Host) string {
+	return fmt.Sprint("/v1/cluster", "/hosts/", in.Name)
+}
+
+//
 func makeURIClusterV1AutoGetNodeGetOper(in *Node) string {
 	return fmt.Sprint("/v1/cluster", "/nodes/", in.Name)
 }
@@ -1684,6 +2076,11 @@ func makeURIClusterV1AutoListClusterListOper(in *api.ListWatchOptions) string {
 }
 
 //
+func makeURIClusterV1AutoListHostListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/cluster", "/hosts")
+}
+
+//
 func makeURIClusterV1AutoListNodeListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/v1/cluster", "/nodes")
 }
@@ -1701,6 +2098,11 @@ func makeURIClusterV1AutoListTenantListOper(in *api.ListWatchOptions) string {
 //
 func makeURIClusterV1AutoUpdateClusterUpdateOper(in *Cluster) string {
 	return fmt.Sprint("/v1/cluster", "/cluster/", in.Name)
+}
+
+//
+func makeURIClusterV1AutoUpdateHostUpdateOper(in *Host) string {
+	return fmt.Sprint("/v1/cluster", "/hosts/", in.Name)
 }
 
 //
@@ -1892,6 +2294,101 @@ func (r *EndpointsClusterV1RestClient) AutoListNode(ctx context.Context, options
 
 // AutoWatchNode CRUD method for Node
 func (r *EndpointsClusterV1RestClient) AutoWatchNode(ctx context.Context, in *Node) (*Node, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoAddHost CRUD method for Host
+func (r *EndpointsClusterV1RestClient) AutoAddHost(ctx context.Context, in *Host) (*Host, error) {
+	path := makeURIClusterV1AutoAddHostCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespClusterV1AutoAddHost(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Host), nil
+}
+
+// AutoUpdateHost CRUD method for Host
+func (r *EndpointsClusterV1RestClient) AutoUpdateHost(ctx context.Context, in *Host) (*Host, error) {
+	path := makeURIClusterV1AutoUpdateHostUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespClusterV1AutoUpdateHost(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Host), err
+}
+
+// AutoGetHost CRUD method for Host
+func (r *EndpointsClusterV1RestClient) AutoGetHost(ctx context.Context, in *Host) (*Host, error) {
+	path := makeURIClusterV1AutoGetHostGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespClusterV1AutoGetHost(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Host), err
+}
+
+// AutoDeleteHost CRUD method for Host
+func (r *EndpointsClusterV1RestClient) AutoDeleteHost(ctx context.Context, in *Host) (*Host, error) {
+	path := makeURIClusterV1AutoDeleteHostDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespClusterV1AutoDeleteHost(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Host), err
+}
+
+// AutoListHost CRUD method for Host
+func (r *EndpointsClusterV1RestClient) AutoListHost(ctx context.Context, options *api.ListWatchOptions) (*HostList, error) {
+	path := makeURIClusterV1AutoListHostListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespClusterV1AutoListHost(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*HostList), err
+}
+
+// AutoWatchHost CRUD method for Host
+func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, in *Host) (*Host, error) {
 	return nil, errors.New("not allowed")
 }
 

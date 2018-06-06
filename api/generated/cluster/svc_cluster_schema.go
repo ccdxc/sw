@@ -24,6 +24,18 @@ var typesMapSvc_cluster = map[string]*runtime.Struct{
 			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.Cluster"},
 		},
 	},
+	"cluster.AutoMsgHostWatchHelper": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.AutoMsgHostWatchHelper.WatchEvent"},
+		},
+	},
+	"cluster.AutoMsgHostWatchHelper.WatchEvent": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.Host"},
+		},
+	},
 	"cluster.AutoMsgNodeWatchHelper": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.AutoMsgNodeWatchHelper.WatchEvent"},
@@ -67,6 +79,15 @@ var typesMapSvc_cluster = map[string]*runtime.Struct{
 			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
 			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.Cluster"},
+		},
+	},
+	"cluster.HostList": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+
+			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.Host"},
 		},
 	},
 	"cluster.NodeList": &runtime.Struct{

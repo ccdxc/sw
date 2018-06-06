@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -98,19 +99,23 @@ func (n *NMD) StartManagedMode() error {
 				nicObj.ObjectMeta.Name = mac
 				nicObj.Spec.Phase = cmd.SmartNICSpec_REGISTERING.String()
 				nicObj.Spec.MgmtIp = n.config.Spec.MgmtIp
-				nicObj.Spec.NodeName = n.config.Spec.NodeName
+				nicObj.Spec.HostName = n.config.Spec.HostName
 
 			} else {
 
 				// Construct new smartNIC object
 				nicObj = &cmd.SmartNIC{
-					TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
-					ObjectMeta: api.ObjectMeta{Name: mac},
+					TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+					ObjectMeta: api.ObjectMeta{
+						Name:      mac,
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+					},
 					Spec: cmd.SmartNICSpec{
 						Phase:  cmd.SmartNICSpec_REGISTERING.String(),
 						MgmtIp: n.config.Spec.MgmtIp,
 						// TODO: get mgmt ip from platform
-						NodeName: n.config.Spec.NodeName,
+						HostName: n.config.Spec.HostName,
 					},
 				}
 			}

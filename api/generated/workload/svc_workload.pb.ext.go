@@ -31,8 +31,24 @@ func (m *EndpointList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *WorkloadList) MakeKey(prefix string) string {
+	obj := Workload{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *WorkloadList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", ver, "/", prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgEndpointWatchHelper) MakeKey(prefix string) string {
 	obj := Endpoint{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgWorkloadWatchHelper) MakeKey(prefix string) string {
+	obj := Workload{}
 	return obj.MakeKey(prefix)
 }
 
@@ -79,6 +95,48 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgWorkloadWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgWorkloadWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgWorkloadWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgWorkloadWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgWorkloadWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgWorkloadWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgWorkloadWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgWorkloadWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *EndpointList) Clone(into interface{}) (interface{}, error) {
 	var out *EndpointList
 	var ok bool
@@ -99,6 +157,27 @@ func (m *EndpointList) Defaults(ver string) bool {
 	return false
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *WorkloadList) Clone(into interface{}) (interface{}, error) {
+	var out *WorkloadList
+	var ok bool
+	if into == nil {
+		out = &WorkloadList{}
+	} else {
+		out, ok = into.(*WorkloadList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *WorkloadList) Defaults(ver string) bool {
+	return false
+}
+
 // Validators
 
 func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -111,8 +190,53 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
+func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
 func (m *EndpointList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	return ret
+}
+
+func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 

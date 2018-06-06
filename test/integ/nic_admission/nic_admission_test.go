@@ -94,7 +94,7 @@ func (t testInfo) APIClient() pencluster.ClusterV1Interface {
 	return t.apiClient.ClusterV1()
 }
 
-func getNodeID(index int) string {
+func getHostID(index int) string {
 	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
 }
 
@@ -157,7 +157,7 @@ func createRPCServer(m *testing.M) *rpckit.RPCServer {
 }
 
 // Create NMD and Agent
-func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmdInfo, error) {
+func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmdInfo, error) {
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -175,7 +175,8 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmdInfo, error) {
 	// create the new NMD
 	ag, err := nmd.NewAgent(pa,
 		dbPath,
-		nodeID,
+		hostID,
+		hostID,
 		*cmdURL,
 		"",
 		restURL,
@@ -220,7 +221,7 @@ func TestCreateNMDs(t *testing.T) {
 			for j := 0; j < batchSize && i <= *numNaples; i, j = i+1, j+1 {
 
 				tcName := fmt.Sprintf("TestNMD-%d", i)
-				nodeID := getNodeID(i)
+				hostID := getHostID(i)
 				dbPath := getDBPath(i)
 				restURL := getRESTUrl(i)
 
@@ -229,14 +230,14 @@ func TestCreateNMDs(t *testing.T) {
 
 					// Execute Agent/NMD creation and registration tests in parallel
 					t.Parallel()
-					log.Infof("#### Started TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d",
-						tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
+					log.Infof("#### Started TC: %s HostID: %s DB: %s GoRoutines: %d CGoCalls: %d",
+						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
 					// Cleanup any prior DB files
 					os.Remove(dbPath)
 
 					// create Agent and NMD
-					nmdInst, err := createNMD(t, dbPath, nodeID, restURL)
+					nmdInst, err := createNMD(t, dbPath, hostID, restURL)
 					defer stopNMD(t, nmdInst)
 					Assert(t, (err == nil && nmdInst.agent != nil), "Failed to create agent", err)
 
@@ -279,9 +280,9 @@ func TestCreateNMDs(t *testing.T) {
 							TypeMeta:   api.TypeMeta{Kind: "Naples"},
 							Spec: proto.NaplesSpec{
 								Mode:           proto.NaplesMode_MANAGED_MODE,
-								PrimaryMac:     nodeID,
+								PrimaryMac:     hostID,
 								ClusterAddress: []string{*cmdURL},
-								NodeName:       nodeID,
+								HostName:       hostID,
 							},
 						}
 
@@ -315,7 +316,7 @@ func TestCreateNMDs(t *testing.T) {
 						// Fetch smartnic object
 						nic, err := nm.GetSmartNIC()
 						if nic == nil || err != nil {
-							log.Errorf("NIC not found in nicDB, mac:%s", nodeID)
+							log.Errorf("NIC not found in nicDB, mac:%s", hostID)
 							return false, nil
 						}
 
@@ -344,11 +345,11 @@ func TestCreateNMDs(t *testing.T) {
 					f5 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
-							Name: nodeID,
+							Name: hostID,
 						}
 						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 						if err != nil || nicObj == nil {
-							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", nodeID, err)
+							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", hostID, err)
 							return false, nil
 						}
 
@@ -356,24 +357,24 @@ func TestCreateNMDs(t *testing.T) {
 					}
 					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
 
-					// Validate Workload Node object is created
+					// Validate Host object is created
 					f6 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
-							Name: nodeID,
+							Name: hostID,
 						}
-						nodeObj, err := tInfo.apiClient.ClusterV1().Node().Get(context.Background(), &meta)
-						if err != nil || nodeObj == nil {
-							log.Errorf("Failed to GET Node object, mac:%s, %v", nodeID, err)
+						hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
+						if err != nil || hostObj == nil {
+							log.Errorf("Failed to GET Host object, mac:%s, %v", hostID, err)
 							return false, nil
 						}
 
 						return true, nil
 					}
-					AssertEventually(t, f6, "Failed to verify creation of required Node object", string("10ms"), string("30s"))
+					AssertEventually(t, f6, "Failed to verify creation of required Host object", string("10ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
-						tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
+						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
 				})
 			}

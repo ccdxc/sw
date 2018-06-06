@@ -15,12 +15,19 @@ import "endpoint.proto";
 service WorkloadV1 {
     // Prefix for all resources served by this service.
     option (venice.apiPrefix) = "workload";
+
     // API Version.
     option (venice.apiVersion) = "v1";
 
     option (venice.apiGrpcCrudService) = "Endpoint";
     option (venice.apiRestService) = {
         Object: "Endpoint"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
+
+    option (venice.apiGrpcCrudService) = "Workload";
+    option (venice.apiRestService) = {
+        Object: "Workload"
         Method: [ "get", "put", "delete", "post", "list" ]
     };
 }

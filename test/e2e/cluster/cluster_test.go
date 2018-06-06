@@ -52,29 +52,21 @@ var _ = Describe("cluster tests", func() {
 		})
 	})
 
-	Context("Naples Node Object validation ", func() {
+	Context("Naples Host Object validation ", func() {
 		var (
-			nodes []*cmd.Node
+			hosts []*cmd.Host
 			err   error
 		)
 		BeforeEach(func() {
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
-			nodeIf := cmdClient.Node()
-			nodes, err = nodeIf.List(ts.tu.NewLoggedInContext(context.Background()), &api.ListWatchOptions{})
+			hostIf := cmdClient.Host()
+			hosts, err = hostIf.List(ts.tu.NewLoggedInContext(context.Background()), &api.ListWatchOptions{})
 		})
 		It("Node fields should be ok", func() {
 			Expect(err).ShouldNot(HaveOccurred())
-			numNaplesNodes := 0
-			for _, node := range nodes {
-				for _, role := range node.Spec.Roles {
-					if role == cmd.NodeSpec_WORKLOAD.String() {
-						numNaplesNodes++
-						Expect(node.Status.Phase).Should(Equal(cmd.NodeStatus_JOINED.String()))
-					}
-				}
-			}
-			Expect(numNaplesNodes).Should(Equal(ts.tu.NumNaplesNodes))
+			numNaplesHosts := len(hosts)
+			Expect(numNaplesHosts).Should(Equal(ts.tu.NumNaplesHosts))
 		})
 	})
 

@@ -20,20 +20,26 @@ service ClusterV1 {
 
     option(venice.apiGrpcCrudService) = "Cluster";
     option(venice.apiGrpcCrudService) = "Node";
+    option(venice.apiGrpcCrudService) = "Host";
     option(venice.apiGrpcCrudService) = "SmartNIC";
-    option (venice.apiGrpcCrudService) = "Tenant";
+    option(venice.apiGrpcCrudService) = "Tenant";
 
-    option(venice.apiRestService) = {
+    option (venice.apiRestService) = {
         Object: "Cluster"
         Method: ["put", "get", "delete", "list"]
     };
 
-    option(venice.apiRestService) = {
+    option (venice.apiRestService) = {
         Object: "Node"
         Method: ["put", "get", "delete", "post", "list"]
     };
 
-    option(venice.apiRestService) = {
+    option (venice.apiRestService) = {
+        Object: "Host"
+        Method: ["put", "get", "delete", "post", "list"]
+    };
+
+    option (venice.apiRestService) = {
         Object: "SmartNIC"
         Method: ["put", "get", "delete", "post", "list"]
     };

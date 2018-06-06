@@ -1,0 +1,83 @@
+
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package workload;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+// ----------------------------- Workload Object -----------------------------
+//
+// Workload represents a VM, container/pod or Baremetal.
+//
+message Workload {
+    option (venice.objectPrefix) = { Collection: "workloads", Path: "/{O.Tenant}"};
+    api.TypeMeta T          = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the Workload.
+    WorkloadSpec Spec       = 3 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the Workload.
+    WorkloadStatus Status   = 4 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// Spec part of Workload object
+message WorkloadSpec {
+
+    // Hostname of the server where the workload is running.
+    string HostName                             = 1 [(gogoproto.nullable) = true,
+                                                    (gogoproto.jsontag) = "host-name,omitempty"];
+
+    // Spec of all interfaces in the Workload identified by Primary MAC
+    map<string, WorkloadIntfSpec> Interfaces    = 2 [(gogoproto.nullable) = false,
+                                                    (gogoproto.jsontag) = "interfaces,omitempty"];
+}
+
+// Status part of Workload object
+message WorkloadStatus {
+
+    // Status of all interfaces in the Workload identified by Primary MAC
+    map<string, WorkloadIntfStatus> Interfaces  = 1 [(gogoproto.nullable) = false,
+                                                    (gogoproto.jsontag) = "interfaces,omitempty"];
+
+    // List of all endpoints associated with this Workload
+    repeated string Endpoints                   = 2 [(gogoproto.nullable) = true,
+                                                    (gogoproto.jsontag) = "endpoints,omitempty"];
+}
+
+// Spec of a Workload interface
+message WorkloadIntfSpec {
+
+    // TBD: Is it possible to have multiple/secondary MAC 
+    // addrs on a workload interface ?
+
+    // Micro-segmentation vlan assigned for this interface
+    uint32 MicroSegVlan  = 1 [(gogoproto.jsontag) = "micro-seg-vlan,omitempty",
+                              (venice.check) = "IntRange(1,4095)"];
+
+    // External vlan assigned for this interface
+    uint32 ExternalVlan  = 2 [(gogoproto.jsontag) = "external-vlan,omitempty",
+                              (venice.check) = "IntRange(1,4095)"];
+
+}
+
+// Status of a Workload interface
+message WorkloadIntfStatus {
+
+    // List of all IP addresses configured and discovered on a Workload Interface
+    repeated string IpAddrs = 1 [(gogoproto.nullable) = true,
+                                 (gogoproto.jsontag) = "ip-addrs,omitempty"];
+}

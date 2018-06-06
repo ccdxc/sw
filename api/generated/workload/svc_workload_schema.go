@@ -24,6 +24,18 @@ var typesMapSvc_workload = map[string]*runtime.Struct{
 			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.Endpoint"},
 		},
 	},
+	"workload.AutoMsgWorkloadWatchHelper": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.AutoMsgWorkloadWatchHelper.WatchEvent"},
+		},
+	},
+	"workload.AutoMsgWorkloadWatchHelper.WatchEvent": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.Workload"},
+		},
+	},
 	"workload.EndpointList": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
@@ -31,6 +43,15 @@ var typesMapSvc_workload = map[string]*runtime.Struct{
 			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
 			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.Endpoint"},
+		},
+	},
+	"workload.WorkloadList": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+
+			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.Workload"},
 		},
 	},
 }

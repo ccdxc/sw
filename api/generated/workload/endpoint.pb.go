@@ -9,13 +9,21 @@
 	It is generated from these files:
 		endpoint.proto
 		svc_workload.proto
+		workload.proto
 
 	It has these top-level messages:
 		Endpoint
 		EndpointSpec
 		EndpointStatus
 		AutoMsgEndpointWatchHelper
+		AutoMsgWorkloadWatchHelper
 		EndpointList
+		WorkloadList
+		Workload
+		WorkloadIntfSpec
+		WorkloadIntfStatus
+		WorkloadSpec
+		WorkloadStatus
 */
 package workload
 
