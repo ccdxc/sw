@@ -104,13 +104,56 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 
 // UpdateNatPool updates a NAT Pool in the datapath
 func (hd *Datapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
-
 	return nil
 }
 
 // DeleteNatPool deletes a NAT Pool in the datapath
 func (hd *Datapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 
+	// Build Nat Pool Key
+	natPoolKey := &halproto.NatPoolKeyHandle{
+		KeyOrHandle: &halproto.NatPoolKeyHandle_PoolKey{
+			PoolKey: &halproto.NatPoolKey{
+				VrfKh:  vrfKey,
+				PoolId: np.Status.NatPoolID,
+			},
+		},
+	}
+
+	npDelReq := &halproto.NatPoolDeleteRequestMsg{
+		Request: []*halproto.NatPoolDeleteRequest{
+			{
+				KeyOrHandle: natPoolKey,
+			},
+		},
+	}
+
+	// delete hal objects
+	if hd.Kind == "hal" {
+		// delete route
+		resp, err := hd.Hal.Natclient.NatPoolDelete(context.Background(), npDelReq)
+		if err != nil {
+			log.Errorf("Error deleting nat pool. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+
+	} else {
+		_, err := hd.Hal.Natclient.NatPoolDelete(context.Background(), npDelReq)
+		if err != nil {
+			log.Errorf("Error deleting nat pool. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -195,7 +238,51 @@ func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespa
 
 // DeleteNatPolicy deletes a NAT Policy in the datapath
 func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 
+	// Build Nat Policy Key
+	natPolicyKey := &halproto.NatPolicyKeyHandle{
+		KeyOrHandle: &halproto.NatPolicyKeyHandle_PolicyKey{
+			PolicyKey: &halproto.NATPolicyKey{
+				VrfKeyOrHandle: vrfKey,
+				NatPolicyId:    np.Status.NatPolicyID,
+			},
+		},
+	}
+
+	npDelReq := &halproto.NatPolicyDeleteRequestMsg{
+		Request: []*halproto.NatPolicyDeleteRequest{
+			{
+				KeyOrHandle: natPolicyKey,
+			},
+		},
+	}
+
+	// delete hal objects
+	if hd.Kind == "hal" {
+		// delete route
+		resp, err := hd.Hal.Natclient.NatPolicyDelete(context.Background(), npDelReq)
+		if err != nil {
+			log.Errorf("Error deleting nat policy. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+
+	} else {
+		_, err := hd.Hal.Natclient.NatPolicyDelete(context.Background(), npDelReq)
+		if err != nil {
+			log.Errorf("Error deleting nat policy. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -286,8 +373,65 @@ func (hd *Datapath) UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Names
 }
 
 // DeleteNatBinding deletes a NAT Binding in the datapath
-func (hd *Datapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteNatBinding(nb *netproto.NatBinding, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 
+	// Build Nat Binding Key
+	natBindingIP := net.ParseIP(nb.Spec.IPAddress)
+	if len(natBindingIP) == 0 {
+		log.Errorf("could not parse IP from {%v}", natBindingIP)
+		return ErrIPParse
+	}
+
+	ipAddr := &halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(natBindingIP),
+		},
+	}
+
+	natBindingKey := &halproto.NatMappingKeyHandle{
+		KeyOrHandle: &halproto.NatMappingKeyHandle_Svc{
+			Svc: &halproto.Svc{
+				VrfKh:  vrfKey,
+				IpAddr: ipAddr,
+			},
+		},
+	}
+
+	nbDelReq := &halproto.NatMappingDeleteRequestMsg{
+		Request: []*halproto.NatMappingDeleteRequest{
+			{
+				KeyOrHandle: natBindingKey,
+			},
+		},
+	}
+
+	// delete hal objects
+	if hd.Kind == "hal" {
+		// delete route
+		resp, err := hd.Hal.Natclient.NatMappingDelete(context.Background(), nbDelReq)
+		if err != nil {
+			log.Errorf("Error deleting nat binding. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+
+	} else {
+		_, err := hd.Hal.Natclient.NatMappingDelete(context.Background(), nbDelReq)
+		if err != nil {
+			log.Errorf("Error deleting nat binding. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
