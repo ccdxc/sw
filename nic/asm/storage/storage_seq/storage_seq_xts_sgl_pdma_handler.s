@@ -47,21 +47,18 @@ storage_seq_xts_sgl_pdma_xfer:
     *
     * For example: dma_m2m_2/dma_m2m_3 would be a valid pair, 
     *              but dma_m2m_7/dma_m2m_8 would not necessarily be adjacent.
-    *
-    * Currently it is known that dma_m2m_0/dma_m2m_1 are in one flit, and
-    * all the subsequent mem2mem quads are in succeeding flits.
     */
  
    // Can process the entire PDMA SGL here which holds 4 addr/len pairs,
    // plus padding
    
-   CHAIN_SGL_PDMA(dma_m2m_6, dma_m2m_7,
+   CHAIN_SGL_PDMA(dma_m2m_4, dma_m2m_5,
                   d.addr0, d.len0, exit, pdma_xfer_error)
-   CHAIN_SGL_PDMA(dma_m2m_8, dma_m2m_9,
+   CHAIN_SGL_PDMA(dma_m2m_6, dma_m2m_7,
                   d.addr1, d.len1, exit, pdma_xfer_error)
-   CHAIN_SGL_PDMA(dma_m2m_10, dma_m2m_11,
+   CHAIN_SGL_PDMA(dma_m2m_8, dma_m2m_9,
                   d.addr2, d.len2, exit, pdma_xfer_error)
-   CHAIN_SGL_PDMA(dma_m2m_12, dma_m2m_13,
+   CHAIN_SGL_PDMA(dma_m2m_10, dma_m2m_11,
                   d.addr3, d.len3, exit, pdma_xfer_error)
 
    // Catch any driver errors here for debugging, i.e., driver did not 

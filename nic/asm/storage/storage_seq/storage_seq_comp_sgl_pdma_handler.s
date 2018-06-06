@@ -45,14 +45,11 @@ storage_seq_comp_sgl_pdma_xfer:
     * For example: dma_m2m_2/dma_m2m_3 would be a valid pair, 
     *              but dma_m2m_7/dma_m2m_8 would not necessarily be adjacent.
     *
-    * Currently it is known that dma_m2m_0/dma_m2m_1 are in one flit, and
-    * all the subsequent mem2mem quads are in succeeding flits.
-    *
     * The following is the initial flit where the first set of mem2mem
     * descriptors are available for PDMA use. Note that the follow on macro
     * invocations can advance into one or more subsequent flits!
     */
-   CAPRI_FLIT_DMA_PTR_INITIAL(dma_m2m_6, dma_m2m_9)
+   CAPRI_FLIT_DMA_PTR_INITIAL(dma_m2m_4, dma_m2m_7)
 
    /*
     * Set up the initial d-vector chain_sgl_pdma tuple pointer in

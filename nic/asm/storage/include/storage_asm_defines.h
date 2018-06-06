@@ -218,6 +218,8 @@
     k.{seq_kivec3_pad_boundary_shift_sbit0_ebit2...seq_kivec3_pad_boundary_shift_sbit3_ebit4}
 #define SEQ_KIVEC3_NUM_BLKS                     \
     k.seq_kivec3_num_blks
+#define SEQ_KIVEC3_SGL_TUPLE_NO                 \
+    k.seq_kivec3_sgl_tuple_no
 
 #define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
     k.seq_kivec3xts_decr_buf_addr
@@ -335,6 +337,17 @@ struct barco_sgl_le_t {
 
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
+
+#define BARCO_SGL_TUPLE0            0
+#define BARCO_SGL_TUPLE1            1
+#define BARCO_SGL_TUPLE2            2
+#define BARCO_SGL_NUM_TUPLES_MAX    3
+
+/*
+ * Number of tuples packed for consumption by compression
+ * SGL padding operation.
+ */
+#define SEQ_COMP_PAD_NUM_BLKS_PER_SGL 1
 
 /*
  * Barco AOL rearranged to little-endian layout

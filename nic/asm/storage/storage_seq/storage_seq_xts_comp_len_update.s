@@ -14,6 +14,7 @@ struct phv_ p;
  * Registers usage:
  * CAUTION: r1 is also implicitly used by LOAD_TABLE1_FOR_ADDR_PC_IMM()
  */
+#define r_update_len                r1  // length to write into SGL tuple
 #define r_last_blk_no               r2  // last block number
 #define r_blk_boundary              r3  // 1 << blk_len_shift
 #define r_last_blk_len              r4  // length of last block
@@ -27,6 +28,8 @@ struct phv_ p;
 #define r_last_sgl_p                r_comp_desc_p   // pointer to last SGL descriptor
 #define r_field_p                   r_blk_boundary  // pointer to an SGL or desc field
 #define r_desc_datain_len           r_num_blks      // descriptor datain_len
+#define r_sgl_tuple_no              r_num_blks      // SGL tuple number
+#define r_sgl_len_total             r_last_blk_no   // length total of all SGL tuple buffers
 
 %%
 
@@ -83,27 +86,83 @@ endif0:
     // SGL (or SGL vector), if any. These don't have any order
     // dependency with Barco descriptor transfer so we can use
     // PHV2MEM DMA.
+    add         r_sgl_tuple_no, r0, r0
 if1:    
     bbeq        SEQ_KIVEC5XTS_COMP_SGL_SRC_EN, 0, endif1
     add         r_last_sgl_p, SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR, r0 // delay slot
-    
 if2:    
     bbeq        SEQ_KIVEC5XTS_COMP_SGL_SRC_VEC_EN, 0, endif2
-    phvwr       p.comp_last_blk_len_len, r_data_len.wx    // delay slot
-    
-    add         r_last_sgl_p, r_last_sgl_p, r_last_blk_no, BARCO_SGL_DESC_SIZE_SHIFT
-    phvwr       p.comp_last_blk_len_len, r_last_blk_len.wx
+    add         r_update_len, r_data_len, r0    // delay slot
 
+    // Note: each SGL tuple is expected to point to a block of size r_pad_boundary
+    //
+    // Calculate
+    //   r_sgl_len_total = num_blks_per_sgl << blk_boundary_shift
+    //   r_last_sgl_p = &comp_sgl_src_addr[r_data_len / r_sgl_len_total]
+    //   r_sgl_tuple_no = (r_data_len % r_sgl_len_total) >> blk_boundary_shift
+    //
+    // Note: blk_boundary is a power of 2 but num_blks_per_sgl may not be 
+    // (it either equals 1 or 3)
+
+    sll         r_sgl_len_total, SEQ_COMP_PAD_NUM_BLKS_PER_SGL, \
+                SEQ_KIVEC5XTS_BLK_BOUNDARY_SHIFT
+    div         r_last_sgl_p, r_data_len, r_sgl_len_total
+    add         r_last_sgl_p, SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR, \
+                r_last_sgl_p, BARCO_SGL_DESC_SIZE_SHIFT
+    mod         r_sgl_tuple_no, r_data_len, r_sgl_len_total
+    srl         r_sgl_tuple_no, r_sgl_tuple_no, SEQ_KIVEC5XTS_BLK_BOUNDARY_SHIFT
+    add         r_update_len, r_last_blk_len, r0
 endif2:
+
+    // Now update length field in
+    // tuple0 or tuple1, or tuple2
+    
+switch0:    
+  .brbegin
+    br          r_sgl_tuple_no[1:0]
     add         r_field_p, r_last_sgl_p, \
-                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len0))
-    DMA_PHV2MEM_SETUP_ADDR64(comp_last_blk_len_len, comp_last_blk_len_len,
-                             r_field_p, dma_p2m_3)
-    // Terminate the SGL vector at the current descriptor
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len0))    // delay slot
+  .brcase BARCO_SGL_TUPLE0
+
+    // last_sgl_p->len0 = r_update_len
+    // zero out the rest of last_sgl_p
+    
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple0_len_update_last_blk_len,
+                      barco_sgl_tuple0_len_update_link,
+                      r_field_p, dma_p2m_2)
+    b           endsw0
+    phvwr       p.barco_sgl_tuple0_len_update_last_blk_len, r_update_len.wx  // delay slot
+
+  .brcase BARCO_SGL_TUPLE1
+
+    // last_sgl_p->len1 = r_update_len
+    // zero out the rest of last_sgl_p
+    
     add         r_field_p, r_last_sgl_p, \
-                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, link))
-    DMA_PHV2MEM_SETUP_ADDR64(null_addr_addr, null_addr_addr,
-                             r_field_p, dma_p2m_4)
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len1))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple1_len_update_last_blk_len,
+                      barco_sgl_tuple1_len_update_link,
+                      r_field_p, dma_p2m_2)
+    b           endsw0
+    phvwr       p.barco_sgl_tuple1_len_update_last_blk_len, r_update_len.wx  // delay slot
+    
+  .brcase BARCO_SGL_TUPLE2
+
+    // last_sgl_p->len2 = r_update_len
+    // zero out the rest of last_sgl_p
+    
+    add         r_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len2))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple2_len_update_last_blk_len,
+                      barco_sgl_tuple2_len_update_link,
+                      r_field_p, dma_p2m_2)
+    b           endsw0
+    phvwr       p.barco_sgl_tuple2_len_update_last_blk_len, r_update_len.wx  // delay slot
+    
+  .brcase BARCO_SGL_NUM_TUPLES_MAX
+  .brend
+endsw0:
+    
 endif1:
 
     wrfence.e

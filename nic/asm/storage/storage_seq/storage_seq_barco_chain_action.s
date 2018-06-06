@@ -59,9 +59,9 @@ if1:
 endif1:
 
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r_desc_addr,
-                                      r_xfers1_len, dma_m2m_18)
+                                      r_xfers1_len, dma_m2m_16)
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_ring_addr,
-                                      r_xfers1_len, dma_m2m_19)
+                                      r_xfers1_len, dma_m2m_17)
 endif0:
 
     // The first transfer before the ring wrapped (if it wrapped)
@@ -75,9 +75,9 @@ if2:
 endif2:
 
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r_desc_addr,
-                                      r_xfers0_len, dma_m2m_16)
+                                      r_xfers0_len, dma_m2m_14)
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_ring_addr,
-                                      r_xfers0_len, dma_m2m_17)
+                                      r_xfers0_len, dma_m2m_15)
     mincr       r_pi, SEQ_KIVEC4_BARCO_RING_SIZE, SEQ_KIVEC4_BARCO_NUM_DESCS
     
     // Need to word swap before writing back as the p_ndx is little endian

@@ -31,11 +31,16 @@ storage_seq_comp_sgl_pad_only_xfer:
     add         r_pad_len, SEQ_KIVEC3_PAD_LEN, r0
     beq         r_pad_len, r0, exit
     add         r_pad_dest, d.addr0, SEQ_KIVEC3_LAST_BLK_LEN    // delay slot
+
+    seq         c1, SEQ_KIVEC3_SGL_TUPLE_NO, 1
+    add.c1      r_pad_dest, d.addr1, SEQ_KIVEC3_LAST_BLK_LEN
+    seq         c1, SEQ_KIVEC3_SGL_TUPLE_NO, 2
+    add.c1      r_pad_dest, d.addr2, SEQ_KIVEC3_LAST_BLK_LEN
     
     DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, SEQ_KIVEC5_PAD_BUF_ADDR,
-                             r_pad_len, dma_m2m_6)
+                             r_pad_len, dma_m2m_4)
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_pad_dest,
-                                      r_pad_len, dma_m2m_7)
+                                      r_pad_len, dma_m2m_5)
 
 exit:
     CLEAR_TABLE2_e
