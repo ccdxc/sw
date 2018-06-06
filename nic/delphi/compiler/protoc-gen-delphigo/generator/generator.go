@@ -3126,30 +3126,32 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 	}
 
 	// TriggerEvent
-	g.P("func (obj *" + wrapperName + ") TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {")
-	g.P("  for _, r := range rl {")
-	g.P("    rctr, ok := r.(" + wrapperName + "Reactor)")
-	g.P("    if ok == false {")
-	g.P("      panic(\"Not a Reactor\")")
-	g.P("    }")
-	g.P("    if op == delphi.ObjectOperation_SetOp {")
-	g.P("      if oldObj == nil {")
-	g.P("        rctr.On" + wrapperName + "Create(obj)")
-	g.P("      } else {")
-	g.P("        rctr.On" + wrapperName + "Update(obj)")
-	g.P("      }")
-	g.P("    } else {")
-	g.P("      rctr.On" + wrapperName + "Delete(obj)")
-	g.P("    }")
-	g.P("  }")
-	g.P("}\n")
+	if g.isDelphiObj(msg) {
+		g.P("func (obj *" + wrapperName + ") TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {")
+		g.P("  for _, r := range rl {")
+		g.P("    rctr, ok := r.(" + wrapperName + "Reactor)")
+		g.P("    if ok == false {")
+		g.P("      panic(\"Not a Reactor\")")
+		g.P("    }")
+		g.P("    if op == delphi.ObjectOperation_SetOp {")
+		g.P("      if oldObj == nil {")
+		g.P("        rctr.On" + wrapperName + "Create(obj)")
+		g.P("      } else {")
+		g.P("        rctr.On" + wrapperName + "Update(obj)")
+		g.P("      }")
+		g.P("    } else {")
+		g.P("      rctr.On" + wrapperName + "Delete(obj)")
+		g.P("    }")
+		g.P("  }")
+		g.P("}\n")
 
-	// Reactor Interface Definition
-	g.P("type " + wrapperName + "Reactor interface {")
-	g.P("  On" + wrapperName + "Create(obj *" + wrapperName + ")")
-	g.P("  On" + wrapperName + "Update(obj *" + wrapperName + ")")
-	g.P("  On" + wrapperName + "Delete(obj *" + wrapperName + ")")
-	g.P("}\n")
+		// Reactor Interface Definition
+		g.P("type " + wrapperName + "Reactor interface {")
+		g.P("  On" + wrapperName + "Create(obj *" + wrapperName + ")")
+		g.P("  On" + wrapperName + "Update(obj *" + wrapperName + ")")
+		g.P("  On" + wrapperName + "Delete(obj *" + wrapperName + ")")
+		g.P("}\n")
+	}
 
 	// new<NAME>FromMessage
 	g.P("func " + "new" + wrapperName + "FromMessage (msg *" + *msg.Name + ") *" + wrapperName + " {")

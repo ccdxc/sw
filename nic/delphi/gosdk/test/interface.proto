@@ -1,0 +1,17 @@
+syntax = "proto3";
+package clientTest;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+// Interface id
+message IntfIndex {
+    uint32    Ifidx = 1;
+}
+
+// spec part of the object
+message InterfaceSpec {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta      Meta         = 1;
+    IntfIndex              Key          = 2;
+    string                 MacAddress   = 3;
+}
