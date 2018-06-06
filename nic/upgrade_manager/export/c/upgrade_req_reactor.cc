@@ -122,4 +122,13 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
     return delphi::error::OK();
 }
 
+void UpgReqReactor::OnMountComplete(void) {
+    LogInfo("UpgReqReactor OnMountComplete called");
+
+    vector<delphi::objects::UpgStateReqPtr> upgReqStatuslist = delphi::objects::UpgStateReq::List(sdk_);
+    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
+        OnUpgStateReqCreate(*reqStatus);
+    }
+}
+
 } // namespace upgrade

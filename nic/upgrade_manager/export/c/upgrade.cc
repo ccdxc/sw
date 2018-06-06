@@ -9,15 +9,6 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgSdk::OnMountComplete(void) {
-    LogInfo("UpgStateReqMgr OnMountComplete called");
-
-    vector<delphi::objects::UpgStateReqPtr> upgReqStatuslist = delphi::objects::UpgStateReq::List(sdk_);
-    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
-        upgReqReactPtr_->OnUpgStateReqCreate(*reqStatus);
-    }
-}
-
 void UpgSdk::SendAppRespSuccess(void) {
     LogInfo("Application returning success via UpgSdk");
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
@@ -188,6 +179,7 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent) {
     upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, name, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
+    sdk_->WatchMountComplete(upgReqReactPtr_);
     sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
     //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
@@ -210,6 +202,7 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHand
     upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, name, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
+    sdk_->WatchMountComplete(upgReqReactPtr_);
     sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
     //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
@@ -231,6 +224,7 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
     upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, uh, name, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
+    sdk_->WatchMountComplete(upgReqReactPtr_);
     sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
     //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
@@ -253,6 +247,7 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
     upgReqReactPtr_ = make_shared<UpgReqReactor>(sk, uh, name, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
+    sdk_->WatchMountComplete(upgReqReactPtr_);
     sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
     //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
@@ -267,4 +262,8 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
     InitStateMachineVector();
 }
 
+void UpgSdk::OnMountComplete(void) {
+    LogInfo("UpgSdk::OnMountComplete called.");
+    return;
+}
 } // namespace upgrade

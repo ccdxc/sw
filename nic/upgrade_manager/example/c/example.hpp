@@ -30,8 +30,7 @@ public:
     void createTimerHandler(ev::timer &watcher, int revents);
 
     void OnMountComplete(void) {
-        LogInfo("ExUpgSvc OnMountComplete called!!");
-        upgsdk_->OnMountComplete();
+        LogInfo("ExUpgSvc OnMountComplete called! Nothing to be done.");
     }
 };
 typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;

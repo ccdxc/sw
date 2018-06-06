@@ -42,10 +42,7 @@ public:
     UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah);
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent);
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah);
-
-    // OnMountComplete gets called when all the objects are mounted
-    void OnMountComplete(void);
-
+    virtual void OnMountComplete(void);
     void SendAppRespSuccess(void);
     void SendAppRespFail(string str);
 

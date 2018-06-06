@@ -43,6 +43,8 @@ public:
     void InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgCtx &ctx);
 
     void GetUpgCtx(UpgCtx &ctx, delphi::objects::UpgStateReqPtr req);
+
+    virtual void OnMountComplete(void);
 };
 typedef std::shared_ptr<UpgReqReactor> UpgReqReactorPtr;
 
