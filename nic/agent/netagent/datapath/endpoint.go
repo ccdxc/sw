@@ -112,7 +112,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 					EnicInfo: &halproto.EnicInfo{
 						L2SegmentKeyHandle: &l2Key,
 						MacAddress:         macaddr,
-						EncapVlanId:        nw.Spec.VlanID,
+						EncapVlanId:        ep.Status.UsegVlan,
 					},
 				},
 			},
