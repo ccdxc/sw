@@ -3183,7 +3183,6 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 	}
 
 	//<NAME>Mount
-	// {{ .GetName }}Mount todo
 	if g.isDelphiObj(msg) {
 		g.P("func " + wrapperName + "Mount(client gosdk.Client, mode delphi.MountMode) {")
 		g.P("  client.MountKind(\"" + wrapperName + "\", mode)")
