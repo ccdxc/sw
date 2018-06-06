@@ -19,21 +19,21 @@ storage_tx_pri_q_state_push_start:
 
    // Push to high priority queue (if priority matches and queue not full)
    PRI_QUEUE_PUSH(STORAGE_KIVEC0_IO_PRIORITY, NVME_BE_PRIORITY_HI,
-                  d.p_ndx_hi, d.c_ndx_hi, d.base_addr, d.num_entries,
+                  d.wp_ndx_hi, d.c_ndx_hi, d.base_addr, d.num_entries,
                   d.entry_size, check_med, tbl_load)
    b	complete_dma
 
    // Push to medium priority queue (if priority matches and queue not full)
 check_med:
    PRI_QUEUE_PUSH(STORAGE_KIVEC0_IO_PRIORITY, NVME_BE_PRIORITY_MED,
-                  d.p_ndx_med, d.c_ndx_med, d.base_addr, d.num_entries,
+                  d.wp_ndx_med, d.c_ndx_med, d.base_addr, d.num_entries,
                   d.entry_size, check_lo, tbl_load)
    b	complete_dma
 
    // Push to low priority queue (if priority matches and queue not full)
 check_lo:
    PRI_QUEUE_PUSH(STORAGE_KIVEC0_IO_PRIORITY, NVME_BE_PRIORITY_LO,
-                  d.p_ndx_lo, d.c_ndx_lo, d.base_addr, d.num_entries,
+                  d.wp_ndx_lo, d.c_ndx_lo, d.base_addr, d.num_entries,
                   d.entry_size, tbl_load, tbl_load)
 
    // Setup the start and end DMA pointers

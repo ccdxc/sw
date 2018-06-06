@@ -64,7 +64,7 @@ header_type pri_q_state_t {
     w_ndx_med	: 16;	// Working consumer index (medium priority)
     w_ndx_lo	: 16;	// Working consumer index (low priority)
     num_entries	: 16;	// Number of queue entries (power of 2 of this value)
-    base_addr	: 64;	// Base address of queue entries
+    base_addr	: 34;	// Base address of queue entries
     entry_size	: 16;	// Size of each queue entry
     hi_weight	: 8;	// Weight of high pri queue
     med_weight	: 8;	// Weight of medium pri queue
@@ -74,13 +74,15 @@ header_type pri_q_state_t {
     lo_running	: 8;	// Number of commands running from low pri queue
     num_running	: 8;	// Total number of commands running
     max_cmds	: 8;	// Maximum number of commands than can be running
-    next_pc	: 28;	// Next program's PC
     dst_lif	: 11;	// Destination LIF number
     dst_qtype	: 3;	// Destination LIF type (within the LIF)
     dst_qid	: 24;	// Destination queue number (within the LIF)
     dst_qaddr	: 34;	// Destination queue state address
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
-    pad		: 10;	// Align to 64 bytes
+    wp_ndx_hi	: 16;	// Working producer index (high priority)
+    wp_ndx_med	: 16;	// Working producer index (medium priority)
+    wp_ndx_lo	: 16;	// Working producer index (low priority)
+    pad		: 20;	// Align to 64 bytes
   }
 }
 
@@ -402,12 +404,14 @@ header_type storage_kivec6_t {
   modify_field(q_state.lo_running, lo_running);		\
   modify_field(q_state.num_running, num_running);	\
   modify_field(q_state.max_cmds, max_cmds);		\
-  modify_field(q_state.next_pc, next_pc);		\
   modify_field(q_state.dst_lif, dst_lif);		\
   modify_field(q_state.dst_qtype, dst_qtype);		\
   modify_field(q_state.dst_qid, dst_qid);		\
   modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.ssd_bm_addr, ssd_bm_addr);	\
+  modify_field(q_state.wp_ndx_hi, wp_ndx_hi);		\
+  modify_field(q_state.wp_ndx_med, wp_ndx_med);		\
+  modify_field(q_state.wp_ndx_lo, wp_ndx_lo);		\
 
 #define PRI_Q_STATE_COPY(q_state)			\
   PRI_Q_STATE_COPY_STAGE0(q_state)			\
@@ -505,6 +509,7 @@ header_type storage_kivec6_t {
 #define pvm_roce_sq_cb_push_start	0x8000F000
 #define seq_pvm_roce_sq_cb_push_start	0x80010000
 #define nvme_be_save_iob_addr_start	0x80020000
+#define nvme_be_sq_handler_start	0x80030000
 
 
 #endif     // STORAGE_TX_P4_HDR_H

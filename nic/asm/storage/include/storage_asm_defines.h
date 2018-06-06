@@ -613,8 +613,8 @@ struct capri_dma_cmd_mem2mem_t {
   sll       r3, _pri, _num_entries;                                     \
   add       r3, r3, _entry_index;                                       \
   sll       r3, r3, _entry_size;                                        \
-  add       r1, r3, _table_base;                                        \
-  LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)                              \
+  add       r3, r3, _table_base;                                        \
+  LOAD_TABLE_FOR_ADDR_PC_IMM(r3, _load_size, _pc)                       \
 
 // Used to set/clear table N valid bit 
 #define SET_TABLE0                                                      \
@@ -1113,13 +1113,13 @@ struct capri_dma_cmd_mem2mem_t {
 // Service the priority queue by popping the entry and setting up the
 // next stage to handle the entry. The w_ndx to be used is saved in 
 // GPR r6 for use later as the tblmincr alters the d-vector.
-#define SERVICE_PRI_QUEUE(_w_ndx_pri, _pri_val)                         \
+#define SERVICE_PRI_QUEUE(_w_ndx_pri, _pri_val, _next_pc)               \
    add      r6, r0, _w_ndx_pri;                                         \
    QUEUE_POP(_w_ndx_pri, d.num_entries)                                 \
    phvwrpair p.storage_kivec0_w_ndx, _w_ndx_pri,                        \
              p.storage_kivec0_io_priority, _pri_val;                    \
    LOAD_TABLE_FOR_PRI_INDEX(d.base_addr, r6, d.num_entries, _pri_val,   \
-                            d.entry_size, d.entry_size[2:0], d.next_pc) \
+                            d.entry_size, d.entry_size[2:0], _next_pc)  \
    
    
 // Derive the priority queue push address and store it in register r7

@@ -529,7 +529,7 @@ header_type roce_rq_wqe_t {
     CAPRI_LOAD_TABLE_PRI_IDX(_i, _q.base_addr, _q.w_ndx_hi,	\
                              _q.num_entries, _pri_val,		\
                              _q.entry_size, _q.entry_size,	\
-                             _q.next_pc)			\
+                             nvme_be_sq_handler_start)		\
 
 // Check if the correct priority queue is full
 #define PRI_QUEUE_FULL(q, _pri)					\
