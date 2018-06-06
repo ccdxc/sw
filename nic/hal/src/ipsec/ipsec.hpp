@@ -102,6 +102,7 @@ typedef struct ipsec_cfg_rule_action_s {
     ipsec::IpsecSAActionType   sa_action;
     hal_handle_t      sa_action_enc_handle;
     hal_handle_t      sa_action_dec_handle;
+    vrf_id_t    vrf;
 } ipsec_cfg_rule_action_t;
 
 typedef struct ipsec_cfg_rule_key_s {
@@ -173,6 +174,8 @@ typedef struct ipsec_sa_s {
     uint8_t               is_random;
     uint8_t               extra_pad;
     uint8_t               flags;
+    uint64_t              vrf;
+    uint64_t              vrf_handle;
     uint16_t              vrf_vlan;
     uint32_t              last_replay_seq_no;
     // PD state

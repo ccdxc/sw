@@ -6,6 +6,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
+#include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
@@ -47,6 +48,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
     uint64_t                                    ipsec_cb_ring_addr;
     uint64_t                                    ipsec_barco_ring_addr;
     uint16_t                                    key_index;
+    pd_vrf_t                                    *pd_vrf;
 
     // hardware index for this entry
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
@@ -115,8 +117,14 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex = 0;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_pindex = 0;
 
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan = htons(ipsec_sa_pd->ipsec_sa->vrf_vlan);
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6 = ipsec_sa_pd->ipsec_sa->is_v6;
+        vrf_t *vrf = vrf_lookup_by_handle(ipsec_sa_pd->ipsec_sa->vrf_handle);
+        if (vrf) {
+            pd_vrf = (pd_vrf_t*)(vrf->pd);
+            ipsec_sa_pd->ipsec_sa->vrf_vlan = pd_vrf->vrf_fromcpu_vlan_id;
+            data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan = htons(ipsec_sa_pd->ipsec_sa->vrf_vlan); 
+            HAL_TRACE_DEBUG("Vrf VLAN {}", ipsec_sa_pd->ipsec_sa->vrf_vlan);
+        }
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6 = ipsec_sa_pd->ipsec_sa->is_v6; 
     }
     HAL_TRACE_DEBUG("Programming Decrypt stage0 at hw-id: 0x{:#x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),

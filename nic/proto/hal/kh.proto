@@ -340,6 +340,7 @@ message IpsecSAEncryptKeyHandle {
     uint64     cb_id     = 1;  // CB id idenfied by a number
     fixed64    cb_handle = 2;  // handle for IPSec CB returned by HAL
   }
+  VrfKeyHandle    vrf_key_or_handle = 3 [(gogoproto.moretags) = "venice:ref"];    // VRF key or handle
 }
 
 // IpsecSADecryptKeyHandle uniquely identifies a IPSec CB and is used
@@ -349,6 +350,7 @@ message IpsecSADecryptKeyHandle {
     uint64     cb_id     = 1;  // CB id idenfied by a number
     fixed64    cb_handle = 2;  // handle for IPSec CB returned by HAL
   }
+  VrfKeyHandle    vrf_key_or_handle = 3 [(gogoproto.moretags) = "venice:ref"];    // VRF key or handle
 }
 
 

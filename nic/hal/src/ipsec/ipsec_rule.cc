@@ -605,6 +605,11 @@ ipsec_cfg_rule_action_spec_extract (const ipsec::IpsecSAAction& spec,
                                     ipsec_cfg_rule_action_t *action)
 {
     hal_ret_t ret = HAL_RET_OK;
+    action->sa_action = spec.sa_action_type();
+    action->sa_action_enc_handle = (hal_handle_t)(spec.enc_handle().cb_id());
+    action->sa_action_dec_handle = (hal_handle_t)(spec.dec_handle().cb_id());
+
+    HAL_TRACE_DEBUG("action type {} enc_handle {} dec_handle {}", action->sa_action, action->sa_action_enc_handle, action->sa_action_dec_handle);
     return ret;
 }
 
@@ -746,10 +751,12 @@ ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *sp
 
     spec->set_rule_id(rule->key.rule_id);
 
-    //auto action = spec->mutable_sa_action();
-    //action->set_src_nat_action(rule->action.src_nat_action);
-    //action->set_dst_nat_action(rule->action.dst_nat_action);
-    // TODO handle SA action
+    auto action = spec->mutable_sa_action();
+    rule->action.sa_action = action->sa_action_type();
+    rule->action.sa_action_enc_handle = (hal_handle_t)action->mutable_enc_handle();
+    rule->action.sa_action_dec_handle = (hal_handle_t)action->mutable_dec_handle();
+
+    HAL_TRACE_DEBUG("action type {} enc_handle {} dec_handle {}", rule->action.sa_action, rule->action.sa_action_enc_handle, rule->action.sa_action_dec_handle);
 
     if ((ret = rule_match_spec_build(
            &rule->match, spec->mutable_match())) != HAL_RET_OK) {

@@ -85,6 +85,7 @@ message IpsecSAEncrypt {
   uint32                         nat_traversal_port        = 11;   // NAT-T port, if non-zero - NAT-T header is added.
   uint32                         salt                      = 12;  // Initial Random number - 32 bits (need to be same on peer)
   uint64                         iv                        = 13;  // Initial Random number that goes in packet - can be assigned from top or generated locally
+  kh.VrfKeyHandle                tep_vrf                   = 14; 
 }
 
 // IPSec security association object
@@ -103,6 +104,7 @@ message IpsecSADecrypt {
   uint32                         rekey_active              = 14;
   uint32                         rekey_spi                 = 15;  // Valid when rekey is active - part of update 
   uint32                         salt                      = 16;  // Initial Random number - 32 bits (need to be same on peer)
+  kh.VrfKeyHandle                tep_vrf                   = 17; 
 }
 
 
@@ -127,6 +129,7 @@ message IPSecSAEncryptGetSpec {
   uint64                         total_pkts                = 18;
   uint64                         total_bytes               = 19;
   uint64                         total_drops               = 20;
+  kh.VrfKeyHandle                tep_vrf                   = 21; 
 }
 
 message IPSecSADecryptGetSpec {
@@ -154,6 +157,7 @@ message IPSecSADecryptGetSpec {
   uint64                         total_pkts                = 22;
   uint64                         total_bytes               = 23;
   uint64                         total_drops               = 24;
+  kh.VrfKeyHandle                tep_vrf                   = 25; 
 }
 
 enum IpsecSAActionType {
