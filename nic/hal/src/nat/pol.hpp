@@ -77,6 +77,7 @@ typedef struct nat_cfg_rule_s {
     // operational
     uint32_t                 prio;
     dllist_ctxt_t            list_ctxt;
+    acl::ref_t               ref_count;
 } nat_cfg_rule_t;
 
 typedef struct nat_cfg_pol_key_s {

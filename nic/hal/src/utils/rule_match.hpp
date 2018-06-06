@@ -43,13 +43,6 @@ typedef struct rule_match_s {
     rule_match_app_t      app;
 } __PACK__ rule_match_t;
 
-typedef void (*userdata_free)(void *);
-typedef struct rule_data_s {
-    void          *userdata;
-    userdata_free data_free;
-    acl::ref_t    ref_count;
-} rule_data_t;
-
 // ipv4_rules_t definition 
 // into the library using acl_* calls
 struct ipv4_tuple {
@@ -65,12 +58,30 @@ struct ipv4_tuple {
     uint32_t  dst_sg;
 };
 
+
 enum {
     PROTO = 0, IP_SRC, IP_DST, MAC_SRC, MAC_DST, ETHERTYPE, PORT_SRC, PORT_DST, SRC_SG, DST_SG,
     NUM_FIELDS
 };
 
 ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
+
+//------------------------------------------------------------------------------
+// The user data struct is defined as below. The ref_count MUST be the last
+// field in the user data struct: 
+// typedef struct user_data_s {
+//    < user_data_struct field1>
+//    < user_data_struct field2>
+//    ....
+//    acl::ref_t    ref_count;
+// } user_data_t;
+//
+// To get the user data back the following macro can be used:
+// acl::ref_t *rc = rule->data.userdata; <-- ref_count ptr returned after acl classify
+// user_data_ptr = RULE_MATCH_USER_DATA(rc, user_data_t, ref_count);
+//------------------------------------------------------------------------------
+#define RULE_MATCH_USER_DATA(ptr, type, member)                 \
+    ((type *)((char *)(ptr) - offsetof(type, member)))
 
 #define RULE_FLD_DEF(typ, struct_name, fld_name)      \
     {typ, sizeof(((struct_name*)0)->fld_name),   \
@@ -101,10 +112,6 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
                         rule->field[PROTO].value.u8,rule->field[PROTO].mask_range.u8,                                                \
                         rule->field[ETHERTYPE].value.u16, rule->field[ETHERTYPE].value.u16)
 
-static inline rule_data_t *
-rule_data_from_ref(const ref_t *ref_count) {
-    return container_of(ref_count, rule_data_t, ref_count);
-}
 // ----------------------------------------------------------------------------
 // Function prototype
 // ----------------------------------------------------------------------------
@@ -116,13 +123,10 @@ void rule_match_cleanup(rule_match_t *match);
 hal_ret_t rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                rule_match_t     *match,
                                int              rule_prio,
-                               rule_data_t      *data);
+                               void             *ref_count);
 const acl_ctx_t *rule_lib_init(const char *name, acl_config_t *cfg);
 hal_ret_t rule_match_spec_build(rule_match_t *match,
                                 types::RuleMatch *spec);
-
-rule_data_t *
-rule_data_alloc_init();
 
 } // namespace hal
 

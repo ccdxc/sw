@@ -65,7 +65,6 @@ protected:
         EXPECT_EQ(g_hal_state->nwsec_policy_ht()->num_entries(), 0);
         EXPECT_EQ(g_hal_state->nwsec_rule_slab()->num_in_use(), 0);
         EXPECT_EQ(g_hal_state->ipv4_rule_slab()->num_in_use(), 0);
-        EXPECT_EQ(g_hal_state->rule_data_slab()->num_in_use(), 0);
   }
 
 

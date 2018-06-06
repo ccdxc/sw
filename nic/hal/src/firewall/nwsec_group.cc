@@ -624,18 +624,13 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
 {
     hal_ret_t ret = HAL_RET_OK;
     nwsec_rule_t    *rule;
-    rule_data_t     *rule_data;
 
     for (uint32_t rule_index = 0; rule_index < policy->rule_len; rule_index++) {
         rule = policy->dense_rules[rule_index];
         if (rule == NULL) {
             return HAL_RET_ERR;
         }
-        rule_data = rule_data_alloc_init();
-        rule_data->userdata = rule;
-        rule_data->data_free     = nwsec_rule_free; 
-        ret = rule_match_rule_add(acl_ctx, &rule->fw_rule_match, rule->priority, rule_data);
-        ref_dec(&rule_data->ref_count);
+        ret = rule_match_rule_add(acl_ctx, &rule->fw_rule_match, rule->priority, &rule->ref_count);
     }
     return ret;
 }

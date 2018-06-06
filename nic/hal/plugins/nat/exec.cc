@@ -33,15 +33,14 @@ static inline hal_ret_t
 update_iflow_from_nat_rules (fte::ctx_t& ctx)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
-    hal::utils::nat::addr_entry_key_t  src_addr_key, dst_addr_key;
-    hal::utils::nat::addr_entry_t     *src_addr_entry, *dst_addr_entry;
-    hal::utils::nat::addr_entry_t     src_nat_addr, dst_nat_addr;
-    const nat_cfg_rule_t              *nat_cfg;
-    hal::rule_data_t                  *rule_data;
-    hal::ipv4_tuple                    acl_key = {};
-    const hal::ipv4_rule_t            *rule = NULL;
-    hal_ret_t                          ret = HAL_RET_OK;
-    const acl::acl_ctx_t              *acl_ctx = NULL;
+    hal::utils::nat::addr_entry_key_t   src_addr_key, dst_addr_key;
+    hal::utils::nat::addr_entry_t       *src_addr_entry, *dst_addr_entry;
+    hal::utils::nat::addr_entry_t       src_nat_addr, dst_nat_addr;
+    const nat_cfg_rule_t                *nat_cfg;
+    hal::ipv4_tuple                     acl_key = {};
+    const hal::ipv4_rule_t              *rule = NULL;
+    hal_ret_t                           ret = HAL_RET_OK;
+    const acl::acl_ctx_t                *acl_ctx = NULL;
 
     // fte state to store the original vrf/ip/port for rflow
     nat_info_t *nat_info = (nat_info_t *)ctx.feature_state();
@@ -104,8 +103,9 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         }
 
         if (rule) {
-            rule_data = (hal::rule_data_t *) rule->data.userdata;
-            nat_cfg = (const hal::nat_cfg_rule_t *)rule_data->userdata;
+            acl::ref_t *rc;
+            rc = (acl::ref_t *) rule->data.userdata;
+            nat_cfg = (const hal::nat_cfg_rule_t *) RULE_MATCH_USER_DATA(rc, hal::nat_cfg_rule_t, ref_count);
             // Handle for each NatAction: None, Static address, Dynamic address
             if (!src_addr_entry && nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {
                 src_addr_entry = &src_nat_addr;

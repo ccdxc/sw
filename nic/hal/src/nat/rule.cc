@@ -250,18 +250,12 @@ nat_cfg_rule_spec_build (nat_cfg_rule_t *rule, nat::NatRuleSpec *spec)
 hal_ret_t
 nat_cfg_rule_acl_build (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
 {
-    rule_data_t *rule_data;
-
-    rule_data = rule_data_alloc_init();
-    rule_data->userdata = rule;
-    rule_data->data_free = nat_cfg_rule_free;
-    return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, rule_data);
+    return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, &rule->ref_count);
 }
 
 void
 nat_cfg_rule_acl_cleanup (nat_cfg_rule_t *rule)
 {
-    // todo  - figure out acl lib mechanisms to free rule_data
     return;
 }
 

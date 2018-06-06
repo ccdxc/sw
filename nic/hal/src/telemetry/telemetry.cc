@@ -337,13 +337,6 @@ collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
     return HAL_RET_OK;
 }
 
-void
-flow_monitor_rule_free (void *rule)
-{
-    return;
-}
-
-
 hal_ret_t
 flow_monitor_acl_ctx_create()
 {
@@ -361,7 +354,6 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                             flow_monitor_rule_t *rule)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    rule_data_t *rule_data;
 
     // Populate the rule_match structure
     ret = rule_match_spec_extract(spec.match(), &rule->rule_match);
@@ -382,10 +374,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                                        telemetry::MIRROR_TO_CPU) ? true : false;
         }
     }
-    rule_data = rule_data_alloc_init();
-    rule_data->userdata = (void *) rule;
-    rule_data->data_free = flow_monitor_rule_free;
-    ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, 0, rule_data);
+    ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, 0, (void *)&rule->ref_count);
     return ret;
 }
 

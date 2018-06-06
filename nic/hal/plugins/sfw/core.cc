@@ -83,7 +83,6 @@ static hal_ret_t
 net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
 {
     hal_ret_t ret;
-    rule_data_t *rule_data;
     hal::ipv4_tuple acl_key = {};
     ep_t            *sep = NULL;
     ep_t            *dep = NULL;
@@ -163,10 +162,11 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
 
  end_match:
     if (rule != NULL) {
-        rule_data = ( hal::rule_data_t *)rule->data.userdata;
-        nwsec_rule = (hal::nwsec_rule_t *)rule_data->userdata;
+        acl::ref_t *rc;
+        rc = (acl::ref_t *) rule->data.userdata;
+        nwsec_rule = (hal::nwsec_rule_t *) RULE_MATCH_USER_DATA(rc, nwsec_rule_t, ref_count);
 
-        if(!dllist_empty(&nwsec_rule->appid_list_head)) {
+        if (!dllist_empty(&nwsec_rule->appid_list_head)) {
             net_sfw_match_app_redir(ctx, nwsec_rule, match_rslt);
         } else {
             HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",

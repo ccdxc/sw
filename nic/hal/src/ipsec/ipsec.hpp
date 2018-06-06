@@ -117,6 +117,7 @@ typedef struct ipsec_cfg_rule_s {
     // operational
     uint32_t                 prio;
     dllist_ctxt_t            list_ctxt;
+    acl::ref_t               ref_count;
 } ipsec_cfg_rule_t;
 
 typedef struct ipsec_cfg_pol_key_s {

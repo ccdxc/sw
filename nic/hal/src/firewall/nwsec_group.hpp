@@ -337,6 +337,7 @@ typedef struct nwsec_policy_s {
     hal_handle_t    hal_handle;
     const acl_ctx_t *acl_ctx;  // lib acl context needed by acl lib
     ht_ctxt_t       ht_ctxt;  // Hash context for storing it in the config db
+    acl::ref_t      ref_count;
 } nwsec_policy_t;
 
 static inline nwsec_policy_t *
@@ -526,7 +527,6 @@ nwsec_rule_init (nwsec_rule_t *rule)
         HAL_TRACE_DEBUG("Calling rule free");
         g_hal_state->nwsec_rule_slab()->free(rule);
     });
-    ref_inc(&rule->ref_count);
     rule_match_init(&rule->fw_rule_match);
     dllist_reset(&rule->dlentry);
     dllist_reset(&rule->appid_list_head);

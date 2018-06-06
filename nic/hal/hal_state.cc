@@ -520,12 +520,6 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPV4_RULE] != NULL), false);
 
-    slabs_[HAL_SLAB_RULE_DATA] =
-        slab::factory("ipv4_rule", HAL_SLAB_RULE_DATA,
-                      sizeof(hal::rule_data_t), 1024,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RULE_DATA] != NULL), false);
-
     slabs_[HAL_SLAB_PROXY] = slab::factory("proxy", HAL_SLAB_PROXY,
                                            sizeof(hal::proxy_t), HAL_MAX_PROXY,
                                            false, true, true);
@@ -1712,10 +1706,6 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPV4_RULE:
         g_hal_state->ipv4_rule_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_RULE_DATA:
-        g_hal_state->rule_data_slab()->free(elem);
         break;
 
    case HAL_SLAB_NWSEC_POLICY:

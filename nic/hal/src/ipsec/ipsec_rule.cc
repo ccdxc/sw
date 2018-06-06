@@ -795,14 +795,10 @@ ipsec_cfg_pol_create_app_ctxt_init (ipsec_cfg_pol_t *pol)
 hal_ret_t
 ipsec_cfg_rule_create_oper_handle (ipsec_cfg_rule_t *rule, const acl_ctx_t *acl_ctx)
 {
-    rule_data_t     *rule_data;
-    rule_data = rule_data_alloc_init();
-    rule_data->userdata = rule;
-    rule_data->data_free = ipsec_cfg_rule_free;
     return rule_match_rule_add(&acl_ctx,
                                &rule->match,
                                rule->prio,
-                               rule_data);
+                               (void *) &rule->ref_count);
 }
 
 }    // namespace hal

@@ -346,20 +346,6 @@ end:
     return ret;
 }
 
-// rule_lib_alloc function allocates data type ipv4_rule_t to be added to
-// acl_lib
-rule_data_t *
-rule_data_alloc_init()
-{
-    rule_data_t *data = (rule_data_t *)g_hal_state->rule_data_slab()->alloc();
-    ref_init(&data->ref_count, [] (const ref_t * ref_count) {
-        rule_data_t *rule  = rule_data_from_ref(ref_count);
-        rule->data_free(rule->userdata);
-        g_hal_state->rule_data_slab()->free((void *)rule);
-    });
-    return data;
-}
-
 void
 rule_lib_init_config(acl_config_t *cfg)
 {
@@ -390,7 +376,7 @@ rule_lib_alloc()
     ref_init(&rule->ref_count, [] (const ref_t * ref_count) {
 
         ipv4_rule_t *rule  = (ipv4_rule_t *)acl_rule_from_ref(ref_count);
-        ref_dec(&((rule_data_t *)rule->data.userdata)->ref_count);
+        ref_dec((acl::ref_t *)rule->data.userdata);
         g_hal_state->ipv4_rule_slab()->free((void *)acl_rule_from_ref(ref_count));
     });
     return rule;
@@ -459,7 +445,7 @@ hal_ret_t
 rule_match_rule_add (const acl_ctx_t **acl_ctx,
                      rule_match_t     *match,
                      int               rule_prio,
-                     rule_data_t      *data)
+                     void             *ref_count)
 {
     ipv4_rule_t          *rule;
     rule_match_app_t     *app_match = &match->app;
@@ -538,13 +524,13 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                         PRINT_RULE_FIELDS(rule);
                                     }
                                     rule->data.priority = rule_prio;
-                                    rule->data.userdata = (void *)data;
+                                    rule->data.userdata = ref_count;
                                     ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
                                     if (ret != HAL_RET_OK) {
                                         HAL_TRACE_ERR("Unable to create the acl rules");
                                         return ret;
                                     }
-                                    ref_inc(&data->ref_count);
+                                    ref_inc((acl::ref_t *)ref_count);
                                 }//  < push it to the vector of ipv4_rule_t >
                             }
                         }

@@ -20,7 +20,6 @@ is_src_local_ep(hal::if_t *intf) {
     return (intf != NULL && intf->if_type == intf::IF_TYPE_ENIC);
 }
 
-
 static inline fte::pipeline_action_t
 update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
@@ -137,7 +136,6 @@ fte::pipeline_action_t
 ipsec_exec2(fte::ctx_t&ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
-    hal::rule_data_t                  *rule_data;
     hal::ipv4_tuple                    acl_key = {};
     const hal::ipv4_rule_t            *rule = NULL;
     const acl::acl_ctx_t              *acl_ctx = NULL;
@@ -199,8 +197,9 @@ ipsec_exec2(fte::ctx_t&ctx)
      HAL_TRACE_DEBUG("ipsec: Got lport as {} for lif {}", args.lport_id, 1004);
  
      if (rule) {
-         rule_data = (hal::rule_data_t *) rule->data.userdata;
-         rule_cfg = (hal::ipsec_cfg_rule_t *)rule_data->userdata;
+         acl::ref_t *rc;
+         rc = (acl::ref_t *) rule->data.userdata;
+         rule_cfg = RULE_MATCH_USER_DATA(rc, ipsec_cfg_rule_t, ref_count);
          HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, rule_cfg->action.sa_action_dec_handle);
          //Need to put ipsec proxy's lport here
          //flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
@@ -272,8 +271,9 @@ ipsec_exec2(fte::ctx_t&ctx)
              HAL_TRACE_DEBUG("Reverse ipsec: rule lookup success for {}", ctx_name);
          }
          if (rule) {
-             rule_data = (hal::rule_data_t *) rule->data.userdata;
-             rule_cfg = (hal::ipsec_cfg_rule_t *)rule_data->userdata;
+             acl::ref_t *rc;
+             rc = (acl::ref_t *) rule->data.userdata;
+             rule_cfg = RULE_MATCH_USER_DATA(rc, ipsec_cfg_rule_t, ref_count);
              HAL_TRACE_DEBUG("Reverse ipsec: rule update fwding info: type {}, vrf {}", rule_cfg->action.sa_action, rule_cfg->action.vrf);
              flowupd = {type: fte::FLOWUPD_LKP_INFO};
              lkp_info.vrf_hwid = rule_cfg->action.vrf;
