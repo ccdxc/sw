@@ -96,8 +96,7 @@ ep_compare_l3_key_func (void *key1, void *key2)
 
 // allocate a ep instance
 static inline ep_t *
-ep_alloc (void)
-{
+ep_alloc (void) {
     ep_t    *ep;
 
     ep = (ep_t *)g_hal_state->ep_slab()->alloc();
@@ -235,41 +234,36 @@ find_ep_by_v4_key (vrf_id_t tid, uint32_t v4_addr)
 ep_t *
 find_ep_by_v6_key (vrf_id_t tid, const ip_addr_t *ip_addr)
 {
-    ep_l3_key_t    l3_key = { 0 };
+    ep_l3_key_t    l3_key;
 
     l3_key.vrf_id = tid;
     memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
     return find_ep_by_l3_key(&l3_key);
 }
 
-
-// find EP from v4 key in segment.
-ep_t*
-find_ep_by_v4_key_in_l2segment (uint32_t v4_addr,
-        const hal::l2seg_t *l2seg)
-{
-    ip_addr_t ip_addr = { 0 };
-    ip_addr.addr.v4_addr = v4_addr;
-    return find_ep_by_v6_key_in_l2segment(&ip_addr, l2seg);
-}
-
 // find EP from v6 key in segment.
-ep_t*
+ep_t *
 find_ep_by_v6_key_in_l2segment (const ip_addr_t *ip_addr,
-        const hal::l2seg_t *l2seg)
+                                const hal::l2seg_t *l2seg)
 {
-    ep_t *dep = nullptr;
-    vrf_t *vrf;
+    vrf_t    *vrf;
 
     vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
     if (vrf == nullptr) {
-        HAL_TRACE_INFO("Vrf not found.");
-        goto out;
+        HAL_TRACE_INFO("Vrf with handle {} not found", l2seg->vrf_handle);
+        return NULL;
     }
+    return find_ep_by_v6_key(vrf->vrf_id, ip_addr);
+}
 
-    dep = find_ep_by_v6_key(vrf->vrf_id, ip_addr);
-out:
-    return dep;
+// find EP from v4 key in segment.
+ep_t *
+find_ep_by_v4_key_in_l2segment (uint32_t v4_addr, const hal::l2seg_t *l2seg)
+{
+    ip_addr_t ip_addr = { 0 };
+
+    ip_addr.addr.v4_addr = v4_addr;
+    return find_ep_by_v6_key_in_l2segment(&ip_addr, l2seg);
 }
 
 //------------------------------------------------------------------------------
@@ -573,7 +567,7 @@ end:
 //  - Removes the existence of this EP in HAL
 //------------------------------------------------------------------------------
 hal_ret_t
-endpoint_cleanup(ep_t *ep)
+endpoint_cleanup (ep_t *ep)
 {
     dllist_ctxt_t    *curr, *next;
     ep_ip_entry_t    *pi_ip_entry = NULL;
@@ -2063,28 +2057,16 @@ hal_ret_t
 endpoint_delete (EndpointDeleteRequest& req,
                  EndpointDeleteResponse *rsp)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
-    vrf_id_t                     tid;
-    ep_t                            *ep = NULL;
-    vrf_t                        *vrf = NULL;
-    cfg_op_ctxt_t                   cfg_ctxt = { 0 };
-    dhl_entry_t                     dhl_entry = { 0 };
-    ApiStatus                       api_status;
+    hal_ret_t        ret = HAL_RET_OK;
+    ep_t             *ep = NULL;
+    cfg_op_ctxt_t    cfg_ctxt = { 0 };
+    dhl_entry_t      dhl_entry = { 0 };
+    ApiStatus        api_status;
 
     // validate the request message
     ret = validate_endpoint_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("EP delete validation failed, err : {}", ret);
-        goto end;
-    }
-
-    // fetch the vrf information
-    tid = req.vrf_key_handle().vrf_id();
-    vrf = vrf_lookup_by_id(tid);
-    if (vrf == NULL) {
-        HAL_TRACE_ERR("Failed to find vrf for tid {}", tid);
-        ret = HAL_RET_VRF_NOT_FOUND;
-        // rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         goto end;
     }
 
@@ -2094,7 +2076,6 @@ endpoint_delete (EndpointDeleteRequest& req,
         HAL_TRACE_ERR("Failed to find EP");
         goto end;
     }
-
     HAL_TRACE_DEBUG("Deleting EP {}", ep_l2_key_to_str(ep));
 
     // validate the EP delete
@@ -2103,7 +2084,6 @@ endpoint_delete (EndpointDeleteRequest& req,
         HAL_TRACE_ERR("EP delete validation failed, err : {}", ret);
         goto end;
     }
-
 
     // form ctxt and call infra add
     dhl_entry.handle = ep->hal_handle;

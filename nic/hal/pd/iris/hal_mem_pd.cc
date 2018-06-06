@@ -1185,8 +1185,16 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->if_l2seg_entry_slab()->free(elem);
         break;
 
+    case HAL_SLAB_TUNNELIF_PD:
+        g_hal_state_pd->tunnelif_pd_slab()->free(elem);
+        break;
+
     case HAL_SLAB_CPUIF_PD:
         g_hal_state_pd->cpuif_pd_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_DOS_POLICY_PD:
+        g_hal_state_pd->dos_pd_slab()->free(elem);
         break;
 
     case HAL_SLAB_APP_REDIR_IF_PD:
