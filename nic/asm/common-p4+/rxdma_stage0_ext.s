@@ -22,6 +22,7 @@
     .param      ipsec_esp_v4_tunnel_n2h_good_pkt
     .param      tcp_rx_read_shared_stage0_start_ext
 
+
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
 .align
@@ -56,6 +57,13 @@ eth_rx_stage0:
 //This has to align with the txdma_stage0.s program
 .align
 eth_tx_stage0_dummy:
+    nop.e
+    nop
+
+//Do not change the order of this entry
+//This has to align with the txdma_stage0.s program
+.align
+rdma_cq_rx_stage0:
     nop.e
     nop
 

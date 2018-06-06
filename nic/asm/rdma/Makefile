@@ -4,6 +4,8 @@ LIBDIRS = \
           resp_rx \
           req_tx \
           req_rx \
+          cq_tx \
+          cq_rx \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

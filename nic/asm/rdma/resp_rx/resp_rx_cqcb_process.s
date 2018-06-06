@@ -25,7 +25,7 @@ struct cqcb_t d;
     
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
 
-    #c1 : CQ_P_INDEX == 0
+    #c1 : d.proxy_pindex == 0
     #c2 : d.arm == 1
     #c3 : cqwqe_dma == True. Do cqwqe dma in cqcb stage.
     
@@ -37,7 +37,7 @@ resp_rx_cqcb_process:
     // if completion is not necessary, die down
     bbeq    K_GLOBAL_FLAG(_completion), 0, exit
 
-    seq             c1, CQ_P_INDEX, 0   //BD Slot
+    seq             c1, d.proxy_pindex, 0   //BD Slot
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
@@ -46,11 +46,11 @@ resp_rx_cqcb_process:
 
     /* get the page index corresponding to p_index */
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
-    srlv            PAGE_INDEX, CQ_P_INDEX, NUM_LOG_WQE
+    srlv            PAGE_INDEX, d.proxy_pindex, NUM_LOG_WQE
     
     add             r1, d.pt_pg_index, 0
     beq             r1, PAGE_INDEX, no_translate_dma
-    add             r1, CQ_P_INDEX, 0  //BD slot
+    add             r1, d.proxy_pindex, 0  //BD slot
 
     //Compute the number of pages of CQ
     add             NUM_LOG_PAGES, d.log_num_wqes, d.log_wqe_size
@@ -60,7 +60,7 @@ resp_rx_cqcb_process:
     beq             r1, PAGE_INDEX, translate_next
     add             PT_PINDEX, r0, d.pt_next_pg_index //Branch delay slot
     b               fire_cqpt
-    add             PT_PINDEX, r0, CQ_P_INDEX //Branch delay slot    
+    add             PT_PINDEX, r0, d.proxy_pindex //Branch delay slot    
 
 translate_next:
 
@@ -113,7 +113,7 @@ fire_cqpt:
     bcf     [!c3], incr_pindex
     nop
     b       do_dma
-    add             r1, r0, CQ_P_INDEX
+    add             r1, r0, d.proxy_pindex
     
 no_translate_dma:
     
@@ -128,7 +128,7 @@ no_translate_dma:
 do_dma:
 
     // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
-    //r1 has CQ_P_INDEX by the time we reach here
+    //r1 has d.proxy_pindex by the time we reach here
     mincr           r1, NUM_LOG_WQE, r0
     sll             PAGE_OFFSET, r1, d.log_wqe_size
 
@@ -140,16 +140,20 @@ do_dma:
     
 incr_pindex: 
     // increment p_index
-    tblmincri       CQ_P_INDEX, d.log_num_wqes, 1
+    tblmincri       d.proxy_pindex, d.log_num_wqes, 1
     // if arm, disarm.
-    seq             c2, d.arm, 1
+    crestore        [c2, c1], d.{arm...sarm}, 0x3
+    #c2 - arm
+    #c1 - sarm
     tblwr.c2        d.arm, 0
+    //TBD: Need to qualify this with bth_se = 1
+    tblwr.c1        d.sarm, 0
 
     bbne            d.wakeup_dpath, 1, skip_wakeup
 
     //for send with imm_as_dbell, set the pindex 
     //optimizing conditional checks
-    RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(CQ_P_INDEX_HX) //Branch Delay Slot
+    RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(d.{proxy_pindex}.hx) //Branch Delay Slot
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_WAKEUP_DPATH)
     RESP_RX_POST_WAKEUP_DPATH_INCR_PINDEX(DMA_CMD_BASE, 

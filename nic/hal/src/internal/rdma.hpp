@@ -1284,18 +1284,23 @@ typedef struct srqcb_s {
     qpcb_intrinsic_base_t ring_header;
 } PACKED srqcb_t;
 
-#define CQ_RING_ID  RING_ID_0
-#define MAX_CQ_RINGS 1
-#define MAX_CQ_HOST_RINGS 1
+#define CQ_RING_ID      RING_ID_0
+#define CQ_ARM_RING_ID  RING_ID_1
+#define CQ_SARM_RING_ID RING_ID_2
+
+#define MAX_CQ_RINGS 3
+#define MAX_CQ_HOST_RINGS 3
 
 typedef struct cqcb_s {
-    uint8_t   rsvd5[12];
-    uint16_t  pt_next_pg_index;
-    uint16_t  pt_pg_index;
+
     uint64_t  pt_next_pa;
     uint64_t  pt_pa;
 
-    uint32_t rsvd4:19;
+    uint8_t   pad[2];
+    uint16_t  pt_next_pg_index;
+    uint16_t  pt_pg_index;
+
+    uint32_t rsvd4:2;
 
     uint32_t wakeup_ring_id:3;
     uint32_t wakeup_qid:24;
@@ -1305,16 +1310,21 @@ typedef struct cqcb_s {
     uint32_t color:1;
     uint32_t wakeup_dpath:1;
 
+    uint32_t sarm:1;
     uint32_t arm:1;
 
     uint32_t eq_id:24;
-    uint32_t cq_num:24;
-    uint32_t rsvd1:1;
+    uint32_t cq_id:24;
+    uint32_t ring_empty_sched_eval_done:1;
     uint32_t log_num_wqes:5;
     uint32_t log_wqe_size:5;
     uint32_t log_cq_page_size:5;
 
     uint32_t pt_base_addr;
+
+    uint16_t proxy_s_pindex;
+
+    uint16_t proxy_pindex;
 
     qpcb_ring_t           rings[MAX_CQ_RINGS];
 

@@ -795,6 +795,59 @@ stage0_req_tx_prog_addr(uint64_t* offset)
 }
 
 hal_ret_t
+stage0_rdma_cq_rx_prog_addr(uint64_t* offset)
+{
+    // Can't access capri apis from PI
+    char progname[] = "rxdma_stage0.bin";
+    char labelname[]= "rdma_cq_rx_stage0";
+
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
+
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
+    //                __FUNCTION__, ret, offset);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: ret: {}\n", __FUNCTION__, ret);
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
+
+
+hal_ret_t
+stage0_rdma_cq_tx_prog_addr(uint64_t* offset)
+{
+    // Can't access capri apis from PI
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "rdma_cq_tx_stage0";
+
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
+
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
+    //                __FUNCTION__, ret, offset);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: ret: {}\n", __FUNCTION__, ret);
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
 rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 {
     uint32_t     lif = spec.hw_lif_id();
@@ -1338,6 +1391,8 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     uint32_t     lif = spec.hw_lif_id();
     uint32_t      num_cq_wqes, cqwqe_size;
     cqcb_t       cqcb;
+    uint64_t     offset;
+    uint64_t     offset_verify;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA CQ Create for lif {}", __FUNCTION__, lif);
@@ -1367,10 +1422,11 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.log_cq_page_size = log2(spec.hostmem_pg_size());
     cqcb.log_wqe_size = log2(cqwqe_size);
     cqcb.log_num_wqes = log2(num_cq_wqes);
-    cqcb.cq_num = spec.cq_num();
+    cqcb.cq_id = spec.cq_num();
     cqcb.eq_id = spec.eq_id();
     cqcb.color = 0;
     cqcb.arm = 0;   // Dont arm by default, only Arm it for tests which post/validate EQ
+    cqcb.sarm = 0;  
 
     cqcb.wakeup_dpath
         = spec.wakeup_dpath();
@@ -1386,6 +1442,14 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.pt_next_pg_index = 1UL & (( 1 << log_num_pages) - 1) ;
 
     HAL_TRACE_DEBUG("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}: log_num_pages: {}", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pg_index, cqcb.pt_next_pg_index, log_num_pages);
+    cqcb.proxy_pindex = 0;
+    cqcb.proxy_s_pindex = 0;
+
+    stage0_rdma_cq_rx_prog_addr(&offset);
+    cqcb.ring_header.pc = offset >> 6;
+
+    stage0_rdma_cq_tx_prog_addr(&offset_verify);
+    HAL_ASSERT(offset == offset_verify);
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}",

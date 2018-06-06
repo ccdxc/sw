@@ -63,10 +63,23 @@ req_rx_cqpt_process:
 
 fire_eqcb:    
 
-    //arm, wakeup_dpath
-    crestore        [c2, c1], CAPRI_KEY_RANGE(IN_P, arm, wakeup_dpath), 0x3
-    bcf             [c1 | !c2], cqpt_exit
-    
+    //if (wakeup_dpath) skip fire_eqcb
+    bbeq CAPRI_KEY_FIELD(IN_P, wakeup_dpath), 1, cqpt_exit
+
+    #c3 - arm
+    #c2 - sarm
+    crestore        [c3, c2], CAPRI_KEY_RANGE(IN_P, arm, sarm), 0x3 //BD Slot
+
+    setcf c4, [c2 & !c3]
+
+    //if (sarm == 1) && (arm = 0) && (bth_se == 0), skip fire_eqcb
+    bbeq.c4 CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0, cqpt_exit
+
+    nop //BD Slot
+
+    //if (arm == 0), skip fire_eqcb
+    bcf     [!c3], cqpt_exit
+
     REQ_RX_EQCB_ADDR_GET(r5, TMP, K_EQ_ID, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
 
     CAPRI_RESET_TABLE_2_ARG()

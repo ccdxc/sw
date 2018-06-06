@@ -175,3 +175,16 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_EQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
+
+    #set CI for CQ ring to that of PI in DB data
+    - step:
+
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x1 # Set CI to PI(DB data)
+
+        expect:
+
+

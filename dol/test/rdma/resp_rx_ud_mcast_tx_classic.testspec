@@ -278,3 +278,4 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC_2
                     ring    : callback://rdma/rdma/GetCQRingForMulticastCopy/idx=1
+

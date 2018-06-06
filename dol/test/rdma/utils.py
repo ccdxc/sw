@@ -46,7 +46,7 @@ def ValidateRespRxCQChecks(tc):
     ring0_mask = (2 ** log_num_cq_wqes) - 1
 
     # verify that p_index is incremented by 1, as cqwqe is posted
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', ring0_mask, 1):
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'proxy_pindex', ring0_mask, 1):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
@@ -64,7 +64,7 @@ def ValidateRespRx2CQChecks(tc):
     ring0_mask = (2 ** log_num_cq_wqes) - 1
 
     # verify that p_index is incremented by 2, as cqwqe is posted
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', ring0_mask, 2):
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'proxy_pindex', ring0_mask, 2):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
@@ -82,7 +82,7 @@ def ValidateReqRxCQChecks(tc, desc_name):
     ring0_mask = (2 ** log_num_cq_wqes) - 1
 
     # verify that p_index is incremented by 1, as cqwqe is posted
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_cq_pre_qstate, tc.pvtdata.sq_cq_post_qstate, 'p_index0', ring0_mask, 1):
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_cq_pre_qstate, tc.pvtdata.sq_cq_post_qstate, 'proxy_pindex', ring0_mask, 1):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
@@ -100,7 +100,7 @@ def ValidateNoCQChanges(tc):
     ring0_mask = (2 ** log_num_cq_wqes) - 1
 
     # verify that no change to p_index
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', ring0_mask, 0):
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'proxy_pindex', ring0_mask, 0):
         return False
 
     # verify that no change to c_index

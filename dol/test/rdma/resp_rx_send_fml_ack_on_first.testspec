@@ -345,3 +345,15 @@ session:
                 - packet:
                     object  : ref://testcase/packets/id=EXP_LAST_ACK_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+    #set CI for CQ ring to that of PI in DB data
+    - step:
+
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x1 # Set CI to PI(DB data)
+
+        expect:
+

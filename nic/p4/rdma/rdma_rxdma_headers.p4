@@ -265,3 +265,15 @@ header_type rdma_ud_feedback_header_t {
     }
 }
 
+//248
+header_type rdma_cq_feedback_header_t {
+    fields {
+        common_header_bits  : 160;
+        feedback_type       : 8;
+        cindex              : 16;
+        arm                 : 1;
+        sarm                : 1;
+        pad                 : 70;
+    }
+}
+

@@ -164,34 +164,61 @@ descriptors:
             cq_id  : ref://testcase/config/rdmasession/lqp/rq_cq/id
             color  : callback://rdma/rdma/GetEQExpColor
 
-trigger:
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=RQ_DESC
-            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+session:
 
-    doorbell:
-        object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
-        fields:
-            upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+#   - step:
+#
+#       trigger:
+#           doorbell:
+#               object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ_ARM/doorbell
+#               fields:
+#                   upd : 0xD # Increment PI and DB_SCHED_EVAL
+#
+#       expect:
+#
+    - step:
 
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=IN_PKT
-            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=RQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+        
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+        
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        
+        expect:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
-expect:
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_RQ_DESC
-            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
-        - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_CQ_DESC
-            ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
-        - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_EQ_DESC
-            ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
-            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+    #set CI for CQ ring to that of PI in DB data
+    - step:
+
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x1 # Set CI to PI(DB data)
+
+        expect:
+
+

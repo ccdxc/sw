@@ -41,6 +41,7 @@
     .param      storage_nvme_pop_r2n_sq_start
     .param      storage_nvme_pop_arm_q_start
     .param      smbdc_req_tx_sqcb_process
+    .param      rdma_cq_tx_cqcb_process
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -77,6 +78,13 @@ eth_rx_stage0_dummy:
 .align
 eth_tx_stage0:
     j eth_tx_fetch_desc
+    nop
+
+//Do not change the order of this entry
+//This has to align with the rxdma_stage0.s program
+.align
+rdma_cq_tx_stage0:
+    j rdma_cq_tx_cqcb_process
     nop
 
 .align

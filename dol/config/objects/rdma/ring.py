@@ -19,6 +19,7 @@ class RdmaRingObject(ring.RingObject):
         self.desc_size = None
         self.initialized = False
         self.nic_resident = False
+        self.hw_ring_id = 0
 
     def Init(self, queue, spec):
         super().Init(queue, spec)
@@ -27,16 +28,17 @@ class RdmaRingObject(ring.RingObject):
         self.doorbell = doorbell.Doorbell()
         self.doorbell.Init(self, spec)
 
-    def SetRingParams(self, host, nic_resident, mem_handle, address, size, desc_size):
+    def SetRingParams(self, ring_id, host, nic_resident, mem_handle, address, size, desc_size):
         self.host = host
         self.nic_resident = nic_resident
         self.address = address
         self.mem_handle = mem_handle
         self.size = size
         self.desc_size = desc_size
+        self.hw_ring_id = ring_id
         logger.info("SetRingParams: host %d nic_resident %d eqe_base_addr: 0x%x" \
-                       " size %d desc_size %d " %\
-                       (self.host, self.nic_resident, self.address, self.size, self.desc_size))
+                       " size %d desc_size %d hw_ring_id: %d" %\
+                       (self.host, self.nic_resident, self.address, self.size, self.desc_size, self.hw_ring_id))
 
 
     def Configure(self):

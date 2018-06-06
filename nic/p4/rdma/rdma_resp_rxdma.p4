@@ -271,10 +271,11 @@ header_type resp_rx_cqcb_to_pt_info_t {
         cq_id                            :   24;
         eq_id                            :   24;
         arm                              :    1;
+        sarm                             :    1;
         wakeup_dpath                     :    1;
         no_translate                     :    1;
         no_dma                           :    1;
-        rsvd1                            :    4;
+        rsvd1                            :    3;
         cqcb_addr                        :   34;
         rsvd2                            :    6;
         pt_next_pg_index                 :   16;
@@ -376,7 +377,8 @@ header_type resp_rx_to_stage_cqpt_info_t {
     fields {
         cqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
-        pad                              :  100;
+        bth_se                           :    1;
+        pad                              :   99;
     }
 }
 
@@ -1460,6 +1462,7 @@ action resp_rx_cqpt_process () {
     // to stage
     modify_field(to_s5_cqpt_info_scr.cqcb_base_addr_hi, to_s5_cqpt_info.cqcb_base_addr_hi);
     modify_field(to_s5_cqpt_info_scr.log_num_cq_entries, to_s5_cqpt_info.log_num_cq_entries);
+    modify_field(to_s5_cqpt_info_scr.bth_se, to_s5_cqpt_info.bth_se);
     modify_field(to_s5_cqpt_info_scr.pad, to_s5_cqpt_info.pad);
 
     // stage to stage
@@ -1468,6 +1471,7 @@ action resp_rx_cqpt_process () {
     modify_field(t2_s2s_cqcb_to_pt_info_scr.cq_id, t2_s2s_cqcb_to_pt_info.cq_id);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.eq_id, t2_s2s_cqcb_to_pt_info.eq_id);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.arm, t2_s2s_cqcb_to_pt_info.arm);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.sarm, t2_s2s_cqcb_to_pt_info.sarm);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.wakeup_dpath, t2_s2s_cqcb_to_pt_info.wakeup_dpath);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.no_translate, t2_s2s_cqcb_to_pt_info.no_translate);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.no_dma, t2_s2s_cqcb_to_pt_info.no_dma);

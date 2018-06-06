@@ -78,7 +78,7 @@ def GetCQExpColor (tc, desc, args = None):
     else:
         entries = args.entries
 
-    pre_val = tc.pvtdata.rq_cq_pre_qstate.p_index0 
+    pre_val = tc.pvtdata.rq_cq_pre_qstate.proxy_pindex
     log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_pre_qstate, 'log_num_wqes')
     mask = (2 ** log_num_cq_wqes) - 1
 
@@ -106,9 +106,9 @@ def GetReqRxCQExpColor (tc, desc, args):
     log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_pre_qstate, 'log_num_wqes')
     ring0_mask = (2 ** log_num_cq_wqes) - 1
 
-    if (tc.pvtdata.sq_cq_pre_qstate.p_index0 == 0) or \
-       ((tc.pvtdata.sq_cq_pre_qstate.p_index0 + args.cq_wqe_num) & ring0_mask) < \
-                                              tc.pvtdata.sq_cq_pre_qstate.p_index0:
+    if (tc.pvtdata.sq_cq_pre_qstate.proxy_pindex == 0) or \
+       ((tc.pvtdata.sq_cq_pre_qstate.proxy_pindex + args.cq_wqe_num) & ring0_mask) < \
+                                              tc.pvtdata.sq_cq_pre_qstate.proxy_pindex:
        return (not tc.pvtdata.sq_cq_pre_qstate.color)
     else:
        return (tc.pvtdata.sq_cq_pre_qstate.color)
@@ -200,9 +200,9 @@ def GetCQColorForMulticastCopy(tc, desc, args = None):
     log_num_cq_wqes = getattr(rq_cq_pre_qstate, 'log_num_wqes')
     ring0_mask = (2 ** log_num_cq_wqes) - 1
 
-    if (rq_cq_pre_qstate.p_index0 == 0) or \
-       ((rq_cq_pre_qstate.p_index0 + args.cq_wqe_num) & ring0_mask) < \
-                                              rq_cq_pre_qstate.p_index0:
+    if (rq_cq_pre_qstate.proxy_pindex == 0) or \
+       ((rq_cq_pre_qstate.proxy_pindex + args.cq_wqe_num) & ring0_mask) < \
+                                              rq_cq_pre_qstate.proxy_pindex:
        color = not rq_cq_pre_qstate.color
     else:
        color = rq_cq_pre_qstate.color

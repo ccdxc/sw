@@ -557,6 +557,12 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
     i++;
 
+    symbols[i].name = "rdma_cq_rx_eqcb_process.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = RDMA_EQ_INTR_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
+    i++;
+
     symbols[i].name = "resp_rx_rqcb_process.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RDMA_ATOMIC_RESOURCE_ADDR;

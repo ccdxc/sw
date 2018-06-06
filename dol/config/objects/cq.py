@@ -90,11 +90,25 @@ class CqObject(base.ConfigObjectBase):
         req_spec.cq_lkey = self.cq_mr.lkey
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        self.cq.SetRingParams('CQ', True, False,
+        self.cq.SetRingParams('CQ', 0, True, False,
                               self.cq_slab.mem_handle,
                               self.cq_slab.address, 
                               self.num_cq_wqes, 
                               self.cqwqe_size)
+        #repeat same mem_handle, and other params for these rings,
+        #but they are never used.
+        #TODO: find a way to create LiteRings, where there is no
+        #associated FIFO, but just CI/PI
+        self.cq.SetRingParams('CQ_ARM', 1, True, False,
+                              self.cq_slab.mem_handle,
+                              self.cq_slab.address, 
+                              0,
+                              0)
+        self.cq.SetRingParams('CQ_SARM', 2, True, False,
+                              self.cq_slab.mem_handle,
+                              self.cq_slab.address, 
+                              0,
+                              0)
         logger.info("CQ: %s PD: %s Remote: %s LIF: %d cqcb_addr: 0x%x cq_base_addr: 0x%x" %\
                         (self.GID(), self.pd.GID(), self.remote, 
                          self.pd.ep.intf.lif.hw_lif_id, 

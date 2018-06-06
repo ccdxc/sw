@@ -130,6 +130,18 @@ queue_types:
                         ci          : 0
                         size        : 32
                         desc        : ref://factory/templates/id=DESC_RDMA_CQ
+                    - ring:
+                        id          : CQ_ARM
+                        pi          : 0
+                        ci          : 0
+                        size        : 32
+                        desc        : ref://factory/templates/id=DESC_RDMA_CQ
+                    - ring:
+                        id          : CQ_SARM
+                        pi          : 0
+                        ci          : 0
+                        size        : 0
+                        desc        : ref://factory/templates/id=DESC_RDMA_CQ
 
     - queue_type:
         id          : RDMA_EQ

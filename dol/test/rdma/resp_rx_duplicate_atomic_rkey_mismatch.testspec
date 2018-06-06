@@ -397,3 +397,17 @@ session:
 
         expect:
             # packet should be silently dropped and no response should be generated.
+
+
+    #set CI for CQ ring to that of PI in DB data
+    - step:
+
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x1 # Set CI to PI(DB data)
+
+        expect:
+
+

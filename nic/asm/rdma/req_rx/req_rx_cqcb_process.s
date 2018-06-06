@@ -33,7 +33,7 @@ req_rx_cqcb_process:
     seq              c1, r1[4:2], STAGE_4
     bcf              [!c1], bubble_to_next_stage
 
-    seq             c1, CQ_P_INDEX, 0
+    seq             c1, d.proxy_pindex, 0
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
@@ -41,11 +41,11 @@ req_rx_cqcb_process:
     phvwr           p.cqwqe.color, CQ_COLOR
 
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
-    srlv            r3, CQ_P_INDEX, NUM_LOG_WQE
+    srlv            r3, d.proxy_pindex, NUM_LOG_WQE
 
     add             r1, d.pt_pg_index, 0
     beq             r1, r3, no_translate_dma
-    add             r1, CQ_P_INDEX, 0  //BD slot
+    add             r1, d.proxy_pindex, 0  //BD slot
 
     //Compute the number of pages of CQ
     add             NUM_LOG_PAGES, d.log_num_wqes, d.log_wqe_size
@@ -55,7 +55,7 @@ req_rx_cqcb_process:
     beq             r1, r3, translate_next 
     add             PT_PINDEX, r0, d.pt_next_pg_index //Branch delay slot    
     b               fire_cqpt
-    add             PT_PINDEX, r0, CQ_P_INDEX //Branch delay slot    
+    add             PT_PINDEX, r0, d.proxy_pindex //Branch delay slot    
 
 translate_next:
 
@@ -105,7 +105,7 @@ fire_cqpt:
     bcf     [!c3], incr_pindex
     nop
     b       do_dma
-    add             r1, r0, CQ_P_INDEX
+    add             r1, r0, d.proxy_pindex
     
 no_translate_dma:
 
@@ -118,7 +118,7 @@ no_translate_dma:
 do_dma:
 
     // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
-    //r1 has CQ_P_INDEX by the time we reach here
+    //r1 has d.proxy_pindex by the time we reach here
     mincr           r1, NUM_LOG_WQE, r0
     sll             r1, r1, d.log_wqe_size
 
@@ -131,12 +131,17 @@ do_dma:
 incr_pindex: 
     
     // increment p_index
-    tblmincri       CQ_P_INDEX, d.log_num_wqes, 1
+    tblmincri       d.proxy_pindex, d.log_num_wqes, 1
     // if arm, disarm.
-    seq             c2, d.arm, 1
+    crestore        [c2, c1], d.{arm...sarm}, 0x3
+    #c2 - arm
+    #c1 - sarm
 
+    //TBD: Need to qualify this with bth_se = 1
+    tblwr.c1    d.sarm, 0
     bbne        d.wakeup_dpath, 1, skip_wakeup
     tblwr.c2    d.arm, 0 //Branch Delay Slot
+
 
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_WAKEUP_DPATH)
     PREPARE_DOORBELL_INC_PINDEX(d.wakeup_lif, d.wakeup_qtype, d.wakeup_qid, d.wakeup_ring_id, r1, r2)

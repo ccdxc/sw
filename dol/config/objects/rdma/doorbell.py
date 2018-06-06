@@ -15,7 +15,7 @@ class Doorbell(doorbell.Doorbell):
         lif_id = self.ring.queue.queue_type.lif.hw_lif_id
 
         # Data
-        ring_id = getattr(self.ring, 'num', 0)
+        ring_id = getattr(self.ring, 'hw_ring_id', 0)
         queue_id = self.ring.queue.id
 
         # Data

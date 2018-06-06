@@ -100,7 +100,7 @@ class EqObject(base.ConfigObjectBase):
         req_spec.eqe_base_addr_phy = self.eqe_base_addr_phy
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        self.eq.SetRingParams('EQ', True, False,
+        self.eq.SetRingParams('EQ', 0, True, False,
                               self.eq_slab.mem_handle,
                               self.eq_slab.address, 
                               self.num_eq_wqes, 

@@ -26,6 +26,7 @@
 #define HBM_NUM_SGES_PER_CACHELINE 4
 #define SQCB_ADDR_SHIFT    9
 #define RQCB_ADDR_SHIFT    9
+#define CQCB_ADDR_SHIFT    9
 #define RDMA_PAYLOAD_DMA_CMDS_START 8
 
 #define LOG_SIZEOF_CQCB_T   6   // 2^6 = 64 Bytes
@@ -81,7 +82,12 @@
 #define RQCB5_ADDR_GET(_r) \
     add     _r, (5 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, RQCB_ADDR_SHIFT;
 
-    
+ //CQCB organization
+//0-63B
+#define CQCB0_ADDR_GET(_r) \
+    sll     _r, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, CQCB_ADDR_SHIFT;
+
+   
 #define MAX_PYLD_DMA_CMDS_PER_SGE   3
 
 #define BTH_OPC_SVC_SHIFT 5
@@ -1001,15 +1007,24 @@ struct dcqcn_cb_t {
 
 #define RDMA_UD_FEEDBACK          0x1
 #define RDMA_RC_FEEDBACK          0x2
+#define RDMA_CQ_ARM_FEEDBACK      0x3
 
 struct rdma_feedback_t {
     feedback_type:8;
     union {
+        /* TYPE: RDMA_UD_FEEDBACK */
         struct {
             wrid: 64;
             optype: 8;
             status: 8;
         }ud;
+        /* Type: RDMA_CQ_ARM_FEEDBACK */
+        struct {
+            cindex: 16;
+            arm   : 1;
+            sarm  : 1;
+            pad   : 62;
+        }arm;
     }; 
 };
 

@@ -65,6 +65,7 @@
 #define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
 #define CAPRI_APP_DATA_AETH_SYNDROME k.rdma_bth_aeth_aeth_syndrome
 #define CAPRI_APP_DATA_BTH_ACK_REQ  k.rdma_bth_bth_a
+#define CAPRI_APP_DATA_BTH_SE k.rdma_bth_bth_se
 #define CAPRI_APP_DATA_BTH_P_KEY k.rdma_bth_bth_pkey
 
 //DETH header fields

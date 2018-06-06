@@ -104,25 +104,40 @@ descriptors:
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             smac: callback://rdma/rdma/GetZeroMAC
 
-trigger:
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC
-            //ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ
-            ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC
+                    //ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ
+                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+        
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+        
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_WQE
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+                
+    #set CI for CQ ring to that of PI in DB data
+    - step:
 
-    doorbell:
-        object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
-        fields:
-            upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x1 # Set CI to PI(DB data)
 
-expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
-            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        expect:
 
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_CQ_WQE
-            ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+

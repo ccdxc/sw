@@ -6,6 +6,7 @@ struct sqcb1_t d;
 struct common_p4plus_stage0_app_header_table_k k;
 
 #define TO_S1_P to_s1_to_stage
+#define TO_S5_P to_s5_to_stage
 
 %%
 
@@ -20,6 +21,8 @@ req_rx_sqcb1_process_ext:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD_RANGE(r1, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, flags, CAPRI_APP_DATA_RAW_FLAGS)
+
+    phvwr       CAPRI_PHV_FIELD(TO_S5_P, bth_se), CAPRI_APP_DATA_BTH_SE
 
     // set DMA CMD ptr
     RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START_FLIT_CMD_ID)

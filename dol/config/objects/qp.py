@@ -213,39 +213,29 @@ class QpObject(base.ConfigObjectBase):
             self.nic_rq_base_addr = resp_spec.nic_rq_base_addr
             self.rdma_atomic_res_addr = resp_spec.rdma_atomic_res_addr
             if self.sq_in_nic:
-                self.sq.SetRingParams('SQ', True, True,
+                self.sq.SetRingParams('SQ', 0, True, True,
                                   None,
                                   self.nic_sq_base_addr,
                                   self.num_sq_wqes, 
                                   self.sqwqe_size)
             else:
-                self.sq.SetRingParams('SQ', True, False,
+                self.sq.SetRingParams('SQ', 0, True, False,
                                   self.sq_slab.mem_handle,
                                   self.sq_slab.address, 
                                   self.num_sq_wqes, 
                                   self.sqwqe_size)
             if self.rq_in_nic:
-                self.rq.SetRingParams('RQ', True, True,
+                self.rq.SetRingParams('RQ', 0, True, True,
                                   None,
                                   self.nic_rq_base_addr,
                                   self.num_rq_wqes, 
                                   self.rqwqe_size)
             else:
-                self.rq.SetRingParams('RQ', True, False,
+                self.rq.SetRingParams('RQ', 0, True, False,
                                   self.rq_slab.mem_handle,
                                   self.rq_slab.address,
                                   self.num_rq_wqes, 
                                   self.rqwqe_size)
-            self.sq.SetRingParams('RRQ', False, True,
-                                  None,
-                                  self.rrq_base_addr,
-                                  self.num_rrq_wqes,
-                                  self.rrqwqe_size)
-            self.rq.SetRingParams('RSQ', False, True,
-                                  None,
-                                  self.rsq_base_addr,
-                                  self.num_rsq_wqes,
-                                  self.rsqwqe_size)
             logger.info("QP: %s PD: %s Remote: %s"
                            "sq_base_addr: 0x%x rq_base_addr: 0x%x "
                            "rsq_base_addr: 0x%x rrq_base_addr: 0x%x "

@@ -53,11 +53,11 @@ def TestCaseVerify(tc):
         return False
 
     # verify that pindex is set to that of CQ (send imm as dbell behavior)
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'p_index0', tc.pvtdata.rq_cq_post_qstate.p_index0):
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'p_index0', tc.pvtdata.rq_cq_post_qstate.proxy_pindex):
         return False
 
     # verify that cindex is set to that of CQ (send imm as dbell behavior), cindex catches up to pindex before the test finishes
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'c_index0', tc.pvtdata.rq_cq_post_qstate.p_index0):
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'c_index0', tc.pvtdata.rq_cq_post_qstate.proxy_pindex):
         return False
 
     # verify that proxy_cindex is incremented by 1 - immdt as dbell doesn't touch proxy_cindex

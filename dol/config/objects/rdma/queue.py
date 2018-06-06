@@ -368,14 +368,24 @@ class RdmaCQstate(Packet):
         ShortField("p_index0", 0),
         ShortField("c_index0", 0),
 
+        ShortField("p_index1", 0),
+        ShortField("c_index1", 0),
+
+        ShortField("p_index2", 0),
+        ShortField("c_index2", 0),
+
+        ShortField("proxy_pindex", 0),
+        ShortField("proxy_s_pindex", 0),
+
         IntField("pt_base_addr", 0),
         BitField("log_cq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
-        BitField("rsvd1", 0, 1),
+        BitField("ring_empty_sched_eval_done", 0, 1),
         X3BytesField("cq_id", 0),
         X3BytesField("eq_id", 0),
         BitField("arm", 0, 1),
+        BitField("sarm", 0, 1),
 
         BitField("wakeup_dpath", 0, 1),
         BitField("color", 0, 1),
@@ -384,13 +394,14 @@ class RdmaCQstate(Packet):
         BitField("wakeup_qid", 0, 24),
         BitField("wakeup_ring_id", 0, 3),
 
-        BitField("rsvd4", 0, 19),
+        BitField("rsvd4", 0, 2),
+
+        ShortField("pt_pg_index", 0),
+        ShortField("pt_next_pg_index", 0),
+        BitField("pad", 0, 16),
 
         LongField("pt_pa", 0),
         LongField("pt_next_pa", 0),
-        ShortField("pt_pa_index", 0),
-        ShortField("pt_next_pa_index", 0),
-        BitField("pad", 0, 96),
     ]
 
 class RdmaEQstate(Packet):
@@ -423,7 +434,7 @@ qt_params = {
     #fix the label/program for following entry reflecting txdma params
     'RDMA_SQ': {'state': RdmaSQstate, 'hrings': 1, 'trings': 2, 'has_label':1, 'label': 'rdma_req_rx_stage0', 'prog': 'rxdma_stage0.bin'},
     'RDMA_RQ': {'state': RdmaRQstate, 'hrings': 1, 'trings': 2, 'has_label':1, 'label': 'rdma_resp_rx_stage0', 'prog': 'rxdma_stage0.bin'},
-    'RDMA_CQ': {'state': RdmaCQstate, 'hrings': 1, 'trings': 1, 'has_label':0, 'label': '', 'prog': ''},
+    'RDMA_CQ': {'state': RdmaCQstate, 'hrings': 3, 'trings': 3, 'has_label':0, 'label': 'rdma_cq_rx_stage0', 'prog': 'rxdma_stage0.bin'},
     'RDMA_EQ': {'state': RdmaEQstate, 'hrings': 1, 'trings': 1, 'has_label':0, 'label': '', 'prog': ''},
 }
 
@@ -582,11 +593,11 @@ class RdmaQueueObject(QueueObject):
         logger.info('- type   : %s' % self.queue_type.GID())
         logger.info('- id     : %s' % self.id)
 
-    def SetRingParams(self, ring_id, host, nic_resident, mem_handle, address, size, desc_size):
+    def SetRingParams(self, ring_id, hw_ring_id, host, nic_resident, mem_handle, address, size, desc_size):
         r = self.rings.Get(ring_id)
         if r is None:
             assert(0)
-        r.SetRingParams(host, nic_resident, mem_handle, address, size, desc_size)
+        r.SetRingParams(hw_ring_id, host, nic_resident, mem_handle, address, size, desc_size)
         return
 
 class RdmaQueueObjectHelper:
