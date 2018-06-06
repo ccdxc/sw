@@ -74,6 +74,37 @@ func (hd *Datapath) UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 
 // DeleteTunnel deletes a tunnel
 func (hd *Datapath) DeleteTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error {
+	tunDelReqMsg := &halproto.InterfaceDeleteRequestMsg{
+		Request: []*halproto.InterfaceDeleteRequest{
+			{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: tun.Status.TunnelID,
+					},
+				},
+			},
+		},
+	}
+
+	// create route object
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Ifclient.InterfaceDelete(context.Background(), tunDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting tunnel interface. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Ifclient.InterfaceDelete(context.Background(), tunDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting tunnel interface. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 

@@ -149,6 +149,7 @@ func (na *Nagent) DeleteTunnel(tun *netproto.Tunnel) error {
 	err = na.Datapath.DeleteTunnel(tunnel, ns)
 	if err != nil {
 		log.Errorf("Error deleting tunnel {%+v}. Err: %v", tun, err)
+		return err
 	}
 
 	// delete from db
