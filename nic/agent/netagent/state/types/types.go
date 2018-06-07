@@ -171,10 +171,10 @@ type NetDatapathAPI interface {
 	SetAgent(ag DatapathIntf) error
 	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*IntfInfo, error) // creates a local endpoint in datapath
 	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                            // updates a local endpoint in datapath
-	DeleteLocalEndpoint(ep *netproto.Endpoint) error                                                                                                                 // deletes a local endpoint in datapath
+	DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error                                                                            // deletes a local endpoint in datapath
 	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error                  // creates a remote endpoint in datapath
 	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                           // updates a remote endpoint in datapath
-	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                                                                // deletes a remote endpoint in datapath
+	DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error                                                                                          // deletes a remote endpoint in datapath
 	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error                                                                 // creates a network
 	UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error                                                                                                // updates a network in datapath
 	DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error                                                                 // deletes a network from datapath

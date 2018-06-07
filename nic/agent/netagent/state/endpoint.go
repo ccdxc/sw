@@ -33,7 +33,6 @@ const (
 // EndpointCreateReq creates an endpoint
 func (na *Nagent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *types.IntfInfo, error) {
 	// make an RPC call to controller
-	epinfo.Status.NodeUUID = na.NodeUUID
 	ep, err := na.Ctrlerif.EndpointCreateReq(epinfo)
 	if err != nil {
 		log.Errorf("Error resp from netctrler for ep create {%+v}. Err: %v", epinfo, err)
@@ -126,6 +125,8 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		}
 		// Ensure the ID is non-overlapping with existing hw interfaces.
 		enicID = enicID + maxNumUplinks
+		// save the enic id in the ep status for deletions
+		ep.Status.EnicID = enicID
 		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, ns)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
@@ -247,16 +248,25 @@ func (na *Nagent) DeleteEndpoint(ep *netproto.Endpoint) error {
 		return ErrEndpointNotFound
 	}
 
+	// find the network
+	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: ep.Spec.NetworkName})
+	if err != nil {
+		log.Errorf("Error finding the network %v. Err: %v", ep.Spec.NetworkName, err)
+		return err
+	}
+
 	// call the datapath
 	if ep.Status.NodeUUID == na.NodeUUID {
-		err = na.Datapath.DeleteLocalEndpoint(ep)
+		err = na.Datapath.DeleteLocalEndpoint(ep, nw, ep.Status.EnicID)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
+			return err
 		}
 	} else {
-		err = na.Datapath.DeleteRemoteEndpoint(ep)
+		err = na.Datapath.DeleteRemoteEndpoint(ep, nw)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
+			return err
 		}
 	}
 

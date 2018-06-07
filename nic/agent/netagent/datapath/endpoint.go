@@ -274,47 +274,96 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 }
 
 // DeleteLocalEndpoint deletes an endpoint
-func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
-	// convert v4 address
-	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
-	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
-	v4Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(ipaddr),
+func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error {
+	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
+	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
+	macaddr, _ := strconv.ParseUint(hex, 16, 64)
+
+	l2Key := &halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
+			SegmentId: nw.Status.NetworkID,
 		},
 	}
-
-	// build endpoint del request
-	epdel := halproto.EndpointDeleteRequest{
-		Meta: &halproto.ObjectMeta{},
-		DeleteBy: &halproto.EndpointDeleteRequest_KeyOrHandle{
-			KeyOrHandle: &halproto.EndpointKeyHandle{
-				KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
-					EndpointKey: &halproto.EndpointKey{
-						EndpointL2L3Key: &halproto.EndpointKey_L3Key{
-							L3Key: &halproto.EndpointL3Key{
-								IpAddress: &v4Addr,
-							},
-						},
+	epKey := &halproto.EndpointKeyHandle{
+		KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
+			EndpointKey: &halproto.EndpointKey{
+				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
+					L2Key: &halproto.EndpointL2Key{
+						L2SegmentKeyHandle: l2Key,
+						MacAddress:         macaddr,
 					},
 				},
 			},
 		},
 	}
-	delReq := halproto.EndpointDeleteRequestMsg{
-		Request: []*halproto.EndpointDeleteRequest{&epdel},
+	epDel := []*halproto.EndpointDeleteRequest{
+		{
+			DeleteBy: &halproto.EndpointDeleteRequest_KeyOrHandle{
+				KeyOrHandle: epKey,
+			},
+		},
 	}
-	// delete it from hal
-	_, err = hd.Hal.Epclient.EndpointDelete(context.Background(), &delReq)
-	if err != nil {
-		log.Errorf("Error deleting endpoint. Err: %v", err)
-		return err
+
+	epDelReq := &halproto.EndpointDeleteRequestMsg{
+		Request: epDel,
+	}
+
+	// call hal to delete the endpoint
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)
+		if err != nil {
+			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)
+		if err != nil {
+			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			return err
+		}
+	}
+
+	// delete the associated enic
+	enicKey := &halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+			InterfaceId: enicID,
+		},
+	}
+
+	enicDelReq := &halproto.InterfaceDeleteRequestMsg{
+		Request: []*halproto.InterfaceDeleteRequest{
+			{
+				KeyOrHandle: enicKey,
+			},
+		},
+	}
+
+	// call hal to delete the enic
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Ifclient.InterfaceDelete(context.Background(), enicDelReq)
+		if err != nil {
+			log.Errorf("Error deleting enic. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("Error deleting enic. Err: %v", err)
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Ifclient.InterfaceDelete(context.Background(), enicDelReq)
+		if err != nil {
+			log.Errorf("Error deleting enic. Err: %v", err)
+			return err
+		}
 	}
 
 	// save the endpoint delete message
 	hd.Lock()
-	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
+	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = epDelReq
 	delete(hd.DB.EndpointDB, objectKey(&ep.ObjectMeta))
 	hd.Unlock()
 
@@ -519,47 +568,62 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 }
 
 // DeleteRemoteEndpoint deletes remote endpoint
-func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
-	// convert v4 address
-	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
-	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
-	v4Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(ipaddr),
+func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error {
+	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
+	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
+	macaddr, _ := strconv.ParseUint(hex, 16, 64)
+
+	l2Key := &halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
+			SegmentId: nw.Status.NetworkID,
 		},
 	}
-
-	// build endpoint del request
-	epdel := halproto.EndpointDeleteRequest{
-		Meta: &halproto.ObjectMeta{},
-		DeleteBy: &halproto.EndpointDeleteRequest_KeyOrHandle{
-			KeyOrHandle: &halproto.EndpointKeyHandle{
-				KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
-					EndpointKey: &halproto.EndpointKey{
-						EndpointL2L3Key: &halproto.EndpointKey_L3Key{
-							L3Key: &halproto.EndpointL3Key{
-								IpAddress: &v4Addr,
-							},
-						},
+	epKey := &halproto.EndpointKeyHandle{
+		KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
+			EndpointKey: &halproto.EndpointKey{
+				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
+					L2Key: &halproto.EndpointL2Key{
+						L2SegmentKeyHandle: l2Key,
+						MacAddress:         macaddr,
 					},
 				},
 			},
 		},
 	}
-	delReq := halproto.EndpointDeleteRequestMsg{
-		Request: []*halproto.EndpointDeleteRequest{&epdel},
+	epDel := []*halproto.EndpointDeleteRequest{
+		{
+			DeleteBy: &halproto.EndpointDeleteRequest_KeyOrHandle{
+				KeyOrHandle: epKey,
+			},
+		},
 	}
-	// delete it from hal
-	_, err = hd.Hal.Epclient.EndpointDelete(context.Background(), &delReq)
-	if err != nil {
-		log.Errorf("Error deleting endpoint. Err: %v", err)
-		return err
+
+	epDelReq := &halproto.EndpointDeleteRequestMsg{
+		Request: epDel,
+	}
+
+	// call hal to delete the endpoint
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)
+		if err != nil {
+			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)
+		if err != nil {
+			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			return err
+		}
 	}
 
 	// save the endpoint delete message
 	hd.Lock()
-	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
+	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = epDelReq
 	delete(hd.DB.EndpointDB, objectKey(&ep.ObjectMeta))
 	hd.Unlock()
 
