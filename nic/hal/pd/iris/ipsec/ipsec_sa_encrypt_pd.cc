@@ -174,7 +174,10 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         } else {
             data.u.ipsec_encap_rxdma_initial_table_d.flags &= 0xF7;
         }
-        HAL_TRACE_DEBUG("is_v6 {} is_nat_t {} is_random {} extra_pad {}", ipsec_sa->is_v6, ipsec_sa->is_nat_t, ipsec_sa->is_random, ipsec_sa->extra_pad);
+        data.u.ipsec_encap_rxdma_initial_table_d.flags |= 16;
+
+        HAL_TRACE_DEBUG("flags {} is_v6 {} is_nat_t {} is_random {} extra_pad {}", data.u.ipsec_encap_rxdma_initial_table_d.flags,
+                        ipsec_sa->is_v6, ipsec_sa->is_nat_t, ipsec_sa->is_random, ipsec_sa->extra_pad);
     }
 
     HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid);

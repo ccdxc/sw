@@ -85,8 +85,9 @@ header_type ipsec_to_stage4_t {
         flags         : 6;
         is_nat_t      : 1;
         is_v6         : 1;
+        is_vlan_encap : 1;
         barco_error   : 8;
-        stage3_pad1     : 48;
+        stage3_pad1     : 47;
     }
 }
 
@@ -223,6 +224,7 @@ action ipsec_build_encap_packet2()
     TXDMA2_T1_S2S_SCRATCH
     modify_field(ipsec_to_stage4_scratch.ipsec_cb_addr, ipsec_to_stage4.ipsec_cb_addr);
     modify_field(ipsec_to_stage4_scratch.is_v6, ipsec_to_stage4.is_v6);
+    modify_field(ipsec_to_stage4_scratch.is_vlan_encap, ipsec_to_stage4.is_vlan_encap);
     modify_field(ipsec_to_stage4_scratch.is_nat_t, ipsec_to_stage4.is_nat_t);
     modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags);
     modify_field(ipsec_to_stage4_scratch.barco_error, ipsec_to_stage4.barco_error);
@@ -236,6 +238,7 @@ action ipsec_build_encap_packet()
 
     modify_field(ipsec_to_stage4_scratch.ipsec_cb_addr, ipsec_to_stage4.ipsec_cb_addr);
     modify_field(ipsec_to_stage4_scratch.is_v6, ipsec_to_stage4.is_v6);
+    modify_field(ipsec_to_stage4_scratch.is_vlan_encap, ipsec_to_stage4.is_vlan_encap);
     modify_field(ipsec_to_stage4_scratch.is_nat_t, ipsec_to_stage4.is_nat_t);
     modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags);
     modify_field(ipsec_to_stage4_scratch.barco_error, ipsec_to_stage4.barco_error);

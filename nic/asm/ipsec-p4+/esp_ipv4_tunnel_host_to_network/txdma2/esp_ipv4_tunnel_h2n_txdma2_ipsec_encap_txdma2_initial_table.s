@@ -31,6 +31,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     and r2, d.flags, 1
     smeqb c2, d.flags, IPSEC_FLAGS_V6_MASK, IPSEC_FLAGS_V6_MASK 
     phvwr.c2 p.ipsec_to_stage4_is_v6, 1 
+    smeqb c4, d.flags, IPSEC_ENCAP_VLAN_MASK, IPSEC_ENCAP_VLAN_MASK
+    phvwr.c4 p.ipsec_to_stage4_is_vlan_encap, 1
     smeqb c3, d.flags, IPSEC_FLAGS_NATT_MASK, IPSEC_FLAGS_NATT_MASK 
     phvwr.c3.f p.ipsec_to_stage4_is_nat_t, 1
     add r7, d.barco_cindex, 1

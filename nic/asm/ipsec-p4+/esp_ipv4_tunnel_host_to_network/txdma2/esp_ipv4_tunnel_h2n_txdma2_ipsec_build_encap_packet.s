@@ -13,7 +13,7 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     // Outer-IP  
-    add r1, k.ipsec_to_stage4_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET+14
+    add r1, k.ipsec_to_stage4_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET+ETH_FIXED_HDR_SIZE
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
     seq c1, k.ipsec_to_stage4_is_v6, 1
     cmov r6, c1, IPV6_HDR_SIZE, IPV4_HDR_SIZE 

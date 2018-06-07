@@ -13,7 +13,7 @@ namespace pd {
 #define HAL_MAX_HW_IPSECCBS                        4
 
 #define P4PD_IPSECCB_STAGE_ENTRY_OFFSET            64
-#define P4PD_HBM_IPSEC_CB_ENTRY_SIZE               128
+#define P4PD_HBM_IPSEC_CB_ENTRY_SIZE               256 
 
 #define IPSEC_CB_RING_ENTRY_SIZE                   8
 #define IPSEC_BARCO_RING_ENTRY_SIZE              128 
@@ -56,6 +56,8 @@ struct pd_ipseccb_decrypt_s {
 typedef struct pd_ipseccb_eth_ip4_hdr_s {
     mac_addr_t dmac;
     mac_addr_t smac;
+    uint16_t   dot1q_ethertype;
+    uint16_t   vlan;
     uint16_t   ethertype; 
     uint8_t    version_ihl;
     uint8_t    tos;
@@ -72,6 +74,8 @@ typedef struct pd_ipseccb_eth_ip4_hdr_s {
 typedef struct pd_ipseccb_eth_ip6_hdr_s {
     mac_addr_t dmac;
     mac_addr_t smac;
+    uint16_t   dot1q_ethertype;
+    uint16_t   vlan;
     uint16_t   ethertype; 
     uint32_t   ver_tc_flowlabel;
     uint16_t   payload_length;

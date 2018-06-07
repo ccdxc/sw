@@ -6,6 +6,9 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
+#include "nic/hal/pd/iris/nw/vrf_pd.hpp"
+#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/src/export/vrf_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
@@ -184,15 +187,23 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
     pd_ipseccb_eth_ip6_hdr_t   eth_ip6_hdr = {0};
     pd_ipseccb_udp_nat_t_hdr_t nat_t_udp_hdr = {0};
     hal_ret_t                  ret = HAL_RET_OK;
+    vrf_t  *vrf = vrf_get_infra_vrf();
+    pd_vrf_t *pd_vrf = NULL;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_IP_HDR);
-
+    if (vrf) {
+        pd_vrf = (pd_vrf_t*)(vrf->pd);
+        HAL_TRACE_DEBUG("vrf_fromcpu_vlan_id : {}", pd_vrf->vrf_fromcpu_vlan_id);
+    }
     if (!del) {
         if (ipseccb_pd->ipseccb->is_v6 == 0) {
             memcpy(eth_ip_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
             memcpy(eth_ip_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
+            eth_ip_hdr.dot1q_ethertype = htons(0x800);
+            //eth_ip_hdr.vlan = htons(pd_vrf->vrf_fromcpu_vlan_id);
+            eth_ip_hdr.vlan = htons(1);
             eth_ip_hdr.ethertype = htons(0x800);
             eth_ip_hdr.version_ihl = 0x45;
             eth_ip_hdr.tos = 0;
@@ -212,6 +223,9 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         } else {
             memcpy(eth_ip6_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
             memcpy(eth_ip6_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
+            eth_ip6_hdr.dot1q_ethertype = htons(0x86dd);
+            //eth_ip6_hdr.vlan = htons(pd_vrf->vrf_fromcpu_vlan_id);
+            eth_ip6_hdr.vlan = htons(1);
             eth_ip6_hdr.ethertype = htons(0x86dd);
             eth_ip6_hdr.ver_tc_flowlabel = htonl(0x60000000);
             eth_ip6_hdr.payload_length = 128;
@@ -232,7 +246,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         if (ipseccb_pd->ipseccb->is_nat_t == 1) {
             nat_t_udp_hdr.sport = htons(UDP_PORT_NAT_T);
             nat_t_udp_hdr.dport = htons(UDP_PORT_NAT_T);
-            if(!p4plus_hbm_write(hwid+34,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr),
+            if(!p4plus_hbm_write(hwid+38,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr),
                         P4PLUS_CACHE_INVALIDATE_BOTH)){
                 HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
                 ret = HAL_RET_HW_FAIL;
@@ -247,7 +261,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         if (ipseccb_pd->ipseccb->is_nat_t == 1) {
             nat_t_udp_hdr.sport = htons(UDP_PORT_NAT_T);
             nat_t_udp_hdr.dport = htons(UDP_PORT_NAT_T);
-            if(!p4plus_hbm_write(hwid+54,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr),
+            if(!p4plus_hbm_write(hwid+58,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr),
                         P4PLUS_CACHE_INVALIDATE_BOTH)){
                 HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
                 ret = HAL_RET_HW_FAIL;

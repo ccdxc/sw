@@ -13,7 +13,7 @@ namespace pd {
 #define HAL_MAX_HW_IPSEC_SA                        2048 
 
 #define P4PD_IPSECCB_STAGE_ENTRY_OFFSET            64
-#define P4PD_HBM_IPSEC_CB_ENTRY_SIZE               128
+#define P4PD_HBM_IPSEC_CB_ENTRY_SIZE               256 
 
 #define IPSEC_CB_RING_ENTRY_SIZE                   8
 #define IPSEC_BARCO_RING_ENTRY_SIZE              128 
