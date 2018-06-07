@@ -116,10 +116,11 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     memcpy((uint8_t*)ipsec->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
 
     vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
+    vrf = vrf_lookup_by_id(6);
     if (vrf) {
         ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
         ipsec->vrf = vrf->vrf_id;
-        HAL_TRACE_DEBUG("vrf success id = {}", ipsec->vrf);
+        HAL_TRACE_DEBUG("vrf success id = {} handle {}", ipsec->vrf, ipsec->vrf_handle);
     }
 
     sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));

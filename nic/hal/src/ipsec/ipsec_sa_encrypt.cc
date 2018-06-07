@@ -122,7 +122,6 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
-    vrf_id_t tid = 0;
     mac_addr_t smac1 = {0x0, 0xee, 0xff, 0x0, 0x0, 0x02};
     mac_addr_t dmac1 = {0x0, 0xee, 0xff, 0x0, 0x0, 0x03};
 
@@ -164,13 +163,15 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
 
-    vrf = vrf_get_infra_vrf();
+    vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
+    vrf = vrf_lookup_by_id(6);
     if (vrf) {
-        tid = vrf->vrf_id;
-        HAL_TRACE_DEBUG("infra_vrf success tid = {}", tid);
+        ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
+        ipsec->vrf = vrf->vrf_id;
+        HAL_TRACE_DEBUG("vrf success id = {} handle {:#x}", ipsec->vrf, ipsec->vrf_handle);
     }
 
-    sep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_sip4.addr.v4_addr));
+    sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));
     if (sep) {
         smac = ep_get_mac_addr(sep);
         if (smac) {
@@ -180,7 +181,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
         memcpy(ipsec->smac, smac1, ETH_ADDR_LEN);
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
-    dep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_dip4.addr.v4_addr));
+    dep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_dip4.addr.v4_addr));
     if (dep) {
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
@@ -233,7 +234,6 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
-    vrf_id_t tid;
 
     ipsec_sa_encrypt_spec_dump(spec);
     auto kh = spec.key_or_handle();
@@ -267,13 +267,14 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
 
-    vrf = vrf_get_infra_vrf();
+    vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
     if (vrf) {
-        tid = vrf->vrf_id;
-        HAL_TRACE_DEBUG("infra_vrf success tid = {}", tid);
-    } else {
+        ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
+        ipsec->vrf = vrf->vrf_id;
+        HAL_TRACE_DEBUG("vrf success id = {}", ipsec->vrf);
     }
-    sep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_sip4.addr.v4_addr));
+
+    sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));
     if (sep) {
         smac = ep_get_mac_addr(sep);
         if (smac) {
@@ -282,7 +283,7 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     } else {
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
-    dep = find_ep_by_v4_key(tid, htonl(ipsec->tunnel_dip4.addr.v4_addr));
+    dep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_dip4.addr.v4_addr));
     if (dep) {
         dmac = ep_get_mac_addr(dep);
         if (dmac) {

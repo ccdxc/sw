@@ -7,6 +7,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -201,6 +202,16 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         if (ipsec_sa_pd->ipsec_sa->is_v6 == 0) {
             memcpy(eth_ip_hdr.smac, ipsec_sa_pd->ipsec_sa->smac, ETH_ADDR_LEN);
             memcpy(eth_ip_hdr.dmac, ipsec_sa_pd->ipsec_sa->dmac, ETH_ADDR_LEN);
+            eth_ip_hdr.dot1q_ethertype = htons(0x8100);
+            vrf_t *vrf = vrf_lookup_by_id(ipsec_sa_pd->ipsec_sa->vrf);
+            if (vrf) {
+                pd_vrf_t *pd_vrf = (pd_vrf_t*)(vrf->pd);
+                ipsec_sa_pd->ipsec_sa->vrf_vlan = pd_vrf->vrf_fromcpu_vlan_id;
+                HAL_TRACE_DEBUG("Vrf VLAN {}", ipsec_sa_pd->ipsec_sa->vrf_vlan);
+            }
+
+            eth_ip_hdr.vlan = htons(ipsec_sa_pd->ipsec_sa->vrf_vlan);
+            HAL_TRACE_DEBUG("vrf vlan : {}", ipsec_sa_pd->ipsec_sa->vrf_vlan);
             eth_ip_hdr.ethertype = htons(0x800);
             eth_ip_hdr.version_ihl = 0x45;
             eth_ip_hdr.tos = 0;

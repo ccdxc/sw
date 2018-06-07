@@ -773,23 +773,12 @@ ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *sp
 
 acl_config_t ipsec_ip_acl_config_glbl;
 
-#if 0
-const char *
-ipsec_acl_ctx_name (vrf_id_t vrf_id)
-{
-    thread_local static char name[ACL_NAMESIZE];
-
-    std::snprintf(name, sizeof(name), "ipsec-ipv4-rules:%lu", vrf_id);
-    HAL_TRACE_DEBUG("Acl Name: {}", name);
-    return name;
-}
-#endif
-
 const acl::acl_ctx_t *
 ipsec_cfg_pol_create_app_ctxt_init (ipsec_cfg_pol_t *pol)
 {
-    return (rule_lib_init(ipsec_acl_ctx_name(
-               pol->key.vrf_id), &ipsec_ip_acl_config_glbl));
+    char acl_name[ACL_NAMESIZE];
+    ipsec_acl_ctx_name(acl_name, pol->key.vrf_id);
+    return (rule_lib_init(acl_name, &ipsec_ip_acl_config_glbl));
 }
 
 hal_ret_t

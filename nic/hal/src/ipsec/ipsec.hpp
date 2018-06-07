@@ -388,12 +388,12 @@ ipsec_cfg_pol_create_db_handle (ipsec_cfg_pol_t *pol)
 }
 
 
-inline const char *
-ipsec_acl_ctx_name (vrf_id_t vrf_id)
+static inline void ipsec_acl_ctx_name (char *name, vrf_id_t vrf_id)
 {
-    thread_local static char name[ACL_NAMESIZE];
-    std::snprintf(name, sizeof(name), "ipsec-ipv4-rules:%lu", vrf_id);
-    return name;
+    //thread_local static char name[ACL_NAMESIZE];
+    std::snprintf(name, ACL_NAMESIZE, "ipsec-ipv4-rules:%lu", vrf_id);
+    HAL_TRACE_DEBUG("Returning {}", name);
+    //return name;
 }
 
 extern void *ipsec_sa_get_key_func(void *entry);

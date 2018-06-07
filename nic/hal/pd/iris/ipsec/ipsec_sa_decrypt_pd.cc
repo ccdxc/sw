@@ -117,7 +117,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex = 0;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_pindex = 0;
 
-        vrf_t *vrf = vrf_lookup_by_handle(ipsec_sa_pd->ipsec_sa->vrf_handle);
+        vrf_t *vrf = vrf_lookup_by_id(ipsec_sa_pd->ipsec_sa->vrf);
         if (vrf) {
             pd_vrf = (pd_vrf_t*)(vrf->pd);
             ipsec_sa_pd->ipsec_sa->vrf_vlan = pd_vrf->vrf_fromcpu_vlan_id;

@@ -46,6 +46,8 @@ struct pd_ipsec_s {
 typedef struct pd_ipsec_eth_ip4_hdr_s {
     mac_addr_t dmac;
     mac_addr_t smac;
+    uint16_t   dot1q_ethertype; 
+    uint16_t   vlan;
     uint16_t   ethertype; 
     uint8_t    version_ihl;
     uint8_t    tos;
@@ -62,6 +64,8 @@ typedef struct pd_ipsec_eth_ip4_hdr_s {
 typedef struct pd_ipsec_eth_ip6_hdr_s {
     mac_addr_t dmac;
     mac_addr_t smac;
+    uint16_t   dot1q_ethertype; 
+    uint16_t   vlan;
     uint16_t   ethertype; 
     uint32_t   ver_tc_flowlabel;
     uint16_t   payload_length;
@@ -90,8 +94,8 @@ typedef struct pd_ipsec_qstate_addr_part2_s {
        pd_ipsec_eth_ip4_hdr_t eth_ip4_hdr;
        pd_ipsec_eth_ip6_hdr_t eth_ip6_hdr;
     } u;
-    pd_ipsec_udp_nat_t_hdr_t nat_t_hdr;
-    uint8_t pad[2];
+    //pd_ipsec_udp_nat_t_hdr_t nat_t_hdr;
+    uint8_t pad[6];
 } __PACK__ pd_ipsec_qstate_addr_part2_t;
 
  

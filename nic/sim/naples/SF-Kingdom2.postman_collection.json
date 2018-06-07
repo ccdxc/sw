@@ -115,7 +115,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ipv4-subnet\": \"20.0.0.0/16\", \"ipv4-gateway\":\"20.1.1.1\", \"vlan-id\":200}}"
+					"raw": "{\"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ipv4-subnet\": \"20.0.0.0/8\", \"ipv4-gateway\":\"20.1.1.1\", \"vlan-id\":200}}"
 				},
 				"description": ""
 			},
@@ -172,7 +172,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"public-router\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface-type\":\"uplink\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"20.1.1.2/16\",\"mac-address\":\"00:22:14:01:01:01\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"name\":\"public-router\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface-type\":\"uplink\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"20.1.1.2/8\",\"mac-address\":\"00:22:14:01:01:01\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"description": ""
 			},
@@ -229,7 +229,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/16\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.1\"}}"
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/8\", \"interface\":\"default-uplink-1\",\"gateway-ip\":\"20.1.1.1\"}}"
 				},
 				"description": ""
 			},
