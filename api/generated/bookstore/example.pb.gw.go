@@ -38,16 +38,20 @@ func request_BookstoreV1_AddOutage_0(ctx context.Context, marshaler runtime.Mars
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	msg, err := client.AddOutage(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
@@ -63,16 +67,20 @@ func request_BookstoreV1_Applydiscount_0(ctx context.Context, marshaler runtime.
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -106,16 +114,20 @@ func request_BookstoreV1_AutoAddCustomer_0(ctx context.Context, marshaler runtim
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	msg, err := client.AutoAddCustomer(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
@@ -131,16 +143,20 @@ func request_BookstoreV1_AutoAddOrder_0(ctx context.Context, marshaler runtime.M
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	msg, err := client.AutoAddOrder(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
@@ -156,16 +172,20 @@ func request_BookstoreV1_AutoAddStore_0(ctx context.Context, marshaler runtime.M
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	msg, err := client.AutoAddStore(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
@@ -180,6 +200,26 @@ var (
 func request_BookstoreV1_AutoDeleteCustomer_0(ctx context.Context, marshaler runtime.Marshaler, client BookstoreV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Customer{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -216,6 +256,26 @@ func request_BookstoreV1_AutoDeleteOrder_0(ctx context.Context, marshaler runtim
 	protoReq := &Order{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -251,6 +311,26 @@ func request_BookstoreV1_AutoDeleteStore_0(ctx context.Context, marshaler runtim
 	protoReq := &Store{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoDeleteStore_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -267,6 +347,26 @@ var (
 func request_BookstoreV1_AutoGetBook_0(ctx context.Context, marshaler runtime.Marshaler, client BookstoreV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Book{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -303,6 +403,26 @@ func request_BookstoreV1_AutoGetCustomer_0(ctx context.Context, marshaler runtim
 	protoReq := &Customer{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -337,6 +457,26 @@ var (
 func request_BookstoreV1_AutoGetOrder_0(ctx context.Context, marshaler runtime.Marshaler, client BookstoreV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Order{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -373,6 +513,26 @@ func request_BookstoreV1_AutoGetStore_0(ctx context.Context, marshaler runtime.M
 	protoReq := &Store{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoGetStore_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -389,6 +549,26 @@ var (
 func request_BookstoreV1_AutoListCustomer_0(ctx context.Context, marshaler runtime.Marshaler, client BookstoreV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoListCustomer_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -407,6 +587,26 @@ func request_BookstoreV1_AutoListOrder_0(ctx context.Context, marshaler runtime.
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoListOrder_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -424,16 +624,20 @@ func request_BookstoreV1_AutoUpdateBook_0(ctx context.Context, marshaler runtime
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -467,16 +671,20 @@ func request_BookstoreV1_AutoUpdateCustomer_0(ctx context.Context, marshaler run
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -510,16 +718,20 @@ func request_BookstoreV1_AutoUpdateOrder_0(ctx context.Context, marshaler runtim
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -553,16 +765,20 @@ func request_BookstoreV1_AutoUpdateStore_0(ctx context.Context, marshaler runtim
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	msg, err := client.AutoUpdateStore(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
@@ -578,16 +794,20 @@ func request_BookstoreV1_Cleardiscount_0(ctx context.Context, marshaler runtime.
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -621,16 +841,20 @@ func request_BookstoreV1_Restock_0(ctx context.Context, marshaler runtime.Marsha
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	msg, err := client.Restock(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))

@@ -224,23 +224,25 @@ var (
 	protoReq := &{{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}{}
 	var smetadata runtime.ServerMetadata
 
-{{if .Body}}
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
-{{end}}
 
 {{if .PathParams}}
 	var (

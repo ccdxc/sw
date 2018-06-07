@@ -49,6 +49,11 @@ func (m *Status) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Defaults applies defaults to the object
+func (m *ListWatchOptions) Defaults(ver string) bool {
+	return false
+}
+
 func init() {
 	// Register this with regular golang proto so it is accessible for grpc code
 	golangproto.RegisterType((*StatusResult)(nil), "api.StatusResult")

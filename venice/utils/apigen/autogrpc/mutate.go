@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
@@ -58,6 +59,16 @@ func trimSlash(in string) string {
 	ret := strings.TrimSuffix(in, "/")
 	ret = strings.TrimPrefix(ret, "/")
 	return ret
+}
+
+func fixupJSONTag(file *descriptor.FileDescriptorProto) {
+	for _, msg := range file.GetMessageType() {
+		for _, f := range msg.GetField() {
+			if tag := gogoproto.GetJsonTag(f); tag != nil {
+				f.JsonName = tag
+			}
+		}
+	}
 }
 
 func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype, oper string, watch bool, restopt *googapi.HttpRule) error {
@@ -460,9 +471,7 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 					depFound = true
 				}
 			}
-			if !depFound {
-				f.Dependency = append(f.Dependency, apiMetaImport)
-			}
+
 			crudMsgMap := make(map[string]bool)
 			glog.V(1).Infof("File is %s [%s]\n", *f.Name, *f.Package)
 			glog.V(1).Infof("Before Mutation file is %+v", f)
@@ -544,10 +553,17 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 					}
 				}
 			}
+
+			if !depFound && (len(crudMsgMap) > 0 || len(f.Service) > 0) {
+				f.Dependency = append(f.Dependency, apiMetaImport)
+			}
 			// Insert new message type for WatchEvents and List
 			for v := range crudMsgMap {
 				insertGrpcAutoMsgs(f, v)
 			}
+
+			// Fixup JSON tags in proto def. Works around a gogoproto bug that does not updated the proto tags correctly.
+			fixupJSONTag(f)
 
 			// Sort the slices of interest to maintain stability in code.
 			sort.Slice(f.Service, func(x, y int) bool {

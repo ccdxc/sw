@@ -38,16 +38,20 @@ func request_MonitoringV1_AutoAddAlertDestination_0(ctx context.Context, marshal
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -81,16 +85,20 @@ func request_MonitoringV1_AutoAddAlertPolicy_0(ctx context.Context, marshaler ru
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -124,16 +132,20 @@ func request_MonitoringV1_AutoAddEventPolicy_0(ctx context.Context, marshaler ru
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -167,16 +179,20 @@ func request_MonitoringV1_AutoAddFlowExportPolicy_0(ctx context.Context, marshal
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -210,16 +226,20 @@ func request_MonitoringV1_AutoAddMirrorSession_0(ctx context.Context, marshaler 
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -252,6 +272,26 @@ var (
 func request_MonitoringV1_AutoDeleteAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &AlertDestination{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -299,6 +339,26 @@ func request_MonitoringV1_AutoDeleteAlertPolicy_0(ctx context.Context, marshaler
 	protoReq := &AlertPolicy{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -344,6 +404,26 @@ var (
 func request_MonitoringV1_AutoDeleteEventPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &EventPolicy{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -391,6 +471,26 @@ func request_MonitoringV1_AutoDeleteFlowExportPolicy_0(ctx context.Context, mars
 	protoReq := &FlowExportPolicy{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -436,6 +536,26 @@ var (
 func request_MonitoringV1_AutoDeleteMirrorSession_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &MirrorSession{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -483,6 +603,26 @@ func request_MonitoringV1_AutoGetAlert_0(ctx context.Context, marshaler runtime.
 	protoReq := &Alert{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -528,6 +668,26 @@ var (
 func request_MonitoringV1_AutoGetAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &AlertDestination{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -575,6 +735,26 @@ func request_MonitoringV1_AutoGetAlertPolicy_0(ctx context.Context, marshaler ru
 	protoReq := &AlertPolicy{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -620,6 +800,26 @@ var (
 func request_MonitoringV1_AutoGetEvent_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Event{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -667,6 +867,26 @@ func request_MonitoringV1_AutoGetEventPolicy_0(ctx context.Context, marshaler ru
 	protoReq := &EventPolicy{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -712,6 +932,26 @@ var (
 func request_MonitoringV1_AutoGetFlowExportPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &FlowExportPolicy{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -759,6 +999,26 @@ func request_MonitoringV1_AutoGetFwlogPolicy_0(ctx context.Context, marshaler ru
 	protoReq := &FwlogPolicy{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -804,6 +1064,26 @@ var (
 func request_MonitoringV1_AutoGetMirrorSession_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &MirrorSession{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -851,6 +1131,26 @@ func request_MonitoringV1_AutoGetStatsPolicy_0(ctx context.Context, marshaler ru
 	protoReq := &StatsPolicy{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -897,6 +1197,26 @@ func request_MonitoringV1_AutoListAlert_0(ctx context.Context, marshaler runtime
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -931,6 +1251,26 @@ var (
 func request_MonitoringV1_AutoListAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -967,6 +1307,26 @@ func request_MonitoringV1_AutoListAlertPolicy_0(ctx context.Context, marshaler r
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -1001,6 +1361,26 @@ var (
 func request_MonitoringV1_AutoListEvent_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -1037,6 +1417,26 @@ func request_MonitoringV1_AutoListFlowExportPolicy_0(ctx context.Context, marsha
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -1071,6 +1471,26 @@ var (
 func request_MonitoringV1_AutoListFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -1107,6 +1527,26 @@ func request_MonitoringV1_AutoListMirrorSession_0(ctx context.Context, marshaler
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -1141,6 +1581,26 @@ var (
 func request_MonitoringV1_AutoListStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -1177,16 +1637,20 @@ func request_MonitoringV1_AutoUpdateAlert_0(ctx context.Context, marshaler runti
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -1231,16 +1695,20 @@ func request_MonitoringV1_AutoUpdateAlertDestination_0(ctx context.Context, mars
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -1285,16 +1753,20 @@ func request_MonitoringV1_AutoUpdateAlertPolicy_0(ctx context.Context, marshaler
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -1339,16 +1811,20 @@ func request_MonitoringV1_AutoUpdateEventPolicy_0(ctx context.Context, marshaler
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -1393,16 +1869,20 @@ func request_MonitoringV1_AutoUpdateFlowExportPolicy_0(ctx context.Context, mars
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -1447,16 +1927,20 @@ func request_MonitoringV1_AutoUpdateFwlogPolicy_0(ctx context.Context, marshaler
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -1501,16 +1985,20 @@ func request_MonitoringV1_AutoUpdateMirrorSession_0(ctx context.Context, marshal
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -1555,16 +2043,20 @@ func request_MonitoringV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshaler
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (

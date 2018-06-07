@@ -10,21 +10,21 @@
 		meta.proto
 
 	It has these top-level messages:
-		Spec
-		Filter
-		WatchSpec
 		Empty
+		Filter
+		Spec
+		WatchSpec
 		ExportConfig
 		ExternalCred
 		SyslogExportConfig
-		TypeMeta
 		ListMeta
-		Timestamp
+		ListWatchOptions
 		ObjectMeta
 		ObjectRef
-		ListWatchOptions
-		StatusResult
 		Status
+		StatusResult
+		Timestamp
+		TypeMeta
 */
 package api
 
@@ -46,6 +46,32 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 // Elements of a filter spec
+type Empty struct {
+}
+
+func (m *Empty) Reset()                    { *m = Empty{} }
+func (m *Empty) String() string            { return proto.CompactTextString(m) }
+func (*Empty) ProtoMessage()               {}
+func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{0} }
+
+// The filter selecting a subset of objects to list
+type Filter struct {
+	Specs []*Spec `protobuf:"bytes,1,rep,name=Specs" json:"Specs,omitempty"`
+}
+
+func (m *Filter) Reset()                    { *m = Filter{} }
+func (m *Filter) String() string            { return proto.CompactTextString(m) }
+func (*Filter) ProtoMessage()               {}
+func (*Filter) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{1} }
+
+func (m *Filter) GetSpecs() []*Spec {
+	if m != nil {
+		return m.Specs
+	}
+	return nil
+}
+
+// Specification for a watch
 type Spec struct {
 	Key      string   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
 	Operator string   `protobuf:"bytes,2,opt,name=Operator,proto3" json:"Operator,omitempty"`
@@ -55,7 +81,7 @@ type Spec struct {
 func (m *Spec) Reset()                    { *m = Spec{} }
 func (m *Spec) String() string            { return proto.CompactTextString(m) }
 func (*Spec) ProtoMessage()               {}
-func (*Spec) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{0} }
+func (*Spec) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{2} }
 
 func (m *Spec) GetKey() string {
 	if m != nil {
@@ -78,24 +104,6 @@ func (m *Spec) GetValues() []string {
 	return nil
 }
 
-// The filter selecting a subset of objects to list
-type Filter struct {
-	Specs []*Spec `protobuf:"bytes,1,rep,name=Specs" json:"Specs,omitempty"`
-}
-
-func (m *Filter) Reset()                    { *m = Filter{} }
-func (m *Filter) String() string            { return proto.CompactTextString(m) }
-func (*Filter) ProtoMessage()               {}
-func (*Filter) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{1} }
-
-func (m *Filter) GetSpecs() []*Spec {
-	if m != nil {
-		return m.Specs
-	}
-	return nil
-}
-
-// Specification for a watch
 type WatchSpec struct {
 	RefVersion string  `protobuf:"bytes,1,opt,name=RefVersion,proto3" json:"RefVersion,omitempty"`
 	Specs      []*Spec `protobuf:"bytes,2,rep,name=Specs" json:"Specs,omitempty"`
@@ -104,7 +112,7 @@ type WatchSpec struct {
 func (m *WatchSpec) Reset()                    { *m = WatchSpec{} }
 func (m *WatchSpec) String() string            { return proto.CompactTextString(m) }
 func (*WatchSpec) ProtoMessage()               {}
-func (*WatchSpec) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{2} }
+func (*WatchSpec) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{3} }
 
 func (m *WatchSpec) GetRefVersion() string {
 	if m != nil {
@@ -120,20 +128,60 @@ func (m *WatchSpec) GetSpecs() []*Spec {
 	return nil
 }
 
-type Empty struct {
-}
-
-func (m *Empty) Reset()                    { *m = Empty{} }
-func (m *Empty) String() string            { return proto.CompactTextString(m) }
-func (*Empty) ProtoMessage()               {}
-func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{3} }
-
 func init() {
-	proto.RegisterType((*Spec)(nil), "api.Spec")
-	proto.RegisterType((*Filter)(nil), "api.Filter")
-	proto.RegisterType((*WatchSpec)(nil), "api.WatchSpec")
 	proto.RegisterType((*Empty)(nil), "api.Empty")
+	proto.RegisterType((*Filter)(nil), "api.Filter")
+	proto.RegisterType((*Spec)(nil), "api.Spec")
+	proto.RegisterType((*WatchSpec)(nil), "api.WatchSpec")
 }
+func (m *Empty) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Empty) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *Filter) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Filter) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Specs) > 0 {
+		for _, msg := range m.Specs {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintCommon(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func (m *Spec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -179,36 +227,6 @@ func (m *Spec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *Filter) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Filter) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Specs) > 0 {
-		for _, msg := range m.Specs {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCommon(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
 func (m *WatchSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -245,24 +263,6 @@ func (m *WatchSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *Empty) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Empty) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	return i, nil
-}
-
 func encodeVarintCommon(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -272,6 +272,24 @@ func encodeVarintCommon(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *Empty) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *Filter) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Specs) > 0 {
+		for _, e := range m.Specs {
+			l = e.Size()
+			n += 1 + l + sovCommon(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *Spec) Size() (n int) {
 	var l int
 	_ = l
@@ -286,18 +304,6 @@ func (m *Spec) Size() (n int) {
 	if len(m.Values) > 0 {
 		for _, s := range m.Values {
 			l = len(s)
-			n += 1 + l + sovCommon(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *Filter) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Specs) > 0 {
-		for _, e := range m.Specs {
-			l = e.Size()
 			n += 1 + l + sovCommon(uint64(l))
 		}
 	}
@@ -320,12 +326,6 @@ func (m *WatchSpec) Size() (n int) {
 	return n
 }
 
-func (m *Empty) Size() (n int) {
-	var l int
-	_ = l
-	return n
-}
-
 func sovCommon(x uint64) (n int) {
 	for {
 		n++
@@ -338,6 +338,137 @@ func sovCommon(x uint64) (n int) {
 }
 func sozCommon(x uint64) (n int) {
 	return sovCommon(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *Empty) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCommon
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Empty: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Empty: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCommon(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCommon
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Filter) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCommon
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Filter: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Filter: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Specs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCommon
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCommon
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Specs = append(m.Specs, &Spec{})
+			if err := m.Specs[len(m.Specs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCommon(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCommon
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *Spec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -476,87 +607,6 @@ func (m *Spec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Filter) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCommon
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Filter: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Filter: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Specs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCommon
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCommon
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Specs = append(m.Specs, &Spec{})
-			if err := m.Specs[len(m.Specs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCommon(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommon
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *WatchSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -646,56 +696,6 @@ func (m *WatchSpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCommon(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommon
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Empty) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCommon
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Empty: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Empty: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCommon(dAtA[iNdEx:])
@@ -825,18 +825,18 @@ var (
 func init() { proto.RegisterFile("common.proto", fileDescriptorCommon) }
 
 var fileDescriptorCommon = []byte{
-	// 204 bytes of a gzipped FileDescriptorProto
+	// 201 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x49, 0xce, 0xcf, 0xcd,
-	0xcd, 0xcf, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4e, 0x2c, 0xc8, 0x54, 0xf2, 0xe1,
-	0x62, 0x09, 0x2e, 0x48, 0x4d, 0x16, 0x12, 0xe0, 0x62, 0xf6, 0x4e, 0xad, 0x94, 0x60, 0x54, 0x60,
-	0xd4, 0xe0, 0x0c, 0x02, 0x31, 0x85, 0xa4, 0xb8, 0x38, 0xfc, 0x0b, 0x52, 0x8b, 0x12, 0x4b, 0xf2,
-	0x8b, 0x24, 0x98, 0xc0, 0xc2, 0x70, 0xbe, 0x90, 0x18, 0x17, 0x5b, 0x58, 0x62, 0x4e, 0x69, 0x6a,
-	0xb1, 0x04, 0xb3, 0x02, 0xb3, 0x06, 0x67, 0x10, 0x94, 0xa7, 0xa4, 0xc9, 0xc5, 0xe6, 0x96, 0x99,
-	0x53, 0x92, 0x5a, 0x24, 0x24, 0xcf, 0xc5, 0x0a, 0x32, 0xb7, 0x58, 0x82, 0x51, 0x81, 0x59, 0x83,
-	0xdb, 0x88, 0x53, 0x2f, 0xb1, 0x20, 0x53, 0x0f, 0x24, 0x12, 0x04, 0x11, 0x57, 0xf2, 0xe1, 0xe2,
-	0x0c, 0x4f, 0x2c, 0x49, 0xce, 0x00, 0xdb, 0x2e, 0xc7, 0xc5, 0x15, 0x94, 0x9a, 0x16, 0x96, 0x5a,
-	0x54, 0x9c, 0x99, 0x9f, 0x07, 0x75, 0x04, 0x92, 0x08, 0xc2, 0x34, 0x26, 0x1c, 0xa6, 0xb1, 0x73,
-	0xb1, 0xba, 0xe6, 0x16, 0x94, 0x54, 0x3a, 0x09, 0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c,
-	0xe3, 0x83, 0x47, 0x72, 0x8c, 0x33, 0x1e, 0xcb, 0x31, 0x24, 0xb1, 0x81, 0x7d, 0x6b, 0x0c, 0x08,
-	0x00, 0x00, 0xff, 0xff, 0xbb, 0x65, 0x2a, 0x02, 0xfd, 0x00, 0x00, 0x00,
+	0xcd, 0xcf, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4e, 0x2c, 0xc8, 0x54, 0x62, 0xe7,
+	0x62, 0x75, 0xcd, 0x2d, 0x28, 0xa9, 0x54, 0xd2, 0xe4, 0x62, 0x73, 0xcb, 0xcc, 0x29, 0x49, 0x2d,
+	0x12, 0x92, 0xe7, 0x62, 0x0d, 0x2e, 0x48, 0x4d, 0x2e, 0x96, 0x60, 0x54, 0x60, 0xd6, 0xe0, 0x36,
+	0xe2, 0xd4, 0x4b, 0x2c, 0xc8, 0xd4, 0x03, 0x89, 0x04, 0x41, 0xc4, 0x95, 0x7c, 0xb8, 0x58, 0x40,
+	0x0c, 0x21, 0x01, 0x2e, 0x66, 0xef, 0xd4, 0x4a, 0x09, 0x46, 0x05, 0x46, 0x0d, 0xce, 0x20, 0x10,
+	0x53, 0x48, 0x8a, 0x8b, 0xc3, 0xbf, 0x20, 0xb5, 0x28, 0xb1, 0x24, 0xbf, 0x48, 0x82, 0x09, 0x2c,
+	0x0c, 0xe7, 0x0b, 0x89, 0x71, 0xb1, 0x85, 0x25, 0xe6, 0x94, 0xa6, 0x16, 0x4b, 0x30, 0x2b, 0x30,
+	0x6b, 0x70, 0x06, 0x41, 0x79, 0x4a, 0x3e, 0x5c, 0x9c, 0xe1, 0x89, 0x25, 0xc9, 0x19, 0x60, 0x23,
+	0xe5, 0xb8, 0xb8, 0x82, 0x52, 0xd3, 0xc2, 0x52, 0x8b, 0x8a, 0x33, 0xf3, 0xf3, 0xa0, 0x26, 0x23,
+	0x89, 0x20, 0xdc, 0xc6, 0x84, 0xdd, 0x6d, 0x4e, 0x3c, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24,
+	0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0x63, 0x12, 0x1b, 0xd8, 0xa7, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x3f, 0xb7, 0x1b, 0xa6, 0xf9, 0x00, 0x00, 0x00,
 }

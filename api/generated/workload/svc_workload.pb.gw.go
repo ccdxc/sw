@@ -38,16 +38,20 @@ func request_WorkloadV1_AutoAddEndpoint_0(ctx context.Context, marshaler runtime
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -81,16 +85,20 @@ func request_WorkloadV1_AutoAddWorkload_0(ctx context.Context, marshaler runtime
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -123,6 +131,26 @@ var (
 func request_WorkloadV1_AutoDeleteEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Endpoint{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -170,6 +198,26 @@ func request_WorkloadV1_AutoDeleteWorkload_0(ctx context.Context, marshaler runt
 	protoReq := &Workload{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -215,6 +263,26 @@ var (
 func request_WorkloadV1_AutoGetEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Endpoint{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -262,6 +330,26 @@ func request_WorkloadV1_AutoGetWorkload_0(ctx context.Context, marshaler runtime
 	protoReq := &Workload{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -308,6 +396,26 @@ func request_WorkloadV1_AutoListEndpoint_0(ctx context.Context, marshaler runtim
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	var (
 		val string
 		ok  bool
@@ -342,6 +450,26 @@ var (
 func request_WorkloadV1_AutoListWorkload_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	var (
 		val string
@@ -378,16 +506,20 @@ func request_WorkloadV1_AutoUpdateEndpoint_0(ctx context.Context, marshaler runt
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (
@@ -432,16 +564,20 @@ func request_WorkloadV1_AutoUpdateWorkload_0(ctx context.Context, marshaler runt
 	if ver == "" {
 		ver = "all"
 	}
-	var buf bytes.Buffer
-	tee := io.TeeReader(req.Body, &buf)
-	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	changed := protoReq.Defaults(ver)
-	if changed {
-		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
 			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
 	}
 
 	var (

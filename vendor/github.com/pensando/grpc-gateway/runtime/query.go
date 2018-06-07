@@ -110,7 +110,7 @@ func fieldByProtoName(m reflect.Value, name string) (reflect.Value, *proto.Prope
 	}
 
 	for _, p := range props.Prop {
-		if p.OrigName == name {
+		if p.JSONName == name || p.OrigName == name {
 			return m.FieldByName(p.Name), p, nil
 		}
 	}
