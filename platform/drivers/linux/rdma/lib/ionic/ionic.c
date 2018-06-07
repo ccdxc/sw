@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "ionic.h"
 
 extern const struct verbs_context_ops fallback_ctx_ops;
@@ -20,6 +22,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	struct ionic_ctx *ctx;
 	struct ionic_ctx_req req = {};
 	struct ionic_ctx_resp resp = {};
+	uint16_t version, compat;
 	int rc;
 
 	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx,
@@ -29,7 +32,6 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		goto err_ctx;
 	}
 
-	req.version = IONIC_ABI_VERSION; /* XXX fw abi version */
 	req.fallback = ionic_env_fallback();
 
 	rc = ibv_cmd_get_context(&ctx->vctx, &req.req, sizeof(req),
@@ -39,10 +41,46 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 	verbs_set_ops(&ctx->vctx, &fallback_ctx_ops);
 
-	ctx->version = resp.version; /* XXX fw abi version */
 	ctx->fallback = resp.fallback != 0;
 
 	if (!ctx->fallback) {
+		version = resp.version;
+
+		if (version <= IONIC_MAX_RDMA_VERSION) {
+			compat = 0;
+		} else {
+			compat = version - IONIC_MAX_RDMA_VERSION;
+			version = IONIC_MAX_RDMA_VERSION;
+		}
+
+		while (version > 0 && compat < 7) {
+			if (resp.qp_opcodes[compat])
+				break;
+			--version;
+			++compat;
+		}
+
+		if (version < IONIC_MIN_RDMA_VERSION) {
+			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
+				resp.version);
+			fprintf(stderr, "ionic: Driver Min RDMA Version %u\n",
+				IONIC_MIN_RDMA_VERSION);
+			rc = EINVAL;
+			goto err_cmd;
+		}
+
+		if (compat >= 7) {
+			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
+				resp.version);
+			fprintf(stderr, "ionic: Driver Max RDMA Version %u\n",
+				IONIC_MAX_RDMA_VERSION);
+			rc = EINVAL;
+			goto err_cmd;
+		}
+
+		ctx->version = version;
+		ctx->opcodes = resp.qp_opcodes[compat];
+
 		ctx->sq_qtype = resp.sq_qtype;
 		ctx->rq_qtype = resp.rq_qtype;
 		ctx->cq_qtype = resp.cq_qtype;

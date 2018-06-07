@@ -18,13 +18,16 @@
 #include "ionic_queue.h"
 #include "table.h"
 
-#define DEV			"ionic : "
+#define IONIC_MIN_RDMA_VERSION	0
+#define IONIC_MAX_RDMA_VERSION	1
 
 struct ionic_ctx {
 	struct verbs_context	vctx;
 
-	uint32_t		version;
 	bool			fallback;
+
+	int			version;
+	int			opcodes;
 
 	uint8_t			sq_qtype;
 	uint8_t			rq_qtype;
