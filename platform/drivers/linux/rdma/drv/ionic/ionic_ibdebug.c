@@ -65,6 +65,11 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 		   (u64)dev->phys_dbpage_base);
 	seq_printf(s, "dbid:\t%u\n", dev->dbid);
 
+	seq_printf(s, "rdma_version:\t%u\n", dev->rdma_version);
+	seq_printf(s, "qp_opcodes:\t%u\n", dev->qp_opcodes);
+	seq_printf(s, "admin_opcodes:\t%u\n", dev->admin_opcodes);
+
+	seq_printf(s, "admin_qtype:\t%u\n", dev->admin_qtype);
 	seq_printf(s, "sq_qtype:\t%u\n", dev->sq_qtype);
 	seq_printf(s, "rq_qtype:\t%u\n", dev->rq_qtype);
 	seq_printf(s, "cq_qtype:\t%u\n", dev->cq_qtype);

@@ -548,7 +548,8 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	struct ionic_ctx *ctx;
 	struct ionic_ctx_req req;
 	struct ionic_ctx_resp resp = {};
-	int rc;
+	const union identity *ident;
+	int i, rc;
 
 	rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
 	if (!rc)
@@ -595,12 +596,22 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 				       dev->dbid * PAGE_SIZE);
 	list_add(&ctx->mmap_dbell.ctx_ent, &ctx->mmap_list);
 
-	resp.version = IONIC_ABI_VERSION; /* XXX fw abi version */
 	resp.fallback = ctx->fallback;
-	resp.dbell_offset = 0;
+
+	ident = ionic_api_get_identity(dev->lif, &i);
+
+	resp.version = le16_to_cpu(ident->dev.rdma_version);
+	for (i = 0; i < 7; ++i)
+		resp.qp_opcodes[i] = ident->dev.rdma_qp_opcodes[i];
+	for (i = 0; i < 7; ++i)
+		resp.admin_opcodes[i] = ident->dev.rdma_qp_opcodes[i];
+
 	resp.sq_qtype = dev->sq_qtype;
 	resp.rq_qtype = dev->rq_qtype;
 	resp.cq_qtype = dev->cq_qtype;
+	resp.admin_qtype = 0; /* TODO: dev->admin_qtype */
+
+	resp.dbell_offset = 0;
 
 	rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 	if (rc)
@@ -4088,9 +4099,46 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	const union identity *ident;
 	struct dentry *lif_dbgfs;
 	size_t size;
-	int rc;
+	u16 version, compat;
+	int lif_id, rc;
 
 	dev_hold(ndev);
+
+	ident = ionic_api_get_identity(lif, &lif_id);
+
+	version = le16_to_cpu(ident->dev.rdma_version);
+
+	if (version <= IONIC_MAX_RDMA_VERSION) {
+		compat = 0;
+	} else {
+		compat = version - IONIC_MAX_RDMA_VERSION;
+		version = IONIC_MAX_RDMA_VERSION;
+	}
+
+	while (version > 0 && compat < 7) {
+		if (ident->dev.rdma_qp_opcodes[compat])
+			break;
+		--version;
+		++compat;
+	}
+
+	if (version < IONIC_MIN_RDMA_VERSION) {
+		pr_err(FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
+		       le16_to_cpu(ident->dev.rdma_version));
+		pr_err(FW_INFO "ionic_rdma: Driver Min RDMA Version %u\n",
+		       IONIC_MIN_RDMA_VERSION);
+		rc = -EINVAL;
+		goto err_dev;
+	}
+
+	if (compat >= 7) {
+		pr_err(FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
+		       le16_to_cpu(ident->dev.rdma_version));
+		pr_err(FW_INFO "ionic_rdma: Driver Max RDMA Version %u\n",
+		       IONIC_MAX_RDMA_VERSION);
+		rc = -EINVAL;
+		goto err_dev;
+	}
 
 	ibdev = ib_alloc_device(sizeof(*dev));
 	if (!ibdev) {
@@ -4102,14 +4150,18 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->hwdev = ndev->dev.parent;
 	dev->ndev = ndev;
 	dev->lif = lif;
-
-	ident = ionic_api_get_identity(lif, &dev->lif_id);
+	dev->lif_id = lif_id;
 
 	ionic_api_get_dbpages(lif, &dev->dbid, &dev->dbpage,
 			      &dev->phys_dbpage_base,
 			      &dev->intr_ctrl);
 
+	dev->rdma_version = version;
+	dev->qp_opcodes = ident->dev.rdma_qp_opcodes[compat];
+	dev->admin_opcodes = ident->dev.rdma_admin_opcodes[compat];
+
 	/* XXX hardcode values, should come from identify */
+	dev->admin_qtype = 0;
 	dev->sq_qtype = 3;
 	dev->rq_qtype = 4;
 	dev->cq_qtype = 5;

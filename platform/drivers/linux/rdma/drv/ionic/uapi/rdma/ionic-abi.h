@@ -3,20 +3,25 @@
 
 #include <linux/types.h>
 
-#define IONIC_ABI_VERSION	1
+#define IONIC_ABI_VERSION	2
 
 struct ionic_ctx_req {
-	__u32 version;
 	__u32 fallback;
 };
 
 struct ionic_ctx_resp {
-	__u32 version;
 	__u32 fallback;
-	__u64 dbell_offset;
+
+	__u16 version;
+	__u8 qp_opcodes[7];
+	__u8 admin_opcodes[7];
+
 	__u8 sq_qtype;
 	__u8 rq_qtype;
 	__u8 cq_qtype;
+	__u8 admin_qtype;
+
+	__u64 dbell_offset;
 };
 
 struct ionic_qdesc {

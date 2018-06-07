@@ -13,6 +13,9 @@
 #include "ionic_queue.h"
 #include "table.h"
 
+#define IONIC_MIN_RDMA_VERSION 0
+#define IONIC_MAX_RDMA_VERSION 1
+
 #define IONIC_DBPAGE_SIZE	0x1000
 #define IONIC_MAX_MRID		0xffffff
 #define IONIC_MAX_QPID		0xffffff
@@ -46,6 +49,11 @@ struct ionic_ibdev {
 	u64		__iomem *dbpage;
 	u32			dbid;
 
+	u16			rdma_version;
+	u8			qp_opcodes;
+	u8			admin_opcodes;
+
+	u8			admin_qtype;
 	u8			sq_qtype;
 	u8			rq_qtype;
 	u8			cq_qtype;
