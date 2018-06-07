@@ -72,7 +72,7 @@ static int ionic_validate_udata(struct ib_udata *udata,
 				size_t inlen, size_t outlen)
 {
 	if (udata) {
-		if (udata->inlen != inlen || udata->outlen != outlen) {
+		if (udata->inlen < inlen || udata->outlen < outlen) {
 			pr_debug("have udata in %lu out %lu want %lu %lu\n",
 				 udata->inlen, udata->outlen,
 				 inlen, outlen);
