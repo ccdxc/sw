@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/satori/go.uuid"
-
 	"github.com/pensando/sw/api"
 	workload "github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -23,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/satori/go.uuid"
 )
 
 // dummy vars to suppress unused errors

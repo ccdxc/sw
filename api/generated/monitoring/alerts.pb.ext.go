@@ -736,26 +736,6 @@ func (m *Requirement) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if m.AuthConfig != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "AuthConfig"
-		if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if m.PrivacyConfig != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "PrivacyConfig"
-		if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	if vs, ok := validatorMapAlerts["SNMPTrapServer"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {

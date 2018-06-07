@@ -24,11 +24,14 @@ import (
 )
 
 const (
-	veniceCmd      = "venice "
-	testServerPort = "30748"
-	testServerOpt  = "--server http://localhost:" + testServerPort + " "
-	fmtOutput      = false
-	snapshotDir    = "snap3443"
+	veniceCmd   = "venice "
+	fmtOutput   = false
+	snapshotDir = "snap3443"
+)
+
+var (
+	testServerAddr = ""
+	testServerOpt  = ""
 )
 
 var once sync.Once
@@ -51,10 +54,11 @@ func veniceCLI(cmdStr string) string {
 	return stdOut
 }
 
-func TestStartServer(t *testing.T) {
+func TestMain(m *testing.M) {
 	var err error
 
-	tserver.Start(":" + testServerPort)
+	testServerAddr = tserver.Start()
+	testServerOpt = "--server http://" + testServerAddr + " "
 
 	// initiaize cluster with default cluster
 	cluster := &cluster.Cluster{}
@@ -62,7 +66,7 @@ func TestStartServer(t *testing.T) {
 	cluster.Name = "dc-az-cluster1"
 
 	count := 5
-	url := "http://localhost:" + testServerPort + "/v1/cluster/cluster"
+	url := "http://" + testServerAddr + "/v1/cluster/cluster"
 	for {
 		var response map[string]string
 		err = netutils.HTTPPost(url, cluster, &response)
@@ -72,13 +76,14 @@ func TestStartServer(t *testing.T) {
 		// server may not be ready yet. retry..
 		count--
 		if count <= 0 {
-			t.Fatalf("error creating default cluster: %s", err)
+			fmt.Printf("error creating default cluster: %v\n", err)
 			return
 		}
-		t.Logf("server not ready yet. Retrying.")
+		fmt.Println("server not ready yet. Retrying.")
 		time.Sleep(10 * time.Millisecond)
 
 	}
+	m.Run()
 	os.RemoveAll(snapshotDir)
 }
 
@@ -126,7 +131,7 @@ func TestClusterUpdate(t *testing.T) {
 
 func TestSmartNICCreate(t *testing.T) {
 	addSnic := func(t *testing.T, snic *cluster.SmartNIC) error {
-		url := "http://localhost:" + testServerPort + "/v1/cluster/smartnics"
+		url := "http://" + testServerAddr + "/v1/cluster/smartnics"
 		if err := httpPost(url, snic); err != nil {
 			t.Fatalf("error posting smart nic: %+v", snic)
 			return err
@@ -1053,7 +1058,7 @@ spec:
 	}
 
 	veniceCLI("create network uploaded")
-	url := "http://localhost:" + testServerPort + api.Objs["network"].URL + "/uploaded"
+	url := "http://" + testServerAddr + api.Objs["network"].URL + "/uploaded"
 	out = veniceCLI("create upload " + url)
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create objects from URL failed '%s'", out)
@@ -1607,4 +1612,16 @@ func TestGetOpenConnections(t *testing.T) {
 		t.Fatalf("error running netstat output: %s", err)
 	}
 	t.Logf("%s\n", cout)
+}
+
+func TestLogin(t *testing.T) {
+	veniceCLI("create user foo")
+	veniceCLI("login -u foo -p bar")
+	if tok := getToken(); tok != tserver.DummyToken {
+		t.Fatalf("Failed to save token to file, found %v", tok)
+	}
+	veniceCLI("logout")
+	if tok := getToken(); tok != "" {
+		t.Fatalf("Failed to clear token, found %v", tok)
+	}
 }

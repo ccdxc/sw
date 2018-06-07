@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
+	loginctx "github.com/pensando/sw/api/login/context"
 
 	api2 "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cli/api"
@@ -1170,7 +1171,7 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 	return fmt.Errorf("unknown object")
 }
 
-func restGet(url, tenant string, obj interface{}) error {
+func restGet(url, tenant, token string, obj interface{}) error {
 	log.Debugf("get url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
@@ -1184,7 +1185,7 @@ func restGet(url, tenant string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
-	ctx := contxt.Background()
+	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		objm := v.ObjectMeta
@@ -1399,7 +1400,7 @@ func restGet(url, tenant string, obj interface{}) error {
 	return httpGet(url, obj)
 }
 
-func restDelete(objKind, url, tenant string) error {
+func restDelete(objKind, url, tenant, token string) error {
 	log.Debugf("delete url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
@@ -1413,7 +1414,7 @@ func restDelete(objKind, url, tenant string) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
-	ctx := contxt.Background()
+	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
 
 	if objKind == "cluster" {
 		objm := swapi.ObjectMeta{}
@@ -1588,7 +1589,7 @@ func restDelete(objKind, url, tenant string) error {
 	return httpDelete(url)
 }
 
-func restPost(url, tenant string, obj interface{}) error {
+func restPost(url, tenant, token string, obj interface{}) error {
 	log.Debugf("post url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
@@ -1601,7 +1602,7 @@ func restPost(url, tenant string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
-	ctx := contxt.Background()
+	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		v.Tenant = tenant
@@ -1696,7 +1697,7 @@ func restPost(url, tenant string, obj interface{}) error {
 	return httpPost(url, obj)
 }
 
-func restPut(url, tenant string, obj interface{}) error {
+func restPut(url, tenant, token string, obj interface{}) error {
 	log.Debugf("put url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
@@ -1710,7 +1711,7 @@ func restPut(url, tenant string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
-	ctx := contxt.Background()
+	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		v.Tenant = tenant

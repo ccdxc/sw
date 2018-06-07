@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"path"
 	"strings"
@@ -21,6 +22,8 @@ import (
 
 	"github.com/satori/go.uuid"
 
+	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -31,8 +34,13 @@ var (
 	kvStore kvstore.Interface
 )
 
-// Start spins up a test server on the local host on the specified port
-func Start(port string) {
+const (
+	// DummyToken is a dummy token
+	DummyToken = "ABCDEF"
+)
+
+// Start spins up a test server on the local host on an available port. It returns the listener's address.
+func Start() string {
 	s := runtime.NewScheme()
 
 	s.AddKnownTypes(&cluster.Cluster{}, &cluster.ClusterList{})
@@ -72,8 +80,13 @@ func Start(port string) {
 
 	mux := NewHTTPServer()
 
-	log.Infof("Starting http server at %v", port)
-	go mux.RunOnAddr(port)
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		log.Fatalf("Failed to create listener with error: %v", err)
+	}
+	log.Infof("Starting http server at %v", listener.Addr())
+	go http.Serve(listener, mux)
+	return listener.Addr().String()
 }
 
 // NewHTTPServer creates a http server for API endpoints.
@@ -196,6 +209,8 @@ func NewHTTPServer() *martini.ClassicMartini {
 	m.Get(api.Objs["user"].URL+"/:name", UserGetHandler)
 	m.Get(api.Objs["user"].URL, UserListHandler)
 	m.Get("/watch"+api.Objs["user"].URL, UsersWatchHandler)
+
+	m.Post(login.LoginURLPath, LoginHandler)
 
 	return m
 }
@@ -2850,4 +2865,45 @@ func UsersWatchHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
+}
+
+// LoginHandler logs in a user.
+func LoginHandler(w http.ResponseWriter, req *http.Request) (int, string) {
+	decoder := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+
+	cred := auth.PasswordCredential{}
+	if err := decoder.Decode(&cred); err != nil {
+		return http.StatusBadRequest, fmt.Sprint("Unable to decode\n")
+	}
+
+	if cred.Username == "" || cred.Password == "" {
+		return http.StatusBadRequest, fmt.Sprint("Missing username or password\n")
+	}
+
+	uuid, err := findUUIDByName("user", cred.Username)
+	if err != nil {
+		return http.StatusNotFound, ""
+	}
+
+	key := path.Join(api.Objs["user"].URL, uuid)
+	user := api.User{}
+
+	if err := kvStore.Get(context.Background(), key, &user); err != nil {
+		if kvstore.IsKeyNotFoundError(err) {
+			return http.StatusNotFound, fmt.Sprintf("User %q not found\n", cred.Username)
+		}
+		return http.StatusInternalServerError, fmt.Sprintf("User %q get failed with error: %v\n", cred.Username, err)
+	}
+
+	out, err := json.Marshal(&user)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprint("Failed to encode\n")
+	}
+	cookie := &http.Cookie{
+		Name:  "sid",
+		Value: DummyToken,
+	}
+	http.SetCookie(w, cookie)
+	return http.StatusOK, string(out)
 }

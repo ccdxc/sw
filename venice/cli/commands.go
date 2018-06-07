@@ -74,6 +74,16 @@ var restoreFlag = cli.BoolFlag{
 	Usage: "Restore from a snapshot",
 }
 
+var userFlag = cli.StringFlag{
+	Name:  "user, u",
+	Usage: "User name",
+}
+
+var passwdFlag = cli.StringFlag{
+	Name:  "password, p",
+	Usage: "Password",
+}
+
 var createFlags = []cli.Flag{labelFlag, noActionFlag, fileFlag}
 var editFlags = []cli.Flag{noActionFlag, ymlFlag}
 var updateFlags = []cli.Flag{labelFlag, noActionFlag}
@@ -83,6 +93,7 @@ var labelFlags = []cli.Flag{labelFlag, noActionFlag, reFlag, updateLabelFlag}
 var exampleFlags = []cli.Flag{ymlFlag, jsonFlag}
 var snapshotFlags = []cli.Flag{ymlFlag, jsonFlag, restoreFlag, idFlag}
 var definitionFlags = []cli.Flag{}
+var loginFlags = []cli.Flag{userFlag, passwdFlag}
 
 // terminating flags are special in the sense that if they are present, no other options are permitted after them
 var terminatingFlags = []cli.Flag{showDefinitionFlag, showExampleFlag, fileFlag}
@@ -159,6 +170,7 @@ var Commands = []cli.Command{
 		ArgsUsage: " ",
 		Usage:     "Log into venice management system",
 		Action:    loginCmd,
+		Flags:     loginFlags,
 	},
 	{
 		Name:         "snapshot",

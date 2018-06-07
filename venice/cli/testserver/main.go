@@ -5,7 +5,6 @@ import (
 )
 
 func main() {
-	port := ":19001"
-	tserver.Start(port)
+	tserver.Start()
 	select {}
 }

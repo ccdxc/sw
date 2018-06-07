@@ -23,7 +23,7 @@ const (
 // NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
 // Returns nil in case of error.
 func NewLoggedInContext(ctx context.Context, apiGW string, cred *auth.PasswordCredential) (context.Context, error) {
-	_, token, err := loginUser(apiGW, cred)
+	_, token, err := UserLogin(apiGW, cred)
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +46,8 @@ func GetTokenFromCookies(cookies []*http.Cookie) (string, error) {
 	return token, nil
 }
 
-// loginUser sends a login request to API Gateway and returns authenticated user and session token upon success
-func loginUser(apiGW string, in *auth.PasswordCredential) (*auth.User, string, error) {
+// UserLogin sends a login request to API Gateway and returns authenticated user and session token upon success
+func UserLogin(apiGW string, in *auth.PasswordCredential) (*auth.User, string, error) {
 	if !strings.HasPrefix(apiGW, "http") {
 		apiGW = "http://" + apiGW
 	}

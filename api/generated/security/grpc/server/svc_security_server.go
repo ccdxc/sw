@@ -12,9 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-
 	"github.com/pensando/sw/api"
 	security "github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -24,6 +21,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 )
 
 // dummy vars to suppress unused errors

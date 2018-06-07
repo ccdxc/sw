@@ -21,6 +21,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	swapi "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -43,7 +45,7 @@ func editCmd(c *cli.Context) {
 
 		obj, _ := getObj(ctx)
 		url := getURL(ctx, objName)
-		err := restGet(url, ctx.tenant, obj)
+		err := restGet(url, ctx.tenant, getToken(), obj)
 		if err != nil {
 			log.Fatalf("Error getting %s '%s': %v", ctx.subcmd, objName, err)
 		}
@@ -121,7 +123,7 @@ func createCmdInternal(c *cli.Context, rmw bool) {
 	obj, _ := getObj(ctx)
 	if rmw {
 		url := getURL(ctx, objName)
-		err := restGet(url, ctx.tenant, obj)
+		err := restGet(url, ctx.tenant, getToken(), obj)
 		if err != nil {
 			log.Printf("Error getting %s '%s': %v", ctx.subcmd, objName, err)
 			return
@@ -163,7 +165,7 @@ func readCmd(c *cli.Context) {
 
 	if len(ctx.names) == 1 {
 		url := getURL(ctx, ctx.names[0])
-		err := restGet(url, ctx.tenant, obj)
+		err := restGet(url, ctx.tenant, getToken(), obj)
 		if err != nil {
 			log.Printf("Error getting %s '%s': %v", ctx.subcmd, ctx.names[0], err)
 		} else {
@@ -173,7 +175,7 @@ func readCmd(c *cli.Context) {
 	}
 
 	url := getURL(ctx, "")
-	err := restGet(url, ctx.tenant, objList)
+	err := restGet(url, ctx.tenant, getToken(), objList)
 	if err != nil {
 		log.Printf("Error getting %ss: %v", ctx.subcmd, err)
 		return
@@ -259,7 +261,7 @@ func deleteCmd(c *cli.Context) {
 
 	for _, name := range names {
 		url := getURL(ctx, name)
-		err := restDelete(c.Command.Name, url, ctx.tenant)
+		err := restDelete(c.Command.Name, url, ctx.tenant, getToken())
 		if err != nil {
 			fmt.Printf("Error deleting %s '%s': %v\n", c.Command.Name, name, err)
 			return
@@ -304,7 +306,7 @@ func labelCmd(c *cli.Context) {
 	}
 	if len(ctx.names) == 1 {
 		url := getURL(ctx, ctx.names[0])
-		err = restGet(url, ctx.tenant, obj)
+		err = restGet(url, ctx.tenant, getToken(), obj)
 		if err != nil {
 			log.Printf("Error getting %s '%s': %s", ctx.subcmd, ctx.names[0], err)
 		} else {
@@ -321,7 +323,7 @@ func labelCmd(c *cli.Context) {
 	}
 
 	url := getURL(ctx, "")
-	err = restGet(url, ctx.tenant, objList)
+	err = restGet(url, ctx.tenant, getToken(), objList)
 	if err != nil {
 		log.Printf("Error getting %ss: %v", ctx.subcmd, err)
 		return
@@ -410,7 +412,7 @@ func treeCmd(c *cli.Context) {
 		}
 
 		url := getURL(newCtx, "")
-		err := restGet(url, ctx.tenant, objList)
+		err := restGet(url, ctx.tenant, getToken(), objList)
 		if err != nil {
 			fmt.Printf("Error getting %ss: %v", newCtx.subcmd, err)
 			return
@@ -463,46 +465,52 @@ func treeCmd(c *cli.Context) {
 	}
 }
 
-var loginUser string
-
 // logoutCmd is called when user executes user logout
 // TODO: tie this to RBAC
 func logoutCmd(c *cli.Context) {
-	fmt.Printf("logging out... %s\n", loginUser)
+	clearToken()
+	fmt.Println("Logout successful")
 }
 
-// loginCmd is called when a user logs in; upon login user's tenancy
-// and JWT tokens are determined that are then used in subsequent REST calls
-// TODO: tie this to RBAC
+// loginCmd is called when a user logs in; JWT returned by login is stored at
+// $HOME/.pensando/token
 func loginCmd(c *cli.Context) {
 	ctx := &context{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "login"); err != nil {
 		return
 	}
 
-	loginUser = ""
-	if len(c.Args()) > 1 {
-		log.Fatalf("Only one user login is allowed")
-	} else if len(c.Args()) == 1 {
-		loginUser = c.Args()[0]
+	if len(c.Args()) != 0 {
+		log.Fatal("No arguments are allowed for login")
 	}
 
-	reader := bufio.NewReader(os.Stdin)
-	if loginUser == "" {
+	loginUser := c.String("user")
+	password := c.String("password")
+
+	if loginUser == "" || password == "" {
+		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter Username: ")
 		loginUser, _ = reader.ReadString('\n')
 		loginUser = strings.TrimSpace(loginUser)
+
+		fmt.Print("Enter Password: ")
+		pBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			log.Fatalf("Error reading user password: %v", err)
+		}
+		password = string(pBytes)
 	}
 
-	fmt.Print("Enter Password: ")
-	_, err := terminal.ReadPassword(int(syscall.Stdin))
+	_, token, err := login.UserLogin(ctx.cli.GlobalString("server"), &auth.PasswordCredential{
+		Username: loginUser,
+		Password: string(password),
+		Tenant:   defaultTenant,
+	})
 	if err != nil {
-		log.Fatalf("error reading user password: %s", err)
+		log.Fatalf("Failed to login with error: %v", err)
 	}
-	// password := string(bytePassword)
-	// password = strings.TrimSpace(password)
-
-	fmt.Printf("\nSuccessfully logged in as '%s' tenant '%s'\n", loginUser, defaultTenant)
+	saveToken(token)
+	fmt.Println("\nLogin successful")
 }
 
 // snapshotCmd takes the snapshot (inventory) of all objects, removes their
@@ -554,7 +562,7 @@ func snapshotCmd(c *cli.Context) {
 		}
 
 		url := getURL(newCtx, "")
-		err := restGet(url, ctx.tenant, objList)
+		err := restGet(url, ctx.tenant, getToken(), objList)
 		if err != nil {
 			log.Fatalf("Error getting %ss: %v", newCtx.subcmd, err)
 		}
@@ -889,7 +897,7 @@ func getFilteredNames(ctx *context) []string {
 	names := []string{}
 	objs := &api.ListHeader{}
 	url := getURL(ctx, "")
-	err := restGet(url, ctx.tenant, objs)
+	err := restGet(url, ctx.tenant, getToken(), objs)
 	if err != nil {
 		fmt.Printf("Error getting %ss: %v", ctx.subcmd, err)
 		return names
@@ -918,7 +926,7 @@ func postObj(ctx *context, obj interface{}) error {
 		return fmt.Errorf("Unable to find header in object (unmarshal): '%s'", string(hdrBytes))
 	}
 
-	err = restPost(url, ctx.tenant, obj)
+	err = restPost(url, ctx.tenant, getToken(), obj)
 	if err != nil {
 		return fmt.Errorf("Error creating %s '%s': %v", ctx.subcmd, hdr.ObjectMeta.Name, err)
 	}
@@ -948,7 +956,7 @@ func putObj(ctx *context, obj interface{}) error {
 		return fmt.Errorf("Unable to find header in object (unmarshal): '%s'", string(hdrBytes))
 	}
 
-	err = restPut(url, ctx.tenant, obj)
+	err = restPut(url, ctx.tenant, getToken(), obj)
 	if err != nil {
 		return fmt.Errorf("Error updating %s '%s': %v", ctx.subcmd, hdr.ObjectMeta.Name, err)
 	}
