@@ -86,7 +86,7 @@ Vagrant.configure("2") do |config|
       SCRIPT
 
       # Run this on every boot
-      subconfig.vm.provision "shell", run: 'always', inline: "/usr/bin/naples-bootstrap.sh"
+      subconfig.vm.provision "shell", run: 'always', inline: "/usr/bin/naples-bootstrap.sh $1", args: "#{i+1}"
     end
   end
 end

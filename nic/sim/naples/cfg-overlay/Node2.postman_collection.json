@@ -6,62 +6,6 @@
 	},
 	"item": [
 		{
-			"name": "tenant/infra",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"Tenant\",\"meta\":{\"name\":\"infra_tenant\",\"tenant\":\"infra_tenant\"}}"
-				},
-				"url": {
-					"raw": "{{node2}}/api/tenants/",
-					"host": [
-						"{{node2}}"
-					],
-					"path": [
-						"api",
-						"tenants",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "namespace/infra",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"infra_ns\",\"tenant\":\"infra_tenant\"}}"
-				},
-				"url": {
-					"raw": "{{node2}}/api/namespaces/",
-					"host": [
-						"{{node2}}"
-					],
-					"path": [
-						"api",
-						"namespaces",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "network/infra",
 			"request": {
 				"method": "POST",
@@ -73,7 +17,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"infra_nw\",\"tenant\":\"infra_tenant\",\"namespace\":\"infra_ns\"}, \"spec\":{\"ipv4-subnet\": \"192.168.10.0/24\", \"ipv4-gateway\":\"192.168.10.100\", \"vlan-id\":200}}"
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"infra_nw\",\"tenant\":\"default\",\"namespace\":\"infra\"}, \"spec\":{\"ipv4-subnet\": \"192.168.10.0/24\", \"ipv4-gateway\":\"192.168.10.100\", \"vlan-id\":200}}"
 				},
 				"url": {
 					"raw": "{{node2}}/api/networks/",
@@ -101,7 +45,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"infra_tenant\",\"namespace\":\"infra_ns\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"192.168.10.11/32\",\"mac-address\":\"00:22:0A:00:02:04\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"192.168.10.11/32\",\"mac-address\":\"00:22:0A:00:02:04\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"url": {
 					"raw": "{{node2}}/api/endpoints/",
@@ -129,7 +73,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Tunnel\",\"meta\":{\"name\":\"testTunnel\",\"tenant\":\"infra_tenant\",\"namespace\":\"infra_ns\"},\"spec\":{\"type\":\"VXLAN\",\"admin-status\":\"UP\",\"source\":\"192.168.10.12\",\"destination\":\"192.168.10.11\"}}"
+					"raw": "{\"kind\":\"Tunnel\",\"meta\":{\"name\":\"infra_vxlan_tunnel\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"type\":\"VXLAN\",\"admin-status\":\"UP\",\"source\":\"192.168.10.12\",\"destination\":\"192.168.10.11\"}}"
 				},
 				"url": {
 					"raw": "{{node2}}/api/tunnels/",
@@ -139,6 +83,118 @@
 					"path": [
 						"api",
 						"tunnels",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "namespace/kg1",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\"}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/namespaces/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"namespaces",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/kg1",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ipv4-subnet\": \"10.30.10.0/24\", \"ipv4-gateway\":\"10.30.10.1\", \"vxlan-vni\":42756}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/networks/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/localep",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"lif\",\"interface\":\"default-lif-1\"},\"status\":{\"useg-vlan\":100,\"ipv4-address\":\"10.30.10.12/32\",\"mac-address\":\"00:22:0A:00:03:12\"}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/endpoints/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/remotep_over_tunnel",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"tunnel\", \"interface\":\"infra/infra_vxlan_tunnel\"},\"status\":{\"useg-vlan\":100,\"ipv4-address\":\"10.30.10.11/32\",\"mac-address\":\"00:22:0A:00:03:11\",\"node-uuid\":\"GWUUID\"}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/endpoints/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
 						""
 					]
 				}

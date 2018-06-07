@@ -9,6 +9,7 @@
 #include "nic/gen/proto/hal/event.grpc.pb.h"
 #include "nic/gen/proto/hal/system.grpc.pb.h"
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "nic/include/eth_common.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -118,7 +119,7 @@ const char rx_qstate[] = {
     0x00,
     0x00,
     0x00,
-    0x3f,
+    0x00,
     0x00,
 };
 
@@ -151,6 +152,94 @@ const char admin_qstate[] = {
     0x00,
     0x00,
 };
+
+void
+print_tx_qstate (const char *qstate)
+{
+   eth_tx_qstate  *tx  = (eth_tx_qstate *)qstate;
+   std::cout  << "tx_qstate: " 
+              << "pc offset: " << tx->pc_offset << "\n"
+              << "rsvd0:" << tx->rsvd0 << "\n"
+              << "cosA:" << tx->cosA << "\n"
+              << "cosB:" << tx->cosB << "\n"
+              << "cos_sel: " << tx->cos_sel << "\n"
+              << "eval_last: " << tx->eval_last << "\n"
+              << "host: " << tx->host << "\n"
+              << "total: " << tx->total << "\n"
+              << "pid: " << tx->pid  << "\n"
+              << "p_index0: " << tx->p_index0 << "\n"
+              << "c_index0: " << tx->c_index0  << "\n"
+              << "comp_index: " << tx->comp_index << "\n"
+              << "spec_index: " << tx->spec_index << "\n"
+              << "enable: " << tx->enable << "\n"
+              << "color: " << tx->color << "\n"
+              << "rsvd1: " << tx->rsvd1 << "\n"
+              << "ring_base: " << tx->ring_base << "\n"
+              << "ring_size: " << tx->ring_size << "\n"
+              << "cq_ring_base: " << tx->cq_ring_base << "\n"
+              << "intr_assert_addr: " << tx->intr_assert_addr << "\n"
+              << "spurious_db_cnt: " << tx->spurious_db_cnt << "\n"
+              << "sg_ring_base: " << tx->sg_ring_base << "\n"
+              << std::endl;
+}
+
+
+void
+print_rx_qstate (const char *qstate)
+{
+   eth_rx_qstate  *rx  = (eth_rx_qstate *)qstate;
+   std::cout  << "rx_qstate: " 
+              << "pc offset " << rx->pc_offset << "\n"
+              << "rsvd0" << rx->rsvd0 << "\n"
+              << "cosA" << rx->cosA << "\n"
+              << "cosB" << rx->cosB << "\n"
+              << "cos_sel" << rx->cos_sel << "\n"
+              << "eval_last" << rx->eval_last << "\n"
+              << "host" << rx->host << "\n"
+              << "total" << rx->total << "\n"
+              << "pid" << rx->pid << "\n"
+              << "p_index0" << rx->p_index0 << "\n"
+              << "c_index0" << rx->c_index0 << "\n"
+              << "p_index1" << rx->p_index1 << "\n"
+              << "c_index1" << rx->c_index1 << "\n"
+              << "enable" << rx->enable << "\n"
+              << "color" << rx->color << "\n"
+              << "rsvd1" << rx->rsvd1 << "\n"
+              << "ring_base" << rx->ring_base << "\n"
+              << "ring_size" << rx->ring_size << "\n"
+              << "cq_ring_base" << rx->cq_ring_base << "\n"
+              << "intr_assert_addr" << rx->intr_assert_addr << "\n"
+              << "rss_type" << rx->rss_type << "\n"
+              << std::endl;
+}
+
+
+void
+print_admin_qstate (const char *qstate)
+{
+   eth_qstate *ad  = (eth_qstate *)qstate;
+   std::cout  << "admin_qstate: " 
+              << "pc offset " << ad->pc_offset << "\n"
+              << "rsvd0" << ad->rsvd0 << "\n"
+              << "cosA" << ad->cosA << "\n" 
+              << "cosB" << ad->cosB << "\n"
+              << "cos_sel" << ad->cos_sel << "\n"
+              << "eval_last" << ad->eval_last << "\n"
+              << "host" << ad->host << "\n"
+              << "total" << ad->total << "\n"
+              << "pid" << ad->pid << "\n"
+              << "p_index0" << ad->p_index0 << "\n"
+              << "c_index0" << ad->c_index0 << "\n"
+              << "p_index1" << ad->p_index0 << "\n"
+              << "c_index1" << ad->c_index0 << "\n"
+              << "enable" << ad->enable << "\n"
+              << "color" << ad->color << "\n"
+              << "rsvd1" << ad->rsvd1 << "\n"
+              << "ring_base" << ad->ring_base << "\n"
+              << "ring_size" << ad->ring_size << "\n"
+              << "cq_ring_base" << ad->cq_ring_base << "\n"
+              << std::endl;
+}
 
 class hal_client {
 public:
@@ -196,6 +285,10 @@ public:
         QStateSetReq         *lif_qstate;
         ClientContext        context;
         Status               status;
+        
+        print_tx_qstate(tx_qstate); 
+        print_rx_qstate(rx_qstate);
+        print_admin_qstate(admin_qstate);
 
         for (uint32_t i = 0; i < num_lifs; i++) {
             spec = req_msg.add_request();

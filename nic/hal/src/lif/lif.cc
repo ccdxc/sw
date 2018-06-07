@@ -292,10 +292,14 @@ lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
                 ret = HAL_RET_ERR;
                 goto end;
             }
-            buf.reset(new uint8_t[req.queue_state().size()]);
-            bcopy(req.queue_state().c_str(), buf.get(), req.queue_state().size());
-            buf.get()[0] = off;
-            state = buf.get();
+            if (req.queue_state().size() != 0) {
+                buf.reset(new uint8_t[req.queue_state().size()]);
+                bcopy(req.queue_state().c_str(), buf.get(), req.queue_state().size());
+                buf.get()[0] = off;
+                state = buf.get();
+            } else {
+                HAL_TRACE_DEBUG("qstate size{}", req.queue_state().size());
+            }
         }
 
         int ret = g_lif_manager->WriteQState(hw_lif_id, req.type_num(),
