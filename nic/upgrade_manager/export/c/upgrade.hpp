@@ -22,7 +22,7 @@ typedef enum {
 
 using namespace std;
 
-class UpgSdk : public delphi::Service {
+class UpgSdk {
     delphi::SdkPtr           sdk_;
     string                   svcName_;
     SvcRole                  svcRole_;
@@ -42,7 +42,6 @@ public:
     UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah);
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent);
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah);
-    virtual void OnMountComplete(void);
     void SendAppRespSuccess(void);
     void SendAppRespFail(string str);
 

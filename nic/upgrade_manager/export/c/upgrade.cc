@@ -262,8 +262,4 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
     InitStateMachineVector();
 }
 
-void UpgSdk::OnMountComplete(void) {
-    LogInfo("UpgSdk::OnMountComplete called.");
-    return;
-}
 } // namespace upgrade
