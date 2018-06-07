@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Service name",
+    "title": "svc_search.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/query": {
+    "/v1/search/query": {
       "get": {
         "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/search/query?QueryString=XXXXX\u0026MaxResults=100\n generates a RPC call Query with the parameter as\n SearchRequest{ QueryString: \"XXXXX\", MaxResults:100}",
         "operationId": "Query",
@@ -29,33 +29,38 @@
         },
         "parameters": [
           {
-            "name": "QueryString",
+            "name": "query-string",
+            "description": "Simple query string\nThis can be specified as URI parameter.\nFor advanced query cases, Users should use specify SearchQuery\nand pass the SearchRequest in a GET/POST Body\nThe max query-string length is 256 bytes. length of string should be between 0 and 256",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "From",
+            "name": "from",
+            "description": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nThis can be specified as URI parameter. \nDefault value is 0 and valid range is 0..1023. value should be between 0 and 1023",
             "in": "query",
             "required": false,
             "type": "integer",
             "format": "int32"
           },
           {
-            "name": "MaxResults",
+            "name": "max-results",
+            "description": "MaxResults is the max-count of search results\nThis can be specified as URI parameter.\nDefault value is 10 and valid range is 0..8192. value should be between 0 and 8192",
             "in": "query",
             "required": false,
             "type": "integer",
             "format": "int32"
           },
           {
-            "name": "SortBy",
+            "name": "sort-by",
+            "description": "SortyBy is an optional parameter and contains the field name \nto be sorted by, For eg: \"meta.name\"\nThis can be specified as URI parameter.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Query.Categories",
+            "name": "query.categories",
+            "description": "OR of Categories to be matched, AND and Exclude are not supported for this type\nThe max category string length is 64 bytes. length of string should be between 0 and 64",
             "in": "query",
             "required": false,
             "type": "array",
@@ -64,7 +69,8 @@
             }
           },
           {
-            "name": "Query.Kinds",
+            "name": "query.kinds",
+            "description": "OR of Kinds to be matched, AND and Exclude are not supported for this type\nThe max kind string length is 64 bytes. length of string should be between 0 and 64",
             "in": "query",
             "required": false,
             "type": "array",
@@ -108,65 +114,138 @@
     "apiObjectMeta": {
       "type": "object",
       "properties": {
-        "Name": {
+        "name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
-        "Tenant": {
+        "tenant": {
           "type": "string",
           "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
-        "Namespace": {
+        "namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
-        "UUID": {
+        "uuid": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         },
-        "Labels": {
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
           "description": "Labels are arbitrary (key,value) pairs associated with any object."
         },
-        "CreationTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "CreationTime is the creation time of Object"
         },
-        "ModTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "ModTime is the Last Modification time of Object"
         },
-        "SelfLink": {
+        "self-link": {
           "type": "string",
           "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
-        "time": {
+        "seconds": {
           "type": "string",
-          "format": "date-time"
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
     "apiTypeMeta": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "kind": {
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "APIVersion": {
+        "api-version": {
           "type": "string",
           "description": "APIVersion defines the version of the API object."
         }
@@ -176,15 +255,34 @@
     "fieldsRequirement": {
       "type": "object",
       "properties": {
-        "Key": {
+        "key": {
           "type": "string",
           "description": "The label key that the condition applies to."
         },
-        "Operator": {
+        "operator": {
           "type": "string",
+          "enum": [
+            "equals",
+            "notEquals",
+            "in",
+            "notIn",
+            "gt",
+            "gte",
+            "lt",
+            "lte"
+          ],
+          "default": "equals",
+          "x-ui-hints": {
+            "gt": "greater than",
+            "gte": "greater than or equals",
+            "lt": "less than",
+            "lte": "less than or equals",
+            "notEquals": "not equals",
+            "notIn": "not in"
+          },
           "description": "Condition checked for the key."
         },
-        "Values": {
+        "values": {
           "type": "array",
           "items": {
             "type": "string"
@@ -197,7 +295,7 @@
     "fieldsSelector": {
       "type": "object",
       "properties": {
-        "Requirements": {
+        "requirements": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/fieldsRequirement"
@@ -210,15 +308,26 @@
     "labelsRequirement": {
       "type": "object",
       "properties": {
-        "Key": {
+        "key": {
           "type": "string",
           "description": "The label key that the condition applies to."
         },
-        "Operator": {
+        "operator": {
           "type": "string",
+          "enum": [
+            "equals",
+            "notEquals",
+            "in",
+            "notIn"
+          ],
+          "default": "equals",
+          "x-ui-hints": {
+            "notEquals": "not equals",
+            "notIn": "not in"
+          },
           "description": "Condition checked for the key."
         },
-        "Values": {
+        "values": {
           "type": "array",
           "items": {
             "type": "string"
@@ -231,7 +340,7 @@
     "labelsSelector": {
       "type": "object",
       "properties": {
-        "Requirements": {
+        "requirements": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/labelsRequirement"
@@ -244,48 +353,50 @@
     "searchCategoryAggregation": {
       "type": "object",
       "properties": {
-        "Categories": {
+        "categories": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/searchKindAggregation"
           }
         }
       },
-      "title": "List of all allowed Kinds in search, specified via \"kind\" modifier\nTODO: Define a list/map of Kinds per Category\nTODO: generate these enums if possible and use it for validation per Category\n      This is a placeholder enum until we have a way to auto-generate list\n      of all kinds"
+      "description": "CategoryAggregation contains map of search result entries\ngrouped by two levels: first by Category and then by Kind."
     },
     "searchEntry": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "AND of words or phrases to be matched\nThe max text-string length is 256 bytes"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         }
       },
-      "description": "TextRequirement is AND of text-strings in the list\nIt is comprised of words or phrases for text search support.\nIf a text-string has space separated multi-word, it will be\ninterpreted as a phrase.\n\nIn the example below :\n- \"link down\" will be a phrase query\n- network, production, staging will be a word query\n\nFor eg:\n   network                      (match network)\n   link down                    (match \"link down\" phrase)\n   network,production           (match network AND production)\n   network,link down,staging    (match network AND \"link down\" AND staging)"
+      "title": "Entry represent a single search result entry"
     },
     "searchEntryList": {
       "type": "object",
       "properties": {
-        "Entries": {
+        "entries": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/searchEntry"
-          },
-          "title": "OR of Text-requirements to be matched, Exclude is not supported for Text search"
+          }
         }
-      }
+      },
+      "title": "EntryList is list of search result entries"
     },
     "searchError": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string",
           "title": "Type of error"
         },
-        "Reason": {
+        "reason": {
           "type": "string",
           "title": "Reason or description of the failure"
         }
@@ -295,124 +406,197 @@
     "searchKindAggregation": {
       "type": "object",
       "properties": {
-        "Kinds": {
+        "kinds": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/searchEntryList"
           }
         }
       },
-      "title": "EntryList is list of search result entries"
+      "description": "KindAggregation contains map of search result\nentries grouped by Kind."
     },
     "searchSearchQuery": {
       "type": "object",
       "properties": {
-        "Texts": {
+        "texts": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/searchTextRequirement"
-          }
+          },
+          "title": "OR of Text-requirements to be matched, Exclude is not supported for Text search"
         },
-        "Categories": {
+        "categories": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "enum": [
+            "Cluster",
+            "Workload",
+            "Security",
+            "Auth",
+            "Network",
+            "Monitoring",
+            "Telemetry",
+            "Events",
+            "Alerts",
+            "AuditTrail"
+          ],
+          "default": "Cluster",
+          "maxLength": 64,
+          "description": "length of string should be between 0 and 64\n",
+          "title": "OR of Categories to be matched, AND and Exclude are not supported for this type\nThe max category string length is 64 bytes"
         },
-        "Kinds": {
+        "kinds": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "enum": [
+            "Cluster",
+            "Node",
+            "SmartNIC",
+            "Rollout",
+            "Tenant",
+            "Endpoint",
+            "SecurityGroup",
+            "Sgpolicy",
+            "App",
+            "AppUser",
+            "AppUserGrp",
+            "Certificate",
+            "TrafficEncryptionPolicy",
+            "User",
+            "AuthenticationPolicy",
+            "Role",
+            "RoleBinding",
+            "Network",
+            "Service",
+            "LbPolicy",
+            "Alert",
+            "AlertDestination",
+            "AlertPolicy",
+            "Event",
+            "EventPolicy",
+            "StatsPolicy",
+            "FlowExportPolicy",
+            "FwlogPolicy",
+            "MirrorSession"
+          ],
+          "default": "Cluster",
+          "maxLength": 64,
+          "description": "length of string should be between 0 and 64\n",
+          "title": "OR of Kinds to be matched, AND and Exclude are not supported for this type\nThe max kind string length is 64 bytes"
         },
-        "Fields": {
-          "$ref": "#/definitions/fieldsSelector"
+        "fields": {
+          "$ref": "#/definitions/fieldsSelector",
+          "title": "Field Selector is AND of field.Requirements"
         },
-        "Labels": {
-          "$ref": "#/definitions/labelsSelector"
+        "labels": {
+          "$ref": "#/definitions/labelsSelector",
+          "title": "Label Selector is AND of label.Requirememts"
         }
-      },
-      "description": "KindAggregation contains map of search result\nentries grouped by Kind."
+      }
     },
     "searchSearchRequest": {
       "type": "object",
       "properties": {
-        "QueryString": {
-          "type": "string"
-        },
-        "From": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "MaxResults": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "SortBy": {
-          "type": "string"
-        },
-        "Query": {
-          "$ref": "#/definitions/searchSearchQuery"
-        }
-      },
-      "description": "CategoryAggregation contains map of search result entries\ngrouped by two levels: first by Category and then by Kind."
-    },
-    "searchSearchResponse": {
-      "type": "object",
-      "properties": {
-        "TotalHits": {
+        "query-string": {
           "type": "string",
-          "format": "int64"
-        },
-        "ActualHits": {
-          "type": "string",
-          "format": "int64"
-        },
-        "TimeTakenMsecs": {
-          "type": "string",
-          "format": "int64"
-        },
-        "Error": {
-          "$ref": "#/definitions/searchError"
-        },
-        "Entries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/searchEntry"
-          }
-        },
-        "AggregatedEntries": {
-          "$ref": "#/definitions/searchTenantAggregation"
-        }
-      },
-      "description": "TenantAggregation contains map of search result entries\ngrouped by three levels: first by Tenant, second by Category \nand finally by Kind."
-    },
-    "searchTenantAggregation": {
-      "type": "object",
-      "properties": {
-        "Tenants": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/searchCategoryAggregation"
-          },
+          "maxLength": 256,
+          "description": "length of string should be between 0 and 256\n",
           "title": "Simple query string\nThis can be specified as URI parameter.\nFor advanced query cases, Users should use specify SearchQuery\nand pass the SearchRequest in a GET/POST Body\nThe max query-string length is 256 bytes"
+        },
+        "from": {
+          "type": "integer",
+          "format": "int32",
+          "maximum": 1023,
+          "description": "value should be between 0 and 1023\n",
+          "title": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nThis can be specified as URI parameter. \nDefault value is 0 and valid range is 0..1023"
+        },
+        "max-results": {
+          "type": "integer",
+          "format": "int32",
+          "default": "10",
+          "maximum": 8192,
+          "description": "value should be between 0 and 8192\n",
+          "title": "MaxResults is the max-count of search results\nThis can be specified as URI parameter.\nDefault value is 10 and valid range is 0..8192"
+        },
+        "sort-by": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "SortyBy is an optional parameter and contains the field name \nto be sorted by, For eg: \"meta.name\"\nThis can be specified as URI parameter."
+        },
+        "query": {
+          "$ref": "#/definitions/searchSearchQuery",
+          "description": "Search query contains the search requirements\nThis is intended for advanced query use cases involving\nboolean query, structured term query and supports various\ncombinations of text, phrase strings and search modifiers\nfor specific categories, kinds, fields and labels.\nThis cannot be specified as URI parameter."
         }
       },
       "description": "Simple queries can be specified as URI param using \"QueryString\".\nFor advanced queries, it is recommended to use the \"SearchQuery\" structure\nand specify them in BODY of the GET/POST method.\n\nExamples of search query in query-string format:\n\n 1. Find all occurrences matching text “Network”\n    Network\n 2. Find all occurrences matching phrase “link down”\n    “link down”\n 3. Find all occurrences matching text production OR \"staging\"\n    production staging\n 4. Find all occurrences matching text “Network” AND \"link down\"\n    Network,\"link down\"\n    Network AND \"link down\"\n 5. Find all config objects with label1=foo\n    category:config label:label1=foo\n 6. Find all objects created on or after certain date+time\n    category:config field:meta.created-time\u003e=”date-time-string”\n 7. Find all Network objects with type=vlan\n    kind:Network field:spec.type=vlan\n 8. Find all Naples nodes with admission-phase = pending or rejected\n    kind:SmartNIC field:spec.phase in (pending, rejected)\n 9. Find all events with text matching “disconnected”\n    category:events disconnected\n10. Find all Critical events for Network objects\n    category:events kind:Network field:severity=CRITICAL\n11. Find all Alerts generated from Naples MAC1\n    category:alerts field:status.source.node=MAC1\n    category:alerts MAC1\n12. Find all Naples nodes with metric filter : mem\u003e90 \u0026\u0026 cpu\u003e90\n    category:metrics kind:SmartNIC field:metric.mem\u003e90,metric.cpu\u003e90\n13. Find all Endpoints with label Tier=Web with counter1\u003e=100\n    category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 \u003e 100\n14. Find all Endpoints objects with label target=prod with crc-error-count != 0\n    category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0\n15. Find all occurences matching the words and phrase in a certain category \u0026 kinds with certain field and label match\n    production \"status down\" category:Network kind:Network,Service field:spec.service-type=external label:tier=web",
       "title": "SearchRequest is the input to the search API"
     },
+    "searchSearchResponse": {
+      "type": "object",
+      "properties": {
+        "total-hits": {
+          "type": "string",
+          "format": "int64",
+          "title": "TotalHits indicates total number of hits matched"
+        },
+        "actual-hits": {
+          "type": "string",
+          "format": "int64",
+          "title": "ActualHits indicates the actual hits returned in this response"
+        },
+        "time-taken-msecs": {
+          "type": "string",
+          "format": "int64",
+          "title": "TimeTakenMsecs is the time taken for search response in millisecs"
+        },
+        "error": {
+          "$ref": "#/definitions/searchError",
+          "title": "Error status for failures"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/searchEntry"
+          },
+          "description": "EntryList is list of all search results with no grouping."
+        },
+        "aggregated-entries": {
+          "$ref": "#/definitions/searchTenantAggregation",
+          "description": "AggregatedEntries is a three level grouping of all search results,\nGrouped by tenant, category and kind in that order."
+        }
+      },
+      "description": "SearchResponse is the output provided by the search API\nBased on the search request, search results would be part\nof one of the entities : Entries or NestedAggregation.\nIn case of failures, Error would indicate the error status and\ndescription."
+    },
+    "searchTenantAggregation": {
+      "type": "object",
+      "properties": {
+        "tenants": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/searchCategoryAggregation"
+          }
+        }
+      },
+      "description": "TenantAggregation contains map of search result entries\ngrouped by three levels: first by Tenant, second by Category \nand finally by Kind."
+    },
     "searchTextRequirement": {
       "type": "object",
       "properties": {
-        "Text": {
+        "text": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "TotalHits indicates total number of hits matched"
+          "maxLength": 256,
+          "description": "length of string should be between 0 and 256\n",
+          "title": "AND of words or phrases to be matched\nThe max text-string length is 256 bytes"
         }
       },
-      "description": "SearchResponse is the output provided by the search API\nBased on the search request, search results would be part\nof one of the entities : Entries or NestedAggregation.\nIn case of failures, Error would indicate the error status and\ndescription."
+      "description": "TextRequirement is AND of text-strings in the list\nIt is comprised of words or phrases for text search support.\nIf a text-string has space separated multi-word, it will be\ninterpreted as a phrase.\n\nIn the example below :\n- \"link down\" will be a phrase query\n- network, production, staging will be a word query\n\nFor eg:\n   network                      (match network)\n   link down                    (match \"link down\" phrase)\n   network,production           (match network AND production)\n   network,link down,staging    (match network AND \"link down\" AND staging)"
     }
   }
 }

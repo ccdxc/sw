@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Service name",
+    "title": "svc_cluster.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,95 +15,134 @@
     "application/json"
   ],
   "paths": {
-    "/cluster": {
+    "/v1/cluster/cluster": {
       "get": {
-        "operationId": "AutoListCluster",
+        "summary": "Retreives a list of Cluster objects",
+        "operationId": "ListCluster",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterClusterList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -113,18 +152,56 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/cluster/{O.Name}": {
+    "/v1/cluster/cluster/{O.Name}": {
       "get": {
-        "operationId": "AutoGetCluster",
+        "summary": "Retreives the Cluster object",
+        "operationId": "GetCluster",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterCluster"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -136,70 +213,72 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.QuorumNodes",
+            "name": "spec.quorum-nodes",
             "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster.",
             "in": "query",
             "required": false,
@@ -209,14 +288,14 @@
             }
           },
           {
-            "name": "Spec.VirtualIP",
+            "name": "spec.virtual-ip",
             "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.NTPServers",
+            "name": "spec.ntp-servers",
             "description": "NTPServers contains the list of NTP servers for the cluster.",
             "in": "query",
             "required": false,
@@ -226,14 +305,14 @@
             }
           },
           {
-            "name": "Spec.DNSSubDomain",
+            "name": "spec.dns-subdomain",
             "description": "DNSSubDomain is the DNS subdomain for the default tenant.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.AutoAdmitNICs",
+            "name": "spec.auto-admit-nics",
             "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster.",
             "in": "query",
             "required": false,
@@ -241,14 +320,15 @@
             "format": "boolean"
           },
           {
-            "name": "Status.Leader",
+            "name": "status.leader",
             "description": "Leader contains the node name of the cluster leader.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.LastLeaderTransitionTime.time",
+            "name": "status.last-leader-transition-time",
+            "description": "LastLeaderTransitionTime is when the leadership changed last time.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -256,16 +336,54 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteCluster",
+        "summary": "Deletes the Cluster object",
+        "operationId": "DeleteCluster",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterCluster"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -278,16 +396,53 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateCluster",
+        "operationId": "UpdateCluster",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterCluster"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -308,99 +463,139 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/hosts": {
+    "/v1/cluster/hosts": {
       "get": {
-        "operationId": "AutoListHost",
+        "summary": "Retreives a list of Host objects",
+        "operationId": "ListHost",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterHostList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -410,16 +605,54 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddHost",
+        "summary": "Creates a new Host object",
+        "operationId": "AddHost",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterHost"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -434,18 +667,56 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/hosts/{O.Name}": {
+    "/v1/cluster/hosts/{O.Name}": {
       "get": {
-        "operationId": "AutoGetHost",
+        "summary": "Retreives the Host object",
+        "operationId": "GetHost",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterHost"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -457,99 +728,141 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.Type",
+            "name": "status.type",
+            "description": "Type of the host.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.OperatingSystem",
+            "name": "status.operating-system",
+            "description": "Operating system info - name of OS with version, eg: \"Linux 3.10.0.xyz\".",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.Orchestrator",
-            "description": "Spec contains the configuration of the host.",
+            "name": "status.orchestrator",
+            "description": "Orchestrator is the name of associated Compute controller\n(like VCenter) managing this host.",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteHost",
+        "summary": "Deletes the Host object",
+        "operationId": "DeleteHost",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterHost"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -562,16 +875,53 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateHost",
+        "operationId": "UpdateHost",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterHost"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -592,99 +942,139 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/nodes": {
+    "/v1/cluster/nodes": {
       "get": {
-        "operationId": "AutoListNode",
+        "summary": "Retreives a list of Node objects",
+        "operationId": "ListNode",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterNodeList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -694,16 +1084,54 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddNode",
+        "summary": "Creates a new Node object",
+        "operationId": "AddNode",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterNode"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -718,18 +1146,56 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/nodes/{O.Name}": {
+    "/v1/cluster/nodes/{O.Name}": {
       "get": {
-        "operationId": "AutoGetNode",
+        "summary": "Retreives the Node object",
+        "operationId": "GetNode",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterNode"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -741,71 +1207,73 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Roles",
-            "description": "List of all MAC addresses configured and discovered on a Host Interface.",
+            "name": "spec.roles",
+            "description": "Roles is of list of roles a node can be configured with.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -814,24 +1282,62 @@
             }
           },
           {
-            "name": "Status.Phase",
-            "description": "List of all IP addresses configured on a Host Interface.",
+            "name": "status.phase",
+            "description": "Current lifecycle phase of the node.",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteNode",
+        "summary": "Deletes the Node object",
+        "operationId": "DeleteNode",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterNode"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -844,16 +1350,53 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateNode",
+        "operationId": "UpdateNode",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterNode"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -874,99 +1417,139 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/smartnics": {
+    "/v1/cluster/smartnics": {
       "get": {
-        "operationId": "AutoListSmartNIC",
+        "summary": "Retreives a list of SmartNIC objects",
+        "operationId": "ListSmartNIC",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterSmartNICList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -976,16 +1559,54 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddSmartNIC",
+        "summary": "Creates a new SmartNIC object",
+        "operationId": "AddSmartNIC",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterSmartNIC"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1000,18 +1621,56 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/smartnics/{O.Name}": {
+    "/v1/cluster/smartnics/{O.Name}": {
       "get": {
-        "operationId": "AutoGetSmartNIC",
+        "summary": "Retreives the SmartNIC object",
+        "operationId": "GetSmartNIC",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterSmartNIC"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1023,115 +1682,155 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Phase",
-            "description": "List of all Mac addresses of the Port.",
+            "name": "spec.phase",
+            "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.MgmtIp",
-            "description": "LinkSpeed of the Port.",
+            "name": "spec.mgmt-ip",
+            "description": "Management IP address of the naples node.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.HostName",
-            "description": "List of current Port conditions.",
+            "name": "spec.host-name",
+            "description": "Host name.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.SerialNum",
-            "description": "Condition Status.",
+            "name": "status.serial-num",
+            "description": "Serial number.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.PrimaryMacAddress",
-            "description": "The last time the condition transitioned.",
+            "name": "status.primary-mac-address",
+            "description": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC.",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteSmartNIC",
+        "summary": "Deletes the SmartNIC object",
+        "operationId": "DeleteSmartNIC",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterSmartNIC"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1144,16 +1843,53 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateSmartNIC",
+        "operationId": "UpdateSmartNIC",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterSmartNIC"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1174,99 +1910,139 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/tenants": {
+    "/v1/cluster/tenants": {
       "get": {
-        "operationId": "AutoListTenant",
+        "summary": "Retreives a list of Tenant objects",
+        "operationId": "ListTenant",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterTenantList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1276,16 +2052,54 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddTenant",
+        "summary": "Creates a new Tenant object",
+        "operationId": "AddTenant",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterTenant"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1300,18 +2114,56 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     },
-    "/tenants/{O.Name}": {
+    "/v1/cluster/tenants/{O.Name}": {
       "get": {
-        "operationId": "AutoGetTenant",
+        "summary": "Retreives the Tenant object",
+        "operationId": "GetTenant",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterTenant"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1323,86 +2175,127 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.AdminUser",
+            "name": "spec.admin-user",
+            "description": "Tenant admin user.",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteTenant",
+        "summary": "Deletes the Tenant object",
+        "operationId": "DeleteTenant",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterTenant"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1415,16 +2308,53 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateTenant",
+        "operationId": "UpdateTenant",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/clusterTenant"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1445,7 +2375,8 @@
           }
         ],
         "tags": [
-          "ClusterV1"
+          "ClusterV1",
+          "version:v1"
         ]
       }
     }
@@ -1454,7 +2385,7 @@
     "apiListMeta": {
       "type": "object",
       "properties": {
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version of object store at the time of list generation."
         }
@@ -1464,20 +2395,49 @@
     "apiListWatchOptions": {
       "type": "object",
       "properties": {
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "LabelSelector": {
+        "name": {
           "type": "string"
         },
-        "FieldSelector": {
+        "tenant": {
           "type": "string"
         },
-        "PrefixWatch": {
+        "namespace": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "self-link": {
+          "type": "string"
+        },
+        "label-selector": {
+          "type": "string"
+        },
+        "field-selector": {
+          "type": "string"
+        },
+        "prefix-watch": {
           "type": "boolean",
           "format": "boolean"
         },
-        "FieldChangeSelector": {
+        "field-change-selector": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1488,65 +2448,138 @@
     "apiObjectMeta": {
       "type": "object",
       "properties": {
-        "Name": {
+        "name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
-        "Tenant": {
+        "tenant": {
           "type": "string",
           "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
-        "Namespace": {
+        "namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
-        "UUID": {
+        "uuid": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         },
-        "Labels": {
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
           "description": "Labels are arbitrary (key,value) pairs associated with any object."
         },
-        "CreationTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "CreationTime is the creation time of Object"
         },
-        "ModTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "ModTime is the Last Modification time of Object"
         },
-        "SelfLink": {
+        "self-link": {
           "type": "string",
           "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
-        "time": {
+        "seconds": {
           "type": "string",
-          "format": "date-time"
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
     "apiTypeMeta": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "kind": {
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "APIVersion": {
+        "api-version": {
           "type": "string",
           "description": "APIVersion defines the version of the API object."
         }
@@ -1562,7 +2595,8 @@
             "$ref": "#/definitions/clusterAutoMsgClusterWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgClusterWatchHelper is a wrapper object for watch events for Cluster objects"
     },
     "clusterAutoMsgClusterWatchHelperWatchEvent": {
       "type": "object",
@@ -1584,7 +2618,8 @@
             "$ref": "#/definitions/clusterAutoMsgHostWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgHostWatchHelper is a wrapper object for watch events for Host objects"
     },
     "clusterAutoMsgHostWatchHelperWatchEvent": {
       "type": "object",
@@ -1606,7 +2641,8 @@
             "$ref": "#/definitions/clusterAutoMsgNodeWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgNodeWatchHelper is a wrapper object for watch events for Node objects"
     },
     "clusterAutoMsgNodeWatchHelperWatchEvent": {
       "type": "object",
@@ -1628,7 +2664,8 @@
             "$ref": "#/definitions/clusterAutoMsgSmartNICWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgSmartNICWatchHelper is a wrapper object for watch events for SmartNIC objects"
     },
     "clusterAutoMsgSmartNICWatchHelperWatchEvent": {
       "type": "object",
@@ -1650,7 +2687,8 @@
             "$ref": "#/definitions/clusterAutoMsgTenantWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgTenantWatchHelper is a wrapper object for watch events for Tenant objects"
     },
     "clusterAutoMsgTenantWatchHelperWatchEvent": {
       "type": "object",
@@ -1666,17 +2704,20 @@
     "clusterCluster": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/clusterClusterSpec",
           "description": "Spec contains the configuration of the cluster."
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/clusterClusterStatus",
           "description": "Status contains the current state of the cluster."
         }
@@ -1687,46 +2728,51 @@
     "clusterClusterList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterCluster"
-          }
+          },
+          "title": "List of Cluster objects"
         }
-      }
+      },
+      "title": "ClusterList is a container object for list of Cluster objects"
     },
     "clusterClusterSpec": {
       "type": "object",
       "properties": {
-        "QuorumNodes": {
+        "quorum-nodes": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster."
         },
-        "VirtualIP": {
+        "virtual-ip": {
           "type": "string",
           "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes."
         },
-        "NTPServers": {
+        "ntp-servers": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "description": "NTPServers contains the list of NTP servers for the cluster."
         },
-        "DNSSubDomain": {
+        "dns-subdomain": {
           "type": "string",
           "description": "DNSSubDomain is the DNS subdomain for the default tenant."
         },
-        "AutoAdmitNICs": {
+        "auto-admit-nics": {
           "type": "boolean",
           "format": "boolean",
           "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster."
@@ -1737,12 +2783,13 @@
     "clusterClusterStatus": {
       "type": "object",
       "properties": {
-        "Leader": {
+        "leader": {
           "type": "string",
           "description": "Leader contains the node name of the cluster leader."
         },
-        "LastLeaderTransitionTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "last-leader-transition-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "LastLeaderTransitionTime is when the leadership changed last time"
         }
       },
@@ -1751,169 +2798,31 @@
     "clusterHost": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/clusterHostSpec",
-          "description": "Spec contains the configuration of the node."
-        },
-        "Status": {
-          "$ref": "#/definitions/clusterHostStatus",
-          "description": "Status contains the current state of the node."
-        }
-      },
-      "description": "Node is representation of a single Venice node in the system.",
-      "title": "---------------------------------- NODE -------------------------------------------"
-    },
-    "clusterHostIntfSpec": {
-      "type": "object",
-      "properties": {
-        "MacAddrs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Roles is of list of roles a node can be configured with."
-        }
-      },
-      "description": "NodeSpec contains the configuration of the node."
-    },
-    "clusterHostIntfStatus": {
-      "type": "object",
-      "properties": {
-        "IpAddrs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Current lifecycle phase of the node."
-        }
-      },
-      "description": "NodeStatus contains the current state of the node."
-    },
-    "clusterHostList": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterHost"
-          }
-        }
-      }
-    },
-    "clusterHostSpec": {
-      "type": "object",
-      "properties": {
-        "Interfaces": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clusterHostIntfSpec"
-          },
-          "title": "Type indicates a certain node condition"
-        }
-      },
-      "description": "NodeCondition describes the state of a Node at a certain point."
-    },
-    "clusterHostStatus": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "OperatingSystem": {
-          "type": "string"
-        },
-        "Orchestrator": {
-          "type": "string",
           "description": "Spec contains the configuration of the host."
         },
-        "Interfaces": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clusterHostIntfStatus"
-          },
+        "status": {
+          "$ref": "#/definitions/clusterHostStatus",
           "description": "Status contains the current state of the host."
         }
       },
       "description": "Host represents a Baremetal or Hypervisor server.",
       "title": "---------------------------------- HOST ------------------------------------"
     },
-    "clusterNode": {
+    "clusterHostIntfSpec": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Spec of all interfaces in the Host identified by Primary MAC"
-        },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "Spec": {
-          "$ref": "#/definitions/clusterNodeSpec"
-        },
-        "Status": {
-          "$ref": "#/definitions/clusterNodeStatus"
-        }
-      },
-      "description": "HostSpec contains the configuration of the Host."
-    },
-    "clusterNodeCondition": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string",
-          "title": "Type of the host"
-        },
-        "Status": {
-          "type": "string",
-          "title": "Operating system info - name of OS with version, eg: \"Linux 3.10.0.xyz\""
-        },
-        "LastTransitionTime": {
-          "type": "string",
-          "description": "Orchestrator is the name of associated Compute controller\n(like VCenter) managing this host."
-        },
-        "Reason": {
-          "type": "string",
-          "title": "Status of all interfaces in the Host identified by Primary MAC"
-        },
-        "Message": {
-          "type": "string"
-        }
-      },
-      "description": "HostStatus contains the current state of the Host."
-    },
-    "clusterNodeList": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterNode"
-          }
-        }
-      }
-    },
-    "clusterNodeSpec": {
-      "type": "object",
-      "properties": {
-        "Roles": {
+        "mac-addrs": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1923,242 +2832,524 @@
       },
       "title": "Spec of a Host interface"
     },
-    "clusterNodeStatus": {
+    "clusterHostIntfStatus": {
       "type": "object",
       "properties": {
-        "Phase": {
-          "type": "string",
-          "title": "List of all IP addresses configured on a Host Interface"
-        },
-        "Conditions": {
+        "ip-addrs": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/clusterNodeCondition"
-          }
+            "type": "string"
+          },
+          "title": "List of all IP addresses configured on a Host Interface"
         }
       },
       "title": "Status of a Host interface"
     },
+    "clusterHostList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterHost"
+          },
+          "title": "List of Host objects"
+        }
+      },
+      "title": "HostList is a container object for list of Host objects"
+    },
+    "clusterHostSpec": {
+      "type": "object",
+      "properties": {
+        "interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/clusterHostIntfSpec"
+          },
+          "title": "Spec of all interfaces in the Host identified by Primary MAC"
+        }
+      },
+      "description": "HostSpec contains the configuration of the Host."
+    },
+    "clusterHostStatus": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "BAREMETAL",
+            "HYPERVISOR"
+          ],
+          "default": "UNKNOWN",
+          "title": "Type of the host"
+        },
+        "operating-system": {
+          "type": "string",
+          "title": "Operating system info - name of OS with version, eg: \"Linux 3.10.0.xyz\""
+        },
+        "orchestrator": {
+          "type": "string",
+          "description": "Orchestrator is the name of associated Compute controller\n(like VCenter) managing this host."
+        },
+        "interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/clusterHostIntfStatus"
+          },
+          "title": "Status of all interfaces in the Host identified by Primary MAC"
+        }
+      },
+      "description": "HostStatus contains the current state of the Host."
+    },
+    "clusterNode": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterNodeSpec",
+          "description": "Spec contains the configuration of the node."
+        },
+        "status": {
+          "$ref": "#/definitions/clusterNodeStatus",
+          "description": "Status contains the current state of the node."
+        }
+      },
+      "description": "Node is representation of a single Venice node in the system.",
+      "title": "---------------------------------- NODE -------------------------------------------"
+    },
+    "clusterNodeCondition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "LEADER"
+          ],
+          "default": "LEADER",
+          "x-ui-hints": {
+            "LEADER": "Leader"
+          },
+          "title": "Type indicates a certain node condition"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "TRUE",
+            "FALSE"
+          ],
+          "default": "UNKNOWN",
+          "x-ui-hints": {
+            "FALSE": "False",
+            "TRUE": "True",
+            "UNKNOWN": "Unknown"
+          },
+          "title": "Condition Status"
+        },
+        "last-transition-time": {
+          "type": "string",
+          "title": "The last time the condition transitioned"
+        },
+        "reason": {
+          "type": "string",
+          "title": "The reason for the condition's last transition"
+        },
+        "message": {
+          "type": "string",
+          "description": "A detailed message indicating details about the transition."
+        }
+      },
+      "description": "NodeCondition describes the state of a Node at a certain point."
+    },
+    "clusterNodeList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterNode"
+          },
+          "title": "List of Node objects"
+        }
+      },
+      "title": "NodeList is a container object for list of Node objects"
+    },
+    "clusterNodeSpec": {
+      "type": "object",
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "enum": [
+            "CONTROLLER",
+            "QUORUM"
+          ],
+          "default": "CONTROLLER",
+          "x-ui-hints": {
+            "CONTROLLER": "Controller",
+            "QUORUM": "Quorum"
+          },
+          "description": "Roles is of list of roles a node can be configured with."
+        }
+      },
+      "description": "NodeSpec contains the configuration of the node."
+    },
+    "clusterNodeStatus": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "PENDING",
+            "JOINED",
+            "FAILED"
+          ],
+          "default": "UNKNOWN",
+          "x-ui-hints": {
+            "FAILED": "Failed",
+            "JOINED": "Joined",
+            "PENDING": "Pending",
+            "UNKNOWN": "Unknown"
+          },
+          "description": "Current lifecycle phase of the node."
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterNodeCondition"
+          },
+          "title": "List of current node conditions"
+        }
+      },
+      "description": "NodeStatus contains the current state of the node."
+    },
     "clusterPortCondition": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "PORT_UP"
+          ],
+          "default": "PORT_UP",
+          "x-ui-hints": {
+            "PORT_UP": "Up"
+          },
+          "title": "Type indicates a certain Port condition"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "TRUE",
+            "FALSE"
+          ],
+          "default": "UNKNOWN",
+          "x-ui-hints": {
+            "FALSE": "False",
+            "TRUE": "True",
+            "UNKNOWN": "Unknown"
+          },
+          "title": "Condition Status"
+        },
+        "last-transition-time": {
+          "type": "string",
+          "title": "The last time the condition transitioned"
+        },
+        "reason": {
+          "type": "string",
+          "title": "The reason for the condition's last transition"
+        },
+        "message": {
+          "type": "string",
+          "description": "A detailed message indicating details about the transition."
+        }
+      },
+      "description": "PortCondition describes the state of a Port at a certain point."
+    },
+    "clusterPortSpec": {
+      "type": "object",
+      "properties": {
+        "mac-address": {
+          "type": "string",
+          "title": "Primary Mac address of the Port, which is key identifier of the port"
+        }
+      },
+      "title": "PortSpec contains configuration of a port in SmartNIC"
+    },
+    "clusterPortStatus": {
+      "type": "object",
+      "properties": {
+        "mac-addrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of all Mac addresses of the Port"
+        },
+        "link-speed": {
+          "type": "string",
+          "title": "LinkSpeed of the Port"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterPortCondition"
+          },
+          "title": "List of current Port conditions"
+        }
+      },
+      "title": "PortStatus contains current status of a Port"
+    },
+    "clusterSmartNIC": {
+      "type": "object",
+      "properties": {
+        "kind": {
           "type": "string"
         },
-        "Status": {
-          "type": "string",
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta",
           "title": "Object name is Serial-Number of the SmartNIC"
         },
-        "LastTransitionTime": {
-          "type": "string",
+        "spec": {
+          "$ref": "#/definitions/clusterSmartNICSpec",
           "description": "SmartNICSpec contains the configuration of the network adapter."
         },
-        "Reason": {
-          "type": "string",
+        "status": {
+          "$ref": "#/definitions/clusterSmartNICStatus",
           "description": "SmartNICStatus contains the current state of the network adapter."
-        },
-        "Message": {
-          "type": "string"
         }
       },
       "description": "SmartNIC represents the Naples I/O subsystem\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o CMD\n             - created as part of NIC registration, Admittance\n     Modify:\n         o CMD\n             - update spec attributes\n             - update status attributes\n     Delete:\n         o CMD\n             - aging out stale or rejected NICs (TBD)\n         o NetOps, SecOps\n             - Decomission a NIC (TBD)",
       "title": "------------------------------------ SMART NIC  -------------------------------------------"
     },
-    "clusterPortSpec": {
+    "clusterSmartNICCondition": {
       "type": "object",
       "properties": {
-        "MacAddress": {
+        "type": {
           "type": "string",
-          "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
-        }
-      },
-      "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
-    },
-    "clusterPortStatus": {
-      "type": "object",
-      "properties": {
-        "MacAddrs": {
-          "type": "array",
-          "items": {
-            "type": "string"
+          "enum": [
+            "HEALTHY",
+            "UNREACHABLE"
+          ],
+          "default": "HEALTHY",
+          "x-ui-hints": {
+            "HEALTHY": "Healthy",
+            "UNREACHABLE": "Not Reachable"
           },
-          "title": "List of current NIC conditions"
-        },
-        "LinkSpeed": {
-          "type": "string",
-          "title": "Serial number"
-        },
-        "Conditions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterPortCondition"
-          },
-          "title": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC"
-        }
-      },
-      "title": "SmartNICStatus contains current status of a SmartNIC"
-    },
-    "clusterSmartNIC": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
           "title": "Type indicates a certain NIC condition"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
+        "status": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "TRUE",
+            "FALSE"
+          ],
+          "default": "UNKNOWN",
+          "x-ui-hints": {
+            "FALSE": "False",
+            "TRUE": "True",
+            "UNKNOWN": "Unknown"
+          },
           "title": "Condition Status"
         },
-        "Spec": {
-          "$ref": "#/definitions/clusterSmartNICSpec",
+        "last-transition-time": {
+          "type": "string",
           "title": "The last time the condition transitioned"
         },
-        "Status": {
-          "$ref": "#/definitions/clusterSmartNICStatus",
+        "reason": {
+          "type": "string",
           "title": "The reason for the condition's last transition"
+        },
+        "message": {
+          "type": "string",
+          "description": "A detailed message indicating details about the transition."
         }
       },
       "description": "SmartNICCondition describes the state of a SmartNIC at a certain point."
     },
-    "clusterSmartNICCondition": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string",
-          "title": "Primary Mac address of the Port, which is key identifier of the port"
-        },
-        "Status": {
-          "type": "string"
-        },
-        "LastTransitionTime": {
-          "type": "string"
-        },
-        "Reason": {
-          "type": "string"
-        },
-        "Message": {
-          "type": "string"
-        }
-      },
-      "title": "PortSpec contains configuration of a port in SmartNIC"
-    },
     "clusterSmartNICList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterSmartNIC"
-          }
+          },
+          "title": "List of SmartNIC objects"
         }
-      }
+      },
+      "title": "SmartNICList is a container object for list of SmartNIC objects"
     },
     "clusterSmartNICSpec": {
       "type": "object",
       "properties": {
-        "Phase": {
+        "phase": {
           "type": "string",
-          "title": "List of all Mac addresses of the Port"
+          "enum": [
+            "UNKNOWN",
+            "REGISTERING",
+            "REJECTED",
+            "PENDING",
+            "ADMITTED"
+          ],
+          "default": "UNKNOWN",
+          "x-ui-hints": {
+            "ADMITTED": "Admitted",
+            "PENDING": "Pending",
+            "REGISTERING": "Registering",
+            "REJECTED": "Rejected",
+            "UNKNOWN": "Unknown"
+          },
+          "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
         },
-        "MgmtIp": {
+        "mgmt-ip": {
           "type": "string",
-          "title": "LinkSpeed of the Port"
+          "title": "Management IP address of the naples node"
         },
-        "HostName": {
+        "host-name": {
           "type": "string",
-          "title": "List of current Port conditions"
+          "title": "Host name"
         },
-        "Ports": {
+        "ports": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterPortSpec"
-          }
+          },
+          "title": "Ports holds a list of Port Specs"
         }
       },
-      "title": "PortStatus contains current status of a Port"
+      "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
     },
     "clusterSmartNICStatus": {
       "type": "object",
       "properties": {
-        "Conditions": {
+        "conditions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterSmartNICCondition"
           },
-          "title": "Type indicates a certain Port condition"
+          "title": "List of current NIC conditions"
         },
-        "SerialNum": {
+        "serial-num": {
           "type": "string",
-          "title": "Condition Status"
+          "title": "Serial number"
         },
-        "PrimaryMacAddress": {
+        "primary-mac-address": {
           "type": "string",
-          "title": "The last time the condition transitioned"
+          "title": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC"
         },
-        "Ports": {
+        "ports": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterPortStatus"
           },
-          "title": "The reason for the condition's last transition"
+          "title": "Ports holds a list of PortStatus"
         }
       },
-      "description": "PortCondition describes the state of a Port at a certain point."
+      "title": "SmartNICStatus contains current status of a SmartNIC"
     },
     "clusterTenant": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Tenant admin user"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
-          "$ref": "#/definitions/clusterTenantSpec"
+        "spec": {
+          "$ref": "#/definitions/clusterTenantSpec",
+          "description": "Spec contains the configuration of the tenant."
         },
-        "Status": {
-          "$ref": "#/definitions/clusterTenantStatus"
+        "status": {
+          "$ref": "#/definitions/clusterTenantStatus",
+          "description": "Status contains the current state of the tenant."
         }
       },
-      "title": "spec part of tenant object"
+      "title": "Tenant represents an org or a tenant"
     },
     "clusterTenantList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterTenant"
-          }
+          },
+          "title": "List of Tenant objects"
         }
-      }
+      },
+      "title": "TenantList is a container object for list of Tenant objects"
     },
     "clusterTenantSpec": {
       "type": "object",
       "properties": {
-        "AdminUser": {
-          "type": "string"
+        "admin-user": {
+          "type": "string",
+          "title": "Tenant admin user"
         }
       },
-      "title": "status part of tenant object"
+      "title": "spec part of tenant object"
     },
     "clusterTenantStatus": {
       "type": "object",
-      "title": "Tenant represents an org or a tenant"
+      "title": "status part of tenant object"
     }
   }
 }

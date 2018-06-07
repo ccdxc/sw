@@ -4,8 +4,6 @@
 /*
 	Package security is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		app.proto
 		networkencryption.proto
@@ -77,12 +75,17 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// AppSpec - spec part of App object
+// App - Read-only objects auto-created by Venice
+// One object per App that can be identified by Naples
 type App struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           AppSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         AppStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	//
+	Spec AppSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	//
+	Status AppStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *App) Reset()                    { *m = App{} }
@@ -104,7 +107,7 @@ func (m *App) GetStatus() AppStatus {
 	return AppStatus{}
 }
 
-// AppStatus - status part of App object
+// AppSpec - spec part of App object
 type AppSpec struct {
 }
 
@@ -113,9 +116,10 @@ func (m *AppSpec) String() string            { return proto.CompactTextString(m)
 func (*AppSpec) ProtoMessage()               {}
 func (*AppSpec) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 
-// App - Read-only objects auto-created by Venice
-// One object per App that can be identified by Naples
+// AppStatus - status part of App object
 type AppStatus struct {
+	// Name is already part of meta
+	// Description of app - example “mongo https://www.mongodb.com/”
 	Description string `protobuf:"bytes,1,opt,name=Description,json=description,omitempty,proto3" json:"description,omitempty"`
 }
 
@@ -131,14 +135,18 @@ func (m *AppStatus) GetDescription() string {
 	return ""
 }
 
-// AppUserSpec - spec part of AppUser object
+// AppUser is derived from application payload such as database login or
+// other application authentication mechanisms.
+// Created by Venice Admin or Tenant Admin
 type AppUser struct {
-	// Name is part of the meta
-	// Description of the AppUser - example "cassandra user"
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           AppUserSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         AppUserStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	//
+	Spec AppUserSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	//
+	Status AppUserStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *AppUser) Reset()                    { *m = AppUser{} }
@@ -160,12 +168,17 @@ func (m *AppUser) GetStatus() AppUserStatus {
 	return AppUserStatus{}
 }
 
-// AppUserStatus - status part of AppUser object
+// AppUserGrp - Object representing group of AppUsers
+// Created by Venice Admin or Tenant Admin
 type AppUserGrp struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           AppUserGrpSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         AppUserGrpStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	//
+	Spec AppUserGrpSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	//
+	Status AppUserGrpStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *AppUserGrp) Reset()                    { *m = AppUserGrp{} }
@@ -187,12 +200,12 @@ func (m *AppUserGrp) GetStatus() AppUserGrpStatus {
 	return AppUserGrpStatus{}
 }
 
-// AppUser is derived from application payload such as database login or
-// other application authentication mechanisms.
-// Created by Venice Admin or Tenant Admin
+// AppUserGrpSpec - spec part of AppUserGrp object
 type AppUserGrpSpec struct {
-	AppUsers    []string `protobuf:"bytes,1,rep,name=AppUsers,json=app-user,omitempty" json:"app-user,omitempty"`
-	Description string   `protobuf:"bytes,2,opt,name=Description,json=description,omitempty,proto3" json:"description,omitempty"`
+	// List of appusers - example [“john”, “george”]
+	AppUsers []string `protobuf:"bytes,1,rep,name=AppUsers,json=app-user,omitempty" json:"app-user,omitempty"`
+	// Description of the AppUserGrp - example "SQL Users"
+	Description string `protobuf:"bytes,2,opt,name=Description,json=description,omitempty,proto3" json:"description,omitempty"`
 }
 
 func (m *AppUserGrpSpec) Reset()                    { *m = AppUserGrpSpec{} }
@@ -214,7 +227,7 @@ func (m *AppUserGrpSpec) GetDescription() string {
 	return ""
 }
 
-// AppUserGrpSpec - spec part of AppUserGrp object
+// AppUserGrpStatus - status part of AppUserGrp object
 type AppUserGrpStatus struct {
 }
 
@@ -223,8 +236,10 @@ func (m *AppUserGrpStatus) String() string            { return proto.CompactText
 func (*AppUserGrpStatus) ProtoMessage()               {}
 func (*AppUserGrpStatus) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{6} }
 
-// AppUserGrpStatus - status part of AppUserGrp object
+// AppUserSpec - spec part of AppUser object
 type AppUserSpec struct {
+	// Name is part of the meta
+	// Description of the AppUser - example "cassandra user"
 	Description string `protobuf:"bytes,1,opt,name=Description,json=description,omitempty,proto3" json:"description,omitempty"`
 }
 
@@ -240,8 +255,7 @@ func (m *AppUserSpec) GetDescription() string {
 	return ""
 }
 
-// AppUserGrp - Object representing group of AppUsers
-// Created by Venice Admin or Tenant Admin
+// AppUserStatus - status part of AppUser object
 type AppUserStatus struct {
 }
 

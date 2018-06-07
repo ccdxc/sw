@@ -24,6 +24,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AutoMsgEndpointWatchHelper is a wrapper object for watch events for Endpoint objects
 type AutoMsgEndpointWatchHelper struct {
 	Events []*AutoMsgEndpointWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -68,6 +69,7 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) GetObject() *Endpoint {
 	return nil
 }
 
+// AutoMsgWorkloadWatchHelper is a wrapper object for watch events for Workload objects
 type AutoMsgWorkloadWatchHelper struct {
 	Events []*AutoMsgWorkloadWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -112,10 +114,12 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) GetObject() *Workload {
 	return nil
 }
 
+// EndpointList is a container object for list of Endpoint objects
 type EndpointList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Endpoint `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Endpoint objects
+	Items []*Endpoint `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *EndpointList) Reset()                    { *m = EndpointList{} }
@@ -130,10 +134,12 @@ func (m *EndpointList) GetItems() []*Endpoint {
 	return nil
 }
 
+// WorkloadList is a container object for list of Workload objects
 type WorkloadList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Workload `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Workload objects
+	Items []*Workload `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *WorkloadList) Reset()                    { *m = WorkloadList{} }
@@ -168,17 +174,27 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for WorkloadV1 service
 
 type WorkloadV1Client interface {
+	// Creates a new Endpoint object
 	AutoAddEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	// Creates a new Workload object
 	AutoAddWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
+	// Deletes the Endpoint object
 	AutoDeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	// Deletes the Workload object
 	AutoDeleteWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
+	// Retreives the Endpoint object
 	AutoGetEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	// Retreives the Workload object
 	AutoGetWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
+	// Retreives a list of Endpoint objects
 	AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*EndpointList, error)
+	// Retreives a list of Workload objects
 	AutoListWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*WorkloadList, error)
 	AutoUpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
 	AutoUpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
+	// Watch for changes to Endpoint objects
 	AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchEndpointClient, error)
+	// Watch for changes to Workload objects
 	AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchWorkloadClient, error)
 }
 
@@ -347,17 +363,27 @@ func (x *workloadV1AutoWatchWorkloadClient) Recv() (*AutoMsgWorkloadWatchHelper,
 // Server API for WorkloadV1 service
 
 type WorkloadV1Server interface {
+	// Creates a new Endpoint object
 	AutoAddEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	// Creates a new Workload object
 	AutoAddWorkload(context.Context, *Workload) (*Workload, error)
+	// Deletes the Endpoint object
 	AutoDeleteEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	// Deletes the Workload object
 	AutoDeleteWorkload(context.Context, *Workload) (*Workload, error)
+	// Retreives the Endpoint object
 	AutoGetEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	// Retreives the Workload object
 	AutoGetWorkload(context.Context, *Workload) (*Workload, error)
+	// Retreives a list of Endpoint objects
 	AutoListEndpoint(context.Context, *api.ListWatchOptions) (*EndpointList, error)
+	// Retreives a list of Workload objects
 	AutoListWorkload(context.Context, *api.ListWatchOptions) (*WorkloadList, error)
 	AutoUpdateEndpoint(context.Context, *Endpoint) (*Endpoint, error)
 	AutoUpdateWorkload(context.Context, *Workload) (*Workload, error)
+	// Watch for changes to Endpoint objects
 	AutoWatchEndpoint(*api.ListWatchOptions, WorkloadV1_AutoWatchEndpointServer) error
+	// Watch for changes to Workload objects
 	AutoWatchWorkload(*api.ListWatchOptions, WorkloadV1_AutoWatchWorkloadServer) error
 }
 

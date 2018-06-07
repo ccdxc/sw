@@ -35,6 +35,7 @@ func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
 		return err
 	}
 	var docs []*spec.Swagger
+	var content []byte
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		var e error
 		var f []byte
@@ -55,15 +56,16 @@ func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
 		err = errors.Wrap(err, "walk of files failed")
 		return err
 	}
-	if len(docs) > 1 {
+	if len(docs) >= 1 {
 		_ = analysis.Mixin(docs[0], docs[1:]...)
 		analysis.FixEmptyResponseDescriptions(docs[0])
+		content, err = json.MarshalIndent(docs[0], "", "  ")
+		if err != nil {
+			err = errors.Wrap(err, "error marshalling swagger file")
+			return err
+		}
 	}
-	content, err := json.MarshalIndent(docs[0], "", "  ")
-	if err != nil {
-		err = errors.Wrap(err, "error marshalling swagger file")
-		return err
-	}
+
 	m.HandleFunc("/swagger/monitoring/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(content)
 	})

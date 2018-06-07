@@ -7,6 +7,18 @@ import (
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 )
 
+// Finalizer is a list of finalizer callbacks for parts of the spec. THis is called after the spec
+//  element is generated. The finalizer then has an oppurtunity to modify the spec element as needed.
+type Finalizer struct {
+	// Init returns any Messages and Enums to be inserted into the spec.
+	Init      func(reg *descriptor.Registry) ([]*descriptor.Message, []*descriptor.Enum)
+	Spec      func(obj *SwaggerObject, file *descriptor.File, reg *descriptor.Registry) error
+	Method    func(obj *SwaggerPathItemObject, path *string, method *descriptor.Method, reg *descriptor.Registry) error
+	Def       func(obj *SwaggerSchemaObject, message *descriptor.Message, reg *descriptor.Registry) error
+	Field     func(obj *SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry) error
+	FieldName func(field *descriptor.Field) string
+}
+
 type param struct {
 	*descriptor.File
 	reg *descriptor.Registry
@@ -17,127 +29,137 @@ type binding struct {
 }
 
 // http://swagger.io/specification/#infoObject
-type swaggerInfoObject struct {
+type SwaggerInfoObject struct {
 	Title          string `json:"title"`
 	Description    string `json:"description,omitempty"`
 	TermsOfService string `json:"termsOfService,omitempty"`
 	Version        string `json:"version"`
 
-	Contact      *swaggerContactObject               `json:"contact,omitempty"`
-	License      *swaggerLicenseObject               `json:"license,omitempty"`
-	ExternalDocs *swaggerExternalDocumentationObject `json:"externalDocs,omitempty"`
+	Contact      *SwaggerContactObject               `json:"contact,omitempty"`
+	License      *SwaggerLicenseObject               `json:"license,omitempty"`
+	ExternalDocs *SwaggerExternalDocumentationObject `json:"externalDocs,omitempty"`
 }
 
 // http://swagger.io/specification/#contactObject
-type swaggerContactObject struct {
+type SwaggerContactObject struct {
 	Name  string `json:"name,omitempty"`
 	URL   string `json:"url,omitempty"`
 	Email string `json:"email,omitempty"`
 }
 
 // http://swagger.io/specification/#licenseObject
-type swaggerLicenseObject struct {
+type SwaggerLicenseObject struct {
 	Name string `json:"name,omitempty"`
 	URL  string `json:"url,omitempty"`
 }
 
 // http://swagger.io/specification/#externalDocumentationObject
-type swaggerExternalDocumentationObject struct {
+type SwaggerExternalDocumentationObject struct {
 	Description string `json:"description,omitempty"`
 	URL         string `json:"url,omitempty"`
 }
 
-// http://swagger.io/specification/#swaggerObject
-type swaggerObject struct {
+// http://swagger.io/specification/#SwaggerObject
+type SwaggerObject struct {
 	Swagger     string                   `json:"swagger"`
-	Info        swaggerInfoObject        `json:"info"`
+	Info        SwaggerInfoObject        `json:"info"`
 	Host        string                   `json:"host,omitempty"`
 	BasePath    string                   `json:"basePath,omitempty"`
 	Schemes     []string                 `json:"schemes"`
 	Consumes    []string                 `json:"consumes"`
 	Produces    []string                 `json:"produces"`
-	Paths       swaggerPathsObject       `json:"paths"`
-	Definitions swaggerDefinitionsObject `json:"definitions"`
+	Paths       SwaggerPathsObject       `json:"paths"`
+	Definitions SwaggerDefinitionsObject `json:"definitions"`
 }
 
 // http://swagger.io/specification/#pathsObject
-type swaggerPathsObject map[string]swaggerPathItemObject
+type SwaggerPathsObject map[string]SwaggerPathItemObject
 
 // http://swagger.io/specification/#pathItemObject
-type swaggerPathItemObject struct {
-	Get    *swaggerOperationObject `json:"get,omitempty"`
-	Delete *swaggerOperationObject `json:"delete,omitempty"`
-	Post   *swaggerOperationObject `json:"post,omitempty"`
-	Put    *swaggerOperationObject `json:"put,omitempty"`
-	Patch  *swaggerOperationObject `json:"patch,omitempty"`
+type SwaggerPathItemObject struct {
+	Get    *SwaggerOperationObject `json:"get,omitempty"`
+	Delete *SwaggerOperationObject `json:"delete,omitempty"`
+	Post   *SwaggerOperationObject `json:"post,omitempty"`
+	Put    *SwaggerOperationObject `json:"put,omitempty"`
+	Patch  *SwaggerOperationObject `json:"patch,omitempty"`
 }
 
 // http://swagger.io/specification/#operationObject
-type swaggerOperationObject struct {
+type SwaggerOperationObject struct {
 	Summary     string                  `json:"summary,omitempty"`
 	Description string                  `json:"description,omitempty"`
 	OperationID string                  `json:"operationId"`
-	Responses   swaggerResponsesObject  `json:"responses"`
-	Parameters  swaggerParametersObject `json:"parameters,omitempty"`
+	Responses   SwaggerResponsesObject  `json:"responses"`
+	Parameters  SwaggerParametersObject `json:"parameters,omitempty"`
 	Tags        []string                `json:"tags,omitempty"`
 
-	ExternalDocs *swaggerExternalDocumentationObject `json:"externalDocs,omitempty"`
+	ExternalDocs *SwaggerExternalDocumentationObject `json:"externalDocs,omitempty"`
 }
 
-type swaggerParametersObject []swaggerParameterObject
+type SwaggerParametersObject []SwaggerParameterObject
 
 // http://swagger.io/specification/#parameterObject
-type swaggerParameterObject struct {
+type SwaggerParameterObject struct {
 	Name        string              `json:"name"`
 	Description string              `json:"description,omitempty"`
 	In          string              `json:"in,omitempty"`
 	Required    bool                `json:"required"`
 	Type        string              `json:"type,omitempty"`
 	Format      string              `json:"format,omitempty"`
-	Items       *swaggerItemsObject `json:"items,omitempty"`
+	Items       *SwaggerItemsObject `json:"items,omitempty"`
 	Enum        []string            `json:"enum,omitempty"`
 	Default     string              `json:"default,omitempty"`
 
 	// Or you can explicitly refer to another type. If this is defined all
 	// other fields should be empty
-	Schema *swaggerSchemaObject `json:"schema,omitempty"`
+	Schema *SwaggerSchemaObject `json:"schema,omitempty"`
 }
 
 // core part of schema, which is common to itemsObject and schemaObject.
 // http://swagger.io/specification/#itemsObject
-type schemaCore struct {
+type SchemaCore struct {
 	Type   string `json:"type,omitempty"`
 	Format string `json:"format,omitempty"`
 	Ref    string `json:"$ref,omitempty"`
 
-	Items *swaggerItemsObject `json:"items,omitempty"`
+	Items *SwaggerItemsObject `json:"items,omitempty"`
 
 	// If the item is an enumeration include a list of all the *NAMES* of the
 	// enum values.  I'm not sure how well this will work but assuming all enums
 	// start from 0 index it will be great. I don't think that is a good assumption.
 	Enum    []string `json:"enum,omitempty"`
 	Default string   `json:"default,omitempty"`
+
+	// Extended Properties
+	Minimum   int    `json:"minimum,omitempty"`
+	Maximum   int    `json:"maximum,omitempty"`
+	MinLength int    `json:"minLength,omitempty"`
+	MaxLength int    `json:"maxLength,omitempty"`
+	Example   string `json:"example,omitempty"`
+
+	// Extenstions
+	XUiHints map[string]string `json:"x-ui-hints,omitempty"`
 }
 
-type swaggerItemsObject schemaCore
+type SwaggerItemsObject SchemaCore
 
 // http://swagger.io/specification/#responsesObject
-type swaggerResponsesObject map[string]swaggerResponseObject
+type SwaggerResponsesObject map[string]SwaggerResponseObject
 
 // http://swagger.io/specification/#responseObject
-type swaggerResponseObject struct {
+type SwaggerResponseObject struct {
 	Description string              `json:"description"`
-	Schema      swaggerSchemaObject `json:"schema"`
+	Schema      SwaggerSchemaObject `json:"schema"`
 }
 
-type keyVal struct {
+type KeyVal struct {
 	Key   string
 	Value interface{}
 }
 
-type swaggerSchemaObjectProperties []keyVal
+type SwaggerSchemaObjectProperties []KeyVal
 
-func (op swaggerSchemaObjectProperties) MarshalJSON() ([]byte, error) {
+func (op SwaggerSchemaObjectProperties) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	buf.WriteString("{")
 	for i, kv := range op {
@@ -162,23 +184,23 @@ func (op swaggerSchemaObjectProperties) MarshalJSON() ([]byte, error) {
 }
 
 // http://swagger.io/specification/#schemaObject
-type swaggerSchemaObject struct {
-	schemaCore
+type SwaggerSchemaObject struct {
+	SchemaCore
 	// Properties can be recursively defined
-	Properties           swaggerSchemaObjectProperties `json:"properties,omitempty"`
-	AdditionalProperties *swaggerSchemaObject          `json:"additionalProperties,omitempty"`
+	Properties           SwaggerSchemaObjectProperties `json:"properties,omitempty"`
+	AdditionalProperties *SwaggerSchemaObject          `json:"additionalProperties,omitempty"`
 
 	Description string `json:"description,omitempty"`
 	Title       string `json:"title,omitempty"`
 }
 
 // http://swagger.io/specification/#referenceObject
-type swaggerReferenceObject struct {
+type SwaggerReferenceObject struct {
 	Ref string `json:"$ref"`
 }
 
 // http://swagger.io/specification/#definitionsObject
-type swaggerDefinitionsObject map[string]swaggerSchemaObject
+type SwaggerDefinitionsObject map[string]SwaggerSchemaObject
 
 // Internal type mapping from FQMN to descriptor.Message. Used as a set by the
 // findServiceMessages function.

@@ -20,15 +20,15 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// spec part of network object
+// Network represents a subnet
 type Network struct {
-	// type of network. (vlan/vxlan/routed etc)
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// IPv4 subnet CIDR
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// IPv4 gateway for this subnet
+	// Spec contains the configuration of the network.
 	Spec NetworkSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// IPv6 subnet CIDR
+	// Status contains the current state of the network.
 	Status NetworkStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -51,17 +51,22 @@ func (m *Network) GetStatus() NetworkStatus {
 	return NetworkStatus{}
 }
 
-// status part of network object
+// spec part of network object
 type NetworkSpec struct {
-	// list of all workloads in this network
+	// type of network. (vlan/vxlan/routed etc)
 	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
-	// allocated IPv4 addresses (bitmap)
-	IPv4Subnet  string `protobuf:"bytes,2,opt,name=IPv4Subnet,json=ipv4-subnet,omitempty,proto3" json:"ipv4-subnet,omitempty"`
+	// IPv4 subnet CIDR
+	IPv4Subnet string `protobuf:"bytes,2,opt,name=IPv4Subnet,json=ipv4-subnet,omitempty,proto3" json:"ipv4-subnet,omitempty"`
+	// IPv4 gateway for this subnet
 	IPv4Gateway string `protobuf:"bytes,3,opt,name=IPv4Gateway,json=ipv4-gateway,omitempty,proto3" json:"ipv4-gateway,omitempty"`
-	IPv6Subnet  string `protobuf:"bytes,4,opt,name=IPv6Subnet,json=ipv6-subnet,omitempty,proto3" json:"ipv6-subnet,omitempty"`
+	// IPv6 subnet CIDR
+	IPv6Subnet string `protobuf:"bytes,4,opt,name=IPv6Subnet,json=ipv6-subnet,omitempty,proto3" json:"ipv6-subnet,omitempty"`
+	// IPv6 gateway
 	IPv6Gateway string `protobuf:"bytes,5,opt,name=IPv6Gateway,json=ipv6-gateway,omitempty,proto3" json:"ipv6-gateway,omitempty"`
-	VlanID      uint32 `protobuf:"varint,6,opt,name=VlanID,json=vlan-id,omitempty,proto3" json:"vlan-id,omitempty"`
-	VxlanVNI    uint32 `protobuf:"varint,7,opt,name=VxlanVNI,json=vxlan-vni,omitempty,proto3" json:"vxlan-vni,omitempty"`
+	// Vlan ID for the network
+	VlanID uint32 `protobuf:"varint,6,opt,name=VlanID,json=vlan-id,omitempty,proto3" json:"vlan-id,omitempty"`
+	// Vxlan VNI for the network
+	VxlanVNI uint32 `protobuf:"varint,7,opt,name=VxlanVNI,json=vxlan-vni,omitempty,proto3" json:"vxlan-vni,omitempty"`
 }
 
 func (m *NetworkSpec) Reset()                    { *m = NetworkSpec{} }
@@ -118,10 +123,12 @@ func (m *NetworkSpec) GetVxlanVNI() uint32 {
 	return 0
 }
 
-// Network represents a subnet
+// status part of network object
 type NetworkStatus struct {
-	Workloads          []string `protobuf:"bytes,1,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
-	AllocatedIPv4Addrs []byte   `protobuf:"bytes,2,opt,name=AllocatedIPv4Addrs,json=allocated-ipv4-addrs,omitempty,proto3" json:"allocated-ipv4-addrs,omitempty" venice:"sskip"`
+	// list of all workloads in this network
+	Workloads []string `protobuf:"bytes,1,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
+	// allocated IPv4 addresses (bitmap)
+	AllocatedIPv4Addrs []byte `protobuf:"bytes,2,opt,name=AllocatedIPv4Addrs,json=allocated-ipv4-addrs,omitempty,proto3" json:"allocated-ipv4-addrs,omitempty" venice:"sskip"`
 }
 
 func (m *NetworkStatus) Reset()                    { *m = NetworkStatus{} }

@@ -36,14 +36,20 @@ const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 type Operator int32
 
 const (
-	Operator_equals    Operator = 0
+	Operator_equals Operator = 0
+	// ui-hint: not equals
 	Operator_notEquals Operator = 1
 	Operator_in        Operator = 2
-	Operator_notIn     Operator = 3
-	Operator_gt        Operator = 4
-	Operator_gte       Operator = 5
-	Operator_lt        Operator = 6
-	Operator_lte       Operator = 7
+	// ui-hint: not in
+	Operator_notIn Operator = 3
+	// ui-hint: greater than
+	Operator_gt Operator = 4
+	// ui-hint: greater than or equals
+	Operator_gte Operator = 5
+	// ui-hint: less than
+	Operator_lt Operator = 6
+	// ui-hint: less than or equals
+	Operator_lte Operator = 7
 )
 
 var Operator_name = map[int32]string{

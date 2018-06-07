@@ -4,8 +4,6 @@
 /*
 	Package workload is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		endpoint.proto
 		svc_workload.proto
@@ -49,12 +47,16 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// spec part of Endpoint object
+// Endpoint represents a network endpoint
 type Endpoint struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           EndpointSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         EndpointStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	// Spec contains the configuration of the Endpoint.
+	Spec EndpointSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the Endpoint.
+	Status EndpointStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *Endpoint) Reset()                    { *m = Endpoint{} }
@@ -76,7 +78,7 @@ func (m *Endpoint) GetStatus() EndpointStatus {
 	return EndpointStatus{}
 }
 
-// status part of Endpoint object
+// spec part of Endpoint object
 type EndpointSpec struct {
 }
 
@@ -85,25 +87,39 @@ func (m *EndpointSpec) String() string            { return proto.CompactTextStri
 func (*EndpointSpec) ProtoMessage()               {}
 func (*EndpointSpec) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{1} }
 
-// Endpoint represents a network endpoint
+// status part of Endpoint object
 type EndpointStatus struct {
+	// endpoint UUID
 	EndpointUUID string `protobuf:"bytes,1,opt,name=EndpointUUID,json=endpoint-uuid,omitempty,proto3" json:"endpoint-uuid,omitempty"`
+	// VM or container UUID
 	WorkloadUUID string `protobuf:"bytes,2,opt,name=WorkloadUUID,json=workload-uuid,omitempty,proto3" json:"workload-uuid,omitempty"`
-	// Spec contains the configuration of the Endpoint.
+	// VM or container name
 	WorkloadName string `protobuf:"bytes,3,opt,name=WorkloadName,json=workload-name,omitempty,proto3" json:"workload-name,omitempty"`
-	// Status contains the current state of the Endpoint.
-	Network            string            `protobuf:"bytes,4,opt,name=Network,json=network,omitempty,proto3" json:"network,omitempty"`
-	HomingHostAddr     string            `protobuf:"bytes,5,opt,name=HomingHostAddr,json=homing-host-addr,omitempty,proto3" json:"homing-host-addr,omitempty"`
-	HomingHostName     string            `protobuf:"bytes,6,opt,name=HomingHostName,json=homing-host-name,omitempty,proto3" json:"homing-host-name,omitempty"`
-	IPv4Address        string            `protobuf:"bytes,7,opt,name=IPv4Address,json=ipv4-address,omitempty,proto3" json:"ipv4-address,omitempty"`
-	IPv4Gateway        string            `protobuf:"bytes,8,opt,name=IPv4Gateway,json=ipv4-gateway,omitempty,proto3" json:"ipv4-gateway,omitempty"`
-	IPv6Address        string            `protobuf:"bytes,9,opt,name=IPv6Address,json=ipv6-address,omitempty,proto3" json:"ipv6-address,omitempty"`
-	IPv6Gateway        string            `protobuf:"bytes,10,opt,name=IPv6Gateway,json=ipv6-gateway,omitempty,proto3" json:"ipv6-gateway,omitempty"`
-	MacAddress         string            `protobuf:"bytes,11,opt,name=MacAddress,json=mac-address,omitempty,proto3" json:"mac-address,omitempty"`
-	NodeUUID           string            `protobuf:"bytes,12,opt,name=NodeUUID,json=node-uuid,omitempty,proto3" json:"node-uuid,omitempty"`
-	EndpointState      string            `protobuf:"bytes,13,opt,name=EndpointState,proto3" json:"EndpointState,omitempty"`
-	SecurityGroups     []string          `protobuf:"bytes,14,rep,name=SecurityGroups" json:"SecurityGroups,omitempty"`
-	MicroSegmentVlan   uint32            `protobuf:"varint,15,opt,name=MicroSegmentVlan,json=micro-segment-vlan,omitempty,proto3" json:"micro-segment-vlan,omitempty"`
+	// network this endpoint belogs to
+	Network string `protobuf:"bytes,4,opt,name=Network,json=network,omitempty,proto3" json:"network,omitempty"`
+	// host address of the host where this endpoint exists
+	HomingHostAddr string `protobuf:"bytes,5,opt,name=HomingHostAddr,json=homing-host-addr,omitempty,proto3" json:"homing-host-addr,omitempty"`
+	// host name of the host where this endpoint exists
+	HomingHostName string `protobuf:"bytes,6,opt,name=HomingHostName,json=homing-host-name,omitempty,proto3" json:"homing-host-name,omitempty"`
+	// IPv4 address of the endpoint
+	IPv4Address string `protobuf:"bytes,7,opt,name=IPv4Address,json=ipv4-address,omitempty,proto3" json:"ipv4-address,omitempty"`
+	// IPv4 gateway for the endpoint
+	IPv4Gateway string `protobuf:"bytes,8,opt,name=IPv4Gateway,json=ipv4-gateway,omitempty,proto3" json:"ipv4-gateway,omitempty"`
+	// IPv6 address for the endpoint
+	IPv6Address string `protobuf:"bytes,9,opt,name=IPv6Address,json=ipv6-address,omitempty,proto3" json:"ipv6-address,omitempty"`
+	// IPv6 gateway
+	IPv6Gateway string `protobuf:"bytes,10,opt,name=IPv6Gateway,json=ipv6-gateway,omitempty,proto3" json:"ipv6-gateway,omitempty"`
+	// Mac address of the endpoint
+	MacAddress string `protobuf:"bytes,11,opt,name=MacAddress,json=mac-address,omitempty,proto3" json:"mac-address,omitempty"`
+	// homing host's UUID
+	NodeUUID string `protobuf:"bytes,12,opt,name=NodeUUID,json=node-uuid,omitempty,proto3" json:"node-uuid,omitempty"`
+	// endpoint FSM state
+	EndpointState string `protobuf:"bytes,13,opt,name=EndpointState,proto3" json:"EndpointState,omitempty"`
+	// security groups
+	SecurityGroups []string `protobuf:"bytes,14,rep,name=SecurityGroups" json:"SecurityGroups,omitempty"`
+	// micro-segment VLAN
+	MicroSegmentVlan uint32 `protobuf:"varint,15,opt,name=MicroSegmentVlan,json=micro-segment-vlan,omitempty,proto3" json:"micro-segment-vlan,omitempty"`
+	// VM or container attribute/labels
 	WorkloadAttributes map[string]string `protobuf:"bytes,16,rep,name=WorkloadAttributes,json=workload-attributes,omitempty" json:"workload-attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 

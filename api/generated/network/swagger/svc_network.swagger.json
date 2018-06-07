@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Service name",
+    "title": "svc_network.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,14 +15,51 @@
     "application/json"
   ],
   "paths": {
-    "/{O.Tenant}/lb-policy": {
+    "/v1/network/{O.Tenant}/lb-policy": {
       "get": {
-        "operationId": "AutoListLbPolicy",
+        "summary": "Retreives a list of LbPolicy objects",
+        "operationId": "ListLbPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicyList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -34,75 +71,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -112,16 +151,54 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddLbPolicy",
+        "summary": "Creates a new LbPolicy object",
+        "operationId": "AddLbPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -142,18 +219,56 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/lb-policy/{O.Name}": {
+    "/v1/network/{O.Tenant}/lb-policy/{O.Name}": {
       "get": {
-        "operationId": "AutoGetLbPolicy",
+        "summary": "Retreives the LbPolicy object",
+        "operationId": "GetLbPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -171,82 +286,86 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Type",
-            "description": "list of service objects referring this lb-policy.",
+            "name": "spec.type",
+            "description": "load balancing type.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Algorithm",
+            "name": "spec.algorithm",
+            "description": "load balancing algorithm.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.SessionAffinity",
+            "name": "spec.session-affinity",
+            "description": "session affinity.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.HealthCheck.Interval",
+            "name": "health-check.interval",
             "description": "Health check interval.",
             "in": "query",
             "required": false,
@@ -254,7 +373,7 @@
             "format": "int64"
           },
           {
-            "name": "Spec.HealthCheck.ProbesPerInterval",
+            "name": "health-check.probes-per-interval",
             "description": "# of probes per interval.",
             "in": "query",
             "required": false,
@@ -262,14 +381,14 @@
             "format": "int64"
           },
           {
-            "name": "Spec.HealthCheck.ProbePortOrUrl",
+            "name": "health-check.probe-port-or-url",
             "description": "probe URL.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.HealthCheck.MaxTimeouts",
+            "name": "health-check.max-timeouts",
             "description": "timeout for declaring backend down.",
             "in": "query",
             "required": false,
@@ -277,7 +396,7 @@
             "format": "int64"
           },
           {
-            "name": "Spec.HealthCheck.DeclareHealthyCount",
+            "name": "health-check.declare-healthy-count",
             "description": "# of successful probes before we declare the backend back up.",
             "in": "query",
             "required": false,
@@ -285,7 +404,8 @@
             "format": "int64"
           },
           {
-            "name": "Status.Services",
+            "name": "status.type",
+            "description": "list of service objects referring this lb-policy.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -295,16 +415,54 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteLbPolicy",
+        "summary": "Deletes the LbPolicy object",
+        "operationId": "DeleteLbPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -323,16 +481,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateLbPolicy",
+        "operationId": "UpdateLbPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -359,19 +554,57 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/networks": {
+    "/v1/network/{O.Tenant}/networks": {
       "get": {
-        "operationId": "AutoListNetwork",
+        "summary": "Retreives a list of Network objects",
+        "operationId": "ListNetwork",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetworkList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -382,75 +615,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -460,16 +695,54 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddNetwork",
+        "summary": "Creates a new Network object",
+        "operationId": "AddNetwork",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -490,18 +763,56 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/networks/{O.Name}": {
+    "/v1/network/{O.Tenant}/networks/{O.Name}": {
       "get": {
-        "operationId": "AutoGetNetwork",
+        "summary": "Retreives the Network object",
+        "operationId": "GetNetwork",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -519,109 +830,117 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Type",
+            "name": "spec.type",
+            "description": "type of network. (vlan/vxlan/routed etc).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.ipv4-subnet",
+            "description": "IPv4 subnet CIDR.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.ipv4-gateway",
+            "description": "IPv4 gateway for this subnet.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.ipv6-subnet",
+            "description": "IPv6 subnet CIDR.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.ipv6-gateway",
+            "description": "IPv6 gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.vlan-id",
+            "description": "Vlan ID for the network.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.vxlan-vni",
+            "description": "Vxlan VNI for the network.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "status.workloads",
             "description": "list of all workloads in this network.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.IPv4Subnet",
-            "description": "allocated IPv4 addresses (bitmap).",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.IPv4Gateway",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.IPv6Subnet",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.IPv6Gateway",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.VlanID",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "Spec.VxlanVNI",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "Status.Workloads",
             "in": "query",
             "required": false,
             "type": "array",
@@ -630,7 +949,8 @@
             }
           },
           {
-            "name": "Status.AllocatedIPv4Addrs",
+            "name": "status.allocated-ipv4-addrs",
+            "description": "allocated IPv4 addresses (bitmap).",
             "in": "query",
             "required": false,
             "type": "string",
@@ -638,16 +958,54 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteNetwork",
+        "summary": "Deletes the Network object",
+        "operationId": "DeleteNetwork",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -666,16 +1024,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateNetwork",
+        "operationId": "UpdateNetwork",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -702,19 +1097,57 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/services": {
+    "/v1/network/{O.Tenant}/services": {
       "get": {
-        "operationId": "AutoListService",
+        "summary": "Retreives a list of Service objects",
+        "operationId": "ListService",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkServiceList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -725,75 +1158,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -803,16 +1238,54 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddService",
+        "summary": "Creates a new Service object",
+        "operationId": "AddService",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -833,18 +1306,56 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/services/{O.Name}": {
+    "/v1/network/{O.Tenant}/services/{O.Name}": {
       "get": {
-        "operationId": "AutoGetService",
+        "summary": "Retreives the Service object",
+        "operationId": "GetService",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -862,146 +1373,65 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.WorkloadSelector",
-            "description": "A map containing the certificate to use for a set of destinations.\nThe key is a selector for workloads that exist either inside or\noutside the cluster. It can be based on labels, hostnames or \"IP:port\" pairs.\nThe value is the name of the certificate to use for the selected destinations.\nThe certificates \"usage\" field must contain \"client\".\nTODO: replace the first \"string\" type with proper selector type when available.\nA single \"default\" certificate which matches all destinations is allowed.\nIf a destination matches multiple non-default map keys, an error is returned.\nIf a destination does not match any map key (and there is no default),\nthe outbound connection is initiated without TLS.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Spec.VirtualIp",
-            "description": "The list of root certificates used to validate a trust chain presented by a server.\nIf the list is empty, all roots certificates in the tenant scope are considered.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Ports",
-            "description": "Valid DNS names or IP addresses that must appear in the server certificate\nSubjAltName or Common Name (if SAN is not specified). If not specified,\nclient validates the IP address of the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.LBPolicy",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.TLSServerPolicy.Certificates",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Spec.TLSServerPolicy.ClientAuthentication",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.TLSServerPolicy.TrustRoots",
-            "description": "Spec contains the configuration of the Service.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Spec.TLSServerPolicy.AllowedPeerId",
-            "description": "Status contains the current state of the Service.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Spec.TLSClientPolicy.TrustRoots",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Spec.TLSClientPolicy.AllowedPeerId",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Status.Workloads",
+            "name": "spec.workload-labels",
             "description": "FIXME: maps are not working. change this after its fixed\nmap\u003cstring, string\u003e WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = \"workload-labels,omitempty\"];\nworkload selector for the service (list of labels to match).",
             "in": "query",
             "required": false,
@@ -1009,19 +1439,145 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "spec.virtual-ip",
+            "description": "Virtual IP of the load balancer.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.ports",
+            "description": "load balancer port.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.lb-policy",
+            "description": "load balancing policy (reference to LbPolicy object).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "tls-server-policy.tls-server-certificates",
+            "description": "List of names of certificates to present to clients.\nThe certificates \"usage\" field must contain \"server\".\nIf multiple certificates names are provided, system tries to choose the\ncorrect one using SNI, otherwise it picks the first one in the list.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tls-server-policy.client-authentication",
+            "description": "Client authentication\n\"None\" means that server does not request and will not validate a client certificate.\n\"Mandatory\" means that server requests and validates client certificate.\n\"Optional\" means that server requests client certificate but proceeds even\nif client does not present it.\nDefault is \"Mandatory\".",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "tls-server-policy.tls-server-trust-roots",
+            "description": "The list of root certificates used to validate a trust chain presented by client.\nIf the list is empty, all roots certificates in the tenant scope are considered.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tls-server-policy.tls-server-allowed-peer-id",
+            "description": "Valid DNS names or IP addresses that must appear in the client certificate\nSubjAltName or Common Name (if SAN is not specified).\nIf client auth is enabled and AllowedPeerId is not specified, server accepts any\nclient certificate as long as it is valid  (not expired and with a valid trust chain).",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tls-client-policy.tls-client-trust-roots",
+            "description": "The list of root certificates used to validate a trust chain presented by a server.\nIf the list is empty, all roots certificates in the tenant scope are considered.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tls-client-policy.tls-client-allowed-peer-id",
+            "description": "Valid DNS names or IP addresses that must appear in the server certificate\nSubjAltName or Common Name (if SAN is not specified). If not specified,\nclient validates the IP address of the server.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.workloads",
+            "description": "list of workloads that are backends of this service.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteService",
+        "summary": "Deletes the Service object",
+        "operationId": "DeleteService",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1040,16 +1596,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateService",
+        "operationId": "UpdateService",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1076,7 +1669,8 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "NetworkV1",
+          "version:v1"
         ]
       }
     }
@@ -1085,7 +1679,7 @@
     "apiListMeta": {
       "type": "object",
       "properties": {
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version of object store at the time of list generation."
         }
@@ -1095,20 +1689,49 @@
     "apiListWatchOptions": {
       "type": "object",
       "properties": {
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "LabelSelector": {
+        "name": {
           "type": "string"
         },
-        "FieldSelector": {
+        "tenant": {
           "type": "string"
         },
-        "PrefixWatch": {
+        "namespace": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "self-link": {
+          "type": "string"
+        },
+        "label-selector": {
+          "type": "string"
+        },
+        "field-selector": {
+          "type": "string"
+        },
+        "prefix-watch": {
           "type": "boolean",
           "format": "boolean"
         },
-        "FieldChangeSelector": {
+        "field-change-selector": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1119,65 +1742,138 @@
     "apiObjectMeta": {
       "type": "object",
       "properties": {
-        "Name": {
+        "name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
-        "Tenant": {
+        "tenant": {
           "type": "string",
           "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
-        "Namespace": {
+        "namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
-        "UUID": {
+        "uuid": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         },
-        "Labels": {
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
           "description": "Labels are arbitrary (key,value) pairs associated with any object."
         },
-        "CreationTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "CreationTime is the creation time of Object"
         },
-        "ModTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "ModTime is the Last Modification time of Object"
         },
-        "SelfLink": {
+        "self-link": {
           "type": "string",
           "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
-        "time": {
+        "seconds": {
           "type": "string",
-          "format": "date-time"
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
     "apiTypeMeta": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "kind": {
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "APIVersion": {
+        "api-version": {
           "type": "string",
           "description": "APIVersion defines the version of the API object."
         }
@@ -1193,7 +1889,8 @@
             "$ref": "#/definitions/networkAutoMsgLbPolicyWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgLbPolicyWatchHelper is a wrapper object for watch events for LbPolicy objects"
     },
     "networkAutoMsgLbPolicyWatchHelperWatchEvent": {
       "type": "object",
@@ -1215,7 +1912,8 @@
             "$ref": "#/definitions/networkAutoMsgNetworkWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgNetworkWatchHelper is a wrapper object for watch events for Network objects"
     },
     "networkAutoMsgNetworkWatchHelperWatchEvent": {
       "type": "object",
@@ -1237,7 +1935,8 @@
             "$ref": "#/definitions/networkAutoMsgServiceWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgServiceWatchHelper is a wrapper object for watch events for Service objects"
     },
     "networkAutoMsgServiceWatchHelperWatchEvent": {
       "type": "object",
@@ -1253,26 +1952,26 @@
     "networkHealthCheckSpec": {
       "type": "object",
       "properties": {
-        "Interval": {
+        "interval": {
           "type": "integer",
           "format": "int64",
           "title": "Health check interval"
         },
-        "ProbesPerInterval": {
+        "probes-per-interval": {
           "type": "integer",
           "format": "int64",
           "title": "# of probes per interval"
         },
-        "ProbePortOrUrl": {
+        "probe-port-or-url": {
           "type": "string",
           "title": "probe URL"
         },
-        "MaxTimeouts": {
+        "max-timeouts": {
           "type": "integer",
           "format": "int64",
           "title": "timeout for declaring backend down"
         },
-        "DeclareHealthyCount": {
+        "declare-healthy-count": {
           "type": "integer",
           "format": "int64",
           "title": "# of successful probes before we declare the backend back up"
@@ -1282,292 +1981,334 @@
     "networkLbPolicy": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "load balancing type"
+        "kind": {
+          "type": "string"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "load balancing algorithm"
+        "api-version": {
+          "type": "string"
         },
-        "Spec": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
           "$ref": "#/definitions/networkLbPolicySpec",
-          "title": "session affinity"
+          "description": "Spec contains the configuration of the LbPolicy."
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/networkLbPolicyStatus",
-          "title": "health check policy"
+          "description": "Status contains the current state of the LbPolicy."
         }
-      }
+      },
+      "title": "LbPolicy represents a load balancer policy"
     },
     "networkLbPolicyList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkLbPolicy"
-          }
+          },
+          "title": "List of LbPolicy objects"
         }
-      }
+      },
+      "title": "LbPolicyList is a container object for list of LbPolicy objects"
     },
     "networkLbPolicySpec": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string",
-          "title": "list of service objects referring this lb-policy"
+          "title": "load balancing type"
         },
-        "Algorithm": {
-          "type": "string"
+        "algorithm": {
+          "type": "string",
+          "title": "load balancing algorithm"
         },
-        "SessionAffinity": {
-          "type": "string"
+        "session-affinity": {
+          "type": "string",
+          "title": "session affinity"
         },
-        "HealthCheck": {
-          "$ref": "#/definitions/networkHealthCheckSpec"
+        "health-check": {
+          "$ref": "#/definitions/networkHealthCheckSpec",
+          "title": "health check policy"
         }
       }
     },
     "networkLbPolicyStatus": {
       "type": "object",
       "properties": {
-        "Services": {
+        "type": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "list of service objects referring this lb-policy"
         }
-      },
-      "title": "LbPolicy represents a load balancer policy"
+      }
     },
     "networkNetwork": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "type of network. (vlan/vxlan/routed etc)"
+        "kind": {
+          "type": "string"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "IPv4 subnet CIDR"
+        "api-version": {
+          "type": "string"
         },
-        "Spec": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
           "$ref": "#/definitions/networkNetworkSpec",
-          "title": "IPv4 gateway for this subnet"
+          "description": "Spec contains the configuration of the network."
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/networkNetworkStatus",
-          "title": "IPv6 subnet CIDR"
+          "description": "Status contains the current state of the network."
         }
       },
-      "title": "spec part of network object"
+      "title": "Network represents a subnet"
     },
     "networkNetworkList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkNetwork"
-          }
+          },
+          "title": "List of Network objects"
         }
-      }
+      },
+      "title": "NetworkList is a container object for list of Network objects"
     },
     "networkNetworkSpec": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string",
-          "title": "list of all workloads in this network"
+          "title": "type of network. (vlan/vxlan/routed etc)"
         },
-        "IPv4Subnet": {
+        "ipv4-subnet": {
           "type": "string",
-          "title": "allocated IPv4 addresses (bitmap)"
+          "title": "IPv4 subnet CIDR"
         },
-        "IPv4Gateway": {
-          "type": "string"
+        "ipv4-gateway": {
+          "type": "string",
+          "title": "IPv4 gateway for this subnet"
         },
-        "IPv6Subnet": {
-          "type": "string"
+        "ipv6-subnet": {
+          "type": "string",
+          "title": "IPv6 subnet CIDR"
         },
-        "IPv6Gateway": {
-          "type": "string"
+        "ipv6-gateway": {
+          "type": "string",
+          "title": "IPv6 gateway"
         },
-        "VlanID": {
+        "vlan-id": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "Vlan ID for the network"
         },
-        "VxlanVNI": {
+        "vxlan-vni": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "Vxlan VNI for the network"
         }
       },
-      "title": "status part of network object"
+      "title": "spec part of network object"
     },
     "networkNetworkStatus": {
       "type": "object",
       "properties": {
-        "Workloads": {
+        "workloads": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "list of all workloads in this network"
         },
-        "AllocatedIPv4Addrs": {
+        "allocated-ipv4-addrs": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "allocated IPv4 addresses (bitmap)"
         }
       },
-      "title": "Network represents a subnet"
+      "title": "status part of network object"
     },
     "networkService": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "description": "List of names of certificates to present to clients.\nThe certificates \"usage\" field must contain \"server\".\nIf multiple certificates names are provided, system tries to choose the\ncorrect one using SNI, otherwise it picks the first one in the list."
+        "kind": {
+          "type": "string"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "description": "Client authentication\n\"None\" means that server does not request and will not validate a client certificate.\n\"Mandatory\" means that server requests and validates client certificate.\n\"Optional\" means that server requests client certificate but proceeds even\nif client does not present it.\nDefault is \"Mandatory\"."
+        "api-version": {
+          "type": "string"
         },
-        "Spec": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
           "$ref": "#/definitions/networkServiceSpec",
-          "description": "The list of root certificates used to validate a trust chain presented by client.\nIf the list is empty, all roots certificates in the tenant scope are considered."
+          "description": "Spec contains the configuration of the Service."
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/networkServiceStatus",
-          "description": "Valid DNS names or IP addresses that must appear in the client certificate\nSubjAltName or Common Name (if SAN is not specified).\nIf client auth is enabled and AllowedPeerId is not specified, server accepts any\nclient certificate as long as it is valid  (not expired and with a valid trust chain)."
+          "description": "Status contains the current state of the Service."
         }
       },
-      "description": "The Service TLS configuration for inbound connections.\nIt is used on all ports specified in the Service spec.\nMultiple Service objects can select the same workload and provide different\nserver TLS configurations for disjoint sets of ports."
+      "title": "Service represents a group of identical endpoints, such as servers in an app tier"
     },
     "networkServiceList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkService"
-          }
+          },
+          "title": "List of Service objects"
         }
-      }
+      },
+      "title": "ServiceList is a container object for list of Service objects"
     },
     "networkServiceSpec": {
       "type": "object",
       "properties": {
-        "WorkloadSelector": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "A map containing the certificate to use for a set of destinations.\nThe key is a selector for workloads that exist either inside or\noutside the cluster. It can be based on labels, hostnames or \"IP:port\" pairs.\nThe value is the name of the certificate to use for the selected destinations.\nThe certificates \"usage\" field must contain \"client\".\nTODO: replace the first \"string\" type with proper selector type when available.\nA single \"default\" certificate which matches all destinations is allowed.\nIf a destination matches multiple non-default map keys, an error is returned.\nIf a destination does not match any map key (and there is no default),\nthe outbound connection is initiated without TLS."
-        },
-        "VirtualIp": {
-          "type": "string",
-          "description": "The list of root certificates used to validate a trust chain presented by a server.\nIf the list is empty, all roots certificates in the tenant scope are considered."
-        },
-        "Ports": {
-          "type": "string",
-          "description": "Valid DNS names or IP addresses that must appear in the server certificate\nSubjAltName or Common Name (if SAN is not specified). If not specified,\nclient validates the IP address of the server."
-        },
-        "LBPolicy": {
-          "type": "string"
-        },
-        "TLSServerPolicy": {
-          "$ref": "#/definitions/networkTLSServerPolicySpec"
-        },
-        "TLSClientPolicy": {
-          "$ref": "#/definitions/networkTLSClientPolicySpec"
-        }
-      },
-      "description": "Service TLS configuration for connections initiated by the workload towards\ndestinations inside or outside the cluster."
-    },
-    "networkServiceStatus": {
-      "type": "object",
-      "properties": {
-        "Workloads": {
+        "workload-labels": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "title": "FIXME: maps are not working. change this after its fixed\nmap\u003cstring, string\u003e WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = \"workload-labels,omitempty\"];\nworkload selector for the service (list of labels to match)"
+        },
+        "virtual-ip": {
+          "type": "string",
+          "title": "Virtual IP of the load balancer"
+        },
+        "ports": {
+          "type": "string",
+          "title": "load balancer port"
+        },
+        "lb-policy": {
+          "type": "string",
+          "title": "load balancing policy (reference to LbPolicy object)"
+        },
+        "tls-server-policy": {
+          "$ref": "#/definitions/networkTLSServerPolicySpec",
+          "title": "TLS configuration for inbound connections"
+        },
+        "tls-client-policy": {
+          "$ref": "#/definitions/networkTLSClientPolicySpec",
+          "title": "TLS configuration for outbound connections"
         }
       },
       "title": "spec part of service object"
     },
-    "networkTLSClientPolicySpec": {
+    "networkServiceStatus": {
       "type": "object",
       "properties": {
-        "CertificatesSelector": {
-          "type": "object",
-          "additionalProperties": {
+        "workloads": {
+          "type": "array",
+          "items": {
             "type": "string"
           },
           "title": "list of workloads that are backends of this service"
-        },
-        "TrustRoots": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "AllowedPeerId": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       },
       "title": "status part of service object"
     },
+    "networkTLSClientPolicySpec": {
+      "type": "object",
+      "properties": {
+        "tls-client-certificates-selector": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A map containing the certificate to use for a set of destinations.\nThe key is a selector for workloads that exist either inside or\noutside the cluster. It can be based on labels, hostnames or \"IP:port\" pairs.\nThe value is the name of the certificate to use for the selected destinations.\nThe certificates \"usage\" field must contain \"client\".\nTODO: replace the first \"string\" type with proper selector type when available.\nA single \"default\" certificate which matches all destinations is allowed.\nIf a destination matches multiple non-default map keys, an error is returned.\nIf a destination does not match any map key (and there is no default),\nthe outbound connection is initiated without TLS."
+        },
+        "tls-client-trust-roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The list of root certificates used to validate a trust chain presented by a server.\nIf the list is empty, all roots certificates in the tenant scope are considered."
+        },
+        "tls-client-allowed-peer-id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Valid DNS names or IP addresses that must appear in the server certificate\nSubjAltName or Common Name (if SAN is not specified). If not specified,\nclient validates the IP address of the server."
+        }
+      },
+      "description": "Service TLS configuration for connections initiated by the workload towards\ndestinations inside or outside the cluster."
+    },
     "networkTLSServerPolicySpec": {
       "type": "object",
       "properties": {
-        "Certificates": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ClientAuthentication": {
-          "type": "string"
-        },
-        "TrustRoots": {
+        "tls-server-certificates": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "Spec contains the configuration of the Service."
+          "description": "List of names of certificates to present to clients.\nThe certificates \"usage\" field must contain \"server\".\nIf multiple certificates names are provided, system tries to choose the\ncorrect one using SNI, otherwise it picks the first one in the list."
         },
-        "AllowedPeerId": {
+        "client-authentication": {
+          "type": "string",
+          "enum": [
+            "Mandatory",
+            "Optional",
+            "None"
+          ],
+          "default": "Mandatory",
+          "description": "Client authentication\n\"None\" means that server does not request and will not validate a client certificate.\n\"Mandatory\" means that server requests and validates client certificate.\n\"Optional\" means that server requests client certificate but proceeds even\nif client does not present it.\nDefault is \"Mandatory\"."
+        },
+        "tls-server-trust-roots": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "Status contains the current state of the Service."
+          "description": "The list of root certificates used to validate a trust chain presented by client.\nIf the list is empty, all roots certificates in the tenant scope are considered."
+        },
+        "tls-server-allowed-peer-id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Valid DNS names or IP addresses that must appear in the client certificate\nSubjAltName or Common Name (if SAN is not specified).\nIf client auth is enabled and AllowedPeerId is not specified, server accepts any\nclient certificate as long as it is valid  (not expired and with a valid trust chain)."
         }
       },
-      "title": "Service represents a group of identical endpoints, such as servers in an app tier"
+      "description": "The Service TLS configuration for inbound connections.\nIt is used on all ports specified in the Service spec.\nMultiple Service objects can select the same workload and provide different\nserver TLS configurations for disjoint sets of ports."
     }
   }
 }

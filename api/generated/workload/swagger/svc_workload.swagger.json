@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Service name",
+    "title": "svc_workload.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,14 +15,51 @@
     "application/json"
   ],
   "paths": {
-    "/{O.Tenant}/endpoints": {
+    "/v1/workload/{O.Tenant}/endpoints": {
       "get": {
-        "operationId": "AutoListEndpoint",
+        "summary": "Retreives a list of Endpoint objects",
+        "operationId": "ListEndpoint",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpointList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -34,75 +71,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -112,16 +151,54 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddEndpoint",
+        "summary": "Creates a new Endpoint object",
+        "operationId": "AddEndpoint",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -142,18 +219,56 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/endpoints/{O.Name}": {
+    "/v1/workload/{O.Tenant}/endpoints/{O.Name}": {
       "get": {
-        "operationId": "AutoGetEndpoint",
+        "summary": "Retreives the Endpoint object",
+        "operationId": "GetEndpoint",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -171,143 +286,157 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.EndpointUUID",
+            "name": "status.endpoint-uuid",
+            "description": "endpoint UUID.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.WorkloadUUID",
+            "name": "status.workload-uuid",
+            "description": "VM or container UUID.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.WorkloadName",
-            "description": "Spec contains the configuration of the Endpoint.",
+            "name": "status.workload-name",
+            "description": "VM or container name.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.Network",
-            "description": "Status contains the current state of the Endpoint.",
+            "name": "status.network",
+            "description": "network this endpoint belogs to.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.HomingHostAddr",
+            "name": "status.homing-host-addr",
+            "description": "host address of the host where this endpoint exists.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.HomingHostName",
+            "name": "status.homing-host-name",
+            "description": "host name of the host where this endpoint exists.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.IPv4Address",
+            "name": "status.ipv4-address",
+            "description": "IPv4 address of the endpoint.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.IPv4Gateway",
+            "name": "status.ipv4-gateway",
+            "description": "IPv4 gateway for the endpoint.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.IPv6Address",
+            "name": "status.ipv6-address",
+            "description": "IPv6 address for the endpoint.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.IPv6Gateway",
+            "name": "status.ipv6-gateway",
+            "description": "IPv6 gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.MacAddress",
+            "name": "status.mac-address",
+            "description": "Mac address of the endpoint.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.NodeUUID",
+            "name": "status.node-uuid",
+            "description": "homing host's UUID.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.EndpointState",
+            "name": "status.EndpointState",
+            "description": "endpoint FSM state.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.SecurityGroups",
+            "name": "status.SecurityGroups",
+            "description": "security groups.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -316,7 +445,8 @@
             }
           },
           {
-            "name": "Status.MicroSegmentVlan",
+            "name": "status.micro-segment-vlan",
+            "description": "micro-segment VLAN.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -324,16 +454,54 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteEndpoint",
+        "summary": "Deletes the Endpoint object",
+        "operationId": "DeleteEndpoint",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -352,16 +520,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateEndpoint",
+        "operationId": "UpdateEndpoint",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -388,19 +593,57 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/workloads": {
+    "/v1/workload/{O.Tenant}/workloads": {
       "get": {
-        "operationId": "AutoListWorkload",
+        "summary": "Retreives a list of Workload objects",
+        "operationId": "ListWorkload",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkloadList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -411,75 +654,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -489,16 +734,54 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddWorkload",
+        "summary": "Creates a new Workload object",
+        "operationId": "AddWorkload",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -519,18 +802,56 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/workloads/{O.Name}": {
+    "/v1/workload/{O.Tenant}/workloads/{O.Name}": {
       "get": {
-        "operationId": "AutoGetWorkload",
+        "summary": "Retreives the Workload object",
+        "operationId": "GetWorkload",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -548,70 +869,73 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.HostName",
-            "description": "Micro-segmentation vlan assigned for this interface.",
+            "name": "spec.host-name",
+            "description": "Hostname of the server where the workload is running.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.Endpoints",
+            "name": "status.endpoints",
+            "description": "List of all endpoints associated with this Workload.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -621,16 +945,54 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteWorkload",
+        "summary": "Deletes the Workload object",
+        "operationId": "DeleteWorkload",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -649,16 +1011,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateWorkload",
+        "operationId": "UpdateWorkload",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -685,7 +1084,8 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "WorkloadV1",
+          "version:v1"
         ]
       }
     }
@@ -694,7 +1094,7 @@
     "apiListMeta": {
       "type": "object",
       "properties": {
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version of object store at the time of list generation."
         }
@@ -704,20 +1104,49 @@
     "apiListWatchOptions": {
       "type": "object",
       "properties": {
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "LabelSelector": {
+        "name": {
           "type": "string"
         },
-        "FieldSelector": {
+        "tenant": {
           "type": "string"
         },
-        "PrefixWatch": {
+        "namespace": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "self-link": {
+          "type": "string"
+        },
+        "label-selector": {
+          "type": "string"
+        },
+        "field-selector": {
+          "type": "string"
+        },
+        "prefix-watch": {
           "type": "boolean",
           "format": "boolean"
         },
-        "FieldChangeSelector": {
+        "field-change-selector": {
           "type": "array",
           "items": {
             "type": "string"
@@ -728,65 +1157,138 @@
     "apiObjectMeta": {
       "type": "object",
       "properties": {
-        "Name": {
+        "name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
-        "Tenant": {
+        "tenant": {
           "type": "string",
           "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
-        "Namespace": {
+        "namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
-        "UUID": {
+        "uuid": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         },
-        "Labels": {
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
           "description": "Labels are arbitrary (key,value) pairs associated with any object."
         },
-        "CreationTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "CreationTime is the creation time of Object"
         },
-        "ModTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "ModTime is the Last Modification time of Object"
         },
-        "SelfLink": {
+        "self-link": {
           "type": "string",
           "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
-        "time": {
+        "seconds": {
           "type": "string",
-          "format": "date-time"
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
     "apiTypeMeta": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "kind": {
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "APIVersion": {
+        "api-version": {
           "type": "string",
           "description": "APIVersion defines the version of the API object."
         }
@@ -802,7 +1304,8 @@
             "$ref": "#/definitions/workloadAutoMsgEndpointWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgEndpointWatchHelper is a wrapper object for watch events for Endpoint objects"
     },
     "workloadAutoMsgEndpointWatchHelperWatchEvent": {
       "type": "object",
@@ -824,7 +1327,8 @@
             "$ref": "#/definitions/workloadAutoMsgWorkloadWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgWorkloadWatchHelper is a wrapper object for watch events for Workload objects"
     },
     "workloadAutoMsgWorkloadWatchHelperWatchEvent": {
       "type": "object",
@@ -840,119 +1344,146 @@
     "workloadEndpoint": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
-          "$ref": "#/definitions/workloadEndpointSpec"
+        "spec": {
+          "$ref": "#/definitions/workloadEndpointSpec",
+          "description": "Spec contains the configuration of the Endpoint."
         },
-        "Status": {
-          "$ref": "#/definitions/workloadEndpointStatus"
+        "status": {
+          "$ref": "#/definitions/workloadEndpointStatus",
+          "description": "Status contains the current state of the Endpoint."
         }
       },
-      "title": "spec part of Endpoint object"
+      "title": "Endpoint represents a network endpoint"
     },
     "workloadEndpointList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/workloadEndpoint"
-          }
+          },
+          "title": "List of Endpoint objects"
         }
-      }
+      },
+      "title": "EndpointList is a container object for list of Endpoint objects"
     },
     "workloadEndpointSpec": {
       "type": "object",
-      "title": "status part of Endpoint object"
+      "title": "spec part of Endpoint object"
     },
     "workloadEndpointStatus": {
       "type": "object",
       "properties": {
-        "EndpointUUID": {
-          "type": "string"
-        },
-        "WorkloadUUID": {
-          "type": "string"
-        },
-        "WorkloadName": {
+        "endpoint-uuid": {
           "type": "string",
-          "description": "Spec contains the configuration of the Endpoint."
+          "title": "endpoint UUID"
         },
-        "Network": {
+        "workload-uuid": {
           "type": "string",
-          "description": "Status contains the current state of the Endpoint."
+          "title": "VM or container UUID"
         },
-        "HomingHostAddr": {
-          "type": "string"
+        "workload-name": {
+          "type": "string",
+          "title": "VM or container name"
         },
-        "HomingHostName": {
-          "type": "string"
+        "network": {
+          "type": "string",
+          "title": "network this endpoint belogs to"
         },
-        "IPv4Address": {
-          "type": "string"
+        "homing-host-addr": {
+          "type": "string",
+          "title": "host address of the host where this endpoint exists"
         },
-        "IPv4Gateway": {
-          "type": "string"
+        "homing-host-name": {
+          "type": "string",
+          "title": "host name of the host where this endpoint exists"
         },
-        "IPv6Address": {
-          "type": "string"
+        "ipv4-address": {
+          "type": "string",
+          "title": "IPv4 address of the endpoint"
         },
-        "IPv6Gateway": {
-          "type": "string"
+        "ipv4-gateway": {
+          "type": "string",
+          "title": "IPv4 gateway for the endpoint"
         },
-        "MacAddress": {
-          "type": "string"
+        "ipv6-address": {
+          "type": "string",
+          "title": "IPv6 address for the endpoint"
         },
-        "NodeUUID": {
-          "type": "string"
+        "ipv6-gateway": {
+          "type": "string",
+          "title": "IPv6 gateway"
+        },
+        "mac-address": {
+          "type": "string",
+          "title": "Mac address of the endpoint"
+        },
+        "node-uuid": {
+          "type": "string",
+          "title": "homing host's UUID"
         },
         "EndpointState": {
-          "type": "string"
+          "type": "string",
+          "title": "endpoint FSM state"
         },
         "SecurityGroups": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "security groups"
         },
-        "MicroSegmentVlan": {
+        "micro-segment-vlan": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "micro-segment VLAN"
         },
-        "WorkloadAttributes": {
+        "workload-attributes": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "title": "VM or container attribute/labels"
         }
       },
-      "title": "Endpoint represents a network endpoint"
+      "title": "status part of Endpoint object"
     },
     "workloadWorkload": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/workloadWorkloadSpec",
           "description": "Spec contains the configuration of the Workload."
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/workloadWorkloadStatus",
           "description": "Status contains the current state of the Workload."
         }
@@ -963,84 +1494,96 @@
     "workloadWorkloadIntfSpec": {
       "type": "object",
       "properties": {
-        "MicroSegVlan": {
+        "micro-seg-vlan": {
           "type": "integer",
           "format": "int64",
-          "description": "Hostname of the server where the workload is running."
-        },
-        "ExternalVlan": {
-          "type": "integer",
-          "format": "int64",
-          "title": "Spec of all interfaces in the Workload identified by Primary MAC"
-        }
-      },
-      "title": "Spec part of Workload object"
-    },
-    "workloadWorkloadIntfStatus": {
-      "type": "object",
-      "properties": {
-        "IpAddrs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Status of all interfaces in the Workload identified by Primary MAC"
-        }
-      },
-      "title": "Status part of Workload object"
-    },
-    "workloadWorkloadList": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/workloadWorkload"
-          }
-        }
-      }
-    },
-    "workloadWorkloadSpec": {
-      "type": "object",
-      "properties": {
-        "HostName": {
-          "type": "string",
+          "minimum": 1,
+          "maximum": 4095,
+          "description": "value should be between 1 and 4095\n",
           "title": "Micro-segmentation vlan assigned for this interface"
         },
-        "Interfaces": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/workloadWorkloadIntfSpec"
-          },
+        "external-vlan": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "maximum": 4095,
+          "description": "value should be between 1 and 4095\n",
           "title": "External vlan assigned for this interface"
         }
       },
       "title": "Spec of a Workload interface"
     },
+    "workloadWorkloadIntfStatus": {
+      "type": "object",
+      "properties": {
+        "ip-addrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of all IP addresses configured and discovered on a Workload Interface"
+        }
+      },
+      "title": "Status of a Workload interface"
+    },
+    "workloadWorkloadList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/workloadWorkload"
+          },
+          "title": "List of Workload objects"
+        }
+      },
+      "title": "WorkloadList is a container object for list of Workload objects"
+    },
+    "workloadWorkloadSpec": {
+      "type": "object",
+      "properties": {
+        "host-name": {
+          "type": "string",
+          "description": "Hostname of the server where the workload is running."
+        },
+        "interfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/workloadWorkloadIntfSpec"
+          },
+          "title": "Spec of all interfaces in the Workload identified by Primary MAC"
+        }
+      },
+      "title": "Spec part of Workload object"
+    },
     "workloadWorkloadStatus": {
       "type": "object",
       "properties": {
-        "Interfaces": {
+        "interfaces": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/workloadWorkloadIntfStatus"
           },
-          "title": "List of all IP addresses configured and discovered on a Workload Interface"
+          "title": "Status of all interfaces in the Workload identified by Primary MAC"
         },
-        "Endpoints": {
+        "endpoints": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "List of all endpoints associated with this Workload"
         }
       },
-      "title": "Status of a Workload interface"
+      "title": "Status part of Workload object"
     }
   }
 }

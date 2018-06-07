@@ -149,7 +149,7 @@ func (m *FlowExportTarget) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Format = FlowExportTarget_Formats_name[0]
+		m.Format = "Ipfix"
 	}
 	return ret
 }
@@ -177,9 +177,9 @@ func (m *FwlogExport) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Filter {
-			m.Filter[k] = FwlogFilter_name[0]
+			m.Filter[k] = "FWLOG_ALL"
 		}
-		m.Format = MonitoringExportFormat_name[0]
+		m.Format = "SYSLOG_BSD"
 	}
 	return ret
 }
@@ -235,7 +235,7 @@ func (m *FwlogSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Filter {
-			m.Filter[k] = FwlogFilter_name[0]
+			m.Filter[k] = "FWLOG_ALL"
 		}
 	}
 	return ret

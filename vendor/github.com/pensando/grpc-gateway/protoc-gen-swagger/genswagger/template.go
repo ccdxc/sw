@@ -11,6 +11,7 @@ import (
 
 	pbdescriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
 
 func listEnumNames(enum *descriptor.Enum) (names []string) {
@@ -30,7 +31,7 @@ func getEnumDefault(enum *descriptor.Enum) string {
 }
 
 // messageToQueryParameters converts a message to a list of swagger query parameters.
-func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Registry, pathParams []descriptor.Parameter) (params []swaggerParameterObject, err error) {
+func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Registry, pathParams []descriptor.Parameter) (params []SwaggerParameterObject, err error) {
 	for _, field := range message.Fields {
 		p, err := queryParams(message, field, "", reg, pathParams)
 		if err != nil {
@@ -42,7 +43,7 @@ func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Regis
 }
 
 // queryParams converts a field to a list of swagger query parameters recuresively.
-func queryParams(message *descriptor.Message, field *descriptor.Field, prefix string, reg *descriptor.Registry, pathParams []descriptor.Parameter) (params []swaggerParameterObject, err error) {
+func queryParams(message *descriptor.Message, field *descriptor.Field, prefix string, reg *descriptor.Registry, pathParams []descriptor.Parameter) (params []SwaggerParameterObject, err error) {
 	// make sure the parameter is not already listed as a path parameter
 	for _, pathParam := range pathParams {
 		if pathParam.Target == field {
@@ -71,8 +72,14 @@ func queryParams(message *descriptor.Message, field *descriptor.Field, prefix st
 		if schema.Title != "" { // merge title because title of parameter object will be ignored
 			desc = strings.TrimSpace(schema.Title + ". " + schema.Description)
 		}
-		param := swaggerParameterObject{
-			Name:        prefix + field.GetName(),
+		fldName := field.GetName()
+		for _, fnz := range Finalizers {
+			if fnz.FieldName != nil {
+				fldName = fnz.FieldName(field)
+			}
+		}
+		param := SwaggerParameterObject{
+			Name:        prefix + fldName,
 			Description: desc,
 			In:          "query",
 			Type:        schema.Type,
@@ -85,7 +92,7 @@ func queryParams(message *descriptor.Message, field *descriptor.Field, prefix st
 				return nil, fmt.Errorf("unknown enum type %s", fieldType)
 			}
 			if items != nil { // array
-				param.Items = &swaggerItemsObject{
+				param.Items = &SwaggerItemsObject{
 					Type: "string",
 					Enum: listEnumNames(enum),
 				}
@@ -99,7 +106,7 @@ func queryParams(message *descriptor.Message, field *descriptor.Field, prefix st
 				param.Description = strings.TrimLeft(param.Description+"\n\n "+valueComments, "\n")
 			}
 		}
-		return []swaggerParameterObject{param}, nil
+		return []SwaggerParameterObject{param}, nil
 	}
 
 	// nested type, recurse
@@ -107,8 +114,14 @@ func queryParams(message *descriptor.Message, field *descriptor.Field, prefix st
 	if err != nil {
 		return nil, fmt.Errorf("unknown message type %s", fieldType)
 	}
+	fldName := field.GetName()
+	for _, fnz := range Finalizers {
+		if fnz.FieldName != nil {
+			fldName = fnz.FieldName(field)
+		}
+	}
 	for _, nestedField := range msg.Fields {
-		p, err := queryParams(msg, nestedField, prefix+field.GetName()+".", reg, pathParams)
+		p, err := queryParams(msg, nestedField, fldName+".", reg, pathParams)
 		if err != nil {
 			return nil, err
 		}
@@ -125,6 +138,18 @@ func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descripto
 			findNestedMessagesAndEnumerations(meth.RequestType, reg, m, e)
 			m[fullyQualifiedNameToSwaggerName(meth.ResponseType.FQMN(), reg)] = meth.ResponseType
 			findNestedMessagesAndEnumerations(meth.ResponseType, reg, m, e)
+		}
+	}
+	// Apply any initializers that are registered
+	for _, fnz := range Finalizers {
+		if fnz.Init != nil {
+			msgs, enums := fnz.Init(reg)
+			for _, im := range msgs {
+				m[fullyQualifiedNameToSwaggerName(im.FQMN(), reg)] = im
+			}
+			for _, ie := range enums {
+				e[fullyQualifiedNameToSwaggerName(ie.FQEN(), reg)] = ie
+			}
 		}
 	}
 }
@@ -153,7 +178,7 @@ func findNestedMessagesAndEnumerations(message *descriptor.Message, reg *descrip
 	}
 }
 
-func renderMessagesAsDefinition(messages messageMap, d swaggerDefinitionsObject, reg *descriptor.Registry) {
+func renderMessagesAsDefinition(messages messageMap, d SwaggerDefinitionsObject, reg *descriptor.Registry) {
 	for name, msg := range messages {
 		switch name {
 		case ".google.protobuf.Timestamp":
@@ -162,8 +187,8 @@ func renderMessagesAsDefinition(messages messageMap, d swaggerDefinitionsObject,
 		if opt := msg.GetOptions(); opt != nil && opt.MapEntry != nil && *opt.MapEntry {
 			continue
 		}
-		schema := swaggerSchemaObject{
-			schemaCore: schemaCore{
+		schema := SwaggerSchemaObject{
+			SchemaCore: SchemaCore{
 				Type: "object",
 			},
 		}
@@ -173,27 +198,52 @@ func renderMessagesAsDefinition(messages messageMap, d swaggerDefinitionsObject,
 		}
 
 		for _, f := range msg.Fields {
-			fieldValue := schemaOfField(f, reg)
-			comments := fieldProtoComments(reg, msg, f)
-			if err := updateSwaggerDataFromComments(&fieldValue, comments); err != nil {
-				panic(err)
+			addField := func(fld *descriptor.Field) {
+				fieldValue := schemaOfField(fld, reg)
+				comments := fieldProtoComments(reg, msg, fld)
+				if err := updateSwaggerDataFromComments(&fieldValue, comments); err != nil {
+					panic(err)
+				}
+				fldName := fld.GetName()
+				for _, fnz := range Finalizers {
+					if fnz.FieldName != nil {
+						fldName = fnz.FieldName(fld)
+					}
+				}
+				schema.Properties = append(schema.Properties, KeyVal{fldName, fieldValue})
 			}
-
-			schema.Properties = append(schema.Properties, keyVal{f.GetName(), fieldValue})
+			if f.GetType() == pbdescriptor.FieldDescriptorProto_TYPE_MESSAGE && f.Embedded && common.GetJSONTag(f) == "" {
+				// Only one level of embedding is supported.
+				m, e := reg.LookupMsg("", f.GetTypeName())
+				if e != nil {
+					panic(fmt.Sprintf("could not find embedded type %v(%s)", f.GetTypeName(), e))
+				}
+				for _, fe := range m.Fields {
+					addField(fe)
+				}
+				continue
+			}
+			addField(f)
+		}
+		// Apply any Finalizers that are registered
+		for _, fnz := range Finalizers {
+			if fnz.Def != nil {
+				fnz.Def(&schema, msg, reg)
+			}
 		}
 		d[fullyQualifiedNameToSwaggerName(msg.FQMN(), reg)] = schema
 	}
 }
 
 // schemaOfField returns a swagger Schema Object for a protobuf field.
-func schemaOfField(f *descriptor.Field, reg *descriptor.Registry) swaggerSchemaObject {
+func schemaOfField(f *descriptor.Field, reg *descriptor.Registry) SwaggerSchemaObject {
 	const (
 		singular = 0
 		array    = 1
 		object   = 2
 	)
 	var (
-		core      schemaCore
+		core      SchemaCore
 		aggregate int
 	)
 
@@ -210,42 +260,50 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry) swaggerSchemaO
 
 	switch ft := fd.GetType(); ft {
 	case pbdescriptor.FieldDescriptorProto_TYPE_ENUM, pbdescriptor.FieldDescriptorProto_TYPE_MESSAGE, pbdescriptor.FieldDescriptorProto_TYPE_GROUP:
-		if fd.GetTypeName() == ".google.protobuf.Timestamp" && pbdescriptor.FieldDescriptorProto_TYPE_MESSAGE == ft {
-			core = schemaCore{
+		if (fd.GetTypeName() == ".google.protobuf.Timestamp" || fd.GetTypeName() == ".api.Timestamp") && pbdescriptor.FieldDescriptorProto_TYPE_MESSAGE == ft {
+			core = SchemaCore{
 				Type:   "string",
 				Format: "date-time",
 			}
 		} else {
-			core = schemaCore{
+			core = SchemaCore{
 				Ref: "#/definitions/" + fullyQualifiedNameToSwaggerName(fd.GetTypeName(), reg),
 			}
 		}
 	default:
 		ftype, format, ok := primitiveSchema(ft)
 		if ok {
-			core = schemaCore{Type: ftype, Format: format}
+			core = SchemaCore{Type: ftype, Format: format}
 		} else {
-			core = schemaCore{Type: ft.String(), Format: "UNKNOWN"}
+			core = SchemaCore{Type: ft.String(), Format: "UNKNOWN"}
 		}
 	}
+	var ret SwaggerSchemaObject
 	switch aggregate {
 	case array:
-		return swaggerSchemaObject{
-			schemaCore: schemaCore{
+		ret = SwaggerSchemaObject{
+			SchemaCore: SchemaCore{
 				Type:  "array",
-				Items: (*swaggerItemsObject)(&core),
+				Items: (*SwaggerItemsObject)(&core),
 			},
 		}
 	case object:
-		return swaggerSchemaObject{
-			schemaCore: schemaCore{
+		ret = SwaggerSchemaObject{
+			SchemaCore: SchemaCore{
 				Type: "object",
 			},
-			AdditionalProperties: &swaggerSchemaObject{schemaCore: core},
+			AdditionalProperties: &SwaggerSchemaObject{SchemaCore: core},
 		}
 	default:
-		return swaggerSchemaObject{schemaCore: core}
+		ret = SwaggerSchemaObject{SchemaCore: core}
 	}
+	// Apply any Finalizers that are registered
+	for _, fnz := range Finalizers {
+		if fnz.Field != nil {
+			fnz.Field(&ret, f, reg)
+		}
+	}
+	return ret
 }
 
 // primitiveSchema returns a pair of "Type" and "Format" in JSON Schema for
@@ -298,7 +356,7 @@ func primitiveSchema(t pbdescriptor.FieldDescriptorProto_Type) (ftype, format st
 }
 
 // renderEnumerationsAsDefinition inserts enums into the definitions object.
-func renderEnumerationsAsDefinition(enums enumMap, d swaggerDefinitionsObject, reg *descriptor.Registry) {
+func renderEnumerationsAsDefinition(enums enumMap, d SwaggerDefinitionsObject, reg *descriptor.Registry) {
 	for _, enum := range enums {
 		enumComments := protoComments(reg, enum.File, enum.Outers, "EnumType", int32(enum.Index))
 
@@ -309,8 +367,8 @@ func renderEnumerationsAsDefinition(enums enumMap, d swaggerDefinitionsObject, r
 		if valueComments != "" {
 			enumComments = strings.TrimLeft(enumComments+"\n\n "+valueComments, "\n")
 		}
-		enumSchemaObject := swaggerSchemaObject{
-			schemaCore: schemaCore{
+		enumSchemaObject := SwaggerSchemaObject{
+			SchemaCore: SchemaCore{
 				Type:    "string",
 				Enum:    enumNames,
 				Default: defaultValue,
@@ -431,13 +489,13 @@ func templateToSwaggerPath(path string) string {
 	return strings.Join(parts, "/")
 }
 
-func renderServices(services []*descriptor.Service, paths swaggerPathsObject, reg *descriptor.Registry) error {
+func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, reg *descriptor.Registry) error {
 	// Correctness of svcIdx and methIdx depends on 'services' containing the services in the same order as the 'file.Service' array.
 	for svcIdx, svc := range services {
 		for methIdx, meth := range svc.Methods {
 			for _, b := range meth.Bindings {
 				// Iterate over all the swagger parameters
-				parameters := swaggerParametersObject{}
+				parameters := SwaggerParametersObject{}
 				for _, parameter := range b.PathParams {
 
 					var paramType, paramFormat string
@@ -455,7 +513,7 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 						}
 					}
 
-					parameters = append(parameters, swaggerParameterObject{
+					parameters = append(parameters, SwaggerParameterObject{
 						Name:     parameter.String(),
 						In:       "path",
 						Required: true,
@@ -466,11 +524,11 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 				}
 				// Now check if there is a body parameter
 				if b.Body != nil {
-					var schema swaggerSchemaObject
+					var schema SwaggerSchemaObject
 
 					if len(b.Body.FieldPath) == 0 {
-						schema = swaggerSchemaObject{
-							schemaCore: schemaCore{
+						schema = SwaggerSchemaObject{
+							SchemaCore: SchemaCore{
 								Ref: fmt.Sprintf("#/definitions/%s", fullyQualifiedNameToSwaggerName(meth.RequestType.FQMN(), reg)),
 							},
 						}
@@ -483,7 +541,7 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 					if meth.GetClientStreaming() {
 						desc = "(streaming inputs)"
 					}
-					parameters = append(parameters, swaggerParameterObject{
+					parameters = append(parameters, SwaggerParameterObject{
 						Name:        "body",
 						Description: desc,
 						In:          "body",
@@ -498,10 +556,16 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 					}
 					parameters = append(parameters, queryParams...)
 				}
-
-				pathItemObject, ok := paths[templateToSwaggerPath(b.PathTmpl.Template)]
+				// get the effective final path
+				path := templateToSwaggerPath(b.PathTmpl.Template)
+				for _, fnz := range Finalizers {
+					if fnz.Method != nil {
+						fnz.Method(nil, &path, meth, reg)
+					}
+				}
+				pathItemObject, ok := paths[path]
 				if !ok {
-					pathItemObject = swaggerPathItemObject{}
+					pathItemObject = SwaggerPathItemObject{}
 				}
 
 				methProtoPath := protoPathIndex(reflect.TypeOf((*pbdescriptor.ServiceDescriptorProto)(nil)), "Method")
@@ -509,15 +573,15 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 				if meth.GetServerStreaming() {
 					desc += "(streaming responses)"
 				}
-				operationObject := &swaggerOperationObject{
+				operationObject := &SwaggerOperationObject{
 					Tags:        []string{svc.GetName()},
 					OperationID: fmt.Sprintf("%s", meth.GetName()),
 					Parameters:  parameters,
-					Responses: swaggerResponsesObject{
-						"200": swaggerResponseObject{
+					Responses: SwaggerResponsesObject{
+						"200": SwaggerResponseObject{
 							Description: desc,
-							Schema: swaggerSchemaObject{
-								schemaCore: schemaCore{
+							Schema: SwaggerSchemaObject{
+								SchemaCore: SchemaCore{
 									Ref: fmt.Sprintf("#/definitions/%s", fullyQualifiedNameToSwaggerName(meth.ResponseType.FQMN(), reg)),
 								},
 							},
@@ -546,7 +610,13 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 					pathItemObject.Patch = operationObject
 					break
 				}
-				paths[templateToSwaggerPath(b.PathTmpl.Template)] = pathItemObject
+				// Apply any Finalizers that are registered to update the pathItemObject
+				for _, fnz := range Finalizers {
+					if fnz.Method != nil {
+						fnz.Method(&pathItemObject, &path, meth, reg)
+					}
+				}
+				paths[path] = pathItemObject
 			}
 		}
 	}
@@ -559,15 +629,15 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 func applyTemplate(p param) (string, error) {
 	// Create the basic template object. This is the object that everything is
 	// defined off of.
-	s := swaggerObject{
+	s := SwaggerObject{
 		// Swagger 2.0 is the version of this document
 		Swagger:     "2.0",
 		Schemes:     []string{"http", "https"},
 		Consumes:    []string{"application/json"},
 		Produces:    []string{"application/json"},
-		Paths:       make(swaggerPathsObject),
-		Definitions: make(swaggerDefinitionsObject),
-		Info: swaggerInfoObject{
+		Paths:       make(SwaggerPathsObject),
+		Definitions: make(SwaggerDefinitionsObject),
+		Info: SwaggerInfoObject{
 			Title:   *p.File.Name,
 			Version: "version not set",
 		},
@@ -594,6 +664,14 @@ func applyTemplate(p param) (string, error) {
 		panic(err)
 	}
 
+	// Call any finalizers registered
+	for _, fn := range Finalizers {
+		if fn.Spec != nil {
+			fn.Spec(&s, p.File, p.reg)
+		}
+
+	}
+
 	// We now have rendered the entire swagger object. Write the bytes out to a
 	// string so it can be written to disk.
 	var w bytes.Buffer
@@ -608,20 +686,20 @@ func applyTemplate(p param) (string, error) {
 //
 // First paragraph of a comment is used for summary. Remaining paragraphs of a
 // comment are used for description. If 'Summary' field is not present on the
-// passed swaggerObject, the summary and description are joined by \n\n.
+// passed SwaggerObject, the summary and description are joined by \n\n.
 //
 // If there is a field named 'Info', its 'Summary' and 'Description' fields
 // will be updated instead.
 //
 // If there is no 'Summary', the same behavior will be attempted on 'Title',
 // but only if the last character is not a period.
-func updateSwaggerDataFromComments(swaggerObject interface{}, comment string) error {
+func updateSwaggerDataFromComments(SwaggerObject interface{}, comment string) error {
 	if len(comment) == 0 {
 		return nil
 	}
 
 	// Figure out what to apply changes to.
-	swaggerObjectValue := reflect.ValueOf(swaggerObject)
+	swaggerObjectValue := reflect.ValueOf(SwaggerObject)
 	infoObjectValue := swaggerObjectValue.Elem().FieldByName("Info")
 	if !infoObjectValue.CanSet() {
 		// No such field? Apply summary and description directly to
@@ -659,7 +737,7 @@ func updateSwaggerDataFromComments(swaggerObject interface{}, comment string) er
 		}
 	}
 
-	// There was no summary field on the swaggerObject. Try to apply the
+	// There was no summary field on the SwaggerObject. Try to apply the
 	// whole comment into description.
 	if descriptionValue.CanSet() {
 		descriptionValue.Set(reflect.ValueOf(comment))

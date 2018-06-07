@@ -15,7 +15,6 @@ import (
 
 	"github.com/golang/glog"
 
-	govldtr "github.com/asaskevich/govalidator"
 	gogoproto "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	descriptor "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
@@ -24,6 +23,7 @@ import (
 
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
+	common "github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
 
 var (
@@ -68,78 +68,6 @@ func (s *scratchVars) getStr(id int) string {
 	return s.Str[id]
 }
 
-func parseStringOptions(val interface{}) (interface{}, error) {
-	v, ok := val.(*string)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return *v, nil
-}
-
-func parseStringSliceOptions(val interface{}) (interface{}, error) {
-	v, ok := val.([]string)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return v, nil
-}
-
-func parseInt32Options(val interface{}) (interface{}, error) {
-	v, ok := val.(*int32)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return *v, nil
-}
-
-func parseObjRelation(val interface{}) (interface{}, error) {
-	v, ok := val.(*venice.ObjectRln)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return *v, nil
-}
-
-func parseBoolOptions(val interface{}) (interface{}, error) {
-	v, ok := val.(*bool)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return *v, nil
-}
-
-func parseRestServiceOption(val interface{}) (interface{}, error) {
-	c, ok := val.(*venice.RestEndpoint)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return *c, nil
-}
-
-func parseGoogleAPIHTTP(val interface{}) (interface{}, error) {
-	c, ok := val.(*googapi.HttpRule)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return c, nil
-}
-
-func parseNaplesRestService(val interface{}) (interface{}, error) {
-	c, ok := val.([]*venice.RestEndpoint)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return c, nil
-}
-
-func parseAPIActions(val interface{}) (interface{}, error) {
-	c, ok := val.([]*venice.ActionEndpoint)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return c, nil
-}
-
 // ServiceParams is the parameters related to the Service used by templates
 type ServiceParams struct {
 	// Version is the version of the Service
@@ -169,14 +97,6 @@ type KeyComponent struct {
 	Type string
 	// Val holds a string literal or a field name depending on type
 	Val string
-}
-
-func parseObjectPrefix(val interface{}) (interface{}, error) {
-	c, ok := val.(*venice.ObjectPrefix)
-	if !ok {
-		return nil, errInvalidOption
-	}
-	return c, nil
 }
 
 //--- Functions registered in the funcMap for the plugin  ---//
@@ -691,36 +611,16 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 	return string(ret), nil
 }
 
-type checkArgs func(string) bool
-
-var validatorArgMap = map[string][]checkArgs{
-	"StrEnum":  {isString},
-	"StrLen":   {govldtr.IsInt, govldtr.IsInt},
-	"IntRange": {govldtr.IsInt, govldtr.IsInt},
-	"IPAddr":   {},
-	"IPv4":     {},
-	"HostAddr": {},
-	"MacAddr":  {},
-	"URI":      {},
-	"UUID":     {},
-}
-
 type validateArg struct {
 	Tpe  string
 	Str  string
 	Intg uint64
 }
 
-type validateField struct {
-	Fn   string
-	Ver  string
-	Args []string
-}
-
 type validateFields struct {
 	Repeated   bool
 	Pointer    bool
-	Validators []validateField
+	Validators []common.ValidateField
 }
 type validateMsg struct {
 	Fields map[string]validateFields
@@ -731,12 +631,6 @@ type validators struct {
 	Map  map[string]validateMsg
 }
 
-func isString(in string) bool {
-	if len(in) != 0 {
-		return true
-	}
-	return false
-}
 func checkValidators(file *descriptor.File, msgmap map[string]bool, name string) bool {
 	if _, ok := msgmap[name]; ok {
 		return msgmap[name]
@@ -763,42 +657,6 @@ func checkValidators(file *descriptor.File, msgmap map[string]bool, name string)
 	return found
 }
 
-func parseValidator(in string) (validateField, error) {
-	ret := validateField{}
-	re := regexp.MustCompile("(?P<ver>[a-zA-Z0-9_\\-\\*]*\\:)?(?P<func>[a-zA-Z0-9_\\-]+)\\((?P<args>[a-zA-Z0-9_\\-\\, \\.\\:]*)*\\)")
-	params := re.FindStringSubmatch(in)
-	if params == nil {
-		return ret, fmt.Errorf("Failed to parse validator [%s]", in)
-	}
-
-	if params[1] != "" && string(params[1][len(params[1])-1]) == ":" {
-		ret.Ver = params[1][:len(params[1])-1]
-		if ret.Ver == "*" {
-			ret.Ver = "all"
-		}
-	} else {
-		ret.Ver = "all"
-	}
-	ret.Fn = params[2]
-	ret.Args = strings.Split(strings.Replace(params[3], " ", "", -1), ",")
-	if len(ret.Args) == 1 && ret.Args[0] == params[3] && params[3] == "" {
-		ret.Args = []string{}
-	}
-	if vargs, ok := validatorArgMap[ret.Fn]; ok {
-		if len(vargs) != len(ret.Args) {
-			return validateField{}, fmt.Errorf("Incorrect number of args (%d) for %s", len(ret.Args), ret.Fn)
-		}
-		for i := range vargs {
-			if !vargs[i](ret.Args[i]) {
-				return validateField{}, fmt.Errorf("validation for arg(%s) failed for %s", ret.Args[i], ret.Fn)
-			}
-		}
-	} else {
-		return validateField{}, fmt.Errorf("unknown validator %s", ret.Fn)
-	}
-	return ret, nil
-}
-
 func getValidatorManifest(file *descriptor.File) (validators, error) {
 	ret := validators{Map: make(map[string]validateMsg)}
 	msgmap := make(map[string]bool)
@@ -823,7 +681,7 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 				ret.Map[*msg.Name].Fields[*fld.Name] = validateFields{Repeated: repeated}
 
 				for _, v := range r.([]string) {
-					fldv, err := parseValidator(v)
+					fldv, err := common.ParseValidator(v)
 					if err != nil {
 						return ret, err
 					}
@@ -866,9 +724,9 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 							// fld.GetTypeName() -> e.g. ".events.EventAttributes"
 							temp := strings.Split(fld.GetTypeName(), ".")
 							fldType := temp[len(temp)-1]
-							ret.Map[msgname].Fields[fldType] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+							ret.Map[msgname].Fields[fldType] = validateFields{Validators: make([]common.ValidateField, 0), Repeated: repeated, Pointer: pointer}
 						} else {
-							ret.Map[msgname].Fields[*fld.Name] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+							ret.Map[msgname].Fields[*fld.Name] = validateFields{Validators: make([]common.ValidateField, 0), Repeated: repeated, Pointer: pointer}
 						}
 					}
 				}
@@ -877,15 +735,6 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 	}
 	glog.Infof("Validator Manifest is %+v", ret)
 	return ret, nil
-}
-
-// Defaults is defaults specified by field.
-type Defaults struct {
-	Repeated bool
-	Pointer  bool
-	Nested   bool
-	// Map is map[version]defaultValue
-	Map map[string]string
 }
 
 // VerDefaults is defaults for a field by version
@@ -897,134 +746,13 @@ type VerDefaults struct {
 }
 
 type msgDefaults struct {
-	Fields   map[string]Defaults
+	Fields   map[string]common.Defaults
 	Versions map[string]map[string]VerDefaults
 }
 
 type fileDefaults struct {
 	Fmap bool
 	Map  map[string]msgDefaults
-}
-
-func parseDefault(in string) (string, string, error) {
-	index := strings.Index(in, ":")
-	ver := "all"
-	val := in
-	// We want version to be specified as "<ver>:" so event "^:..." is no version hence the check against 1 instead of 0
-	if index < 1 {
-		glog.V(1).Infof("parseDefaulter - No version specified [%s]", in)
-	} else {
-		if in[index-1] == '\\' {
-			glog.V(1).Info("parseDefaulter - escaped : ignoring.. [%s]", in)
-		} else {
-			ver = in[:index]
-			val = in[index+1:]
-			if ver == "*" {
-				ver = "all"
-			}
-		}
-	}
-	return ver, val, nil
-}
-
-func implicitDefaults(file *descriptor.File, f *descriptor.Field) (Defaults, bool) {
-	ret := Defaults{Map: make(map[string]string)}
-	if f.GetType() == gogoproto.FieldDescriptorProto_TYPE_STRING {
-		r, err := reg.GetExtension("venice.check", f)
-		if err != nil {
-			return ret, false
-		}
-		if f.Label != nil && *f.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
-			ret.Repeated = true
-		}
-		for _, v := range r.([]string) {
-			validator, err := parseValidator(v)
-			if err != nil || validator.Fn != "StrEnum" {
-				continue
-			}
-			vin := []string{validator.Args[0]}
-			ver := validator.Ver
-			en, err := getEnumStr(file, vin, "name")
-			if err != nil {
-				continue
-			}
-			ret.Map[ver] = fmt.Sprintf("%s[0]", en)
-		}
-		return ret, true
-	}
-	return ret, false
-}
-
-func parseDefaults(file *descriptor.File, f *descriptor.Field) (Defaults, bool, error) {
-	iret, found := implicitDefaults(file, f)
-	ret := Defaults{Map: make(map[string]string)}
-	if found {
-		for k, v := range iret.Map {
-			ret.Map[k] = v
-		}
-	}
-	r, err := reg.GetExtension("venice.default", f)
-	ds := []string{}
-	if f.Label != nil && *f.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
-		ret.Repeated = true
-	}
-	if err == nil {
-		ds = r.([]string)
-	}
-	for _, d := range ds {
-		found = true
-		ver, val, err := parseDefault(d)
-		if err != nil {
-			return ret, true, err
-		}
-		switch f.GetType() {
-		case gogoproto.FieldDescriptorProto_TYPE_GROUP, gogoproto.FieldDescriptorProto_TYPE_MESSAGE, gogoproto.FieldDescriptorProto_TYPE_BYTES:
-			// Aggregate types are not allowed to have defaults. Only scalar values
-			return ret, true, fmt.Errorf("[%s]not allowed", *f.Name)
-		case gogoproto.FieldDescriptorProto_TYPE_BOOL:
-			if _, err := strconv.ParseBool(val); err != nil {
-				return ret, false, fmt.Errorf("[%s]cound not parse bool (%s)", *f.Name, err)
-			}
-		case gogoproto.FieldDescriptorProto_TYPE_ENUM:
-			// not validate yet - TBD
-		case gogoproto.FieldDescriptorProto_TYPE_INT32, gogoproto.FieldDescriptorProto_TYPE_SFIXED32, gogoproto.FieldDescriptorProto_TYPE_SINT32:
-			if _, err := strconv.ParseInt(val, 10, 32); err != nil {
-				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
-			}
-		case gogoproto.FieldDescriptorProto_TYPE_INT64, gogoproto.FieldDescriptorProto_TYPE_SFIXED64, gogoproto.FieldDescriptorProto_TYPE_SINT64:
-			if _, err := strconv.ParseInt(val, 10, 64); err != nil {
-				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
-			}
-		case gogoproto.FieldDescriptorProto_TYPE_UINT32, gogoproto.FieldDescriptorProto_TYPE_FIXED32:
-			if _, err := strconv.ParseUint(val, 10, 32); err != nil {
-				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
-			}
-		case gogoproto.FieldDescriptorProto_TYPE_UINT64, gogoproto.FieldDescriptorProto_TYPE_FIXED64:
-			if _, err := strconv.ParseUint(val, 10, 64); err != nil {
-				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
-			}
-		case gogoproto.FieldDescriptorProto_TYPE_FLOAT:
-			if _, err := strconv.ParseFloat(val, 32); err != nil {
-				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
-			}
-		case gogoproto.FieldDescriptorProto_TYPE_DOUBLE:
-			if _, err := strconv.ParseFloat(val, 64); err != nil {
-				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
-			}
-		case gogoproto.FieldDescriptorProto_TYPE_STRING:
-			val = "\"" + val + "\""
-		default:
-			return ret, true, fmt.Errorf(" [%s]unknown type", *f.Name)
-		}
-		if ev, eok := ret.Map[ver]; eok {
-			iv, iok := iret.Map[ver]
-			if !iok || iv != ev {
-				return ret, true, fmt.Errorf("[%s] got duplicate default for version %s", *f.Name, ver)
-			}
-		}
-		ret.Map[ver] = val
-	}
-	return ret, found, nil
 }
 
 func checkDefaults(file *descriptor.File, msgmap map[string]bool, name string, ret *fileDefaults) (bool, error) {
@@ -1046,7 +774,7 @@ func checkDefaults(file *descriptor.File, msgmap map[string]bool, name string, r
 		return false, nil
 	}
 	for _, fld := range msg.Fields {
-		r, found, err := parseDefaults(file, fld)
+		r, found, err := common.ParseDefaults(file, fld)
 		if err != nil {
 			glog.V(1).Infof("[%v.%v]got error parsing defaulters (%s)", *msg.Name, *fld.Name, err)
 			return false, err
@@ -1055,7 +783,7 @@ func checkDefaults(file *descriptor.File, msgmap map[string]bool, name string, r
 			if _, ok := ret.Map[*msg.Name]; !ok {
 				glog.V(1).Infof("Creating a new map for [%s]", *msg.Name)
 				ret.Map[*msg.Name] = msgDefaults{
-					Fields:   make(map[string]Defaults),
+					Fields:   make(map[string]common.Defaults),
 					Versions: make(map[string]map[string]VerDefaults),
 				}
 			} else {
@@ -1090,7 +818,7 @@ func checkDefaults(file *descriptor.File, msgmap map[string]bool, name string, r
 				repeated := false
 				pointer := true
 				if _, ok := ret.Map[*msg.Name]; !ok {
-					ret.Map[*msg.Name] = msgDefaults{Fields: make(map[string]Defaults), Versions: make(map[string]map[string]VerDefaults)}
+					ret.Map[*msg.Name] = msgDefaults{Fields: make(map[string]common.Defaults), Versions: make(map[string]map[string]VerDefaults)}
 				}
 				fldName := *fld.Name
 				if fld.Embedded {
@@ -1105,7 +833,7 @@ func checkDefaults(file *descriptor.File, msgmap map[string]bool, name string, r
 					pointer = r.(bool)
 				}
 
-				ret.Map[*msg.Name].Fields[fldName] = Defaults{Pointer: pointer, Repeated: repeated, Nested: true}
+				ret.Map[*msg.Name].Fields[fldName] = common.Defaults{Pointer: pointer, Repeated: repeated, Nested: true}
 			}
 		}
 	}
@@ -1326,36 +1054,9 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 func derefStr(in *string) string {
 	return *in
 }
-func getEnumStr(file *descriptor.File, in []string, suffix string) (string, error) {
-	if len(in) != 1 {
-		return "", fmt.Errorf("incorrect number of arguments")
-	}
-	enum := in[0]
-	glog.V(1).Infof("Working on enum string %s", enum)
-	pkg := ""
-	if !strings.HasPrefix(enum, ".") {
-		enum = "." + *file.Package + "." + enum
-		pkg = file.GoPkg.Name
-	}
-	parts := strings.Split(enum, ".")
-	if pkg == "" {
-		pkg = parts[1]
-	}
-	parts = parts[2:]
-
-	ret := suffix
-	for i := len(parts) - 1; i >= 0; i-- {
-		ret = parts[i] + "_" + ret
-	}
-	if pkg != file.GoPkg.Name {
-		ret = pkg + "." + ret
-	}
-	glog.V(1).Infof("Ret:Working on enum string %s", ret)
-	return ret, nil
-}
 
 func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
-	return getEnumStr(file, in, "value")
+	return common.GetEnumStr(file, in, "value")
 }
 
 // relationRef is reference to relations
@@ -1587,13 +1288,6 @@ func getSvcActionEndpoints(svc *descriptor.Service, target string) ([]ActionEndp
 	return ret, nil
 }
 
-func isAutoGenMethod(meth *descriptor.Method) bool {
-	if v, err := reg.GetExtension("venice.methodAutoGen", meth); err == nil {
-		return v.(bool)
-	}
-	return false
-}
-
 func isRestExposed(meth *descriptor.Method) bool {
 	glog.V(1).Infof("Checking for rest exposed for %s\n", *meth.Name)
 	if _, err := reg.GetExtension("google.api.http", meth); err == nil {
@@ -1763,7 +1457,7 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 	}
 	ret = Field{
 		Name:    *fld.Name,
-		JSONTag: getJSONTag(fld),
+		JSONTag: common.GetJSONTag(fld),
 		Pointer: pointer,
 		Slice:   repeated,
 		Map:     isMap,
@@ -1849,27 +1543,7 @@ func reqMutator(req *plugin.CodeGeneratorRequest) {
 
 func init() {
 	// Register Option Parsers
-	reg.RegisterOptionParser("venice.fileGrpcDest", parseStringOptions)
-	reg.RegisterOptionParser("venice.apiProfile", parseStringOptions)
-	reg.RegisterOptionParser("venice.apiVersion", parseStringOptions)
-	reg.RegisterOptionParser("venice.apiGrpcCrudService", parseStringSliceOptions)
-	reg.RegisterOptionParser("venice.apiPrefix", parseStringOptions)
-	reg.RegisterOptionParser("venice.methodProfile", parseStringOptions)
-	reg.RegisterOptionParser("venice.methodOper", parseStringOptions)
-	reg.RegisterOptionParser("venice.methodAutoGen", parseBoolOptions)
-	reg.RegisterOptionParser("venice.objectIdentifier", parseStringOptions)
-	reg.RegisterOptionParser("venice.objectAutoGen", parseStringOptions)
-	reg.RegisterOptionParser("venice.objectPrefix", parseObjectPrefix)
-	reg.RegisterOptionParser("venice.objRelation", parseObjRelation)
-	reg.RegisterOptionParser("google.api.http", parseGoogleAPIHTTP)
-	reg.RegisterOptionParser("venice.check", parseStringSliceOptions)
-	reg.RegisterOptionParser("venice.storageTransformer", parseStringSliceOptions)
-	reg.RegisterOptionParser("gogoproto.nullable", parseBoolOptions)
-	reg.RegisterOptionParser("gogoproto.jsontag", parseStringOptions)
-	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
-	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
-	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
-	reg.RegisterOptionParser("venice.default", parseStringSliceOptions)
+	common.RegisterOptionParsers()
 
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
@@ -1899,7 +1573,7 @@ func init() {
 	reg.RegisterFunc("isListHelper", isListHelper)
 	reg.RegisterFunc("getPackageCrudObjects", getPackageCrudObjects)
 	reg.RegisterFunc("getSvcCrudObjects", getSvcCrudObjects)
-	reg.RegisterFunc("isAutoGenMethod", isAutoGenMethod)
+	reg.RegisterFunc("isAutoGenMethod", common.IsAutoGenMethod)
 	reg.RegisterFunc("getAutoRestOper", getAutoRestOper)
 	reg.RegisterFunc("isRestExposed", isRestExposed)
 	reg.RegisterFunc("isRestMethod", isRestMethod)

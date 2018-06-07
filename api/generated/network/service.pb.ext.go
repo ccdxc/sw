@@ -150,7 +150,7 @@ func (m *TLSServerPolicySpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.ClientAuthentication = TLSServerPolicySpec_ClientAuthTypes_name[0]
+		m.ClientAuthentication = "Mandatory"
 	}
 	return ret
 }

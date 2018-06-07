@@ -19,10 +19,13 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+//
 type PacketCollectorType int32
 
 const (
+	// ui-hint: Venice
 	PacketCollectorType_VENICE PacketCollectorType = 0
+	//
 	PacketCollectorType_ERSPAN PacketCollectorType = 1
 )
 
@@ -46,9 +49,13 @@ func (PacketCollectorType) EnumDescriptor() ([]byte, []int) { return fileDescrip
 type MirrorSessionState int32
 
 const (
-	MirrorSessionState_RUNNING      MirrorSessionState = 0
-	MirrorSessionState_STOPPED      MirrorSessionState = 1
-	MirrorSessionState_SCHEDULED    MirrorSessionState = 2
+	// ui-hint: Running
+	MirrorSessionState_RUNNING MirrorSessionState = 0
+	// ui-hint: Stopped
+	MirrorSessionState_STOPPED MirrorSessionState = 1
+	// ui-hint: Scheduled
+	MirrorSessionState_SCHEDULED MirrorSessionState = 2
+	// ui-hint: Ready To Run
 	MirrorSessionState_READY_TO_RUN MirrorSessionState = 3
 )
 
@@ -70,12 +77,17 @@ func (x MirrorSessionState) String() string {
 }
 func (MirrorSessionState) EnumDescriptor() ([]byte, []int) { return fileDescriptorMirror, []int{1} }
 
+// Filter selected packets further - mirror only those packets that match atleast one of the PacketFilers
 type MirrorSessionSpec_MirrorPacketFilter int32
 
 const (
-	MirrorSessionSpec_ALL_PKTS             MirrorSessionSpec_MirrorPacketFilter = 0
-	MirrorSessionSpec_ALL_DROPS            MirrorSessionSpec_MirrorPacketFilter = 1
-	MirrorSessionSpec_NETWORK_POLICY_DROP  MirrorSessionSpec_MirrorPacketFilter = 2
+	// ui-hint: All Packets
+	MirrorSessionSpec_ALL_PKTS MirrorSessionSpec_MirrorPacketFilter = 0
+	// ui-hint: All Drops
+	MirrorSessionSpec_ALL_DROPS MirrorSessionSpec_MirrorPacketFilter = 1
+	// ui-hint: Network Policy Drops
+	MirrorSessionSpec_NETWORK_POLICY_DROP MirrorSessionSpec_MirrorPacketFilter = 2
+	// ui-hint: Firewall Policy Drops
 	MirrorSessionSpec_FIREWALL_POLICY_DROP MirrorSessionSpec_MirrorPacketFilter = 3
 )
 
@@ -99,18 +111,11 @@ func (MirrorSessionSpec_MirrorPacketFilter) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorMirror, []int{5, 0}
 }
 
-// ========================================================================================
-// Packet Mirroring
-// ========================================================================================
-// -----------------------
-// ---- MirrorSessionSpec
-// -----------------------
+// Application/protocol selector
 type AppProtoSelector struct {
-	// PacketSize: Max size of a mirrored packet.
-	// PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
-	// For packets mirrored to Venice, max mirror packet size allowed is 256 B
+	// ports - Includes protocol name and port Eg ["tcp/1234", "udp"]
 	Ports []string `protobuf:"bytes,1,rep,name=Ports,json=ports,omitempty" json:"ports,omitempty"`
-	// StartConditions
+	// Apps - E.g. ["Redis"]
 	Apps []string `protobuf:"bytes,2,rep,name=Apps,json=applications,omitempty" json:"applications,omitempty"`
 }
 
@@ -133,10 +138,16 @@ func (m *AppProtoSelector) GetApps() []string {
 	return nil
 }
 
-// MirrorStartConditions - Conditions to start mirroring
+// MatchRule : This is used to select packets that need to be monitored (mirrored)
 type MatchRule struct {
-	Src         *MatchSelector    `protobuf:"bytes,1,opt,name=Src,json=source,omitempty" json:"source,omitempty"`
-	Dst         *MatchSelector    `protobuf:"bytes,2,opt,name=Dst,json=destination,omitempty" json:"destination,omitempty"`
+	// Either Src or Dst or both must be specified, both cannot be *
+	// Src = * when not specified
+	// When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored
+	Src *MatchSelector `protobuf:"bytes,1,opt,name=Src,json=source,omitempty" json:"source,omitempty"`
+	// Dst = * when not specified
+	// When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored
+	Dst *MatchSelector `protobuf:"bytes,2,opt,name=Dst,json=destination,omitempty" json:"destination,omitempty"`
+	// App = * when not specified
 	AppProtoSel *AppProtoSelector `protobuf:"bytes,3,opt,name=AppProtoSel,json=app-protocol-selectors,omitempty" json:"app-protocol-selectors,omitempty"`
 }
 
@@ -166,13 +177,14 @@ func (m *MatchRule) GetAppProtoSel() *AppProtoSelector {
 	return nil
 }
 
-// MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met
+// Traffic Selection Rules
+// Traffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses
 type MatchSelector struct {
-	// Stop after capturing specified number of packets
+	// Any one of the following match selector can be specified to select a packet from mirroring
 	Endpoints []string `protobuf:"bytes,1,rep,name=Endpoints,json=endpoints,omitempty" json:"endpoints,omitempty"`
-	// Stop after specified amount of time. E.g. 1h, 20min
-	// When ExpiryDuration is not specified, Default is "2h"
-	IPAddresses  []string `protobuf:"bytes,2,rep,name=IPAddresses,json=ip-addresses,omitempty" json:"ip-addresses,omitempty"`
+	// Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)
+	IPAddresses []string `protobuf:"bytes,2,rep,name=IPAddresses,json=ip-addresses,omitempty" json:"ip-addresses,omitempty"`
+	// List of MacAddresses - "aa:bb:cc:dd:ee:ff", "00:01:02:03:04:05"
 	MACAddresses []string `protobuf:"bytes,3,rep,name=MACAddresses,json=mac-addresses,omitempty" json:"mac-addresses,omitempty"`
 }
 
@@ -204,6 +216,7 @@ func (m *MatchSelector) GetMACAddresses() []string {
 
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
 type MirrorCollector struct {
+	//
 	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
 	// When collector type is Venice, collector export information is not required
 	ExportCfg api1.ExportConfig `protobuf:"bytes,3,opt,name=ExportCfg,json=export-config,omitempty" json:"export-config,omitempty"`
@@ -228,15 +241,17 @@ func (m *MirrorCollector) GetExportCfg() api1.ExportConfig {
 	return api1.ExportConfig{}
 }
 
-// Traffic Selection Rules
-// Traffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses
+// ------------------
+// ---- MirrorSession
+// ------------------
 type MirrorSession struct {
-	// Any one of the following match selector can be specified to select a packet from mirroring
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// List of MacAddresses - "aa:bb:cc:dd:ee:ff", "00:01:02:03:04:05"
-	Spec   MirrorSessionSpec   `protobuf:"bytes,3,opt,name=Spec,json=mirror-session-spec,inline" json:"mirror-session-spec,inline"`
+	//
+	Spec MirrorSessionSpec `protobuf:"bytes,3,opt,name=Spec,json=mirror-session-spec,inline" json:"mirror-session-spec,inline"`
+	//
 	Status MirrorSessionStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -259,16 +274,27 @@ func (m *MirrorSession) GetStatus() MirrorSessionStatus {
 	return MirrorSessionStatus{}
 }
 
-// Application/protocol selector
+// ========================================================================================
+// Packet Mirroring
+// ========================================================================================
+// -----------------------
+// ---- MirrorSessionSpec
+// -----------------------
 type MirrorSessionSpec struct {
-	// ports - Includes protocol name and port Eg ["tcp/1234", "udp"]
+	// PacketSize: Max size of a mirrored packet.
+	// PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
+	// For packets mirrored to Venice, max mirror packet size allowed is 256 B
 	PacketSize uint32 `protobuf:"varint,1,opt,name=PacketSize,json=packet-size,omitempty,proto3" json:"packet-size,omitempty"`
-	// Apps - E.g. ["Redis"]
+	// StartConditions
 	StartConditions MirrorStartConditions `protobuf:"bytes,2,opt,name=StartConditions,json=start-condition,inline" json:"start-condition,inline"`
-	StopConditions  MirrorStopConditions  `protobuf:"bytes,3,opt,name=StopConditions,json=stop-condition,inline" json:"stop-condition,inline"`
-	Collectors      []MirrorCollector     `protobuf:"bytes,4,rep,name=Collectors,json=collectors,inline" json:"collectors,inline"`
-	MatchRules      []MatchRule           `protobuf:"bytes,5,rep,name=MatchRules,json=match-rules,inline" json:"match-rules,inline"`
-	PacketFilters   []string              `protobuf:"bytes,6,rep,name=PacketFilters,json=packet-filters,omitempty" json:"packet-filters,omitempty"`
+	//
+	StopConditions MirrorStopConditions `protobuf:"bytes,3,opt,name=StopConditions,json=stop-condition,inline" json:"stop-condition,inline"`
+	// Mirrored packet collectors
+	Collectors []MirrorCollector `protobuf:"bytes,4,rep,name=Collectors,json=collectors,inline" json:"collectors,inline"`
+	// Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions
+	MatchRules []MatchRule `protobuf:"bytes,5,rep,name=MatchRules,json=match-rules,inline" json:"match-rules,inline"`
+	//
+	PacketFilters []string `protobuf:"bytes,6,rep,name=PacketFilters,json=packet-filters,omitempty" json:"packet-filters,omitempty"`
 }
 
 func (m *MirrorSessionSpec) Reset()                    { *m = MirrorSessionSpec{} }
@@ -318,17 +344,15 @@ func (m *MirrorSessionSpec) GetPacketFilters() []string {
 	return nil
 }
 
-// MatchRule : This is used to select packets that need to be monitored (mirrored)
+//
 type MirrorSessionStatus struct {
-	// Either Src or Dst or both must be specified, both cannot be *
-	// Src = * when not specified
-	// When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored
+	//
 	State string `protobuf:"bytes,1,opt,name=State,json=oper-state,inline,proto3" json:"oper-state,inline"`
-	// Dst = * when not specified
-	// When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored
+	//
 	NICStatus []SmartNICMirrorSessionStatus `protobuf:"bytes,2,rep,name=NICStatus,json=smart-nic-status,omitempty" json:"smart-nic-status,omitempty"`
-	// App = * when not specified
+	//
 	SrcPacketCaptureFileURL string `protobuf:"bytes,3,opt,name=SrcPacketCaptureFileURL,json=src-packet-capture-url,inline),proto3" json:"src-packet-capture-url,inline)"`
+	//
 	DstPacketCaptureFileURL string `protobuf:"bytes,4,opt,name=DstPacketCaptureFileURL,json=dst-packet-capture-url,inline),proto3" json:"dst-packet-capture-url,inline)"`
 }
 
@@ -365,7 +389,9 @@ func (m *MirrorSessionStatus) GetDstPacketCaptureFileURL() string {
 	return ""
 }
 
+// MirrorStartConditions - Conditions to start mirroring
 type MirrorStartConditions struct {
+	//
 	ScheduleTime *api.Timestamp `protobuf:"bytes,1,opt,name=ScheduleTime,json=schedule-time,omitempty" json:"schedule-time,omitempty"`
 }
 
@@ -381,8 +407,12 @@ func (m *MirrorStartConditions) GetScheduleTime() *api.Timestamp {
 	return nil
 }
 
+// MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met
 type MirrorStopConditions struct {
+	// Stop after capturing specified number of packets
 	MaxPacketCount uint32 `protobuf:"varint,1,opt,name=MaxPacketCount,json=max-packets,omitempty,proto3" json:"max-packets,omitempty"`
+	// Stop after specified amount of time. E.g. 1h, 20min
+	// When ExpiryDuration is not specified, Default is "2h"
 	ExpiryDuration string `protobuf:"bytes,2,opt,name=ExpiryDuration,json=expiry-duration,omitempty,proto3" json:"expiry-duration,omitempty"`
 }
 
@@ -405,14 +435,16 @@ func (m *MirrorStopConditions) GetExpiryDuration() string {
 	return ""
 }
 
-// ------------------
-// ---- MirrorSession
-// ------------------
+//
 type SmartNICMirrorSessionStatus struct {
-	SmartNIC      string `protobuf:"bytes,1,opt,name=SmartNIC,json=smart-nic,inline),proto3" json:"smart-nic,inline)"`
+	//
+	SmartNIC string `protobuf:"bytes,1,opt,name=SmartNIC,json=smart-nic,inline),proto3" json:"smart-nic,inline)"`
+	//
 	NumSrcPackets uint32 `protobuf:"varint,2,opt,name=NumSrcPackets,json=num-src-packets,inline,proto3" json:"num-src-packets,inline"`
+	//
 	NumDstPackets uint32 `protobuf:"varint,3,opt,name=NumDstPackets,json=num-dst-packets,inline,proto3" json:"num-dst-packets,inline"`
-	SessionId     uint32 `protobuf:"varint,4,opt,name=SessionId,json=session-id,inline,proto3" json:"session-id,inline"`
+	//
+	SessionId uint32 `protobuf:"varint,4,opt,name=SessionId,json=session-id,inline,proto3" json:"session-id,inline"`
 }
 
 func (m *SmartNICMirrorSessionStatus) Reset()         { *m = SmartNICMirrorSessionStatus{} }

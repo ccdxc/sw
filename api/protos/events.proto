@@ -34,8 +34,8 @@ message EventPolicy {
 }
 
 enum MonitoringExportFormat {
-        SYSLOG_BSD = 0;
-        SYSLOG_RFC5424 = 1;
+        SYSLOG_BSD = 0; // ui-hint: BSD
+        SYSLOG_RFC5424 = 1; // ui-hint: RFC5424
 }
 
 message EventExport {
@@ -72,8 +72,11 @@ message EventPolicyStatus {
 // -------------------------- Event -----------------------------
 // Severity Level of an event
 enum SeverityLevel {
+    // ui-hint: Informational
     INFO        = 0; // no action needed
+    // ui-hint: Warning
     WARNING     = 1; // can cause problems in the future, no immediate action required
+    // ui-hint: Critical
     CRITICAL    = 2; // immediate attention required
 }
 

@@ -19,12 +19,16 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+//
 type TLSServerPolicySpec_ClientAuthTypes int32
 
 const (
+	//
 	TLSServerPolicySpec_Mandatory TLSServerPolicySpec_ClientAuthTypes = 0
-	TLSServerPolicySpec_Optional  TLSServerPolicySpec_ClientAuthTypes = 1
-	TLSServerPolicySpec_None      TLSServerPolicySpec_ClientAuthTypes = 2
+	//
+	TLSServerPolicySpec_Optional TLSServerPolicySpec_ClientAuthTypes = 1
+	//
+	TLSServerPolicySpec_None TLSServerPolicySpec_ClientAuthTypes = 2
 )
 
 var TLSServerPolicySpec_ClientAuthTypes_name = map[int32]string{
@@ -45,30 +49,15 @@ func (TLSServerPolicySpec_ClientAuthTypes) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorService, []int{4, 0}
 }
 
-// The Service TLS configuration for inbound connections.
-// It is used on all ports specified in the Service spec.
-// Multiple Service objects can select the same workload and provide different
-// server TLS configurations for disjoint sets of ports.
+// Service represents a group of identical endpoints, such as servers in an app tier
 type Service struct {
-	// List of names of certificates to present to clients.
-	// The certificates "usage" field must contain "server".
-	// If multiple certificates names are provided, system tries to choose the
-	// correct one using SNI, otherwise it picks the first one in the list.
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Client authentication
-	// "None" means that server does not request and will not validate a client certificate.
-	// "Mandatory" means that server requests and validates client certificate.
-	// "Optional" means that server requests client certificate but proceeds even
-	// if client does not present it.
-	// Default is "Mandatory".
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// The list of root certificates used to validate a trust chain presented by client.
-	// If the list is empty, all roots certificates in the tenant scope are considered.
+	// Spec contains the configuration of the Service.
 	Spec ServiceSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// Valid DNS names or IP addresses that must appear in the client certificate
-	// SubjAltName or Common Name (if SAN is not specified).
-	// If client auth is enabled and AllowedPeerId is not specified, server accepts any
-	// client certificate as long as it is valid  (not expired and with a valid trust chain).
+	// Status contains the current state of the Service.
 	Status ServiceStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -91,29 +80,21 @@ func (m *Service) GetStatus() ServiceStatus {
 	return ServiceStatus{}
 }
 
-// Service TLS configuration for connections initiated by the workload towards
-// destinations inside or outside the cluster.
+// spec part of service object
 type ServiceSpec struct {
-	// A map containing the certificate to use for a set of destinations.
-	// The key is a selector for workloads that exist either inside or
-	// outside the cluster. It can be based on labels, hostnames or "IP:port" pairs.
-	// The value is the name of the certificate to use for the selected destinations.
-	// The certificates "usage" field must contain "client".
-	// TODO: replace the first "string" type with proper selector type when available.
-	// A single "default" certificate which matches all destinations is allowed.
-	// If a destination matches multiple non-default map keys, an error is returned.
-	// If a destination does not match any map key (and there is no default),
-	// the outbound connection is initiated without TLS.
+	// FIXME: maps are not working. change this after its fixed
+	// map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"];
+	// workload selector for the service (list of labels to match)
 	WorkloadSelector []string `protobuf:"bytes,1,rep,name=WorkloadSelector,json=workload-labels,omitempty" json:"workload-labels,omitempty"`
-	// The list of root certificates used to validate a trust chain presented by a server.
-	// If the list is empty, all roots certificates in the tenant scope are considered.
+	// Virtual IP of the load balancer
 	VirtualIp string `protobuf:"bytes,2,opt,name=VirtualIp,json=virtual-ip,omitempty,proto3" json:"virtual-ip,omitempty"`
-	// Valid DNS names or IP addresses that must appear in the server certificate
-	// SubjAltName or Common Name (if SAN is not specified). If not specified,
-	// client validates the IP address of the server.
-	Ports           string               `protobuf:"bytes,3,opt,name=Ports,json=ports,omitempty,proto3" json:"ports,omitempty"`
-	LBPolicy        string               `protobuf:"bytes,4,opt,name=LBPolicy,json=lb-policy,omitempty,proto3" json:"lb-policy,omitempty"`
+	// load balancer port
+	Ports string `protobuf:"bytes,3,opt,name=Ports,json=ports,omitempty,proto3" json:"ports,omitempty"`
+	// load balancing policy (reference to LbPolicy object)
+	LBPolicy string `protobuf:"bytes,4,opt,name=LBPolicy,json=lb-policy,omitempty,proto3" json:"lb-policy,omitempty"`
+	// TLS configuration for inbound connections
 	TLSServerPolicy *TLSServerPolicySpec `protobuf:"bytes,5,opt,name=TLSServerPolicy,json=tls-server-policy,omitempty" json:"tls-server-policy,omitempty"`
+	// TLS configuration for outbound connections
 	TLSClientPolicy *TLSClientPolicySpec `protobuf:"bytes,6,opt,name=TLSClientPolicy,json=tls-client-policy,omitempty" json:"tls-client-policy,omitempty"`
 }
 
@@ -164,11 +145,9 @@ func (m *ServiceSpec) GetTLSClientPolicy() *TLSClientPolicySpec {
 	return nil
 }
 
-// spec part of service object
+// status part of service object
 type ServiceStatus struct {
-	// FIXME: maps are not working. change this after its fixed
-	// map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"];
-	// workload selector for the service (list of labels to match)
+	// list of workloads that are backends of this service
 	Workloads []string `protobuf:"bytes,1,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
 }
 
@@ -184,12 +163,27 @@ func (m *ServiceStatus) GetWorkloads() []string {
 	return nil
 }
 
-// status part of service object
+// Service TLS configuration for connections initiated by the workload towards
+// destinations inside or outside the cluster.
 type TLSClientPolicySpec struct {
-	// list of workloads that are backends of this service
+	// A map containing the certificate to use for a set of destinations.
+	// The key is a selector for workloads that exist either inside or
+	// outside the cluster. It can be based on labels, hostnames or "IP:port" pairs.
+	// The value is the name of the certificate to use for the selected destinations.
+	// The certificates "usage" field must contain "client".
+	// TODO: replace the first "string" type with proper selector type when available.
+	// A single "default" certificate which matches all destinations is allowed.
+	// If a destination matches multiple non-default map keys, an error is returned.
+	// If a destination does not match any map key (and there is no default),
+	// the outbound connection is initiated without TLS.
 	CertificatesSelector map[string]string `protobuf:"bytes,1,rep,name=CertificatesSelector,json=tls-client-certificates-selector,omitempty" json:"tls-client-certificates-selector,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	TrustRoots           []string          `protobuf:"bytes,2,rep,name=TrustRoots,json=tls-client-trust-roots,omitempty" json:"tls-client-trust-roots,omitempty"`
-	AllowedPeerId        []string          `protobuf:"bytes,3,rep,name=AllowedPeerId,json=tls-client-allowed-peer-id,omitempty" json:"tls-client-allowed-peer-id,omitempty"`
+	// The list of root certificates used to validate a trust chain presented by a server.
+	// If the list is empty, all roots certificates in the tenant scope are considered.
+	TrustRoots []string `protobuf:"bytes,2,rep,name=TrustRoots,json=tls-client-trust-roots,omitempty" json:"tls-client-trust-roots,omitempty"`
+	// Valid DNS names or IP addresses that must appear in the server certificate
+	// SubjAltName or Common Name (if SAN is not specified). If not specified,
+	// client validates the IP address of the server.
+	AllowedPeerId []string `protobuf:"bytes,3,rep,name=AllowedPeerId,json=tls-client-allowed-peer-id,omitempty" json:"tls-client-allowed-peer-id,omitempty"`
 }
 
 func (m *TLSClientPolicySpec) Reset()                    { *m = TLSClientPolicySpec{} }
@@ -218,13 +212,30 @@ func (m *TLSClientPolicySpec) GetAllowedPeerId() []string {
 	return nil
 }
 
-// Service represents a group of identical endpoints, such as servers in an app tier
+// The Service TLS configuration for inbound connections.
+// It is used on all ports specified in the Service spec.
+// Multiple Service objects can select the same workload and provide different
+// server TLS configurations for disjoint sets of ports.
 type TLSServerPolicySpec struct {
-	Certificates         []string `protobuf:"bytes,1,rep,name=Certificates,json=tls-server-certificates,omitempty" json:"tls-server-certificates,omitempty"`
-	ClientAuthentication string   `protobuf:"bytes,2,opt,name=ClientAuthentication,json=client-authentication,omitempty,proto3" json:"client-authentication,omitempty"`
-	// Spec contains the configuration of the Service.
+	// List of names of certificates to present to clients.
+	// The certificates "usage" field must contain "server".
+	// If multiple certificates names are provided, system tries to choose the
+	// correct one using SNI, otherwise it picks the first one in the list.
+	Certificates []string `protobuf:"bytes,1,rep,name=Certificates,json=tls-server-certificates,omitempty" json:"tls-server-certificates,omitempty"`
+	// Client authentication
+	// "None" means that server does not request and will not validate a client certificate.
+	// "Mandatory" means that server requests and validates client certificate.
+	// "Optional" means that server requests client certificate but proceeds even
+	// if client does not present it.
+	// Default is "Mandatory".
+	ClientAuthentication string `protobuf:"bytes,2,opt,name=ClientAuthentication,json=client-authentication,omitempty,proto3" json:"client-authentication,omitempty"`
+	// The list of root certificates used to validate a trust chain presented by client.
+	// If the list is empty, all roots certificates in the tenant scope are considered.
 	TrustRoots []string `protobuf:"bytes,3,rep,name=TrustRoots,json=tls-server-trust-roots,omitempty" json:"tls-server-trust-roots,omitempty"`
-	// Status contains the current state of the Service.
+	// Valid DNS names or IP addresses that must appear in the client certificate
+	// SubjAltName or Common Name (if SAN is not specified).
+	// If client auth is enabled and AllowedPeerId is not specified, server accepts any
+	// client certificate as long as it is valid  (not expired and with a valid trust chain).
 	AllowedPeerId []string `protobuf:"bytes,4,rep,name=AllowedPeerId,json=tls-server-allowed-peer-id,omitempty" json:"tls-server-allowed-peer-id,omitempty"`
 }
 

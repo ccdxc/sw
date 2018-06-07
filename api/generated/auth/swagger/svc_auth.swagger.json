@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Service name",
+    "title": "svc_auth.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,14 +15,51 @@
     "application/json"
   ],
   "paths": {
-    "/authn-policy": {
+    "/v1/auth/authn-policy": {
       "post": {
-        "operationId": "AutoAddAuthenticationPolicy",
+        "summary": "Creates a new AuthenticationPolicy object",
+        "operationId": "AddAuthenticationPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -37,18 +74,56 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     },
-    "/authn-policy/{O.Name}": {
+    "/v1/auth/authn-policy/{O.Name}": {
       "get": {
-        "operationId": "AutoGetAuthenticationPolicy",
+        "summary": "Retreives the AuthenticationPolicy object",
+        "operationId": "GetAuthenticationPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -60,170 +135,85 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Authenticators.Ldap.Enabled",
+            "name": "ldap.enabled",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "Spec.Authenticators.Ldap.Url",
+            "name": "ldap.url",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Authenticators.Ldap.TLSOptions.StartTLS",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.TLSOptions.SkipServerCertVerification",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.TLSOptions.ServerName",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.TLSOptions.TrustedCerts",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.BaseDN",
-            "description": "Order in which authenticators are applied. If an authenticator returns success, others are skipped.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.BindDN",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.BindPassword",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.AttributeMapping.User",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.AttributeMapping.UserObjectClass",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.AttributeMapping.Tenant",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.AttributeMapping.Group",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.AttributeMapping.GroupObjectClass",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.AttributeMapping.Email",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Ldap.AttributeMapping.Fullname",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Authenticators.Local.Enabled",
+            "name": "tls-options.start-tls",
             "description": "StartTLS determines if ldap connection uses TLS.",
             "in": "query",
             "required": false,
@@ -231,38 +221,130 @@
             "format": "boolean"
           },
           {
-            "name": "Spec.Authenticators.Radius.Enabled",
+            "name": "tls-options.skip-server-cert-verification",
+            "description": "SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.\nIf SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.\nIn this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "Spec.Authenticators.Radius.Ip",
+            "name": "tls-options.server-name",
+            "description": "ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Authenticators.Radius.Port",
+            "name": "tls-options.trusted-certs",
+            "description": "TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Authenticators.Radius.NasIp",
+            "name": "ldap.base-dn",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Authenticators.Radius.Secret",
+            "name": "ldap.bind-dn",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Authenticators.AuthenticatorOrder",
+            "name": "ldap.bind-password",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "attribute-mapping.user",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "attribute-mapping.user-object-class",
+            "description": "UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "attribute-mapping.tenant",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "attribute-mapping.group",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "attribute-mapping.group-object-class",
+            "description": "GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "attribute-mapping.email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "attribute-mapping.fullname",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "local.enabled",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "radius.enabled",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "radius.ip",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "radius.port",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "radius.nas-ip",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "radius.secret",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "authenticators.authenticator-order",
+            "description": "Order in which authenticators are applied. If an authenticator returns success, others are skipped.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -271,7 +353,8 @@
             }
           },
           {
-            "name": "Spec.Secret",
+            "name": "spec.secret",
+            "description": "Secret used to sign JWT token.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -279,16 +362,54 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteAuthenticationPolicy",
+        "summary": "Deletes the AuthenticationPolicy object",
+        "operationId": "DeleteAuthenticationPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -301,16 +422,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateAuthenticationPolicy",
+        "operationId": "UpdateAuthenticationPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -331,19 +489,57 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/role-bindings": {
+    "/v1/auth/{O.Tenant}/role-bindings": {
       "get": {
-        "operationId": "AutoListRoleBinding",
+        "summary": "Retreives a list of RoleBinding objects",
+        "operationId": "ListRoleBinding",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBindingList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -354,75 +550,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -432,16 +630,54 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddRoleBinding",
+        "summary": "Creates a new RoleBinding object",
+        "operationId": "AddRoleBinding",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -462,18 +698,56 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/role-bindings/{O.Name}": {
+    "/v1/auth/{O.Tenant}/role-bindings/{O.Name}": {
       "get": {
-        "operationId": "AutoGetRoleBinding",
+        "summary": "Retreives the RoleBinding object",
+        "operationId": "GetRoleBinding",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -491,64 +765,65 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Users",
-            "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.",
+            "name": "spec.users",
             "in": "query",
             "required": false,
             "type": "array",
@@ -557,8 +832,7 @@
             }
           },
           {
-            "name": "Spec.UserGroups",
-            "description": "ResourceGroup is grouping of resource types for which a permission is defined.",
+            "name": "spec.user-groups",
             "in": "query",
             "required": false,
             "type": "array",
@@ -567,24 +841,61 @@
             }
           },
           {
-            "name": "Spec.Role",
-            "description": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint.",
+            "name": "spec.role",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteRoleBinding",
+        "summary": "Deletes the RoleBinding object",
+        "operationId": "DeleteRoleBinding",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -603,16 +914,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateRoleBinding",
+        "operationId": "UpdateRoleBinding",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -639,19 +987,57 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/roles": {
+    "/v1/auth/{O.Tenant}/roles": {
       "get": {
-        "operationId": "AutoListRole",
+        "summary": "Retreives a list of Role objects",
+        "operationId": "ListRole",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -662,75 +1048,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -740,16 +1128,54 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddRole",
+        "summary": "Creates a new Role object",
+        "operationId": "AddRole",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -770,18 +1196,56 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/roles/{O.Name}": {
+    "/v1/auth/{O.Tenant}/roles/{O.Name}": {
       "get": {
-        "operationId": "AutoGetRole",
+        "summary": "Retreives the Role object",
+        "operationId": "GetRole",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -799,56 +1263,58 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
@@ -856,16 +1322,54 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteRole",
+        "summary": "Deletes the Role object",
+        "operationId": "DeleteRole",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -884,16 +1388,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateRole",
+        "operationId": "UpdateRole",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -920,19 +1461,57 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/users": {
+    "/v1/auth/{O.Tenant}/users": {
       "get": {
-        "operationId": "AutoListUser",
+        "summary": "Retreives a list of User objects",
+        "operationId": "ListUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUserList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -943,75 +1522,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1021,16 +1602,54 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddUser",
+        "summary": "Creates a new User object",
+        "operationId": "AddUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1051,18 +1670,56 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/users/{O.Name}": {
+    "/v1/auth/{O.Tenant}/users/{O.Name}": {
       "get": {
-        "operationId": "AutoGetUser",
+        "summary": "Retreives the User object",
+        "operationId": "GetUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1080,89 +1737,89 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Fullname",
+            "name": "spec.fullname",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Email",
+            "name": "spec.email",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Password",
-            "description": "Spec contains the configuration of the role binding.",
+            "name": "spec.password",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Type",
-            "description": "Status contains the current state of the role binding.",
+            "name": "spec.type",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.Roles",
+            "name": "status.roles",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1171,7 +1828,7 @@
             }
           },
           {
-            "name": "Status.UserGroups",
+            "name": "status.user-groups",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1180,7 +1837,7 @@
             }
           },
           {
-            "name": "Status.LastSuccessfulLogin.time",
+            "name": "status.last-successful-login",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1188,16 +1845,54 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteUser",
+        "summary": "Deletes the User object",
+        "operationId": "DeleteUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1216,16 +1911,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateUser",
+        "operationId": "UpdateUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1252,7 +1984,8 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "AuthV1",
+          "version:v1"
         ]
       }
     }
@@ -1261,7 +1994,7 @@
     "apiListMeta": {
       "type": "object",
       "properties": {
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version of object store at the time of list generation."
         }
@@ -1271,20 +2004,49 @@
     "apiListWatchOptions": {
       "type": "object",
       "properties": {
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "LabelSelector": {
+        "name": {
           "type": "string"
         },
-        "FieldSelector": {
+        "tenant": {
           "type": "string"
         },
-        "PrefixWatch": {
+        "namespace": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "self-link": {
+          "type": "string"
+        },
+        "label-selector": {
+          "type": "string"
+        },
+        "field-selector": {
+          "type": "string"
+        },
+        "prefix-watch": {
           "type": "boolean",
           "format": "boolean"
         },
-        "FieldChangeSelector": {
+        "field-change-selector": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1295,65 +2057,138 @@
     "apiObjectMeta": {
       "type": "object",
       "properties": {
-        "Name": {
+        "name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
-        "Tenant": {
+        "tenant": {
           "type": "string",
           "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
-        "Namespace": {
+        "namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
-        "UUID": {
+        "uuid": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         },
-        "Labels": {
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
           "description": "Labels are arbitrary (key,value) pairs associated with any object."
         },
-        "CreationTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "CreationTime is the creation time of Object"
         },
-        "ModTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "ModTime is the Last Modification time of Object"
         },
-        "SelfLink": {
+        "self-link": {
           "type": "string",
           "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
-        "time": {
+        "seconds": {
           "type": "string",
-          "format": "date-time"
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
     "apiTypeMeta": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "kind": {
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "APIVersion": {
+        "api-version": {
           "type": "string",
           "description": "APIVersion defines the version of the API object."
         }
@@ -1363,76 +2198,95 @@
     "authAuthenticationPolicy": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
-          "$ref": "#/definitions/authAuthenticationPolicySpec"
+        "spec": {
+          "$ref": "#/definitions/authAuthenticationPolicySpec",
+          "description": "Spec contains configuration of authentication mechanisms."
         },
-        "Status": {
-          "$ref": "#/definitions/authAuthenticationPolicyStatus"
+        "status": {
+          "$ref": "#/definitions/authAuthenticationPolicyStatus",
+          "description": "Status contains the current state of the authentication policy."
         }
       },
-      "title": "spec part of user object"
+      "title": "AuthenticationPolicy defines various authentication mechanisms available and order in which they are used"
     },
     "authAuthenticationPolicyList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authAuthenticationPolicy"
-          }
+          },
+          "title": "List of AuthenticationPolicy objects"
         }
-      }
+      },
+      "title": "AuthenticationPolicyList is a container object for list of AuthenticationPolicy objects"
     },
     "authAuthenticationPolicySpec": {
       "type": "object",
       "properties": {
-        "Authenticators": {
+        "authenticators": {
           "$ref": "#/definitions/authAuthenticators"
         },
-        "Secret": {
+        "secret": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "Secret used to sign JWT token"
         }
       },
-      "title": "status part of user object"
+      "title": "spec part of authentication policy object"
     },
     "authAuthenticationPolicyStatus": {
       "type": "object",
-      "title": "User could be local or external"
+      "title": "status part of authentication policy object"
     },
     "authAuthenticators": {
       "type": "object",
       "properties": {
-        "Ldap": {
+        "ldap": {
           "$ref": "#/definitions/authLdap"
         },
-        "Local": {
-          "$ref": "#/definitions/authLocal",
-          "title": "Secret used to sign JWT token"
+        "local": {
+          "$ref": "#/definitions/authLocal"
         },
-        "Radius": {
+        "radius": {
           "$ref": "#/definitions/authRadius"
         },
-        "AuthenticatorOrder": {
+        "authenticator-order": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "enum": [
+            "LOCAL",
+            "LDAP",
+            "RADIUS"
+          ],
+          "default": "LOCAL",
+          "x-ui-hints": {
+            "LOCAL": "Local"
+          },
+          "title": "Order in which authenticators are applied. If an authenticator returns success, others are skipped"
         }
-      },
-      "title": "spec part of authentication policy object"
+      }
     },
     "authAutoMsgAuthenticationPolicyWatchHelper": {
       "type": "object",
@@ -1443,7 +2297,8 @@
             "$ref": "#/definitions/authAutoMsgAuthenticationPolicyWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgAuthenticationPolicyWatchHelper is a wrapper object for watch events for AuthenticationPolicy objects"
     },
     "authAutoMsgAuthenticationPolicyWatchHelperWatchEvent": {
       "type": "object",
@@ -1465,7 +2320,8 @@
             "$ref": "#/definitions/authAutoMsgRoleBindingWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgRoleBindingWatchHelper is a wrapper object for watch events for RoleBinding objects"
     },
     "authAutoMsgRoleBindingWatchHelperWatchEvent": {
       "type": "object",
@@ -1487,7 +2343,8 @@
             "$ref": "#/definitions/authAutoMsgRoleWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgRoleWatchHelper is a wrapper object for watch events for Role objects"
     },
     "authAutoMsgRoleWatchHelperWatchEvent": {
       "type": "object",
@@ -1509,7 +2366,8 @@
             "$ref": "#/definitions/authAutoMsgUserWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgUserWatchHelper is a wrapper object for watch events for User objects"
     },
     "authAutoMsgUserWatchHelperWatchEvent": {
       "type": "object",
@@ -1525,27 +2383,26 @@
     "authLdap": {
       "type": "object",
       "properties": {
-        "Enabled": {
+        "enabled": {
           "type": "boolean",
           "format": "boolean"
         },
-        "Url": {
+        "url": {
           "type": "string"
         },
-        "TLSOptions": {
+        "tls-options": {
           "$ref": "#/definitions/authTLSOptions"
         },
-        "BaseDN": {
-          "type": "string",
-          "title": "Order in which authenticators are applied. If an authenticator returns success, others are skipped"
-        },
-        "BindDN": {
+        "base-dn": {
           "type": "string"
         },
-        "BindPassword": {
+        "bind-dn": {
           "type": "string"
         },
-        "AttributeMapping": {
+        "bind-password": {
+          "type": "string"
+        },
+        "attribute-mapping": {
           "$ref": "#/definitions/authLdapAttributeMapping"
         }
       }
@@ -1553,25 +2410,27 @@
     "authLdapAttributeMapping": {
       "type": "object",
       "properties": {
-        "User": {
+        "user": {
           "type": "string"
         },
-        "UserObjectClass": {
+        "user-object-class": {
+          "type": "string",
+          "title": "UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search"
+        },
+        "tenant": {
           "type": "string"
         },
-        "Tenant": {
+        "group": {
           "type": "string"
         },
-        "Group": {
+        "group-object-class": {
+          "type": "string",
+          "title": "GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search"
+        },
+        "email": {
           "type": "string"
         },
-        "GroupObjectClass": {
-          "type": "string"
-        },
-        "Email": {
-          "type": "string"
-        },
-        "Fullname": {
+        "fullname": {
           "type": "string"
         }
       }
@@ -1579,59 +2438,139 @@
     "authLocal": {
       "type": "object",
       "properties": {
-        "Enabled": {
+        "enabled": {
           "type": "boolean",
-          "format": "boolean",
-          "title": "StartTLS determines if ldap connection uses TLS"
+          "format": "boolean"
         }
       }
     },
     "authPermission": {
       "type": "object",
       "properties": {
-        "ResourceTenant": {
-          "type": "string"
+        "resource-tenant": {
+          "type": "string",
+          "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant."
         },
-        "ResourceGroup": {
-          "type": "string"
+        "resource-group": {
+          "type": "string",
+          "title": "ResourceGroup is grouping of resource types for which a permission is defined"
         },
-        "ResourceKind": {
-          "type": "string"
+        "resource-kind": {
+          "type": "string",
+          "enum": [
+            "ALL_RESOURCE_KINDS",
+            "TENANT",
+            "CLUSTER",
+            "NODE",
+            "SMARTNIC",
+            "CERTIFICATE",
+            "NETWORK",
+            "SERVICE",
+            "LBPOLICY",
+            "ENDPOINT",
+            "SECURITYGROUP",
+            "SGPOLICY",
+            "APP",
+            "ENCRYPTIONPOLICY",
+            "ALERT",
+            "ALERTPOLICY",
+            "ALERTDESTINATION",
+            "EVENTPOLICY",
+            "STATSPOLICY",
+            "FWLOGPOLICY",
+            "FLOWEXPORTPOLICY",
+            "USER",
+            "AUTHPOLICY",
+            "ROLE",
+            "ROLEBINDING",
+            "APIENDPOINT"
+          ],
+          "default": "ALL_RESOURCE_KINDS",
+          "x-ui-hints": {
+            "ALERT": "Alert",
+            "ALERTDESTINATION": "AlertDestination",
+            "ALERTPOLICY": "AlertPolicy",
+            "ALL_RESOURCE_KINDS": "All Resource Kinds",
+            "APIENDPOINT": "API Endpoint",
+            "APP": "App",
+            "AUTHPOLICY": "AuthenticationPolicy",
+            "CERTIFICATE": "Certificate",
+            "CLUSTER": "Cluster",
+            "ENCRYPTIONPOLICY": "EncryptionPolicy",
+            "ENDPOINT": "Endpoint",
+            "EVENTPOLICY": "EventPolicy",
+            "FLOWEXPORTPOLICY": "FlowExportPolicy",
+            "FWLOGPOLICY": "FwlogPolicy",
+            "LBPOLICY": "LBPolicy",
+            "NETWORK": "Network",
+            "NODE": "Node",
+            "ROLE": "Role",
+            "ROLEBINDING": "RoleBinding",
+            "SECURITYGROUP": "SecurityGroup",
+            "SERVICE": "Service",
+            "SGPOLICY": "SGPolicy",
+            "SMARTNIC": "SmartNIC",
+            "STATSPOLICY": "StatsPolicy",
+            "TENANT": "Tenant",
+            "USER": "User"
+          },
+          "title": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint"
         },
-        "ResourceNamespace": {
-          "type": "string"
+        "resource-namespace": {
+          "type": "string",
+          "title": "ResourceNamespace is a namespace to which a resource (API Server object) belongs"
         },
-        "ResourceNames": {
+        "resource-names": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "ResourceNames identify specific objects on which this permission applies."
         },
-        "Actions": {
+        "actions": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "enum": [
+            "ALL_ACTIONS",
+            "CREATE",
+            "READ",
+            "UPDATE",
+            "DELETE",
+            "COMMIT"
+          ],
+          "default": "ALL_ACTIONS",
+          "x-ui-hints": {
+            "ALL_ACTIONS": "All Actions",
+            "COMMIT": "Commit Config",
+            "CREATE": "Create",
+            "DELETE": "Delete",
+            "READ": "Read",
+            "UPDATE": "Update"
+          },
+          "title": "Actions are actions on a resource that a permission allows"
         }
-      }
+      },
+      "description": "Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints."
     },
     "authRadius": {
       "type": "object",
       "properties": {
-        "Enabled": {
+        "enabled": {
           "type": "boolean",
           "format": "boolean"
         },
-        "Ip": {
+        "ip": {
           "type": "string"
         },
-        "Port": {
+        "port": {
           "type": "string"
         },
-        "NasIp": {
+        "nas-ip": {
           "type": "string"
         },
-        "Secret": {
+        "secret": {
           "type": "string"
         }
       }
@@ -1639,214 +2578,251 @@
     "authRole": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
-          "$ref": "#/definitions/authRoleSpec"
+        "spec": {
+          "$ref": "#/definitions/authRoleSpec",
+          "description": "Spec contains the configuration of the role."
         },
-        "Status": {
-          "$ref": "#/definitions/authRoleStatus"
+        "status": {
+          "$ref": "#/definitions/authRoleStatus",
+          "description": "Status contains the current state of the role."
         }
       },
-      "title": "status part of authentication policy object"
+      "title": "Role is a collection of permissions"
     },
     "authRoleBinding": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/authRoleBindingSpec",
-          "description": "Spec contains configuration of authentication mechanisms."
-        },
-        "Status": {
-          "$ref": "#/definitions/authRoleBindingStatus",
-          "description": "Status contains the current state of the authentication policy."
-        }
-      },
-      "title": "AuthenticationPolicy defines various authentication mechanisms available and order in which they are used"
-    },
-    "authRoleBindingList": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/authRoleBinding"
-          }
-        }
-      }
-    },
-    "authRoleBindingSpec": {
-      "type": "object",
-      "properties": {
-        "Users": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant."
-        },
-        "UserGroups": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "ResourceGroup is grouping of resource types for which a permission is defined"
-        },
-        "Role": {
-          "type": "string",
-          "title": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint"
-        }
-      },
-      "description": "Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints."
-    },
-    "authRoleBindingStatus": {
-      "type": "object",
-      "title": "spec part of role object"
-    },
-    "authRoleList": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/authRole"
-          }
-        }
-      }
-    },
-    "authRoleSpec": {
-      "type": "object",
-      "properties": {
-        "Permissions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/authPermission"
-          }
-        }
-      },
-      "title": "status part of role object"
-    },
-    "authRoleStatus": {
-      "type": "object",
-      "title": "Role is a collection of permissions"
-    },
-    "authTLSOptions": {
-      "type": "object",
-      "properties": {
-        "StartTLS": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "SkipServerCertVerification": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "ServerName": {
-          "type": "string"
-        },
-        "TrustedCerts": {
-          "type": "string"
-        }
-      },
-      "title": "spec part of role binding object"
-    },
-    "authUser": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "Spec": {
-          "$ref": "#/definitions/authUserSpec"
-        },
-        "Status": {
-          "$ref": "#/definitions/authUserStatus"
-        }
-      },
-      "title": "status part of role binding object"
-    },
-    "authUserList": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/authUser"
-          }
-        }
-      }
-    },
-    "authUserSpec": {
-      "type": "object",
-      "properties": {
-        "Fullname": {
-          "type": "string"
-        },
-        "Email": {
-          "type": "string"
-        },
-        "Password": {
-          "type": "string",
           "description": "Spec contains the configuration of the role binding."
         },
-        "Type": {
-          "type": "string",
+        "status": {
+          "$ref": "#/definitions/authRoleBindingStatus",
           "description": "Status contains the current state of the role binding."
         }
       },
       "title": "RoleBinding is an assignment of a role to users or groups"
     },
+    "authRoleBindingList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authRoleBinding"
+          },
+          "title": "List of RoleBinding objects"
+        }
+      },
+      "title": "RoleBindingList is a container object for list of RoleBinding objects"
+    },
+    "authRoleBindingSpec": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "user-groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "title": "spec part of role binding object"
+    },
+    "authRoleBindingStatus": {
+      "type": "object",
+      "title": "status part of role binding object"
+    },
+    "authRoleList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authRole"
+          },
+          "title": "List of Role objects"
+        }
+      },
+      "title": "RoleList is a container object for list of Role objects"
+    },
+    "authRoleSpec": {
+      "type": "object",
+      "properties": {
+        "permissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authPermission"
+          },
+          "title": "Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint"
+        }
+      },
+      "title": "spec part of role object"
+    },
+    "authRoleStatus": {
+      "type": "object",
+      "title": "status part of role object"
+    },
+    "authTLSOptions": {
+      "type": "object",
+      "properties": {
+        "start-tls": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "StartTLS determines if ldap connection uses TLS"
+        },
+        "skip-server-cert-verification": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.\nIf SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.\nIn this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing."
+        },
+        "server-name": {
+          "type": "string",
+          "description": "ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true."
+        },
+        "trusted-certs": {
+          "type": "string",
+          "description": "TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates."
+        }
+      }
+    },
+    "authUser": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/authUserSpec",
+          "description": "Spec contains the configuration of the user."
+        },
+        "status": {
+          "$ref": "#/definitions/authUserStatus",
+          "description": "Status contains the current state of the role binding."
+        }
+      },
+      "title": "User could be local or external"
+    },
+    "authUserList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authUser"
+          },
+          "title": "List of User objects"
+        }
+      },
+      "title": "UserList is a container object for list of User objects"
+    },
+    "authUserSpec": {
+      "type": "object",
+      "properties": {
+        "fullname": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "LOCAL",
+            "EXTERNAL"
+          ],
+          "default": "LOCAL",
+          "x-ui-hints": {
+            "EXTERNAL": "External",
+            "LOCAL": "Local"
+          }
+        }
+      },
+      "title": "spec part of user object"
+    },
     "authUserStatus": {
       "type": "object",
       "properties": {
-        "Roles": {
+        "roles": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "UserGroups": {
+        "user-groups": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "LastSuccessfulLogin": {
-          "$ref": "#/definitions/apiTimestamp"
+        "last-successful-login": {
+          "type": "string",
+          "format": "date-time"
         }
       },
-      "description": "PasswordCredential is user credential to login to Venice. It consists of username, password and tenant."
+      "title": "status part of user object"
     }
   }
 }

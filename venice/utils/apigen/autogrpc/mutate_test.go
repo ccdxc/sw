@@ -1,6 +1,7 @@
 package autogrpc
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -13,6 +14,8 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 
 	_ "github.com/pensando/sw/venice/utils/apigen/annotations"
+	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
+	ref "github.com/pensando/sw/venice/utils/ref"
 )
 
 func TestMutator(t *testing.T) {
@@ -257,4 +260,210 @@ func TestMutator(t *testing.T) {
 		}
 		t.Fatalf("expected and found do not match")
 	}
+}
+
+func TestSourceCodeInfo(t *testing.T) {
+	var req plugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		enum_type:<
+			name:"Enum1"
+			value:<name:"Value1" number:0 >
+			value:<name:"Value2" number:1 >
+		>
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'msg1fld1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'msg1fld2'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
+			>
+			enum_type:<
+				name:"msg1Enum1"
+				value:<name:"Value1" number:0 >
+				value:<name:"Value2" number:1 >
+			>
+		>
+		message_type <
+			name: 'msg2'
+			field <
+				name: 'msg2fld1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'msg2fld2'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
+			>
+		>
+		service <
+			name: 'svc1'
+			method: <
+				name: 'svc1method1'
+				input_type: '.example.msg1'
+				output_type: '.example.msg1'
+			>
+			method: <
+				name: 'svc1method2'
+				input_type: '.example.msg2'
+				output_type: '.example.msg2'
+			>
+		>
+		service <
+			name: 'svc2'
+			method: <
+				name: 'svc2method1'
+				input_type: '.example.msg1'
+				output_type: '.example.msg1'
+			>
+			method: <
+				name: 'svc2method2'
+				input_type: '.example.msg2'
+				output_type: '.example.msg2'
+			>
+		>
+		source_code_info:<
+		location:<path:5 path:0 leading_comments:"Enum1 comments" >
+		location:<path:5 path:0 path:2 path:0 leading_comments:"Enum1 field 1 comments" >
+		location:<path:5 path:0 path:2 path:1>
+		location:<path:4 path:0 leading_comments:"msg1 comments" >
+		location:<path:4 path:0 path:2 path:0 leading_comments:"msg1 field 1 comments" >
+		location:<path:4 path:0 path:2 path:1 leading_comments:"msg1 field 2 comments" >
+		location:<path:4 path:0 path:4 path:0 leading_comments:"msg1Enum1 comments" >
+		location:<path:4 path:0 path:4 path:0 path:2 path:0 leading_comments:"msg1Enum1 field 1 comments" >
+		location:<path:4 path:0 path:4 path:0 path:2  path:1>
+		location:<path:4 path:1 leading_comments:"msg2 comments" >
+		location:<path:4 path:1 path:2 path:0 leading_comments:"msg2 field 1 comments" >
+		location:<path:4 path:1 path:2 path:1 leading_comments:"msg2 field 2 comments" >
+		location:<path:6 path:0 leading_comments:"svc 1 comments" >
+		location:<path:6 path:0 path:2 path:0 leading_comments:"svc1 method 1 comments" >
+		location:<path:6 path:0 path:2 path:1 leading_comments:"svc1 method 2 comments" >
+		location:<path:6 path:1 leading_comments:"svc 2 comments" >
+		location:<path:6 path:1 path:2 path:0 leading_comments:"svc2 method 1 comments" >
+		location:<path:6 path:1 path:2 path:1 leading_comments:"svc2 method 2 comments" >
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	req.FileToGenerate = []string{"example.proto"}
+
+	file := req.GetProtoFile()[0]
+	sci := saveSrcCodeInfo(file)
+	expsci := srcCodeInfo{
+		msgs: map[string]msgSrcCodeInfo{
+			"msg1": msgSrcCodeInfo{
+				codeInfo: codeInfo{comments: "msg1 comments"},
+				fields: map[string]codeInfo{
+					"msg1fld1": codeInfo{comments: "msg1 field 1 comments"},
+					"msg1fld2": codeInfo{comments: "msg1 field 2 comments"},
+				},
+				nestedMsgs: map[string]msgSrcCodeInfo{},
+				enums: map[string]enumSrcCodeInfo{
+					"msg1Enum1": enumSrcCodeInfo{
+						codeInfo: codeInfo{comments: "msg1Enum1 comments"},
+						values: map[string]codeInfo{
+							"Value1": codeInfo{comments: "msg1Enum1 field 1 comments"},
+							"Value2": codeInfo{comments: ""},
+						},
+					},
+				},
+			},
+			"msg2": msgSrcCodeInfo{
+				codeInfo: codeInfo{comments: "msg2 comments"},
+				fields: map[string]codeInfo{
+					"msg2fld1": codeInfo{comments: "msg2 field 1 comments"},
+					"msg2fld2": codeInfo{comments: "msg2 field 2 comments"},
+				},
+				nestedMsgs: map[string]msgSrcCodeInfo{},
+				enums:      map[string]enumSrcCodeInfo{},
+			},
+		},
+		services: map[string]svcSrcCodeInfo{
+			"svc1": svcSrcCodeInfo{
+				codeInfo: codeInfo{comments: "svc 1 comments"},
+				methods: map[string]codeInfo{
+					"svc1method1": codeInfo{comments: "svc1 method 1 comments"},
+					"svc1method2": codeInfo{comments: "svc1 method 2 comments"},
+				},
+			},
+			"svc2": svcSrcCodeInfo{
+				codeInfo: codeInfo{comments: "svc 2 comments"},
+				methods: map[string]codeInfo{
+					"svc2method1": codeInfo{comments: "svc2 method 1 comments"},
+					"svc2method2": codeInfo{comments: "svc2 method 2 comments"},
+				},
+			},
+		},
+		enums: map[string]enumSrcCodeInfo{
+			"Enum1": enumSrcCodeInfo{
+				codeInfo: codeInfo{comments: "Enum1 comments"},
+				values: map[string]codeInfo{
+					"Value1": codeInfo{comments: "Enum1 field 1 comments"},
+					"Value2": codeInfo{comments: ""},
+				},
+			},
+		},
+	}
+	if !reflect.DeepEqual(&sci, &expsci) {
+		diff, _ := ref.ObjDiff(sci, expsci)
+		t.Fatalf("save src code info does not match at %v exp/got\n%+v\n%+v", diff.List(), expsci, sci.services)
+	}
+	// Restore the source code info.
+	restoreScrCodeInfo(file, sci)
+	cases := []struct {
+		name     string
+		paths    []int
+		comments string
+		err      error
+	}{
+		{name: "case1", paths: []int{4, 0}, comments: "msg1 comments", err: nil},
+		{name: "case2", paths: []int{4, 0, 2, 0}, comments: "msg1 field 1 comments", err: nil},
+		{name: "case3", paths: []int{4, 0, 2, 1}, comments: "msg1 field 2 comments", err: nil},
+		{name: "case4", paths: []int{4, 1}, comments: "msg2 comments", err: nil},
+		{name: "case5", paths: []int{4, 1, 2, 0}, comments: "msg2 field 1 comments", err: nil},
+		{name: "case6", paths: []int{4, 1, 2, 1}, comments: "msg2 field 2 comments", err: nil},
+		{name: "case7", paths: []int{6, 0}, comments: "svc 1 comments", err: nil},
+		{name: "case8", paths: []int{6, 0, 2, 0}, comments: "svc1 method 1 comments", err: nil},
+		{name: "case9", paths: []int{6, 0, 2, 1}, comments: "svc1 method 2 comments", err: nil},
+		{name: "case10", paths: []int{6, 1}, comments: "svc 2 comments", err: nil},
+		{name: "case11", paths: []int{4, 0, 4, 0}, comments: "msg1Enum1 comments", err: nil},
+		{name: "case12", paths: []int{4, 0, 4, 0, 2, 0}, comments: "msg1Enum1 field 1 comments", err: nil},
+		{name: "case13", paths: []int{4, 0, 4, 0, 2, 1}, comments: "", err: nil},
+		{name: "case14", paths: []int{5, 0}, comments: "Enum1 comments", err: nil},
+		{name: "case15", paths: []int{5, 0, 2, 0}, comments: "Enum1 field 1 comments", err: nil},
+		{name: "case16", paths: []int{5, 0, 2, 1}, comments: "", err: nil},
+		{name: "case51", paths: []int{6, 3}, comments: "", err: errors.New("")},
+		{name: "case52", paths: []int{6, 1, 2}, comments: "", err: errors.New("")},
+		{name: "case53", paths: []int{6, 1, 2, 3}, comments: "", err: errors.New("")},
+		{name: "case54", paths: []int{4, 1, 2, 3}, comments: "", err: errors.New("")},
+		{name: "case55", paths: []int{7, 1, 2, 3}, comments: "", err: errors.New("")},
+	}
+	for _, c := range cases {
+		loc, err := common.GetLocation(file.GetSourceCodeInfo(), c.paths)
+		if (c.err == nil) != (err == nil) {
+			t.Fatalf("[%s] errors dont match exp: %v got %v", c.name, (c.err == nil), (err == nil))
+		}
+		if err == nil && loc.GetLeadingComments() != c.comments {
+			t.Fatalf("[%s]comments dont match exp [%s] got [%s]", c.name, c.comments, loc.GetLeadingComments())
+		}
+	}
+
 }

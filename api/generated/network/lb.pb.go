@@ -4,8 +4,6 @@
 /*
 	Package network is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		lb.proto
 		network.proto
@@ -57,6 +55,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+//
 type HealthCheckSpec struct {
 	// Health check interval
 	Interval uint32 `protobuf:"varint,1,opt,name=Interval,json=interval,omitempty,proto3" json:"interval,omitempty"`
@@ -110,14 +109,15 @@ func (m *HealthCheckSpec) GetDeclareHealthyCount() uint32 {
 	return 0
 }
 
+// LbPolicy represents a load balancer policy
 type LbPolicy struct {
-	// load balancing type
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// load balancing algorithm
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// session affinity
+	// Spec contains the configuration of the LbPolicy.
 	Spec LbPolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// health check policy
+	// Status contains the current state of the LbPolicy.
 	Status LbPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -140,12 +140,16 @@ func (m *LbPolicy) GetStatus() LbPolicyStatus {
 	return LbPolicyStatus{}
 }
 
+//
 type LbPolicySpec struct {
-	// list of service objects referring this lb-policy
-	Type            string           `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
-	Algorithm       string           `protobuf:"bytes,2,opt,name=Algorithm,json=algorithm,omitempty,proto3" json:"algorithm,omitempty"`
-	SessionAffinity string           `protobuf:"bytes,3,opt,name=SessionAffinity,json=session-affinity,omitempty,proto3" json:"session-affinity,omitempty"`
-	HealthCheck     *HealthCheckSpec `protobuf:"bytes,4,opt,name=HealthCheck,json=health-check,omitempty" json:"health-check,omitempty"`
+	// load balancing type
+	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
+	// load balancing algorithm
+	Algorithm string `protobuf:"bytes,2,opt,name=Algorithm,json=algorithm,omitempty,proto3" json:"algorithm,omitempty"`
+	// session affinity
+	SessionAffinity string `protobuf:"bytes,3,opt,name=SessionAffinity,json=session-affinity,omitempty,proto3" json:"session-affinity,omitempty"`
+	// health check policy
+	HealthCheck *HealthCheckSpec `protobuf:"bytes,4,opt,name=HealthCheck,json=health-check,omitempty" json:"health-check,omitempty"`
 }
 
 func (m *LbPolicySpec) Reset()                    { *m = LbPolicySpec{} }
@@ -181,8 +185,9 @@ func (m *LbPolicySpec) GetHealthCheck() *HealthCheckSpec {
 	return nil
 }
 
-// LbPolicy represents a load balancer policy
+//
 type LbPolicyStatus struct {
+	// list of service objects referring this lb-policy
 	Services []string `protobuf:"bytes,1,rep,name=Services,json=type,omitempty" json:"type,omitempty"`
 }
 

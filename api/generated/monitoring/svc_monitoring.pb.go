@@ -23,10 +23,12 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AlertDestinationList is a container object for list of AlertDestination objects
 type AlertDestinationList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*AlertDestination `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of AlertDestination objects
+	Items []*AlertDestination `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AlertDestinationList) Reset()         { *m = AlertDestinationList{} }
@@ -43,10 +45,12 @@ func (m *AlertDestinationList) GetItems() []*AlertDestination {
 	return nil
 }
 
+// AlertList is a container object for list of Alert objects
 type AlertList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Alert `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Alert objects
+	Items []*Alert `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AlertList) Reset()                    { *m = AlertList{} }
@@ -61,10 +65,12 @@ func (m *AlertList) GetItems() []*Alert {
 	return nil
 }
 
+// AlertPolicyList is a container object for list of AlertPolicy objects
 type AlertPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*AlertPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of AlertPolicy objects
+	Items []*AlertPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AlertPolicyList) Reset()                    { *m = AlertPolicyList{} }
@@ -79,6 +85,7 @@ func (m *AlertPolicyList) GetItems() []*AlertPolicy {
 	return nil
 }
 
+// AutoMsgAlertDestinationWatchHelper is a wrapper object for watch events for AlertDestination objects
 type AutoMsgAlertDestinationWatchHelper struct {
 	Events []*AutoMsgAlertDestinationWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -127,6 +134,7 @@ func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) GetObject() *AlertDestin
 	return nil
 }
 
+// AutoMsgAlertPolicyWatchHelper is a wrapper object for watch events for AlertPolicy objects
 type AutoMsgAlertPolicyWatchHelper struct {
 	Events []*AutoMsgAlertPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -173,6 +181,7 @@ func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) GetObject() *AlertPolicy {
 	return nil
 }
 
+// AutoMsgAlertWatchHelper is a wrapper object for watch events for Alert objects
 type AutoMsgAlertWatchHelper struct {
 	Events []*AutoMsgAlertWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -217,6 +226,7 @@ func (m *AutoMsgAlertWatchHelper_WatchEvent) GetObject() *Alert {
 	return nil
 }
 
+// AutoMsgEventPolicyWatchHelper is a wrapper object for watch events for EventPolicy objects
 type AutoMsgEventPolicyWatchHelper struct {
 	Events []*AutoMsgEventPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -263,6 +273,7 @@ func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) GetObject() *EventPolicy {
 	return nil
 }
 
+// AutoMsgEventWatchHelper is a wrapper object for watch events for Event objects
 type AutoMsgEventWatchHelper struct {
 	Events []*AutoMsgEventWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -307,6 +318,7 @@ func (m *AutoMsgEventWatchHelper_WatchEvent) GetObject() *Event {
 	return nil
 }
 
+// AutoMsgFlowExportPolicyWatchHelper is a wrapper object for watch events for FlowExportPolicy objects
 type AutoMsgFlowExportPolicyWatchHelper struct {
 	Events []*AutoMsgFlowExportPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -355,6 +367,7 @@ func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) GetObject() *FlowExportP
 	return nil
 }
 
+// AutoMsgFwlogPolicyWatchHelper is a wrapper object for watch events for FwlogPolicy objects
 type AutoMsgFwlogPolicyWatchHelper struct {
 	Events []*AutoMsgFwlogPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -401,6 +414,7 @@ func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) GetObject() *FwlogPolicy {
 	return nil
 }
 
+// AutoMsgMirrorSessionWatchHelper is a wrapper object for watch events for MirrorSession objects
 type AutoMsgMirrorSessionWatchHelper struct {
 	Events []*AutoMsgMirrorSessionWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -449,6 +463,7 @@ func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) GetObject() *MirrorSession 
 	return nil
 }
 
+// AutoMsgStatsPolicyWatchHelper is a wrapper object for watch events for StatsPolicy objects
 type AutoMsgStatsPolicyWatchHelper struct {
 	Events []*AutoMsgStatsPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -495,10 +510,12 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) GetObject() *StatsPolicy {
 	return nil
 }
 
+// EventList is a container object for list of Event objects
 type EventList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Event `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Event objects
+	Items []*Event `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *EventList) Reset()                    { *m = EventList{} }
@@ -513,10 +530,12 @@ func (m *EventList) GetItems() []*Event {
 	return nil
 }
 
+// EventPolicyList is a container object for list of EventPolicy objects
 type EventPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*EventPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of EventPolicy objects
+	Items []*EventPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *EventPolicyList) Reset()                    { *m = EventPolicyList{} }
@@ -531,10 +550,12 @@ func (m *EventPolicyList) GetItems() []*EventPolicy {
 	return nil
 }
 
+// FlowExportPolicyList is a container object for list of FlowExportPolicy objects
 type FlowExportPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*FlowExportPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of FlowExportPolicy objects
+	Items []*FlowExportPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *FlowExportPolicyList) Reset()         { *m = FlowExportPolicyList{} }
@@ -551,10 +572,12 @@ func (m *FlowExportPolicyList) GetItems() []*FlowExportPolicy {
 	return nil
 }
 
+// FwlogPolicyList is a container object for list of FwlogPolicy objects
 type FwlogPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*FwlogPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of FwlogPolicy objects
+	Items []*FwlogPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *FwlogPolicyList) Reset()                    { *m = FwlogPolicyList{} }
@@ -569,10 +592,12 @@ func (m *FwlogPolicyList) GetItems() []*FwlogPolicy {
 	return nil
 }
 
+// MirrorSessionList is a container object for list of MirrorSession objects
 type MirrorSessionList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*MirrorSession `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of MirrorSession objects
+	Items []*MirrorSession `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *MirrorSessionList) Reset()                    { *m = MirrorSessionList{} }
@@ -587,10 +612,12 @@ func (m *MirrorSessionList) GetItems() []*MirrorSession {
 	return nil
 }
 
+// StatsPolicyList is a container object for list of StatsPolicy objects
 type StatsPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*StatsPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of StatsPolicy objects
+	Items []*StatsPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *StatsPolicyList) Reset()                    { *m = StatsPolicyList{} }
@@ -646,41 +673,77 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for MonitoringV1 service
 
 type MonitoringV1Client interface {
+	// Creates a new Alert object
 	AutoAddAlert(ctx context.Context, in *Alert, opts ...grpc.CallOption) (*Alert, error)
+	// Creates a new AlertDestination object
 	AutoAddAlertDestination(ctx context.Context, in *AlertDestination, opts ...grpc.CallOption) (*AlertDestination, error)
+	// Creates a new AlertPolicy object
 	AutoAddAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*AlertPolicy, error)
+	// Creates a new Event object
 	AutoAddEvent(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Event, error)
+	// Creates a new EventPolicy object
 	AutoAddEventPolicy(ctx context.Context, in *EventPolicy, opts ...grpc.CallOption) (*EventPolicy, error)
+	// Creates a new FlowExportPolicy object
 	AutoAddFlowExportPolicy(ctx context.Context, in *FlowExportPolicy, opts ...grpc.CallOption) (*FlowExportPolicy, error)
+	// Creates a new FwlogPolicy object
 	AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
+	// Creates a new MirrorSession object
 	AutoAddMirrorSession(ctx context.Context, in *MirrorSession, opts ...grpc.CallOption) (*MirrorSession, error)
+	// Creates a new StatsPolicy object
 	AutoAddStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	// Deletes the Alert object
 	AutoDeleteAlert(ctx context.Context, in *Alert, opts ...grpc.CallOption) (*Alert, error)
+	// Deletes the AlertDestination object
 	AutoDeleteAlertDestination(ctx context.Context, in *AlertDestination, opts ...grpc.CallOption) (*AlertDestination, error)
+	// Deletes the AlertPolicy object
 	AutoDeleteAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*AlertPolicy, error)
+	// Deletes the Event object
 	AutoDeleteEvent(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Event, error)
+	// Deletes the EventPolicy object
 	AutoDeleteEventPolicy(ctx context.Context, in *EventPolicy, opts ...grpc.CallOption) (*EventPolicy, error)
+	// Deletes the FlowExportPolicy object
 	AutoDeleteFlowExportPolicy(ctx context.Context, in *FlowExportPolicy, opts ...grpc.CallOption) (*FlowExportPolicy, error)
+	// Deletes the FwlogPolicy object
 	AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
+	// Deletes the MirrorSession object
 	AutoDeleteMirrorSession(ctx context.Context, in *MirrorSession, opts ...grpc.CallOption) (*MirrorSession, error)
+	// Deletes the StatsPolicy object
 	AutoDeleteStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	// Retreives the Alert object
 	AutoGetAlert(ctx context.Context, in *Alert, opts ...grpc.CallOption) (*Alert, error)
+	// Retreives the AlertDestination object
 	AutoGetAlertDestination(ctx context.Context, in *AlertDestination, opts ...grpc.CallOption) (*AlertDestination, error)
+	// Retreives the AlertPolicy object
 	AutoGetAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*AlertPolicy, error)
+	// Retreives the Event object
 	AutoGetEvent(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Event, error)
+	// Retreives the EventPolicy object
 	AutoGetEventPolicy(ctx context.Context, in *EventPolicy, opts ...grpc.CallOption) (*EventPolicy, error)
+	// Retreives the FlowExportPolicy object
 	AutoGetFlowExportPolicy(ctx context.Context, in *FlowExportPolicy, opts ...grpc.CallOption) (*FlowExportPolicy, error)
+	// Retreives the FwlogPolicy object
 	AutoGetFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
+	// Retreives the MirrorSession object
 	AutoGetMirrorSession(ctx context.Context, in *MirrorSession, opts ...grpc.CallOption) (*MirrorSession, error)
+	// Retreives the StatsPolicy object
 	AutoGetStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	// Retreives a list of Alert objects
 	AutoListAlert(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AlertList, error)
+	// Retreives a list of AlertDestination objects
 	AutoListAlertDestination(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AlertDestinationList, error)
+	// Retreives a list of AlertPolicy objects
 	AutoListAlertPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AlertPolicyList, error)
+	// Retreives a list of Event objects
 	AutoListEvent(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*EventList, error)
+	// Retreives a list of EventPolicy objects
 	AutoListEventPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*EventPolicyList, error)
+	// Retreives a list of FlowExportPolicy objects
 	AutoListFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*FlowExportPolicyList, error)
+	// Retreives a list of FwlogPolicy objects
 	AutoListFwlogPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*FwlogPolicyList, error)
+	// Retreives a list of MirrorSession objects
 	AutoListMirrorSession(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*MirrorSessionList, error)
+	// Retreives a list of StatsPolicy objects
 	AutoListStatsPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*StatsPolicyList, error)
 	AutoUpdateAlert(ctx context.Context, in *Alert, opts ...grpc.CallOption) (*Alert, error)
 	AutoUpdateAlertDestination(ctx context.Context, in *AlertDestination, opts ...grpc.CallOption) (*AlertDestination, error)
@@ -691,14 +754,23 @@ type MonitoringV1Client interface {
 	AutoUpdateFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
 	AutoUpdateMirrorSession(ctx context.Context, in *MirrorSession, opts ...grpc.CallOption) (*MirrorSession, error)
 	AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	// Watch for changes to Alert objects
 	AutoWatchAlert(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchAlertClient, error)
+	// Watch for changes to AlertDestination objects
 	AutoWatchAlertDestination(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchAlertDestinationClient, error)
+	// Watch for changes to AlertPolicy objects
 	AutoWatchAlertPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchAlertPolicyClient, error)
+	// Watch for changes to Event objects
 	AutoWatchEvent(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchEventClient, error)
+	// Watch for changes to EventPolicy objects
 	AutoWatchEventPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchEventPolicyClient, error)
+	// Watch for changes to FlowExportPolicy objects
 	AutoWatchFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchFlowExportPolicyClient, error)
+	// Watch for changes to FwlogPolicy objects
 	AutoWatchFwlogPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchFwlogPolicyClient, error)
+	// Watch for changes to MirrorSession objects
 	AutoWatchMirrorSession(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchMirrorSessionClient, error)
+	// Watch for changes to StatsPolicy objects
 	AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchStatsPolicyClient, error)
 }
 
@@ -1406,41 +1478,77 @@ func (x *monitoringV1AutoWatchStatsPolicyClient) Recv() (*AutoMsgStatsPolicyWatc
 // Server API for MonitoringV1 service
 
 type MonitoringV1Server interface {
+	// Creates a new Alert object
 	AutoAddAlert(context.Context, *Alert) (*Alert, error)
+	// Creates a new AlertDestination object
 	AutoAddAlertDestination(context.Context, *AlertDestination) (*AlertDestination, error)
+	// Creates a new AlertPolicy object
 	AutoAddAlertPolicy(context.Context, *AlertPolicy) (*AlertPolicy, error)
+	// Creates a new Event object
 	AutoAddEvent(context.Context, *Event) (*Event, error)
+	// Creates a new EventPolicy object
 	AutoAddEventPolicy(context.Context, *EventPolicy) (*EventPolicy, error)
+	// Creates a new FlowExportPolicy object
 	AutoAddFlowExportPolicy(context.Context, *FlowExportPolicy) (*FlowExportPolicy, error)
+	// Creates a new FwlogPolicy object
 	AutoAddFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
+	// Creates a new MirrorSession object
 	AutoAddMirrorSession(context.Context, *MirrorSession) (*MirrorSession, error)
+	// Creates a new StatsPolicy object
 	AutoAddStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	// Deletes the Alert object
 	AutoDeleteAlert(context.Context, *Alert) (*Alert, error)
+	// Deletes the AlertDestination object
 	AutoDeleteAlertDestination(context.Context, *AlertDestination) (*AlertDestination, error)
+	// Deletes the AlertPolicy object
 	AutoDeleteAlertPolicy(context.Context, *AlertPolicy) (*AlertPolicy, error)
+	// Deletes the Event object
 	AutoDeleteEvent(context.Context, *Event) (*Event, error)
+	// Deletes the EventPolicy object
 	AutoDeleteEventPolicy(context.Context, *EventPolicy) (*EventPolicy, error)
+	// Deletes the FlowExportPolicy object
 	AutoDeleteFlowExportPolicy(context.Context, *FlowExportPolicy) (*FlowExportPolicy, error)
+	// Deletes the FwlogPolicy object
 	AutoDeleteFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
+	// Deletes the MirrorSession object
 	AutoDeleteMirrorSession(context.Context, *MirrorSession) (*MirrorSession, error)
+	// Deletes the StatsPolicy object
 	AutoDeleteStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	// Retreives the Alert object
 	AutoGetAlert(context.Context, *Alert) (*Alert, error)
+	// Retreives the AlertDestination object
 	AutoGetAlertDestination(context.Context, *AlertDestination) (*AlertDestination, error)
+	// Retreives the AlertPolicy object
 	AutoGetAlertPolicy(context.Context, *AlertPolicy) (*AlertPolicy, error)
+	// Retreives the Event object
 	AutoGetEvent(context.Context, *Event) (*Event, error)
+	// Retreives the EventPolicy object
 	AutoGetEventPolicy(context.Context, *EventPolicy) (*EventPolicy, error)
+	// Retreives the FlowExportPolicy object
 	AutoGetFlowExportPolicy(context.Context, *FlowExportPolicy) (*FlowExportPolicy, error)
+	// Retreives the FwlogPolicy object
 	AutoGetFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
+	// Retreives the MirrorSession object
 	AutoGetMirrorSession(context.Context, *MirrorSession) (*MirrorSession, error)
+	// Retreives the StatsPolicy object
 	AutoGetStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	// Retreives a list of Alert objects
 	AutoListAlert(context.Context, *api.ListWatchOptions) (*AlertList, error)
+	// Retreives a list of AlertDestination objects
 	AutoListAlertDestination(context.Context, *api.ListWatchOptions) (*AlertDestinationList, error)
+	// Retreives a list of AlertPolicy objects
 	AutoListAlertPolicy(context.Context, *api.ListWatchOptions) (*AlertPolicyList, error)
+	// Retreives a list of Event objects
 	AutoListEvent(context.Context, *api.ListWatchOptions) (*EventList, error)
+	// Retreives a list of EventPolicy objects
 	AutoListEventPolicy(context.Context, *api.ListWatchOptions) (*EventPolicyList, error)
+	// Retreives a list of FlowExportPolicy objects
 	AutoListFlowExportPolicy(context.Context, *api.ListWatchOptions) (*FlowExportPolicyList, error)
+	// Retreives a list of FwlogPolicy objects
 	AutoListFwlogPolicy(context.Context, *api.ListWatchOptions) (*FwlogPolicyList, error)
+	// Retreives a list of MirrorSession objects
 	AutoListMirrorSession(context.Context, *api.ListWatchOptions) (*MirrorSessionList, error)
+	// Retreives a list of StatsPolicy objects
 	AutoListStatsPolicy(context.Context, *api.ListWatchOptions) (*StatsPolicyList, error)
 	AutoUpdateAlert(context.Context, *Alert) (*Alert, error)
 	AutoUpdateAlertDestination(context.Context, *AlertDestination) (*AlertDestination, error)
@@ -1451,14 +1559,23 @@ type MonitoringV1Server interface {
 	AutoUpdateFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
 	AutoUpdateMirrorSession(context.Context, *MirrorSession) (*MirrorSession, error)
 	AutoUpdateStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	// Watch for changes to Alert objects
 	AutoWatchAlert(*api.ListWatchOptions, MonitoringV1_AutoWatchAlertServer) error
+	// Watch for changes to AlertDestination objects
 	AutoWatchAlertDestination(*api.ListWatchOptions, MonitoringV1_AutoWatchAlertDestinationServer) error
+	// Watch for changes to AlertPolicy objects
 	AutoWatchAlertPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchAlertPolicyServer) error
+	// Watch for changes to Event objects
 	AutoWatchEvent(*api.ListWatchOptions, MonitoringV1_AutoWatchEventServer) error
+	// Watch for changes to EventPolicy objects
 	AutoWatchEventPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchEventPolicyServer) error
+	// Watch for changes to FlowExportPolicy objects
 	AutoWatchFlowExportPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchFlowExportPolicyServer) error
+	// Watch for changes to FwlogPolicy objects
 	AutoWatchFwlogPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchFwlogPolicyServer) error
+	// Watch for changes to MirrorSession objects
 	AutoWatchMirrorSession(*api.ListWatchOptions, MonitoringV1_AutoWatchMirrorSessionServer) error
+	// Watch for changes to StatsPolicy objects
 	AutoWatchStatsPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchStatsPolicyServer) error
 }
 

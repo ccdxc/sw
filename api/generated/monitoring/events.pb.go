@@ -20,10 +20,13 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+//
 type MonitoringExportFormat int32
 
 const (
-	MonitoringExportFormat_SYSLOG_BSD     MonitoringExportFormat = 0
+	//
+	MonitoringExportFormat_SYSLOG_BSD MonitoringExportFormat = 0
+	//
 	MonitoringExportFormat_SYSLOG_RFC5424 MonitoringExportFormat = 1
 )
 
@@ -46,8 +49,11 @@ func (MonitoringExportFormat) EnumDescriptor() ([]byte, []int) { return fileDesc
 type SeverityLevel int32
 
 const (
-	SeverityLevel_INFO     SeverityLevel = 0
-	SeverityLevel_WARNING  SeverityLevel = 1
+	// ui-hint: Informational
+	SeverityLevel_INFO SeverityLevel = 0
+	// ui-hint: Warning
+	SeverityLevel_WARNING SeverityLevel = 1
+	// ui-hint: Critical
 	SeverityLevel_CRITICAL SeverityLevel = 2
 )
 
@@ -67,13 +73,16 @@ func (x SeverityLevel) String() string {
 }
 func (SeverityLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptorEvents, []int{1} }
 
-// -------------------------- Event Policy -----------------------------
-// Event Policy represents the policy definition for Events.
-// Event Client module will be consumer of this policy.
+// Event is a system notification of a fault, condition or configuration
+// that should be user visible. These objects are created internally by
+// Event client and persisted in EventDB.
 type Event struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	// ObjectMeta.Name will be the UUID for an event object.
+	// TODO: Should there be a predefined list of labels or keep it free form ?
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Spec contains the configuration of an event policy.
+	// Attributes contains the attributes of an event.
 	EventAttributes `protobuf:"bytes,3,opt,name=Attributes,json=,inline,embedded=Attributes" json:",inline"`
 }
 
@@ -82,17 +91,20 @@ func (m *Event) String() string            { return proto.CompactTextString(m) }
 func (*Event) ProtoMessage()               {}
 func (*Event) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{0} }
 
+// EventAttributes contains all the event attributes
 type EventAttributes struct {
-	// export target ip/port/protocol
+	// Severity represents the criticality level of an event
 	Severity string `protobuf:"bytes,1,opt,name=Severity,json=severity,omitempty,proto3" json:"severity,omitempty"`
-	// event export format, SYSLOG_BSD default
+	// Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined
 	Type string `protobuf:"bytes,2,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
-	// export events matched by the selector
+	// Message represents the human readable description of an event
 	Message string `protobuf:"bytes,3,opt,name=Message,json=message,omitempty,proto3" json:"message,omitempty"`
-	// syslog specific configuration
+	// ObjectRef is the reference to the object associated with an event
 	ObjectRef *api.ObjectRef `protobuf:"bytes,4,opt,name=ObjectRef,json=object-ref,omitempty" json:"object-ref,omitempty"`
-	Source    *EventSource   `protobuf:"bytes,5,opt,name=Source,json=source,omitempty" json:"source,omitempty"`
-	Count     uint32         `protobuf:"varint,6,opt,name=Count,json=count,omitempty,proto3" json:"count,omitempty"`
+	// Source is the component and host/node which generated an event
+	Source *EventSource `protobuf:"bytes,5,opt,name=Source,json=source,omitempty" json:"source,omitempty"`
+	// Number of occurrence of this event in the active interval
+	Count uint32 `protobuf:"varint,6,opt,name=Count,json=count,omitempty,proto3" json:"count,omitempty"`
 }
 
 func (m *EventAttributes) Reset()                    { *m = EventAttributes{} }
@@ -142,15 +154,15 @@ func (m *EventAttributes) GetCount() uint32 {
 	return 0
 }
 
-// EventPolicySpec is the specification of an Event Policy,
-// It consists of Retention and Export.
+//
 type EventExport struct {
-	// export configuration
+	// export target ip/port/protocol
 	Targets []*api1.ExportConfig `protobuf:"bytes,1,rep,name=Targets,json=targets,omitempty" json:"targets,omitempty"`
-	// MaxRetentionTime defines for how long to keep the data before it is deleted
-	// The value is specified as a string format e.g. 30d (30 days)
-	Format       string                   `protobuf:"bytes,2,opt,name=Format,json=format, omitempty,proto3" json:"format, omitempty"`
-	Selector     *fields.Selector         `protobuf:"bytes,3,opt,name=Selector,json=selector,omitempty" json:"selector,omitempty"`
+	// event export format, SYSLOG_BSD default
+	Format string `protobuf:"bytes,2,opt,name=Format,json=format, omitempty,proto3" json:"format, omitempty"`
+	// export events matched by the selector
+	Selector *fields.Selector `protobuf:"bytes,3,opt,name=Selector,json=selector,omitempty" json:"selector,omitempty"`
+	// syslog specific configuration
 	SyslogConfig *api1.SyslogExportConfig `protobuf:"bytes,4,opt,name=SyslogConfig,json=syslog-config,omitempty" json:"syslog-config,omitempty"`
 }
 
@@ -187,12 +199,18 @@ func (m *EventExport) GetSyslogConfig() *api1.SyslogExportConfig {
 	return nil
 }
 
-// EventPolicyStatus
+// -------------------------- Event Policy -----------------------------
+// Event Policy represents the policy definition for Events.
+// Event Client module will be consumer of this policy.
 type EventPolicy struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           EventPolicySpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         EventPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	// Spec contains the configuration of an event policy.
+	Spec EventPolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of an event policy.
+	Status EventPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *EventPolicy) Reset()                    { *m = EventPolicy{} }
@@ -214,13 +232,13 @@ func (m *EventPolicy) GetStatus() EventPolicyStatus {
 	return EventPolicyStatus{}
 }
 
-// Event is a system notification of a fault, condition or configuration
-// that should be user visible. These objects are created internally by
-// Event client and persisted in EventDB.
+// EventPolicySpec is the specification of an Event Policy,
+// It consists of Retention and Export.
 type EventPolicySpec struct {
+	// export configuration
 	Exports []*EventExport `protobuf:"bytes,1,rep,name=Exports,json=exports,omitempty" json:"exports,omitempty"`
-	// ObjectMeta.Name will be the UUID for an event object.
-	// TODO: Should there be a predefined list of labels or keep it free form ?
+	// MaxRetentionTime defines for how long to keep the data before it is deleted
+	// The value is specified as a string format e.g. 30d (30 days)
 	MaxRetentionTime string `protobuf:"bytes,2,opt,name=MaxRetentionTime,json=max-retention-time,omitempty,proto3" json:"max-retention-time,omitempty"`
 }
 
@@ -243,7 +261,7 @@ func (m *EventPolicySpec) GetMaxRetentionTime() string {
 	return ""
 }
 
-// EventAttributes contains all the event attributes
+// EventPolicyStatus
 type EventPolicyStatus struct {
 }
 
@@ -282,6 +300,7 @@ func (m *EventSource) GetNodeName() string {
 
 // list of events
 type EventsList struct {
+	//
 	Events []*Event `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
 

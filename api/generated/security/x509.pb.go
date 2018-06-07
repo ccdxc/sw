@@ -22,8 +22,11 @@ var _ = math.Inf
 type CertificateSpec_UsageValues int32
 
 const (
-	CertificateSpec_Server    CertificateSpec_UsageValues = 0
-	CertificateSpec_Client    CertificateSpec_UsageValues = 1
+	//
+	CertificateSpec_Server CertificateSpec_UsageValues = 0
+	//
+	CertificateSpec_Client CertificateSpec_UsageValues = 1
+	//
 	CertificateSpec_TrustRoot CertificateSpec_UsageValues = 2
 )
 
@@ -45,12 +48,17 @@ func (CertificateSpec_UsageValues) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorX509, []int{1, 0}
 }
 
+// --- Local defs --- //
 type CertificateStatus_ValidityValues int32
 
 const (
+	//
 	CertificateStatus_Unknown CertificateStatus_ValidityValues = 0
-	CertificateStatus_Valid   CertificateStatus_ValidityValues = 1
+	//
+	CertificateStatus_Valid CertificateStatus_ValidityValues = 1
+	//
 	CertificateStatus_Invalid CertificateStatus_ValidityValues = 2
+	//
 	CertificateStatus_Expired CertificateStatus_ValidityValues = 3
 )
 
@@ -74,22 +82,15 @@ func (CertificateStatus_ValidityValues) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorX509, []int{2, 0}
 }
 
+// Certificate represents a certificate with associated chain of trust
 type Certificate struct {
-	// Description of the purpose of this certificate
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Usage can be "client", "server" or "trust-root" in any combination.
-	// A "server" certificate is used by a server to authenticate itself to the client
-	// A "client" certificate is used by a client to authenticate itself to a server
-	// A "trust-root" certificate is self-signed and is only used to validate
-	// certificates presented by peers.
-	// "client" and "server" certificates are always accompanied by a private key,
-	// whereas "trust-root"-only certificates are not.
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Body of the certificate in PEM encoding
+	// Spec contains the configuration of the certificate.
 	Spec CertificateSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// Trust chain of the certificate in PEM encoding.
-	// These certificates are treated opaquely. We do not process them in any way
-	// other than decoding them for informational purposes.
+	// Status contains the current state of the certificate.
 	Status CertificateStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -112,15 +113,24 @@ func (m *Certificate) GetStatus() CertificateStatus {
 	return CertificateStatus{}
 }
 
+//
 type CertificateSpec struct {
-	// Status of the certificate: "valid", "invalid", "expired"
-	// "invalid" means that the signature of the certificate does not match or
-	// there are inconsistencies in the trust chain.
+	// Description of the purpose of this certificate
 	Description string `protobuf:"bytes,1,opt,name=Description,json=description,omitempty,proto3" json:"description,omitempty"`
-	// The workloads where this certificate has been deployed
-	Usages     []string `protobuf:"bytes,2,rep,name=Usages,json=usages,omitempty" json:"usages,omitempty"`
-	Body       string   `protobuf:"bytes,3,opt,name=Body,json=body,omitempty,proto3" json:"body,omitempty"`
-	TrustChain string   `protobuf:"bytes,4,opt,name=TrustChain,json=trust-chain,omitempty,proto3" json:"trust-chain,omitempty"`
+	// Usage can be "client", "server" or "trust-root" in any combination.
+	// A "server" certificate is used by a server to authenticate itself to the client
+	// A "client" certificate is used by a client to authenticate itself to a server
+	// A "trust-root" certificate is self-signed and is only used to validate
+	// certificates presented by peers.
+	// "client" and "server" certificates are always accompanied by a private key,
+	// whereas "trust-root"-only certificates are not.
+	Usages []string `protobuf:"bytes,2,rep,name=Usages,json=usages,omitempty" json:"usages,omitempty"`
+	// Body of the certificate in PEM encoding
+	Body string `protobuf:"bytes,3,opt,name=Body,json=body,omitempty,proto3" json:"body,omitempty"`
+	// Trust chain of the certificate in PEM encoding.
+	// These certificates are treated opaquely. We do not process them in any way
+	// other than decoding them for informational purposes.
+	TrustChain string `protobuf:"bytes,4,opt,name=TrustChain,json=trust-chain,omitempty,proto3" json:"trust-chain,omitempty"`
 }
 
 func (m *CertificateSpec) Reset()                    { *m = CertificateSpec{} }
@@ -156,9 +166,13 @@ func (m *CertificateSpec) GetTrustChain() string {
 	return ""
 }
 
-// Certificate represents a certificate with associated chain of trust
+//
 type CertificateStatus struct {
-	Validity  string   `protobuf:"bytes,1,opt,name=Validity,json=validity,omitempty,proto3" json:"validity,omitempty"`
+	// Status of the certificate: "valid", "invalid", "expired"
+	// "invalid" means that the signature of the certificate does not match or
+	// there are inconsistencies in the trust chain.
+	Validity string `protobuf:"bytes,1,opt,name=Validity,json=validity,omitempty,proto3" json:"validity,omitempty"`
+	// The workloads where this certificate has been deployed
 	Workloads []string `protobuf:"bytes,2,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
 }
 

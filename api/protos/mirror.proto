@@ -35,9 +35,13 @@ message MirrorSessionSpec {
 
     // Filter selected packets further - mirror only those packets that match atleast one of the PacketFilers
     enum MirrorPacketFilter {
+        // ui-hint: All Packets
         ALL_PKTS                = 0;
+        // ui-hint: All Drops
         ALL_DROPS               = 1;
+        // ui-hint: Network Policy Drops
         NETWORK_POLICY_DROP     = 2;
+        // ui-hint: Firewall Policy Drops
         FIREWALL_POLICY_DROP    = 3;
     }
     repeated string PacketFilters           = 6 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
@@ -58,6 +62,7 @@ message MirrorStopConditions {
 }
 
 enum PacketCollectorType {
+    // ui-hint: Venice
     VENICE     = 0;    // captured on venice
     ERSPAN     = 1;    // external packet capture using ERSPAN format
 }
@@ -105,9 +110,13 @@ message MatchRule {
 //---- MirrorSessionStatus
 //-------------------------
 enum MirrorSessionState {
+    // ui-hint: Running
     RUNNING         = 0;    // active i.e. capturing packets
+    // ui-hint: Stopped
     STOPPED         = 1;    // stop condition met
+    // ui-hint: Scheduled
     SCHEDULED       = 2;    // Waiting on start condition
+    // ui-hint: Ready To Run
     READY_TO_RUN    = 3;
 }
 

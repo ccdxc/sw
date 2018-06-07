@@ -19,13 +19,18 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+//
 type FwlogFilter int32
 
 const (
-	FwlogFilter_FWLOG_ALL    FwlogFilter = 0
+	// ui-hint: All
+	FwlogFilter_FWLOG_ALL FwlogFilter = 0
+	// ui-hint: Accept
 	FwlogFilter_FWLOG_ACCEPT FwlogFilter = 1
+	// ui-hint: Reject
 	FwlogFilter_FWLOG_REJECT FwlogFilter = 2
-	FwlogFilter_FWLOG_DENY   FwlogFilter = 3
+	// ui-hint: Deny
+	FwlogFilter_FWLOG_DENY FwlogFilter = 3
 )
 
 var FwlogFilter_name = map[int32]string{
@@ -46,9 +51,11 @@ func (x FwlogFilter) String() string {
 }
 func (FwlogFilter) EnumDescriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{0} }
 
+//
 type FlowExportTarget_Formats int32
 
 const (
+	//
 	FlowExportTarget_Ipfix FlowExportTarget_Formats = 0
 )
 
@@ -66,32 +73,16 @@ func (FlowExportTarget_Formats) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorTelemetry, []int{3, 0}
 }
 
-// telemetry policies:
-// -------------------------------------------------------------------------------
-// policy name         |  intended for        |     description                 |
-// -------------------------------------------------------------------------------
-// stats               |  sys admins          |    for all stats other than     |
-//                     |                      |    fwlog/netflow.               |
-//                     |                      |    includes retention,compaction|
-// -------------------------------------------------------------------------------
-// fwlog               |  security admins     |    firewall log policy          |
-//                     |                      |    includes retention,          |
-//                     |                      |    export parameters            |
-// -------------------------------------------------------------------------------
-//                     |                      |                                 |
-// flowexport          |  network admins      |    netflow export policy        |
-//                     |                      |    includes interval,           |
-//                     |                      |    export parameters            |
-// -------------------------------------------------------------------------------
 //
-// =========================================================================================
-//  stats policy
-// =========================================================================================
 type FlowExportPolicy struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           FlowExportSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         FlowExportStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	//
+	Spec FlowExportSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the export policy.
+	Status FlowExportStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *FlowExportPolicy) Reset()                    { *m = FlowExportPolicy{} }
@@ -113,12 +104,9 @@ func (m *FlowExportPolicy) GetStatus() FlowExportStatus {
 	return FlowExportStatus{}
 }
 
-// compaction method will be selected by Venice based on the mesaurement/table
-// collection interval will be selected by Venice based on workloads
+//
 type FlowExportSpec struct {
-	// Compaction Interval is the down sampling interval in minutes, hours or days
-	// this would be mapped to GROUP BY TIME() in influxdb CQ
-	// example: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host
+	//
 	Targets []FlowExportTarget `protobuf:"bytes,1,rep,name=Targets,json=targets,omitempty" json:"targets,omitempty"`
 }
 
@@ -134,6 +122,9 @@ func (m *FlowExportSpec) GetTargets() []FlowExportTarget {
 	return nil
 }
 
+// ========================================================================================
+//  flow export policy
+// ========================================================================================
 type FlowExportStatus struct {
 }
 
@@ -142,10 +133,15 @@ func (m *FlowExportStatus) String() string            { return proto.CompactText
 func (*FlowExportStatus) ProtoMessage()               {}
 func (*FlowExportStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{2} }
 
+//
 type FlowExportTarget struct {
-	Interval string              `protobuf:"bytes,1,opt,name=Interval,json=interval,omitempty,proto3" json:"interval,omitempty"`
-	Format   string              `protobuf:"bytes,2,opt,name=Format,json=format,omitempty,proto3" json:"format,omitempty"`
-	Exports  []api1.ExportConfig `protobuf:"bytes,3,rep,name=Exports,json=exports,omitempty" json:"exports,omitempty"`
+	// Interval defines how often to push the records to an external or internal collector
+	// The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
+	Interval string `protobuf:"bytes,1,opt,name=Interval,json=interval,omitempty,proto3" json:"interval,omitempty"`
+	//
+	Format string `protobuf:"bytes,2,opt,name=Format,json=format,omitempty,proto3" json:"format,omitempty"`
+	// Export contains export parameters.
+	Exports []api1.ExportConfig `protobuf:"bytes,3,rep,name=Exports,json=exports,omitempty" json:"exports,omitempty"`
 }
 
 func (m *FlowExportTarget) Reset()                    { *m = FlowExportTarget{} }
@@ -221,14 +217,15 @@ func (m *FwlogExport) GetSyslogConfig() *api1.SyslogExportConfig {
 	return nil
 }
 
-// Venice collects fwlog irrespective of the export config
+//
 type FwlogPolicy struct {
-	// RetentionTime defines for how long to keep the fwlog before it is deleted
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// filter firewall logs for venice, FWLOG_ALL default
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Export contains the export config
-	Spec   FwlogSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	//
+	Spec FwlogSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the policy.
 	Status FwlogStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -251,10 +248,14 @@ func (m *FwlogPolicy) GetStatus() FwlogStatus {
 	return FwlogStatus{}
 }
 
+// Venice collects fwlog irrespective of the export config
 type FwlogSpec struct {
-	RetentionTime string         `protobuf:"bytes,1,opt,name=RetentionTime,json=retention-time,omitempty,proto3" json:"retention-time,omitempty"`
-	Filter        []string       `protobuf:"bytes,2,rep,name=Filter,json=filter,omitempty" json:"filter,omitempty"`
-	Exports       []*FwlogExport `protobuf:"bytes,3,rep,name=Exports,json=exports,omitempty" json:"exports,omitempty"`
+	// RetentionTime defines for how long to keep the fwlog before it is deleted
+	RetentionTime string `protobuf:"bytes,1,opt,name=RetentionTime,json=retention-time,omitempty,proto3" json:"retention-time,omitempty"`
+	// filter firewall logs for venice, FWLOG_ALL default
+	Filter []string `protobuf:"bytes,2,rep,name=Filter,json=filter,omitempty" json:"filter,omitempty"`
+	// Export contains the export config
+	Exports []*FwlogExport `protobuf:"bytes,3,rep,name=Exports,json=exports,omitempty" json:"exports,omitempty"`
 }
 
 func (m *FwlogSpec) Reset()                    { *m = FwlogSpec{} }
@@ -283,9 +284,7 @@ func (m *FwlogSpec) GetExports() []*FwlogExport {
 	return nil
 }
 
-// ========================================================================================
-//  flow export policy
-// ========================================================================================
+//
 type FwlogStatus struct {
 }
 
@@ -294,13 +293,15 @@ func (m *FwlogStatus) String() string            { return proto.CompactTextStrin
 func (*FwlogStatus) ProtoMessage()               {}
 func (*FwlogStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{7} }
 
+//
 type StatsPolicy struct {
-	// Interval defines how often to push the records to an external or internal collector
-	// The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Export contains export parameters.
-	Spec   StatsSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	//
+	Spec StatsSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the policy.
 	Status StatsStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -323,9 +324,20 @@ func (m *StatsPolicy) GetStatus() StatsStatus {
 	return StatsStatus{}
 }
 
+// compaction method will be selected by Venice based on the mesaurement/table
+// collection interval will be selected by Venice based on workloads
 type StatsSpec struct {
-	CompactionInterval      string `protobuf:"bytes,1,opt,name=CompactionInterval,json=compaction-interval ,omitempty,proto3" json:"compaction-interval ,omitempty"`
-	RetentionTime           string `protobuf:"bytes,2,opt,name=RetentionTime,json=retention-time,omitempty,proto3" json:"retention-time,omitempty"`
+	// Compaction Interval is the down sampling interval in minutes, hours or days
+	// this would be mapped to GROUP BY TIME() in influxdb CQ
+	// example: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host
+	CompactionInterval string `protobuf:"bytes,1,opt,name=CompactionInterval,json=compaction-interval ,omitempty,proto3" json:"compaction-interval ,omitempty"`
+	// RetentionTime defines for how long to keep the stats data before it is deleted
+	// The value is specified as a string format to be hours, days, or months etc.
+	// e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
+	RetentionTime string `protobuf:"bytes,2,opt,name=RetentionTime,json=retention-time,omitempty,proto3" json:"retention-time,omitempty"`
+	// DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted
+	// The value is specified as a string format to be hours, days, or months etc.
+	// e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
 	DownSampleRetentionTime string `protobuf:"bytes,3,opt,name=DownSampleRetentionTime,json=downsample-retention-time,omitempty,proto3" json:"downsample-retention-time,omitempty"`
 }
 
@@ -355,6 +367,27 @@ func (m *StatsSpec) GetDownSampleRetentionTime() string {
 	return ""
 }
 
+// telemetry policies:
+// -------------------------------------------------------------------------------
+// policy name         |  intended for        |     description                 |
+// -------------------------------------------------------------------------------
+// stats               |  sys admins          |    for all stats other than     |
+//                     |                      |    fwlog/netflow.               |
+//                     |                      |    includes retention,compaction|
+// -------------------------------------------------------------------------------
+// fwlog               |  security admins     |    firewall log policy          |
+//                     |                      |    includes retention,          |
+//                     |                      |    export parameters            |
+// -------------------------------------------------------------------------------
+//                     |                      |                                 |
+// flowexport          |  network admins      |    netflow export policy        |
+//                     |                      |    includes interval,           |
+//                     |                      |    export parameters            |
+// -------------------------------------------------------------------------------
+//
+// =========================================================================================
+//  stats policy
+// =========================================================================================
 type StatsStatus struct {
 }
 

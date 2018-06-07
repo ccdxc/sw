@@ -85,7 +85,7 @@ func (m *CertificateSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Usages {
-			m.Usages[k] = CertificateSpec_UsageValues_name[0]
+			m.Usages[k] = "Server"
 		}
 	}
 	return ret
@@ -113,7 +113,7 @@ func (m *CertificateStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Validity = CertificateStatus_ValidityValues_name[0]
+		m.Validity = "Unknown"
 	}
 	return ret
 }

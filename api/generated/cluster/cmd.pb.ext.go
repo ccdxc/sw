@@ -239,7 +239,7 @@ func (m *HostStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = HostStatus_HostType_name[0]
+		m.Type = "UNKNOWN"
 	}
 	return ret
 }
@@ -290,8 +290,8 @@ func (m *NodeCondition) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = ConditionStatus_name[0]
-		m.Type = NodeCondition_ConditionType_name[0]
+		m.Status = "UNKNOWN"
+		m.Type = "LEADER"
 	}
 	return ret
 }
@@ -319,7 +319,7 @@ func (m *NodeSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Roles {
-			m.Roles[k] = NodeSpec_NodeRole_name[0]
+			m.Roles[k] = "CONTROLLER"
 		}
 	}
 	return ret
@@ -352,7 +352,7 @@ func (m *NodeStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Phase = NodeStatus_NodePhase_name[0]
+		m.Phase = "UNKNOWN"
 	}
 	return ret
 }
@@ -379,8 +379,8 @@ func (m *PortCondition) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = ConditionStatus_name[0]
-		m.Type = PortCondition_ConditionType_name[0]
+		m.Status = "UNKNOWN"
+		m.Type = "PORT_UP"
 	}
 	return ret
 }
@@ -479,8 +479,8 @@ func (m *SmartNICCondition) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = ConditionStatus_name[0]
-		m.Type = SmartNICCondition_ConditionType_name[0]
+		m.Status = "UNKNOWN"
+		m.Type = "HEALTHY"
 	}
 	return ret
 }
@@ -507,7 +507,7 @@ func (m *SmartNICSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Phase = SmartNICSpec_SmartNICPhase_name[0]
+		m.Phase = "UNKNOWN"
 	}
 	return ret
 }

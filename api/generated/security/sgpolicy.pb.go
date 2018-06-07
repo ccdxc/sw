@@ -20,6 +20,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+//
 type SGRule struct {
 	// match ports for the rule
 	Ports string `protobuf:"bytes,1,opt,name=Ports,json=ports,omitempty,proto3" json:"ports,omitempty"`
@@ -86,13 +87,15 @@ func (m *SGRule) GetAppUserGrp() string {
 	return ""
 }
 
+// Sgpolicy represents a security policy for security groups
 type Sgpolicy struct {
-	// list of security groups this policy is attached to
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Incoming rules
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Outgoing rules
-	Spec   SgpolicySpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Spec contains the configuration of the sgpolicy.
+	Spec SgpolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the sgpolicy.
 	Status SgpolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -115,11 +118,14 @@ func (m *Sgpolicy) GetStatus() SgpolicyStatus {
 	return SgpolicyStatus{}
 }
 
+//
 type SgpolicySpec struct {
-	// list of workloads in this group
+	// list of security groups this policy is attached to
 	AttachGroups []string `protobuf:"bytes,1,rep,name=AttachGroups,json=attach-groups,omitempty" json:"attach-groups,omitempty"`
-	InRules      []SGRule `protobuf:"bytes,2,rep,name=InRules,json=in-rules,omitempty" json:"in-rules,omitempty"`
-	OutRules     []SGRule `protobuf:"bytes,3,rep,name=OutRules,json=out-rules,omitempty" json:"out-rules,omitempty"`
+	// Incoming rules
+	InRules []SGRule `protobuf:"bytes,2,rep,name=InRules,json=in-rules,omitempty" json:"in-rules,omitempty"`
+	// Outgoing rules
+	OutRules []SGRule `protobuf:"bytes,3,rep,name=OutRules,json=out-rules,omitempty" json:"out-rules,omitempty"`
 }
 
 func (m *SgpolicySpec) Reset()                    { *m = SgpolicySpec{} }
@@ -148,8 +154,9 @@ func (m *SgpolicySpec) GetOutRules() []SGRule {
 	return nil
 }
 
-// Sgpolicy represents a security policy for security groups
+//
 type SgpolicyStatus struct {
+	// list of workloads in this group
 	Workloads []string `protobuf:"bytes,1,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
 }
 

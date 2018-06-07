@@ -4,8 +4,6 @@
 /*
 	Package monitoring is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		alerts.proto
 		events.proto
@@ -102,11 +100,15 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+// Possible alert states
 type AlertSpec_AlertState int32
 
 const (
-	AlertSpec_OPEN         AlertSpec_AlertState = 0
-	AlertSpec_RESOLVED     AlertSpec_AlertState = 1
+	// ui-hint: Open
+	AlertSpec_OPEN AlertSpec_AlertState = 0
+	// ui-hint: Resolved
+	AlertSpec_RESOLVED AlertSpec_AlertState = 1
+	// ui-hint: Acknowledged
 	AlertSpec_ACKNOWLEDGED AlertSpec_AlertState = 2
 )
 
@@ -126,12 +128,14 @@ func (x AlertSpec_AlertState) String() string {
 }
 func (AlertSpec_AlertState) EnumDescriptor() ([]byte, []int) { return fileDescriptorAlerts, []int{9, 0} }
 
-// Algos contains the encryption algorithm to be used when SecurityMethod
-// has PRIVACY.
+// Algos contains the authentication algorithm to be used when SecurityMethod
+// has AUTH.
 type AuthConfig_Algos int32
 
 const (
-	AuthConfig_MD5  AuthConfig_Algos = 0
+	//
+	AuthConfig_MD5 AuthConfig_Algos = 0
+	//
 	AuthConfig_SHA1 AuthConfig_Algos = 1
 )
 
@@ -149,10 +153,14 @@ func (x AuthConfig_Algos) String() string {
 }
 func (AuthConfig_Algos) EnumDescriptor() ([]byte, []int) { return fileDescriptorAlerts, []int{12, 0} }
 
+// Algos contains the encryption algorithm to be used when SecurityMethod
+// has PRIVACY.
 type PrivacyConfig_Algos int32
 
 const (
-	PrivacyConfig_DES56  PrivacyConfig_Algos = 0
+	//
+	PrivacyConfig_DES56 PrivacyConfig_Algos = 0
+	//
 	PrivacyConfig_AES128 PrivacyConfig_Algos = 1
 )
 
@@ -170,15 +178,22 @@ func (x PrivacyConfig_Algos) String() string {
 }
 func (PrivacyConfig_Algos) EnumDescriptor() ([]byte, []int) { return fileDescriptorAlerts, []int{14, 0} }
 
+// List of allowed operators in the requirement
 type Requirement_AllowedOperators int32
 
 const (
-	Requirement_Equals    Requirement_AllowedOperators = 0
-	Requirement_In        Requirement_AllowedOperators = 1
+	//
+	Requirement_Equals Requirement_AllowedOperators = 0
+	//
+	Requirement_In Requirement_AllowedOperators = 1
+	//
 	Requirement_NotEquals Requirement_AllowedOperators = 2
-	Requirement_NotIn     Requirement_AllowedOperators = 3
-	Requirement_Gt        Requirement_AllowedOperators = 4
-	Requirement_Lt        Requirement_AllowedOperators = 5
+	//
+	Requirement_NotIn Requirement_AllowedOperators = 3
+	//
+	Requirement_Gt Requirement_AllowedOperators = 4
+	//
+	Requirement_Lt Requirement_AllowedOperators = 5
 )
 
 var Requirement_AllowedOperators_name = map[int32]string{
@@ -205,11 +220,14 @@ func (Requirement_AllowedOperators) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAlerts, []int{15, 0}
 }
 
+// Version of SNMP to use to send the traps (v1 is not supported).
 type SNMPTrapServer_SNMPVersions int32
 
 const (
+	//
 	SNMPTrapServer_V2C SNMPTrapServer_SNMPVersions = 0
-	SNMPTrapServer_V3  SNMPTrapServer_SNMPVersions = 1
+	//
+	SNMPTrapServer_V3 SNMPTrapServer_SNMPVersions = 1
 )
 
 var SNMPTrapServer_SNMPVersions_name = map[int32]string{
@@ -228,12 +246,16 @@ func (SNMPTrapServer_SNMPVersions) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAlerts, []int{16, 0}
 }
 
-// Source of an alert; for alerts generated from events, it maps to event.Source
+// Alert defines an alert object
 type Alert struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta, omitempty,embedded=O" json:"meta, omitempty"`
-	Spec           AlertSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec, omitempty" json:"spec, omitempty"`
-	Status         AlertStatus `protobuf:"bytes,4,opt,name=Status,json=status, omitempty" json:"status, omitempty"`
+	//
+	Spec AlertSpec `protobuf:"bytes,3,opt,name=Spec,json=spec, omitempty" json:"spec, omitempty"`
+	//
+	Status AlertStatus `protobuf:"bytes,4,opt,name=Status,json=status, omitempty" json:"status, omitempty"`
 }
 
 func (m *Alert) Reset()                    { *m = Alert{} }
@@ -255,16 +277,16 @@ func (m *Alert) GetStatus() AlertStatus {
 	return AlertStatus{}
 }
 
-// One of the requirement from the expression that was met
+// AlertDestination - tenant scoped
 type AlertDestination struct {
-	// Requirement from the alert rule that was met
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// The value at which the requirement was met.
-	// same as Requirement.value for operator `Equals` but could vary for other operators
-	// e.g. requirement - CPU;Gt;90 could have a matching value 96
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta, omitempty,embedded=O" json:"meta, omitempty"`
-	Spec           AlertDestinationSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec, omitempty" json:"spec, omitempty"`
-	Status         AlertDestinationStatus `protobuf:"bytes,4,opt,name=Status,json=status, omitempty" json:"status, omitempty"`
+	//
+	Spec AlertDestinationSpec `protobuf:"bytes,3,opt,name=Spec,json=spec, omitempty" json:"spec, omitempty"`
+	//
+	Status AlertDestinationStatus `protobuf:"bytes,4,opt,name=Status,json=status, omitempty" json:"status, omitempty"`
 }
 
 func (m *AlertDestination) Reset()                    { *m = AlertDestination{} }
@@ -286,14 +308,14 @@ func (m *AlertDestination) GetStatus() AlertDestinationStatus {
 	return AlertDestinationStatus{}
 }
 
-// AlertReason captures all the requirements with matched value from the alert policy rule
-// at the time of creating an alert.
-// e.g. "matched-requirements": [{"field": "cpu", "operator": "Gt", "values": [90], "observed-value": 95}]
+//
 type AlertDestinationSpec struct {
-	// List of requirements from the alert policy with it's matched value
+	// If set, this will be the default notification option for the alert policies unless otherwise
+	// something else is mentioned.
 	Default bool `protobuf:"varint,1,opt,name=Default,json=default, omitempty,proto3" json:"default, omitempty"`
-	// Alert Policy ID that matched
-	EmailList       []string          `protobuf:"bytes,2,rep,name=EmailList,json=email-list, omitempty" json:"email-list, omitempty"`
+	// Email notification
+	EmailList []string `protobuf:"bytes,2,rep,name=EmailList,json=email-list, omitempty" json:"email-list, omitempty"`
+	// SNMP trap destination(s)
 	SNMPTrapServers []*SNMPTrapServer `protobuf:"bytes,3,rep,name=SNMPTrapServers,json=snmp-trap-servers, omitempty" json:"snmp-trap-servers, omitempty"`
 }
 
@@ -323,10 +345,9 @@ func (m *AlertDestinationSpec) GetSNMPTrapServers() []*SNMPTrapServer {
 	return nil
 }
 
-// AuditInfo captures the user performed the action and the time at which the
-// action was performed.
+//
 type AlertDestinationStatus struct {
-	// Name of the user performed some action.
+	// total number of notifications sent using this notification mechanism
 	TotalNotificationsSent int32 `protobuf:"varint,1,opt,name=totalNotificationsSent,json=total-notifications-sent, omitempty,proto3" json:"total-notifications-sent, omitempty"`
 }
 
@@ -342,12 +363,16 @@ func (m *AlertDestinationStatus) GetTotalNotificationsSent() int32 {
 	return 0
 }
 
-// User can change the state of the alert by changing the spec
+// AlertPolicy - tenant scoped
 type AlertPolicy struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta, omitempty,embedded=O" json:"meta, omitempty"`
-	Spec           AlertPolicySpec   `protobuf:"bytes,3,opt,name=Spec,json=spec, omitempty" json:"spec, omitempty"`
-	Status         AlertPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status, omitempty" json:"status, omitempty"`
+	//
+	Spec AlertPolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec, omitempty" json:"spec, omitempty"`
+	//
+	Status AlertPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status, omitempty" json:"status, omitempty"`
 }
 
 func (m *AlertPolicy) Reset()                    { *m = AlertPolicy{} }
@@ -369,24 +394,33 @@ func (m *AlertPolicy) GetStatus() AlertPolicyStatus {
 	return AlertPolicyStatus{}
 }
 
-// Status part of the alert object
+//
 type AlertPolicySpec struct {
-	// Severity of an alert
+	// Resource type - target resource to run this policy.
+	// e.g. Network, Endpoint - object based alert policy
+	//      Event - event based alert policy
+	//      EndpointMetrics - metric based alert policy
+	// based on the resource type, the policy gets interpreted.
 	Resource string `protobuf:"bytes,1,opt,name=Resource,json=resource, omitempty,proto3" json:"resource, omitempty"`
-	// Alert source or origin
+	// Severity to be set for an alert that gets triggered from this rule
 	Severity string `protobuf:"bytes,2,opt,name=Severity,json=severity, omitempty,proto3" json:"severity, omitempty"`
-	// Affected object
+	// Message to be used while generating the alert
+	// XXX: Event based alerts should not carry a message. It will be derived from the event.
 	Message string `protobuf:"bytes,3,opt,name=Message,json=message, omitempty,proto3" json:"message, omitempty"`
-	// Message from the alert rule that triggered the alert
+	// List of requirements that needs to be met to trigger an alert
 	Requirements []Requirement `protobuf:"bytes,4,rep,name=Requirements,json=requirements, omitempty" json:"requirements, omitempty"`
-	// Captures all the requirements from the alert policy rule with matched value.
-	// All these requirements must be cleared to auto-resolve an alert.
+	// Met rule (requirements) needs to sustain for the given duration to qualify to be an alert
 	PersistenceDuration string `protobuf:"bytes,5,opt,name=PersistenceDuration,json=persistence-duration, omitempty,proto3" json:"persistence-duration, omitempty"`
-	// Username and time at which the alert was acknowledged
+	// Met rule (requirements) needs to be cleared for the given duration to resolve an alert
 	ClearDuration string `protobuf:"bytes,6,opt,name=ClearDuration,json=clear-duration, omitempty,proto3" json:"clear-duration, omitempty"`
-	// Username and time at which the alert was resolved
-	Enable       bool     `protobuf:"varint,7,opt,name=Enable,json=enable, omitempty,proto3" json:"enable, omitempty"`
-	AutoResolve  bool     `protobuf:"varint,8,opt,name=AutoResolve,json=auto-resolve, omitempty,proto3" json:"auto-resolve, omitempty"`
+	// User can disable the policy by setting this field.
+	// Disabled policies will not generate any more alerts but the outstanding ones will remain as is.
+	Enable bool `protobuf:"varint,7,opt,name=Enable,json=enable, omitempty,proto3" json:"enable, omitempty"`
+	// If set, the underlying alert will be auto-resolved if the rule that
+	// triggered the alert is cleared
+	AutoResolve bool `protobuf:"varint,8,opt,name=AutoResolve,json=auto-resolve, omitempty,proto3" json:"auto-resolve, omitempty"`
+	// name of the alert destinations to be used to send out notification when an alert
+	// gets generated.
 	Destinations []string `protobuf:"bytes,9,rep,name=Destinations,json=destinations, omitempty" json:"destinations, omitempty"`
 }
 
@@ -458,10 +492,13 @@ func (m *AlertPolicySpec) GetDestinations() []string {
 	return nil
 }
 
-// Alert defines an alert object
+//
 type AlertPolicyStatus struct {
-	TotalHits          int32 `protobuf:"varint,1,opt,name=TotalHits,json=total-hits, omitempty,proto3" json:"total-hits, omitempty"`
-	OpenAlerts         int32 `protobuf:"varint,2,opt,name=OpenAlerts,json=open-alerts, omitempty,proto3" json:"open-alerts, omitempty"`
+	// Total hits on this policy
+	TotalHits int32 `protobuf:"varint,1,opt,name=TotalHits,json=total-hits, omitempty,proto3" json:"total-hits, omitempty"`
+	// Open alerts based on this policy
+	OpenAlerts int32 `protobuf:"varint,2,opt,name=OpenAlerts,json=open-alerts, omitempty,proto3" json:"open-alerts, omitempty"`
+	// Acknowledged alerts based on this policy
 	AcknowledgedAlerts int32 `protobuf:"varint,3,opt,name=AcknowledgedAlerts,json=acknowledged-alerts, omitempty,proto3" json:"acknowledged-alerts, omitempty"`
 }
 
@@ -491,12 +528,14 @@ func (m *AlertPolicyStatus) GetAcknowledgedAlerts() int32 {
 	return 0
 }
 
-// Requirement specifies each
-// {"field": "Status.Phase", "operator":"Equals", "values":["JOINED"]}
+// AlertReason captures all the requirements with matched value from the alert policy rule
+// at the time of creating an alert.
+// e.g. "matched-requirements": [{"field": "cpu", "operator": "Gt", "values": [90], "observed-value": 95}]
 type AlertReason struct {
-	// name of the field or metric
+	// List of requirements from the alert policy with it's matched value
 	MatchedRequirements []*MatchedRequirement `protobuf:"bytes,1,rep,name=MatchedRequirements,json=matched-requirements, omitempty" json:"matched-requirements, omitempty"`
-	PolicyID            string                `protobuf:"bytes,2,opt,name=PolicyID,json=alert-policy-id, omitempty,proto3" json:"alert-policy-id, omitempty"`
+	// Alert Policy ID that matched
+	PolicyID string `protobuf:"bytes,2,opt,name=PolicyID,json=alert-policy-id, omitempty,proto3" json:"alert-policy-id, omitempty"`
 }
 
 func (m *AlertReason) Reset()                    { *m = AlertReason{} }
@@ -518,14 +557,11 @@ func (m *AlertReason) GetPolicyID() string {
 	return ""
 }
 
+// Source of an alert; for alerts generated from events, it maps to event.Source
 type AlertSource struct {
-	// Resource type - target resource to run this policy.
-	// e.g. Network, Endpoint - object based alert policy
-	//      Event - event based alert policy
-	//      EndpointMetrics - metric based alert policy
-	// based on the resource type, the policy gets interpreted.
+	//
 	Component string `protobuf:"bytes,1,opt,name=Component,json=component, omitempty,proto3" json:"component, omitempty"`
-	// Severity to be set for an alert that gets triggered from this rule
+	//
 	NodeName string `protobuf:"bytes,2,opt,name=NodeName,json=node-name, omitempty,proto3" json:"node-name, omitempty"`
 }
 
@@ -548,8 +584,9 @@ func (m *AlertSource) GetNodeName() string {
 	return ""
 }
 
+// User can change the state of the alert by changing the spec
 type AlertSpec struct {
-	// Total hits on this policy
+	//
 	State string `protobuf:"bytes,1,opt,name=State,json=state, omitempty,proto3" json:"state, omitempty"`
 }
 
@@ -565,15 +602,23 @@ func (m *AlertSpec) GetState() string {
 	return ""
 }
 
-// AlertPolicy - tenant scoped
+// Status part of the alert object
 type AlertStatus struct {
-	Severity     string        `protobuf:"bytes,1,opt,name=Severity,json=severity, omitempty,proto3" json:"severity, omitempty"`
-	Source       *AlertSource  `protobuf:"bytes,2,opt,name=Source,json=source, omitempty" json:"source, omitempty"`
-	ObjectRef    api.ObjectRef `protobuf:"bytes,3,opt,name=ObjectRef,json=object-ref, omitempty" json:"object-ref, omitempty"`
-	Message      string        `protobuf:"bytes,4,opt,name=Message,json=message, omitempty,proto3" json:"message, omitempty"`
-	Reason       AlertReason   `protobuf:"bytes,5,opt,name=Reason,json=reason, omitempty" json:"reason, omitempty"`
-	Acknowledged *AuditInfo    `protobuf:"bytes,6,opt,name=Acknowledged,json=acknowledged, omitempty" json:"acknowledged, omitempty"`
-	Resolved     *AuditInfo    `protobuf:"bytes,7,opt,name=Resolved,json=resolved, omitempty" json:"resolved, omitempty"`
+	// Severity of an alert
+	Severity string `protobuf:"bytes,1,opt,name=Severity,json=severity, omitempty,proto3" json:"severity, omitempty"`
+	// Alert source or origin
+	Source *AlertSource `protobuf:"bytes,2,opt,name=Source,json=source, omitempty" json:"source, omitempty"`
+	// Affected object
+	ObjectRef api.ObjectRef `protobuf:"bytes,3,opt,name=ObjectRef,json=object-ref, omitempty" json:"object-ref, omitempty"`
+	// Message from the alert rule that triggered the alert
+	Message string `protobuf:"bytes,4,opt,name=Message,json=message, omitempty,proto3" json:"message, omitempty"`
+	// Captures all the requirements from the alert policy rule with matched value.
+	// All these requirements must be cleared to auto-resolve an alert.
+	Reason AlertReason `protobuf:"bytes,5,opt,name=Reason,json=reason, omitempty" json:"reason, omitempty"`
+	// Username and time at which the alert was acknowledged
+	Acknowledged *AuditInfo `protobuf:"bytes,6,opt,name=Acknowledged,json=acknowledged, omitempty" json:"acknowledged, omitempty"`
+	// Username and time at which the alert was resolved
+	Resolved *AuditInfo `protobuf:"bytes,7,opt,name=Resolved,json=resolved, omitempty" json:"resolved, omitempty"`
 }
 
 func (m *AlertStatus) Reset()                    { *m = AlertStatus{} }
@@ -630,10 +675,12 @@ func (m *AlertStatus) GetResolved() *AuditInfo {
 	return nil
 }
 
-// AuthConfig contains the configuration for SNMP Trap authentication.
+// AuditInfo captures the user performed the action and the time at which the
+// action was performed.
 type AuditInfo struct {
+	// Name of the user performed some action.
 	User string `protobuf:"bytes,1,opt,name=User,json=user, omitempty,proto3" json:"user, omitempty"`
-	// Password contains the authentication password.
+	// Time at which the action was performed.
 	Time *api.Timestamp `protobuf:"bytes,2,opt,name=Time,json=time, omitempty" json:"time, omitempty"`
 }
 
@@ -656,10 +703,11 @@ func (m *AuditInfo) GetTime() *api.Timestamp {
 	return nil
 }
 
-// PrivacyConfig contains the configuration for SNMP Trap encryption.
+// AuthConfig contains the configuration for SNMP Trap authentication.
 type AuthConfig struct {
+	//
 	Algo string `protobuf:"bytes,1,opt,name=Algo,json=algo, omitempty,proto3" json:"algo, omitempty"`
-	// Password contains the privacy password.
+	// Password contains the authentication password.
 	Password string `protobuf:"bytes,2,opt,name=Password,json=password, omitempty,proto3" json:"password, omitempty"`
 }
 
@@ -682,11 +730,13 @@ func (m *AuthConfig) GetPassword() string {
 	return ""
 }
 
-// SNMPTrapServer contains the configuration for sending SNMP traps to a receiver.
+// One of the requirement from the expression that was met
 type MatchedRequirement struct {
-	// Host where the trap needs to be sent.
+	// Requirement from the alert rule that was met
 	Requirement `protobuf:"bytes,1,opt,name=Requirement,json=,inline,embedded=Requirement" json:",inline"`
-	// Port on the Host where the trap needs to be sent, default is 162.
+	// The value at which the requirement was met.
+	// same as Requirement.value for operator `Equals` but could vary for other operators
+	// e.g. requirement - CPU;Gt;90 could have a matching value 96
 	ObservedValue string `protobuf:"bytes,2,opt,name=ObservedValue,json=observed-value, omitempty,proto3" json:"observed-value, omitempty"`
 }
 
@@ -702,11 +752,11 @@ func (m *MatchedRequirement) GetObservedValue() string {
 	return ""
 }
 
+// PrivacyConfig contains the configuration for SNMP Trap encryption.
 type PrivacyConfig struct {
-	// If set, this will be the default notification option for the alert policies unless otherwise
-	// something else is mentioned.
+	//
 	Algo string `protobuf:"bytes,1,opt,name=Algo,json=algo, omitempty,proto3" json:"algo, omitempty"`
-	// Email notification
+	// Password contains the privacy password.
 	Password string `protobuf:"bytes,2,opt,name=Password,json=password, omitempty,proto3" json:"password, omitempty"`
 }
 
@@ -729,11 +779,17 @@ func (m *PrivacyConfig) GetPassword() string {
 	return ""
 }
 
+// Requirement specifies each
+// {"field": "Status.Phase", "operator":"Equals", "values":["JOINED"]}
 type Requirement struct {
-	// total number of notifications sent using this notification mechanism
-	FieldOrMetric string   `protobuf:"bytes,1,opt,name=FieldOrMetric,json=field-or-metric, omitempty,proto3" json:"field-or-metric, omitempty"`
-	Operator      string   `protobuf:"bytes,2,opt,name=Operator,json=operator, omitempty,proto3" json:"operator, omitempty"`
-	Values        []string `protobuf:"bytes,3,rep,name=Values,json=values, omitempty" json:"values, omitempty"`
+	// name of the field or metric
+	FieldOrMetric string `protobuf:"bytes,1,opt,name=FieldOrMetric,json=field-or-metric, omitempty,proto3" json:"field-or-metric, omitempty"`
+	//
+	Operator string `protobuf:"bytes,2,opt,name=Operator,json=operator, omitempty,proto3" json:"operator, omitempty"`
+	// Values contains one or more values corresponding to the field-or-metric. "Equals",
+	// "NotEquals", "Gt" and "Lt" operators need a single value. "In" and "NotIn" operators
+	// can have one or more values.
+	Values []string `protobuf:"bytes,3,rep,name=Values,json=values, omitempty" json:"values, omitempty"`
 }
 
 func (m *Requirement) Reset()                    { *m = Requirement{} }
@@ -762,14 +818,20 @@ func (m *Requirement) GetValues() []string {
 	return nil
 }
 
-// AlertDestination - tenant scoped
+// SNMPTrapServer contains the configuration for sending SNMP traps to a receiver.
 type SNMPTrapServer struct {
-	Host            string         `protobuf:"bytes,1,opt,name=Host,json=host, omitempty,proto3" json:"host, omitempty"`
-	Port            string         `protobuf:"bytes,2,opt,name=Port,json=port, omitempty,proto3" json:"port, omitempty"`
-	Version         string         `protobuf:"bytes,3,opt,name=Version,json=version, omitempty,proto3" json:"version, omitempty"`
-	CommunityOrUser string         `protobuf:"bytes,4,opt,name=CommunityOrUser,json=community-or-user, omitempty,proto3" json:"community-or-user, omitempty"`
-	AuthConfig      *AuthConfig    `protobuf:"bytes,5,opt,name=AuthConfig,json=auth-config, omitempty" json:"auth-config, omitempty"`
-	PrivacyConfig   *PrivacyConfig `protobuf:"bytes,6,opt,name=PrivacyConfig,json=privacy-config, omitempty" json:"privacy-config, omitempty"`
+	// Host where the trap needs to be sent.
+	Host string `protobuf:"bytes,1,opt,name=Host,json=host, omitempty,proto3" json:"host, omitempty"`
+	// Port on the Host where the trap needs to be sent, default is 162.
+	Port string `protobuf:"bytes,2,opt,name=Port,json=port, omitempty,proto3" json:"port, omitempty"`
+	//
+	Version string `protobuf:"bytes,3,opt,name=Version,json=version, omitempty,proto3" json:"version, omitempty"`
+	// CommunityOrUser contains community string for v2c, user for v3.
+	CommunityOrUser string `protobuf:"bytes,4,opt,name=CommunityOrUser,json=community-or-user, omitempty,proto3" json:"community-or-user, omitempty"`
+	// AuthConfig contains the configuration for authentication, valid only for v3.
+	AuthConfig *AuthConfig `protobuf:"bytes,5,opt,name=AuthConfig,json=auth-config, omitempty" json:"auth-config, omitempty"`
+	// PrivacyConfig contains the configuration for encryption, valid only for v3.
+	PrivacyConfig *PrivacyConfig `protobuf:"bytes,6,opt,name=PrivacyConfig,json=privacy-config, omitempty" json:"privacy-config, omitempty"`
 }
 
 func (m *SNMPTrapServer) Reset()                    { *m = SNMPTrapServer{} }

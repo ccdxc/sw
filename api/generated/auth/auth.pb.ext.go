@@ -158,7 +158,7 @@ func (m *Authenticators) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.AuthenticatorOrder {
-			m.AuthenticatorOrder[k] = Authenticators_AuthenticatorType_name[0]
+			m.AuthenticatorOrder[k] = "LOCAL"
 		}
 	}
 	return ret
@@ -271,9 +271,9 @@ func (m *Permission) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Actions {
-			m.Actions[k] = Permission_ActionType_name[0]
+			m.Actions[k] = "ALL_ACTIONS"
 		}
-		m.ResourceKind = Permission_ResrcKind_name[0]
+		m.ResourceKind = "ALL_RESOURCE_KINDS"
 	}
 	return ret
 }
@@ -497,7 +497,7 @@ func (m *UserSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = UserSpec_UserType_name[0]
+		m.Type = "LOCAL"
 	}
 	return ret
 }

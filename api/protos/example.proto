@@ -56,9 +56,12 @@ message Book {
 
 message BookSpec {
   enum  BookCategories{
+    // ui-hint: Childrens Literature
     ChildrensLit = 0;
+    // ui-hint: Young Adult
     YoungAdult = 1;
     Fiction = 2;
+    // ui-hint: Non Fiction
     NonFiction = 3;
   }
   string ISBNId = 2;
@@ -110,12 +113,12 @@ message OrderItem {
 
 message OrderStatus {
   enum OrderStatus {
-    CREATED = 0;
-    PROCESSING = 1;
-    FILLED = 2;
-    SHIPPED = 3;
-    COMPLETED = 4;
-    DISCOUNTED = 5;
+    CREATED = 0; // ui-hint: Created
+    PROCESSING = 1; // ui-hint: Processing
+    FILLED = 2; // ui-hint: Filled
+    SHIPPED = 3; // ui-hint: Shipped
+    COMPLETED = 4; // ui-hint: Completed
+    DISCOUNTED = 5; // ui-hint: Discounted
   }
   string Status = 3 [(venice.check) = "StrEnum(OrderStatus.OrderStatus)"];
   repeated OrderSpec Filled = 4;
@@ -190,6 +193,7 @@ service BookstoreV1 {
   // API Version.
   option (venice.apiVersion) = "v1";
   // The apiCrudService Option generates CRUD + List, Watch APIs for the specified message.
+  // The Order Object is for orders to the bookstore
   option (venice.apiGrpcCrudService) = "Order";
   option (venice.apiGrpcCrudService) = "Book";
   option (venice.apiGrpcCrudService) = "Publisher";

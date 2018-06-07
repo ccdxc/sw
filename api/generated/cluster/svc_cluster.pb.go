@@ -23,6 +23,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AutoMsgClusterWatchHelper is a wrapper object for watch events for Cluster objects
 type AutoMsgClusterWatchHelper struct {
 	Events []*AutoMsgClusterWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -67,6 +68,7 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) GetObject() *Cluster {
 	return nil
 }
 
+// AutoMsgHostWatchHelper is a wrapper object for watch events for Host objects
 type AutoMsgHostWatchHelper struct {
 	Events []*AutoMsgHostWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -109,6 +111,7 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) GetObject() *Host {
 	return nil
 }
 
+// AutoMsgNodeWatchHelper is a wrapper object for watch events for Node objects
 type AutoMsgNodeWatchHelper struct {
 	Events []*AutoMsgNodeWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -151,6 +154,7 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) GetObject() *Node {
 	return nil
 }
 
+// AutoMsgSmartNICWatchHelper is a wrapper object for watch events for SmartNIC objects
 type AutoMsgSmartNICWatchHelper struct {
 	Events []*AutoMsgSmartNICWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -195,6 +199,7 @@ func (m *AutoMsgSmartNICWatchHelper_WatchEvent) GetObject() *SmartNIC {
 	return nil
 }
 
+// AutoMsgTenantWatchHelper is a wrapper object for watch events for Tenant objects
 type AutoMsgTenantWatchHelper struct {
 	Events []*AutoMsgTenantWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -239,10 +244,12 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) GetObject() *Tenant {
 	return nil
 }
 
+// ClusterList is a container object for list of Cluster objects
 type ClusterList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Cluster `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Cluster objects
+	Items []*Cluster `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *ClusterList) Reset()                    { *m = ClusterList{} }
@@ -257,10 +264,12 @@ func (m *ClusterList) GetItems() []*Cluster {
 	return nil
 }
 
+// HostList is a container object for list of Host objects
 type HostList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Host `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Host objects
+	Items []*Host `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *HostList) Reset()                    { *m = HostList{} }
@@ -275,10 +284,12 @@ func (m *HostList) GetItems() []*Host {
 	return nil
 }
 
+// NodeList is a container object for list of Node objects
 type NodeList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Node `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Node objects
+	Items []*Node `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *NodeList) Reset()                    { *m = NodeList{} }
@@ -293,10 +304,12 @@ func (m *NodeList) GetItems() []*Node {
 	return nil
 }
 
+// SmartNICList is a container object for list of SmartNIC objects
 type SmartNICList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*SmartNIC `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of SmartNIC objects
+	Items []*SmartNIC `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *SmartNICList) Reset()                    { *m = SmartNICList{} }
@@ -311,10 +324,12 @@ func (m *SmartNICList) GetItems() []*SmartNIC {
 	return nil
 }
 
+// TenantList is a container object for list of Tenant objects
 type TenantList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Tenant `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Tenant objects
+	Items []*Tenant `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *TenantList) Reset()                    { *m = TenantList{} }
@@ -358,35 +373,60 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterV1 service
 
 type ClusterV1Client interface {
+	// Creates a new Cluster object
 	AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Creates a new Host object
 	AutoAddHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
+	// Creates a new Node object
 	AutoAddNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Creates a new SmartNIC object
 	AutoAddSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
+	// Creates a new Tenant object
 	AutoAddTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	// Deletes the Cluster object
 	AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Deletes the Host object
 	AutoDeleteHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
+	// Deletes the Node object
 	AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Deletes the SmartNIC object
 	AutoDeleteSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
+	// Deletes the Tenant object
 	AutoDeleteTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	// Retreives the Cluster object
 	AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Retreives the Host object
 	AutoGetHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
+	// Retreives the Node object
 	AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Retreives the SmartNIC object
 	AutoGetSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
+	// Retreives the Tenant object
 	AutoGetTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	// Retreives a list of Cluster objects
 	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ClusterList, error)
+	// Retreives a list of Host objects
 	AutoListHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*HostList, error)
+	// Retreives a list of Node objects
 	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NodeList, error)
+	// Retreives a list of SmartNIC objects
 	AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SmartNICList, error)
+	// Retreives a list of Tenant objects
 	AutoListTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*TenantList, error)
 	AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
 	AutoUpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
 	AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoUpdateTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	// Watch for changes to Cluster objects
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchClusterClient, error)
+	// Watch for changes to Host objects
 	AutoWatchHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchHostClient, error)
+	// Watch for changes to Node objects
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchNodeClient, error)
+	// Watch for changes to SmartNIC objects
 	AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSmartNICClient, error)
+	// Watch for changes to Tenant objects
 	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchTenantClient, error)
 }
 
@@ -786,35 +826,60 @@ func (x *clusterV1AutoWatchTenantClient) Recv() (*AutoMsgTenantWatchHelper, erro
 // Server API for ClusterV1 service
 
 type ClusterV1Server interface {
+	// Creates a new Cluster object
 	AutoAddCluster(context.Context, *Cluster) (*Cluster, error)
+	// Creates a new Host object
 	AutoAddHost(context.Context, *Host) (*Host, error)
+	// Creates a new Node object
 	AutoAddNode(context.Context, *Node) (*Node, error)
+	// Creates a new SmartNIC object
 	AutoAddSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
+	// Creates a new Tenant object
 	AutoAddTenant(context.Context, *Tenant) (*Tenant, error)
+	// Deletes the Cluster object
 	AutoDeleteCluster(context.Context, *Cluster) (*Cluster, error)
+	// Deletes the Host object
 	AutoDeleteHost(context.Context, *Host) (*Host, error)
+	// Deletes the Node object
 	AutoDeleteNode(context.Context, *Node) (*Node, error)
+	// Deletes the SmartNIC object
 	AutoDeleteSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
+	// Deletes the Tenant object
 	AutoDeleteTenant(context.Context, *Tenant) (*Tenant, error)
+	// Retreives the Cluster object
 	AutoGetCluster(context.Context, *Cluster) (*Cluster, error)
+	// Retreives the Host object
 	AutoGetHost(context.Context, *Host) (*Host, error)
+	// Retreives the Node object
 	AutoGetNode(context.Context, *Node) (*Node, error)
+	// Retreives the SmartNIC object
 	AutoGetSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
+	// Retreives the Tenant object
 	AutoGetTenant(context.Context, *Tenant) (*Tenant, error)
+	// Retreives a list of Cluster objects
 	AutoListCluster(context.Context, *api.ListWatchOptions) (*ClusterList, error)
+	// Retreives a list of Host objects
 	AutoListHost(context.Context, *api.ListWatchOptions) (*HostList, error)
+	// Retreives a list of Node objects
 	AutoListNode(context.Context, *api.ListWatchOptions) (*NodeList, error)
+	// Retreives a list of SmartNIC objects
 	AutoListSmartNIC(context.Context, *api.ListWatchOptions) (*SmartNICList, error)
+	// Retreives a list of Tenant objects
 	AutoListTenant(context.Context, *api.ListWatchOptions) (*TenantList, error)
 	AutoUpdateCluster(context.Context, *Cluster) (*Cluster, error)
 	AutoUpdateHost(context.Context, *Host) (*Host, error)
 	AutoUpdateNode(context.Context, *Node) (*Node, error)
 	AutoUpdateSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoUpdateTenant(context.Context, *Tenant) (*Tenant, error)
+	// Watch for changes to Cluster objects
 	AutoWatchCluster(*api.ListWatchOptions, ClusterV1_AutoWatchClusterServer) error
+	// Watch for changes to Host objects
 	AutoWatchHost(*api.ListWatchOptions, ClusterV1_AutoWatchHostServer) error
+	// Watch for changes to Node objects
 	AutoWatchNode(*api.ListWatchOptions, ClusterV1_AutoWatchNodeServer) error
+	// Watch for changes to SmartNIC objects
 	AutoWatchSmartNIC(*api.ListWatchOptions, ClusterV1_AutoWatchSmartNICServer) error
+	// Watch for changes to Tenant objects
 	AutoWatchTenant(*api.ListWatchOptions, ClusterV1_AutoWatchTenantServer) error
 }
 

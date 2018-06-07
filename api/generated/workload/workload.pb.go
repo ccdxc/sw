@@ -24,7 +24,9 @@ var _ = math.Inf
 // Workload represents a VM, container/pod or Baremetal.
 //
 type Workload struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
 	// Spec contains the configuration of the Workload.
 	Spec WorkloadSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
@@ -51,11 +53,11 @@ func (m *Workload) GetStatus() WorkloadStatus {
 	return WorkloadStatus{}
 }
 
-// Spec part of Workload object
+// Spec of a Workload interface
 type WorkloadIntfSpec struct {
-	// Hostname of the server where the workload is running.
+	// Micro-segmentation vlan assigned for this interface
 	MicroSegVlan uint32 `protobuf:"varint,1,opt,name=MicroSegVlan,json=micro-seg-vlan,omitempty,proto3" json:"micro-seg-vlan,omitempty"`
-	// Spec of all interfaces in the Workload identified by Primary MAC
+	// External vlan assigned for this interface
 	ExternalVlan uint32 `protobuf:"varint,2,opt,name=ExternalVlan,json=external-vlan,omitempty,proto3" json:"external-vlan,omitempty"`
 }
 
@@ -78,9 +80,9 @@ func (m *WorkloadIntfSpec) GetExternalVlan() uint32 {
 	return 0
 }
 
-// Status part of Workload object
+// Status of a Workload interface
 type WorkloadIntfStatus struct {
-	// Status of all interfaces in the Workload identified by Primary MAC
+	// List of all IP addresses configured and discovered on a Workload Interface
 	IpAddrs []string `protobuf:"bytes,1,rep,name=IpAddrs,json=ip-addrs,omitempty" json:"ip-addrs,omitempty"`
 }
 
@@ -96,11 +98,11 @@ func (m *WorkloadIntfStatus) GetIpAddrs() []string {
 	return nil
 }
 
-// Spec of a Workload interface
+// Spec part of Workload object
 type WorkloadSpec struct {
-	// Micro-segmentation vlan assigned for this interface
+	// Hostname of the server where the workload is running.
 	HostName string `protobuf:"bytes,1,opt,name=HostName,json=host-name,omitempty,proto3" json:"host-name,omitempty"`
-	// External vlan assigned for this interface
+	// Spec of all interfaces in the Workload identified by Primary MAC
 	Interfaces map[string]WorkloadIntfSpec `protobuf:"bytes,2,rep,name=Interfaces,json=interfaces,omitempty" json:"interfaces,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -123,11 +125,12 @@ func (m *WorkloadSpec) GetInterfaces() map[string]WorkloadIntfSpec {
 	return nil
 }
 
-// Status of a Workload interface
+// Status part of Workload object
 type WorkloadStatus struct {
-	// List of all IP addresses configured and discovered on a Workload Interface
+	// Status of all interfaces in the Workload identified by Primary MAC
 	Interfaces map[string]WorkloadIntfStatus `protobuf:"bytes,1,rep,name=Interfaces,json=interfaces,omitempty" json:"interfaces,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
-	Endpoints  []string                      `protobuf:"bytes,2,rep,name=Endpoints,json=endpoints,omitempty" json:"endpoints,omitempty"`
+	// List of all endpoints associated with this Workload
+	Endpoints []string `protobuf:"bytes,2,rep,name=Endpoints,json=endpoints,omitempty" json:"endpoints,omitempty"`
 }
 
 func (m *WorkloadStatus) Reset()                    { *m = WorkloadStatus{} }

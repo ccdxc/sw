@@ -966,7 +966,7 @@ func (m *OrderStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = OrderStatus_OrderStatus_name[0]
+		m.Status = "CREATED"
 	}
 	return ret
 }
@@ -1549,6 +1549,16 @@ func (m *OrderList) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Order {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sOrder[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 

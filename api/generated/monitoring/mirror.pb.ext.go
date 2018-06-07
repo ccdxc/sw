@@ -123,7 +123,7 @@ func (m *MirrorCollector) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = PacketCollectorType_name[0]
+		m.Type = "VENICE"
 	}
 	return ret
 }
@@ -178,7 +178,7 @@ func (m *MirrorSessionSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.PacketFilters {
-			m.PacketFilters[k] = MirrorSessionSpec_MirrorPacketFilter_name[0]
+			m.PacketFilters[k] = "ALL_PKTS"
 		}
 	}
 	return ret
@@ -206,7 +206,7 @@ func (m *MirrorSessionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.State = MirrorSessionState_name[0]
+		m.State = "RUNNING"
 	}
 	return ret
 }

@@ -4,8 +4,6 @@
 /*
 	Package auth is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		auth.proto
 		svc_auth.proto
@@ -63,11 +61,15 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+//
 type Authenticators_AuthenticatorType int32
 
 const (
-	Authenticators_LOCAL  Authenticators_AuthenticatorType = 0
-	Authenticators_LDAP   Authenticators_AuthenticatorType = 1
+	//
+	Authenticators_LOCAL Authenticators_AuthenticatorType = 0
+	//
+	Authenticators_LDAP Authenticators_AuthenticatorType = 1
+	//
 	Authenticators_RADIUS Authenticators_AuthenticatorType = 2
 )
 
@@ -89,35 +91,62 @@ func (Authenticators_AuthenticatorType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAuth, []int{3, 0}
 }
 
+// ResourceKind is a resource kind for which permission is defined
 type Permission_ResrcKind int32
 
 const (
+	// Reserved keyword to imply all resources
 	Permission_ALL_RESOURCE_KINDS Permission_ResrcKind = 0
-	Permission_TENANT             Permission_ResrcKind = 1
-	Permission_CLUSTER            Permission_ResrcKind = 2
-	Permission_NODE               Permission_ResrcKind = 3
-	Permission_SMARTNIC           Permission_ResrcKind = 4
-	Permission_CERTIFICATE        Permission_ResrcKind = 5
-	Permission_NETWORK            Permission_ResrcKind = 6
-	Permission_SERVICE            Permission_ResrcKind = 7
-	Permission_LBPOLICY           Permission_ResrcKind = 8
-	Permission_ENDPOINT           Permission_ResrcKind = 9
-	Permission_SECURITYGROUP      Permission_ResrcKind = 10
-	Permission_SGPOLICY           Permission_ResrcKind = 11
-	Permission_APP                Permission_ResrcKind = 12
-	Permission_ENCRYPTIONPOLICY   Permission_ResrcKind = 13
-	Permission_ALERT              Permission_ResrcKind = 14
-	Permission_ALERTPOLICY        Permission_ResrcKind = 15
-	Permission_ALERTDESTINATION   Permission_ResrcKind = 16
-	Permission_EVENTPOLICY        Permission_ResrcKind = 17
-	Permission_STATSPOLICY        Permission_ResrcKind = 18
-	Permission_FWLOGPOLICY        Permission_ResrcKind = 19
-	Permission_FLOWEXPORTPOLICY   Permission_ResrcKind = 20
-	Permission_USER               Permission_ResrcKind = 21
-	Permission_AUTHPOLICY         Permission_ResrcKind = 22
-	Permission_ROLE               Permission_ResrcKind = 23
-	Permission_ROLEBINDING        Permission_ResrcKind = 24
-	Permission_APIENDPOINT        Permission_ResrcKind = 25
+	// Cluster wide resources
+	Permission_TENANT Permission_ResrcKind = 1
+	//
+	Permission_CLUSTER Permission_ResrcKind = 2
+	//
+	Permission_NODE Permission_ResrcKind = 3
+	//
+	Permission_SMARTNIC Permission_ResrcKind = 4
+	//
+	Permission_CERTIFICATE Permission_ResrcKind = 5
+	// Network related resources
+	Permission_NETWORK Permission_ResrcKind = 6
+	//
+	Permission_SERVICE Permission_ResrcKind = 7
+	//
+	Permission_LBPOLICY Permission_ResrcKind = 8
+	// Workload
+	Permission_ENDPOINT Permission_ResrcKind = 9
+	// Security related resources
+	Permission_SECURITYGROUP Permission_ResrcKind = 10
+	//
+	Permission_SGPOLICY Permission_ResrcKind = 11
+	//
+	Permission_APP Permission_ResrcKind = 12
+	//
+	Permission_ENCRYPTIONPOLICY Permission_ResrcKind = 13
+	// Monitoring related resources
+	Permission_ALERT Permission_ResrcKind = 14
+	//
+	Permission_ALERTPOLICY Permission_ResrcKind = 15
+	//
+	Permission_ALERTDESTINATION Permission_ResrcKind = 16
+	//
+	Permission_EVENTPOLICY Permission_ResrcKind = 17
+	//
+	Permission_STATSPOLICY Permission_ResrcKind = 18
+	//
+	Permission_FWLOGPOLICY Permission_ResrcKind = 19
+	//
+	Permission_FLOWEXPORTPOLICY Permission_ResrcKind = 20
+	// User management related resources
+	Permission_USER Permission_ResrcKind = 21
+	//
+	Permission_AUTHPOLICY Permission_ResrcKind = 22
+	//
+	Permission_ROLE Permission_ResrcKind = 23
+	//
+	Permission_ROLEBINDING Permission_ResrcKind = 24
+	// Arbitrary API endpoint as a resource
+	Permission_APIENDPOINT Permission_ResrcKind = 25
 )
 
 var Permission_ResrcKind_name = map[int32]string{
@@ -182,15 +211,22 @@ func (x Permission_ResrcKind) String() string {
 }
 func (Permission_ResrcKind) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{8, 0} }
 
+// ActionType is an action on a resource that a permission allows
 type Permission_ActionType int32
 
 const (
+	// Reserved keyword to imply all action types
 	Permission_ALL_ACTIONS Permission_ActionType = 0
-	Permission_CREATE      Permission_ActionType = 1
-	Permission_READ        Permission_ActionType = 2
-	Permission_UPDATE      Permission_ActionType = 3
-	Permission_DELETE      Permission_ActionType = 4
-	Permission_COMMIT      Permission_ActionType = 5
+	//
+	Permission_CREATE Permission_ActionType = 1
+	//
+	Permission_READ Permission_ActionType = 2
+	//
+	Permission_UPDATE Permission_ActionType = 3
+	//
+	Permission_DELETE Permission_ActionType = 4
+	// Commit action on staging buffer
+	Permission_COMMIT Permission_ActionType = 5
 )
 
 var Permission_ActionType_name = map[int32]string{
@@ -215,10 +251,13 @@ func (x Permission_ActionType) String() string {
 }
 func (Permission_ActionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{8, 1} }
 
+// User could be local or external like in LDAP
 type UserSpec_UserType int32
 
 const (
-	UserSpec_LOCAL    UserSpec_UserType = 0
+	// ui-hint: Local
+	UserSpec_LOCAL UserSpec_UserType = 0
+	// ui-hint: External
 	UserSpec_EXTERNAL UserSpec_UserType = 1
 )
 
@@ -236,12 +275,16 @@ func (x UserSpec_UserType) String() string {
 }
 func (UserSpec_UserType) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{18, 0} }
 
-// spec part of user object
+// AuthenticationPolicy defines various authentication mechanisms available and order in which they are used
 type AuthenticationPolicy struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           AuthenticationPolicySpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         AuthenticationPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	// Spec contains configuration of authentication mechanisms.
+	Spec AuthenticationPolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the authentication policy.
+	Status AuthenticationPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *AuthenticationPolicy) Reset()                    { *m = AuthenticationPolicy{} }
@@ -263,10 +306,12 @@ func (m *AuthenticationPolicy) GetStatus() AuthenticationPolicyStatus {
 	return AuthenticationPolicyStatus{}
 }
 
-// status part of user object
+// spec part of authentication policy object
 type AuthenticationPolicySpec struct {
+	//
 	Authenticators Authenticators `protobuf:"bytes,1,opt,name=Authenticators,json=authenticators,omitempty" json:"authenticators,omitempty"`
-	Secret         []byte         `protobuf:"bytes,2,opt,name=Secret,json=secret,omitempty,proto3" json:"secret,omitempty"`
+	// Secret used to sign JWT token
+	Secret []byte `protobuf:"bytes,2,opt,name=Secret,json=secret,omitempty,proto3" json:"secret,omitempty"`
 }
 
 func (m *AuthenticationPolicySpec) Reset()                    { *m = AuthenticationPolicySpec{} }
@@ -288,7 +333,7 @@ func (m *AuthenticationPolicySpec) GetSecret() []byte {
 	return nil
 }
 
-// User could be local or external
+// status part of authentication policy object
 type AuthenticationPolicyStatus struct {
 }
 
@@ -297,12 +342,15 @@ func (m *AuthenticationPolicyStatus) String() string            { return proto.C
 func (*AuthenticationPolicyStatus) ProtoMessage()               {}
 func (*AuthenticationPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{2} }
 
-// spec part of authentication policy object
+//
 type Authenticators struct {
+	//
 	Ldap *Ldap `protobuf:"bytes,1,opt,name=Ldap,json=ldap,omitempty" json:"ldap,omitempty"`
-	// Secret used to sign JWT token
-	Local              *Local   `protobuf:"bytes,2,opt,name=Local,json=local,omitempty" json:"local,omitempty"`
-	Radius             *Radius  `protobuf:"bytes,3,opt,name=Radius,json=radius,omitempty" json:"radius,omitempty"`
+	//
+	Local *Local `protobuf:"bytes,2,opt,name=Local,json=local,omitempty" json:"local,omitempty"`
+	//
+	Radius *Radius `protobuf:"bytes,3,opt,name=Radius,json=radius,omitempty" json:"radius,omitempty"`
+	// Order in which authenticators are applied. If an authenticator returns success, others are skipped
 	AuthenticatorOrder []string `protobuf:"bytes,9,rep,name=AuthenticatorOrder,json=authenticator-order,omitempty" json:"authenticator-order,omitempty"`
 }
 
@@ -339,14 +387,21 @@ func (m *Authenticators) GetAuthenticatorOrder() []string {
 	return nil
 }
 
+//
 type Ldap struct {
-	Enabled    bool        `protobuf:"varint,1,opt,name=Enabled,json=enabled,omitempty,proto3" json:"enabled,omitempty"`
-	Url        string      `protobuf:"bytes,2,opt,name=Url,json=url,omitempty,proto3" json:"url,omitempty"`
+	//
+	Enabled bool `protobuf:"varint,1,opt,name=Enabled,json=enabled,omitempty,proto3" json:"enabled,omitempty"`
+	//
+	Url string `protobuf:"bytes,2,opt,name=Url,json=url,omitempty,proto3" json:"url,omitempty"`
+	//
 	TLSOptions *TLSOptions `protobuf:"bytes,3,opt,name=TLSOptions,json=tls-options,omitempty" json:"tls-options,omitempty"`
-	// Order in which authenticators are applied. If an authenticator returns success, others are skipped
-	BaseDN           string                `protobuf:"bytes,4,opt,name=BaseDN,json=base-dn,omitempty,proto3" json:"base-dn,omitempty"`
-	BindDN           string                `protobuf:"bytes,5,opt,name=BindDN,json=bind-dn,omitempty,proto3" json:"bind-dn,omitempty"`
-	BindPassword     string                `protobuf:"bytes,6,opt,name=BindPassword,json=bind-password,omitempty,proto3" json:"bind-password,omitempty"`
+	//
+	BaseDN string `protobuf:"bytes,4,opt,name=BaseDN,json=base-dn,omitempty,proto3" json:"base-dn,omitempty"`
+	//
+	BindDN string `protobuf:"bytes,5,opt,name=BindDN,json=bind-dn,omitempty,proto3" json:"bind-dn,omitempty"`
+	//
+	BindPassword string `protobuf:"bytes,6,opt,name=BindPassword,json=bind-password,omitempty,proto3" json:"bind-password,omitempty"`
+	//
 	AttributeMapping *LdapAttributeMapping `protobuf:"bytes,7,opt,name=AttributeMapping,json=attribute-mapping,omitempty" json:"attribute-mapping,omitempty"`
 }
 
@@ -404,14 +459,22 @@ func (m *Ldap) GetAttributeMapping() *LdapAttributeMapping {
 	return nil
 }
 
+//
 type LdapAttributeMapping struct {
-	User             string `protobuf:"bytes,1,opt,name=User,json=user,omitempty,proto3" json:"user,omitempty"`
-	UserObjectClass  string `protobuf:"bytes,2,opt,name=UserObjectClass,json=user-object-class,omitempty,proto3" json:"user-object-class,omitempty"`
-	Tenant           string `protobuf:"bytes,3,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
-	Group            string `protobuf:"bytes,4,opt,name=Group,json=group,omitempty,proto3" json:"group,omitempty"`
+	//
+	User string `protobuf:"bytes,1,opt,name=User,json=user,omitempty,proto3" json:"user,omitempty"`
+	// UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
+	UserObjectClass string `protobuf:"bytes,2,opt,name=UserObjectClass,json=user-object-class,omitempty,proto3" json:"user-object-class,omitempty"`
+	//
+	Tenant string `protobuf:"bytes,3,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
+	//
+	Group string `protobuf:"bytes,4,opt,name=Group,json=group,omitempty,proto3" json:"group,omitempty"`
+	// GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search
 	GroupObjectClass string `protobuf:"bytes,5,opt,name=GroupObjectClass,json=group-object-class,omitempty,proto3" json:"group-object-class,omitempty"`
-	Email            string `protobuf:"bytes,6,opt,name=Email,json=email,omitempty,proto3" json:"email,omitempty"`
-	Fullname         string `protobuf:"bytes,7,opt,name=Fullname,json=fullname,omitempty,proto3" json:"fullname,omitempty"`
+	//
+	Email string `protobuf:"bytes,6,opt,name=Email,json=email,omitempty,proto3" json:"email,omitempty"`
+	//
+	Fullname string `protobuf:"bytes,7,opt,name=Fullname,json=fullname,omitempty,proto3" json:"fullname,omitempty"`
 }
 
 func (m *LdapAttributeMapping) Reset()                    { *m = LdapAttributeMapping{} }
@@ -468,8 +531,9 @@ func (m *LdapAttributeMapping) GetFullname() string {
 	return ""
 }
 
+//
 type Local struct {
-	// StartTLS determines if ldap connection uses TLS
+	//
 	Enabled bool `protobuf:"varint,1,opt,name=Enabled,json=enabled,omitempty,proto3" json:"enabled,omitempty"`
 }
 
@@ -485,11 +549,14 @@ func (m *Local) GetEnabled() bool {
 	return false
 }
 
+// PasswordCredential is user credential to login to Venice. It consists of username, password and tenant.
 type PasswordCredential struct {
+	//
 	Username string `protobuf:"bytes,1,opt,name=Username,json=username,omitempty,proto3" json:"username,omitempty"`
-	// UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
+	//
 	Password string `protobuf:"bytes,2,opt,name=Password,json=password,omitempty,proto3" json:"password,omitempty"`
-	Tenant   string `protobuf:"bytes,3,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
+	//
+	Tenant string `protobuf:"bytes,3,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
 }
 
 func (m *PasswordCredential) Reset()                    { *m = PasswordCredential{} }
@@ -518,13 +585,21 @@ func (m *PasswordCredential) GetTenant() string {
 	return ""
 }
 
+// Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints.
 type Permission struct {
-	ResourceTenant    string   `protobuf:"bytes,1,opt,name=ResourceTenant,json=resource-tenant,omitempty,proto3" json:"resource-tenant,omitempty"`
-	ResourceGroup     string   `protobuf:"bytes,2,opt,name=ResourceGroup,json=resource-group,omitempty,proto3" json:"resource-group,omitempty"`
-	ResourceKind      string   `protobuf:"bytes,3,opt,name=ResourceKind,json=resource-kind,omitempty,proto3" json:"resource-kind,omitempty"`
-	ResourceNamespace string   `protobuf:"bytes,4,opt,name=ResourceNamespace,json=resource-namespace,omitempty,proto3" json:"resource-namespace,omitempty"`
-	ResourceNames     []string `protobuf:"bytes,5,rep,name=ResourceNames,json=resource-names,omitempty" json:"resource-names,omitempty"`
-	Actions           []string `protobuf:"bytes,6,rep,name=Actions,json=actions,omitempty" json:"actions,omitempty"`
+	// ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
+	// to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.
+	ResourceTenant string `protobuf:"bytes,1,opt,name=ResourceTenant,json=resource-tenant,omitempty,proto3" json:"resource-tenant,omitempty"`
+	// ResourceGroup is grouping of resource types for which a permission is defined
+	ResourceGroup string `protobuf:"bytes,2,opt,name=ResourceGroup,json=resource-group,omitempty,proto3" json:"resource-group,omitempty"`
+	// ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint
+	ResourceKind string `protobuf:"bytes,3,opt,name=ResourceKind,json=resource-kind,omitempty,proto3" json:"resource-kind,omitempty"`
+	// ResourceNamespace is a namespace to which a resource (API Server object) belongs
+	ResourceNamespace string `protobuf:"bytes,4,opt,name=ResourceNamespace,json=resource-namespace,omitempty,proto3" json:"resource-namespace,omitempty"`
+	// ResourceNames identify specific objects on which this permission applies.
+	ResourceNames []string `protobuf:"bytes,5,rep,name=ResourceNames,json=resource-names,omitempty" json:"resource-names,omitempty"`
+	// Actions are actions on a resource that a permission allows
+	Actions []string `protobuf:"bytes,6,rep,name=Actions,json=actions,omitempty" json:"actions,omitempty"`
 }
 
 func (m *Permission) Reset()                    { *m = Permission{} }
@@ -574,12 +649,18 @@ func (m *Permission) GetActions() []string {
 	return nil
 }
 
+//
 type Radius struct {
-	Enabled bool   `protobuf:"varint,1,opt,name=Enabled,json=enabled,omitempty,proto3" json:"enabled,omitempty"`
-	Ip      string `protobuf:"bytes,2,opt,name=Ip,json=ip,omitempty,proto3" json:"ip,omitempty"`
-	Port    string `protobuf:"bytes,3,opt,name=Port,json=port,omitempty,proto3" json:"port,omitempty"`
-	NasIp   string `protobuf:"bytes,4,opt,name=NasIp,json=nas-ip,omitempty,proto3" json:"nas-ip,omitempty"`
-	Secret  string `protobuf:"bytes,5,opt,name=Secret,json=secret,omitempty,proto3" json:"secret,omitempty"`
+	//
+	Enabled bool `protobuf:"varint,1,opt,name=Enabled,json=enabled,omitempty,proto3" json:"enabled,omitempty"`
+	//
+	Ip string `protobuf:"bytes,2,opt,name=Ip,json=ip,omitempty,proto3" json:"ip,omitempty"`
+	//
+	Port string `protobuf:"bytes,3,opt,name=Port,json=port,omitempty,proto3" json:"port,omitempty"`
+	//
+	NasIp string `protobuf:"bytes,4,opt,name=NasIp,json=nas-ip,omitempty,proto3" json:"nas-ip,omitempty"`
+	//
+	Secret string `protobuf:"bytes,5,opt,name=Secret,json=secret,omitempty,proto3" json:"secret,omitempty"`
 }
 
 func (m *Radius) Reset()                    { *m = Radius{} }
@@ -622,12 +703,16 @@ func (m *Radius) GetSecret() string {
 	return ""
 }
 
-// status part of authentication policy object
+// Role is a collection of permissions
 type Role struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           RoleSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         RoleStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	// Spec contains the configuration of the role.
+	Spec RoleSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the role.
+	Status RoleStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *Role) Reset()                    { *m = Role{} }
@@ -649,13 +734,15 @@ func (m *Role) GetStatus() RoleStatus {
 	return RoleStatus{}
 }
 
-// AuthenticationPolicy defines various authentication mechanisms available and order in which they are used
+// RoleBinding is an assignment of a role to users or groups
 type RoleBinding struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Spec contains configuration of authentication mechanisms.
+	// Spec contains the configuration of the role binding.
 	Spec RoleBindingSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// Status contains the current state of the authentication policy.
+	// Status contains the current state of the role binding.
 	Status RoleBindingStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -678,14 +765,13 @@ func (m *RoleBinding) GetStatus() RoleBindingStatus {
 	return RoleBindingStatus{}
 }
 
-// Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints.
+// spec part of role binding object
 type RoleBindingSpec struct {
-	// ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
-	// to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.
+	//
 	Users []string `protobuf:"bytes,1,rep,name=Users,json=users,omitempty" json:"users,omitempty"`
-	// ResourceGroup is grouping of resource types for which a permission is defined
+	//
 	UserGroups []string `protobuf:"bytes,2,rep,name=UserGroups,json=user-groups,omitempty" json:"user-groups,omitempty"`
-	// ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint
+	//
 	Role string `protobuf:"bytes,3,opt,name=Role,json=role,omitempty,proto3" json:"role,omitempty"`
 }
 
@@ -715,7 +801,7 @@ func (m *RoleBindingSpec) GetRole() string {
 	return ""
 }
 
-// spec part of role object
+// status part of role binding object
 type RoleBindingStatus struct {
 }
 
@@ -724,8 +810,9 @@ func (m *RoleBindingStatus) String() string            { return proto.CompactTex
 func (*RoleBindingStatus) ProtoMessage()               {}
 func (*RoleBindingStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{13} }
 
-// status part of role object
+// spec part of role object
 type RoleSpec struct {
+	// Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint
 	Permissions []Permission `protobuf:"bytes,1,rep,name=Permissions,json=permissions,omitempty" json:"permissions,omitempty"`
 }
 
@@ -741,7 +828,7 @@ func (m *RoleSpec) GetPermissions() []Permission {
 	return nil
 }
 
-// Role is a collection of permissions
+// status part of role object
 type RoleStatus struct {
 }
 
@@ -750,12 +837,18 @@ func (m *RoleStatus) String() string            { return proto.CompactTextString
 func (*RoleStatus) ProtoMessage()               {}
 func (*RoleStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{15} }
 
-// spec part of role binding object
+//
 type TLSOptions struct {
-	StartTLS                   bool   `protobuf:"varint,1,opt,name=StartTLS,json=start-tls,omitempty,proto3" json:"start-tls,omitempty"`
-	SkipServerCertVerification bool   `protobuf:"varint,2,opt,name=SkipServerCertVerification,json=skip-server-cert-verification,omitempty,proto3" json:"skip-server-cert-verification,omitempty"`
-	ServerName                 string `protobuf:"bytes,3,opt,name=ServerName,json=server-name,omitempty,proto3" json:"server-name,omitempty"`
-	TrustedCerts               string `protobuf:"bytes,4,opt,name=TrustedCerts,json=trusted-certs,omitempty,proto3" json:"trusted-certs,omitempty"`
+	// StartTLS determines if ldap connection uses TLS
+	StartTLS bool `protobuf:"varint,1,opt,name=StartTLS,json=start-tls,omitempty,proto3" json:"start-tls,omitempty"`
+	// SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.
+	// If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
+	// In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.
+	SkipServerCertVerification bool `protobuf:"varint,2,opt,name=SkipServerCertVerification,json=skip-server-cert-verification,omitempty,proto3" json:"skip-server-cert-verification,omitempty"`
+	// ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.
+	ServerName string `protobuf:"bytes,3,opt,name=ServerName,json=server-name,omitempty,proto3" json:"server-name,omitempty"`
+	// TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.
+	TrustedCerts string `protobuf:"bytes,4,opt,name=TrustedCerts,json=trusted-certs,omitempty,proto3" json:"trusted-certs,omitempty"`
 }
 
 func (m *TLSOptions) Reset()                    { *m = TLSOptions{} }
@@ -791,12 +884,16 @@ func (m *TLSOptions) GetTrustedCerts() string {
 	return ""
 }
 
-// status part of role binding object
+// User could be local or external
 type User struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           UserSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         UserStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	// Spec contains the configuration of the user.
+	Spec UserSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the role binding.
+	Status UserStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *User) Reset()                    { *m = User{} }
@@ -818,13 +915,15 @@ func (m *User) GetStatus() UserStatus {
 	return UserStatus{}
 }
 
-// RoleBinding is an assignment of a role to users or groups
+// spec part of user object
 type UserSpec struct {
+	//
 	Fullname string `protobuf:"bytes,1,opt,name=Fullname,json=fullname,omitempty,proto3" json:"fullname,omitempty"`
-	Email    string `protobuf:"bytes,2,opt,name=Email,json=email,omitempty,proto3" json:"email,omitempty"`
-	// Spec contains the configuration of the role binding.
+	//
+	Email string `protobuf:"bytes,2,opt,name=Email,json=email,omitempty,proto3" json:"email,omitempty"`
+	//
 	Password string `protobuf:"bytes,3,opt,name=Password,json=password,omitempty,proto3" json:"password,omitempty"`
-	// Status contains the current state of the role binding.
+	//
 	Type string `protobuf:"bytes,4,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
 }
 
@@ -861,10 +960,13 @@ func (m *UserSpec) GetType() string {
 	return ""
 }
 
-// PasswordCredential is user credential to login to Venice. It consists of username, password and tenant.
+// status part of user object
 type UserStatus struct {
-	Roles               []string       `protobuf:"bytes,1,rep,name=Roles,json=roles,omitempty" json:"roles,omitempty"`
-	UserGroups          []string       `protobuf:"bytes,2,rep,name=UserGroups,json=user-groups,omitempty" json:"user-groups,omitempty"`
+	//
+	Roles []string `protobuf:"bytes,1,rep,name=Roles,json=roles,omitempty" json:"roles,omitempty"`
+	//
+	UserGroups []string `protobuf:"bytes,2,rep,name=UserGroups,json=user-groups,omitempty" json:"user-groups,omitempty"`
+	//
 	LastSuccessfulLogin *api.Timestamp `protobuf:"bytes,3,opt,name=LastSuccessfulLogin,json=last-successful-login,omitempty" json:"last-successful-login,omitempty"`
 }
 

@@ -93,7 +93,7 @@ func (m *EventAttributes) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Severity = SeverityLevel_name[0]
+		m.Severity = "INFO"
 	}
 	return ret
 }
@@ -120,7 +120,7 @@ func (m *EventExport) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Format = MonitoringExportFormat_name[0]
+		m.Format = "SYSLOG_BSD"
 	}
 	return ret
 }

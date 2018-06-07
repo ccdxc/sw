@@ -18,7 +18,242 @@ import (
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
+	common "github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
+
+type codeInfo struct {
+	comments string
+	trailer  string
+}
+
+type msgSrcCodeInfo struct {
+	codeInfo
+	fields     map[string]codeInfo
+	nestedMsgs map[string]msgSrcCodeInfo
+	enums      map[string]enumSrcCodeInfo
+}
+
+type methSrcCodeInfo struct {
+	codeInfo
+}
+type svcSrcCodeInfo struct {
+	codeInfo
+	methods map[string]codeInfo
+}
+
+type enumSrcCodeInfo struct {
+	codeInfo
+	values map[string]codeInfo
+}
+type srcCodeInfo struct {
+	codeInfo
+	msgs     map[string]msgSrcCodeInfo
+	services map[string]svcSrcCodeInfo
+	enums    map[string]enumSrcCodeInfo
+}
+
+func saveEnumSrcCodeInfo(file *descriptor.FileDescriptorProto, enum *descriptor.EnumDescriptorProto, path []int) enumSrcCodeInfo {
+	ret := enumSrcCodeInfo{
+		values: make(map[string]codeInfo),
+	}
+	loc, err := common.GetLocation(file.GetSourceCodeInfo(), path)
+	if err != nil {
+		panic(fmt.Errorf("error while saving source code info  for enum(%s)", err))
+	}
+	ret.comments = loc.GetLeadingComments()
+
+	for idx, v := range enum.GetValue() {
+		npath := append(path, common.EnumValType, idx)
+		loc, err = common.GetLocation(file.GetSourceCodeInfo(), npath)
+		if err != nil {
+			panic(fmt.Errorf("error while saving source code info  for enum(%s) file [%s] enum[%s]", err, file.GetName(), enum.GetName()))
+		}
+		ret.values[v.GetName()] = codeInfo{comments: loc.GetLeadingComments(), trailer: loc.GetTrailingComments()}
+	}
+	return ret
+}
+
+func saveMsgSrcCodeInfo(file *descriptor.FileDescriptorProto, msg *descriptor.DescriptorProto, path []int) msgSrcCodeInfo {
+	m := msgSrcCodeInfo{
+		fields:     make(map[string]codeInfo),
+		nestedMsgs: make(map[string]msgSrcCodeInfo),
+		enums:      make(map[string]enumSrcCodeInfo),
+	}
+	loc, err := common.GetLocation(file.GetSourceCodeInfo(), path)
+	if err != nil {
+		// Just log a message here, since there can be elements like map_entry that dont have locs
+		glog.V(1).Infof("error while saving source code info  for msg(%s) file [%s] msg[%s]", err, file.GetName(), msg.GetName())
+	}
+	if loc != nil {
+		m.comments = loc.GetLeadingComments()
+	}
+	for fidx, fld := range msg.GetField() {
+		fpath := append(path, []int{common.FieldType, fidx}...)
+		loc, err = common.GetLocation(file.GetSourceCodeInfo(), fpath)
+		if err != nil {
+			glog.V(1).Infof("error while saving source code info for fld (%s)", err)
+		}
+		if loc != nil {
+			m.fields[fld.GetName()] = codeInfo{comments: loc.GetLeadingComments()}
+		} else {
+			m.fields[fld.GetName()] = codeInfo{}
+		}
+	}
+	// Save Nested Messages
+	for idx, nmsg := range msg.GetNestedType() {
+		npath := append(path, []int{common.NestedMsgType, idx}...)
+		m.nestedMsgs[nmsg.GetName()] = saveMsgSrcCodeInfo(file, nmsg, npath)
+	}
+
+	// Save nested enums
+	for idx, enum := range msg.GetEnumType() {
+		npath := append(path, common.NestedEnumType, idx)
+		m.enums[enum.GetName()] = saveEnumSrcCodeInfo(file, enum, npath)
+	}
+	return m
+}
+
+func saveSrcCodeInfo(file *descriptor.FileDescriptorProto) srcCodeInfo {
+	ret := srcCodeInfo{
+		msgs:     make(map[string]msgSrcCodeInfo),
+		services: make(map[string]svcSrcCodeInfo),
+		enums:    make(map[string]enumSrcCodeInfo),
+	}
+	if file.SourceCodeInfo == nil {
+		return ret
+	}
+	// Messages
+	for idx, msg := range file.MessageType {
+		path := []int{common.MsgType, idx}
+		ret.msgs[msg.GetName()] = saveMsgSrcCodeInfo(file, msg, path)
+	}
+	//Services
+	for idx, svc := range file.Service {
+		s := svcSrcCodeInfo{
+			methods: make(map[string]codeInfo),
+		}
+		loc, err := common.GetLocation(file.GetSourceCodeInfo(), []int{common.SvcType, idx})
+		if err != nil {
+			panic(fmt.Errorf("error while saving source code info  for msg(%s)", err))
+		}
+		if loc != nil {
+			s.comments = loc.GetLeadingComments()
+		}
+		for midx, meth := range svc.GetMethod() {
+			loc, err = common.GetLocation(file.GetSourceCodeInfo(), []int{common.SvcType, idx, 2, midx})
+			if err != nil {
+				panic(fmt.Errorf("error while saving source code info for method (%s)", err))
+			}
+			if loc != nil {
+				s.methods[meth.GetName()] = codeInfo{comments: loc.GetLeadingComments()}
+			} else {
+				s.methods[meth.GetName()] = codeInfo{}
+			}
+		}
+		ret.services[svc.GetName()] = s
+	}
+
+	// Enums
+	for idx, enum := range file.EnumType {
+		path := []int{common.EnumType, idx}
+		ret.enums[enum.GetName()] = saveEnumSrcCodeInfo(file, enum, path)
+	}
+	glog.V(1).Infof("Save Source code Info : [%+v]", ret)
+	return ret
+}
+
+func restoreMsgSrcCodeInfo(f *descriptor.FileDescriptorProto, msg *descriptor.DescriptorProto, savedSci *srcCodeInfo, newSci *descriptor.SourceCodeInfo, path []int32) {
+	cmsg, ok := savedSci.msgs[msg.GetName()]
+	if ok {
+		newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+			Path:            path,
+			LeadingComments: &cmsg.comments,
+		})
+	}
+	for fidx, fld := range msg.Field {
+		cfld, ok := cmsg.fields[fld.GetName()]
+		if ok {
+			fldpath := append(path, common.FieldType, int32(fidx))
+			newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+				Path:            fldpath,
+				LeadingComments: &cfld.comments,
+			})
+		}
+	}
+	// Nested Enums
+	for idx, enum := range msg.EnumType {
+		cenum, ok := cmsg.enums[enum.GetName()]
+		if ok {
+			enumpath := append(path, common.NestedEnumType, int32(idx))
+			newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+				Path:            enumpath,
+				LeadingComments: &cenum.comments,
+			})
+			for id, v := range enum.Value {
+				cval, ok := cenum.values[v.GetName()]
+				if ok {
+					valpath := append(enumpath, common.EnumValType, int32(id))
+					newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+						Path:             valpath,
+						LeadingComments:  &cval.comments,
+						TrailingComments: &cval.trailer,
+					})
+				}
+			}
+		}
+	}
+	// Nested Messages
+	for idx, nmsg := range msg.NestedType {
+		npath := append(path, common.NestedMsgType, int32(idx))
+		restoreMsgSrcCodeInfo(f, nmsg, savedSci, newSci, npath)
+	}
+}
+
+func restoreScrCodeInfo(f *descriptor.FileDescriptorProto, savedSci srcCodeInfo) {
+	newSci := &descriptor.SourceCodeInfo{}
+	for idx, msg := range f.GetMessageType() {
+		path := []int32{common.MsgType, int32(idx)}
+		restoreMsgSrcCodeInfo(f, msg, &savedSci, newSci, path)
+	}
+	// services
+	for idx, svc := range f.GetService() {
+		cmsg, ok := savedSci.services[svc.GetName()]
+		if ok {
+			newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+				Path:            []int32{common.SvcType, int32(idx)},
+				LeadingComments: &cmsg.comments,
+			})
+			for midx, meth := range svc.GetMethod() {
+				cmtd, ok := cmsg.methods[meth.GetName()]
+				if ok {
+					newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+						Path:            []int32{common.SvcType, int32(idx), common.MethType, int32(midx)},
+						LeadingComments: &cmtd.comments,
+					})
+				}
+			}
+		}
+	}
+	for idx, enum := range f.GetEnumType() {
+		cenum, ok := savedSci.enums[enum.GetName()]
+		if ok {
+			newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+				Path:            []int32{common.EnumType, int32(idx)},
+				LeadingComments: &cenum.comments,
+			})
+			for vidx, val := range enum.Value {
+				cval, ok := cenum.values[val.GetName()]
+				if ok {
+					newSci.Location = append(newSci.Location, &descriptor.SourceCodeInfo_Location{
+						Path:            []int32{common.EnumType, int32(idx), common.EnumValType, int32(vidx)},
+						LeadingComments: &cval.comments,
+					})
+				}
+			}
+		}
+	}
+	f.SourceCodeInfo = newSci
+}
 
 func getMethodOperOption(pb *descriptor.MethodDescriptorProto) *proto.ExtensionDesc {
 	desc, err := proto.ExtensionDescs(pb)
@@ -117,7 +352,7 @@ func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype,
 	return nil
 }
 
-func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, resteps map[string]string) {
+func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m, pkg string, resteps map[string]string) {
 	var restopt *googapi.HttpRule
 
 	glog.V(1).Infof("adding Grpc CRUD endpoints for %s [ %+v ]", m, resteps)
@@ -133,7 +368,9 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, reste
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"create", false, restopt)
-
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoAdd%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Creates a new %s object", m),
+	}
 	// Update method
 	if v, ok := resteps["put"]; ok {
 		opt := googapi.HttpRule_Put{Put: v}
@@ -146,7 +383,9 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, reste
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"update", false, restopt)
-
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoUpdat%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Updates the %s object", m),
+	}
 	// Get method
 	if v, ok := resteps["get"]; ok {
 		opt := googapi.HttpRule_Get{Get: v}
@@ -159,7 +398,9 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, reste
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"get", false, restopt)
-
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoGet%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Retreives the %s object", m),
+	}
 	// Delete method
 	if v, ok := resteps["delete"]; ok {
 		opt := googapi.HttpRule_Delete{Delete: v}
@@ -172,7 +413,9 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, reste
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"delete", false, restopt)
-
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoDelete%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Deletes the %s object", m),
+	}
 	// List method
 	if v, ok := resteps["list"]; ok {
 		opt := googapi.HttpRule_Get{Get: v}
@@ -185,6 +428,9 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, reste
 		".api.ListWatchOptions",
 		fmt.Sprintf(".%s.%sList", pkg, m),
 		"list", false, restopt)
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoList%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Retreives a list of %s objects", m),
+	}
 
 	// Watch method
 	// Rest Endpoint on Watch is not currently supported. Will be ignored if specified.
@@ -193,10 +439,13 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, reste
 		".api.ListWatchOptions",
 		fmt.Sprintf(".%s.AutoMsg%sWatchHelper", pkg, m),
 		"watch", true, nil)
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoWatch%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Watch for changes to %s objects", m),
+	}
 	glog.V(1).Infof("Generated AutoGrpc for [%s][%s]\n", *svc.Name, m)
 }
 
-func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
+func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg string) {
 	autoDesc, err := getExtensionDesc(&descriptor.MessageOptions{}, "venice.objectAutoGen")
 	if err != nil {
 		glog.V(1).Infof("Get objectAutoGen desc failed (%s)\n", err)
@@ -230,6 +479,18 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
 
 		var nfldtype1 = descriptor.FieldDescriptorProto_TYPE_STRING
 		var nfldtype2 = descriptor.FieldDescriptorProto_TYPE_MESSAGE
+
+		sci.msgs[name] = msgSrcCodeInfo{
+			codeInfo: codeInfo{comments: fmt.Sprintf("%s is a wrapper object for watch events for %s objects", name, msg)},
+			fields: map[string]codeInfo{
+				nfldname1: codeInfo{
+					comments: "Type of watch event",
+				},
+				nfldname2: codeInfo{
+					comments: "Changed object details",
+				},
+			},
+		}
 
 		nfield1 := descriptor.FieldDescriptorProto{
 			Name:   &nfldname1,
@@ -278,7 +539,9 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
 			Options:    &descriptor.MessageOptions{},
 		}
 		proto.SetExtension(msg.GetOptions(), autoDesc, &autoption)
+
 		f.MessageType = append(f.MessageType, &msg)
+
 	}
 	// List helper message
 	{
@@ -294,7 +557,14 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
 		fldname2 := "T"
 		fldname3 := "ListMeta"
 		fldname4 := "Items"
-
+		sci.msgs[name] = msgSrcCodeInfo{
+			codeInfo: codeInfo{comments: fmt.Sprintf("%s is a container object for list of %s objects", name, msg)},
+			fields: map[string]codeInfo{
+				fldname4: codeInfo{
+					comments: fmt.Sprintf("List of %s objects", msg),
+				},
+			},
+		}
 		// var fldnum1 int32 = 1
 		var fldnum2 int32 = 2
 		var fldnum3 int32 = 3
@@ -347,6 +617,7 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
 			Options: &descriptor.MessageOptions{},
 		}
 		proto.SetExtension(msg.GetOptions(), autoDesc, &autoption)
+
 		f.MessageType = append(f.MessageType, &msg)
 	}
 }
@@ -400,7 +671,7 @@ func GetMessageURI(m *descriptor.DescriptorProto) (string, error) {
 	return ret + "/{O.Name}", nil
 }
 
-func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDescriptorProto, msgMap map[string]*descriptor.DescriptorProto) {
+func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, msgMap map[string]*descriptor.DescriptorProto) {
 	opts := s.GetOptions()
 	act, err := getExtension(opts, "venice.apiAction")
 	if err != nil {
@@ -443,9 +714,9 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
 func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
-
 	msgMap := make(map[string]*descriptor.DescriptorProto)
 	pkgMap := make(map[string]string)
+
 	protoRe := regexp.MustCompile(`protos/([a-z]|[A-Z]|[0-9]|_|.)+.proto$`)
 	for _, f := range req.GetProtoFile() {
 		glog.V(1).Infof("Got Importsin [%s] as {%v}", *f.Name, f.GetDependency())
@@ -461,9 +732,12 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 	glog.V(1).Infof("Got PkgMap as {%+v}", pkgMap)
 	for _, files := range req.GetFileToGenerate() {
 		for _, f := range req.GetProtoFile() {
+			var savedSci srcCodeInfo
 			if files != *f.Name {
 				continue
 			}
+			// Before mutating save SourceCodeInfo paths and indices
+			savedSci = saveSrcCodeInfo(f)
 			// Add api/meta.prot if it is not in dependencies
 			depFound := false
 			for _, d := range f.GetDependency() {
@@ -496,7 +770,11 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 						continue
 					}
 					msgs := e.([]string)
-
+					if _, ok := savedSci.services[s.GetName()]; !ok {
+						savedSci.services[s.GetName()] = svcSrcCodeInfo{
+							methods: make(map[string]codeInfo),
+						}
+					}
 					resteps := make(map[string]map[string]string)
 					rest, err := getExtension(opts, "venice.apiRestService")
 					if err != nil {
@@ -541,11 +819,11 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 						}
 					}
 					// Process any actions defined
-					processActions(f, s, msgMap)
+					processActions(f, s, &savedSci, msgMap)
 
 					for _, m := range msgs {
 						if _, ok := msgMap[m]; ok {
-							insertGrpcCRUD(s, m, *f.Package, resteps[m])
+							insertGrpcCRUD(s, &savedSci, m, *f.Package, resteps[m])
 							crudMsgMap[m] = true
 						} else {
 							glog.V(1).Infof("*** Unknown Message [%s] defined for CRUD service\n", m)
@@ -559,7 +837,7 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 			}
 			// Insert new message type for WatchEvents and List
 			for v := range crudMsgMap {
-				insertGrpcAutoMsgs(f, v)
+				insertGrpcAutoMsgs(f, &savedSci, v)
 			}
 
 			// Fixup JSON tags in proto def. Works around a gogoproto bug that does not updated the proto tags correctly.
@@ -577,6 +855,9 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 					return *s.Method[x].Name < *s.Method[y].Name
 				})
 			}
+			// Restore the source code info
+			restoreScrCodeInfo(f, savedSci)
+
 			glog.V(1).Infof("Mutated file is %+v", f)
 		}
 	}

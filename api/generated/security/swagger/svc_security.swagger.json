@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Service name",
+    "title": "svc_security.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,95 +15,134 @@
     "application/json"
   ],
   "paths": {
-    "/apps": {
+    "/v1/security/apps": {
       "get": {
-        "operationId": "AutoListApp",
+        "summary": "Retreives a list of App objects",
+        "operationId": "ListApp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -113,19 +152,57 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/apps/{O.Name}": {
+    "/v1/security/apps/{O.Name}": {
       "get": {
-        "operationId": "AutoGetApp",
+        "summary": "Retreives the App object",
+        "operationId": "GetApp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityApp"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -136,89 +213,130 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Status.Description",
+            "name": "status.description",
+            "description": "Name is already part of meta\nDescription of app - example “mongo https://www.mongodb.com/”.",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/app-users": {
+    "/v1/security/{O.Tenant}/app-users": {
       "get": {
-        "operationId": "AutoListAppUser",
+        "summary": "Retreives a list of AppUser objects",
+        "operationId": "ListAppUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUserList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -229,75 +347,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -307,16 +427,54 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddAppUser",
+        "summary": "Creates a new AppUser object",
+        "operationId": "AddAppUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -337,19 +495,57 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/app-users-groups": {
+    "/v1/security/{O.Tenant}/app-users-groups": {
       "get": {
-        "operationId": "AutoListAppUserGrp",
+        "summary": "Retreives a list of AppUserGrp objects",
+        "operationId": "ListAppUserGrp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUserGrpList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -360,75 +556,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -438,16 +636,54 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddAppUserGrp",
+        "summary": "Creates a new AppUserGrp object",
+        "operationId": "AddAppUserGrp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUserGrp"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -468,18 +704,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/app-users-groups/{O.Name}": {
+    "/v1/security/{O.Tenant}/app-users-groups/{O.Name}": {
       "get": {
-        "operationId": "AutoGetAppUserGrp",
+        "summary": "Retreives the AppUserGrp object",
+        "operationId": "GetAppUserGrp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUserGrp"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -497,63 +771,66 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.AppUsers",
+            "name": "spec.app-user",
+            "description": "List of appusers - example [“john”, “george”].",
             "in": "query",
             "required": false,
             "type": "array",
@@ -562,23 +839,62 @@
             }
           },
           {
-            "name": "Spec.Description",
+            "name": "spec.description",
+            "description": "Description of the AppUserGrp - example \"SQL Users\".",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteAppUserGrp",
+        "summary": "Deletes the AppUserGrp object",
+        "operationId": "DeleteAppUserGrp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUserGrp"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -597,16 +913,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateAppUserGrp",
+        "operationId": "UpdateAppUserGrp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUserGrp"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -633,18 +986,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/app-users/{O.Name}": {
+    "/v1/security/{O.Tenant}/app-users/{O.Name}": {
       "get": {
-        "operationId": "AutoGetAppUser",
+        "summary": "Retreives the AppUser object",
+        "operationId": "GetAppUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -662,79 +1053,120 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Description",
+            "name": "spec.description",
+            "description": "Name is part of the meta\nDescription of the AppUser - example \"cassandra user\".",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteAppUser",
+        "summary": "Deletes the AppUser object",
+        "operationId": "DeleteAppUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -753,16 +1185,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateAppUser",
+        "operationId": "UpdateAppUser",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityAppUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -789,19 +1258,57 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/certificates": {
+    "/v1/security/{O.Tenant}/certificates": {
       "get": {
-        "operationId": "AutoListCertificate",
+        "summary": "Retreives a list of Certificate objects",
+        "operationId": "ListCertificate",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificateList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -812,75 +1319,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -890,16 +1399,54 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddCertificate",
+        "summary": "Creates a new Certificate object",
+        "operationId": "AddCertificate",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -920,18 +1467,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/certificates/{O.Name}": {
+    "/v1/security/{O.Tenant}/certificates/{O.Name}": {
       "get": {
-        "operationId": "AutoGetCertificate",
+        "summary": "Retreives the Certificate object",
+        "operationId": "GetCertificate",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -949,70 +1534,103 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Description",
+            "name": "spec.description",
+            "description": "Description of the purpose of this certificate.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.usages",
+            "description": "Usage can be \"client\", \"server\" or \"trust-root\" in any combination.\nA \"server\" certificate is used by a server to authenticate itself to the client\nA \"client\" certificate is used by a client to authenticate itself to a server\nA \"trust-root\" certificate is self-signed and is only used to validate\ncertificates presented by peers.\n\"client\" and \"server\" certificates are always accompanied by a private key,\nwhereas \"trust-root\"-only certificates are not.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "spec.body",
+            "description": "Body of the certificate in PEM encoding.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.trust-chain",
+            "description": "Trust chain of the certificate in PEM encoding.\nThese certificates are treated opaquely. We do not process them in any way\nother than decoding them for informational purposes.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.validity",
             "description": "Status of the certificate: \"valid\", \"invalid\", \"expired\"\n\"invalid\" means that the signature of the certificate does not match or\nthere are inconsistencies in the trust chain.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Usages",
+            "name": "status.workloads",
             "description": "The workloads where this certificate has been deployed.",
             "in": "query",
             "required": false,
@@ -1020,46 +1638,57 @@
             "items": {
               "type": "string"
             }
-          },
-          {
-            "name": "Spec.Body",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.TrustChain",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.Validity",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.Workloads",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteCertificate",
+        "summary": "Deletes the Certificate object",
+        "operationId": "DeleteCertificate",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1078,16 +1707,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateCertificate",
+        "operationId": "UpdateCertificate",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1114,19 +1780,57 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/security-groups": {
+    "/v1/security/{O.Tenant}/security-groups": {
       "get": {
-        "operationId": "AutoListSecurityGroup",
+        "summary": "Retreives a list of SecurityGroup objects",
+        "operationId": "ListSecurityGroup",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroupList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -1137,75 +1841,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1215,16 +1921,54 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddSecurityGroup",
+        "summary": "Creates a new SecurityGroup object",
+        "operationId": "AddSecurityGroup",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1245,18 +1989,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/security-groups/{O.Name}": {
+    "/v1/security/{O.Tenant}/security-groups/{O.Name}": {
       "get": {
-        "operationId": "AutoGetSecurityGroup",
+        "summary": "Retreives the SecurityGroup object",
+        "operationId": "GetSecurityGroup",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1274,63 +2056,95 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.ServiceSelector",
+            "name": "spec.service-labels",
+            "description": "Service object selector.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "spec.match-prefixes",
+            "description": "list of CIDRs that are part of this security group.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.workloads",
+            "description": "list of workloads that are part of this security group.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.Policies",
             "description": "list of all policies attached to this security group.",
             "in": "query",
             "required": false,
@@ -1338,46 +2152,57 @@
             "items": {
               "type": "string"
             }
-          },
-          {
-            "name": "Spec.MatchPrefixes",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Status.Workloads",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Status.Policies",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteSecurityGroup",
+        "summary": "Deletes the SecurityGroup object",
+        "operationId": "DeleteSecurityGroup",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1396,16 +2221,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateSecurityGroup",
+        "operationId": "UpdateSecurityGroup",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1432,19 +2294,57 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/sgpolicy": {
+    "/v1/security/{O.Tenant}/sgpolicy": {
       "get": {
-        "operationId": "AutoListSgpolicy",
+        "summary": "Retreives a list of Sgpolicy objects",
+        "operationId": "ListSgpolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySgpolicyList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -1455,75 +2355,77 @@
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1533,16 +2435,54 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddSgpolicy",
+        "summary": "Creates a new Sgpolicy object",
+        "operationId": "AddSgpolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySgpolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1563,18 +2503,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/sgpolicy/{O.Name}": {
+    "/v1/security/{O.Tenant}/sgpolicy/{O.Name}": {
       "get": {
-        "operationId": "AutoGetSgpolicy",
+        "summary": "Retreives the Sgpolicy object",
+        "operationId": "GetSgpolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySgpolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1592,63 +2570,75 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.AttachGroups",
+            "name": "spec.attach-groups",
+            "description": "list of security groups this policy is attached to.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.workloads",
             "description": "list of workloads in this group.",
             "in": "query",
             "required": false,
@@ -1656,28 +2646,57 @@
             "items": {
               "type": "string"
             }
-          },
-          {
-            "name": "Status.Workloads",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteSgpolicy",
+        "summary": "Deletes the Sgpolicy object",
+        "operationId": "DeleteSgpolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySgpolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1696,16 +2715,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateSgpolicy",
+        "operationId": "UpdateSgpolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySgpolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1732,18 +2788,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/trafficEncryptionPolicy": {
+    "/v1/security/{O.Tenant}/trafficEncryptionPolicy": {
       "post": {
-        "operationId": "AutoAddTrafficEncryptionPolicy",
+        "summary": "Creates a new TrafficEncryptionPolicy object",
+        "operationId": "AddTrafficEncryptionPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1764,18 +2858,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     },
-    "/{O.Tenant}/trafficEncryptionPolicy/{O.Name}": {
+    "/v1/security/{O.Tenant}/trafficEncryptionPolicy/{O.Name}": {
       "get": {
-        "operationId": "AutoGetTrafficEncryptionPolicy",
+        "summary": "Retreives the TrafficEncryptionPolicy object",
+        "operationId": "GetTrafficEncryptionPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1793,97 +2925,101 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Mode",
+            "name": "spec.mode",
+            "description": "Possible values: TLS, IPsec.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Tls.Version",
-            "description": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106).",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Tls.CipherSuite",
-            "description": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption).",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.IPsec.EncryptionTransform",
+            "name": "tls.version",
             "description": "TLS version: only supported value at present is 1.2.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.IPsec.IntegrityTransform",
+            "name": "tls.cipher-suite",
             "description": "The name of the cipher suite in IANA format\ndefault is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.KeyRotationIntervalSecs",
+            "name": "ipsec.encryption-transform",
+            "description": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ipsec.integrity-transform",
+            "description": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.key-rotation-interval-secs",
+            "description": "How often the keys should be rotated, in seconds.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1891,16 +3027,54 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteTrafficEncryptionPolicy",
+        "summary": "Deletes the TrafficEncryptionPolicy object",
+        "operationId": "DeleteTrafficEncryptionPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1919,16 +3093,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateTrafficEncryptionPolicy",
+        "operationId": "UpdateTrafficEncryptionPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1955,7 +3166,8 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "SecurityV1",
+          "version:v1"
         ]
       }
     }
@@ -1964,7 +3176,7 @@
     "apiListMeta": {
       "type": "object",
       "properties": {
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version of object store at the time of list generation."
         }
@@ -1974,20 +3186,49 @@
     "apiListWatchOptions": {
       "type": "object",
       "properties": {
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "LabelSelector": {
+        "name": {
           "type": "string"
         },
-        "FieldSelector": {
+        "tenant": {
           "type": "string"
         },
-        "PrefixWatch": {
+        "namespace": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "self-link": {
+          "type": "string"
+        },
+        "label-selector": {
+          "type": "string"
+        },
+        "field-selector": {
+          "type": "string"
+        },
+        "prefix-watch": {
           "type": "boolean",
           "format": "boolean"
         },
-        "FieldChangeSelector": {
+        "field-change-selector": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1998,65 +3239,138 @@
     "apiObjectMeta": {
       "type": "object",
       "properties": {
-        "Name": {
+        "name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
-        "Tenant": {
+        "tenant": {
           "type": "string",
           "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
-        "Namespace": {
+        "namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
-        "UUID": {
+        "uuid": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         },
-        "Labels": {
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
           "description": "Labels are arbitrary (key,value) pairs associated with any object."
         },
-        "CreationTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "CreationTime is the creation time of Object"
         },
-        "ModTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "ModTime is the Last Modification time of Object"
         },
-        "SelfLink": {
+        "self-link": {
           "type": "string",
           "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
-        "time": {
+        "seconds": {
           "type": "string",
-          "format": "date-time"
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
     "apiTypeMeta": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "kind": {
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "APIVersion": {
+        "api-version": {
           "type": "string",
           "description": "APIVersion defines the version of the API object."
         }
@@ -2066,15 +3380,26 @@
     "labelsRequirement": {
       "type": "object",
       "properties": {
-        "Key": {
+        "key": {
           "type": "string",
           "description": "The label key that the condition applies to."
         },
-        "Operator": {
+        "operator": {
           "type": "string",
+          "enum": [
+            "equals",
+            "notEquals",
+            "in",
+            "notIn"
+          ],
+          "default": "equals",
+          "x-ui-hints": {
+            "notEquals": "not equals",
+            "notIn": "not in"
+          },
           "description": "Condition checked for the key."
         },
-        "Values": {
+        "values": {
           "type": "array",
           "items": {
             "type": "string"
@@ -2087,7 +3412,7 @@
     "labelsSelector": {
       "type": "object",
       "properties": {
-        "Requirements": {
+        "requirements": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/labelsRequirement"
@@ -2100,153 +3425,180 @@
     "securityApp": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/securityAppSpec"
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/securityAppStatus"
         }
       },
-      "title": "AppSpec - spec part of App object"
+      "title": "App - Read-only objects auto-created by Venice\nOne object per App that can be identified by Naples"
     },
     "securityAppList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityApp"
-          }
+          },
+          "title": "List of App objects"
         }
-      }
+      },
+      "title": "AppList is a container object for list of App objects"
     },
     "securityAppSpec": {
       "type": "object",
-      "title": "AppStatus - status part of App object"
+      "title": "AppSpec - spec part of App object"
     },
     "securityAppStatus": {
       "type": "object",
       "properties": {
-        "Description": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "title": "Name is already part of meta\nDescription of app - example “mongo https://www.mongodb.com/”"
         }
       },
-      "title": "App - Read-only objects auto-created by Venice\nOne object per App that can be identified by Naples"
+      "title": "AppStatus - status part of App object"
     },
     "securityAppUser": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Name is part of the meta\nDescription of the AppUser - example \"cassandra user\""
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/securityAppUserSpec"
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/securityAppUserStatus"
         }
       },
-      "title": "AppUserSpec - spec part of AppUser object"
+      "title": "AppUser is derived from application payload such as database login or\nother application authentication mechanisms.\nCreated by Venice Admin or Tenant Admin"
     },
     "securityAppUserGrp": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/securityAppUserGrpSpec"
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/securityAppUserGrpStatus"
         }
       },
-      "title": "AppUserStatus - status part of AppUser object"
+      "title": "AppUserGrp - Object representing group of AppUsers\nCreated by Venice Admin or Tenant Admin"
     },
     "securityAppUserGrpList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityAppUserGrp"
-          }
+          },
+          "title": "List of AppUserGrp objects"
         }
-      }
+      },
+      "title": "AppUserGrpList is a container object for list of AppUserGrp objects"
     },
     "securityAppUserGrpSpec": {
       "type": "object",
       "properties": {
-        "AppUsers": {
+        "app-user": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "List of appusers - example [“john”, “george”]"
         },
-        "Description": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "title": "Description of the AppUserGrp - example \"SQL Users\""
         }
       },
-      "title": "AppUser is derived from application payload such as database login or\nother application authentication mechanisms.\nCreated by Venice Admin or Tenant Admin"
+      "title": "AppUserGrpSpec - spec part of AppUserGrp object"
     },
     "securityAppUserGrpStatus": {
       "type": "object",
-      "title": "AppUserGrpSpec - spec part of AppUserGrp object"
+      "title": "AppUserGrpStatus - status part of AppUserGrp object"
     },
     "securityAppUserList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityAppUser"
-          }
+          },
+          "title": "List of AppUser objects"
         }
-      }
+      },
+      "title": "AppUserList is a container object for list of AppUser objects"
     },
     "securityAppUserSpec": {
       "type": "object",
       "properties": {
-        "Description": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "title": "Name is part of the meta\nDescription of the AppUser - example \"cassandra user\""
         }
       },
-      "title": "AppUserGrpStatus - status part of AppUserGrp object"
+      "title": "AppUserSpec - spec part of AppUser object"
     },
     "securityAppUserStatus": {
       "type": "object",
-      "title": "AppUserGrp - Object representing group of AppUsers\nCreated by Venice Admin or Tenant Admin"
+      "title": "AppUserStatus - status part of AppUser object"
     },
     "securityAutoMsgAppUserGrpWatchHelper": {
       "type": "object",
@@ -2257,7 +3609,8 @@
             "$ref": "#/definitions/securityAutoMsgAppUserGrpWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgAppUserGrpWatchHelper is a wrapper object for watch events for AppUserGrp objects"
     },
     "securityAutoMsgAppUserGrpWatchHelperWatchEvent": {
       "type": "object",
@@ -2279,7 +3632,8 @@
             "$ref": "#/definitions/securityAutoMsgAppUserWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgAppUserWatchHelper is a wrapper object for watch events for AppUser objects"
     },
     "securityAutoMsgAppUserWatchHelperWatchEvent": {
       "type": "object",
@@ -2301,7 +3655,8 @@
             "$ref": "#/definitions/securityAutoMsgAppWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgAppWatchHelper is a wrapper object for watch events for App objects"
     },
     "securityAutoMsgAppWatchHelperWatchEvent": {
       "type": "object",
@@ -2323,7 +3678,8 @@
             "$ref": "#/definitions/securityAutoMsgCertificateWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgCertificateWatchHelper is a wrapper object for watch events for Certificate objects"
     },
     "securityAutoMsgCertificateWatchHelperWatchEvent": {
       "type": "object",
@@ -2345,7 +3701,8 @@
             "$ref": "#/definitions/securityAutoMsgSecurityGroupWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgSecurityGroupWatchHelper is a wrapper object for watch events for SecurityGroup objects"
     },
     "securityAutoMsgSecurityGroupWatchHelperWatchEvent": {
       "type": "object",
@@ -2367,7 +3724,8 @@
             "$ref": "#/definitions/securityAutoMsgSgpolicyWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgSgpolicyWatchHelper is a wrapper object for watch events for Sgpolicy objects"
     },
     "securityAutoMsgSgpolicyWatchHelperWatchEvent": {
       "type": "object",
@@ -2389,7 +3747,8 @@
             "$ref": "#/definitions/securityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgTrafficEncryptionPolicyWatchHelper is a wrapper object for watch events for TrafficEncryptionPolicy objects"
     },
     "securityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent": {
       "type": "object",
@@ -2405,118 +3764,141 @@
     "securityCertificate": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Description of the purpose of this certificate"
+        "kind": {
+          "type": "string"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "description": "Usage can be \"client\", \"server\" or \"trust-root\" in any combination.\nA \"server\" certificate is used by a server to authenticate itself to the client\nA \"client\" certificate is used by a client to authenticate itself to a server\nA \"trust-root\" certificate is self-signed and is only used to validate\ncertificates presented by peers.\n\"client\" and \"server\" certificates are always accompanied by a private key,\nwhereas \"trust-root\"-only certificates are not."
+        "api-version": {
+          "type": "string"
         },
-        "Spec": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
           "$ref": "#/definitions/securityCertificateSpec",
-          "title": "Body of the certificate in PEM encoding"
+          "description": "Spec contains the configuration of the certificate."
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/securityCertificateStatus",
-          "description": "Trust chain of the certificate in PEM encoding.\nThese certificates are treated opaquely. We do not process them in any way\nother than decoding them for informational purposes."
+          "description": "Status contains the current state of the certificate."
         }
-      }
+      },
+      "title": "Certificate represents a certificate with associated chain of trust"
     },
     "securityCertificateList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityCertificate"
-          }
+          },
+          "title": "List of Certificate objects"
         }
-      }
+      },
+      "title": "CertificateList is a container object for list of Certificate objects"
     },
     "securityCertificateSpec": {
       "type": "object",
       "properties": {
-        "Description": {
+        "description": {
           "type": "string",
-          "description": "Status of the certificate: \"valid\", \"invalid\", \"expired\"\n\"invalid\" means that the signature of the certificate does not match or\nthere are inconsistencies in the trust chain."
+          "title": "Description of the purpose of this certificate"
         },
-        "Usages": {
+        "usages": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "The workloads where this certificate has been deployed"
+          "enum": [
+            "Server",
+            "Client",
+            "TrustRoot"
+          ],
+          "default": "Server",
+          "description": "Usage can be \"client\", \"server\" or \"trust-root\" in any combination.\nA \"server\" certificate is used by a server to authenticate itself to the client\nA \"client\" certificate is used by a client to authenticate itself to a server\nA \"trust-root\" certificate is self-signed and is only used to validate\ncertificates presented by peers.\n\"client\" and \"server\" certificates are always accompanied by a private key,\nwhereas \"trust-root\"-only certificates are not."
         },
-        "Body": {
-          "type": "string"
+        "body": {
+          "type": "string",
+          "title": "Body of the certificate in PEM encoding"
         },
-        "TrustChain": {
-          "type": "string"
+        "trust-chain": {
+          "type": "string",
+          "description": "Trust chain of the certificate in PEM encoding.\nThese certificates are treated opaquely. We do not process them in any way\nother than decoding them for informational purposes."
         }
       }
     },
     "securityCertificateStatus": {
       "type": "object",
       "properties": {
-        "Validity": {
-          "type": "string"
+        "validity": {
+          "type": "string",
+          "enum": [
+            "Unknown",
+            "Valid",
+            "Invalid",
+            "Expired"
+          ],
+          "default": "Unknown",
+          "description": "Status of the certificate: \"valid\", \"invalid\", \"expired\"\n\"invalid\" means that the signature of the certificate does not match or\nthere are inconsistencies in the trust chain."
         },
-        "Workloads": {
+        "workloads": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "The workloads where this certificate has been deployed"
         }
-      },
-      "title": "Certificate represents a certificate with associated chain of trust"
+      }
     },
     "securityIPsecProtocolSpec": {
       "type": "object",
       "properties": {
-        "EncryptionTransform": {
+        "encryption-transform": {
           "type": "string",
-          "title": "TLS version: only supported value at present is 1.2"
+          "title": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106)"
         },
-        "IntegrityTransform": {
+        "integrity-transform": {
           "type": "string",
-          "title": "The name of the cipher suite in IANA format\ndefault is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+          "title": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption)"
         }
       }
     },
     "securitySGRule": {
       "type": "object",
       "properties": {
-        "Ports": {
+        "ports": {
           "type": "string",
           "title": "match ports for the rule"
         },
-        "Action": {
+        "action": {
           "type": "string",
           "title": "Rule action (allow/deny/log/train)"
         },
-        "PeerGroup": {
+        "peer-group": {
           "type": "string",
           "title": "Peer group for the rule (from/to group depending on direction)"
         },
-        "Apps": {
+        "apps": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "title": "List of Apps to match for the rule"
         },
-        "AppUser": {
+        "app-user": {
           "type": "string",
           "title": "AppUser or AppUserGroup to match for the rule\nAppUser is derived from application payload such as database login or\nother application authentication mechanisms\nFIXME: oneof does not translate well in golang - will enforce via validation\nUsed when policy is applied on a single user"
         },
-        "AppUserGrp": {
+        "app-user-group": {
           "type": "string",
           "title": "Used when policy is applied on a group of users"
         }
@@ -2525,221 +3907,251 @@
     "securitySecurityGroup": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Workload selector (list of labels)"
+        "kind": {
+          "type": "string"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "Service object selector"
+        "api-version": {
+          "type": "string"
         },
-        "Spec": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
           "$ref": "#/definitions/securitySecurityGroupSpec",
-          "title": "list of CIDRs that are part of this security group"
+          "description": "Spec contains the configuration of the security group."
         },
-        "Status": {
-          "$ref": "#/definitions/securitySecurityGroupStatus"
+        "status": {
+          "$ref": "#/definitions/securitySecurityGroupStatus",
+          "description": "Status contains the current state of the security group."
         }
       },
-      "title": "security group configuration"
+      "title": "SecurityGroup represents a security zone or domain"
     },
     "securitySecurityGroupList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securitySecurityGroup"
-          }
+          },
+          "title": "List of SecurityGroup objects"
         }
-      }
+      },
+      "title": "SecurityGroupList is a container object for list of SecurityGroup objects"
     },
     "securitySecurityGroupSpec": {
       "type": "object",
       "properties": {
-        "WorkloadSelector": {
+        "workload-selector": {
           "$ref": "#/definitions/labelsSelector",
-          "title": "list of workloads that are part of this security group"
+          "title": "Workload selector (list of labels)"
         },
-        "ServiceSelector": {
+        "service-labels": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "list of all policies attached to this security group"
+          "title": "Service object selector"
         },
-        "MatchPrefixes": {
+        "match-prefixes": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "list of CIDRs that are part of this security group"
         }
       },
-      "title": "security group status"
+      "title": "security group configuration"
     },
     "securitySecurityGroupStatus": {
       "type": "object",
       "properties": {
-        "Workloads": {
+        "workloads": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "list of workloads that are part of this security group"
         },
         "Policies": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "list of all policies attached to this security group"
         }
       },
-      "title": "SecurityGroup represents a security zone or domain"
+      "title": "security group status"
     },
     "securitySgpolicy": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "list of security groups this policy is attached to"
+        "kind": {
+          "type": "string"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "Incoming rules"
+        "api-version": {
+          "type": "string"
         },
-        "Spec": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
           "$ref": "#/definitions/securitySgpolicySpec",
-          "title": "Outgoing rules"
+          "description": "Spec contains the configuration of the sgpolicy."
         },
-        "Status": {
-          "$ref": "#/definitions/securitySgpolicyStatus"
+        "status": {
+          "$ref": "#/definitions/securitySgpolicyStatus",
+          "description": "Status contains the current state of the sgpolicy."
         }
-      }
+      },
+      "title": "Sgpolicy represents a security policy for security groups"
     },
     "securitySgpolicyList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securitySgpolicy"
-          }
+          },
+          "title": "List of Sgpolicy objects"
         }
-      }
+      },
+      "title": "SgpolicyList is a container object for list of Sgpolicy objects"
     },
     "securitySgpolicySpec": {
       "type": "object",
       "properties": {
-        "AttachGroups": {
+        "attach-groups": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "list of workloads in this group"
+          "title": "list of security groups this policy is attached to"
         },
-        "InRules": {
+        "in-rules": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securitySGRule"
-          }
+          },
+          "title": "Incoming rules"
         },
-        "OutRules": {
+        "out-rules": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securitySGRule"
-          }
+          },
+          "title": "Outgoing rules"
         }
       }
     },
     "securitySgpolicyStatus": {
       "type": "object",
       "properties": {
-        "Workloads": {
+        "workloads": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "list of workloads in this group"
         }
-      },
-      "title": "Sgpolicy represents a security policy for security groups"
+      }
     },
     "securityTLSProtocolSpec": {
       "type": "object",
       "properties": {
-        "Version": {
+        "version": {
           "type": "string",
-          "title": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106)"
+          "title": "TLS version: only supported value at present is 1.2"
         },
-        "CipherSuite": {
+        "cipher-suite": {
           "type": "string",
-          "title": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption)"
+          "title": "The name of the cipher suite in IANA format\ndefault is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
         }
       }
     },
     "securityTrafficEncryptionPolicy": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Possible values: TLS, IPsec"
+        "kind": {
+          "type": "string"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "TLS Parameters for workload-to-workload connections"
+        "api-version": {
+          "type": "string"
         },
-        "Spec": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
           "$ref": "#/definitions/securityTrafficEncryptionPolicySpec",
-          "title": "IPsec Parameters for node-to-node connections"
+          "description": "Spec contains the configuration of the encryption policy."
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/securityTrafficEncryptionPolicyStatus",
-          "title": "How often the keys should be rotated, in seconds"
+          "description": "Status contains the current state of the encryption policy."
         }
       }
     },
     "securityTrafficEncryptionPolicyList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityTrafficEncryptionPolicy"
-          }
+          },
+          "title": "List of TrafficEncryptionPolicy objects"
         }
-      }
+      },
+      "title": "TrafficEncryptionPolicyList is a container object for list of TrafficEncryptionPolicy objects"
     },
     "securityTrafficEncryptionPolicySpec": {
       "type": "object",
       "properties": {
-        "Mode": {
-          "type": "string"
+        "mode": {
+          "type": "string",
+          "title": "Possible values: TLS, IPsec"
         },
-        "Tls": {
-          "$ref": "#/definitions/securityTLSProtocolSpec"
+        "tls": {
+          "$ref": "#/definitions/securityTLSProtocolSpec",
+          "title": "TLS Parameters for workload-to-workload connections"
         },
-        "IPsec": {
-          "$ref": "#/definitions/securityIPsecProtocolSpec"
+        "ipsec": {
+          "$ref": "#/definitions/securityIPsecProtocolSpec",
+          "title": "IPsec Parameters for node-to-node connections"
         },
-        "KeyRotationIntervalSecs": {
+        "key-rotation-interval-secs": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "How often the keys should be rotated, in seconds"
         }
       }
     },

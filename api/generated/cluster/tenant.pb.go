@@ -19,13 +19,16 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// spec part of tenant object
+// Tenant represents an org or a tenant
 type Tenant struct {
-	// Tenant admin user
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           TenantSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         TenantStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	// Spec contains the configuration of the tenant.
+	Spec TenantSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the tenant.
+	Status TenantStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *Tenant) Reset()                    { *m = Tenant{} }
@@ -47,8 +50,9 @@ func (m *Tenant) GetStatus() TenantStatus {
 	return TenantStatus{}
 }
 
-// status part of tenant object
+// spec part of tenant object
 type TenantSpec struct {
+	// Tenant admin user
 	AdminUser string `protobuf:"bytes,1,opt,name=AdminUser,json=admin-user,omitempty,proto3" json:"admin-user,omitempty"`
 }
 
@@ -64,7 +68,7 @@ func (m *TenantSpec) GetAdminUser() string {
 	return ""
 }
 
-// Tenant represents an org or a tenant
+// status part of tenant object
 type TenantStatus struct {
 }
 

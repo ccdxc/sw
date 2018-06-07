@@ -18,11 +18,12 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+//
 type IPsecProtocolSpec struct {
-	// TLS version: only supported value at present is 1.2
+	// ESP encryption algorithm. Default is "aes-256-gcm-128" (See RFC4106)
 	EncryptionTransform string `protobuf:"bytes,1,opt,name=EncryptionTransform,json=encryption-transform,omitempty,proto3" json:"encryption-transform,omitempty"`
-	// The name of the cipher suite in IANA format
-	// default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	// ESP integrity algorithm.
+	// Default is "NULL" (must be "NULL" if AES-GCM is used for encryption)
 	IntegrityTransform string `protobuf:"bytes,2,opt,name=IntegrityTransform,json=integrity-transform,omitempty,proto3" json:"integrity-transform,omitempty"`
 }
 
@@ -47,11 +48,12 @@ func (m *IPsecProtocolSpec) GetIntegrityTransform() string {
 	return ""
 }
 
+//
 type TLSProtocolSpec struct {
-	// ESP encryption algorithm. Default is "aes-256-gcm-128" (See RFC4106)
+	// TLS version: only supported value at present is 1.2
 	Version string `protobuf:"bytes,1,opt,name=Version,json=version,omitempty,proto3" json:"version,omitempty"`
-	// ESP integrity algorithm.
-	// Default is "NULL" (must be "NULL" if AES-GCM is used for encryption)
+	// The name of the cipher suite in IANA format
+	// default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	CipherSuite string `protobuf:"bytes,2,opt,name=CipherSuite,json=cipher-suite,omitempty,proto3" json:"cipher-suite,omitempty"`
 }
 
@@ -74,14 +76,15 @@ func (m *TLSProtocolSpec) GetCipherSuite() string {
 	return ""
 }
 
+//
 type TrafficEncryptionPolicy struct {
-	// Possible values: TLS, IPsec
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// TLS Parameters for workload-to-workload connections
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// IPsec Parameters for node-to-node connections
+	// Spec contains the configuration of the encryption policy.
 	Spec TrafficEncryptionPolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// How often the keys should be rotated, in seconds
+	// Status contains the current state of the encryption policy.
 	Status TrafficEncryptionPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -106,11 +109,16 @@ func (m *TrafficEncryptionPolicy) GetStatus() TrafficEncryptionPolicyStatus {
 	return TrafficEncryptionPolicyStatus{}
 }
 
+//
 type TrafficEncryptionPolicySpec struct {
-	Mode                    string            `protobuf:"bytes,1,opt,name=Mode,json=mode,omitempty,proto3" json:"mode,omitempty"`
-	Tls                     TLSProtocolSpec   `protobuf:"bytes,2,opt,name=Tls,json=tls,omitempty" json:"tls,omitempty"`
-	IPsec                   IPsecProtocolSpec `protobuf:"bytes,3,opt,name=IPsec,json=ipsec,omitempty" json:"ipsec,omitempty"`
-	KeyRotationIntervalSecs uint32            `protobuf:"varint,4,opt,name=KeyRotationIntervalSecs,json=key-rotation-interval-secs,omitempty,proto3" json:"key-rotation-interval-secs,omitempty"`
+	// Possible values: TLS, IPsec
+	Mode string `protobuf:"bytes,1,opt,name=Mode,json=mode,omitempty,proto3" json:"mode,omitempty"`
+	// TLS Parameters for workload-to-workload connections
+	Tls TLSProtocolSpec `protobuf:"bytes,2,opt,name=Tls,json=tls,omitempty" json:"tls,omitempty"`
+	// IPsec Parameters for node-to-node connections
+	IPsec IPsecProtocolSpec `protobuf:"bytes,3,opt,name=IPsec,json=ipsec,omitempty" json:"ipsec,omitempty"`
+	// How often the keys should be rotated, in seconds
+	KeyRotationIntervalSecs uint32 `protobuf:"varint,4,opt,name=KeyRotationIntervalSecs,json=key-rotation-interval-secs,omitempty,proto3" json:"key-rotation-interval-secs,omitempty"`
 }
 
 func (m *TrafficEncryptionPolicySpec) Reset()         { *m = TrafficEncryptionPolicySpec{} }
@@ -148,6 +156,7 @@ func (m *TrafficEncryptionPolicySpec) GetKeyRotationIntervalSecs() uint32 {
 	return 0
 }
 
+//
 type TrafficEncryptionPolicyStatus struct {
 }
 

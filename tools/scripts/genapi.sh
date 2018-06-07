@@ -86,7 +86,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --swagger_out=logtostderr=true:${curdir}/generated/${pkg}/swagger \
+        --swagger_out=logtostderr=false,v=7,log_dir=${curdir}/tmp:${curdir}/generated/${pkg}/swagger \
         ${protofiles} || { echo "swagger generation failed" ; exit -1; }
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \

@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Service name",
+    "title": "example.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/books/Restock": {
+    "/v1/bookstore/books/Restock": {
       "post": {
         "operationId": "Restock",
         "responses": {
@@ -23,6 +23,42 @@
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreRestockResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -37,18 +73,56 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/books/{O.Name}": {
+    "/v1/bookstore/books/{O.Name}": {
       "get": {
-        "operationId": "AutoGetBook",
+        "summary": "Retreives the Book object",
+        "operationId": "GetBook",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreBook"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -60,108 +134,112 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.ISBNId",
+            "name": "spec.ISBNId",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Author",
+            "name": "spec.Author",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.IdProvider",
+            "name": "spec.IdProvider",
+            "description": "Added in  version 2 of the API.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.Category",
+            "name": "spec.Category",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.UpdateTimestamp.time",
+            "name": "spec.UpdateTimestamp",
+            "description": "Used for performance monitoring tests.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "Spec.Terminate",
+            "name": "spec.Terminate",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "Status.Inventory",
+            "name": "status.Inventory",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -169,16 +247,53 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateBook",
+        "operationId": "UpdateBook",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreBook"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -199,99 +314,139 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/customers": {
+    "/v1/bookstore/customers": {
       "get": {
-        "operationId": "AutoListCustomer",
+        "summary": "Retreives a list of Customer objects",
+        "operationId": "ListCustomer",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreCustomerList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -301,16 +456,54 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddCustomer",
+        "summary": "Creates a new Customer object",
+        "operationId": "AddCustomer",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreCustomer"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -325,18 +518,56 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/customers/{O.Name}": {
+    "/v1/bookstore/customers/{O.Name}": {
       "get": {
-        "operationId": "AutoGetCustomer",
+        "summary": "Retreives the Customer object",
+        "operationId": "GetCustomer",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreCustomer"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -348,63 +579,65 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
@@ -418,6 +651,7 @@
           },
           {
             "name": "Spec.CreditCardNumbers",
+            "description": "length of string should be between 3 and 16\n",
             "in": "query",
             "required": false,
             "type": "array",
@@ -433,29 +667,67 @@
             "format": "byte"
           },
           {
-            "name": "Spec.PasswordRecoveryInfo.SSN",
+            "name": "PasswordRecoveryInfo.ssn",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.PasswordRecoveryInfo.MotherMaidenName",
+            "name": "PasswordRecoveryInfo.mother-maiden-name",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteCustomer",
+        "summary": "Deletes the Customer object",
+        "operationId": "DeleteCustomer",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreCustomer"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -468,16 +740,53 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateCustomer",
+        "operationId": "UpdateCustomer",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreCustomer"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -498,99 +807,139 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/orders": {
+    "/v1/bookstore/orders": {
       "get": {
-        "operationId": "AutoListOrder",
+        "summary": "Retreives a list of Order objects",
+        "operationId": "ListOrder",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreOrderList"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "O.Name",
+            "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "O.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "O.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "O.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "O.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "O.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "LabelSelector",
+            "name": "label-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "FieldSelector",
+            "name": "field-selector",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "PrefixWatch",
+            "name": "prefix-watch",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "FieldChangeSelector",
+            "name": "field-change-selector",
             "in": "query",
             "required": false,
             "type": "array",
@@ -600,16 +949,54 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddOrder",
+        "summary": "Creates a new Order object",
+        "operationId": "AddOrder",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreOrder"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -624,18 +1011,56 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/orders/{O.Name}": {
+    "/v1/bookstore/orders/{O.Name}": {
       "get": {
-        "operationId": "AutoGetOrder",
+        "summary": "Retreives the Order object",
+        "operationId": "GetOrder",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreOrder"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -647,63 +1072,65 @@
             "type": "string"
           },
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
@@ -729,16 +1156,54 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteOrder",
+        "summary": "Deletes the Order object",
+        "operationId": "DeleteOrder",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreOrder"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -751,16 +1216,53 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateOrder",
+        "operationId": "UpdateOrder",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreOrder"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -781,11 +1283,12 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/orders/{O.Name}/applydiscount": {
+    "/v1/bookstore/orders/{O.Name}/applydiscount": {
       "post": {
         "operationId": "Applydiscount",
         "responses": {
@@ -794,6 +1297,42 @@
             "schema": {
               "$ref": "#/definitions/bookstoreOrder"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -813,11 +1352,12 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/orders/{O.Name}/cleardiscount": {
+    "/v1/bookstore/orders/{O.Name}/cleardiscount": {
       "post": {
         "operationId": "Cleardiscount",
         "responses": {
@@ -826,6 +1366,42 @@
             "schema": {
               "$ref": "#/definitions/bookstoreOrder"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -845,87 +1421,127 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/store": {
+    "/v1/bookstore/store": {
       "get": {
-        "operationId": "AutoGetStore",
+        "summary": "Retreives the Store object",
+        "operationId": "GetStore",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreStore"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
           {
-            "name": "T.Kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.APIVersion",
+            "name": "T.api-version",
             "description": "APIVersion defines the version of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Name",
+            "name": "meta.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Tenant",
+            "name": "meta.tenant",
             "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.Namespace",
+            "name": "meta.namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.ResourceVersion",
+            "name": "meta.resource-version",
             "description": "Resource version in the object store. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.UUID",
+            "name": "meta.uuid",
             "description": "UUID is the unique identifier for the object. This can only be set by the server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "O.CreationTime.time",
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.ModTime.time",
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "O.SelfLink",
+            "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
             "in": "query",
             "required": false,
@@ -948,30 +1564,106 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "delete": {
-        "operationId": "AutoDeleteStore",
+        "summary": "Deletes the Store object",
+        "operationId": "DeleteStore",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreStore"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "post": {
-        "operationId": "AutoAddStore",
+        "summary": "Creates a new Store object",
+        "operationId": "AddStore",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreStore"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -986,16 +1678,53 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       },
       "put": {
-        "operationId": "AutoUpdateStore",
+        "operationId": "UpdateStore",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreStore"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1010,11 +1739,12 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     },
-    "/store/AddOutage": {
+    "/v1/bookstore/store/AddOutage": {
       "post": {
         "operationId": "AddOutage",
         "responses": {
@@ -1022,6 +1752,42 @@
             "description": "",
             "schema": {
               "$ref": "#/definitions/bookstoreStore"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1036,7 +1802,8 @@
           }
         ],
         "tags": [
-          "BookstoreV1"
+          "BookstoreV1",
+          "version:v1"
         ]
       }
     }
@@ -1045,7 +1812,7 @@
     "apiListMeta": {
       "type": "object",
       "properties": {
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version of object store at the time of list generation."
         }
@@ -1055,20 +1822,49 @@
     "apiListWatchOptions": {
       "type": "object",
       "properties": {
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "LabelSelector": {
+        "name": {
           "type": "string"
         },
-        "FieldSelector": {
+        "tenant": {
           "type": "string"
         },
-        "PrefixWatch": {
+        "namespace": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "self-link": {
+          "type": "string"
+        },
+        "label-selector": {
+          "type": "string"
+        },
+        "field-selector": {
+          "type": "string"
+        },
+        "prefix-watch": {
           "type": "boolean",
           "format": "boolean"
         },
-        "FieldChangeSelector": {
+        "field-change-selector": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1079,65 +1875,138 @@
     "apiObjectMeta": {
       "type": "object",
       "properties": {
-        "Name": {
+        "name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
-        "Tenant": {
+        "tenant": {
           "type": "string",
           "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
-        "Namespace": {
+        "namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
-        "ResourceVersion": {
+        "resource-version": {
           "type": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
-        "UUID": {
+        "uuid": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         },
-        "Labels": {
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
           "description": "Labels are arbitrary (key,value) pairs associated with any object."
         },
-        "CreationTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "CreationTime is the creation time of Object"
         },
-        "ModTime": {
-          "$ref": "#/definitions/apiTimestamp",
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
           "title": "ModTime is the Last Modification time of Object"
         },
-        "SelfLink": {
+        "self-link": {
           "type": "string",
           "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
-        "time": {
+        "seconds": {
           "type": "string",
-          "format": "date-time"
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
     "apiTypeMeta": {
       "type": "object",
       "properties": {
-        "Kind": {
+        "kind": {
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "APIVersion": {
+        "api-version": {
           "type": "string",
           "description": "APIVersion defines the version of the API object."
         }
@@ -1147,10 +2016,13 @@
     "bookstoreApplyDiscountReq": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Coupon": {
@@ -1167,7 +2039,8 @@
             "$ref": "#/definitions/bookstoreAutoMsgBookWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgBookWatchHelper is a wrapper object for watch events for Book objects"
     },
     "bookstoreAutoMsgBookWatchHelperWatchEvent": {
       "type": "object",
@@ -1189,7 +2062,8 @@
             "$ref": "#/definitions/bookstoreAutoMsgCouponWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgCouponWatchHelper is a wrapper object for watch events for Coupon objects"
     },
     "bookstoreAutoMsgCouponWatchHelperWatchEvent": {
       "type": "object",
@@ -1211,7 +2085,8 @@
             "$ref": "#/definitions/bookstoreAutoMsgCustomerWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgCustomerWatchHelper is a wrapper object for watch events for Customer objects"
     },
     "bookstoreAutoMsgCustomerWatchHelperWatchEvent": {
       "type": "object",
@@ -1233,7 +2108,8 @@
             "$ref": "#/definitions/bookstoreAutoMsgOrderWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgOrderWatchHelper is a wrapper object for watch events for Order objects"
     },
     "bookstoreAutoMsgOrderWatchHelperWatchEvent": {
       "type": "object",
@@ -1255,7 +2131,8 @@
             "$ref": "#/definitions/bookstoreAutoMsgPublisherWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgPublisherWatchHelper is a wrapper object for watch events for Publisher objects"
     },
     "bookstoreAutoMsgPublisherWatchHelperWatchEvent": {
       "type": "object",
@@ -1277,7 +2154,8 @@
             "$ref": "#/definitions/bookstoreAutoMsgStoreWatchHelperWatchEvent"
           }
         }
-      }
+      },
+      "title": "AutoMsgStoreWatchHelper is a wrapper object for watch events for Store objects"
     },
     "bookstoreAutoMsgStoreWatchHelperWatchEvent": {
       "type": "object",
@@ -1293,16 +2171,19 @@
     "bookstoreBook": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/bookstoreBookSpec"
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/bookstoreBookStatus"
         }
       }
@@ -1310,13 +2191,17 @@
     "bookstoreBookEdition": {
       "type": "object",
       "properties": {
-        "Errata": {
-          "type": "string"
+        "errata": {
+          "type": "string",
+          "default": "None"
         },
-        "Year": {
-          "type": "string"
+        "year": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4,
+          "description": "length of string should be between 4 and 4\n"
         },
-        "Reviews": {
+        "reviews": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/bookstoreBookReview"
@@ -1327,27 +2212,33 @@
     "bookstoreBookList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreBook"
-          }
+          },
+          "title": "List of Book objects"
         }
-      }
+      },
+      "title": "BookList is a container object for list of Book objects"
     },
     "bookstoreBookReview": {
       "type": "object",
       "properties": {
-        "Date": {
-          "$ref": "#/definitions/apiTimestamp"
+        "date": {
+          "type": "string",
+          "format": "date-time"
         },
-        "Review": {
+        "review": {
           "type": "string"
         }
       }
@@ -1362,19 +2253,34 @@
           "type": "string"
         },
         "IdProvider": {
-          "type": "string"
+          "type": "string",
+          "description": "Added in  version 2 of the API."
         },
         "Category": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "ChildrensLit",
+            "YoungAdult",
+            "Fiction",
+            "NonFiction"
+          ],
+          "default": "YoungAdult",
+          "x-ui-hints": {
+            "ChildrensLit": "Childrens Literature",
+            "NonFiction": "Non Fiction",
+            "YoungAdult": "Young Adult"
+          }
         },
         "UpdateTimestamp": {
-          "$ref": "#/definitions/apiTimestamp"
+          "type": "string",
+          "format": "date-time",
+          "title": "Used for performance monitoring tests"
         },
         "Terminate": {
           "type": "boolean",
           "format": "boolean"
         },
-        "Editions": {
+        "editions": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/bookstoreBookEdition"
@@ -1394,10 +2300,13 @@
     "bookstoreCoupon": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "DiscountCode": {
@@ -1408,27 +2317,35 @@
     "bookstoreCouponList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreCoupon"
-          }
+          },
+          "title": "List of Coupon objects"
         }
-      }
+      },
+      "title": "CouponList is a container object for list of Coupon objects"
     },
     "bookstoreCustomer": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
@@ -1442,27 +2359,32 @@
     "bookstoreCustomerList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreCustomer"
-          }
+          },
+          "title": "List of Customer objects"
         }
-      }
+      },
+      "title": "CustomerList is a container object for list of Customer objects"
     },
     "bookstoreCustomerPersonalInfo": {
       "type": "object",
       "properties": {
-        "SSN": {
+        "ssn": {
           "type": "string"
         },
-        "MotherMaidenName": {
+        "mother-maiden-name": {
           "type": "string"
         }
       }
@@ -1477,7 +2399,10 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "minLength": 3,
+          "maxLength": 16,
+          "description": "length of string should be between 3 and 16\n"
         },
         "Password": {
           "type": "string",
@@ -1494,14 +2419,18 @@
     "bookstoreOrder": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/bookstoreOrderSpec"
+          "$ref": "#/definitions/bookstoreOrderSpec",
+          "description": "Spec is not allowed to be Null hence disabling nullable."
         },
         "Status": {
           "$ref": "#/definitions/bookstoreOrderStatus"
@@ -1512,36 +2441,48 @@
       "type": "object",
       "properties": {
         "ISBNId": {
-          "type": "string"
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 10,
+          "description": "length of string should be between 3 and 10\n"
         },
         "Quantity": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "value should be between 1 and 30\n"
         }
       }
     },
     "bookstoreOrderList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreOrder"
-          }
+          },
+          "title": "List of Order objects"
         }
-      }
+      },
+      "title": "OrderList is a container object for list of Order objects"
     },
     "bookstoreOrderSpec": {
       "type": "object",
       "properties": {
         "Id": {
-          "type": "string"
+          "type": "string",
+          "default": "unknown order"
         },
         "Order": {
           "type": "array",
@@ -1555,7 +2496,24 @@
       "type": "object",
       "properties": {
         "Status": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "PROCESSING",
+            "FILLED",
+            "SHIPPED",
+            "COMPLETED",
+            "DISCOUNTED"
+          ],
+          "default": "CREATED",
+          "x-ui-hints": {
+            "COMPLETED": "Completed",
+            "CREATED": "Created",
+            "DISCOUNTED": "Discounted",
+            "FILLED": "Filled",
+            "PROCESSING": "Processing",
+            "SHIPPED": "Shipped"
+          }
         },
         "Filled": {
           "type": "array",
@@ -1571,10 +2529,13 @@
     "bookstoreOutageRequest": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Reason": {
@@ -1585,10 +2546,13 @@
     "bookstorePublisher": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
@@ -1599,19 +2563,24 @@
     "bookstorePublisherList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstorePublisher"
-          }
+          },
+          "title": "List of Publisher objects"
         }
-      }
+      },
+      "title": "PublisherList is a container object for list of Publisher objects"
     },
     "bookstorePublisherSpec": {
       "type": "object",
@@ -1623,17 +2592,24 @@
           "type": "string"
         },
         "WebAddr": {
-          "type": "string"
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 256,
+          "example": "https://10.1.1.1, ldap://10.1.1.1:800, /path/to/x",
+          "description": "should be a valid URI\nlength of string should be between 6 and 256\n"
         }
       }
     },
     "bookstoreRestockRequest": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Reason": {
@@ -1644,10 +2620,13 @@
     "bookstoreRestockResponse": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Books": {
@@ -1665,10 +2644,13 @@
     "bookstoreStore": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "O": {
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
@@ -1682,19 +2664,24 @@
     "bookstoreStoreList": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+        "kind": {
+          "type": "string"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreStore"
-          }
+          },
+          "title": "List of Store objects"
         }
-      }
+      },
+      "title": "StoreList is a container object for list of Store objects"
     },
     "bookstoreStoreSpec": {
       "type": "object",

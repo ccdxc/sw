@@ -4,8 +4,6 @@
 /*
 	Package search is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		search.proto
 		svc_search.proto
@@ -49,21 +47,29 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+//
 type Category_Type int32
 
 const (
 	// api-groups
-	Category_Cluster    Category_Type = 0
-	Category_Workload   Category_Type = 1
-	Category_Security   Category_Type = 2
-	Category_Auth       Category_Type = 3
-	Category_Network    Category_Type = 4
+	Category_Cluster Category_Type = 0
+	//
+	Category_Workload Category_Type = 1
+	//
+	Category_Security Category_Type = 2
+	//
+	Category_Auth Category_Type = 3
+	//
+	Category_Network Category_Type = 4
+	//
 	Category_Monitoring Category_Type = 5
 	// Additional categories
 	// granular categories
 	Category_Telemetry Category_Type = 6
-	Category_Events    Category_Type = 7
-	Category_Alerts    Category_Type = 8
+	//
+	Category_Events Category_Type = 7
+	//
+	Category_Alerts Category_Type = 8
 	// special categories
 	Category_AuditTrail Category_Type = 9
 )
@@ -98,38 +104,68 @@ func (x Category_Type) String() string {
 }
 func (Category_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptorSearch, []int{0, 0} }
 
+//
 type Kind_Type int32
 
 const (
-	Kind_Cluster                 Kind_Type = 0
-	Kind_Node                    Kind_Type = 1
-	Kind_SmartNIC                Kind_Type = 2
-	Kind_Rollout                 Kind_Type = 3
-	Kind_Tenant                  Kind_Type = 4
-	Kind_Endpoint                Kind_Type = 5
-	Kind_SecurityGroup           Kind_Type = 6
-	Kind_Sgpolicy                Kind_Type = 7
-	Kind_App                     Kind_Type = 8
-	Kind_AppUser                 Kind_Type = 9
-	Kind_AppUserGrp              Kind_Type = 10
-	Kind_Certificate             Kind_Type = 11
+	//
+	Kind_Cluster Kind_Type = 0
+	//
+	Kind_Node Kind_Type = 1
+	//
+	Kind_SmartNIC Kind_Type = 2
+	//
+	Kind_Rollout Kind_Type = 3
+	//
+	Kind_Tenant Kind_Type = 4
+	//
+	Kind_Endpoint Kind_Type = 5
+	//
+	Kind_SecurityGroup Kind_Type = 6
+	//
+	Kind_Sgpolicy Kind_Type = 7
+	//
+	Kind_App Kind_Type = 8
+	//
+	Kind_AppUser Kind_Type = 9
+	//
+	Kind_AppUserGrp Kind_Type = 10
+	//
+	Kind_Certificate Kind_Type = 11
+	//
 	Kind_TrafficEncryptionPolicy Kind_Type = 12
-	Kind_User                    Kind_Type = 13
-	Kind_AuthenticationPolicy    Kind_Type = 14
-	Kind_Role                    Kind_Type = 15
-	Kind_RoleBinding             Kind_Type = 16
-	Kind_Network                 Kind_Type = 17
-	Kind_Service                 Kind_Type = 18
-	Kind_LbPolicy                Kind_Type = 19
-	Kind_Alert                   Kind_Type = 20
-	Kind_AlertDestination        Kind_Type = 21
-	Kind_AlertPolicy             Kind_Type = 22
-	Kind_Event                   Kind_Type = 23
-	Kind_EventPolicy             Kind_Type = 24
-	Kind_StatsPolicy             Kind_Type = 25
-	Kind_FlowExportPolicy        Kind_Type = 26
-	Kind_FwlogPolicy             Kind_Type = 27
-	Kind_MirrorSession           Kind_Type = 28
+	//
+	Kind_User Kind_Type = 13
+	//
+	Kind_AuthenticationPolicy Kind_Type = 14
+	//
+	Kind_Role Kind_Type = 15
+	//
+	Kind_RoleBinding Kind_Type = 16
+	//
+	Kind_Network Kind_Type = 17
+	//
+	Kind_Service Kind_Type = 18
+	//
+	Kind_LbPolicy Kind_Type = 19
+	//
+	Kind_Alert Kind_Type = 20
+	//
+	Kind_AlertDestination Kind_Type = 21
+	//
+	Kind_AlertPolicy Kind_Type = 22
+	//
+	Kind_Event Kind_Type = 23
+	//
+	Kind_EventPolicy Kind_Type = 24
+	//
+	Kind_StatsPolicy Kind_Type = 25
+	//
+	Kind_FlowExportPolicy Kind_Type = 26
+	//
+	Kind_FwlogPolicy Kind_Type = 27
+	//
+	Kind_MirrorSession Kind_Type = 28
 )
 
 var Kind_Type_name = map[int32]string{
@@ -210,12 +246,10 @@ func (m *Category) String() string            { return proto.CompactTextString(m
 func (*Category) ProtoMessage()               {}
 func (*Category) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{0} }
 
-// List of all allowed Kinds in search, specified via "kind" modifier
-// TODO: Define a list/map of Kinds per Category
-// TODO: generate these enums if possible and use it for validation per Category
-//       This is a placeholder enum until we have a way to auto-generate list
-//       of all kinds
+// CategoryAggregation contains map of search result entries
+// grouped by two levels: first by Category and then by Kind.
 type CategoryAggregation struct {
+	//
 	Categories map[string]*KindAggregation `protobuf:"bytes,1,rep,name=Categories,json=categories,omitempty" json:"categories,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -231,25 +265,13 @@ func (m *CategoryAggregation) GetCategories() map[string]*KindAggregation {
 	return nil
 }
 
-// TextRequirement is AND of text-strings in the list
-// It is comprised of words or phrases for text search support.
-// If a text-string has space separated multi-word, it will be
-// interpreted as a phrase.
-//
-// In the example below :
-// - "link down" will be a phrase query
-// - network, production, staging will be a word query
-//
-// For eg:
-//    network                      (match network)
-//    link down                    (match "link down" phrase)
-//    network,production           (match network AND production)
-//    network,link down,staging    (match network AND "link down" AND staging)
-//
+// Entry represent a single search result entry
 type Entry struct {
-	// AND of words or phrases to be matched
-	// The max text-string length is 256 bytes
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	// For Policy & config objects, the result will have
+	// have all the metadata and a self-link to get the
+	// entire object next if needed
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
 }
 
@@ -258,8 +280,9 @@ func (m *Entry) String() string            { return proto.CompactTextString(m) }
 func (*Entry) ProtoMessage()               {}
 func (*Entry) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{2} }
 
+// EntryList is list of search result entries
 type EntryList struct {
-	// OR of Text-requirements to be matched, Exclude is not supported for Text search
+	//
 	Entries []*Entry `protobuf:"bytes,1,rep,name=Entries,json=entries,omitempty" json:"entries,omitempty"`
 }
 
@@ -303,7 +326,11 @@ func (m *Error) GetReason() string {
 	return ""
 }
 
-// Entry represent a single search result entry
+// List of all allowed Kinds in search, specified via "kind" modifier
+// TODO: Define a list/map of Kinds per Category
+// TODO: generate these enums if possible and use it for validation per Category
+//       This is a placeholder enum until we have a way to auto-generate list
+//       of all kinds
 type Kind struct {
 }
 
@@ -312,8 +339,10 @@ func (m *Kind) String() string            { return proto.CompactTextString(m) }
 func (*Kind) ProtoMessage()               {}
 func (*Kind) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{5} }
 
-// EntryList is list of search result entries
+// KindAggregation contains map of search result
+// entries grouped by Kind.
 type KindAggregation struct {
+	//
 	Kinds map[string]*EntryList `protobuf:"bytes,1,rep,name=Kinds,json=kinds,omitempty" json:"kinds,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -329,14 +358,20 @@ func (m *KindAggregation) GetKinds() map[string]*EntryList {
 	return nil
 }
 
-// KindAggregation contains map of search result
-// entries grouped by Kind.
+//
 type SearchQuery struct {
-	Texts      []*TextRequirement `protobuf:"bytes,1,rep,name=Texts,json=texts,omitempty" json:"texts,omitempty"`
-	Categories []string           `protobuf:"bytes,2,rep,name=Categories,json=categories,omitempty" json:"categories,omitempty"`
-	Kinds      []string           `protobuf:"bytes,3,rep,name=Kinds,json=kinds,omitempty" json:"kinds,omitempty"`
-	Fields     *fields.Selector   `protobuf:"bytes,4,opt,name=Fields,json=fields,omitempty" json:"fields,omitempty"`
-	Labels     *labels.Selector   `protobuf:"bytes,5,opt,name=Labels,json=labels,omitempty" json:"labels,omitempty"`
+	// OR of Text-requirements to be matched, Exclude is not supported for Text search
+	Texts []*TextRequirement `protobuf:"bytes,1,rep,name=Texts,json=texts,omitempty" json:"texts,omitempty"`
+	// OR of Categories to be matched, AND and Exclude are not supported for this type
+	// The max category string length is 64 bytes
+	Categories []string `protobuf:"bytes,2,rep,name=Categories,json=categories,omitempty" json:"categories,omitempty"`
+	// OR of Kinds to be matched, AND and Exclude are not supported for this type
+	// The max kind string length is 64 bytes
+	Kinds []string `protobuf:"bytes,3,rep,name=Kinds,json=kinds,omitempty" json:"kinds,omitempty"`
+	// Field Selector is AND of field.Requirements
+	Fields *fields.Selector `protobuf:"bytes,4,opt,name=Fields,json=fields,omitempty" json:"fields,omitempty"`
+	// Label Selector is AND of label.Requirememts
+	Labels *labels.Selector `protobuf:"bytes,5,opt,name=Labels,json=labels,omitempty" json:"labels,omitempty"`
 }
 
 func (m *SearchQuery) Reset()                    { *m = SearchQuery{} }
@@ -379,14 +414,74 @@ func (m *SearchQuery) GetLabels() *labels.Selector {
 	return nil
 }
 
-// CategoryAggregation contains map of search result entries
-// grouped by two levels: first by Category and then by Kind.
+// SearchRequest is the input to the search API
+//
+// Simple queries can be specified as URI param using "QueryString".
+// For advanced queries, it is recommended to use the "SearchQuery" structure
+// and specify them in BODY of the GET/POST method.
+//
+// Examples of search query in query-string format:
+//
+//  1. Find all occurrences matching text “Network”
+//     Network
+//  2. Find all occurrences matching phrase “link down”
+//     “link down”
+//  3. Find all occurrences matching text production OR "staging"
+//     production staging
+//  4. Find all occurrences matching text “Network” AND "link down"
+//     Network,"link down"
+//     Network AND "link down"
+//  5. Find all config objects with label1=foo
+//     category:config label:label1=foo
+//  6. Find all objects created on or after certain date+time
+//     category:config field:meta.created-time>=”date-time-string”
+//  7. Find all Network objects with type=vlan
+//     kind:Network field:spec.type=vlan
+//  8. Find all Naples nodes with admission-phase = pending or rejected
+//     kind:SmartNIC field:spec.phase in (pending, rejected)
+//  9. Find all events with text matching “disconnected”
+//     category:events disconnected
+// 10. Find all Critical events for Network objects
+//     category:events kind:Network field:severity=CRITICAL
+// 11. Find all Alerts generated from Naples MAC1
+//     category:alerts field:status.source.node=MAC1
+//     category:alerts MAC1
+// 12. Find all Naples nodes with metric filter : mem>90 && cpu>90
+//     category:metrics kind:SmartNIC field:metric.mem>90,metric.cpu>90
+// 13. Find all Endpoints with label Tier=Web with counter1>=100
+//     category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 > 100
+// 14. Find all Endpoints objects with label target=prod with crc-error-count != 0
+//     category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0
+// 15. Find all occurences matching the words and phrase in a certain category & kinds with certain field and label match
+//     production "status down" category:Network kind:Network,Service field:spec.service-type=external label:tier=web
+//
 type SearchRequest struct {
-	QueryString string       `protobuf:"bytes,1,opt,name=QueryString,json=query-string,omitempty,proto3" json:"query-string,omitempty"`
-	From        int32        `protobuf:"varint,2,opt,name=From,json=from,omitempty,proto3" json:"from,omitempty"`
-	MaxResults  int32        `protobuf:"varint,3,opt,name=MaxResults,json=max-results,omitempty,proto3" json:"max-results,omitempty"`
-	SortBy      string       `protobuf:"bytes,4,opt,name=SortBy,json=sort-by,omitempty,proto3" json:"sort-by,omitempty"`
-	Query       *SearchQuery `protobuf:"bytes,5,opt,name=Query,json=query,omitempty" json:"query,omitempty"`
+	// Simple query string
+	// This can be specified as URI parameter.
+	// For advanced query cases, Users should use specify SearchQuery
+	// and pass the SearchRequest in a GET/POST Body
+	// The max query-string length is 256 bytes
+	QueryString string `protobuf:"bytes,1,opt,name=QueryString,json=query-string,omitempty,proto3" json:"query-string,omitempty"`
+	// From represents the start offset (zero based), used in paginated search requests
+	// The results returned would be in the range [From ... From+MaxResults-1]
+	// This can be specified as URI parameter.
+	// Default value is 0 and valid range is 0..1023
+	From int32 `protobuf:"varint,2,opt,name=From,json=from,omitempty,proto3" json:"from,omitempty"`
+	// MaxResults is the max-count of search results
+	// This can be specified as URI parameter.
+	// Default value is 10 and valid range is 0..8192
+	MaxResults int32 `protobuf:"varint,3,opt,name=MaxResults,json=max-results,omitempty,proto3" json:"max-results,omitempty"`
+	// SortyBy is an optional parameter and contains the field name
+	// to be sorted by, For eg: "meta.name"
+	// This can be specified as URI parameter.
+	SortBy string `protobuf:"bytes,4,opt,name=SortBy,json=sort-by,omitempty,proto3" json:"sort-by,omitempty"`
+	// Search query contains the search requirements
+	// This is intended for advanced query use cases involving
+	// boolean query, structured term query and supports various
+	// combinations of text, phrase strings and search modifiers
+	// for specific categories, kinds, fields and labels.
+	// This cannot be specified as URI parameter.
+	Query *SearchQuery `protobuf:"bytes,5,opt,name=Query,json=query,omitempty" json:"query,omitempty"`
 }
 
 func (m *SearchRequest) Reset()                    { *m = SearchRequest{} }
@@ -429,15 +524,24 @@ func (m *SearchRequest) GetQuery() *SearchQuery {
 	return nil
 }
 
-// TenantAggregation contains map of search result entries
-// grouped by three levels: first by Tenant, second by Category
-// and finally by Kind.
+// SearchResponse is the output provided by the search API
+// Based on the search request, search results would be part
+// of one of the entities : Entries or NestedAggregation.
+// In case of failures, Error would indicate the error status and
+// description.
 type SearchResponse struct {
-	TotalHits         int64              `protobuf:"varint,3,opt,name=TotalHits,json=total-hits,omitempty,proto3" json:"total-hits,omitempty"`
-	ActualHits        int64              `protobuf:"varint,4,opt,name=ActualHits,json=actual-hits,omitempty,proto3" json:"actual-hits,omitempty"`
-	TimeTakenMsecs    int64              `protobuf:"varint,5,opt,name=TimeTakenMsecs,json=time-taken-msecs,omitempty,proto3" json:"time-taken-msecs,omitempty"`
-	Error             *Error             `protobuf:"bytes,6,opt,name=Error,json=error,omitempty" json:"error,omitempty"`
-	Entries           []*Entry           `protobuf:"bytes,7,rep,name=Entries,json=entries,omitempty" json:"entries,omitempty"`
+	// TotalHits indicates total number of hits matched
+	TotalHits int64 `protobuf:"varint,3,opt,name=TotalHits,json=total-hits,omitempty,proto3" json:"total-hits,omitempty"`
+	// ActualHits indicates the actual hits returned in this response
+	ActualHits int64 `protobuf:"varint,4,opt,name=ActualHits,json=actual-hits,omitempty,proto3" json:"actual-hits,omitempty"`
+	// TimeTakenMsecs is the time taken for search response in millisecs
+	TimeTakenMsecs int64 `protobuf:"varint,5,opt,name=TimeTakenMsecs,json=time-taken-msecs,omitempty,proto3" json:"time-taken-msecs,omitempty"`
+	// Error status for failures
+	Error *Error `protobuf:"bytes,6,opt,name=Error,json=error,omitempty" json:"error,omitempty"`
+	// EntryList is list of all search results with no grouping.
+	Entries []*Entry `protobuf:"bytes,7,rep,name=Entries,json=entries,omitempty" json:"entries,omitempty"`
+	// AggregatedEntries is a three level grouping of all search results,
+	// Grouped by tenant, category and kind in that order.
 	AggregatedEntries *TenantAggregation `protobuf:"bytes,8,opt,name=AggregatedEntries,json=aggregated-entries,omitempty" json:"aggregated-entries,omitempty"`
 }
 
@@ -488,53 +592,11 @@ func (m *SearchResponse) GetAggregatedEntries() *TenantAggregation {
 	return nil
 }
 
-// SearchRequest is the input to the search API
-//
-// Simple queries can be specified as URI param using "QueryString".
-// For advanced queries, it is recommended to use the "SearchQuery" structure
-// and specify them in BODY of the GET/POST method.
-//
-// Examples of search query in query-string format:
-//
-//  1. Find all occurrences matching text “Network”
-//     Network
-//  2. Find all occurrences matching phrase “link down”
-//     “link down”
-//  3. Find all occurrences matching text production OR "staging"
-//     production staging
-//  4. Find all occurrences matching text “Network” AND "link down"
-//     Network,"link down"
-//     Network AND "link down"
-//  5. Find all config objects with label1=foo
-//     category:config label:label1=foo
-//  6. Find all objects created on or after certain date+time
-//     category:config field:meta.created-time>=”date-time-string”
-//  7. Find all Network objects with type=vlan
-//     kind:Network field:spec.type=vlan
-//  8. Find all Naples nodes with admission-phase = pending or rejected
-//     kind:SmartNIC field:spec.phase in (pending, rejected)
-//  9. Find all events with text matching “disconnected”
-//     category:events disconnected
-// 10. Find all Critical events for Network objects
-//     category:events kind:Network field:severity=CRITICAL
-// 11. Find all Alerts generated from Naples MAC1
-//     category:alerts field:status.source.node=MAC1
-//     category:alerts MAC1
-// 12. Find all Naples nodes with metric filter : mem>90 && cpu>90
-//     category:metrics kind:SmartNIC field:metric.mem>90,metric.cpu>90
-// 13. Find all Endpoints with label Tier=Web with counter1>=100
-//     category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 > 100
-// 14. Find all Endpoints objects with label target=prod with crc-error-count != 0
-//     category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0
-// 15. Find all occurences matching the words and phrase in a certain category & kinds with certain field and label match
-//     production "status down" category:Network kind:Network,Service field:spec.service-type=external label:tier=web
-//
+// TenantAggregation contains map of search result entries
+// grouped by three levels: first by Tenant, second by Category
+// and finally by Kind.
 type TenantAggregation struct {
-	// Simple query string
-	// This can be specified as URI parameter.
-	// For advanced query cases, Users should use specify SearchQuery
-	// and pass the SearchRequest in a GET/POST Body
-	// The max query-string length is 256 bytes
+	//
 	Tenants map[string]*CategoryAggregation `protobuf:"bytes,1,rep,name=Tenants,json=tenants,omitempty" json:"tenants,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -550,13 +612,24 @@ func (m *TenantAggregation) GetTenants() map[string]*CategoryAggregation {
 	return nil
 }
 
-// SearchResponse is the output provided by the search API
-// Based on the search request, search results would be part
-// of one of the entities : Entries or NestedAggregation.
-// In case of failures, Error would indicate the error status and
-// description.
+// TextRequirement is AND of text-strings in the list
+// It is comprised of words or phrases for text search support.
+// If a text-string has space separated multi-word, it will be
+// interpreted as a phrase.
+//
+// In the example below :
+// - "link down" will be a phrase query
+// - network, production, staging will be a word query
+//
+// For eg:
+//    network                      (match network)
+//    link down                    (match "link down" phrase)
+//    network,production           (match network AND production)
+//    network,link down,staging    (match network AND "link down" AND staging)
+//
 type TextRequirement struct {
-	// TotalHits indicates total number of hits matched
+	// AND of words or phrases to be matched
+	// The max text-string length is 256 bytes
 	Text []string `protobuf:"bytes,1,rep,name=Text,json=text,omitempty" json:"text,omitempty"`
 }
 

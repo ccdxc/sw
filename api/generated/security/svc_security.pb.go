@@ -24,10 +24,12 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AppList is a container object for list of App objects
 type AppList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*App `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of App objects
+	Items []*App `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AppList) Reset()                    { *m = AppList{} }
@@ -42,10 +44,12 @@ func (m *AppList) GetItems() []*App {
 	return nil
 }
 
+// AppUserGrpList is a container object for list of AppUserGrp objects
 type AppUserGrpList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*AppUserGrp `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of AppUserGrp objects
+	Items []*AppUserGrp `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AppUserGrpList) Reset()                    { *m = AppUserGrpList{} }
@@ -60,10 +64,12 @@ func (m *AppUserGrpList) GetItems() []*AppUserGrp {
 	return nil
 }
 
+// AppUserList is a container object for list of AppUser objects
 type AppUserList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*AppUser `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of AppUser objects
+	Items []*AppUser `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AppUserList) Reset()                    { *m = AppUserList{} }
@@ -78,6 +84,7 @@ func (m *AppUserList) GetItems() []*AppUser {
 	return nil
 }
 
+// AutoMsgAppUserGrpWatchHelper is a wrapper object for watch events for AppUserGrp objects
 type AutoMsgAppUserGrpWatchHelper struct {
 	Events []*AutoMsgAppUserGrpWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -124,6 +131,7 @@ func (m *AutoMsgAppUserGrpWatchHelper_WatchEvent) GetObject() *AppUserGrp {
 	return nil
 }
 
+// AutoMsgAppUserWatchHelper is a wrapper object for watch events for AppUser objects
 type AutoMsgAppUserWatchHelper struct {
 	Events []*AutoMsgAppUserWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -168,6 +176,7 @@ func (m *AutoMsgAppUserWatchHelper_WatchEvent) GetObject() *AppUser {
 	return nil
 }
 
+// AutoMsgAppWatchHelper is a wrapper object for watch events for App objects
 type AutoMsgAppWatchHelper struct {
 	Events []*AutoMsgAppWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -210,6 +219,7 @@ func (m *AutoMsgAppWatchHelper_WatchEvent) GetObject() *App {
 	return nil
 }
 
+// AutoMsgCertificateWatchHelper is a wrapper object for watch events for Certificate objects
 type AutoMsgCertificateWatchHelper struct {
 	Events []*AutoMsgCertificateWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -256,6 +266,7 @@ func (m *AutoMsgCertificateWatchHelper_WatchEvent) GetObject() *Certificate {
 	return nil
 }
 
+// AutoMsgSecurityGroupWatchHelper is a wrapper object for watch events for SecurityGroup objects
 type AutoMsgSecurityGroupWatchHelper struct {
 	Events []*AutoMsgSecurityGroupWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -304,6 +315,7 @@ func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) GetObject() *SecurityGroup 
 	return nil
 }
 
+// AutoMsgSgpolicyWatchHelper is a wrapper object for watch events for Sgpolicy objects
 type AutoMsgSgpolicyWatchHelper struct {
 	Events []*AutoMsgSgpolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -348,6 +360,7 @@ func (m *AutoMsgSgpolicyWatchHelper_WatchEvent) GetObject() *Sgpolicy {
 	return nil
 }
 
+// AutoMsgTrafficEncryptionPolicyWatchHelper is a wrapper object for watch events for TrafficEncryptionPolicy objects
 type AutoMsgTrafficEncryptionPolicyWatchHelper struct {
 	Events []*AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -398,10 +411,12 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) GetObject() *Traf
 	return nil
 }
 
+// CertificateList is a container object for list of Certificate objects
 type CertificateList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Certificate `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Certificate objects
+	Items []*Certificate `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *CertificateList) Reset()                    { *m = CertificateList{} }
@@ -416,10 +431,12 @@ func (m *CertificateList) GetItems() []*Certificate {
 	return nil
 }
 
+// SecurityGroupList is a container object for list of SecurityGroup objects
 type SecurityGroupList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*SecurityGroup `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of SecurityGroup objects
+	Items []*SecurityGroup `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *SecurityGroupList) Reset()                    { *m = SecurityGroupList{} }
@@ -434,10 +451,12 @@ func (m *SecurityGroupList) GetItems() []*SecurityGroup {
 	return nil
 }
 
+// SgpolicyList is a container object for list of Sgpolicy objects
 type SgpolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Sgpolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Sgpolicy objects
+	Items []*Sgpolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *SgpolicyList) Reset()                    { *m = SgpolicyList{} }
@@ -452,10 +471,12 @@ func (m *SgpolicyList) GetItems() []*Sgpolicy {
 	return nil
 }
 
+// TrafficEncryptionPolicyList is a container object for list of TrafficEncryptionPolicy objects
 type TrafficEncryptionPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*TrafficEncryptionPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of TrafficEncryptionPolicy objects
+	Items []*TrafficEncryptionPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *TrafficEncryptionPolicyList) Reset()         { *m = TrafficEncryptionPolicyList{} }
@@ -507,33 +528,61 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for SecurityV1 service
 
 type SecurityV1Client interface {
+	// Creates a new App object
 	AutoAddApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
+	// Creates a new AppUser object
 	AutoAddAppUser(ctx context.Context, in *AppUser, opts ...grpc.CallOption) (*AppUser, error)
+	// Creates a new AppUserGrp object
 	AutoAddAppUserGrp(ctx context.Context, in *AppUserGrp, opts ...grpc.CallOption) (*AppUserGrp, error)
+	// Creates a new Certificate object
 	AutoAddCertificate(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*Certificate, error)
+	// Creates a new SecurityGroup object
 	AutoAddSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	// Creates a new Sgpolicy object
 	AutoAddSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	// Creates a new TrafficEncryptionPolicy object
 	AutoAddTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
+	// Deletes the App object
 	AutoDeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
+	// Deletes the AppUser object
 	AutoDeleteAppUser(ctx context.Context, in *AppUser, opts ...grpc.CallOption) (*AppUser, error)
+	// Deletes the AppUserGrp object
 	AutoDeleteAppUserGrp(ctx context.Context, in *AppUserGrp, opts ...grpc.CallOption) (*AppUserGrp, error)
+	// Deletes the Certificate object
 	AutoDeleteCertificate(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*Certificate, error)
+	// Deletes the SecurityGroup object
 	AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	// Deletes the Sgpolicy object
 	AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	// Deletes the TrafficEncryptionPolicy object
 	AutoDeleteTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
+	// Retreives the App object
 	AutoGetApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
+	// Retreives the AppUser object
 	AutoGetAppUser(ctx context.Context, in *AppUser, opts ...grpc.CallOption) (*AppUser, error)
+	// Retreives the AppUserGrp object
 	AutoGetAppUserGrp(ctx context.Context, in *AppUserGrp, opts ...grpc.CallOption) (*AppUserGrp, error)
+	// Retreives the Certificate object
 	AutoGetCertificate(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*Certificate, error)
+	// Retreives the SecurityGroup object
 	AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	// Retreives the Sgpolicy object
 	AutoGetSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	// Retreives the TrafficEncryptionPolicy object
 	AutoGetTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
+	// Retreives a list of App objects
 	AutoListApp(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AppList, error)
+	// Retreives a list of AppUser objects
 	AutoListAppUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AppUserList, error)
+	// Retreives a list of AppUserGrp objects
 	AutoListAppUserGrp(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AppUserGrpList, error)
+	// Retreives a list of Certificate objects
 	AutoListCertificate(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*CertificateList, error)
+	// Retreives a list of SecurityGroup objects
 	AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SecurityGroupList, error)
+	// Retreives a list of Sgpolicy objects
 	AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SgpolicyList, error)
+	// Retreives a list of TrafficEncryptionPolicy objects
 	AutoListTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*TrafficEncryptionPolicyList, error)
 	AutoUpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
 	AutoUpdateAppUser(ctx context.Context, in *AppUser, opts ...grpc.CallOption) (*AppUser, error)
@@ -542,12 +591,19 @@ type SecurityV1Client interface {
 	AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
 	AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
 	AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
+	// Watch for changes to App objects
 	AutoWatchApp(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchAppClient, error)
+	// Watch for changes to AppUser objects
 	AutoWatchAppUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchAppUserClient, error)
+	// Watch for changes to AppUserGrp objects
 	AutoWatchAppUserGrp(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchAppUserGrpClient, error)
+	// Watch for changes to Certificate objects
 	AutoWatchCertificate(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchCertificateClient, error)
+	// Watch for changes to SecurityGroup objects
 	AutoWatchSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSecurityGroupClient, error)
+	// Watch for changes to Sgpolicy objects
 	AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSgpolicyClient, error)
+	// Watch for changes to TrafficEncryptionPolicy objects
 	AutoWatchTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchTrafficEncryptionPolicyClient, error)
 }
 
@@ -1101,33 +1157,61 @@ func (x *securityV1AutoWatchTrafficEncryptionPolicyClient) Recv() (*AutoMsgTraff
 // Server API for SecurityV1 service
 
 type SecurityV1Server interface {
+	// Creates a new App object
 	AutoAddApp(context.Context, *App) (*App, error)
+	// Creates a new AppUser object
 	AutoAddAppUser(context.Context, *AppUser) (*AppUser, error)
+	// Creates a new AppUserGrp object
 	AutoAddAppUserGrp(context.Context, *AppUserGrp) (*AppUserGrp, error)
+	// Creates a new Certificate object
 	AutoAddCertificate(context.Context, *Certificate) (*Certificate, error)
+	// Creates a new SecurityGroup object
 	AutoAddSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	// Creates a new Sgpolicy object
 	AutoAddSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	// Creates a new TrafficEncryptionPolicy object
 	AutoAddTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
+	// Deletes the App object
 	AutoDeleteApp(context.Context, *App) (*App, error)
+	// Deletes the AppUser object
 	AutoDeleteAppUser(context.Context, *AppUser) (*AppUser, error)
+	// Deletes the AppUserGrp object
 	AutoDeleteAppUserGrp(context.Context, *AppUserGrp) (*AppUserGrp, error)
+	// Deletes the Certificate object
 	AutoDeleteCertificate(context.Context, *Certificate) (*Certificate, error)
+	// Deletes the SecurityGroup object
 	AutoDeleteSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	// Deletes the Sgpolicy object
 	AutoDeleteSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	// Deletes the TrafficEncryptionPolicy object
 	AutoDeleteTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
+	// Retreives the App object
 	AutoGetApp(context.Context, *App) (*App, error)
+	// Retreives the AppUser object
 	AutoGetAppUser(context.Context, *AppUser) (*AppUser, error)
+	// Retreives the AppUserGrp object
 	AutoGetAppUserGrp(context.Context, *AppUserGrp) (*AppUserGrp, error)
+	// Retreives the Certificate object
 	AutoGetCertificate(context.Context, *Certificate) (*Certificate, error)
+	// Retreives the SecurityGroup object
 	AutoGetSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	// Retreives the Sgpolicy object
 	AutoGetSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	// Retreives the TrafficEncryptionPolicy object
 	AutoGetTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
+	// Retreives a list of App objects
 	AutoListApp(context.Context, *api.ListWatchOptions) (*AppList, error)
+	// Retreives a list of AppUser objects
 	AutoListAppUser(context.Context, *api.ListWatchOptions) (*AppUserList, error)
+	// Retreives a list of AppUserGrp objects
 	AutoListAppUserGrp(context.Context, *api.ListWatchOptions) (*AppUserGrpList, error)
+	// Retreives a list of Certificate objects
 	AutoListCertificate(context.Context, *api.ListWatchOptions) (*CertificateList, error)
+	// Retreives a list of SecurityGroup objects
 	AutoListSecurityGroup(context.Context, *api.ListWatchOptions) (*SecurityGroupList, error)
+	// Retreives a list of Sgpolicy objects
 	AutoListSgpolicy(context.Context, *api.ListWatchOptions) (*SgpolicyList, error)
+	// Retreives a list of TrafficEncryptionPolicy objects
 	AutoListTrafficEncryptionPolicy(context.Context, *api.ListWatchOptions) (*TrafficEncryptionPolicyList, error)
 	AutoUpdateApp(context.Context, *App) (*App, error)
 	AutoUpdateAppUser(context.Context, *AppUser) (*AppUser, error)
@@ -1136,12 +1220,19 @@ type SecurityV1Server interface {
 	AutoUpdateSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
 	AutoUpdateSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
 	AutoUpdateTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
+	// Watch for changes to App objects
 	AutoWatchApp(*api.ListWatchOptions, SecurityV1_AutoWatchAppServer) error
+	// Watch for changes to AppUser objects
 	AutoWatchAppUser(*api.ListWatchOptions, SecurityV1_AutoWatchAppUserServer) error
+	// Watch for changes to AppUserGrp objects
 	AutoWatchAppUserGrp(*api.ListWatchOptions, SecurityV1_AutoWatchAppUserGrpServer) error
+	// Watch for changes to Certificate objects
 	AutoWatchCertificate(*api.ListWatchOptions, SecurityV1_AutoWatchCertificateServer) error
+	// Watch for changes to SecurityGroup objects
 	AutoWatchSecurityGroup(*api.ListWatchOptions, SecurityV1_AutoWatchSecurityGroupServer) error
+	// Watch for changes to Sgpolicy objects
 	AutoWatchSgpolicy(*api.ListWatchOptions, SecurityV1_AutoWatchSgpolicyServer) error
+	// Watch for changes to TrafficEncryptionPolicy objects
 	AutoWatchTrafficEncryptionPolicy(*api.ListWatchOptions, SecurityV1_AutoWatchTrafficEncryptionPolicyServer) error
 }
 

@@ -4,8 +4,6 @@
 /*
 	Package cluster is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		cmd.proto
 		svc_cluster.proto
@@ -72,9 +70,12 @@ const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 type ConditionStatus int32
 
 const (
+	// ui-hint: Unknown
 	ConditionStatus_UNKNOWN ConditionStatus = 0
-	ConditionStatus_TRUE    ConditionStatus = 1
-	ConditionStatus_FALSE   ConditionStatus = 2
+	// ui-hint: True
+	ConditionStatus_TRUE ConditionStatus = 1
+	// ui-hint: False
+	ConditionStatus_FALSE ConditionStatus = 2
 )
 
 var ConditionStatus_name = map[int32]string{
@@ -93,11 +94,15 @@ func (x ConditionStatus) String() string {
 }
 func (ConditionStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{0} }
 
+// Type of Host
 type HostStatus_HostType int32
 
 const (
-	HostStatus_UNKNOWN    HostStatus_HostType = 0
-	HostStatus_BAREMETAL  HostStatus_HostType = 1
+	//
+	HostStatus_UNKNOWN HostStatus_HostType = 0
+	//
+	HostStatus_BAREMETAL HostStatus_HostType = 1
+	//
 	HostStatus_HYPERVISOR HostStatus_HostType = 2
 )
 
@@ -117,10 +122,11 @@ func (x HostStatus_HostType) String() string {
 }
 func (HostStatus_HostType) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{7, 0} }
 
-// Type of Host
+// These are valid conditions of a Node
 type NodeCondition_ConditionType int32
 
 const (
+	// ui-hint: Leader
 	NodeCondition_LEADER NodeCondition_ConditionType = 0
 )
 
@@ -138,11 +144,14 @@ func (NodeCondition_ConditionType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorCmd, []int{9, 0}
 }
 
+// NodeRole Type
 type NodeSpec_NodeRole int32
 
 const (
+	// ui-hint: Controller
 	NodeSpec_CONTROLLER NodeSpec_NodeRole = 0
-	NodeSpec_QUORUM     NodeSpec_NodeRole = 1
+	// ui-hint: Quorum
+	NodeSpec_QUORUM NodeSpec_NodeRole = 1
 )
 
 var NodeSpec_NodeRole_name = map[int32]string{
@@ -159,13 +168,18 @@ func (x NodeSpec_NodeRole) String() string {
 }
 func (NodeSpec_NodeRole) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{10, 0} }
 
+// Various phases in lifecycle of a Node
 type NodeStatus_NodePhase int32
 
 const (
+	// ui-hint: Unknown
 	NodeStatus_UNKNOWN NodeStatus_NodePhase = 0
+	// ui-hint: Pending
 	NodeStatus_PENDING NodeStatus_NodePhase = 1
-	NodeStatus_JOINED  NodeStatus_NodePhase = 2
-	NodeStatus_FAILED  NodeStatus_NodePhase = 3
+	// ui-hint: Joined
+	NodeStatus_JOINED NodeStatus_NodePhase = 2
+	// ui-hint: Failed
+	NodeStatus_FAILED NodeStatus_NodePhase = 3
 )
 
 var NodeStatus_NodePhase_name = map[int32]string{
@@ -186,9 +200,11 @@ func (x NodeStatus_NodePhase) String() string {
 }
 func (NodeStatus_NodePhase) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{11, 0} }
 
+// These are valid conditions of a Port
 type PortCondition_ConditionType int32
 
 const (
+	// ui-hint: Up
 	PortCondition_PORT_UP PortCondition_ConditionType = 0
 )
 
@@ -206,10 +222,13 @@ func (PortCondition_ConditionType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorCmd, []int{12, 0}
 }
 
+// These are valid conditions of a SmartNIC
 type SmartNICCondition_ConditionType int32
 
 const (
-	SmartNICCondition_HEALTHY     SmartNICCondition_ConditionType = 0
+	// ui-hint: Healthy
+	SmartNICCondition_HEALTHY SmartNICCondition_ConditionType = 0
+	// ui-hint: Not Reachable
 	SmartNICCondition_UNREACHABLE SmartNICCondition_ConditionType = 1
 )
 
@@ -229,14 +248,20 @@ func (SmartNICCondition_ConditionType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorCmd, []int{16, 0}
 }
 
+// Various phases in lifecycle of a SmartNIC
 type SmartNICSpec_SmartNICPhase int32
 
 const (
-	SmartNICSpec_UNKNOWN     SmartNICSpec_SmartNICPhase = 0
+	// ui-hint: Unknown
+	SmartNICSpec_UNKNOWN SmartNICSpec_SmartNICPhase = 0
+	// ui-hint: Registering
 	SmartNICSpec_REGISTERING SmartNICSpec_SmartNICPhase = 1
-	SmartNICSpec_REJECTED    SmartNICSpec_SmartNICPhase = 2
-	SmartNICSpec_PENDING     SmartNICSpec_SmartNICPhase = 3
-	SmartNICSpec_ADMITTED    SmartNICSpec_SmartNICPhase = 4
+	// ui-hint: Rejected
+	SmartNICSpec_REJECTED SmartNICSpec_SmartNICPhase = 2
+	// ui-hint: Pending
+	SmartNICSpec_PENDING SmartNICSpec_SmartNICPhase = 3
+	// ui-hint: Admitted
+	SmartNICSpec_ADMITTED SmartNICSpec_SmartNICPhase = 4
 )
 
 var SmartNICSpec_SmartNICPhase_name = map[int32]string{
@@ -280,7 +305,9 @@ func (SmartNICSpec_SmartNICPhase) EnumDescriptor() ([]byte, []int) {
 //              - TBD
 //
 type Cluster struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
 	// Spec contains the configuration of the cluster.
 	Spec ClusterSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
@@ -393,16 +420,18 @@ func (m *ClusterStatus) GetLastLeaderTransitionTime() *api.Timestamp {
 	return nil
 }
 
-// ---------------------------------- NODE -------------------------------------------
+// ---------------------------------- HOST ------------------------------------
 //
-// Node is representation of a single Venice node in the system.
+// Host represents a Baremetal or Hypervisor server.
 //
 type Host struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Spec contains the configuration of the node.
+	// Spec contains the configuration of the host.
 	Spec HostSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// Status contains the current state of the node.
+	// Status contains the current state of the host.
 	Status HostStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -425,9 +454,9 @@ func (m *Host) GetStatus() HostStatus {
 	return HostStatus{}
 }
 
-// NodeSpec contains the configuration of the node.
+// Spec of a Host interface
 type HostIntfSpec struct {
-	// Roles is of list of roles a node can be configured with.
+	// List of all MAC addresses configured and discovered on a Host Interface
 	MacAddrs []string `protobuf:"bytes,1,rep,name=MacAddrs,json=mac-addrs,omitempty" json:"mac-addrs,omitempty"`
 }
 
@@ -443,9 +472,9 @@ func (m *HostIntfSpec) GetMacAddrs() []string {
 	return nil
 }
 
-// NodeStatus contains the current state of the node.
+// Status of a Host interface
 type HostIntfStatus struct {
-	// Current lifecycle phase of the node.
+	// List of all IP addresses configured on a Host Interface
 	IpAddrs []string `protobuf:"bytes,1,rep,name=IpAddrs,json=ip-addrs,omitempty" json:"ip-addrs,omitempty"`
 }
 
@@ -461,9 +490,9 @@ func (m *HostIntfStatus) GetIpAddrs() []string {
 	return nil
 }
 
-// NodeCondition describes the state of a Node at a certain point.
+// HostSpec contains the configuration of the Host.
 type HostSpec struct {
-	// Type indicates a certain node condition
+	// Spec of all interfaces in the Host identified by Primary MAC
 	Interfaces map[string]HostIntfSpec `protobuf:"bytes,1,rep,name=Interfaces,json=interfaces,omitempty" json:"interfaces,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -479,16 +508,16 @@ func (m *HostSpec) GetInterfaces() map[string]HostIntfSpec {
 	return nil
 }
 
-// ---------------------------------- HOST ------------------------------------
-//
-// Host represents a Baremetal or Hypervisor server.
-//
+// HostStatus contains the current state of the Host.
 type HostStatus struct {
-	Type            string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
+	// Type of the host
+	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
+	// Operating system info - name of OS with version, eg: "Linux 3.10.0.xyz"
 	OperatingSystem string `protobuf:"bytes,2,opt,name=OperatingSystem,json=operating-system,omitempty,proto3" json:"operating-system,omitempty"`
-	// Spec contains the configuration of the host.
+	// Orchestrator is the name of associated Compute controller
+	// (like VCenter) managing this host.
 	Orchestrator string `protobuf:"bytes,3,opt,name=Orchestrator,json=orchestrator,omitempty,proto3" json:"orchestrator,omitempty"`
-	// Status contains the current state of the host.
+	// Status of all interfaces in the Host identified by Primary MAC
 	Interfaces map[string]HostIntfStatus `protobuf:"bytes,4,rep,name=Interfaces,json=interfaces,omitempty" json:"interfaces,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -525,13 +554,19 @@ func (m *HostStatus) GetInterfaces() map[string]HostIntfStatus {
 	return nil
 }
 
-// HostSpec contains the configuration of the Host.
+// ---------------------------------- NODE -------------------------------------------
+//
+// Node is representation of a single Venice node in the system.
+//
 type Node struct {
-	// Spec of all interfaces in the Host identified by Primary MAC
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	Spec           NodeSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	Status         NodeStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+	// Spec contains the configuration of the node.
+	Spec NodeSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the node.
+	Status NodeStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
 func (m *Node) Reset()                    { *m = Node{} }
@@ -553,17 +588,17 @@ func (m *Node) GetStatus() NodeStatus {
 	return NodeStatus{}
 }
 
-// HostStatus contains the current state of the Host.
+// NodeCondition describes the state of a Node at a certain point.
 type NodeCondition struct {
-	// Type of the host
+	// Type indicates a certain node condition
 	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
-	// Operating system info - name of OS with version, eg: "Linux 3.10.0.xyz"
+	// Condition Status
 	Status string `protobuf:"bytes,2,opt,name=Status,json=status,omitempty,proto3" json:"status,omitempty"`
-	// Orchestrator is the name of associated Compute controller
-	// (like VCenter) managing this host.
+	// The last time the condition transitioned
 	LastTransitionTime string `protobuf:"bytes,3,opt,name=LastTransitionTime,json=last-transition-time,omitempty,proto3" json:"last-transition-time,omitempty"`
-	// Status of all interfaces in the Host identified by Primary MAC
-	Reason  string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
+	// The reason for the condition's last transition
+	Reason string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
+	// A detailed message indicating details about the transition.
 	Message string `protobuf:"bytes,5,opt,name=Message,json=message,omitempty,proto3" json:"message,omitempty"`
 }
 
@@ -607,9 +642,9 @@ func (m *NodeCondition) GetMessage() string {
 	return ""
 }
 
-// Spec of a Host interface
+// NodeSpec contains the configuration of the node.
 type NodeSpec struct {
-	// List of all MAC addresses configured and discovered on a Host Interface
+	// Roles is of list of roles a node can be configured with.
 	Roles []string `protobuf:"bytes,1,rep,name=Roles,json=roles,omitempty" json:"roles,omitempty"`
 }
 
@@ -625,10 +660,11 @@ func (m *NodeSpec) GetRoles() []string {
 	return nil
 }
 
-// Status of a Host interface
+// NodeStatus contains the current state of the node.
 type NodeStatus struct {
-	// List of all IP addresses configured on a Host Interface
-	Phase      string           `protobuf:"bytes,1,opt,name=Phase,json=phase,omitempty,proto3" json:"phase,omitempty"`
+	// Current lifecycle phase of the node.
+	Phase string `protobuf:"bytes,1,opt,name=Phase,json=phase,omitempty,proto3" json:"phase,omitempty"`
+	// List of current node conditions
 	Conditions []*NodeCondition `protobuf:"bytes,2,rep,name=Conditions,json=conditions,omitempty" json:"conditions,omitempty"`
 }
 
@@ -651,33 +687,17 @@ func (m *NodeStatus) GetConditions() []*NodeCondition {
 	return nil
 }
 
-// ------------------------------------ SMART NIC  -------------------------------------------
-//
-// SmartNIC represents the Naples I/O subsystem
-//
-// Entity responsible & scenarios involved in managing this object:
-//
-//      Create:
-//          o CMD
-//              - created as part of NIC registration, Admittance
-//      Modify:
-//          o CMD
-//              - update spec attributes
-//              - update status attributes
-//      Delete:
-//          o CMD
-//              - aging out stale or rejected NICs (TBD)
-//          o NetOps, SecOps
-//              - Decomission a NIC (TBD)
-//
+// PortCondition describes the state of a Port at a certain point.
 type PortCondition struct {
+	// Type indicates a certain Port condition
 	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
-	// Object name is Serial-Number of the SmartNIC
+	// Condition Status
 	Status string `protobuf:"bytes,2,opt,name=Status,json=status,omitempty,proto3" json:"status,omitempty"`
-	// SmartNICSpec contains the configuration of the network adapter.
+	// The last time the condition transitioned
 	LastTransitionTime string `protobuf:"bytes,3,opt,name=LastTransitionTime,json=last-transition-time,omitempty,proto3" json:"last-transition-time,omitempty"`
-	// SmartNICStatus contains the current state of the network adapter.
-	Reason  string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
+	// The reason for the condition's last transition
+	Reason string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
+	// A detailed message indicating details about the transition.
 	Message string `protobuf:"bytes,5,opt,name=Message,json=message,omitempty,proto3" json:"message,omitempty"`
 }
 
@@ -721,16 +741,9 @@ func (m *PortCondition) GetMessage() string {
 	return ""
 }
 
-// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
+// PortSpec contains configuration of a port in SmartNIC
 type PortSpec struct {
-	// Current phase of the SmartNIC.
-	// When auto-admission is enabled, Phase will be set to NIC_ADMITTED
-	// by CMD for validated NICs.
-	// When auto-admission is not enabled, Phase will be set to NIC_PENDING
-	// by CMD for validated NICs since it requires manual approval.
-	// To admit the NIC as a part of manual admission, user is expected to
-	// set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
-	// state. Note : Whitelist mode is not supported yet.
+	// Primary Mac address of the Port, which is key identifier of the port
 	MacAddress string `protobuf:"bytes,1,opt,name=MacAddress,json=mac-address,omitempty,proto3" json:"mac-address,omitempty"`
 }
 
@@ -746,13 +759,13 @@ func (m *PortSpec) GetMacAddress() string {
 	return ""
 }
 
-// SmartNICStatus contains current status of a SmartNIC
+// PortStatus contains current status of a Port
 type PortStatus struct {
-	// List of current NIC conditions
+	// List of all Mac addresses of the Port
 	MacAddrs []string `protobuf:"bytes,1,rep,name=MacAddrs,json=mac-addrs,omitempty" json:"mac-addrs,omitempty"`
-	// Serial number
+	// LinkSpeed of the Port
 	LinkSpeed string `protobuf:"bytes,2,opt,name=LinkSpeed,json=link-speed,omitempty,proto3" json:"link-speed,omitempty"`
-	// Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
+	// List of current Port conditions
 	Conditions []*PortCondition `protobuf:"bytes,3,rep,name=Conditions,json=conditions,omitempty" json:"conditions,omitempty"`
 }
 
@@ -782,15 +795,33 @@ func (m *PortStatus) GetConditions() []*PortCondition {
 	return nil
 }
 
-// SmartNICCondition describes the state of a SmartNIC at a certain point.
+// ------------------------------------ SMART NIC  -------------------------------------------
+//
+// SmartNIC represents the Naples I/O subsystem
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o CMD
+//              - created as part of NIC registration, Admittance
+//      Modify:
+//          o CMD
+//              - update spec attributes
+//              - update status attributes
+//      Delete:
+//          o CMD
+//              - aging out stale or rejected NICs (TBD)
+//          o NetOps, SecOps
+//              - Decomission a NIC (TBD)
+//
 type SmartNIC struct {
-	// Type indicates a certain NIC condition
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Condition Status
+	// Object name is Serial-Number of the SmartNIC
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// The last time the condition transitioned
+	// SmartNICSpec contains the configuration of the network adapter.
 	Spec SmartNICSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// The reason for the condition's last transition
+	// SmartNICStatus contains the current state of the network adapter.
 	Status SmartNICStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -813,14 +844,18 @@ func (m *SmartNIC) GetStatus() SmartNICStatus {
 	return SmartNICStatus{}
 }
 
-// PortSpec contains configuration of a port in SmartNIC
+// SmartNICCondition describes the state of a SmartNIC at a certain point.
 type SmartNICCondition struct {
-	// Primary Mac address of the Port, which is key identifier of the port
-	Type               string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
-	Status             string `protobuf:"bytes,2,opt,name=Status,json=status,omitempty,proto3" json:"status,omitempty"`
+	// Type indicates a certain NIC condition
+	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
+	// Condition Status
+	Status string `protobuf:"bytes,2,opt,name=Status,json=status,omitempty,proto3" json:"status,omitempty"`
+	// The last time the condition transitioned
 	LastTransitionTime string `protobuf:"bytes,3,opt,name=LastTransitionTime,json=last-transition-time,omitempty,proto3" json:"last-transition-time,omitempty"`
-	Reason             string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
-	Message            string `protobuf:"bytes,5,opt,name=Message,json=message,omitempty,proto3" json:"message,omitempty"`
+	// The reason for the condition's last transition
+	Reason string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
+	// A detailed message indicating details about the transition.
+	Message string `protobuf:"bytes,5,opt,name=Message,json=message,omitempty,proto3" json:"message,omitempty"`
 }
 
 func (m *SmartNICCondition) Reset()                    { *m = SmartNICCondition{} }
@@ -863,15 +898,23 @@ func (m *SmartNICCondition) GetMessage() string {
 	return ""
 }
 
-// PortStatus contains current status of a Port
+// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
 type SmartNICSpec struct {
-	// List of all Mac addresses of the Port
+	// Current phase of the SmartNIC.
+	// When auto-admission is enabled, Phase will be set to NIC_ADMITTED
+	// by CMD for validated NICs.
+	// When auto-admission is not enabled, Phase will be set to NIC_PENDING
+	// by CMD for validated NICs since it requires manual approval.
+	// To admit the NIC as a part of manual admission, user is expected to
+	// set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
+	// state. Note : Whitelist mode is not supported yet.
 	Phase string `protobuf:"bytes,1,opt,name=Phase,json=phase,omitempty,proto3" json:"phase,omitempty"`
-	// LinkSpeed of the Port
+	// Management IP address of the naples node
 	MgmtIp string `protobuf:"bytes,2,opt,name=MgmtIp,json=mgmt-ip,omitempty,proto3" json:"mgmt-ip,omitempty"`
-	// List of current Port conditions
-	HostName string     `protobuf:"bytes,3,opt,name=HostName,json=host-name,omitempty,proto3" json:"host-name,omitempty"`
-	Ports    []PortSpec `protobuf:"bytes,4,rep,name=Ports,json=ports,omitempty" json:"ports,omitempty"`
+	// Host name
+	HostName string `protobuf:"bytes,3,opt,name=HostName,json=host-name,omitempty,proto3" json:"host-name,omitempty"`
+	// Ports holds a list of Port Specs
+	Ports []PortSpec `protobuf:"bytes,4,rep,name=Ports,json=ports,omitempty" json:"ports,omitempty"`
 }
 
 func (m *SmartNICSpec) Reset()                    { *m = SmartNICSpec{} }
@@ -907,15 +950,15 @@ func (m *SmartNICSpec) GetPorts() []PortSpec {
 	return nil
 }
 
-// PortCondition describes the state of a Port at a certain point.
+// SmartNICStatus contains current status of a SmartNIC
 type SmartNICStatus struct {
-	// Type indicates a certain Port condition
+	// List of current NIC conditions
 	Conditions []*SmartNICCondition `protobuf:"bytes,1,rep,name=Conditions,json=conditions,omitempty" json:"conditions,omitempty"`
-	// Condition Status
+	// Serial number
 	SerialNum string `protobuf:"bytes,2,opt,name=SerialNum,json=serial-num,omitempty,proto3" json:"serial-num,omitempty"`
-	// The last time the condition transitioned
+	// Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
 	PrimaryMacAddress string `protobuf:"bytes,3,opt,name=PrimaryMacAddress,json=primary-mac-address,omitempty,proto3" json:"primary-mac-address,omitempty"`
-	// The reason for the condition's last transition
+	// Ports holds a list of PortStatus
 	Ports []*PortStatus `protobuf:"bytes,4,rep,name=Ports,json=ports,omitempty" json:"ports,omitempty"`
 }
 

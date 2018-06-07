@@ -4,8 +4,6 @@
 /*
 	Package bookstore is a generated protocol buffer package.
 
-	Service name
-
 	It is generated from these files:
 		example.proto
 
@@ -72,13 +70,18 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+//
 type BookSpec_BookCategories int32
 
 const (
+	// ui-hint: Childrens Literature
 	BookSpec_ChildrensLit BookSpec_BookCategories = 0
-	BookSpec_YoungAdult   BookSpec_BookCategories = 1
-	BookSpec_Fiction      BookSpec_BookCategories = 2
-	BookSpec_NonFiction   BookSpec_BookCategories = 3
+	// ui-hint: Young Adult
+	BookSpec_YoungAdult BookSpec_BookCategories = 1
+	//
+	BookSpec_Fiction BookSpec_BookCategories = 2
+	// ui-hint: Non Fiction
+	BookSpec_NonFiction BookSpec_BookCategories = 3
 )
 
 var BookSpec_BookCategories_name = map[int32]string{
@@ -101,14 +104,21 @@ func (BookSpec_BookCategories) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorExample, []int{11, 0}
 }
 
+//
 type OrderStatus_OrderStatus int32
 
 const (
-	OrderStatus_CREATED    OrderStatus_OrderStatus = 0
+	//
+	OrderStatus_CREATED OrderStatus_OrderStatus = 0
+	//
 	OrderStatus_PROCESSING OrderStatus_OrderStatus = 1
-	OrderStatus_FILLED     OrderStatus_OrderStatus = 2
-	OrderStatus_SHIPPED    OrderStatus_OrderStatus = 3
-	OrderStatus_COMPLETED  OrderStatus_OrderStatus = 4
+	//
+	OrderStatus_FILLED OrderStatus_OrderStatus = 2
+	//
+	OrderStatus_SHIPPED OrderStatus_OrderStatus = 3
+	//
+	OrderStatus_COMPLETED OrderStatus_OrderStatus = 4
+	//
 	OrderStatus_DISCOUNTED OrderStatus_OrderStatus = 5
 )
 
@@ -136,10 +146,14 @@ func (OrderStatus_OrderStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorExample, []int{24, 0}
 }
 
+//
 type ApplyDiscountReq struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Coupon         string `protobuf:"bytes,3,opt,name=Coupon,proto3" json:"Coupon,omitempty"`
+	//
+	Coupon string `protobuf:"bytes,3,opt,name=Coupon,proto3" json:"Coupon,omitempty"`
 }
 
 func (m *ApplyDiscountReq) Reset()                    { *m = ApplyDiscountReq{} }
@@ -154,6 +168,7 @@ func (m *ApplyDiscountReq) GetCoupon() string {
 	return ""
 }
 
+// AutoMsgBookWatchHelper is a wrapper object for watch events for Book objects
 type AutoMsgBookWatchHelper struct {
 	Events []*AutoMsgBookWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -196,6 +211,7 @@ func (m *AutoMsgBookWatchHelper_WatchEvent) GetObject() *Book {
 	return nil
 }
 
+// AutoMsgCouponWatchHelper is a wrapper object for watch events for Coupon objects
 type AutoMsgCouponWatchHelper struct {
 	Events []*AutoMsgCouponWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -238,6 +254,7 @@ func (m *AutoMsgCouponWatchHelper_WatchEvent) GetObject() *Coupon {
 	return nil
 }
 
+// AutoMsgCustomerWatchHelper is a wrapper object for watch events for Customer objects
 type AutoMsgCustomerWatchHelper struct {
 	Events []*AutoMsgCustomerWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -282,6 +299,7 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) GetObject() *Customer {
 	return nil
 }
 
+// AutoMsgOrderWatchHelper is a wrapper object for watch events for Order objects
 type AutoMsgOrderWatchHelper struct {
 	Events []*AutoMsgOrderWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -324,6 +342,7 @@ func (m *AutoMsgOrderWatchHelper_WatchEvent) GetObject() *Order {
 	return nil
 }
 
+// AutoMsgPublisherWatchHelper is a wrapper object for watch events for Publisher objects
 type AutoMsgPublisherWatchHelper struct {
 	Events []*AutoMsgPublisherWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -370,6 +389,7 @@ func (m *AutoMsgPublisherWatchHelper_WatchEvent) GetObject() *Publisher {
 	return nil
 }
 
+// AutoMsgStoreWatchHelper is a wrapper object for watch events for Store objects
 type AutoMsgStoreWatchHelper struct {
 	Events []*AutoMsgStoreWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -412,11 +432,16 @@ func (m *AutoMsgStoreWatchHelper_WatchEvent) GetObject() *Store {
 	return nil
 }
 
+//
 type Book struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Spec           BookSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec" json:"spec"`
-	Status         BookStatus `protobuf:"bytes,4,opt,name=Status,json=status" json:"status"`
+	//
+	Spec BookSpec `protobuf:"bytes,3,opt,name=Spec,json=spec" json:"spec"`
+	//
+	Status BookStatus `protobuf:"bytes,4,opt,name=Status,json=status" json:"status"`
 }
 
 func (m *Book) Reset()                    { *m = Book{} }
@@ -438,9 +463,13 @@ func (m *Book) GetStatus() BookStatus {
 	return BookStatus{}
 }
 
+//
 type BookEdition struct {
-	Errata  string                 `protobuf:"bytes,1,opt,name=Errata,json=errata,proto3" json:"errata"`
-	Year    string                 `protobuf:"bytes,2,opt,name=Year,json=year,proto3" json:"year"`
+	//
+	Errata string `protobuf:"bytes,1,opt,name=Errata,json=errata,proto3" json:"errata"`
+	//
+	Year string `protobuf:"bytes,2,opt,name=Year,json=year,proto3" json:"year"`
+	//
 	Reviews map[string]*BookReview `protobuf:"bytes,3,rep,name=Reviews,json=reviews" json:"reviews" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -470,10 +499,12 @@ func (m *BookEdition) GetReviews() map[string]*BookReview {
 	return nil
 }
 
+// BookList is a container object for list of Book objects
 type BookList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Book `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Book objects
+	Items []*Book `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *BookList) Reset()                    { *m = BookList{} }
@@ -488,9 +519,12 @@ func (m *BookList) GetItems() []*Book {
 	return nil
 }
 
+//
 type BookReview struct {
-	Date   *api.Timestamp `protobuf:"bytes,1,opt,name=Date,json=date" json:"date"`
-	Review string         `protobuf:"bytes,2,opt,name=Review,json=review,proto3" json:"review"`
+	//
+	Date *api.Timestamp `protobuf:"bytes,1,opt,name=Date,json=date" json:"date"`
+	//
+	Review string `protobuf:"bytes,2,opt,name=Review,json=review,proto3" json:"review"`
 }
 
 func (m *BookReview) Reset()                    { *m = BookReview{} }
@@ -512,14 +546,22 @@ func (m *BookReview) GetReview() string {
 	return ""
 }
 
+//
 type BookSpec struct {
-	ISBNId          string                  `protobuf:"bytes,2,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
-	Author          string                  `protobuf:"bytes,3,opt,name=Author,proto3" json:"Author,omitempty"`
-	IdProvider      string                  `protobuf:"bytes,4,opt,name=IdProvider,proto3" json:"IdProvider,omitempty"`
-	Category        string                  `protobuf:"bytes,5,opt,name=Category,proto3" json:"Category,omitempty"`
-	UpdateTimestamp *api.Timestamp          `protobuf:"bytes,6,opt,name=UpdateTimestamp" json:"UpdateTimestamp,omitempty"`
-	Terminate       bool                    `protobuf:"varint,7,opt,name=Terminate,proto3" json:"Terminate,omitempty"`
-	Editions        map[string]*BookEdition `protobuf:"bytes,8,rep,name=Editions,json=editions" json:"editions" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	//
+	ISBNId string `protobuf:"bytes,2,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
+	//
+	Author string `protobuf:"bytes,3,opt,name=Author,proto3" json:"Author,omitempty"`
+	// Added in  version 2 of the API.
+	IdProvider string `protobuf:"bytes,4,opt,name=IdProvider,proto3" json:"IdProvider,omitempty"`
+	//
+	Category string `protobuf:"bytes,5,opt,name=Category,proto3" json:"Category,omitempty"`
+	// Used for performance monitoring tests
+	UpdateTimestamp *api.Timestamp `protobuf:"bytes,6,opt,name=UpdateTimestamp" json:"UpdateTimestamp,omitempty"`
+	//
+	Terminate bool `protobuf:"varint,7,opt,name=Terminate,proto3" json:"Terminate,omitempty"`
+	//
+	Editions map[string]*BookEdition `protobuf:"bytes,8,rep,name=Editions,json=editions" json:"editions" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *BookSpec) Reset()                    { *m = BookSpec{} }
@@ -576,7 +618,9 @@ func (m *BookSpec) GetEditions() map[string]*BookEdition {
 	return nil
 }
 
+//
 type BookStatus struct {
+	//
 	Inventory int32 `protobuf:"varint,1,opt,name=Inventory,proto3" json:"Inventory,omitempty"`
 }
 
@@ -592,10 +636,14 @@ func (m *BookStatus) GetInventory() int32 {
 	return 0
 }
 
+//
 type Coupon struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	DiscountCode   string `protobuf:"bytes,3,opt,name=DiscountCode,proto3" json:"DiscountCode,omitempty"`
+	//
+	DiscountCode string `protobuf:"bytes,3,opt,name=DiscountCode,proto3" json:"DiscountCode,omitempty"`
 }
 
 func (m *Coupon) Reset()                    { *m = Coupon{} }
@@ -610,10 +658,12 @@ func (m *Coupon) GetDiscountCode() string {
 	return ""
 }
 
+// CouponList is a container object for list of Coupon objects
 type CouponList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Coupon `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Coupon objects
+	Items []*Coupon `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *CouponList) Reset()                    { *m = CouponList{} }
@@ -628,11 +678,16 @@ func (m *CouponList) GetItems() []*Coupon {
 	return nil
 }
 
+//
 type Customer struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Spec           CustomerSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
-	Status         CustomerStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
+	//
+	Spec CustomerSpec `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	//
+	Status CustomerStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
 }
 
 func (m *Customer) Reset()                    { *m = Customer{} }
@@ -654,10 +709,12 @@ func (m *Customer) GetStatus() CustomerStatus {
 	return CustomerStatus{}
 }
 
+// CustomerList is a container object for list of Customer objects
 type CustomerList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Customer `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Customer objects
+	Items []*Customer `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *CustomerList) Reset()                    { *m = CustomerList{} }
@@ -672,8 +729,11 @@ func (m *CustomerList) GetItems() []*Customer {
 	return nil
 }
 
+//
 type CustomerPersonalInfo struct {
-	SSN              string `protobuf:"bytes,1,opt,name=SSN,json=ssn,omitempty,proto3" json:"ssn,omitempty"`
+	//
+	SSN string `protobuf:"bytes,1,opt,name=SSN,json=ssn,omitempty,proto3" json:"ssn,omitempty"`
+	//
 	MotherMaidenName string `protobuf:"bytes,2,opt,name=MotherMaidenName,json=mother-maiden-name,omitempty,proto3" json:"mother-maiden-name,omitempty"`
 }
 
@@ -696,10 +756,15 @@ func (m *CustomerPersonalInfo) GetMotherMaidenName() string {
 	return ""
 }
 
+//
 type CustomerSpec struct {
-	Address              string               `protobuf:"bytes,1,opt,name=Address,proto3" json:"Address,omitempty"`
-	CreditCardNumbers    []string             `protobuf:"bytes,2,rep,name=CreditCardNumbers" json:"CreditCardNumbers,omitempty"`
-	Password             []byte               `protobuf:"bytes,3,opt,name=Password,proto3" json:"Password,omitempty"`
+	//
+	Address string `protobuf:"bytes,1,opt,name=Address,proto3" json:"Address,omitempty"`
+	//
+	CreditCardNumbers []string `protobuf:"bytes,2,rep,name=CreditCardNumbers" json:"CreditCardNumbers,omitempty"`
+	//
+	Password []byte `protobuf:"bytes,3,opt,name=Password,proto3" json:"Password,omitempty"`
+	//
 	PasswordRecoveryInfo CustomerPersonalInfo `protobuf:"bytes,4,opt,name=PasswordRecoveryInfo" json:"PasswordRecoveryInfo"`
 }
 
@@ -736,6 +801,7 @@ func (m *CustomerSpec) GetPasswordRecoveryInfo() CustomerPersonalInfo {
 	return CustomerPersonalInfo{}
 }
 
+//
 type CustomerStatus struct {
 }
 
@@ -744,11 +810,16 @@ func (m *CustomerStatus) String() string            { return proto.CompactTextSt
 func (*CustomerStatus) ProtoMessage()               {}
 func (*CustomerStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{19} }
 
+//
 type Order struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Spec           OrderSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
-	Status         OrderStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
+	// Spec is not allowed to be Null hence disabling nullable.
+	Spec OrderSpec `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	//
+	Status OrderStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
 }
 
 func (m *Order) Reset()                    { *m = Order{} }
@@ -770,8 +841,11 @@ func (m *Order) GetStatus() OrderStatus {
 	return OrderStatus{}
 }
 
+//
 type OrderItem struct {
-	ISBNId   string `protobuf:"bytes,1,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
+	//
+	ISBNId string `protobuf:"bytes,1,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
+	//
 	Quantity uint32 `protobuf:"varint,2,opt,name=Quantity,proto3" json:"Quantity,omitempty"`
 }
 
@@ -794,10 +868,12 @@ func (m *OrderItem) GetQuantity() uint32 {
 	return 0
 }
 
+// OrderList is a container object for list of Order objects
 type OrderList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Order `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Order objects
+	Items []*Order `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *OrderList) Reset()                    { *m = OrderList{} }
@@ -812,8 +888,11 @@ func (m *OrderList) GetItems() []*Order {
 	return nil
 }
 
+//
 type OrderSpec struct {
-	Id    string       `protobuf:"bytes,1,opt,name=Id,json=,omitempty,proto3" json:",omitempty"`
+	//
+	Id string `protobuf:"bytes,1,opt,name=Id,json=,omitempty,proto3" json:",omitempty"`
+	//
 	Order []*OrderItem `protobuf:"bytes,2,rep,name=Order" json:"Order,omitempty"`
 }
 
@@ -836,10 +915,14 @@ func (m *OrderSpec) GetOrder() []*OrderItem {
 	return nil
 }
 
+//
 type OrderStatus struct {
-	Status  string       `protobuf:"bytes,3,opt,name=Status,proto3" json:"Status,omitempty"`
-	Filled  []*OrderSpec `protobuf:"bytes,4,rep,name=Filled" json:"Filled,omitempty"`
-	Message string       `protobuf:"bytes,5,opt,name=Message,proto3" json:"Message,omitempty"`
+	//
+	Status string `protobuf:"bytes,3,opt,name=Status,proto3" json:"Status,omitempty"`
+	//
+	Filled []*OrderSpec `protobuf:"bytes,4,rep,name=Filled" json:"Filled,omitempty"`
+	//
+	Message string `protobuf:"bytes,5,opt,name=Message,proto3" json:"Message,omitempty"`
 }
 
 func (m *OrderStatus) Reset()                    { *m = OrderStatus{} }
@@ -868,10 +951,14 @@ func (m *OrderStatus) GetMessage() string {
 	return ""
 }
 
+//
 type OutageRequest struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Reason         string `protobuf:"bytes,3,opt,name=Reason,proto3" json:"Reason,omitempty"`
+	//
+	Reason string `protobuf:"bytes,3,opt,name=Reason,proto3" json:"Reason,omitempty"`
 }
 
 func (m *OutageRequest) Reset()                    { *m = OutageRequest{} }
@@ -886,10 +973,14 @@ func (m *OutageRequest) GetReason() string {
 	return ""
 }
 
+//
 type Publisher struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Spec           PublisherSpec `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	//
+	Spec PublisherSpec `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
 }
 
 func (m *Publisher) Reset()                    { *m = Publisher{} }
@@ -904,10 +995,12 @@ func (m *Publisher) GetSpec() PublisherSpec {
 	return PublisherSpec{}
 }
 
+// PublisherList is a container object for list of Publisher objects
 type PublisherList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Publisher `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Publisher objects
+	Items []*Publisher `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *PublisherList) Reset()                    { *m = PublisherList{} }
@@ -922,9 +1015,13 @@ func (m *PublisherList) GetItems() []*Publisher {
 	return nil
 }
 
+//
 type PublisherSpec struct {
-	Id      string `protobuf:"bytes,2,opt,name=Id,proto3" json:"Id,omitempty"`
+	//
+	Id string `protobuf:"bytes,2,opt,name=Id,proto3" json:"Id,omitempty"`
+	//
 	Address string `protobuf:"bytes,3,opt,name=Address,proto3" json:"Address,omitempty"`
+	//
 	WebAddr string `protobuf:"bytes,4,opt,name=WebAddr,proto3" json:"WebAddr,omitempty"`
 }
 
@@ -954,10 +1051,14 @@ func (m *PublisherSpec) GetWebAddr() string {
 	return ""
 }
 
+//
 type RestockRequest struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Reason         string `protobuf:"bytes,3,opt,name=Reason,proto3" json:"Reason,omitempty"`
+	//
+	Reason string `protobuf:"bytes,3,opt,name=Reason,proto3" json:"Reason,omitempty"`
 }
 
 func (m *RestockRequest) Reset()                    { *m = RestockRequest{} }
@@ -972,11 +1073,16 @@ func (m *RestockRequest) GetReason() string {
 	return ""
 }
 
+//
 type RestockResponse struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Books          []string `protobuf:"bytes,3,rep,name=Books" json:"Books,omitempty"`
-	Count          int32    `protobuf:"varint,4,opt,name=Count,proto3" json:"Count,omitempty"`
+	//
+	Books []string `protobuf:"bytes,3,rep,name=Books" json:"Books,omitempty"`
+	//
+	Count int32 `protobuf:"varint,4,opt,name=Count,proto3" json:"Count,omitempty"`
 }
 
 func (m *RestockResponse) Reset()                    { *m = RestockResponse{} }
@@ -998,11 +1104,16 @@ func (m *RestockResponse) GetCount() int32 {
 	return 0
 }
 
+//
 type Store struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
-	Spec           StoreSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
-	Status         StoreStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
+	//
+	Spec StoreSpec `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	//
+	Status StoreStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
 }
 
 func (m *Store) Reset()                    { *m = Store{} }
@@ -1024,10 +1135,12 @@ func (m *Store) GetStatus() StoreStatus {
 	return StoreStatus{}
 }
 
+// StoreList is a container object for list of Store objects
 type StoreList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Store `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Store objects
+	Items []*Store `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *StoreList) Reset()                    { *m = StoreList{} }
@@ -1042,7 +1155,9 @@ func (m *StoreList) GetItems() []*Store {
 	return nil
 }
 
+//
 type StoreSpec struct {
+	//
 	Contact string `protobuf:"bytes,1,opt,name=Contact,proto3" json:"Contact,omitempty"`
 }
 
@@ -1058,7 +1173,9 @@ func (m *StoreSpec) GetContact() string {
 	return ""
 }
 
+//
 type StoreStatus struct {
+	//
 	CurrentOutages []string `protobuf:"bytes,1,rep,name=CurrentOutages" json:"CurrentOutages,omitempty"`
 }
 
@@ -1133,29 +1250,53 @@ const _ = grpc.SupportPackageIsVersion4
 type BookstoreV1Client interface {
 	AddOutage(ctx context.Context, in *OutageRequest, opts ...grpc.CallOption) (*Store, error)
 	Applydiscount(ctx context.Context, in *ApplyDiscountReq, opts ...grpc.CallOption) (*Order, error)
+	// Creates a new Book object
 	AutoAddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
+	// Creates a new Coupon object
 	AutoAddCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
+	// Creates a new Customer object
 	AutoAddCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
+	// Creates a new Order object
 	AutoAddOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
+	// Creates a new Publisher object
 	AutoAddPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	// Creates a new Store object
 	AutoAddStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
+	// Deletes the Book object
 	AutoDeleteBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
+	// Deletes the Coupon object
 	AutoDeleteCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
+	// Deletes the Customer object
 	AutoDeleteCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
+	// Deletes the Order object
 	AutoDeleteOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
+	// Deletes the Publisher object
 	AutoDeletePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	// Deletes the Store object
 	AutoDeleteStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
+	// Retreives the Book object
 	AutoGetBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
+	// Retreives the Coupon object
 	AutoGetCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
+	// Retreives the Customer object
 	AutoGetCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
+	// Retreives the Order object
 	AutoGetOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
+	// Retreives the Publisher object
 	AutoGetPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	// Retreives the Store object
 	AutoGetStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
+	// Retreives a list of Book objects
 	AutoListBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*BookList, error)
+	// Retreives a list of Coupon objects
 	AutoListCoupon(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*CouponList, error)
+	// Retreives a list of Customer objects
 	AutoListCustomer(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*CustomerList, error)
+	// Retreives a list of Order objects
 	AutoListOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*OrderList, error)
+	// Retreives a list of Publisher objects
 	AutoListPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*PublisherList, error)
+	// Retreives a list of Store objects
 	AutoListStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*StoreList, error)
 	AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
 	AutoUpdateCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
@@ -1163,11 +1304,17 @@ type BookstoreV1Client interface {
 	AutoUpdateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
 	AutoUpdateStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
+	// Watch for changes to Book objects
 	AutoWatchBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchBookClient, error)
+	// Watch for changes to Coupon objects
 	AutoWatchCoupon(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchCouponClient, error)
+	// Watch for changes to Customer objects
 	AutoWatchCustomer(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchCustomerClient, error)
+	// Watch for changes to Order objects
 	AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error)
+	// Watch for changes to Publisher objects
 	AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchPublisherClient, error)
+	// Watch for changes to Store objects
 	AutoWatchStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchStoreClient, error)
 	Cleardiscount(ctx context.Context, in *ApplyDiscountReq, opts ...grpc.CallOption) (*Order, error)
 	Restock(ctx context.Context, in *RestockRequest, opts ...grpc.CallOption) (*RestockResponse, error)
@@ -1684,29 +1831,53 @@ func (c *bookstoreV1Client) Restock(ctx context.Context, in *RestockRequest, opt
 type BookstoreV1Server interface {
 	AddOutage(context.Context, *OutageRequest) (*Store, error)
 	Applydiscount(context.Context, *ApplyDiscountReq) (*Order, error)
+	// Creates a new Book object
 	AutoAddBook(context.Context, *Book) (*Book, error)
+	// Creates a new Coupon object
 	AutoAddCoupon(context.Context, *Coupon) (*Coupon, error)
+	// Creates a new Customer object
 	AutoAddCustomer(context.Context, *Customer) (*Customer, error)
+	// Creates a new Order object
 	AutoAddOrder(context.Context, *Order) (*Order, error)
+	// Creates a new Publisher object
 	AutoAddPublisher(context.Context, *Publisher) (*Publisher, error)
+	// Creates a new Store object
 	AutoAddStore(context.Context, *Store) (*Store, error)
+	// Deletes the Book object
 	AutoDeleteBook(context.Context, *Book) (*Book, error)
+	// Deletes the Coupon object
 	AutoDeleteCoupon(context.Context, *Coupon) (*Coupon, error)
+	// Deletes the Customer object
 	AutoDeleteCustomer(context.Context, *Customer) (*Customer, error)
+	// Deletes the Order object
 	AutoDeleteOrder(context.Context, *Order) (*Order, error)
+	// Deletes the Publisher object
 	AutoDeletePublisher(context.Context, *Publisher) (*Publisher, error)
+	// Deletes the Store object
 	AutoDeleteStore(context.Context, *Store) (*Store, error)
+	// Retreives the Book object
 	AutoGetBook(context.Context, *Book) (*Book, error)
+	// Retreives the Coupon object
 	AutoGetCoupon(context.Context, *Coupon) (*Coupon, error)
+	// Retreives the Customer object
 	AutoGetCustomer(context.Context, *Customer) (*Customer, error)
+	// Retreives the Order object
 	AutoGetOrder(context.Context, *Order) (*Order, error)
+	// Retreives the Publisher object
 	AutoGetPublisher(context.Context, *Publisher) (*Publisher, error)
+	// Retreives the Store object
 	AutoGetStore(context.Context, *Store) (*Store, error)
+	// Retreives a list of Book objects
 	AutoListBook(context.Context, *api.ListWatchOptions) (*BookList, error)
+	// Retreives a list of Coupon objects
 	AutoListCoupon(context.Context, *api.ListWatchOptions) (*CouponList, error)
+	// Retreives a list of Customer objects
 	AutoListCustomer(context.Context, *api.ListWatchOptions) (*CustomerList, error)
+	// Retreives a list of Order objects
 	AutoListOrder(context.Context, *api.ListWatchOptions) (*OrderList, error)
+	// Retreives a list of Publisher objects
 	AutoListPublisher(context.Context, *api.ListWatchOptions) (*PublisherList, error)
+	// Retreives a list of Store objects
 	AutoListStore(context.Context, *api.ListWatchOptions) (*StoreList, error)
 	AutoUpdateBook(context.Context, *Book) (*Book, error)
 	AutoUpdateCoupon(context.Context, *Coupon) (*Coupon, error)
@@ -1714,11 +1885,17 @@ type BookstoreV1Server interface {
 	AutoUpdateOrder(context.Context, *Order) (*Order, error)
 	AutoUpdatePublisher(context.Context, *Publisher) (*Publisher, error)
 	AutoUpdateStore(context.Context, *Store) (*Store, error)
+	// Watch for changes to Book objects
 	AutoWatchBook(*api.ListWatchOptions, BookstoreV1_AutoWatchBookServer) error
+	// Watch for changes to Coupon objects
 	AutoWatchCoupon(*api.ListWatchOptions, BookstoreV1_AutoWatchCouponServer) error
+	// Watch for changes to Customer objects
 	AutoWatchCustomer(*api.ListWatchOptions, BookstoreV1_AutoWatchCustomerServer) error
+	// Watch for changes to Order objects
 	AutoWatchOrder(*api.ListWatchOptions, BookstoreV1_AutoWatchOrderServer) error
+	// Watch for changes to Publisher objects
 	AutoWatchPublisher(*api.ListWatchOptions, BookstoreV1_AutoWatchPublisherServer) error
+	// Watch for changes to Store objects
 	AutoWatchStore(*api.ListWatchOptions, BookstoreV1_AutoWatchStoreServer) error
 	Cleardiscount(context.Context, *ApplyDiscountReq) (*Order, error)
 	Restock(context.Context, *RestockRequest) (*RestockResponse, error)

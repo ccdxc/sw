@@ -23,10 +23,12 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AuthenticationPolicyList is a container object for list of AuthenticationPolicy objects
 type AuthenticationPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*AuthenticationPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of AuthenticationPolicy objects
+	Items []*AuthenticationPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AuthenticationPolicyList) Reset()                    { *m = AuthenticationPolicyList{} }
@@ -41,6 +43,7 @@ func (m *AuthenticationPolicyList) GetItems() []*AuthenticationPolicy {
 	return nil
 }
 
+// AutoMsgAuthenticationPolicyWatchHelper is a wrapper object for watch events for AuthenticationPolicy objects
 type AutoMsgAuthenticationPolicyWatchHelper struct {
 	Events []*AutoMsgAuthenticationPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -91,6 +94,7 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) GetObject() *Authent
 	return nil
 }
 
+// AutoMsgRoleBindingWatchHelper is a wrapper object for watch events for RoleBinding objects
 type AutoMsgRoleBindingWatchHelper struct {
 	Events []*AutoMsgRoleBindingWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -137,6 +141,7 @@ func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) GetObject() *RoleBinding {
 	return nil
 }
 
+// AutoMsgRoleWatchHelper is a wrapper object for watch events for Role objects
 type AutoMsgRoleWatchHelper struct {
 	Events []*AutoMsgRoleWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -179,6 +184,7 @@ func (m *AutoMsgRoleWatchHelper_WatchEvent) GetObject() *Role {
 	return nil
 }
 
+// AutoMsgUserWatchHelper is a wrapper object for watch events for User objects
 type AutoMsgUserWatchHelper struct {
 	Events []*AutoMsgUserWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events" json:"Events,omitempty"`
 }
@@ -221,10 +227,12 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) GetObject() *User {
 	return nil
 }
 
+// RoleBindingList is a container object for list of RoleBinding objects
 type RoleBindingList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*RoleBinding `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of RoleBinding objects
+	Items []*RoleBinding `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *RoleBindingList) Reset()                    { *m = RoleBindingList{} }
@@ -239,10 +247,12 @@ func (m *RoleBindingList) GetItems() []*RoleBinding {
 	return nil
 }
 
+// RoleList is a container object for list of Role objects
 type RoleList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Role `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of Role objects
+	Items []*Role `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *RoleList) Reset()                    { *m = RoleList{} }
@@ -257,10 +267,12 @@ func (m *RoleList) GetItems() []*Role {
 	return nil
 }
 
+// UserList is a container object for list of User objects
 type UserList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*User `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// List of User objects
+	Items []*User `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *UserList) Reset()                    { *m = UserList{} }
@@ -301,29 +313,49 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AuthV1 service
 
 type AuthV1Client interface {
+	// Creates a new AuthenticationPolicy object
 	AutoAddAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
+	// Creates a new Role object
 	AutoAddRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
+	// Creates a new RoleBinding object
 	AutoAddRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
+	// Creates a new User object
 	AutoAddUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
+	// Deletes the AuthenticationPolicy object
 	AutoDeleteAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
+	// Deletes the Role object
 	AutoDeleteRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
+	// Deletes the RoleBinding object
 	AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
+	// Deletes the User object
 	AutoDeleteUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
+	// Retreives the AuthenticationPolicy object
 	AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
+	// Retreives the Role object
 	AutoGetRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
+	// Retreives the RoleBinding object
 	AutoGetRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
+	// Retreives the User object
 	AutoGetUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
+	// Retreives a list of AuthenticationPolicy objects
 	AutoListAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AuthenticationPolicyList, error)
+	// Retreives a list of Role objects
 	AutoListRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleList, error)
+	// Retreives a list of RoleBinding objects
 	AutoListRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleBindingList, error)
+	// Retreives a list of User objects
 	AutoListUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*UserList, error)
 	AutoUpdateAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
 	AutoUpdateRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
 	AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
 	AutoUpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
+	// Watch for changes to AuthenticationPolicy objects
 	AutoWatchAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchAuthenticationPolicyClient, error)
+	// Watch for changes to Role objects
 	AutoWatchRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleClient, error)
+	// Watch for changes to RoleBinding objects
 	AutoWatchRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleBindingClient, error)
+	// Watch for changes to User objects
 	AutoWatchUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchUserClient, error)
 }
 
@@ -646,29 +678,49 @@ func (x *authV1AutoWatchUserClient) Recv() (*AutoMsgUserWatchHelper, error) {
 // Server API for AuthV1 service
 
 type AuthV1Server interface {
+	// Creates a new AuthenticationPolicy object
 	AutoAddAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	// Creates a new Role object
 	AutoAddRole(context.Context, *Role) (*Role, error)
+	// Creates a new RoleBinding object
 	AutoAddRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
+	// Creates a new User object
 	AutoAddUser(context.Context, *User) (*User, error)
+	// Deletes the AuthenticationPolicy object
 	AutoDeleteAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	// Deletes the Role object
 	AutoDeleteRole(context.Context, *Role) (*Role, error)
+	// Deletes the RoleBinding object
 	AutoDeleteRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
+	// Deletes the User object
 	AutoDeleteUser(context.Context, *User) (*User, error)
+	// Retreives the AuthenticationPolicy object
 	AutoGetAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	// Retreives the Role object
 	AutoGetRole(context.Context, *Role) (*Role, error)
+	// Retreives the RoleBinding object
 	AutoGetRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
+	// Retreives the User object
 	AutoGetUser(context.Context, *User) (*User, error)
+	// Retreives a list of AuthenticationPolicy objects
 	AutoListAuthenticationPolicy(context.Context, *api.ListWatchOptions) (*AuthenticationPolicyList, error)
+	// Retreives a list of Role objects
 	AutoListRole(context.Context, *api.ListWatchOptions) (*RoleList, error)
+	// Retreives a list of RoleBinding objects
 	AutoListRoleBinding(context.Context, *api.ListWatchOptions) (*RoleBindingList, error)
+	// Retreives a list of User objects
 	AutoListUser(context.Context, *api.ListWatchOptions) (*UserList, error)
 	AutoUpdateAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	AutoUpdateRole(context.Context, *Role) (*Role, error)
 	AutoUpdateRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
 	AutoUpdateUser(context.Context, *User) (*User, error)
+	// Watch for changes to AuthenticationPolicy objects
 	AutoWatchAuthenticationPolicy(*api.ListWatchOptions, AuthV1_AutoWatchAuthenticationPolicyServer) error
+	// Watch for changes to Role objects
 	AutoWatchRole(*api.ListWatchOptions, AuthV1_AutoWatchRoleServer) error
+	// Watch for changes to RoleBinding objects
 	AutoWatchRoleBinding(*api.ListWatchOptions, AuthV1_AutoWatchRoleBindingServer) error
+	// Watch for changes to User objects
 	AutoWatchUser(*api.ListWatchOptions, AuthV1_AutoWatchUserServer) error
 }
 

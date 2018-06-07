@@ -28,6 +28,8 @@ func New(reg *descriptor.Registry) gen.Generator {
 	return &generator{reg: reg}
 }
 
+var Finalizers []Finalizer
+
 func (g *generator) Generate(targets []*descriptor.File) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	for _, file := range targets {

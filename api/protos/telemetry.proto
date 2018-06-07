@@ -76,9 +76,13 @@ message FwlogStatus {
 }
 
 enum FwlogFilter {
+    // ui-hint: All
     FWLOG_ALL = 0;
+    // ui-hint: Accept
     FWLOG_ACCEPT = 1;
+    // ui-hint: Reject
     FWLOG_REJECT= 2;
+    // ui-hint: Deny
     FWLOG_DENY = 3;
 }
 

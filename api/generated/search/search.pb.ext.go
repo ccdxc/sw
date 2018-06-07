@@ -200,10 +200,10 @@ func (m *SearchQuery) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Categories {
-			m.Categories[k] = Category_Type_name[0]
+			m.Categories[k] = "Cluster"
 		}
 		for k := range m.Kinds {
-			m.Kinds[k] = Kind_Type_name[0]
+			m.Kinds[k] = "Cluster"
 		}
 	}
 	return ret

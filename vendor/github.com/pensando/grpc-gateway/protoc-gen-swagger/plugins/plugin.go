@@ -3,6 +3,7 @@ package plugin
 import (
 	protoplugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/golang/glog"
+	"github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger"
 )
 
 // RequestMutatorFunc is the registered function that mutates the CodeGen request req
@@ -18,4 +19,8 @@ func RegisterReqMutator(name string, fn RequestMutatorFunc) {
 		MutatorMap = make(map[string]RequestMutatorFunc)
 	}
 	MutatorMap[name] = fn
+}
+
+func RegisterFinalizer(name string, fnz genswagger.Finalizer) {
+	genswagger.Finalizers = append(genswagger.Finalizers, fnz)
 }

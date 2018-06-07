@@ -66,8 +66,11 @@ message AuditInfo {
 message AlertSpec {
   // Possible alert states
   enum AlertState {
+    //ui-hint: Open
     OPEN         = 0;
+    //ui-hint: Resolved
     RESOLVED     = 1;
+    //ui-hint: Acknowledged
     ACKNOWLEDGED = 2;
   }
 
@@ -196,10 +199,10 @@ message Requirement {
   enum AllowedOperators {
     Equals       = 0;
     In           = 1;
-    NotEquals    = 2;
-    NotIn        = 3;
-    Gt           = 4;
-    Lt           = 5;
+    NotEquals    = 2; // ui-hint: Not Equals
+    NotIn        = 3; // ui-hint: Not In
+    Gt           = 4; // ui-hint: Greater Than
+    Lt           = 5; // ui-hint: Less Than
   }
 
   // name of the field or metric

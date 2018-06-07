@@ -20,14 +20,15 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// security group configuration
+// SecurityGroup represents a security zone or domain
 type SecurityGroup struct {
-	// Workload selector (list of labels)
+	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Service object selector
+	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// list of CIDRs that are part of this security group
-	Spec   SecurityGroupSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Spec contains the configuration of the security group.
+	Spec SecurityGroupSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the security group.
 	Status SecurityGroupStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
 }
 
@@ -50,13 +51,14 @@ func (m *SecurityGroup) GetStatus() SecurityGroupStatus {
 	return SecurityGroupStatus{}
 }
 
-// security group status
+// security group configuration
 type SecurityGroupSpec struct {
-	// list of workloads that are part of this security group
+	// Workload selector (list of labels)
 	WorkloadSelector *labels.Selector `protobuf:"bytes,1,opt,name=WorkloadSelector,json=workload-selector,omitempty" json:"workload-selector,omitempty"`
-	// list of all policies attached to this security group
+	// Service object selector
 	ServiceSelector []string `protobuf:"bytes,2,rep,name=ServiceSelector,json=service-labels,omitempty" json:"service-labels,omitempty"`
-	MatchPrefixes   []string `protobuf:"bytes,3,rep,name=MatchPrefixes,json=match-prefixes,omitempty" json:"match-prefixes,omitempty"`
+	// list of CIDRs that are part of this security group
+	MatchPrefixes []string `protobuf:"bytes,3,rep,name=MatchPrefixes,json=match-prefixes,omitempty" json:"match-prefixes,omitempty"`
 }
 
 func (m *SecurityGroupSpec) Reset()                    { *m = SecurityGroupSpec{} }
@@ -85,10 +87,12 @@ func (m *SecurityGroupSpec) GetMatchPrefixes() []string {
 	return nil
 }
 
-// SecurityGroup represents a security zone or domain
+// security group status
 type SecurityGroupStatus struct {
+	// list of workloads that are part of this security group
 	Workloads []string `protobuf:"bytes,1,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
-	Policies  []string `protobuf:"bytes,2,rep,name=Policies" json:"Policies,omitempty"`
+	// list of all policies attached to this security group
+	Policies []string `protobuf:"bytes,2,rep,name=Policies" json:"Policies,omitempty"`
 }
 
 func (m *SecurityGroupStatus) Reset()                    { *m = SecurityGroupStatus{} }

@@ -45,7 +45,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// Elements of a filter spec
+//
 type Empty struct {
 }
 
@@ -56,6 +56,7 @@ func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptorCommon, []int{
 
 // The filter selecting a subset of objects to list
 type Filter struct {
+	//
 	Specs []*Spec `protobuf:"bytes,1,rep,name=Specs" json:"Specs,omitempty"`
 }
 
@@ -71,11 +72,14 @@ func (m *Filter) GetSpecs() []*Spec {
 	return nil
 }
 
-// Specification for a watch
+// Elements of a filter spec
 type Spec struct {
-	Key      string   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
-	Operator string   `protobuf:"bytes,2,opt,name=Operator,proto3" json:"Operator,omitempty"`
-	Values   []string `protobuf:"bytes,3,rep,name=Values" json:"Values,omitempty"`
+	//
+	Key string `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
+	//
+	Operator string `protobuf:"bytes,2,opt,name=Operator,proto3" json:"Operator,omitempty"`
+	//
+	Values []string `protobuf:"bytes,3,rep,name=Values" json:"Values,omitempty"`
 }
 
 func (m *Spec) Reset()                    { *m = Spec{} }
@@ -104,9 +108,12 @@ func (m *Spec) GetValues() []string {
 	return nil
 }
 
+// Specification for a watch
 type WatchSpec struct {
-	RefVersion string  `protobuf:"bytes,1,opt,name=RefVersion,proto3" json:"RefVersion,omitempty"`
-	Specs      []*Spec `protobuf:"bytes,2,rep,name=Specs" json:"Specs,omitempty"`
+	//
+	RefVersion string `protobuf:"bytes,1,opt,name=RefVersion,proto3" json:"RefVersion,omitempty"`
+	//
+	Specs []*Spec `protobuf:"bytes,2,rep,name=Specs" json:"Specs,omitempty"`
 }
 
 func (m *WatchSpec) Reset()                    { *m = WatchSpec{} }

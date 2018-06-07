@@ -201,7 +201,7 @@ func (m *AlertPolicySpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Severity = SeverityLevel_name[0]
+		m.Severity = "INFO"
 	}
 	return ret
 }
@@ -297,7 +297,7 @@ func (m *AlertSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.State = AlertSpec_AlertState_name[0]
+		m.State = "OPEN"
 	}
 	return ret
 }
@@ -325,7 +325,7 @@ func (m *AlertStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Severity = SeverityLevel_name[0]
+		m.Severity = "INFO"
 	}
 	return ret
 }
@@ -373,7 +373,7 @@ func (m *AuthConfig) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Algo = AuthConfig_Algos_name[0]
+		m.Algo = "MD5"
 	}
 	return ret
 }
@@ -423,7 +423,7 @@ func (m *PrivacyConfig) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Algo = PrivacyConfig_Algos_name[0]
+		m.Algo = "DES56"
 	}
 	return ret
 }
@@ -450,7 +450,7 @@ func (m *Requirement) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Operator = Requirement_AllowedOperators_name[0]
+		m.Operator = "Equals"
 	}
 	return ret
 }
@@ -483,7 +483,7 @@ func (m *SNMPTrapServer) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Version = SNMPTrapServer_SNMPVersions_name[0]
+		m.Version = "V2C"
 	}
 	return ret
 }
@@ -736,6 +736,26 @@ func (m *Requirement) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.AuthConfig != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "AuthConfig"
+		if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	if m.PrivacyConfig != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "PrivacyConfig"
+		if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapAlerts["SNMPTrapServer"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {

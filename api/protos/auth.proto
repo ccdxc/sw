@@ -16,7 +16,9 @@ import "github.com/pensando/sw/api/meta.proto";
 message UserSpec {
     //User could be local or external like in LDAP
     enum UserType {
+        // ui-hint: Local
         LOCAL    = 0; //User managed locally
+        // ui-hint: External
         EXTERNAL = 1; //User external to Venice like in LDAP, SAML
     }
 
@@ -58,7 +60,7 @@ message AuthenticationPolicySpec {
 
 message Authenticators {
     enum AuthenticatorType {
-        LOCAL  = 0;
+        LOCAL  = 0; // ui-hint: Local
         LDAP   = 1;
         RADIUS = 2;
     }
@@ -149,58 +151,58 @@ message Permission {
     // ResourceKind is a resource kind for which permission is defined
     enum ResrcKind {
         // Reserved keyword to imply all resources
-        ALL_RESOURCE_KINDS = 0;
+        ALL_RESOURCE_KINDS = 0; // ui-hint: All Resource Kinds
 
         // Cluster wide resources
-        TENANT             = 1;
-        CLUSTER            = 2;
-        NODE               = 3;
-        SMARTNIC           = 4;
-        CERTIFICATE        = 5;
+        TENANT             = 1; // ui-hint: Tenant
+        CLUSTER            = 2; // ui-hint: Cluster
+        NODE               = 3; // ui-hint: Node
+        SMARTNIC           = 4; // ui-hint: SmartNIC
+        CERTIFICATE        = 5; // ui-hint: Certificate
 
         // Network related resources
-        NETWORK            = 6;
-        SERVICE            = 7;
-        LBPOLICY           = 8;
+        NETWORK            = 6; // ui-hint: Network
+        SERVICE            = 7; // ui-hint: Service
+        LBPOLICY           = 8; // ui-hint: LBPolicy
 
         // Workload
-        ENDPOINT           = 9;
+        ENDPOINT           = 9; // ui-hint: Endpoint
 
         // Security related resources
-        SECURITYGROUP      = 10;
-        SGPOLICY           = 11;
-        APP                = 12;
-        ENCRYPTIONPOLICY   = 13;
+        SECURITYGROUP      = 10; // ui-hint: SecurityGroup
+        SGPOLICY           = 11; // ui-hint: SGPolicy
+        APP                = 12; // ui-hint: App
+        ENCRYPTIONPOLICY   = 13; // ui-hint: EncryptionPolicy
 
         // Monitoring related resources
-        ALERT              = 14;
-        ALERTPOLICY        = 15;
-        ALERTDESTINATION   = 16;
-        EVENTPOLICY        = 17;
-        STATSPOLICY        = 18;
-        FWLOGPOLICY        = 19;
-        FLOWEXPORTPOLICY   = 20;
+        ALERT              = 14; // ui-hint: Alert
+        ALERTPOLICY        = 15; // ui-hint: AlertPolicy
+        ALERTDESTINATION   = 16; // ui-hint: AlertDestination
+        EVENTPOLICY        = 17; // ui-hint: EventPolicy
+        STATSPOLICY        = 18; // ui-hint: StatsPolicy
+        FWLOGPOLICY        = 19; // ui-hint: FwlogPolicy
+        FLOWEXPORTPOLICY   = 20; // ui-hint: FlowExportPolicy
 
         // User management related resources
-        USER               = 21;
-        AUTHPOLICY         = 22;
-        ROLE               = 23;
-        ROLEBINDING        = 24;
+        USER               = 21; // ui-hint: User
+        AUTHPOLICY         = 22; // ui-hint: AuthenticationPolicy
+        ROLE               = 23; // ui-hint: Role
+        ROLEBINDING        = 24; // ui-hint: RoleBinding
 
         // Arbitrary API endpoint as a resource
-        APIENDPOINT        = 25;
+        APIENDPOINT        = 25; // ui-hint: API Endpoint
     }
 
     // ActionType is an action on a resource that a permission allows
     enum ActionType {
         // Reserved keyword to imply all action types
-        ALL_ACTIONS = 0;
-        CREATE      = 1;
-        READ        = 2;
-        UPDATE      = 3;
-        DELETE      = 4;
+        ALL_ACTIONS = 0; // ui-hint: All Actions
+        CREATE      = 1; // ui-hint: Create
+        READ        = 2; // ui-hint: Read
+        UPDATE      = 3; // ui-hint: Update
+        DELETE      = 4; // ui-hint: Delete
         // Commit action on staging buffer
-        COMMIT      = 5;
+        COMMIT      = 5; // ui-hint: Commit Config
     }
 
     // ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
