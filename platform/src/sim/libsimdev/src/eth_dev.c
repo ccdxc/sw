@@ -211,6 +211,9 @@ devcmd_identify(struct admin_cmd *acmd, struct admin_comp *acomp)
             .nintrs = ep->intr_count,
             .nucasts_per_lif = 0,
             .nmcasts_per_lif = 0,
+            .rdma_version = 0,
+            .rdma_qp_opcodes = { 0 },
+            .rdma_admin_opcodes = { 0 },
         },
     };
 
