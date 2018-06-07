@@ -61,7 +61,7 @@ func setup() {
 	}
 
 	//create test user
-	user = CreateTestUser(apicl, testUser, testPassword, "default")
+	user = MustCreateTestUser(apicl, testUser, testPassword, "default")
 
 	//for tests in passwordhasher_test.go
 	cachePasswordHash()
@@ -109,7 +109,11 @@ func cachePasswordHash() {
 }
 
 func TestAuthenticate(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 
 	defer DeleteAuthenticationPolicy(apicl)
 
@@ -125,7 +129,11 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestIncorrectPasswordAuthentication(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 
 	defer DeleteAuthenticationPolicy(apicl)
 
@@ -141,7 +149,11 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 }
 
 func TestIncorrectUserAuthentication(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 
 	defer DeleteAuthenticationPolicy(apicl)
 
@@ -158,7 +170,11 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 }
 
 func TestDisabledPasswordAuthenticator(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: false}, &auth.Ldap{Enabled: false})
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: false}, &auth.Ldap{Enabled: false})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 
 	defer DeleteAuthenticationPolicy(apicl)
 

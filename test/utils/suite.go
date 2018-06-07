@@ -190,10 +190,22 @@ func (tu *TestUtils) SetupAuth() {
 		ginkgo.Fail(fmt.Sprintf("cannot create rest client, err: %v", err))
 	}
 	// create authentication policy with local auth enabled
-	testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: tu.AuthMethod == auth.Authenticators_LOCAL.String()},
+	_, err = testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: tu.AuthMethod == auth.Authenticators_LOCAL.String()},
 		&auth.Ldap{Enabled: tu.AuthMethod == auth.Authenticators_LDAP.String()})
+	if err != nil {
+		// 409 is returned when authpolicy already exists. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(409)") {
+			ginkgo.Fail(fmt.Sprintf("CreateAuthenticationPolicy failed with err: %v", err))
+		}
+	}
 	// create user
-	testutils.CreateTestUser(apicl, tu.User, tu.Password, "default")
+	_, err = testutils.CreateTestUser(apicl, tu.User, tu.Password, "default")
+	if err != nil {
+		// 409 is returned when user already exists. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(409)") {
+			ginkgo.Fail(fmt.Sprintf("CreateTestUser failed with err: %v", err))
+		}
+	}
 }
 
 // Init starts connecting to the nodes and builds initial data about cluster
@@ -218,6 +230,9 @@ func (tu *TestUtils) Init() {
 	ginkgo.By(fmt.Sprintf("IPToNameMap: %+v", tu.IPToNameMap))
 	ginkgo.By(fmt.Sprintf("apiGwAddr : %+v ", tu.apiGwAddr))
 
+	// We purposefully create Auth at the start of the test and dont delete these policies at the end.
+	//  deletion is not possible because as soon as we delete the user, we lose privileges to delete authpolicy.
+	//	so - during creation we ignore if the authpolicy/user already exist
 	tu.SetupAuth()
 	ginkgo.By("auth setup complete")
 
@@ -281,11 +296,6 @@ func (tu *TestUtils) Close() {
 	}
 
 	if tu.APIClient != nil {
-		// Clean up auth setup
-		testutils.DeleteAuthenticationPolicy(tu.APIClient)
-		testutils.DeleteUser(tu.APIClient, tu.User, "default")
-		ginkgo.By("Cleaned up auth setup")
-
 		tu.APIClient.Close()
 		tu.APIClient = nil
 	}

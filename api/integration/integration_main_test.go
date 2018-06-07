@@ -190,9 +190,9 @@ func TestMain(m *testing.M) {
 		tinfo.l.Fatalf("cannot create API server client (%v)", err)
 	}
 	// create authentication policy with local auth enabled
-	testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
 	// create user
-	testutils.CreateTestUser(apicl, testUser, testPassword, "default")
+	testutils.MustCreateTestUser(apicl, testUser, testPassword, "default")
 	tinfo.userCred = &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,

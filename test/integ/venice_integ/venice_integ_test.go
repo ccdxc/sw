@@ -302,9 +302,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.tpm = tpm
 
 	// create authentication policy with local auth enabled
-	CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
 	// create user
-	CreateTestUser(apicl, testUser, testPassword, "default")
+	MustCreateTestUser(apicl, testUser, testPassword, "default")
 	it.userCred = &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,

@@ -1677,9 +1677,9 @@ func stopAPIserverAPIgw(t *testing.T) {
 
 func setupAuth(t *testing.T) {
 	// create authentication policy with local auth enabled
-	authntestutils.CreateAuthenticationPolicy(tInfo.apiClient, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	authntestutils.MustCreateAuthenticationPolicy(tInfo.apiClient, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
 	// create user
-	authntestutils.CreateTestUser(tInfo.apiClient, testUser, testPassword, "default")
+	authntestutils.MustCreateTestUser(tInfo.apiClient, testUser, testPassword, "default")
 	getAuthorizationHeader(t)
 }
 

@@ -64,7 +64,7 @@ func setup() {
 	}
 
 	// create test user
-	CreateTestUser(apicl, testUser, testPassword, "default")
+	MustCreateTestUser(apicl, testUser, testPassword, "default")
 
 	// create secret for jwt tests
 	secret = CreateSecret(128)
@@ -195,12 +195,15 @@ func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy)
 		return err != nil, nil
 	}, "failed to create AuthenticationPolicy")
 
-	ret := CreateAuthenticationPolicyWithOrder(apicl,
+	ret, err := CreateAuthenticationPolicyWithOrder(apicl,
 		policy.Spec.Authenticators.Local,
 		policy.Spec.Authenticators.Ldap,
 		policy.Spec.Authenticators.Radius,
 		policy.Spec.Authenticators.AuthenticatorOrder,
 		secret)
+	if err != nil {
+		panic(fmt.Sprintf("CreateAuthenticationPolicyWithOrder failed with err %s", err))
+	}
 
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := authGetter.GetAuthenticationPolicy()

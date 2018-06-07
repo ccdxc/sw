@@ -22,10 +22,10 @@ func TestLogin(t *testing.T) {
 		panic("error creating api client")
 	}
 	// create authentication policy with local auth enabled
-	CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
 	defer DeleteAuthenticationPolicy(apicl)
 	// create local user
-	CreateTestUser(apicl, testUser, testPassword, "default")
+	MustCreateTestUser(apicl, testUser, testPassword, "default")
 	defer DeleteUser(apicl, testUser, "default")
 
 	in := &auth.PasswordCredential{
@@ -105,10 +105,10 @@ func TestLoginFailures(t *testing.T) {
 		panic("error creating api client")
 	}
 	// create authentication policy with local auth enabled
-	CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
 	defer DeleteAuthenticationPolicy(apicl)
 	// create local user
-	CreateTestUser(apicl, testUser, testPassword, "default")
+	MustCreateTestUser(apicl, testUser, testPassword, "default")
 	defer DeleteUser(apicl, testUser, "default")
 
 	for _, test := range tests {

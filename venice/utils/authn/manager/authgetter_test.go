@@ -21,7 +21,7 @@ func TestGetUser(t *testing.T) {
 
 func TestStopStart(t *testing.T) {
 	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
-	CreateTestUser(apicl, "test1", testPassword, tenant)
+	MustCreateTestUser(apicl, "test1", testPassword, tenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		user, ok := authGetter.GetUser("test1", tenant)
 		return ok && user.Name == "test1" && user.Tenant == tenant, nil
@@ -29,7 +29,7 @@ func TestStopStart(t *testing.T) {
 	// stop AuthGetter
 	authGetter.Stop()
 	// create user "test2"
-	CreateTestUser(apicl, "test2", testPassword, tenant)
+	MustCreateTestUser(apicl, "test2", testPassword, tenant)
 	// check AuthGetter shouldn't get "test2"
 	AssertConsistently(t, func() (bool, interface{}) {
 		user, ok := authGetter.GetUser("test2", tenant)

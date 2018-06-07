@@ -181,7 +181,7 @@ func authenticationPoliciesData() map[string]*auth.Ldap {
 
 // createDefaultAuthenticationPolicy creates an authentication policy with LDAP with TLS enabled
 func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
-	return CreateAuthenticationPolicy(apicl,
+	return MustCreateAuthenticationPolicy(apicl,
 		&auth.Local{
 			Enabled: true,
 		}, &auth.Ldap{
@@ -207,7 +207,11 @@ func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 
 func TestAuthenticate(t *testing.T) {
 	for testtype, ldapconf := range authenticationPoliciesData() {
-		CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
+		_, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
+		if err != nil {
+			t.Errorf("err %s in CreateAuthenticationPolicy", err)
+			return
+		}
 		// create password authenticator
 		authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, ldapconf)
 
@@ -256,7 +260,7 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 }
 
 func TestMissingLdapAttributeMapping(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -266,6 +270,10 @@ func TestMissingLdapAttributeMapping(t *testing.T) {
 		BindDN:       bindDN,
 		BindPassword: bindPassword,
 	})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
@@ -279,7 +287,7 @@ func TestMissingLdapAttributeMapping(t *testing.T) {
 }
 
 func TestIncorrectLdapAttributeMapping(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -295,6 +303,10 @@ func TestIncorrectLdapAttributeMapping(t *testing.T) {
 			GroupObjectClass: "groupOfNames",
 		},
 	})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
@@ -308,7 +320,7 @@ func TestIncorrectLdapAttributeMapping(t *testing.T) {
 }
 
 func TestIncorrectBaseDN(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -324,6 +336,10 @@ func TestIncorrectBaseDN(t *testing.T) {
 			GroupObjectClass: groupObjectClassAttribute,
 		},
 	})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
@@ -337,7 +353,7 @@ func TestIncorrectBaseDN(t *testing.T) {
 }
 
 func TestIncorrectBindPassword(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -353,6 +369,10 @@ func TestIncorrectBindPassword(t *testing.T) {
 			GroupObjectClass: groupObjectClassAttribute,
 		},
 	})
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
@@ -366,7 +386,7 @@ func TestIncorrectBindPassword(t *testing.T) {
 }
 
 func TestDisabledLdapAuthenticator(t *testing.T) {
-	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: false,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -382,6 +402,11 @@ func TestDisabledLdapAuthenticator(t *testing.T) {
 			GroupObjectClass: groupObjectClassAttribute,
 		},
 	})
+
+	if err != nil {
+		t.Errorf("err %s in CreateAuthenticationPolicy", err)
+		return
+	}
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator

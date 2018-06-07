@@ -89,7 +89,7 @@ func CreateSecret(len int) []byte {
 }
 
 // CreateTestUser creates a test user
-func CreateTestUser(apicl apiclient.Services, username, password, tenant string) *auth.User {
+func CreateTestUser(apicl apiclient.Services, username, password, tenant string) (*auth.User, error) {
 	// user object
 	user := &auth.User{
 		TypeMeta: api.TypeMeta{Kind: "User"},
@@ -113,12 +113,21 @@ func CreateTestUser(apicl apiclient.Services, username, password, tenant string)
 		if err == nil {
 			return true, nil
 		}
-		log.Errorf("Error creating user: %v", err)
 		return false, nil
-	}, "10ms", "20s") {
-		panic(fmt.Sprintf("Error creating user: %v", err))
+	}, "100ms", "20s") {
+		log.Errorf("Error creating user, Err: %v", err)
+		return nil, err
 	}
-	return createdUser
+	return createdUser, nil
+}
+
+// MustCreateTestUser creates testuser and panics if fails
+func MustCreateTestUser(apicl apiclient.Services, username, password, tenant string) *auth.User {
+	u, err := CreateTestUser(apicl, username, password, tenant)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateTestUser", err))
+	}
+	return u
 }
 
 // DeleteUser deletes an user
@@ -128,12 +137,21 @@ func DeleteUser(apicl apiclient.Services, username, tenant string) {
 }
 
 // CreateAuthenticationPolicy creates an authentication policy with local and ldap auth config. secret and radius config is set to nil in the policy
-func CreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap) *auth.AuthenticationPolicy {
+func CreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap) (*auth.AuthenticationPolicy, error) {
 	return CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()}, nil)
 }
 
+// MustCreateAuthenticationPolicy creates an authentication policy with local and ldap auth config. secret and radius config is set to nil in the policy
+func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap) *auth.AuthenticationPolicy {
+	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()}, nil)
+	if err != nil {
+		panic(fmt.Sprintf("CreateAuthenticationPolicy failed with err %s", err))
+	}
+	return pol
+}
+
 // CreateAuthenticationPolicyWithOrder creates an authentication policy
-func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string, secret []byte) *auth.AuthenticationPolicy {
+func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string, secret []byte) (*auth.AuthenticationPolicy, error) {
 	// authn policy object
 	policy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
@@ -159,19 +177,21 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 		if err == nil {
 			return true, nil
 		}
-		log.Errorf("Error creating authentication policy, Err: %v", err)
 		return false, nil
-	}, "10ms", "20s") {
-		panic(fmt.Sprintf("Error creating authentication policy, Err: %v", err))
+	}, "100ms", "20s") {
+		log.Errorf("Error creating authentication policy, Err: %v", err)
+		return nil, err
 	}
-	return createdPolicy
+	return createdPolicy, nil
 }
 
 // DeleteAuthenticationPolicy deletes an authentication policy
-func DeleteAuthenticationPolicy(apicl apiclient.Services) {
+func DeleteAuthenticationPolicy(apicl apiclient.Services) error {
 	// delete authentication policy object in api server
 	_, err := apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &api.ObjectMeta{Name: "AuthenticationPolicy"})
 	if err != nil {
-		panic(fmt.Sprintf("Error deleting AuthenticationPolicy: %v", err))
+		log.Errorf("Error deleting AuthenticationPolicy: %v", err)
+		return err
 	}
+	return nil
 }
