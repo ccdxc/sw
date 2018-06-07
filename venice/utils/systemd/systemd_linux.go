@@ -48,6 +48,30 @@ func (s *systemd) RestartTarget(name string) error {
 	return restartTarget(name)
 }
 
+// RestartTargetIfRunning restart target only if its already running
+func (s *systemd) RestartTargetIfRunning(name string) error {
+	conn, err := dbus.New()
+	if err != nil {
+		return errors.Wrap(err, "unable to establish dbus connection to systemd")
+	}
+	defer conn.Close()
+
+	reschan := make(chan string)
+	_, err = conn.TryRestartUnit(name, "replace", reschan)
+	if err != nil {
+		return errors.Wrapf(err, "unable to try-restart target(%s)", name)
+	}
+	select {
+	case status := <-reschan:
+		if status != "done" {
+			return errors.New(status)
+		}
+		return nil
+	case <-time.After(targetStateChangeWaitTime):
+		return fmt.Errorf("timedout when restarting target(%s)", name)
+	}
+}
+
 // NewWatcher creates new watcher
 func (s *systemd) NewWatcher() (Watcher, <-chan *UnitEvent, <-chan error) {
 	return newWatcher()

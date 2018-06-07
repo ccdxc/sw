@@ -20,6 +20,29 @@ def ExecuteCommand(cmd):
     print cmd
     return os.system(cmd)
 
+# Each InstallationItem is looked into during the installation time. Each entry has a name, type
+#   (thus implying pre-defined actions to be taken by installer and (optionally) data
+# currently supported installType are: container, inline-script
+# As requirements evolve, in the future, we might support other installTypes like: rpm, deb, script-file etc
+class InstallationItem:
+    def __init__(self, data, install_type='container', comment=None):
+        self.comment = comment
+        self.install_type = install_type
+        self.data = data
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, InstallationItem):
+            retval = {
+                "installType" : obj.install_type,
+                "data" : obj.data
+            }
+            if obj.comment is not None:
+                retval['comment'] = obj.comment
+            return retval
+        return super(MyEncoder, self).default(obj)
+
+
 # images which are not compiled every day
 static_images = {
     'pen-kube-controller-manager': 'registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.7.14',
@@ -68,21 +91,43 @@ for i in dynamic_images:
     ExecuteCommand("docker save -o bin/tars/pen-{}.tar pen-{}:{}".format(i, i, container_tag))
     imageMap["""pen-{}""".format(i)] = "pen-{}:{}".format(i, container_tag)
     # remove old images to conserve disk space on dev machines
-    old_images = subprocess.check_output(["/bin/sh", "-c", '''docker images pen-{} --filter "before=pen-{}:latest" --format {} | sort | uniq '''.format(i, i, '{{.ID}}') ])
-    if old_images != "" :
+    old_images = subprocess.check_output(["/bin/sh", "-c", '''docker images pen-{} --filter "before=pen-{}:latest" --format {} | sort | uniq '''.format(i, i, '{{.ID}}')])
+    if old_images != "":
         ExecuteCommand('''docker rmi -f ''' + old_images)
 
 # the datastructure that will be written to the file
-imageConfig={}
+imageConfig = {}
 imageConfig['imageMap'] = imageMap
 
 #the order in which the services get upgraded. For now fill up with some random order.
-imageConfig['upgradeOrder'] = [ 'pen-cmd', 'pen-apiserver', 'pen-apigw', 'pen-vchub', 'pen-npm', 'pen-collector', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
-    'pen-kube-controller-manager', 'pen-kube-scheduler' , 'pen-kube-apiserver' , 'pen-etcd' , 'pen-filebeat' , 'pen-ntp' , 'pen-influx' , 'pen-elastic'
-]
+imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw', 'pen-vchub', 'pen-npm', 'pen-collector', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
+                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp', 'pen-influx', 'pen-elastic']
 
+# installInfo is used by the installer during installation of this image.
+# This has 2 steps. Preload and LoadAndInstall.
+#   Preload is part of Precheck phase and is not supposed to change system state.
+#   LoadAndInstall is run after Preload
+#   to start with, all this does is do 'docker load -i <x>.tar' for each image
+#   This can be used to orchestrate each step of execution, load container images, execute post-installation scripts etc
+installInfo = {}
+installInfo['Preload'] = [InstallationItem(k + ".tar") for k in imageMap]
+installInfo['Preload'].append(InstallationItem("pen-install.tar"))
+installInfo['LoadAndInstall'] = [InstallationItem(install_type="inline-script", data="echo starting install", comment="start")]
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="inline-script",
+    data="docker run --rm --name pen-install -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript",
+    comment="run initscript"))
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-daemon-reload", data="", comment="systemctl daemon reload"))
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-reload-running", data="pen-etcd.service", comment="restart pen-etcd"))
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-reload-running", data="pen-kubelet.service", comment="restart pen-kubelet if running"))
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-reload-running", data="pen-kube-controller-manager.service", comment="restart pen-kube-controller-manager if running"))
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-reload-running", data="pen-kube-apiserver.service", comment="restart pen-kube-apiserver if running"))
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-reload-running", data="pen-kube-scheduler.service", comment="restart pen-kube-scheduler if running"))
+installInfo['LoadAndInstall'].append(InstallationItem(install_type="inline-script", data="echo done", comment="done"))
+
+with open("bin/venice-install.json", 'w') as f:
+    json.dump(installInfo, f, indent=True, sort_keys=True, cls=MyEncoder)
 with open("tools/docker-files/install/target/etc/pensando/shared/common/venice.json", 'w') as f:
     json.dump(imageConfig, f, indent=True, sort_keys=True)
 with open("tools/docker-files/install/target/etc/pensando/shared/common/venice.conf", 'w') as f:
-    for  k,v in systemdNameMap.items():
-        f.write("{}='{}'\n".format(k,imageMap[v]))
+    for  k, v in systemdNameMap.items():
+        f.write("{}='{}'\n".format(k, imageMap[v]))

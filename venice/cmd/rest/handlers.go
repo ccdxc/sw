@@ -12,6 +12,7 @@ import (
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/env"
+	"github.com/pensando/sw/venice/cmd/installer"
 	"github.com/pensando/sw/venice/cmd/ops"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
@@ -41,7 +42,8 @@ func NewRESTServer() *martini.ClassicMartini {
 	m.Post(uRLPrefix+clusterURL, ClusterCreateHandler)
 	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
 	m.Get(uRLPrefix+servicesURL, ServiceListHandler)
-	m.Get(uRLPrefix+"/debugUpgrade", DebugUpgradeHandler) // TODO: Remove after upgrade development is complete
+	m.Get(uRLPrefix+"/debugSrvUpgrade", DebugUpgradeHandler)      // TODO: Remove after upgrade development is complete
+	m.Get(uRLPrefix+"/debugNodeUpgrade", DebugNodeUpgradeHandler) // TODO: Remove after upgrade development is complete
 	m.Get(debugPrefix+expvarURL, expvar.Handler())
 
 	m.Group("/debug/pprof", func(r martini.Router) {
@@ -132,4 +134,17 @@ func DebugUpgradeHandler(w http.ResponseWriter, req *http.Request) {
 	services.ContainerInfoMap = utils.GetContainerInfo()
 	err := env.K8sService.UpgradeServices(utils.GetUpgradeOrder())
 	log.Debugf("UpgradeServices returned %s", err)
+}
+
+// DebugNodeUpgradeHandler is a debug handler for installing+upgrade of node services
+func DebugNodeUpgradeHandler(w http.ResponseWriter, req *http.Request) {
+
+	imageName, err := installer.DownloadImage("ignore")
+	log.Infof("DownloadImage returned %s %v", imageName, err)
+	err = installer.ExtractImage(imageName)
+	log.Infof("extractImage returned %v ", err)
+	err = installer.PreLoadImage()
+	log.Infof("preLoadImage returned %v ", err)
+	err = installer.LoadAndInstallImage()
+	log.Infof("loadAndInstallImage returned %v ", err)
 }

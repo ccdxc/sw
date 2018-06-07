@@ -1,0 +1,7 @@
+[Unit]
+Description=Pensando filebeat configuration script
+Documentation=http://pensando.io/
+
+[Service]
+ExecStart=/bin/sh -c 'CONS=`/usr/bin/docker ps -q -f "label=io.kubernetes.container.name=pen-filebeat"` ; if [ "$CONS" != "" ]; then /usr/bin/docker stop $CONS ; fi; exit 0'
+Type=oneshot

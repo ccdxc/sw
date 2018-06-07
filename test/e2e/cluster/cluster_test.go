@@ -19,24 +19,25 @@ var _ = Describe("cluster tests", func() {
 	Context("Services should be running", func() {
 		It("pen-base should be running on all nodes", func() {
 			for _, ip := range ts.tu.VeniceNodeIPs {
-				out := ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-cmd")
-				Expect(out).ShouldNot(BeEmpty(), "pen-cmd container should be running on %s", ip)
+				Eventually(func() string {
+					return ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-cmd")
+				}, 10, 1).ShouldNot(BeEmpty(), "pen-cmd container should be running on %s", ip)
 			}
 		})
 		It("etcd should be running on all quorum nodes", func() {
 			for _, qnode := range ts.tu.QuorumNodes {
 				ip := ts.tu.NameToIPMap[qnode]
-				out := ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-etcd")
-				Expect(out).ShouldNot(BeEmpty(), "pen-etcd container should be running on %s(%s)",
-					ts.tu.IPToNameMap[ip], ip)
+				Eventually(func() string {
+					return ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-etcd")
+				}, 10, 1).ShouldNot(BeEmpty(), "pen-etcd container should be running on %s(%s)", ts.tu.IPToNameMap[ip], ip)
 			}
 		})
 		It("etcd should not be running on non-quorum nodes", func() {
 			ips := ts.tu.NonQuorumNodes()
 			for nonQnode := range ips {
-				out := ts.tu.CommandOutput(nonQnode, "docker ps -q -f Name=pen-etcd")
-				Expect(out).Should(BeEmpty(), "pen-etcd container should not be running on %s(%s)",
-					ts.tu.IPToNameMap[nonQnode], nonQnode)
+				Eventually(func() string {
+					return ts.tu.CommandOutput(nonQnode, "docker ps -q -f Name=pen-etcd")
+				}, 10, 1).Should(BeEmpty(), "pen-etcd container should not be running on %s(%s)", ts.tu.IPToNameMap[nonQnode], nonQnode)
 			}
 		})
 		It("kubernetes indicated all pods to be Running", func() {
@@ -100,8 +101,8 @@ var _ = Describe("cluster tests", func() {
 			oldLeaderIP string
 		)
 		BeforeEach(func() {
-			if ts.tu.NumQuorumNodes < 3 {
-				Skip(fmt.Sprintf("Skipping failover test: %d quorum nodes found, need >= 3", ts.tu.NumQuorumNodes))
+			if ts.tu.NumQuorumNodes < 2 {
+				Skip(fmt.Sprintf("Skipping failover test: %d quorum nodes found, need >= 2", ts.tu.NumQuorumNodes))
 			}
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)

@@ -21,6 +21,7 @@ type Interface interface {
 	StartTarget(name string) (err error)
 	StopTarget(name string) error
 	RestartTarget(name string) error
+	RestartTargetIfRunning(name string) error
 	NewWatcher() (Watcher, <-chan *UnitEvent, <-chan error)
 }
 

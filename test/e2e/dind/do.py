@@ -8,6 +8,7 @@ import argparse
 import http
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
+import ipaddr
 
 src_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
 registry = "registry.test.pensando.io:5000"
@@ -25,12 +26,12 @@ def runCommand(cmd, ignore_error=False):
     elif ignore_error:
         return subprocess.call(cmd, shell=True, stdin=None)
     else:
-        return subprocess.check_call(cmd, shell=True,stdin=None)
+        return subprocess.check_call(cmd, shell=True, stdin=None)
 
 class TestMgmtNode:
     def __init__(self, name, ipaddress, quorumNames, quorumIPs, nodes, ipList, clustervip, containerIndex):
         self.containerIndex = containerIndex
-        self.debug = False
+        self.debug = debug
         self.name = name
         self.ipaddress = ipaddress
         self.quorumNames = quorumNames
@@ -38,7 +39,7 @@ class TestMgmtNode:
         self.nodes = nodes
         self.clustervip = clustervip
         self.ipList = ipList
-    def runCmd(self,command, ignore_error=False):
+    def runCmd(self, command, ignore_error=False):
         return runCommand("""docker exec -it {} """.format(self.name) + command, ignore_error)
     def startNode(self):
         # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
@@ -62,26 +63,25 @@ class TestMgmtNode:
 class Node:
     def __init__(self, name, ipaddress, containerIndex):
         self.containerIndex = containerIndex
-        self.debug = False
+        self.debug = debug
         self.name = name
         self.ipaddress = ipaddress
-    def runCmd(self,command, ignore_error=False):
+    def runCmd(self, command, ignore_error=False):
         return runCommand("""docker exec -it {} """.format(self.name) + command, ignore_error)
     def startNode(self):
-        while debug or runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name), ignore_error=True) == 0:
+        while runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name), ignore_error=True) == 0 and not debug:
             time.sleep(2)
         runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -p {}:9000 -p {}:9200 -l pens -l pens-dind --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
-        while self.runCmd("""docker ps >/dev/null 2>&1""".format(self.name), ignore_error=True) != 0:
+        while self.runCmd("""docker ps >/dev/null 2>&1""", ignore_error=True) != 0 and not debug:
             time.sleep(2)
-        self.runCmd(r'''bash  -c ' CGR=`grep memory /proc/1/cgroup  | cut -d: -f3` ; if [ !  -z $CGR ]; then  mkdir -p /sys/fs/cgroup/cpuset/$CGR; fi; if [ !  -z $CGR ]; then mkdir -p /sys/fs/cgroup/hugetlb/$CGR; fi' '''.format(self.name))
+        self.runCmd(r'''bash  -c ' CGR=`grep memory /proc/1/cgroup  | cut -d: -f3` ; if [ !  -z $CGR ]; then  mkdir -p /sys/fs/cgroup/cpuset/$CGR; fi; if [ !  -z $CGR ]; then mkdir -p /sys/fs/cgroup/hugetlb/$CGR; fi' ''')
 
     def doCluster(self):
         self.startNode()
-        self.loadImage()
         self.startCluster()
     def stopCluster(self):
-        penSrvs = ["pen-cmd", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch", "pen-vchub", "pen-npm" ]
+        penSrvs = ["pen-cmd", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver"]
         for srv in penSrvs:
             self.runCmd("systemctl stop " + srv)
             self.runCmd("systemctl disable " + srv)
@@ -91,23 +91,18 @@ class Node:
         self.runCmd("bash -c 'rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/' ")
         self.runCmd("bash -c 'ip addr flush label *pens' ")
         self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop -t 2 $(docker ps -qa); docker rm -f $(docker ps -qa); fi' """)
-    def loadImage(self):
-        self.runCmd("""sh -c 'for i in /import/src/github.com/pensando/sw/bin/tars/pen* ; do docker load -i  $i; done'""")
-        self.runCmd("""docker run --rm --name pen-install -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript""")
+
     def startCluster(self):
-        self.runCmd("""systemctl daemon-reload""")
-        self.runCmd("""systemctl enable pensando.target""")
-        self.runCmd("""systemctl start pensando.target""")
-        self.runCmd("""systemctl enable pen-cmd""")
-        self.runCmd("""systemctl start pen-cmd""")
+        # this is a shortcut bypassing the untar of image and running the script - just to speed up things
+        self.runCmd("""sh -c 'cd /import/src/github.com/pensando/sw/bin && ../tools/scripts/INSTALL.sh' """)
     def restartCluster(self):
         self.stopCluster()
-        self.loadImage()
         self.startCluster()
 class NaplesNode(Node):
-    def __init__(self, name, ipaddress, containerIndex, testMode):
-        Node.__init__(self,name,ipaddress, containerIndex)
+    def __init__(self, name, ipaddress, containerIndex, testMode, clustervip):
+        Node.__init__(self, name, ipaddress, containerIndex)
         self.testMode = testMode
+        self.clustervip = clustervip
     def doCluster(self):
         self.startNode()
         self.startCluster()
@@ -123,7 +118,7 @@ class NaplesNode(Node):
         runCommand("""docker exec {}  mkdir -p /var/log/pensando """.format(self.name))
         runCommand("""docker network connect pen-dind-hnet {}""".format(self.name))
         runCommand("""docker network connect pen-dind-nnet {}""".format(self.name))
-        runCommand("""docker exec {}  bash -c "echo 192.168.30.10 pen-master | tee -a /etc/hosts " """.format(self.name))
+        runCommand("""docker exec {}  bash -c "echo {} pen-master | tee -a /etc/hosts " """.format(self.name, self.clustervip))
     def stopCluster(self):
         self.runCmd("""killall -q netagent""")
         self.runCmd("""killall -q nmd""")
@@ -134,12 +129,12 @@ class NaplesNode(Node):
     def startCluster(self):
         # start nmd as a native process on NaplesNode
         if self.testMode == "HAL":
-            runCommand("""docker exec -d {} nmd -cmdregistration 192.168.30.10:9002 -cmdupdates 192.168.30.10:9009 -hostif eth1 -hostname {}-host -resolver 192.168.30.10:9009 -mode managed & """.format(self.name, self.name))
+            runCommand("""docker exec -d {} nmd -cmdregistration {}:9002 -cmdupdates {}:9009 -hostif eth1 -hostname {}-host -resolver {}:9009 -mode managed  & """.format(self.name, self.clustervip, self.clustervip, self.name, self.clustervip))
             runCommand("""docker exec -d {} make e2e-sanity-hal-bringup""".format(self.name))
-            runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent -npm pen-npm -resolver-urls 192.168.30.10:9009 -hostif eth1 -datapath hal -mode managed &" """.format(self.name))
+            runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent -npm pen-npm -resolver-urls {}:9009 -hostif eth1 -datapath hal -mode managed &" """.format(self.name, self.clustervip))
         else:
-            runCommand("""docker exec -d {} /nmd -cmdregistration 192.168.30.10:9002 -cmdupdates 192.168.30.10:9009 -hostif eth1 -hostname {}-host -resolver 192.168.30.10:9009 -mode managed -mode managed & """.format(self.name, self.name))
-            runCommand("""docker exec -d {} /netagent -npm pen-npm -resolver-urls 192.168.30.10:9009 -hostif eth1 -datapath mock &""".format(self.name))
+            runCommand("""docker exec -d {} /nmd -cmdregistration {}:9002 -cmdupdates {}:9009 -hostif eth1 -hostname {}-host -resolver {}:9009 -mode managed  & """.format(self.name, self.clustervip, self.clustervip, self.name, self.clustervip))
+            runCommand("""docker exec -d {} /netagent -npm pen-npm -resolver-urls {}:9009 -hostif eth1 -datapath mock &""".format(self.name, self.clustervip))
 
 def initCluster(nodeAddr, quorumNodes, clustervip):
     postUrl = 'http://' + nodeAddr + ':9001/api/v1/cluster'
@@ -157,16 +152,16 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
             "auto-admit-nics": True,
             "quorum-nodes": quorumNodes,
             "virtual-ip":  clustervip,
-            "ntp-servers": ["1.pool.ntp.org","2.pool.ntp.org"]
+            "ntp-servers": ["1.pool.ntp.org", "2.pool.ntp.org"]
         }
     })
 
     # Post the data. try upto 3 times since the server may not be ready..
-    for i in range (1,4):
+    for i in range(1, 4):
         response = http.httpPost(postUrl, jdata)
         print "Init cluster with " + jdata
         print "cluster response is: " + response
-        if response != "Error" :
+        if response != "Error":
             break
         time.sleep(3)
 
@@ -184,48 +179,60 @@ def stopCluster(nodeList, nodes, quorum, clustervip):
     pool = ThreadPool(len(nodeList))
     pool.map(lambda x: x.stopCluster(), nodes)
 
-def createCluster(nodeList, nodes, quorum, clustervip, test_mode):
+def createCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
+    dind_net = ipaddr.IPv4Network(ipaddr.IPv4Address(clustervip).__str__() + '/24').masked()
+    dind_hnet = ipaddr.IPv4Network((ipaddr.IPv4Address(clustervip) - 256 ).__str__() + '/24').masked()
+    dind_nnet = ipaddr.IPv4Network((ipaddr.IPv4Address(clustervip) - 512 ).__str__() + '/24').masked()
+
     pool = ThreadPool(len(nodes))
     runCommand("""if ! docker network inspect pen-dind-hnet >/dev/null 2>&1; then
-        docker network create --internal --ip-range 192.168.28.1/24 --subnet 192.168.28.0/24 pen-dind-hnet
-    fi""")
+        docker network create --internal --ip-range {} --subnet {} pen-dind-hnet
+    fi""".format(dind_nnet, dind_nnet))
     runCommand("""if ! docker network inspect pen-dind-nnet >/dev/null 2>&1; then
-        docker network create --internal --ip-range 192.168.29.1/24 --subnet 192.168.29.0/24 pen-dind-nnet
-    fi""")
+        docker network create --internal --ip-range {} --subnet {} pen-dind-nnet
+    fi""".format(dind_hnet, dind_hnet))
     runCommand("""if ! docker network inspect pen-dind-net >/dev/null 2>&1; then
-        docker network create --ip-range 192.168.30.1/24 --subnet 192.168.30.0/24 pen-dind-net
-    fi""")
+        docker network create --ip-range {} --subnet {} pen-dind-net
+    fi""".format(dind_net, dind_net))
+
     pool.map(lambda x: x.doCluster(), nodes)
 
-    for i in range (1,3):
-        if runCommand("""docker exec -it node1 /import/src/github.com/pensando/sw/test/e2e/dind/do.py  -configFile '' -init_cluster_only -num_nodes {} -num_quorum {} -clustervip {} -test_mode {}""".format(len(nodes), len(quorum), clustervip, test_mode)) == 0:
-                break
+    for i in range(1, 3):
+        if runCommand("""docker exec -it node1 /import/src/github.com/pensando/sw/test/e2e/dind/do.py  -configFile '' -init_cluster_only -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
+            break
         time.sleep(2)
 
 
-def restartCluster(nodeList, nodes, quorum, clustervip):
+def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
     pool = ThreadPool(len(nodes))
     pool.map(lambda x: x.restartCluster(), nodes)
-    for i in range (1,3):
-        if runCommand("""docker exec -it node1 /import/src/github.com/pensando/sw/test/e2e/dind/do.py -configFile ''  -init_cluster_only -num_nodes {} -num_quorum {} -clustervip {} -test_mode {}""".format(len(nodes), len(quorum), clustervip), test_mode) == 0:
+    for i in range(1, 3):
+        if runCommand("""docker exec -it node1 /import/src/github.com/pensando/sw/test/e2e/dind/do.py -configFile ''  -init_cluster_only  -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
             break
         time.sleep(2)
 
 parser = argparse.ArgumentParser()
 # these 6 below are used internally not to be directly executed by the caller
 parser.add_argument("-clustervip", help="VIP of the cluster")
-parser.add_argument("-num_nodes", type=int,help="number of nodes")
-parser.add_argument("-num_naples", type=int,default=0,help="number of naples nodes")
-parser.add_argument("-num_quorum", type=int,help="number of quorum nodenames")
-parser.add_argument("-init_cluster_only", action='store_true',default=False, help="Init the cluster by posting Cluster object to CMD and exit")
+parser.add_argument("-quorum", type=str, default="", help="quorum nodes joined by ,")
+parser.add_argument("-init_cluster_only", action='store_true', default=False, help="Init the cluster by posting Cluster object to CMD and exit")
+parser.add_argument("-init_cluster_node", type=str, default="", help="node in which the cluster object is created.")
+# args below are to be called by user
+parser.add_argument("-first_venice_ip", type=str, default="192.168.30.11",help="First Venice IP")
+parser.add_argument("-num_naples", type=int, default=1, help="number of naples nodes")
+parser.add_argument("-num_quorum", type=int, default=1, help="number of quorum nodes")
+parser.add_argument("-num_nodes", type=int, default=1, help="number of venice nodes")
 parser.add_argument("-test_mode", type=str, default="MOCK", help="Specify Agent datapath mode.")
-# these 5 below are to be called by user
 parser.add_argument("-configFile", default="tb_config.json", help="Configuration of the cluster")
-parser.add_argument("-restart", action='store_true',default=False, help="restart venice components in existing Cluster by loading new Pensando code")
-parser.add_argument("-delete", action='store_true',default=False, help="delete cluster by deleting containers")
-parser.add_argument("-stop", action='store_true',default=False, help="stop venice cluster but keep containers")
-parser.add_argument("-load_image_only", action='store_true',default=False, help="load and install new venice image (not restart)")
+parser.add_argument("-restart", action='store_true', default=False, help="restart venice components in existing Cluster by loading new Pensando code")
+parser.add_argument("-delete", action='store_true', default=False, help="delete cluster by deleting containers")
+parser.add_argument("-stop", action='store_true', default=False, help="stop venice cluster but keep containers")
 args = parser.parse_args()
+
+if args.init_cluster_only:
+    initCluster(args.init_cluster_node, args.quorum.split(","), args.clustervip)
+    os.system("stty sane")
+    sys.exit(0)
 
 if args.delete:
     deleteCluster()
@@ -245,6 +252,8 @@ num_nodes = int(datastore.get("NumVeniceNodes", args.num_nodes))
 num_quorum =  int(datastore.get("NumQuorumNodes", args.num_quorum))
 num_naples =  int(datastore.get("NumNaplesHosts", args.num_naples))
 test_mode = datastore.get("E2EMode", args.test_mode)
+first_venice_ipstr = datastore.get("FirstVeniceIP",args.first_venice_ip)
+first_venice_ip = ipaddr.IPv4Address(first_venice_ipstr)
 
 quorumNames = []
 for i in range(1, num_quorum + 1):
@@ -259,16 +268,16 @@ for i in range(1, num_nodes + 1):
     nodeList.append("node{}".format(i))
 
 ipList = []
-for i in range(1, num_nodes + 1):
-    ipList.append("192.168.30.{}".format(10+i))
+for i in range(0, num_nodes):
+    ipList.append("{}".format(first_venice_ip + i ))
 
 quorumIPs = []
-for i in range(1, num_quorum + 1):
-    quorumIPs.append("192.168.30.{}".format(10+i))
+for i in range(0, num_quorum):
+    quorumIPs.append("{}".format(first_venice_ip + i ))
 
 naplesIPs = []
-for i in range(1, num_naples + 1):
-    naplesIPs.append("192.168.30.{}".format(20+i))
+for i in range(0, num_naples):
+    naplesIPs.append("{}".format(first_venice_ip + i + num_nodes))
 
 # this is a global index of all the containers running in the e2e system
 # node0 has containerIndex=0.
@@ -283,32 +292,23 @@ for addr in xrange(len(nodeList)):
 
 naplesNodes = []
 for addr in xrange(len(naplesNames)):
-    node = NaplesNode(naplesNames[addr], naplesIPs[addr], containerIndex, test_mode)
+    node = NaplesNode(naplesNames[addr], naplesIPs[addr], containerIndex, test_mode, clustervip)
     containerIndex = containerIndex + 1
     naplesNodes.append(node)
 
 
-if args.init_cluster_only:
-    initCluster(ipList[0], quorumNames, clustervip)
-    os.system("stty sane")
-    sys.exit(0)
-if args.load_image_only:
-    pool = ThreadPool(len(nodes))
-    pool.map(lambda x: x.loadImage(), nodes)
-    os.system("stty sane")
-    sys.exit(0)
 if args.stop:
     stopCluster(nodeList, nodes + naplesNodes, quorumNames, clustervip)
     os.system("stty sane")
     sys.exit(0)
 if args.restart:
-    restartCluster(nodeList, nodes + naplesNodes, quorumNames, clustervip)
+    restartCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip)
     os.system("stty sane")
     sys.exit(0)
 
 deleteCluster()
-testMgmtNode=TestMgmtNode("node0","192.168.30.9", quorumNames, quorumIPs, nodes, ipList, clustervip, 0)
-createCluster(nodeList, nodes + naplesNodes, quorumNames, clustervip, test_mode)
+testMgmtNode = TestMgmtNode("node0","{}".format(first_venice_ip + num_nodes + num_naples), quorumNames, quorumIPs, nodes, ipList, clustervip, 0)
+createCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip)
 testMgmtNode.startNode()
 
 os.system("stty sane")

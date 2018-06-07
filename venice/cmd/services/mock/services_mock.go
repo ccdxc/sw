@@ -217,6 +217,11 @@ type SystemdIf struct {
 	m mockSystemdWatcher
 }
 
+// RestartTargetIfRunning is mock implementation of systemd daemon reload.
+func (s *SystemdIf) RestartTargetIfRunning(name string) (err error) {
+	return nil
+}
+
 // DaemonReload is mock implementation of systemd daemon reload.
 func (s *SystemdIf) DaemonReload() (err error) {
 	return nil

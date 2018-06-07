@@ -139,6 +139,8 @@ install:
 	@# In the future, this can be a shell script, rpm, curl script or whatever..
 	docker build --rm --no-cache -t pen-install:latest -f tools/docker-files/install/Dockerfile tools/docker-files/install
 	docker save -o bin/tars/pen-install.tar pen-install:latest
+	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
+	cd bin && tar -cvf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 
 deploy:
 	$(MAKE) container-compile

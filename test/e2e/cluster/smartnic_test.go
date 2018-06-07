@@ -72,12 +72,13 @@ var _ = Describe("SmartNIC tests", func() {
 		})
 
 		It("SmartNIC should be in healthy state", func() {
-			snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
-			Expect(err).ShouldNot(HaveOccurred())
-
 			// Validate nic is healthy
 			Eventually(func() bool {
 
+				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
+				if err != nil {
+					return false
+				}
 				numHealthySmartNICs := 0
 				for _, snic := range snics {
 					for _, cond := range snic.Status.Conditions {
