@@ -225,6 +225,11 @@ enum os_type {
  *                        Scale user-supplied interrupt coalescing
  *                        value in usecs to device units using:
  *                           device units = usecs * mult / div
+ *     @rdma_version:     RDMA version of opcodes and queue descriptors.
+ *     @rdma_qp_opcodes:  Number of rdma queue pair opcodes supported for the
+ *                        current version and six prior versions.
+ *     @rdma_admin_opcodes: Number of rdma admin opcodes supported for the
+ *                        current version and six prior versions.
  */
 union identity {
 	struct {
@@ -255,6 +260,9 @@ union identity {
 		u32 nmcasts_per_lif;
 		u32 intr_coal_mult;
 		u32 intr_coal_div;
+		u16 rdma_version;
+		u8 rdma_qp_opcodes[7];
+		u8 rdma_admin_opcodes[7];
 	} dev;
 	u32 words[1024];
 };

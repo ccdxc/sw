@@ -297,6 +297,7 @@ static int identity_show(struct seq_file *seq, void *v)
 {
 	struct ionic *ionic = seq->private;
 	union identity *ident = ionic->ident;
+	int i;
 
 	seq_printf(seq, "asic_type:        %s\n",
 		   ionic_dev_asic_name(ident->dev.asic_type));
@@ -317,6 +318,14 @@ static int identity_show(struct seq_file *seq, void *v)
 	seq_printf(seq, "nmcasts_per_lif:  %d\n", ident->dev.nmcasts_per_lif);
 	seq_printf(seq, "intr_coal_mult:   %d\n", ident->dev.intr_coal_mult);
 	seq_printf(seq, "intr_coal_div:    %d\n", ident->dev.intr_coal_div);
+
+	seq_printf(seq, "rdma_version:     %d\n", ident->dev.rdma_version);
+	for (i = 0; i < 7; ++i)
+		seq_printf(seq, "rdma_qp_opcodes[%d]: %d\n",
+			   i, ident->dev.rdma_qp_opcodes[i]);
+	for (i = 0; i < 7; ++i)
+		seq_printf(seq, "rdma_admin_opcodes[%d]: %d\n",
+			   i, ident->dev.rdma_admin_opcodes[i]);
 
 	return 0;
 }
