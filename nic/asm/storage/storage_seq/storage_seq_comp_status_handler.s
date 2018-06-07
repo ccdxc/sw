@@ -118,8 +118,9 @@ possible_sgl_padding:
     // Note: r_pad_boundary is a power of 2 but num_blks_per_sgl may not be 
     // (it either equals 1 or 3)
 
-    sll         r_sgl_len_total, SEQ_COMP_PAD_NUM_BLKS_PER_SGL, \
-                SEQ_KIVEC4_PAD_BOUNDARY_SHIFT 
+    seq         c3, SEQ_KIVEC5_SGL_SPARSE_FORMAT_EN, 1
+    sll.c3      r_sgl_len_total, 1, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT 
+    sll.!c3     r_sgl_len_total, BARCO_SGL_NUM_TUPLES_MAX, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT 
     div         r_last_sgl_p, r_comp_data_len, r_sgl_len_total
     add         r_last_sgl_p, SEQ_KIVEC2_SGL_VEC_ADDR, \
                 r_last_sgl_p, BARCO_SGL_DESC_SIZE_SHIFT

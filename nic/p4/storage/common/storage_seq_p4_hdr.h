@@ -114,6 +114,7 @@ header_type seq_comp_status_desc1_t {
                             // 0 => Use the comp_output_data_len
     aol_pad_en      : 1;
     sgl_pad_en      : 1;
+    sgl_sparse_format_en: 1;
     sgl_pdma_en     : 1;
     sgl_pdma_pad_only:1;
     desc_vec_push_en:1;
@@ -192,6 +193,7 @@ header_type seq_xts_status_desc1_t {
     comp_len_update_en  : 1; // 1 => read length from cp_hdr and update comp desc/SGL
     comp_sgl_src_en     : 1; // 1 => comp_sgl_src_addr is valid
     comp_sgl_src_vec_en : 1; // 1 => comp_sgl_src_addr is a vector address
+    sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1; // 1 => do PDMA from decr_buf_addr to sgl_pdma_dst_addr
     sgl_pdma_len_from_desc: 1; // 1 => PDMA length is data_len above
     desc_vec_push_en    : 1; // 1 => barco_desc_addr is a vector address
@@ -452,6 +454,7 @@ header_type seq_kivec5_t {
                                 // 0 => Use the data lenghth in the status
     aol_pad_en          : 1;
     sgl_pad_en          : 1;
+    sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1;
     sgl_pdma_pad_only   : 1;
     desc_vec_push_en    : 1;
@@ -474,6 +477,7 @@ header_type seq_kivec5xts_t {
     comp_len_update_en  : 1;
     comp_sgl_src_en     : 1;
     comp_sgl_src_vec_en : 1;
+    sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1;
     sgl_pdma_len_from_desc: 1;
     desc_vec_push_en    : 1;
@@ -582,6 +586,7 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);   \
   modify_field(scratch.aol_pad_en, kivec.aol_pad_en);                   \
   modify_field(scratch.sgl_pad_en, kivec.sgl_pad_en);                   \
+  modify_field(scratch.sgl_sparse_format_en, kivec.sgl_sparse_format_en); \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
   modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
@@ -599,6 +604,7 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.comp_len_update_en, kivec.comp_len_update_en);   \
   modify_field(scratch.comp_sgl_src_en, kivec.comp_sgl_src_en);         \
   modify_field(scratch.comp_sgl_src_vec_en, kivec.comp_sgl_src_vec_en); \
+  modify_field(scratch.sgl_sparse_format_en, kivec.sgl_sparse_format_en); \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.sgl_pdma_len_from_desc, kivec.sgl_pdma_len_from_desc);\
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \

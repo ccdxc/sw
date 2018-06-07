@@ -251,6 +251,8 @@ encrypt_only_t::full_verify(void)
     last_encrypt_output_data_len = xts_out->l0;
 
     if (!suppress_info_log) {
+        xts_aol_trace("encrypt_only xts_out_aol", xts_out_aol,
+                       xts_out_aol->num_lines_get(), true);
         printf("Testcase encrypt_only full_verify passed: "
                "last_encrypt_output_data_len %u\n", last_encrypt_output_data_len);
     }

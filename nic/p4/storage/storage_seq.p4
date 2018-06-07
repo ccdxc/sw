@@ -577,7 +577,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
                                      sgl_vec_addr, pad_buf_addr, data_len,
                                      pad_boundary_shift, stop_chain_on_error,
                                      data_len_from_desc, aol_pad_en, sgl_pad_en,
-                                     sgl_pdma_en, sgl_pdma_pad_only,
+                                     sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
 				     desc_vec_push_en, copy_src_dst_on_error) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -596,6 +596,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
   modify_field(seq_comp_status_desc1_scratch.aol_pad_en, aol_pad_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pad_en, sgl_pad_en);
+  modify_field(seq_comp_status_desc1_scratch.sgl_sparse_format_en, sgl_sparse_format_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_pad_only, sgl_pdma_pad_only);
   modify_field(seq_comp_status_desc1_scratch.desc_vec_push_en, desc_vec_push_en);
@@ -610,6 +611,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_kivec5.data_len_from_desc, seq_comp_status_desc1_scratch.data_len_from_desc);
   modify_field(seq_kivec5.aol_pad_en, seq_comp_status_desc1_scratch.aol_pad_en);
   modify_field(seq_kivec5.sgl_pad_en, seq_comp_status_desc1_scratch.sgl_pad_en);
+  modify_field(seq_kivec5.sgl_sparse_format_en, seq_comp_status_desc1_scratch.sgl_sparse_format_en);
   modify_field(seq_kivec5.sgl_pdma_en, seq_comp_status_desc1_scratch.sgl_pdma_en);
   modify_field(seq_kivec5.sgl_pdma_pad_only, seq_comp_status_desc1_scratch.sgl_pdma_pad_only);
   modify_field(seq_kivec5.desc_vec_push_en, seq_comp_status_desc1_scratch.desc_vec_push_en);
@@ -942,7 +944,8 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
 action seq_xts_status_desc1_handler(comp_sgl_src_addr, sgl_pdma_dst_addr, decr_buf_addr,
                                     data_len, blk_boundary_shift, stop_chain_on_error,
                                     comp_len_update_en, comp_sgl_src_en, comp_sgl_src_vec_en,
-				    sgl_pdma_en, sgl_pdma_len_from_desc, desc_vec_push_en) {
+				    sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_len_from_desc,
+				    desc_vec_push_en) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC5XTS_USE(seq_kivec5xts_scratch, seq_kivec5xts)
@@ -957,6 +960,7 @@ action seq_xts_status_desc1_handler(comp_sgl_src_addr, sgl_pdma_dst_addr, decr_b
   modify_field(seq_xts_status_desc1_scratch.comp_len_update_en, comp_len_update_en);
   modify_field(seq_xts_status_desc1_scratch.comp_sgl_src_en, comp_sgl_src_en);
   modify_field(seq_xts_status_desc1_scratch.comp_sgl_src_vec_en, comp_sgl_src_vec_en);
+  modify_field(seq_xts_status_desc1_scratch.sgl_sparse_format_en, sgl_sparse_format_en);
   modify_field(seq_xts_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
   modify_field(seq_xts_status_desc1_scratch.sgl_pdma_len_from_desc, sgl_pdma_len_from_desc);
   modify_field(seq_xts_status_desc1_scratch.desc_vec_push_en, desc_vec_push_en);
@@ -971,6 +975,7 @@ action seq_xts_status_desc1_handler(comp_sgl_src_addr, sgl_pdma_dst_addr, decr_b
   modify_field(seq_kivec5xts.comp_len_update_en, seq_xts_status_desc1_scratch.comp_len_update_en);
   modify_field(seq_kivec5xts.comp_sgl_src_en, seq_xts_status_desc1_scratch.comp_sgl_src_en);
   modify_field(seq_kivec5xts.comp_sgl_src_vec_en, seq_xts_status_desc1_scratch.comp_sgl_src_vec_en);
+  modify_field(seq_kivec5xts.sgl_sparse_format_en, seq_xts_status_desc1_scratch.sgl_sparse_format_en);
   modify_field(seq_kivec5xts.sgl_pdma_en, seq_xts_status_desc1_scratch.sgl_pdma_en);
   modify_field(seq_kivec5xts.sgl_pdma_len_from_desc, seq_xts_status_desc1_scratch.sgl_pdma_len_from_desc);
   modify_field(seq_kivec5xts.desc_vec_push_en, seq_xts_status_desc1_scratch.desc_vec_push_en);

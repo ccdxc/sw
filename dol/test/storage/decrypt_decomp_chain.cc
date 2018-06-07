@@ -208,13 +208,16 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
             chain_params.comp_sgl_src_en = 1;
             chain_params.comp_sgl_src_addr = decomp_sgl_src_vec->pa();
 
+            /*
+             * Validate the mode where the entire SGL describes just
+             * a single buffer.
+             */
             if (params.decrypt_decomp_len_update_ == DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC) {
-                comp_sgl_sparse_fill(decomp_sgl_src_vec, xts_decrypt_buf1,
-                                     xts_decrypt_buf1->line_size_get(), 1);
+                comp_sgl_packed_fill(decomp_sgl_src_vec, xts_decrypt_buf1,
+                                     xts_decrypt_buf1->line_size_get());
 
             } else {
-                comp_sgl_sparse_fill(decomp_sgl_src_vec, xts_decrypt_buf1,
-                                     app_enc_size, max_enc_blks);
+                comp_sgl_packed_fill(decomp_sgl_src_vec, xts_decrypt_buf1, app_enc_size);
                 chain_params.comp_sgl_src_vec_en = 1;
             }
         }
@@ -476,6 +479,21 @@ decrypt_decomp_chain_t::full_verify(void)
         return -1;
     }
 
+    /*
+     * Trace AOL and SGL info
+     */
+    max_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ?
+               xts_dst_aol_vec->num_lines_get() : num_enc_blks;
+    if (!suppress_info_log) {
+        xts_aol_trace("decrypt_decomp_chain xts_dst_aol_vec", xts_dst_aol_vec,
+                       max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
+        if (d->cmd_bits.src_is_list) {
+            comp_sgl_trace("decrypt_decomp_chain decomp_sgl_src_vec",
+                           decomp_sgl_src_vec, decomp_sgl_src_vec->num_lines_get(),
+                           true);
+        }
+    }
+
     last_dc_output_data_len = comp_status_output_data_len_get(caller_comp_status_buf);
     if (!suppress_info_log) {
         printf("decrypt_decomp_chain: last_dc_output_data_len %u\n",
@@ -499,8 +517,6 @@ decrypt_decomp_chain_t::full_verify(void)
 
     // Status verification done.
     // Ensure AOL lengths were set correctly.
-    max_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ?
-               xts_dst_aol_vec->num_lines_get() : num_enc_blks;
     last_decrypt_output_data_len = 0;
     for (block_no = 0; block_no < max_blks; block_no++) {
         xts_dst_aol_vec->line_set(block_no);

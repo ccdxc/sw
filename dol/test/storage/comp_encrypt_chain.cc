@@ -510,6 +510,13 @@ comp_encrypt_chain_t::full_verify(void)
      */
     max_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ?
                xts_dst_aol_vec->num_lines_get() : (uint32_t)actual_enc_blks;
+    if (!suppress_info_log) {
+        xts_aol_trace("comp_encrypt_chain xts_src_aol_vec", xts_src_aol_vec,
+                       max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
+        xts_aol_trace("comp_encrypt_chain xts_dst_aol_vec", xts_dst_aol_vec,
+                       max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
+    }
+
     src_len0 = 0;
     src_len1 = 0;
     src_len2 = 0;
@@ -578,7 +585,6 @@ comp_encrypt_chain_t::full_verify(void)
     for (block_no = 0; block_no < max_blks; block_no++) {
         xts_dst_aol_vec->line_set(block_no);
         xts_aol = (xts::xts_aol_t *)xts_dst_aol_vec->read_thru();
-
         dst_len_total += xts_aol->l0 + xts_aol->l1 + xts_aol->l2;
         if ((enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK) && !xts_aol->next) {
             break;

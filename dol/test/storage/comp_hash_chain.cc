@@ -85,9 +85,6 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     hash_desc_vec = new dp_mem_t(max_hash_blks, sizeof(cp_desc_t),
                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                  sizeof(cp_desc_t));
-    comp_dst_sgl_vec = new dp_mem_t(max_hash_blks, sizeof(cp_sgl_t),
-                                    DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
-                                    sizeof(cp_sgl_t));
     hash_sgl_vec = new dp_mem_t(max_hash_blks, sizeof(cp_sgl_t),
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(cp_sgl_t));
@@ -122,7 +119,6 @@ comp_hash_chain_t::~comp_hash_chain_t()
         delete comp_status_buf1;
         delete comp_opaque_buf;
         delete hash_desc_vec;
-        delete comp_dst_sgl_vec;
         delete hash_sgl_vec;
         delete seq_sgl_pdma;
     }
@@ -233,29 +229,12 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     success = false;
 
     /*
-     * Use different destination format depending on whether the final
-     * compressed data go to a different buffer (i.e., comp_buf2) from comp_buf1. 
+     * Format compression descriptor. Note that any required padding
+     * that would be applied by P4+ would use the SGL vector provided
+     * by hash_sgl_vec.
      */
-    if (comp_buf1 == comp_buf2) {
-
-        /*
-         * This is the case where Comp engine writes output data to comp_buf1
-         * according to info in comp_dst_sgl_vec, after which P4+ will append the
-         * pad data. The comp_dst_sgl_vec is to describe per-block buffers exactly
-         * the same as for hash_sgl_vec, except that for comp_dst_sgl_vec each SGL
-         * will link to the next.
-         */
-        comp_sgl_sparse_fill(comp_dst_sgl_vec, comp_buf1,
-                             app_hash_size, num_hash_blks);
-        comp_dst_sgl_vec->line_set(0);
-        compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_dst_sgl_vec,
-                         comp_status_buf1, comp_buf1, app_blk_size);
-        cp_desc.cmd_bits.dst_is_list = 1;
-        chain_params.sgl_pdma_pad_only = 1;
-    } else {
-        compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf1,
-                         comp_status_buf1, comp_buf1, app_blk_size);
-    }
+    compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf1,
+                     comp_status_buf1, comp_buf1, app_blk_size);
 
     /*
      * point barco_desc_addr to the first of the descriptors vector,
@@ -285,7 +264,15 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     chain_params.push_spec.barco_ring_size = 
                            (uint8_t)log2(hash_ring->ring_size_get());
     chain_params.push_spec.barco_desc_addr = hash_desc_vec->pa();
+
+    /*
+     * Padding applied thru hash_sgl_vec which are sparsely formatted
+     * (hashing is done per block, i.e., one descriptor to a single
+     * tuple SGL per operation).
+     */
     chain_params.sgl_vec_addr = hash_sgl_vec->pa();
+    chain_params.sgl_pad_en = 1;
+    chain_params.sgl_sparse_format_en = 1;
 
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
     if (comp_status_buf1 != comp_status_buf2) {
@@ -300,7 +287,6 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
 
     chain_params.pad_buf_addr = caller_comp_pad_buf->pa();
     chain_params.stop_chain_on_error = 1;
-    chain_params.sgl_pad_en = 1;
     chain_params.pad_boundary_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
 
@@ -332,7 +318,10 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      * could be as low as just 1 chunk, depending on how many other
      * chaining features are also enabled in the current chain.
      */
-    if (comp_buf1 != comp_buf2) {
+    if (comp_buf1 == comp_buf2) {
+        chain_params.sgl_pdma_pad_only = 1;
+
+    } else {
         chain_sgl_pdma_packed_fill(seq_sgl_pdma, comp_buf2);
         chain_params.comp_buf_addr = comp_buf1->pa();
         chain_params.aol_dst_vec_addr = seq_sgl_pdma->pa();
@@ -602,6 +591,11 @@ comp_hash_chain_t::full_verify(void)
         if (block_no == ((uint32_t)actual_hash_blks - 1)) {
             pad_data_len = hash_sgl->len1;
         }
+    }
+
+    if (!suppress_info_log) {
+        comp_sgl_trace("comp_hash_chain hash_sgl", hash_sgl_vec,
+                       actual_hash_blks, false);
     }
 
     /*
