@@ -71,8 +71,8 @@ void UpgReqReactor::GetUpgCtx(UpgCtx &ctx, delphi::objects::UpgStateReqPtr req) 
 delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
     LogInfo("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
-    upgAppRespPtr_->CreateUpgAppResp();
-    if (upgHdlrPtr_) {
+    if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate())) {
+        upgAppRespPtr_->CreateUpgAppResp();
         HdlrResp hdlrResp;
         UpgCtx ctx;
         UpgReqReactor::GetUpgCtx(ctx, req);

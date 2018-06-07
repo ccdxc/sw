@@ -64,6 +64,21 @@ delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type, HdlrResp a
     return delphi::error::OK();
 }
 
+bool UpgAppRespHdlr::CanInvokeHandler(UpgReqStateType reqType) {
+   auto upgAppResp = findUpgAppResp(appName_);
+    if (upgAppResp == NULL) {
+        LogInfo("UpgAppRespHdlr::UpdateUpgAppResp not found for {}", appName_);
+        return true;
+    } 
+    if ((GetUpgAppRespNextPass(reqType) == upgAppResp->upgapprespval()) ||
+        (GetUpgAppRespNextFail(reqType) == upgAppResp->upgapprespval())) {
+        LogInfo("Application {} already responded with {}", appName_, UpgAppRespValToStr(upgAppResp->upgapprespval()));
+        return false;
+    }
+    LogInfo("Application {} was still processing {}", appName_, reqType); 
+    return true;
+}
+
 UpgRespStateType
 UpgAppRespHdlr::GetUpgAppRespNextPass(UpgReqStateType reqType) {
     //LogInfo("UpgAppRespHdlr::GetUpgAppRespNextPass got called for reqType {}", reqType);

@@ -62,10 +62,10 @@ public:
         return resp;
     }
 
-    HdlrResp HandleStateDataplaneDowntimeStart(UpgCtx& upgCtx) {
+    HdlrResp HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        //HdlrResp resp = {.resp=FAIL, .errStr="LALALALA: Example could not do HandleStateDataplaneDowntimeStart"};
-        LogInfo("UpgHandler HandleStateDataplaneDowntimeStart called for the SVC!!");
+        //HdlrResp resp = {.resp=FAIL, .errStr="LALALALA: Example could not do HandleStateDataplaneDowntimePhase1Start"};
+        LogInfo("UpgHandler HandleStateDataplaneDowntimePhase1Start called for the SVC!!");
         return resp;
     }
 

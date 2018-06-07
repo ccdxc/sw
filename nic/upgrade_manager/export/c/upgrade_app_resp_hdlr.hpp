@@ -33,6 +33,9 @@ public:
     //CreateOrUpdateUpgAppResp creates the response for upgrade_manager
     delphi::error UpdateUpgAppResp(UpgRespStateType type, HdlrResp appHdlrResp);
 
+    //CanInvokeHandler is used during OnMountComplete to know if we can InvokeAppHdlr
+    bool CanInvokeHandler(UpgReqStateType reqType);
+
     //findUpgAppResp returns the UpgAppResp object for this application
     delphi::objects::UpgAppRespPtr findUpgAppResp(string name);
 
