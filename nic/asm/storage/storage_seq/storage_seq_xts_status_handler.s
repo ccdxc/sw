@@ -61,7 +61,7 @@ all_dma_complete:
 
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP_e(dma_p2m_0_dma_cmd_pad,
-                   dma_p2m_21_dma_cmd_eop,
+                   dma_p2m_19_dma_cmd_eop,
                    p4_txdma_intr_dma_cmd_ptr)
 
 xts_error:
@@ -72,7 +72,7 @@ xts_error:
    nop
 
    // cancel any barco push prep
-   DMA_CMD_CANCEL(dma_p2m_21)
+   DMA_CMD_CANCEL(dma_p2m_19)
    
    // else if intr_en then complete any status DMA and 
    // override doorbell to raising an interrupt
@@ -80,7 +80,7 @@ xts_error:
    nop
 
    PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5XTS_INTR_ADDR,
-                              dma_p2m_21)
+                              dma_p2m_19)
    b            all_dma_complete
    nop
 

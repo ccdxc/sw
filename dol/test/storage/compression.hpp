@@ -155,10 +155,13 @@ extern acc_ring_t *dc_hot_ring;
 
 extern dp_mem_t *comp_pad_buf;
 
-void comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
+void comp_sgl_packed_fill(dp_mem_t *comp_sgl_vec,
                           dp_mem_t *comp_buf,
-                          uint32_t blk_size,
-                          uint32_t num_blks);
+                          uint32_t blk_size);
+void comp_sgl_trace(const char *comp_sgl_name,
+                    dp_mem_t *comp_sgl_vec,
+                    uint32_t max_blks,
+                    bool honor_link);
 void chain_sgl_pdma_packed_fill(dp_mem_t *seq_sgl_pdma,
                                 dp_mem_t *dst_buf);
 bool comp_status_poll(dp_mem_t *status,

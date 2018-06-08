@@ -157,50 +157,101 @@ int run_dc_test(cp_desc_t& desc,
                 uint32_t seq_comp_qid = 0);
 
 /*
- * Format a sparse SGL vector where only the addr0/len0 chunk is filled.
- * Leaving addr1/len1/addr2/len2 unused is somewhat wasteful in terms of
- * descriptor memory usage but makes it easier for P4+ and also comsumes
- * less P4+ TxDMA descriptors.
+ * Format a packed SGL vector where each tuple block length is of a fixed
+ * size. The packed format will result in more effort in P4+ for work such
+ * as compression padding, in terms of computation and DMA resources required
+ * to determine which tuples to adjust and pad, and which tuples to clear.
+ *
+ * The more prefered format would have been the sparse SGL which, just prior
+ * to Capri1 tape out, was found to fail in stress tests and was declared
+ * as not-supported by the ASIC team.
  */
 void
-comp_sgl_sparse_fill(dp_mem_t *comp_sgl_vec,
+comp_sgl_packed_fill(dp_mem_t *comp_sgl_vec,
                      dp_mem_t *comp_buf,
-                     uint32_t blk_size,
-                     uint32_t num_blks)
+                     uint32_t blk_size)
 {
     cp_sgl_t    *comp_sgl;
     uint64_t    comp_buf_addr;
     uint32_t    comp_buf_size;
-    uint32_t    block_no;
+    uint32_t    block_no = 0;
     uint32_t    save_curr_line;
 
-    assert(comp_sgl_vec->num_lines_get() >= num_blks);
     comp_buf_addr = comp_buf->pa();
     comp_buf_size = comp_buf->line_size_get();
     save_curr_line = comp_sgl_vec->line_get();
 
-    for (block_no = 0; block_no < num_blks; block_no++) {
-        comp_sgl_vec->line_set(block_no);
+    while (comp_buf_size) {
+        assert(comp_sgl_vec->num_lines_get() >= (block_no + 1));
+        comp_sgl_vec->line_set(block_no++);
         comp_sgl_vec->clear();
 
         comp_sgl = (cp_sgl_t *)comp_sgl_vec->read();
+        comp_sgl->len0 = std::min(comp_buf_size, blk_size);
         comp_sgl->addr0 = comp_buf_addr;
-        comp_sgl->len0 = comp_buf_size >= blk_size ? blk_size : comp_buf_size;
-        assert(comp_sgl->len0);
 
-        if (block_no < (num_blks - 1)) {
+        comp_buf_addr += comp_sgl->len0;
+        comp_buf_size -= comp_sgl->len0;
+        comp_sgl->len1 = std::min(comp_buf_size, blk_size);
+        if (comp_sgl->len1 == 0) {
+            break;
+        }
+        comp_sgl->addr1 = comp_buf_addr;
+
+        comp_buf_addr += comp_sgl->len1;
+        comp_buf_size -= comp_sgl->len1;
+        comp_sgl->len2 = std::min(comp_buf_size, blk_size);
+        if (comp_sgl->len2 == 0) {
+            break;
+        }
+        comp_sgl->addr2 = comp_buf_addr;
+
+        comp_buf_addr += comp_sgl->len2;
+        comp_buf_size -= comp_sgl->len2;
+        if (comp_buf_size) {
             comp_sgl->link = comp_sgl_vec->pa() + comp_sgl_vec->line_size_get();
         }
         comp_sgl_vec->write_thru();
-        comp_buf_addr += comp_sgl->len0;
-        comp_buf_size -= comp_sgl->len0;
+    }
+    comp_sgl_vec->line_set(save_curr_line);
+}
+
+/*
+ * Print debug trace info for an SGL vector
+ */
+void
+comp_sgl_trace(const char *comp_sgl_name,
+               dp_mem_t *comp_sgl_vec,
+               uint32_t max_blks,
+               bool honor_link)
+{
+    cp_sgl_t        *comp_sgl;
+    uint32_t        block_no;
+    uint32_t        num_blks;
+    uint32_t        save_curr_line;
+
+    save_curr_line = comp_sgl_vec->line_get();
+    num_blks = std::min(comp_sgl_vec->num_lines_get(), max_blks);
+
+    for (block_no = 0; block_no < num_blks; block_no++) {
+        comp_sgl_vec->line_set(block_no);
+        comp_sgl = (cp_sgl_t *)comp_sgl_vec->read_thru();
+        printf("%s 0x%lx block %u addr0 0x%lx len0 %u addr1 0x%lx len1 %u "
+               "addr2 0x%lx len2 %u link 0x%lx\n", comp_sgl_name,
+               comp_sgl_vec->pa(), block_no,
+               comp_sgl->addr0, comp_sgl->len0, comp_sgl->addr1, comp_sgl->len1,
+               comp_sgl->addr2, comp_sgl->len2, comp_sgl->link);
+
+        if (honor_link && !comp_sgl->link) {
+            break;
+        }
     }
     comp_sgl_vec->line_set(save_curr_line);
 }
 
 /*
  * Format a packed chain SGL for PDMA purposes. Note that TxDMA mem2mem has
- * as transfer limit of 14 bits (16K - 1) so each SGL addr/len must be
+ * a transfer limit of 14 bits (16K - 1) so each SGL addr/len must be
  * within this limit.
  */
 void
@@ -424,10 +475,11 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
     seq_status_desc->write_bit_fields(512 + 406, 1, chain_params.data_len_from_desc);
     seq_status_desc->write_bit_fields(512 + 407, 1, chain_params.aol_pad_en);
     seq_status_desc->write_bit_fields(512 + 408, 1, chain_params.sgl_pad_en);
-    seq_status_desc->write_bit_fields(512 + 409, 1, chain_params.sgl_pdma_en);
-    seq_status_desc->write_bit_fields(512 + 410, 1, chain_params.sgl_pdma_pad_only);
-    seq_status_desc->write_bit_fields(512 + 411, 1, chain_params.desc_vec_push_en);
-    seq_status_desc->write_bit_fields(512 + 412, 1, chain_params.copy_src_dst_on_error);
+    seq_status_desc->write_bit_fields(512 + 409, 1, chain_params.sgl_sparse_format_en);
+    seq_status_desc->write_bit_fields(512 + 410, 1, chain_params.sgl_pdma_en);
+    seq_status_desc->write_bit_fields(512 + 411, 1, chain_params.sgl_pdma_pad_only);
+    seq_status_desc->write_bit_fields(512 + 412, 1, chain_params.desc_vec_push_en);
+    seq_status_desc->write_bit_fields(512 + 413, 1, chain_params.copy_src_dst_on_error);
     seq_status_desc->write_thru();
 
     // Form the doorbell to be returned by the API

@@ -1211,7 +1211,7 @@ acc_comp_hash_chain_scale_create(uint32_t num_submissions,
                                               chc_params(chc_params.app_max_size(app_blk_size).
                                                                     uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                                                     comp_mem_type1(DP_MEM_TYPE_HBM).
-                                                                    comp_mem_type2(DP_MEM_TYPE_VOID).
+                                                                    comp_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                                                     comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                                                     comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                                                     destructor_free_buffers(true).

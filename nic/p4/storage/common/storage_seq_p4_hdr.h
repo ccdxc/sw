@@ -108,12 +108,13 @@ header_type seq_comp_status_desc1_t {
     sgl_vec_addr    : 64;   // SGL vector for padding operation
     pad_buf_addr    : 64;   // pad buffer address
     data_len        : 16;   // Length of the compression data
-    pad_boundary_shift  : 5;// log2(padding boundray)
-    stop_chain_on_error : 1; // 1 => don't ring next DB on error
-    data_len_from_desc  : 1; // 1 => Use data_len in the descriptor, 
-                             // 0 => Use the comp_output_data_len
+    pad_boundary_shift: 5;  // log2(padding boundray)
+    stop_chain_on_error: 1; // 1 => don't ring next DB on error
+    data_len_from_desc : 1; // 1 => Use data_len in the descriptor, 
+                            // 0 => Use the comp_output_data_len
     aol_pad_en      : 1;
     sgl_pad_en      : 1;
+    sgl_sparse_format_en: 1;
     sgl_pdma_en     : 1;
     sgl_pdma_pad_only:1;
     desc_vec_push_en:1;
@@ -192,6 +193,7 @@ header_type seq_xts_status_desc1_t {
     comp_len_update_en  : 1; // 1 => read length from cp_hdr and update comp desc/SGL
     comp_sgl_src_en     : 1; // 1 => comp_sgl_src_addr is valid
     comp_sgl_src_vec_en : 1; // 1 => comp_sgl_src_addr is a vector address
+    sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1; // 1 => do PDMA from decr_buf_addr to sgl_pdma_dst_addr
     sgl_pdma_len_from_desc: 1; // 1 => PDMA length is data_len above
     desc_vec_push_en    : 1; // 1 => barco_desc_addr is a vector address
@@ -257,7 +259,95 @@ header_type barco_sgl_t {
   }
 }
 
-// Pad structures
+// When a packed Barco SGL is being padded where the last block
+// lands in tuple 0 and the padding in tuple 1, this is what
+// the resulting PHV layout will look like, with tuple 2 and
+// the link field getting nullified.
+header_type barco_sgl_tuple0_pad_t {
+  fields {
+    last_blk_len    : 32;
+    rsvd0           : 32;
+    pad_buf_addr    : 64;
+    pad_len         : 32;
+    rsvd1           : 32;
+    null_addr2      : 64;
+    null_len2       : 32;
+    null_rsvd2      : 32;
+    link            : 64;
+  }
+}
+
+// When a packed Barco SGL is being padded where the last block
+// lands in tuple 1 and the padding in tuple 2, this is what
+// the resulting PHV layout will look like, with just the link
+// field getting nullified.
+header_type barco_sgl_tuple1_pad_t {
+  fields {
+    last_blk_len    : 32;
+    rsvd1           : 32;
+    pad_buf_addr    : 64;
+    pad_len         : 32;
+    rsvd2           : 32;
+    link            : 64;
+  }
+}
+
+// When a packed Barco SGL is being padded where the last block
+// lands in tuple 2, padding has to occur in tuple 0 of the next
+// adjacent SGL. In order to save flit space, we'll do the padding
+// with 2 PHV2MEM: the first separately updates A2 len, and the next
+// writes the entire subsequent SGL, as follows:.
+header_type barco_sgl_tuple2_pad_t {
+  fields {
+    pad_buf_addr    : 64;
+    pad_len         : 32;
+    rsvd0           : 32;
+    null_addr1      : 64;
+    null_len1       : 32;
+    null_rsvd1      : 32;
+    null_addr2      : 64;
+    null_len2       : 32;
+    null_rsvd2      : 32;
+    link            : 64;
+  }
+}
+
+// Similar to above structures, the following SGLs are used when the
+// length in the last block needs to be updated, but without padding.
+header_type barco_sgl_tuple0_len_update_t {
+  fields {
+    last_blk_len    : 32;
+    rsvd0           : 32;
+    null_addr1      : 64;
+    null_len1       : 32;
+    null_rsvd1      : 32;
+    null_addr2      : 64;
+    null_len2       : 32;
+    null_rsvd2      : 32;
+    link            : 64;
+  }
+}
+
+header_type barco_sgl_tuple1_len_update_t {
+  fields {
+    last_blk_len    : 32;
+    rsvd1           : 32;
+    null_addr2      : 64;
+    null_len2       : 32;
+    null_rsvd2      : 32;
+    link            : 64;
+  }
+}
+
+header_type barco_sgl_tuple2_len_update_t {
+  fields {
+    last_blk_len    : 32;
+    rsvd2           : 32;
+    link            : 64;
+  }
+}
+
+// PHV pad structures
 
 header_type storage_seq_pad192_t {
   fields {
@@ -322,6 +412,7 @@ header_type seq_kivec3_t {
     last_blk_len        : 16;
     num_blks            : 5;
     pad_boundary_shift  : 5;
+    sgl_tuple_no        : 2;
   }
 }
 
@@ -363,6 +454,7 @@ header_type seq_kivec5_t {
                                 // 0 => Use the data lenghth in the status
     aol_pad_en          : 1;
     sgl_pad_en          : 1;
+    sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1;
     sgl_pdma_pad_only   : 1;
     desc_vec_push_en    : 1;
@@ -385,6 +477,7 @@ header_type seq_kivec5xts_t {
     comp_len_update_en  : 1;
     comp_sgl_src_en     : 1;
     comp_sgl_src_vec_en : 1;
+    sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1;
     sgl_pdma_len_from_desc: 1;
     desc_vec_push_en    : 1;
@@ -466,6 +559,7 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
   modify_field(scratch.pad_boundary_shift, kivec.pad_boundary_shift);   \
+  modify_field(scratch.sgl_tuple_no, kivec.sgl_tuple_no);               \
 
 #define SEQ_KIVEC3XTS_USE(scratch, kivec)                               \
   modify_field(scratch.decr_buf_addr, kivec.decr_buf_addr);             \
@@ -492,6 +586,7 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);   \
   modify_field(scratch.aol_pad_en, kivec.aol_pad_en);                   \
   modify_field(scratch.sgl_pad_en, kivec.sgl_pad_en);                   \
+  modify_field(scratch.sgl_sparse_format_en, kivec.sgl_sparse_format_en); \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
   modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
@@ -509,6 +604,7 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.comp_len_update_en, kivec.comp_len_update_en);   \
   modify_field(scratch.comp_sgl_src_en, kivec.comp_sgl_src_en);         \
   modify_field(scratch.comp_sgl_src_vec_en, kivec.comp_sgl_src_vec_en); \
+  modify_field(scratch.sgl_sparse_format_en, kivec.sgl_sparse_format_en); \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.sgl_pdma_len_from_desc, kivec.sgl_pdma_len_from_desc);\
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \

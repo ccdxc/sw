@@ -218,6 +218,8 @@
     k.{seq_kivec3_pad_boundary_shift_sbit0_ebit2...seq_kivec3_pad_boundary_shift_sbit3_ebit4}
 #define SEQ_KIVEC3_NUM_BLKS                     \
     k.seq_kivec3_num_blks
+#define SEQ_KIVEC3_SGL_TUPLE_NO                 \
+    k.seq_kivec3_sgl_tuple_no
 
 #define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
     k.seq_kivec3xts_decr_buf_addr
@@ -259,6 +261,8 @@
     k.seq_kivec5_aol_pad_en
 #define SEQ_KIVEC5_SGL_PAD_EN                   \
     k.seq_kivec5_sgl_pad_en
+#define SEQ_KIVEC5_SGL_SPARSE_FORMAT_EN         \
+    k.seq_kivec5_sgl_sparse_format_en
 #define SEQ_KIVEC5_SGL_PDMA_EN                  \
     k.seq_kivec5_sgl_pdma_en
 #define SEQ_KIVEC5_SGL_PDMA_PAD_ONLY            \
@@ -288,6 +292,8 @@
     k.seq_kivec5xts_comp_sgl_src_en
 #define SEQ_KIVEC5XTS_COMP_SGL_SRC_VEC_EN       \
     k.seq_kivec5xts_comp_sgl_src_vec_en
+#define SEQ_KIVEC5XTS_SGL_SPARSE_FORMAT_EN      \
+    k.seq_kivec5xts_sgl_sparse_format_en
 #define SEQ_KIVEC5XTS_INTR_EN                   \
     k.seq_kivec5xts_intr_en
 #define SEQ_KIVEC5XTS_NEXT_DB_ACTION_BARCO_PUSH \
@@ -335,6 +341,11 @@ struct barco_sgl_le_t {
 
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
+
+#define BARCO_SGL_TUPLE0            0
+#define BARCO_SGL_TUPLE1            1
+#define BARCO_SGL_TUPLE2            2
+#define BARCO_SGL_NUM_TUPLES_MAX    3
 
 /*
  * Barco AOL rearranged to little-endian layout

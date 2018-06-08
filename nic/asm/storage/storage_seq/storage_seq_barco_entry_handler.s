@@ -35,10 +35,10 @@ storage_seq_barco_entry_handler:
                 p.seq_kivec4_barco_num_descs, r_num_descs
    
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
-                            d.barco_pndx_addr, dma_p2m_21)
-   DMA_PHV2MEM_FENCE(dma_p2m_21)
+                            d.barco_pndx_addr, dma_p2m_19)
+   DMA_PHV2MEM_FENCE(dma_p2m_19)
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad,
-                 dma_p2m_21_dma_cmd_eop,
+                 dma_p2m_19_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
 
    // Advance to a common stage for executing table lock read to get the

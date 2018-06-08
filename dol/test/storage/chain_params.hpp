@@ -91,6 +91,7 @@ typedef struct {
     // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
              aol_pad_en           :1, // enable AOL length padding
              sgl_pad_en           :1, // enable SGL length padding (e.g., for multi-block hash)
+             sgl_sparse_format_en :1, // SGL sparsely formatted
              sgl_pdma_en          :1, // enable data transfer from comp_buf_addr to aol_dst_vec_addr
              sgl_pdma_pad_only    :1, // enable pad-only fill mode, i.e., Comp engine writes
                                       // compressed output according to SGL, P4+ will fill
@@ -132,6 +133,7 @@ typedef struct {
              comp_len_update_en   :1, // enable compression length update
              comp_sgl_src_en      :1, // source of (de)compression is in SGL format
              comp_sgl_src_vec_en  :1, // comp_sgl_src_addr points to a vector
+             sgl_sparse_format_en :1, // SGL sparsely formatted
              sgl_pdma_en          :1, // enable data transfer from decr_buf_addr to sgl_pdma_dst_addr
              sgl_pdma_len_from_desc:1,// PDMA length is data_len above; otherwise use length from comp hdr
              desc_vec_push_en     :1; // barco_desc_addr points to a vector

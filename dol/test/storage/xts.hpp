@@ -271,6 +271,10 @@ void xts_aol_sparse_fill(xts_enc_dec_blk_type_t enc_dec_blk_type,
                          dp_mem_t *xts_buf,
                          uint32_t blk_size,
                          uint32_t num_blks);
+void xts_aol_trace(const char *aol_name,
+                   dp_mem_t *xts_aol_vec,
+                   uint32_t max_blks,
+                   bool honor_link);
 
 }  // namespace tests
 

@@ -99,18 +99,30 @@ metadata barco_ring_t barco_doorbell_data;
 
 // Accelerator chaining states
 @pragma dont_trim
-metadata storage_capri_addr_t pad_buf_addr;
+metadata storage_capri_len32_t last_blk_len;
 @pragma dont_trim
-metadata storage_capri_addr_t null_addr;
+@pragma pa_align 512
+metadata barco_sgl_tuple2_pad_t barco_sgl_tuple2_pad;
 @pragma dont_trim
-metadata storage_capri_len32_t comp_last_blk_len;
+@pragma pa_header_union ingress barco_sgl_tuple2_pad
+metadata barco_sgl_tuple1_pad_t barco_sgl_tuple1_pad;
 @pragma dont_trim
-metadata storage_capri_len32_t comp_pad_len;
+@pragma pa_header_union ingress barco_sgl_tuple2_pad
+metadata barco_sgl_tuple0_pad_t barco_sgl_tuple0_pad;
+
 @pragma dont_trim
-metadata storage_seq_pad192_t pad192;
+@pragma pa_header_union ingress barco_sgl_tuple2_pad
+metadata barco_sgl_tuple0_len_update_t barco_sgl_tuple0_len_update;
+@pragma dont_trim
+@pragma pa_header_union ingress barco_sgl_tuple2_pad
+metadata barco_sgl_tuple1_len_update_t barco_sgl_tuple1_len_update;
+@pragma dont_trim
+@pragma pa_header_union ingress barco_sgl_tuple2_pad
+metadata barco_sgl_tuple2_len_update_t barco_sgl_tuple2_len_update;
 
 // DMA commands metadata
 @pragma dont_trim
+@pragma pa_align 512
 metadata dma_cmd_phv2mem_t dma_p2m_0;
 @pragma dont_trim
 @pragma pa_header_union ingress dma_p2m_0
@@ -230,17 +242,6 @@ metadata dma_cmd_phv2mem_t dma_p2m_19;
 @pragma pa_header_union ingress dma_p2m_19
 metadata dma_cmd_mem2mem_t dma_m2m_19;
 
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_p2m_20;
-@pragma dont_trim
-@pragma pa_header_union ingress dma_p2m_20
-metadata dma_cmd_mem2mem_t dma_m2m_20;
-
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_p2m_21;
-@pragma dont_trim
-@pragma pa_header_union ingress dma_p2m_21
-metadata dma_cmd_mem2mem_t dma_m2m_21;
 
 /*****************************************************************************
  * Storage Sequencer PHV layout END 
@@ -573,10 +574,10 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 
 //@pragma little_endian rsvd comp_buf_addr aol_src_vec_addr aol_dst_vec_addr data_len sgl_vec_addr pad_buf_addr
 action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_dst_vec_addr, 
-                                     sgl_vec_addr, pad_buf_addr,
-                                     data_len, pad_boundary_shift, stop_chain_on_error,
+                                     sgl_vec_addr, pad_buf_addr, data_len,
+                                     pad_boundary_shift, stop_chain_on_error,
                                      data_len_from_desc, aol_pad_en, sgl_pad_en,
-                                     sgl_pdma_en, sgl_pdma_pad_only,
+                                     sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
 				     desc_vec_push_en, copy_src_dst_on_error) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -595,6 +596,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
   modify_field(seq_comp_status_desc1_scratch.aol_pad_en, aol_pad_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pad_en, sgl_pad_en);
+  modify_field(seq_comp_status_desc1_scratch.sgl_sparse_format_en, sgl_sparse_format_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_pad_only, sgl_pdma_pad_only);
   modify_field(seq_comp_status_desc1_scratch.desc_vec_push_en, desc_vec_push_en);
@@ -609,6 +611,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_kivec5.data_len_from_desc, seq_comp_status_desc1_scratch.data_len_from_desc);
   modify_field(seq_kivec5.aol_pad_en, seq_comp_status_desc1_scratch.aol_pad_en);
   modify_field(seq_kivec5.sgl_pad_en, seq_comp_status_desc1_scratch.sgl_pad_en);
+  modify_field(seq_kivec5.sgl_sparse_format_en, seq_comp_status_desc1_scratch.sgl_sparse_format_en);
   modify_field(seq_kivec5.sgl_pdma_en, seq_comp_status_desc1_scratch.sgl_pdma_en);
   modify_field(seq_kivec5.sgl_pdma_pad_only, seq_comp_status_desc1_scratch.sgl_pdma_pad_only);
   modify_field(seq_kivec5.desc_vec_push_en, seq_comp_status_desc1_scratch.desc_vec_push_en);
@@ -941,7 +944,8 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
 action seq_xts_status_desc1_handler(comp_sgl_src_addr, sgl_pdma_dst_addr, decr_buf_addr,
                                     data_len, blk_boundary_shift, stop_chain_on_error,
                                     comp_len_update_en, comp_sgl_src_en, comp_sgl_src_vec_en,
-				    sgl_pdma_en, sgl_pdma_len_from_desc, desc_vec_push_en) {
+				    sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_len_from_desc,
+				    desc_vec_push_en) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC5XTS_USE(seq_kivec5xts_scratch, seq_kivec5xts)
@@ -956,6 +960,7 @@ action seq_xts_status_desc1_handler(comp_sgl_src_addr, sgl_pdma_dst_addr, decr_b
   modify_field(seq_xts_status_desc1_scratch.comp_len_update_en, comp_len_update_en);
   modify_field(seq_xts_status_desc1_scratch.comp_sgl_src_en, comp_sgl_src_en);
   modify_field(seq_xts_status_desc1_scratch.comp_sgl_src_vec_en, comp_sgl_src_vec_en);
+  modify_field(seq_xts_status_desc1_scratch.sgl_sparse_format_en, sgl_sparse_format_en);
   modify_field(seq_xts_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
   modify_field(seq_xts_status_desc1_scratch.sgl_pdma_len_from_desc, sgl_pdma_len_from_desc);
   modify_field(seq_xts_status_desc1_scratch.desc_vec_push_en, desc_vec_push_en);
@@ -970,6 +975,7 @@ action seq_xts_status_desc1_handler(comp_sgl_src_addr, sgl_pdma_dst_addr, decr_b
   modify_field(seq_kivec5xts.comp_len_update_en, seq_xts_status_desc1_scratch.comp_len_update_en);
   modify_field(seq_kivec5xts.comp_sgl_src_en, seq_xts_status_desc1_scratch.comp_sgl_src_en);
   modify_field(seq_kivec5xts.comp_sgl_src_vec_en, seq_xts_status_desc1_scratch.comp_sgl_src_vec_en);
+  modify_field(seq_kivec5xts.sgl_sparse_format_en, seq_xts_status_desc1_scratch.sgl_sparse_format_en);
   modify_field(seq_kivec5xts.sgl_pdma_en, seq_xts_status_desc1_scratch.sgl_pdma_en);
   modify_field(seq_kivec5xts.sgl_pdma_len_from_desc, seq_xts_status_desc1_scratch.sgl_pdma_len_from_desc);
   modify_field(seq_kivec5xts.desc_vec_push_en, seq_xts_status_desc1_scratch.desc_vec_push_en);

@@ -42,8 +42,8 @@ storage_seq_comp_status_desc0_handler_start:
    nop
                 
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
-                            d.barco_pndx_addr, dma_p2m_21)
-   DMA_PHV2MEM_FENCE(dma_p2m_21)
+                            d.barco_pndx_addr, dma_p2m_19)
+   DMA_PHV2MEM_FENCE(dma_p2m_19)
     
    // Note that d.next_db_addr in this case is really d.barco_ring_addr.
    // phvwrpair limits destination p[] to 64 bits per.
@@ -77,14 +77,14 @@ intr_check:
    nop
 
    // Raise interrupt based on addr/data provided in descriptor
-   PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, dma_p2m_21)
+   PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, dma_p2m_19)
    b            status_dma_setup
    nop
 
 next_db_ring:
                             
    // Ring the sequencer doorbell based on addr/data provided in the descriptor
-   SEQUENCER_DOORBELL_RING(dma_p2m_21)
+   SEQUENCER_DOORBELL_RING(dma_p2m_19)
    b            status_dma_setup
    nop
 

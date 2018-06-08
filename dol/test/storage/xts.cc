@@ -170,7 +170,7 @@ xts_aol_sparse_fill(xts_enc_dec_blk_type_t enc_dec_blk_type,
 
         xts_aol = (xts::xts_aol_t *)xts_aol_vec->read();
         xts_aol->a0 = xts_buf_addr;
-        xts_aol->l0 = xts_buf_size >= blk_size ? blk_size : xts_buf_size;
+        xts_aol->l0 = std::min(xts_buf_size, blk_size);
         assert(xts_aol->l0);
 
         /*
@@ -187,6 +187,39 @@ xts_aol_sparse_fill(xts_enc_dec_blk_type_t enc_dec_blk_type,
     }
     xts_aol_vec->line_set(save_curr_line);
 }
+
+/*
+ * Print debug trace info for an AOL vector
+ */
+void
+xts_aol_trace(const char *aol_name,
+              dp_mem_t *xts_aol_vec,
+              uint32_t max_blks,
+              bool honor_link)
+{
+    xts::xts_aol_t  *xts_aol;
+    uint32_t        block_no;
+    uint32_t        num_blks;
+    uint32_t        save_curr_line;
+
+    save_curr_line = xts_aol_vec->line_get();
+    num_blks = std::min(xts_aol_vec->num_lines_get(), max_blks);
+
+    for (block_no = 0; block_no < num_blks; block_no++) {
+        xts_aol_vec->line_set(block_no);
+        xts_aol = (xts::xts_aol_t *)xts_aol_vec->read_thru();
+        printf("%s 0x%lx block %u A0 0x%lx L0 %u A1 0x%lx L1 %u "
+               "A2 0x%lx L2 %u next 0x%lx\n", aol_name,
+               xts_aol_vec->pa(), block_no, xts_aol->a0, xts_aol->l0,
+               xts_aol->a1, xts_aol->l1, xts_aol->a2, xts_aol->l2, xts_aol->next);
+
+        if (honor_link && !xts_aol->next) {
+            break;
+        }
+    }
+    xts_aol_vec->line_set(save_curr_line);
+}
+
 
 bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset,
     uint32_t& pending_size, uint32_t len)
@@ -536,9 +569,10 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
   seq_status_desc->write_bit_fields(512 + 214, 1, chain_params.comp_len_update_en);
   seq_status_desc->write_bit_fields(512 + 215, 1, chain_params.comp_sgl_src_en);
   seq_status_desc->write_bit_fields(512 + 216, 1, chain_params.comp_sgl_src_vec_en);
-  seq_status_desc->write_bit_fields(512 + 217, 1, chain_params.sgl_pdma_en);
-  seq_status_desc->write_bit_fields(512 + 218, 1, chain_params.sgl_pdma_len_from_desc);
-  seq_status_desc->write_bit_fields(512 + 219, 1, chain_params.desc_vec_push_en);
+  seq_status_desc->write_bit_fields(512 + 217, 1, chain_params.sgl_sparse_format_en);
+  seq_status_desc->write_bit_fields(512 + 218, 1, chain_params.sgl_pdma_en);
+  seq_status_desc->write_bit_fields(512 + 219, 1, chain_params.sgl_pdma_len_from_desc);
+  seq_status_desc->write_bit_fields(512 + 220, 1, chain_params.desc_vec_push_en);
   seq_status_desc->write_thru();
 
   // Form the doorbell to be returned by the API

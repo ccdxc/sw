@@ -14,7 +14,6 @@ struct phv_ p;
 /*
  * Registers usage:
  */
-#define r_pad_buf_addr              r1  // pointer to pad buffer
 
 %%
 
@@ -24,9 +23,7 @@ storage_seq_comp_status_desc1_handler_start:
     phvwrpair	p.seq_kivec5_data_len, d.data_len, \
                 p.{seq_kivec5_stop_chain_on_error...seq_kivec5_copy_src_dst_on_error}, \
     	        d.{stop_chain_on_error...copy_src_dst_on_error}
-    add         r_pad_buf_addr, d.pad_buf_addr, r0
-    phvwr       p.seq_kivec5_pad_buf_addr, r_pad_buf_addr
-    phvwr       p.pad_buf_addr_addr, r_pad_buf_addr.dx
+    phvwr       p.seq_kivec5_pad_buf_addr, d.pad_buf_addr[33:0]
     
     phvwrpair	p.seq_kivec3_comp_buf_addr, d.comp_buf_addr, \
                 p.seq_kivec3_pad_boundary_shift, d.pad_boundary_shift

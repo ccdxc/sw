@@ -21,14 +21,17 @@ struct phv_ p;
 #define r_pad_len                   r3  // padding length
 #define r_pad_boundary              r4  // user specified padding boundary
 #define r_num_blks                  r5  // number of hash blocks
-#define r_last_sgl_p                r6  // pointer to last SGL
-#define r_sgl_field_p               r7  // pointer to an SGL field
+#define r_last_blk_len              r6  // length of last block
+#define r_last_sgl_p                r7  // pointer to last SGL
 
 /*
  * Registers reuse, post padding calculations
  */
-#define r_last_blk_len              r_comp_data_len  // length of last block
-#define r_status                    r_sgl_field_p    // comp status, briefly used at beginning
+#define r_status                    r_last_sgl_p     // comp status, briefly used at beginning
+#define r_sgl_len_total             r_num_blks       // length total of all SGL tuple buffers
+#define r_sgl_tuple_no              r_total_len      // SGL tuple number
+#define r_sgl_field_p               r_comp_data_len  // pointer to an SGL field
+#define r_pad_buf_addr              r_sgl_len_total  // pad buffer address
 
 %%
     .param storage_seq_barco_ring_pndx_read
@@ -52,6 +55,8 @@ storage_seq_comp_status_handler:
     
     seq	        c3, SEQ_KIVEC5_DATA_LEN_FROM_DESC, 1        // delay slot
     cmov        r_comp_data_len, c3, SEQ_KIVEC5_DATA_LEN, d.output_data_len
+    seq	        c3, r_comp_data_len, r0
+    add.c3      r_comp_data_len, 65536, r0
     phvwr	p.seq_kivec5_data_len, r_comp_data_len
    
     // Preliminary padding calculations:
@@ -67,8 +72,10 @@ storage_seq_comp_status_handler:
     sub         r_pad_len, r_total_len, r_comp_data_len
     sub         r_last_blk_len, r_pad_boundary, r_pad_len
 
-    phvwrpair   p.comp_last_blk_len_len, r_last_blk_len.wx, \
-                p.comp_pad_len_len, r_pad_len.wx
+    // In the per-block hash or encryption case, we now indicate to
+    // storage_seq_barco_chain_action the correct number of descriptors.
+    seq         c3, SEQ_KIVEC5_DESC_VEC_PUSH_EN, 1
+    phvwr.c3    p.seq_kivec4_barco_num_descs, r_num_blks
     
     // Note that both SGL padding and AOL padding may be enabled, for the
     // following use case: compress-pad-encrypt where the compressed output
@@ -89,7 +96,7 @@ aol_padding:
     setcf       c6, [c0]
 
 possible_sgl_padding:
-    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, possible_per_block_descs
+    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, possible_sgl_pdma_xfer
     phvwr       p.seq_kivec3_num_blks, r_num_blks       // delay slot
 
     // SGL padding enabled:
@@ -98,44 +105,105 @@ possible_sgl_padding:
     // and apply padding.
    
     // Tell possible_sgl_pdma_xfer that padding is enabled
-    setcf       c6, [c0]
-    
-if0:
-    beq         r_pad_len, r0, endif0
-    sub         r_last_sgl_p, r_num_blks, 1     // delay slot
+    beq         r_pad_len, r0, possible_sgl_pdma_xfer
+    setcf       c6, [c0]                                // delay slot
+
+    // Note: each SGL tuple is expected to point to a block of size r_pad_boundary
+    //
+    // Calculate
+    //   r_sgl_len_total = num_blks_per_sgl << pad_boundary_shift
+    //   r_last_sgl_p = &sgl_vec_addr[r_comp_data_len / r_sgl_len_total]
+    //   r_sgl_tuple_no = (r_comp_data_len % r_sgl_len_total) >> pad_boundary_shift
+    //
+    // Note: r_pad_boundary is a power of 2 but num_blks_per_sgl may not be 
+    // (it either equals 1 or 3)
+
+    seq         c3, SEQ_KIVEC5_SGL_SPARSE_FORMAT_EN, 1
+    sll.c3      r_sgl_len_total, 1, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT 
+    sll.!c3     r_sgl_len_total, BARCO_SGL_NUM_TUPLES_MAX, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT 
+    div         r_last_sgl_p, r_comp_data_len, r_sgl_len_total
     add         r_last_sgl_p, SEQ_KIVEC2_SGL_VEC_ADDR, \
                 r_last_sgl_p, BARCO_SGL_DESC_SIZE_SHIFT
+    mod         r_sgl_tuple_no, r_comp_data_len, r_sgl_len_total
+    srl         r_sgl_tuple_no, r_sgl_tuple_no, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
+    phvwr       p.seq_kivec3_sgl_tuple_no, r_sgl_tuple_no
+    
+    // Now apply padding by adjusting tuple pair which could be:
+    // tuple0/tuple1, or
+    // tuple1/tuple2, or
+    // tuple2/tuple0 (of the next adjacent SGL)
 
-    // Set up DMA for the following:
+switch0:    
+  .brbegin
+    br          r_sgl_tuple_no[1:0]
+    add         r_pad_buf_addr, SEQ_KIVEC5_PAD_BUF_ADDR, r0
+
+  .brcase BARCO_SGL_TUPLE0
+
     // last_sgl_p->len0 = r_last_blk_len
     // last_sgl_p->addr1 = comp_pad_buf
     // last_sgl_p->len1 = r_pad_len
+    // zero out the rest of last_sgl_p
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len0))
-    DMA_PHV2MEM_SETUP_ADDR64(comp_last_blk_len_len, comp_last_blk_len_len,
-                             r_sgl_field_p, dma_p2m_2)
-    
-    add         r_sgl_field_p, r_last_sgl_p, \
-                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr1))
-    DMA_PHV2MEM_SETUP_ADDR64(pad_buf_addr_addr, pad_buf_addr_addr,
-                             r_sgl_field_p, dma_p2m_3)
+    phvwrpair   p.barco_sgl_tuple0_pad_pad_buf_addr, r_pad_buf_addr.dx, \
+                p.barco_sgl_tuple0_pad_pad_len, r_pad_len.wx
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple0_pad_last_blk_len,
+                      barco_sgl_tuple0_pad_link,
+                      r_sgl_field_p, dma_p2m_2)
+    b           endsw0
+    phvwr       p.barco_sgl_tuple0_pad_last_blk_len, r_last_blk_len.wx  // delay slot
+
+  .brcase BARCO_SGL_TUPLE1
+
+    // last_sgl_p->len1 = r_last_blk_len
+    // last_sgl_p->addr2 = comp_pad_buf
+    // last_sgl_p->len2 = r_pad_len
+    // zero out the rest of last_sgl_p
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len1))
-    DMA_PHV2MEM_SETUP_ADDR64(comp_pad_len_len, comp_pad_len_len,
-                             r_sgl_field_p, dma_p2m_4)
-
-endif0:
-
-possible_per_block_descs:
-
-    // In the per-block hash or encryption case, we now indicate to
-    // storage_seq_barco_chain_action the correct number of descriptors.
+    phvwrpair   p.barco_sgl_tuple1_pad_pad_buf_addr, r_pad_buf_addr.dx, \
+                p.barco_sgl_tuple1_pad_pad_len, r_pad_len.wx
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple1_pad_last_blk_len,
+                      barco_sgl_tuple1_pad_link,
+                      r_sgl_field_p, dma_p2m_2)
+    b           endsw0
+    phvwr       p.barco_sgl_tuple1_pad_last_blk_len, r_last_blk_len.wx  // delay slot
     
-    bbeq        SEQ_KIVEC5_DESC_VEC_PUSH_EN, 0, possible_sgl_pdma_xfer
-    nop
-    phvwr       p.seq_kivec4_barco_num_descs, r_num_blks
+  .brcase BARCO_SGL_TUPLE2
+
+    // last_sgl_p->len2 = r_last_blk_len
+    // (last_sgl_p + 1)->addr0 = comp_pad_buf
+    // (last_sgl_p + 1)->len0 = r_pad_len
+    // zero out the rest of (last_sgl_p + 1)
+    
+    add         r_sgl_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len2))
+    DMA_PHV2MEM_SETUP(last_blk_len_len,
+                      last_blk_len_len,
+                      r_sgl_field_p, dma_p2m_2)
+    
+    phvwrpair   p.barco_sgl_tuple2_pad_pad_buf_addr, r_pad_buf_addr.dx, \
+                p.barco_sgl_tuple2_pad_pad_len, r_pad_len.wx
+                
+    // Note: register r_last_sgl_p should not advance as it will be used for
+    // storage_seq_comp_sgl_pad_only_xfer below. Only r_sgl_field_p should
+    // advance to the next SGL and field.
+     
+    add         r_sgl_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(sizeof(struct barco_sgl_le_t)) + \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr0))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple2_pad_pad_buf_addr,
+                      barco_sgl_tuple2_pad_link,
+                      r_sgl_field_p, dma_p2m_3)
+    b           endsw0
+    phvwr       p.last_blk_len_len, r_last_blk_len.wx      // delay slot
+    
+  .brcase BARCO_SGL_NUM_TUPLES_MAX
+  .brend
+endsw0:
     
 possible_sgl_pdma_xfer:
 
@@ -178,7 +246,7 @@ all_dma_complete:
 
     // Setup the start and end DMA pointers
     DMA_PTR_SETUP_e(dma_p2m_0_dma_cmd_pad,
-                    dma_p2m_21_dma_cmd_eop,
+                    dma_p2m_19_dma_cmd_eop,
                     p4_txdma_intr_dma_cmd_ptr)
 
 comp_error:
@@ -189,7 +257,7 @@ comp_error:
     nop
 
     // cancel any barco push prep
-    DMA_CMD_CANCEL(dma_p2m_21)
+    DMA_CMD_CANCEL(dma_p2m_19)
    
     // else if intr_en then complete any status DMA and 
     // override doorbell to raising an interrupt
@@ -197,7 +265,7 @@ comp_error:
     nop
 
     PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5_INTR_ADDR,
-                               dma_p2m_21)
+                               dma_p2m_19)
     b           all_dma_complete
     nop
 

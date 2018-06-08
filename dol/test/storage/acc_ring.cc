@@ -41,10 +41,6 @@ acc_ring_t::acc_ring_t(const char *ring_name,
     assert(ring_size && desc_size && pi_size);
     shadow_pd_idx_mem = new dp_mem_t(1, pi_size);
 
-    /*
-     * If caller passed in a valid ring_base_mem_pa, ring_base_mem
-     * below would be used as descriptor cache for sequencer submission.
-     */
     ring_base_mem = (uint8_t *)alloc_page_aligned_host_mem(desc_size * ring_size);
     assert(ring_base_mem != nullptr);
 

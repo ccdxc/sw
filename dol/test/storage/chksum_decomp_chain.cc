@@ -449,7 +449,6 @@ chksum_decomp_chain_t::full_verify(void)
     if (test_data_verify_and_dump(comp_hash_chain->uncomp_buf_get()->read(),
                                   uncomp_buf->read_thru(),
                                   app_blk_size)) {
-        success = false;
         return -1;
     }
 
