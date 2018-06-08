@@ -35,7 +35,9 @@ storage_seq_comp_sgl_pdma_xfer:
    //  r_src_addr stores the offeset of the source data buffer from where
    //  the current xfer is to be done.
    add          r_src_len, SEQ_KIVEC5_DATA_LEN, r0
-   add		r_src_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
+   seq          c1, SEQ_KIVEC8_ALT_BUF_ADDR_EN, 1
+   add.c1	r_src_addr, SEQ_KIVEC8_ALT_BUF_ADDR, r0
+   add.!c1	r_src_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
 
    /*
     * VERY IMPORTANT NOTE: mem2mem descriptors work in adjacent pair and the

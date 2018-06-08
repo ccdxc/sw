@@ -33,6 +33,12 @@ struct phv_ p;
 #define r_sgl_field_p               r_comp_data_len  // pointer to an SGL field
 #define r_pad_buf_addr              r_sgl_len_total  // pad buffer address
 
+/*
+ * Registers reuse, on compression error
+ */
+#define r_alt_desc_addr             r_pad_boundary   // alternate descriptor address
+#define r_src_qaddr                 r_last_sgl_p     // qstate address
+ 
 %%
     .param storage_seq_barco_ring_pndx_read
     .param storage_seq_comp_aol_pad_handler
@@ -207,9 +213,9 @@ endsw0:
     
 possible_sgl_pdma_xfer:
 
-    // PDMA compressed data only for non-error case (c4 was set)
-    seq.c4      c4, SEQ_KIVEC5_SGL_PDMA_EN, 1
-    bcf         [!c4], possible_barco_push
+    // PDMA compressed data
+    seq         c3, SEQ_KIVEC5_SGL_PDMA_EN, 1
+    bcf         [!c3], possible_barco_push
     phvwr.!c6   p.seq_kivec3_pad_len, r0        // delay slot
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop
@@ -253,11 +259,11 @@ comp_error:
 
     // If next_db_en and !stop_chain_on_error then ring_db
     seq         c5, SEQ_KIVEC5_NEXT_DB_EN, 1
-    bbeq.c5     SEQ_KIVEC5_STOP_CHAIN_ON_ERROR, 0, possible_sgl_pdma_xfer
+    bbeq.c5     SEQ_KIVEC5_STOP_CHAIN_ON_ERROR, 0, possible_chain_alt_desc
     nop
 
     // cancel any barco push prep
-    DMA_CMD_CANCEL(dma_p2m_19)
+    SEQ_COMP_NEXT_DB_CANCEL(dma_p2m_19)
    
     // else if intr_en then complete any status DMA and 
     // override doorbell to raising an interrupt
@@ -269,6 +275,27 @@ comp_error:
     b           all_dma_complete
     nop
 
+possible_chain_alt_desc:
+
+    // On compress error, possibly can still chain using an alternate set of
+    // next-in-chain descriptors.
+
+    bbeq        SEQ_KIVEC5_CHAIN_ALT_DESC_ON_ERROR, 0, possible_sgl_pdma_alt_src
+    sll         r_alt_desc_addr, SEQ_KIVEC4_BARCO_NUM_DESCS, \
+                SEQ_KIVEC4_BARCO_DESC_SIZE      // delay slot
+    add         r_alt_desc_addr, r_alt_desc_addr, SEQ_KIVEC4_BARCO_DESC_ADDR
+    phvwr       p.seq_kivec4_barco_desc_addr, r_alt_desc_addr
+    
+possible_sgl_pdma_alt_src:
+
+    // On compress error, possibly can still do SGL PDMA using an alternate
+    // source buffer address.
+
+    bbeq        SEQ_KIVEC5_SGL_PDMA_ALT_SRC_ON_ERROR, 0, possible_barco_push
+    nop
+    b           sgl_pdma_xfer_full
+    phvwri      p.seq_kivec8_alt_buf_addr_en, 1         // delay slot
+    
 pdma_pad_only_error:
 
    // PDMA pad-only requires sgl_pad_en to also be enabled

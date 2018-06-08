@@ -321,7 +321,8 @@ int
 compress_status_verify(dp_mem_t *status,
                        dp_mem_t *dst_buf,
                        const cp_desc_t& desc,
-                       bool log_error)
+                       bool log_error,
+                       uint32_t expected_status)
 {
     cp_status_sha512_t *st = (cp_status_sha512_t *)status->read_thru();
 
@@ -329,7 +330,15 @@ compress_status_verify(dp_mem_t *status,
         LOG_CHECK_PRINTF("%s ERROR: Status valid bit not set\n", __func__);
         return -1;
     }
-    if (st->err) {
+    if (st->err == expected_status) {
+        if (expected_status != CP_STATUS_SUCCESS) {
+            LOG_CHECK_PRINTF("%s Got expected status 0x%x\n",
+                             __func__, st->err);
+            // No further checks needed
+            return 0;
+        }
+
+    } else {
         LOG_CHECK_PRINTF("%s ERROR: status err 0x%x is unexpected\n",
                          __func__, st->err);
         return -1;
@@ -469,17 +478,19 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
     seq_status_desc->write_bit_fields(512 + 192, 64, chain_params.aol_dst_vec_addr);
     seq_status_desc->write_bit_fields(512 + 256, 64, chain_params.sgl_vec_addr);
     seq_status_desc->write_bit_fields(512 + 320, 64, chain_params.pad_buf_addr);
-    seq_status_desc->write_bit_fields(512 + 384, 16, chain_params.data_len);
-    seq_status_desc->write_bit_fields(512 + 400, 5, chain_params.pad_boundary_shift);
-    seq_status_desc->write_bit_fields(512 + 405, 1, chain_params.stop_chain_on_error);
-    seq_status_desc->write_bit_fields(512 + 406, 1, chain_params.data_len_from_desc);
-    seq_status_desc->write_bit_fields(512 + 407, 1, chain_params.aol_pad_en);
-    seq_status_desc->write_bit_fields(512 + 408, 1, chain_params.sgl_pad_en);
-    seq_status_desc->write_bit_fields(512 + 409, 1, chain_params.sgl_sparse_format_en);
-    seq_status_desc->write_bit_fields(512 + 410, 1, chain_params.sgl_pdma_en);
-    seq_status_desc->write_bit_fields(512 + 411, 1, chain_params.sgl_pdma_pad_only);
-    seq_status_desc->write_bit_fields(512 + 412, 1, chain_params.desc_vec_push_en);
-    seq_status_desc->write_bit_fields(512 + 413, 1, chain_params.copy_src_dst_on_error);
+    seq_status_desc->write_bit_fields(512 + 384, 64, chain_params.alt_buf_addr);
+    seq_status_desc->write_bit_fields(512 + 448, 16, chain_params.data_len);
+    seq_status_desc->write_bit_fields(512 + 464, 5, chain_params.pad_boundary_shift);
+    seq_status_desc->write_bit_fields(512 + 469, 1, chain_params.stop_chain_on_error);
+    seq_status_desc->write_bit_fields(512 + 470, 1, chain_params.data_len_from_desc);
+    seq_status_desc->write_bit_fields(512 + 471, 1, chain_params.aol_pad_en);
+    seq_status_desc->write_bit_fields(512 + 472, 1, chain_params.sgl_pad_en);
+    seq_status_desc->write_bit_fields(512 + 473, 1, chain_params.sgl_sparse_format_en);
+    seq_status_desc->write_bit_fields(512 + 474, 1, chain_params.sgl_pdma_en);
+    seq_status_desc->write_bit_fields(512 + 475, 1, chain_params.sgl_pdma_pad_only);
+    seq_status_desc->write_bit_fields(512 + 476, 1, chain_params.sgl_pdma_alt_src_on_error);
+    seq_status_desc->write_bit_fields(512 + 477, 1, chain_params.desc_vec_push_en);
+    seq_status_desc->write_bit_fields(512 + 478, 1, chain_params.chain_alt_desc_on_error);
     seq_status_desc->write_thru();
 
     // Form the doorbell to be returned by the API
@@ -568,7 +579,8 @@ compression_buf_init()
          new comp_encrypt_chain_t(cec_ctor.app_max_size(kCompAppMaxSize).
                                            app_enc_size(kCompAppHashBlkSize).
                                            uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
-                                           comp_mem_type(DP_MEM_TYPE_HBM).
+                                           comp_mem_type1(DP_MEM_TYPE_HBM).
+                                           comp_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                            comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                            comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                            encrypt_mem_type(DP_MEM_TYPE_HOST_MEM).
@@ -1673,6 +1685,34 @@ int seq_compress_output_encrypt_app_test_size() {
                                     seq_comp_qid(queues::get_seq_comp_sq(0)).
                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
                                     seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->full_verify();
+}
+
+int seq_compress_output_encrypt_force_comp_buf2_bypass() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.enc_dec_blk_type(XTS_ENC_DEC_PER_HASH_BLK).
+                                    app_blk_size(kCompAppTestSize).
+                                    comp_ring(cp_ring).
+                                    push_type(ACC_RING_PUSH_SEQUENCER).
+                                    seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
+                                    force_comp_buf2_bypass(true));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->full_verify();
+}
+
+int seq_compress_output_encrypt_force_uncomp_encrypt() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.enc_dec_blk_type(XTS_ENC_DEC_PER_HASH_BLK).
+                                    app_blk_size(kCompAppTestSize).
+                                    comp_ring(cp_ring).
+                                    push_type(ACC_RING_PUSH_SEQUENCER).
+                                    seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
+                                    force_uncomp_encrypt(true));
     comp_encrypt_chain->post_push();
     return comp_encrypt_chain->full_verify();
 }

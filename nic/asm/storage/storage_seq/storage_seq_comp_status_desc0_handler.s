@@ -29,13 +29,15 @@ storage_seq_comp_status_desc0_handler_start:
    // Note: if a compression error arises and status_dma_en is set,
    // interrupts (if set) will also be raised
    PCI_SET_INTERRUPT_DATA()
-
-   // Store the various parts of the descriptor in the K+I vectors for later use
-   // Check if next doorbell is to be enabled
-   bbeq		d.next_db_en, 0, intr_check
    phvwrpair	p.seq_kivec5_intr_addr, d.intr_addr, \
                 p.{seq_kivec5_status_dma_en...seq_kivec5_next_db_action_barco_push}, \
-   	        d.{status_dma_en...next_db_action_barco_push}   // delay slot
+   	        d.{status_dma_en...next_db_action_barco_push}
+
+   // When interrupt is not enabled, use seq_kivec5_intr_addr to hold qstate
+   // address which might be needed when a Barco push gets canceled.
+   seq          c1, d.intr_en, 0
+   bbeq         d.next_db_en, 0, intr_check
+   phvwr.c1     p.seq_kivec5_intr_addr[33:0], SEQ_KIVEC1_SRC_QADDR // delay slot
 
    // if doorbell is actually a Barco push action, handle accordingly
    bbeq		d.next_db_action_barco_push, 0, next_db_ring

@@ -159,13 +159,15 @@ xts_aol_sparse_fill(xts_enc_dec_blk_type_t enc_dec_blk_type,
     uint32_t        block_no;
     uint32_t        save_curr_line;
 
-    assert(xts_aol_vec->num_lines_get() >= num_blks);
     xts_buf_addr = xts_buf->pa();
     xts_buf_size = xts_buf->line_size_get();
     save_curr_line = xts_aol_vec->line_get();
 
+    /*
+     * Fill AOL vector starting from the current line
+     */
     for (block_no = 0; block_no < num_blks; block_no++) {
-        xts_aol_vec->line_set(block_no);
+        xts_aol_vec->line_set(save_curr_line + block_no);
         xts_aol_vec->clear();
 
         xts_aol = (xts::xts_aol_t *)xts_aol_vec->read();

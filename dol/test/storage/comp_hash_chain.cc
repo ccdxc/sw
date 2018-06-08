@@ -643,11 +643,31 @@ comp_hash_chain_t::full_verify(void)
     /*
      * Validate PDMA transfer capability
      */
-    if (comp_buf1 != comp_buf2) {
+    if (comp_buf1 == comp_buf2) {
+
+        /*
+         * Validate padding
+         */
+        if (pad_data_len && 
+            test_data_verify_and_dump(comp_buf1->read_thru() + last_cp_output_data_len,
+                                      caller_comp_pad_buf->read(),
+                                      pad_data_len)) {
+            printf("ERROR: comp_hash_chain comp_buf1 pad data verification failed\n");
+            return -1;
+        }
+
+    } else {
         if (test_data_verify_and_dump(comp_buf1->read_thru(),
                                       comp_buf2->read_thru(),
                                       last_cp_output_data_len)) {
-            success = false;
+            printf("ERROR: comp_hash_chain PDMA data verification failed\n");
+            return -1;
+        }
+        if (pad_data_len && 
+            test_data_verify_and_dump(comp_buf2->read() + last_cp_output_data_len,
+                                      caller_comp_pad_buf->read(),
+                                      pad_data_len)) {
+            printf("ERROR: comp_hash_chain comp_buf2 pad data verification failed\n");
             return -1;
         }
     }

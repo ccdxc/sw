@@ -39,6 +39,7 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     num_enc_blks(0),
     last_dc_output_data_len(0),
     last_decrypt_output_data_len(0),
+    decomp_bypass(false),
     destructor_free_buffers(params.destructor_free_buffers_),
     suppress_info_log(params.suppress_info_log_),
     success(false)
@@ -176,6 +177,11 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     }
 
     /*
+     * Execute decomp only if data had been compressed.
+     */
+    decomp_bypass = comp_encrypt_chain->force_uncomp_encrypt_get();
+
+    /*
      * Partially overwrite destination buffers to prevent left over
      * data from a previous run
      */
@@ -183,75 +189,82 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     xts_decrypt_buf2->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
     uncomp_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
+    memset(&cp_desc, 0, sizeof(cp_desc));
     decomp_ring = params.decomp_ring_;
     success = false;
-    decompress_cp_desc_template_fill(cp_desc, xts_decrypt_buf1, uncomp_buf,
-                                     caller_comp_status_buf,
-                                     comp_encrypt_chain->cp_output_data_len_get(),
-                                     app_blk_size);
-    /*
-     * Configure decrypt_decomp_len_update mode
-     */
-    if (params.decrypt_decomp_len_update_ != DECRYPT_DECOMP_LEN_UPDATE_NONE) {
-
+    if (!decomp_bypass) {
+        decompress_cp_desc_template_fill(cp_desc, xts_decrypt_buf1, uncomp_buf,
+                           caller_comp_status_buf,
+                           comp_encrypt_chain->cp_output_data_len_get(),
+                           app_blk_size);
         /*
-         * Configure the max length possible and let P4+ make the
-         * appropriate correction based on the cp_hdr it reads.
+         * Configure decrypt_decomp_len_update mode
          */
-        chain_params.comp_len_update_en = 1;
-        chain_params.blk_boundary_shift = (uint8_t)log2(app_enc_size);
-        cp_desc.datain_len = xts_decrypt_buf1->line_size_get();
-
-        if (params.decrypt_decomp_len_update_ != DECRYPT_DECOMP_LEN_UPDATE_FLAT) {
-            cp_desc.cmd_bits.src_is_list = 1;
-            cp_desc.src = decomp_sgl_src_vec->pa();
-            chain_params.comp_sgl_src_en = 1;
-            chain_params.comp_sgl_src_addr = decomp_sgl_src_vec->pa();
+        if (params.decrypt_decomp_len_update_ != 
+                   DECRYPT_DECOMP_LEN_UPDATE_NONE) {
 
             /*
-             * Validate the mode where the entire SGL describes just
-             * a single buffer.
+             * Configure the max length possible and let P4+ make the
+             * appropriate correction based on the cp_hdr it reads.
              */
-            if (params.decrypt_decomp_len_update_ == DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC) {
-                comp_sgl_packed_fill(decomp_sgl_src_vec, xts_decrypt_buf1,
-                                     xts_decrypt_buf1->line_size_get());
+            chain_params.comp_len_update_en = 1;
+            chain_params.blk_boundary_shift = (uint8_t)log2(app_enc_size);
+            cp_desc.datain_len = xts_decrypt_buf1->line_size_get();
 
-            } else {
-                comp_sgl_packed_fill(decomp_sgl_src_vec, xts_decrypt_buf1, app_enc_size);
-                chain_params.comp_sgl_src_vec_en = 1;
+            if (params.decrypt_decomp_len_update_ != 
+                       DECRYPT_DECOMP_LEN_UPDATE_FLAT) {
+                cp_desc.cmd_bits.src_is_list = 1;
+                cp_desc.src = decomp_sgl_src_vec->pa();
+                chain_params.comp_sgl_src_en = 1;
+                chain_params.comp_sgl_src_addr = decomp_sgl_src_vec->pa();
+
+                /*
+                 * Validate the mode where the entire SGL describes just
+                 * a single buffer.
+                 */
+                if (params.decrypt_decomp_len_update_ == 
+                                   DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC) {
+                    comp_sgl_packed_fill(decomp_sgl_src_vec, xts_decrypt_buf1,
+                                         xts_decrypt_buf1->line_size_get());
+
+                } else {
+                    comp_sgl_packed_fill(decomp_sgl_src_vec, xts_decrypt_buf1,
+                                         app_enc_size);
+                    chain_params.comp_sgl_src_vec_en = 1;
+                }
             }
         }
+
+        caller_comp_status_buf->fragment_find(0, sizeof(uint64_t))->clear_thru();
+
+        // Use caller's Comp opaque info, if any
+        if (caller_comp_opaque_buf) {
+            cp_desc.cmd_bits.opaque_tag_on = 1;
+            cp_desc.opaque_tag_addr = caller_comp_opaque_buf->pa();
+            cp_desc.opaque_tag_data = caller_comp_opaque_data;
+        }
+
+        /*
+         * Decompression will use direct barco push action
+         */
+        chain_params.next_doorbell_en = 1;
+        chain_params.next_db_action_barco_push = 1;
+        chain_params.push_spec.barco_ring_addr =
+                               decomp_ring->ring_base_mem_pa_get();
+        chain_params.push_spec.barco_pndx_addr =
+                               decomp_ring->cfg_ring_pd_idx_get();
+        chain_params.push_spec.barco_pndx_shadow_addr =
+                               decomp_ring->shadow_pd_idx_pa_get();
+        chain_params.push_spec.barco_desc_addr = xts_decomp_cp_desc->pa();
+        chain_params.push_spec.barco_desc_size = 
+                               (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
+        chain_params.push_spec.barco_pndx_size = 
+                               (uint8_t)log2(sizeof(uint32_t));
+        chain_params.push_spec.barco_ring_size =
+                               (uint8_t)log2(decomp_ring->ring_size_get());
+        chain_params.push_spec.barco_num_descs = 1;
     }
 
-    caller_comp_status_buf->fragment_find(0, sizeof(uint64_t))->clear_thru();
-
-    // Use caller's Comp opaque info, if any
-    if (caller_comp_opaque_buf) {
-        cp_desc.cmd_bits.opaque_tag_on = 1;
-        cp_desc.opaque_tag_addr = caller_comp_opaque_buf->pa();
-        cp_desc.opaque_tag_data = caller_comp_opaque_data;
-    }
-
-    chain_params.seq_spec.seq_q = params.seq_xts_qid_;
-    chain_params.seq_spec.seq_status_q = params.seq_xts_status_qid_;
-
-    // Decompression will use direct barco push action
-    chain_params.next_doorbell_en = 1;
-    chain_params.next_db_action_barco_push = 1;
-    chain_params.push_spec.barco_ring_addr =
-                           decomp_ring->ring_base_mem_pa_get();
-    chain_params.push_spec.barco_pndx_addr =
-                           decomp_ring->cfg_ring_pd_idx_get();
-    chain_params.push_spec.barco_pndx_shadow_addr =
-                           decomp_ring->shadow_pd_idx_pa_get();
-    chain_params.push_spec.barco_desc_addr = xts_decomp_cp_desc->pa();
-    chain_params.push_spec.barco_desc_size = 
-                           (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
-    chain_params.push_spec.barco_pndx_size = 
-                           (uint8_t)log2(sizeof(uint32_t));
-    chain_params.push_spec.barco_ring_size =
-                           (uint8_t)log2(decomp_ring->ring_size_get());
-    chain_params.push_spec.barco_num_descs = 1;
     if (xts_status_vec1 != xts_status_vec2) {
 
         // xts_status_vec2 will receive the content of xts_status_vec1
@@ -265,6 +278,9 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
                      xts_status_vec2->line_size_get() * (uint32_t)actual_enc_blks;
         chain_params.status_dma_en = 1;
     }
+
+    chain_params.seq_spec.seq_q = params.seq_xts_qid_;
+    chain_params.seq_spec.seq_status_q = params.seq_xts_status_qid_;
 
     /*
      * P4+ is capable of initiating chained decomp operation simultaneous
@@ -281,7 +297,10 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
         chain_params.sgl_pdma_dst_addr = seq_sgl_pdma->pa();
     }
 
-    // Enable interrupt in case decryption fails
+    /*
+     * Enable interrupt in case decryption fails; 
+     * also applicable when decomp is skipped.
+     */
     xts_opaque_buf->clear_thru();
     chain_params.intr_addr = xts_opaque_buf->pa();
     chain_params.intr_data = kCompSeqIntrData;
@@ -401,17 +420,19 @@ decrypt_decomp_chain_t::fast_verify(void)
         xts_status_vec2->line_set(block_no);
         xts_status = *((uint64_t *)xts_status_vec2->read_thru());
         if (xts_status) {
-          printf("ERROR: decrypt_decomp_chain XTS error 0x%lx\n", xts_status);
-          return -1;
+            printf("ERROR: decrypt_decomp_chain XTS error 0x%lx\n", xts_status);
+            return -1;
         }
     }
 
     // Validate decomp status
     d = (cp_desc_t *)xts_decomp_cp_desc->read_thru();
-    if (decompress_status_verify(caller_comp_status_buf, *d, app_blk_size)) {
-      printf("ERROR: decrypt_decomp_chain decompression failed: "
-             "datain_len %u threshold_len %u\n", d->datain_len, d->threshold_len);
-      return -1;
+    if (!decomp_bypass &&
+        decompress_status_verify(caller_comp_status_buf, *d, app_blk_size)) {
+
+        printf("ERROR: decrypt_decomp_chain decompression failed: "
+               "datain_len %u threshold_len %u\n", d->datain_len, d->threshold_len);
+        return -1;
     }
 
     if (!suppress_info_log) {
@@ -449,11 +470,24 @@ decrypt_decomp_chain_t::full_verify(void)
         for (block_no = 0; block_no < (uint32_t)actual_enc_blks; block_no++) {
             xts_status_vec2->line_set(block_no);
             xts_status = *((uint64_t *)xts_status_vec2->read_thru());
-            if (!xts_status) {
-              return 0;
+            if (xts_status) {
+                break;
             }
         }
-        return 1;
+
+        if (block_no != (uint32_t)actual_enc_blks) {
+            return 1;
+        }
+
+        /*
+         * If second part of chain (decomp) was not executed, ensure XTS
+         * interrupt completion.
+         */
+        if (decomp_bypass) {
+            return *((uint32_t *)xts_opaque_buf->read_thru()) == 
+                                 kCompSeqIntrData ? 0 : 1;
+        }
+        return 0;
     };
 
     assert(poll_factor);
@@ -461,15 +495,17 @@ decrypt_decomp_chain_t::full_verify(void)
     success = false;
 
     if (xts_poll(xts_status_poll_func) != 0) {
-      printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", xts_status);
-      return -1;
+        printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", xts_status);
+        return -1;
     }
 
     // Poll for decomp status
     d = (cp_desc_t *)xts_decomp_cp_desc->read_thru();
-    if (!comp_status_poll(caller_comp_status_buf, *d, suppress_info_log)) {
-      printf("ERROR: decrypt_decomp_chain decompression status never came\n");
-      return -1;
+    if (!decomp_bypass &&
+        !comp_status_poll(caller_comp_status_buf, *d, suppress_info_log)) {
+
+        printf("ERROR: decrypt_decomp_chain decompression status never came\n");
+        return -1;
     }
 
     /*
@@ -489,30 +525,46 @@ decrypt_decomp_chain_t::full_verify(void)
                        max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
         if (d->cmd_bits.src_is_list) {
             comp_sgl_trace("decrypt_decomp_chain decomp_sgl_src_vec",
-                           decomp_sgl_src_vec, decomp_sgl_src_vec->num_lines_get(),
-                           true);
+                           decomp_sgl_src_vec,
+                           decomp_sgl_src_vec->num_lines_get(), true);
         }
     }
 
-    last_dc_output_data_len = comp_status_output_data_len_get(caller_comp_status_buf);
-    if (!suppress_info_log) {
-        printf("decrypt_decomp_chain: last_dc_output_data_len %u\n",
-               last_dc_output_data_len);
-    }
+    /*
+     * Validate data
+     */
+    if (decomp_bypass) {
+        if (test_data_verify_and_dump(comp_encrypt_chain->uncomp_data_get(),
+                             xts_decrypt_buf2->read_thru(),
+                             comp_encrypt_chain->encrypt_output_data_len_get())) {
+            printf("ERROR: decrypt_decomp_chain decrypted data "
+                   "verification failed\n");
+            return -1;
+        }
 
-    // Validate data
-    if (test_data_verify_and_dump(comp_encrypt_chain->uncomp_data_get(),
-                                  uncomp_buf->read_thru(),
-                                  app_blk_size)) {
-        printf("ERROR: decrypt_decomp_chain decompressed data verification failed\n");
-        return -1;
-    }
+    } else {
+        last_dc_output_data_len = 
+             comp_status_output_data_len_get(caller_comp_status_buf);
+        if (!suppress_info_log) {
+            printf("decrypt_decomp_chain: last_dc_output_data_len %u\n",
+                   last_dc_output_data_len);
+        }
 
-    if (test_data_verify_and_dump(comp_encrypt_chain->comp_data_get(),
-                                  xts_decrypt_buf2->read_thru(),
-                                  comp_encrypt_chain->cp_output_data_len_get())) {
-        printf("ERROR: decrypt_decomp_chain decrypted data verification failed\n");
-        return -1;
+        if (test_data_verify_and_dump(comp_encrypt_chain->uncomp_data_get(),
+                                      uncomp_buf->read_thru(),
+                                      app_blk_size)) {
+            printf("ERROR: decrypt_decomp_chain decompressed data "
+                   "verification failed\n");
+            return -1;
+        }
+
+        if (test_data_verify_and_dump(comp_encrypt_chain->comp_data_get(),
+                             xts_decrypt_buf2->read_thru(),
+                             comp_encrypt_chain->cp_output_data_len_get())) {
+            printf("ERROR: decrypt_decomp_chain decrypted data "
+                   "verification failed\n");
+            return -1;
+        }
     }
 
     // Status verification done.

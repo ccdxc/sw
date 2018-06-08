@@ -195,8 +195,6 @@
     k.{seq_kivec1_src_qid_sbit0_ebit1...seq_kivec1_src_qid_sbit18_ebit23}
 #define SEQ_KIVEC1_SRC_QADDR                    \
     k.{seq_kivec1_src_qaddr_sbit0_ebit1...seq_kivec1_src_qaddr_sbit26_ebit33}
-#define SEQ_KIVEC1_BARCO_RING_ADDR              \
-    k.{seq_kivec1_barco_ring_addr_sbit0_ebit7...seq_kivec1_barco_ring_addr_sbit32_ebit33}
 
 #define SEQ_KIVEC2_SGL_PDMA_DST_ADDR            \
     k.seq_kivec2_sgl_pdma_dst_addr
@@ -225,9 +223,9 @@
     k.seq_kivec3xts_decr_buf_addr
 
 #define SEQ_KIVEC4_BARCO_DESC_ADDR              \
-    k.{seq_kivec4_barco_desc_addr_sbit0_ebit15...seq_kivec4_barco_desc_addr_sbit56_ebit63}
+    k.{seq_kivec4_barco_desc_addr_sbit0_ebit7...seq_kivec4_barco_desc_addr_sbit40_ebit63}
 #define SEQ_KIVEC4_BARCO_RING_ADDR              \
-    k.{seq_kivec4_barco_ring_addr_sbit0_ebit23...seq_kivec4_barco_ring_addr_sbit32_ebit33}
+    k.{seq_kivec4_barco_ring_addr_sbit0_ebit7...seq_kivec4_barco_ring_addr_sbit32_ebit33}
 #define SEQ_KIVEC4_BARCO_DESC_SIZE              \
     k.seq_kivec4_barco_desc_size
 #define SEQ_KIVEC4_BARCO_PNDX_SHADOW_ADDR       \
@@ -253,8 +251,8 @@
     k.seq_kivec5_data_len_from_desc
 #define SEQ_KIVEC5_STOP_CHAIN_ON_ERROR          \
     k.seq_kivec5_stop_chain_on_error
-#define SEQ_KIVEC5_COPY_SRC_DST_ON_ERROR        \
-    k.seq_kivec5_copy_src_desc_on_error
+#define SEQ_KIVEC5_CHAIN_ALT_DESC_ON_ERROR      \
+    k.seq_kivec5_chain_alt_desc_on_error
 #define SEQ_KIVEC5_NEXT_DB_EN                   \
     k.seq_kivec5_next_db_en
 #define SEQ_KIVEC5_AOL_PAD_EN                   \
@@ -267,6 +265,8 @@
     k.seq_kivec5_sgl_pdma_en
 #define SEQ_KIVEC5_SGL_PDMA_PAD_ONLY            \
     k.seq_kivec5_sgl_pdma_pad_only
+#define SEQ_KIVEC5_SGL_PDMA_ALT_SRC_ON_ERROR    \
+    k.seq_kivec5_sgl_pdma_alt_src_on_error
 #define SEQ_KIVEC5_INTR_EN                      \
     k.seq_kivec5_intr_en
 #define SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH    \
@@ -315,6 +315,11 @@
 #define SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR         \
     k.seq_kivec7xts_comp_sgl_src_addr
 
+#define SEQ_KIVEC8_ALT_BUF_ADDR                 \
+    k.seq_kivec8_alt_buf_addr
+#define SEQ_KIVEC8_ALT_BUF_ADDR_EN              \
+    k.seq_kivec8_alt_buf_addr_en
+    
 /*
  * Debug flags
  */
@@ -322,6 +327,16 @@
 #define SEQ_COMP_SGL_PDMA_PAD_ONLY_DEBUG        1
 #define DMA_CMD_MEM2MEM_SIZE_DEBUG              1
 
+/*
+ * Comp status sequencer qstate size
+ */
+#define SEQ_COMP_STATUS_QSTATE_SIZE_BYTE        64
+ 
+/*
+ * XTS status sequencer qstate size
+ */
+#define SEQ_XTS_STATUS_QSTATE_SIZE_BYTE         64
+ 
 /*
  * Barco SGL rearranged to little-endian layout
  */
@@ -870,9 +885,27 @@ struct capri_dma_cmd_mem2mem_t {
                                         sizeof(p._start) - 1))/16);     \
    phvwri   p._dma_cmd_eop, 1;                                          \
    
-// Cancel a previously set DMA descriptor
-#define DMA_CMD_CANCEL(_dma_cmd_X)                                      \
-   phvwri   p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_NOP;                 \
+// Cancel a previously set Comp next doorbell ring command.
+// Since such a command is likely an EOP, NOP cannot be used
+// so work around that using a harmless PHV2MEM commmand.
+// Note: SEQ_KIVEC5_INT_ADDR would have been filled with 
+// 34-bit qstate address.
+#define SEQ_COMP_NEXT_DB_CANCEL(_dma_cmd_X)                             \
+   add      r_src_qaddr, SEQ_KIVEC5_INTR_ADDR[33:0],                    \
+            SEQ_COMP_STATUS_QSTATE_SIZE_BYTE - 1;                       \
+   DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
+                            r_src_qaddr, _dma_cmd_X)                    \
+
+// Cancel a previously set XTS next doorbell ring command.
+// Since such a command is likely an EOP, NOP cannot be used
+// so work around that using a harmless PHV2MEM commmand.
+// Note: SEQ_KIVEC5XTS_INT_ADDR would have been filled with 
+// 34-bit qstate address.
+#define SEQ_XTS_NEXT_DB_CANCEL(_dma_cmd_X)                              \
+   add      r_src_qaddr, SEQ_KIVEC5XTS_INTR_ADDR[33:0],                 \
+            SEQ_XTS_STATUS_QSTATE_SIZE_BYTE - 1;                        \
+   DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
+                            r_src_qaddr, _dma_cmd_X)                    \
 
 // Setup the doorbell data. Write back the data in little endian format
 #define DOORBELL_DATA_SETUP_REG(_reg, _index, _ring, _qid, _pid)        \

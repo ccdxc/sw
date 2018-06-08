@@ -1129,7 +1129,8 @@ acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
                                                  cec_params(cec_params.app_max_size(app_blk_size).
                                                                        app_enc_size(kCompAppHashBlkSize).
                                                                        uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
-                                                                       comp_mem_type(DP_MEM_TYPE_HBM).
+                                                                       comp_mem_type1(DP_MEM_TYPE_HBM).
+                                                                       comp_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                                                        comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                                                        comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                                                        encrypt_mem_type(DP_MEM_TYPE_HOST_MEM).

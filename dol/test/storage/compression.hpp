@@ -182,7 +182,8 @@ void decompress_cp_desc_template_fill(cp_desc_t &d,
 int compress_status_verify(dp_mem_t *status,
                            dp_mem_t *dst_buf,
                            const cp_desc_t& desc,
-                           bool log_error=true);
+                           bool log_error=true,
+                           uint32_t expected_status=CP_STATUS_SUCCESS);
 int decompress_status_verify(dp_mem_t *status,
                              const cp_desc_t& desc,
                              uint32_t exp_output_data_len,

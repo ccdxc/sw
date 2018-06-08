@@ -40,17 +40,36 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     num_enc_blks(0),
     last_cp_output_data_len(0),
     last_encrypt_output_data_len(0),
+    expected_status(CP_STATUS_SUCCESS),
+    force_comp_buf2_bypass(false),
+    force_uncomp_encrypt(false),
     destructor_free_buffers(params.destructor_free_buffers_),
     suppress_info_log(params.suppress_info_log_),
     success(false)
 {
+    uint32_t    max_src_blks;
+
     uncomp_buf = new dp_mem_t(1, app_max_size,
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
                               0, DP_MEM_ALLOC_NO_FILL);
 
-    comp_buf = new dp_mem_t(1, app_max_size,
-                            DP_MEM_ALIGN_PAGE, params.comp_mem_type_,
-                            0, DP_MEM_ALLOC_NO_FILL);
+    // Caller can elect to have 2 output buffers, e.g.
+    // one in HBM for lower latency P4+ processing, and another in host
+    // memory which P4+ will PDMA transfer into for the application.
+    comp_buf1 = new dp_mem_t(1, app_max_size,
+                             DP_MEM_ALIGN_PAGE, params.comp_mem_type1_,
+                             0, DP_MEM_ALLOC_NO_FILL);
+    if (params.comp_mem_type2_ != DP_MEM_TYPE_VOID) {
+        comp_buf2 = new dp_mem_t(1, comp_buf1->line_size_get(),
+                                 DP_MEM_ALIGN_PAGE, params.comp_mem_type2_,
+                                 0, DP_MEM_ALLOC_NO_FILL);
+    } else {
+        comp_buf2 = comp_buf1;
+    }
+    seq_sgl_pdma = new dp_mem_t(1, sizeof(chain_sgl_pdma_t),
+                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                sizeof(chain_sgl_pdma_t));
+
     xts_encrypt_buf = new dp_mem_t(1, app_max_size,
                           DP_MEM_ALIGN_PAGE, params.encrypt_mem_type_,
                           0, DP_MEM_ALLOC_NO_FILL);
@@ -71,18 +90,33 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
                                    DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                    kMinHostMemAllocSize);
 
-    // XTS AOL must be 512 byte aligned
+    // XTS AOL must be 512 byte aligned.
+    // 
+    // Note: For certain "source" resources, we allocate twice the number
+    // of required entries in order to test P4+ ability to do chaining
+    // using the alternate descriptor set when there's a compression error.
+    
     max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, app_enc_size);
-    xts_src_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
+    max_src_blks = max_enc_blks * 2;
+
+    xts_src_aol_vec = new dp_mem_t(max_src_blks, sizeof(xts::xts_aol_t),
                                    DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
-    xts_dst_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
-                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
-    xts_desc_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_desc_t),
+    xts_desc_vec = new dp_mem_t(max_src_blks, sizeof(xts::xts_desc_t),
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(xts::xts_desc_t));
+    xts_dst_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
     xts_opaque_vec = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                   sizeof(uint64_t));
+
+    // sgl_pad_vec would be used for PDMA of the pad data into comp_buf1
+    // unless comp_buf2 is also present, in which case, full PDMA into
+    // comp_buf2 would take place using seq_sgl_pdma. 
+    sgl_pad_vec = new dp_mem_t(max_enc_blks, sizeof(cp_sgl_t),
+                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                               sizeof(cp_sgl_t));
+
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncomp_buf->read();
     for (uint64_t i = 0; i < (app_max_size / sizeof(uint64_t)); i++) {
@@ -104,7 +138,10 @@ comp_encrypt_chain_t::~comp_encrypt_chain_t()
            __FUNCTION__, success, destructor_free_buffers);
     if (success && destructor_free_buffers) {
         delete uncomp_buf;
-        delete comp_buf;
+        delete comp_buf1;
+        if (comp_buf1 != comp_buf2) {
+            delete comp_buf2;
+        }
         delete xts_encrypt_buf;
         if (comp_status_buf1 != comp_status_buf2) {
             delete comp_status_buf2;
@@ -115,6 +152,8 @@ comp_encrypt_chain_t::~comp_encrypt_chain_t()
         delete xts_dst_aol_vec;
         delete xts_desc_vec;
         delete xts_opaque_vec;
+        delete sgl_pad_vec;
+        delete seq_sgl_pdma;
     }
 }
 
@@ -173,6 +212,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
      * data from a previous run
      */
     xts_encrypt_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
+    comp_buf2->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
     enc_dec_blk_type = params.enc_dec_blk_type_;
     app_blk_size = params.app_blk_size_;
@@ -187,8 +227,8 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 
     comp_ring = params.comp_ring_;
     success = false;
-    compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf,
-                     comp_status_buf1, comp_buf, app_blk_size);
+    compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf1,
+                     comp_status_buf1, nullptr, app_blk_size);
 
     // XTS chaining will use direct Barco push action from
     // comp status queue handler. Hence, no XTS seq queue needed.
@@ -206,9 +246,31 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     // Note: p4+ will modify AOL vectors below based on compression
     // output_data_len and any required padding
     xts_aol_sparse_fill(enc_dec_blk_type, xts_src_aol_vec,
-                        comp_buf, app_enc_size, num_enc_blks);
+                        comp_buf1, app_enc_size, num_enc_blks);
     xts_aol_sparse_fill(enc_dec_blk_type, xts_dst_aol_vec,
                         xts_encrypt_buf, app_enc_size, num_enc_blks);
+    /*
+     * Do setup for the alternate descriptor set if applicable
+     */
+    force_comp_buf2_bypass = params.force_comp_buf2_bypass_;
+    force_uncomp_encrypt = params.force_uncomp_encrypt_;
+    expected_status = CP_STATUS_SUCCESS;
+    if (force_uncomp_encrypt) {
+
+        /*
+         * Force compression error to happen by making threshold_len 
+         * really small. When error happens, we'll end up encrypting
+         * the uncompressed data instead.
+         */
+        cp_desc.threshold_len = sizeof(uint32_t);
+        expected_status = CP_STATUS_COMPRESSION_FAILED;
+        chain_params.chain_alt_desc_on_error = 1;
+
+        xts_src_aol_vec->line_set(num_enc_blks);
+        xts_aol_sparse_fill(enc_dec_blk_type, xts_src_aol_vec,
+                            uncomp_buf, app_enc_size, num_enc_blks);
+    }
+
     /*
      * Ensure caller supplied enough status and opaque buffers
      */
@@ -237,12 +299,22 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
         chain_params.desc_vec_push_en = 1;
         chain_params.push_spec.barco_num_descs = num_enc_blks;
         for (block_no = 0; block_no < num_enc_blks; block_no++) {
-            encrypt_setup(block_no, chain_params);
+            encrypt_setup(block_no, block_no, chain_params);
+
+            /*
+             * Do setup for the alternate descriptor set if applicable
+             */
+            if (force_uncomp_encrypt) {
+                encrypt_setup(block_no + num_enc_blks, block_no, chain_params);
+            }
         }
 
     } else {
         chain_params.push_spec.barco_num_descs = 1;
-        encrypt_setup(0, chain_params);
+        encrypt_setup(0, 0, chain_params);
+        if (force_uncomp_encrypt) {
+            encrypt_setup(1, 0, chain_params);
+        }
     }
 
 
@@ -275,10 +347,28 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     }
 
     chain_params.pad_buf_addr = caller_comp_pad_buf->pa();
-    chain_params.stop_chain_on_error = 1;
+    chain_params.stop_chain_on_error = !force_uncomp_encrypt;
     chain_params.aol_pad_en = 1;
     chain_params.pad_boundary_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
+
+    /*
+     * Enable sgl_pdma_en, which for comp-encrypt is either full transfer when
+     * comp_buf1 != comp_buf2, or pad-only transfer when
+     * comp_buf1 == comp_buf2.
+     */
+    chain_params.sgl_pdma_en = 1; 
+    if (force_comp_buf2_bypass || (comp_buf1 == comp_buf2)) {
+        comp_sgl_packed_fill(sgl_pad_vec, comp_buf1, app_enc_size);
+        chain_params.sgl_vec_addr = sgl_pad_vec->pa();
+        chain_params.sgl_pad_en = 1;
+        chain_params.sgl_pdma_pad_only = 1;
+
+    } else {
+        chain_sgl_pdma_packed_fill(seq_sgl_pdma, comp_buf2);
+        chain_params.comp_buf_addr = comp_buf1->pa();
+        chain_params.sgl_vec_addr = seq_sgl_pdma->pa();
+    }
 
     // Enable interrupt in case compression fails
     comp_opaque_buf->clear_thru();
@@ -315,10 +405,13 @@ comp_encrypt_chain_t::post_push(void)
 
 
 /*
- * Set up of XTS encryption
+ * Set up of XTS encryption:
+ * src_block_no can be different from dst_block_no when we're setting up
+ * the "alternate" source descriptor set.
  */
 void 
-comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
+comp_encrypt_chain_t::encrypt_setup(uint32_t src_block_no,
+                                    uint32_t dst_block_no,
                                     chain_params_comp_t& chain_params)
 {
     xts::xts_cmd_t  cmd;
@@ -326,7 +419,7 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
 
     // Use caller's XTS opaque info and status, if any
     if (caller_xts_opaque_vec) {
-        caller_xts_opaque_vec->line_set(block_no);
+        caller_xts_opaque_vec->line_set(dst_block_no);
         xts_ctx.xts_db = 
             caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
         xts_ctx.xts_db_addr = 0;
@@ -334,7 +427,7 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
         xts_ctx.caller_xts_db_en = true;
     }
     if (caller_xts_status_vec) {
-        caller_xts_status_vec->line_set(block_no);
+        caller_xts_status_vec->line_set(dst_block_no);
         xts_ctx.status = 
             caller_xts_status_vec->fragment_find(0, caller_xts_status_vec->line_size_get());
         xts_ctx.caller_status_en = true;
@@ -350,9 +443,10 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t block_no,
     }
 
     // Set up XTS encrypt descriptor
-    xts_src_aol_vec->line_set(block_no);
-    xts_dst_aol_vec->line_set(block_no);
-    xts_desc_vec->line_set(block_no);
+    xts_src_aol_vec->line_set(src_block_no);
+    xts_desc_vec->line_set(src_block_no);
+
+    xts_dst_aol_vec->line_set(dst_block_no);
 
     xts_ctx.cmd_eval_seq_xts(cmd);
     xts_desc = (xts::xts_desc_t *)xts_desc_vec->read();
@@ -394,13 +488,17 @@ comp_encrypt_chain_t::actual_enc_blks_get(test_resource_query_method_t query_met
         default:
 
             // Validate comp status
-            if (compress_status_verify(comp_status_buf2, comp_buf, cp_desc, log_error)) {
+            if (compress_status_verify(comp_status_buf2, comp_buf1, cp_desc,
+                                       log_error, expected_status)) {
                 if (log_error) {
-                    printf("ERROR: comp_encrypt_chain compression status verification failed\n");
+                    printf("ERROR: comp_encrypt_chain compression status "
+                           "verification failed\n");
                 }
                 return -1;
             }
-            last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
+            last_cp_output_data_len = expected_status == CP_STATUS_SUCCESS ?
+                                      comp_status_output_data_len_get(comp_status_buf2) :
+                                      app_blk_size;
             actual_enc_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ? 1 :
                               (int)COMP_MAX_HASH_BLKS(last_cp_output_data_len,
                                                       app_enc_size);
@@ -481,7 +579,6 @@ comp_encrypt_chain_t::full_verify(void)
         return -1;
     }
 
-    last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
     if (!suppress_info_log) {
         printf("comp_encrypt_chain: last_cp_output_data_len %u\n",
                last_cp_output_data_len);
@@ -521,7 +618,11 @@ comp_encrypt_chain_t::full_verify(void)
     src_len1 = 0;
     src_len2 = 0;
     for (block_no = 0; block_no < max_blks; block_no++) {
-        xts_src_aol_vec->line_set(block_no);
+        if (expected_status == CP_STATUS_SUCCESS) {
+            xts_src_aol_vec->line_set(block_no);
+        } else {
+            xts_src_aol_vec->line_set(block_no + num_enc_blks);
+        }
         xts_aol = (xts::xts_aol_t *)xts_src_aol_vec->read_thru();
         src_len0 += xts_aol->l0;
         src_len1 += xts_aol->l1;
@@ -603,6 +704,45 @@ comp_encrypt_chain_t::full_verify(void)
      */
     if (fast_verify()) {
         return -1;
+    }
+
+    /*
+     * Validate PDMA
+     */
+    if (expected_status == CP_STATUS_SUCCESS) {
+        if (force_comp_buf2_bypass || (comp_buf1 == comp_buf2)) {
+
+            /*
+             * Validate padding
+             */
+            if (src_len1 && 
+                test_data_verify_and_dump(comp_buf1->read_thru() + 
+                                          last_cp_output_data_len,
+                                          caller_comp_pad_buf->read(),
+                                          src_len1)) {
+                printf("ERROR: comp_encrypt_chain comp_buf1 pad data "
+                       "verification failed\n");
+                return -1;
+            }
+
+        } else {
+            if (test_data_verify_and_dump(comp_buf1->read_thru(),
+                                          comp_buf2->read_thru(),
+                                          last_cp_output_data_len)) {
+                printf("ERROR: comp_encrypt_chain PDMA data "
+                       "verification failed\n");
+                return -1;
+            }
+            if (src_len1 && 
+                test_data_verify_and_dump(comp_buf2->read() +
+                                          last_cp_output_data_len,
+                                          caller_comp_pad_buf->read(),
+                                          src_len1)) {
+                printf("ERROR: comp_encrypt_chain comp_buf2 pad data "
+                       "averification failed\n");
+                return -1;
+            }
+        }
     }
 
     if (!suppress_info_log) {
