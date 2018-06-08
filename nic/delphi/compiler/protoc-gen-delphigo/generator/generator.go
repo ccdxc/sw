@@ -3004,7 +3004,7 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 			}
 		}
 		if isRepeated(field) {
-			panic("Arrays not supported yet!")
+			//panic("Arrays not supported yet!")
 		}
 		g.P(lowerFirst(fieldname) + " " + trim(typename))
 	}
