@@ -2,7 +2,7 @@
 #ifndef __LIB_DRIVER__
 #define __LIB_DRIVER__
 
-void hal_create_eq_wrapper(struct create_eq_cmd  *cmd,
+void hal_create_eq_wrapper(struct rdma_create_queue_cmd  *cmd,
                            struct admin_comp     *comp,
                            u_int32_t             *done);
 void hal_create_ah_wrapper(struct create_ah_cmd  *cmd,

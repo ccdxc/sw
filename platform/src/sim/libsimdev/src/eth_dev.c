@@ -574,7 +574,7 @@ devcmd_create_eq (struct admin_cmd  *acmd,
                   struct admin_comp *acomp,
                   u_int32_t         *done)
 {
-    struct create_eq_cmd *cmd = (void *)acmd;
+    struct rdma_create_queue_cmd *cmd = (void *)acmd;
     struct create_eq_comp *comp = (void *)acomp;
 
     simdev_hal_create_eq(cmd, comp, done);
@@ -715,23 +715,23 @@ devcmd(struct dev_cmd_regs *dc)
         devcmd_create_eq(cmd, comp, &dc->done);
         break;
 
-    case CMD_OPCODE_RDMA_CREATE_AH:
+    case CMD_OPCODE_V0_RDMA_CREATE_AH:
         devcmd_create_ah(cmd, comp, &dc->done);
         break;
 
-    case CMD_OPCODE_RDMA_CREATE_MR:
+    case CMD_OPCODE_V0_RDMA_CREATE_MR:
         devcmd_create_mr(cmd, comp, &dc->done);
         break;
 
-    case CMD_OPCODE_RDMA_CREATE_CQ:
+    case CMD_OPCODE_V0_RDMA_CREATE_CQ:
         devcmd_create_cq(cmd, comp, &dc->done);
         break;
 
-    case CMD_OPCODE_RDMA_CREATE_QP:
+    case CMD_OPCODE_V0_RDMA_CREATE_QP:
         devcmd_create_qp(cmd, comp, &dc->done);
         break;
 
-    case CMD_OPCODE_RDMA_MODIFY_QP:
+    case CMD_OPCODE_V0_RDMA_MODIFY_QP:
         devcmd_modify_qp(cmd, comp, &dc->done);
         break;
 
@@ -741,8 +741,8 @@ devcmd(struct dev_cmd_regs *dc)
         break;
     }
 
-    if ((cmd->opcode > CMD_OPCODE_RDMA_FIRST_CMD)
-        && (cmd->opcode < CMD_OPCODE_RDMA_LAST_CMD)) {
+    if ((cmd->opcode >= CMD_OPCODE_RDMA_FIRST_CMD)
+        && (cmd->opcode <= CMD_OPCODE_RDMA_LAST_CMD)) {
         /*
          * Dont set the done bit as these commands are asynchronously
          * processed by HAL. This bit will be once HAL is finished with
