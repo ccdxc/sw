@@ -1,16 +1,21 @@
 # Build tools
 
 ## How to publish new vagrant box image
+There are two box images we use: 1) dev-vm 2) production vm (aka turin)
 
 ### 1. Edit provisioning script
 
-Edit `tools/pens-packer-scripts/pens.sh` script and add the new provisioning
+Edit `tools/pens-packer-scripts/pens.sh` (for dev-vm) or `tools/pens-packer-scripts/pens_turin.sh` (for turin) script and add the new provisioning
 steps into the script.
 
 ### 2. build new vagrant image
 
 ```
+# for dev-vm
 make dev-build-centos74
+
+# for turin
+make turin-centos74
 ```
 
 ### 3. Try new vagrant image
