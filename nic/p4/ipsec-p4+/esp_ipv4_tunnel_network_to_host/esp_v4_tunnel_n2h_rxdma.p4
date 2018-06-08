@@ -223,6 +223,7 @@ metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
     modify_field(ipsec_global_scratch.packet_length, ipsec_global.packet_length); \
     modify_field(ipsec_global_scratch.icv_size, ipsec_global.icv_size); \
+    modify_field(ipsec_global_scratch.rxdma_pad22, ipsec_global.rxdma_pad22); \
 
 #define IPSEC_TO_STAGE3_SCRATCH \
     modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size); \

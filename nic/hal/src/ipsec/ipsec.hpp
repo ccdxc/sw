@@ -460,7 +460,7 @@ extern hal_ret_t
 ipsec_cfg_pol_rule_spec_build(ipsec_cfg_pol_t *pol,
                                ipsec::IpsecRuleSpec *spec);
 extern hal_ret_t
-ipsec_cfg_rule_spec_build(ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *spec);
+ipsec_cfg_rule_spec_build(ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *spec, ipsec::IpsecRuleSpec *rule_spec);
 
 extern hal_ret_t
 ipsec_cfg_rule_spec_handle(const ipsec::IpsecRuleMatchSpec& spec, dllist_ctxt_t *head);

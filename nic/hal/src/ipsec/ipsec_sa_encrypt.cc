@@ -163,10 +163,17 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
 
-    vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
-    vrf = vrf_lookup_by_id(6);
+    vrf = vrf_lookup_by_id(spec.tep_vrf().vrf_id());
+#if 0
     if (vrf) {
-        ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
+        ipsec->vrf = vrf->vrf_id;
+        HAL_TRACE_DEBUG("vrf vrf_lookup_by_handle success id = {} handle {}", ipsec->vrf, ipsec->vrf_handle);
+    }
+
+    vrf = vrf_lookup_by_id(6);
+#endif
+    if (vrf) {
+        //ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
         ipsec->vrf = vrf->vrf_id;
         HAL_TRACE_DEBUG("vrf success id = {} handle {:#x}", ipsec->vrf, ipsec->vrf_handle);
     }

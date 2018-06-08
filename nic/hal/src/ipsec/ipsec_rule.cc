@@ -14,6 +14,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/nw/vrf.hpp"
+//#include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/src/utils/cfg_op_ctxt.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 
@@ -345,7 +346,7 @@ ipsec_cfg_pol_rule_spec_build (ipsec_cfg_pol_t *pol,
                     (sizeof(ipsec_cfg_rule_action_t) + sizeof(rule_match_t) + sizeof(ipsec_cfg_rule_key_t)));
         auto rule_spec = spec->add_rules();
         if ((ret = ipsec_cfg_rule_spec_build(
-               rule, rule_spec)) != HAL_RET_OK) {
+               rule, rule_spec, spec)) != HAL_RET_OK) {
         HAL_TRACE_DEBUG("Failed here");
             return ret;
         }
@@ -746,7 +747,7 @@ ipsec_cfg_rule_spec_handle (const ipsec::IpsecRuleMatchSpec& spec, dllist_ctxt_t
 }
 
 hal_ret_t
-ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *spec)
+ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *spec, ipsec::IpsecRuleSpec *rule_spec)
 {
     hal_ret_t   ret;
 
@@ -756,8 +757,11 @@ ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *sp
     rule->action.sa_action = action->sa_action_type();
     rule->action.sa_action_enc_handle = (hal_handle_t)action->mutable_enc_handle();
     rule->action.sa_action_dec_handle = (hal_handle_t)action->mutable_dec_handle();
+    rule->action.vrf = rule_spec->key_or_handle().rule_key().vrf_key_or_handle().vrf_id();    
 
-    HAL_TRACE_DEBUG("action type {} enc_handle {} dec_handle {}", rule->action.sa_action, rule->action.sa_action_enc_handle, rule->action.sa_action_dec_handle);
+    HAL_TRACE_DEBUG("action type {} enc_handle {} dec_handle {} vrf-id {}", 
+                    rule->action.sa_action, rule->action.sa_action_enc_handle, 
+                    rule->action.sa_action_dec_handle, rule->action.vrf);
 
     if ((ret = rule_match_spec_build(
            &rule->match, spec->mutable_match())) != HAL_RET_OK) {

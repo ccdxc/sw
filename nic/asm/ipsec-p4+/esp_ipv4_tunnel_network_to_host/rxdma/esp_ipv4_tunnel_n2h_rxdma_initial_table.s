@@ -13,6 +13,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     seq c5, d.{rxdma_ring_pindex}.hx, r1
     bcf [c5], esp_ipv4_tunnel_n2h_rxdma_initial_table_drop_pkt
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
+    phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
     seq c1, d.is_v6, 1
 
     phvwr p.ipsec_int_header_spi, k.{p42p4plus_hdr_spi_sbit0_ebit15...p42p4plus_hdr_spi_sbit16_ebit31}

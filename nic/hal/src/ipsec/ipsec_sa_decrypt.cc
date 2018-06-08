@@ -92,7 +92,7 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec->sa_id = spec.key_or_handle().cb_id();
 
     if ((spec.decryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
-        (spec.rekey_dec_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
+        //(spec.rekey_dec_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) || // ToDo
         (spec.authentication_algorithm() != ipsec::AUTHENTICATION_AES_GCM)) {
         HAL_TRACE_DEBUG("Unsupported Encyption or Authentication Algo. EncAlgo {} AuthAlgo{}", spec.decryption_algorithm(), spec.authentication_algorithm());
         goto cleanup;
@@ -115,10 +115,16 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec->new_key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
     memcpy((uint8_t*)ipsec->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
 
-    vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
-    vrf = vrf_lookup_by_id(6);
+    vrf = vrf_lookup_by_id(spec.key_or_handle().vrf_key_or_handle().vrf_id());
+#if 0
     if (vrf) {
-        ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
+        ipsec->vrf = vrf->vrf_id;
+        HAL_TRACE_DEBUG("vrf vrf_lookup_by_handle success id = {} handle {}", ipsec->vrf, ipsec->vrf_handle);
+    }
+    vrf = vrf_lookup_by_id(4);
+#endif
+    if (vrf) {
+        //ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
         ipsec->vrf = vrf->vrf_id;
         HAL_TRACE_DEBUG("vrf success id = {} handle {}", ipsec->vrf, ipsec->vrf_handle);
     }
