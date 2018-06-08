@@ -91,7 +91,9 @@ p4plus_app_tcp_proxy:
 
 .align
 p4plus_app_cpu:
-  phvwr       p.p4_to_p4plus_cpu_table0_valid, TRUE
+  phvwrpair   p.p4_to_p4plus_cpu_p4plus_app_id, \
+                    k.control_metadata_p4plus_app_id[3:0], \
+                    p.p4_to_p4plus_cpu_table0_valid, TRUE
   add         r6, r0, r0 // pass packet start offset = 0
 
 p4plus_app_cpu_raw_redir_common:
@@ -142,9 +144,7 @@ p4plus_app_cpu_common:
 p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
-  or          r4, k.ipsec_metadata_seq_no_sbit24_ebit31, \
-                  k.ipsec_metadata_seq_no_sbit0_ebit23, 8
-  phvwr       p.p4_to_p4plus_ipsec_seq_no, r4
+  phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
   add         r4, k.flow_lkp_metadata_lkp_dport,k.flow_lkp_metadata_lkp_sport, 16
   phvwr       p.p4_to_p4plus_ipsec_spi, r4
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
@@ -263,6 +263,7 @@ f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx
   phvwr       p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
                   k.control_metadata_lkp_flags_egress[5:0]
+  phvwr       p.p4_to_p4plus_cpu_pkt_flow_hash, k.{rewrite_metadata_entropy_hash}.wx
   seq         c1, k.control_metadata_lkp_flags_egress[CPU_LKP_FLAGS_LKP_DIR], FLOW_DIR_FROM_DMA
   phvwr.c1    p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.control_metadata_src_tm_iq
   // r1 : offset

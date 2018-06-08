@@ -231,6 +231,9 @@ header_type p4_to_p4plus_cpu_pkt_t {
         // qos
         src_tm_iq           : 5;
         pad_1               : 3;
+
+        // flow hash
+        flow_hash           : 32;
     }
 }
 

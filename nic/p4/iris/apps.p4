@@ -321,6 +321,7 @@ action f_p4plus_cpu_pkt(offset) {
                  control_metadata.lkp_flags_egress);
     modify_field(p4_to_p4plus_cpu_pkt.lkp_type,
                  control_metadata.lkp_flags_egress);
+    modify_field(p4_to_p4plus_cpu_pkt.flow_hash, rewrite_metadata.entropy_hash);
     // Copy the src_tm_iq only for pkts from TxDMA
     if ((control_metadata.lkp_flags_egress & (1 << CPU_LKP_FLAGS_LKP_DIR)) ==
             (FLOW_DIR_FROM_DMA << CPU_LKP_FLAGS_LKP_DIR)) {

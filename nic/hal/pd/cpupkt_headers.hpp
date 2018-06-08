@@ -48,6 +48,8 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
 #error "architecture unknown"
 #endif
 
+    // flow hash
+    uint32_t  flow_hash;
     // tcp
     uint8_t   tcp_flags;
     uint32_t  tcp_seq_num;
@@ -106,7 +108,7 @@ typedef struct cpu_to_p4plus_header_s {
     uint8_t     tm_oq  : 5;
 } __attribute__ ((__packed__)) cpu_to_p4plus_header_t;
 
-} // namespace pd       
+} // namespace pd
 } // namespace hal
 
 struct quiesce_trailer_t {

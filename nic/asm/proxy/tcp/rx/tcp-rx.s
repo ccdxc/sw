@@ -225,6 +225,7 @@ table_read_setup_next:
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.to_s3_flag, d.u.tcp_rx_d.flag
+flow_cpu_rx_process_done:
     /*
      * c7 = drop
      */
@@ -441,10 +442,10 @@ tcp_rx_slow_path:
     seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
     phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.{to_s2_seq}.wx
-    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.{s1_s2s_ack_seq}.wx
+    phvwr.c2        p.{cpu_hdr2_tcp_AckNo_1,cpu_hdr3_tcp_AckNo_2}, k.{s1_s2s_ack_seq}.wx
     phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s2_flags
 
-    bcf             [c1], flow_rx_process_done
+    bcf             [c1], flow_cpu_rx_process_done
     setcf           c7, [!c0]
     /* Setup the to-stage/stage-to-stage variables */
 

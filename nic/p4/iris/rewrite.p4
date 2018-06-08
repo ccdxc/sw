@@ -6,7 +6,7 @@ header_type rewrite_metadata_t {
         rewrite_index        : 12;
         tunnel_rewrite_index : 10;
         tunnel_vnid          : 24;
-        entropy_hash         : 16;
+        entropy_hash         : 32;
         flags                : 8;
     }
 }

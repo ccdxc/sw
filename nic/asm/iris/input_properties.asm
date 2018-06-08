@@ -32,10 +32,8 @@ input_properties:
   phvwrpair     p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable, \
                     p.control_metadata_flow_miss_action, \
                     d.input_properties_d.flow_miss_action
-  phvwrpair     p.control_metadata_allow_flood, \
-                    d.input_properties_d.allow_flood, \
-                    p.flow_miss_metadata_tunnel_vnid, \
-                    d.input_properties_d.bounce_vnid
+  phvwr         p.control_metadata_allow_flood, d.input_properties_d.allow_flood
+  phvwr         p.flow_miss_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
   phvwr         p.{control_metadata_mirror_on_drop_en, \
                    control_metadata_mirror_on_drop_session_id}, \
                     d.{input_properties_d.mirror_on_drop_en, \

@@ -592,13 +592,11 @@ header_type p4_to_p4plus_cpu_pkt_1_t {
         // offsets
         l2_offset           : 16;
         l3_offset_1         : 8;
-
     }
 }
 
 header_type p4_to_p4plus_cpu_pkt_2_t {
     fields {
-
         l3_offset_2         : 8;
         l4_offset           : 16;
         payload_offset      : 16;
@@ -607,17 +605,20 @@ header_type p4_to_p4plus_cpu_pkt_2_t {
         src_tm_iq           : 5;
         pad_1               : 3;
 
+        // flow hash
+        flow_hash           : 32;
+
         // tcp
         tcp_flags           : 8;
         tcp_seqNo           : 32;
-        tcp_AckNo           : 32;
-        tcp_window_1        : 8;
+        tcp_AckNo_1         : 8;
     }
 }
 
 header_type p4_to_p4plus_cpu_pkt_3_t {
     fields {
-        tcp_window_2        : 8;
+        tcp_AckNo_2         : 24;
+        tcp_window          : 16;
         tcp_options         : 8;
         tcp_mss             : 16;
         tcp_ws              : 8;
@@ -627,7 +628,7 @@ header_type p4_to_p4plus_cpu_pkt_3_t {
 
 header_type policer_scratch_metadata_t {
     fields {
-        policer_valid       : 1;                                             
+        policer_valid       : 1;
         policer_pkt_rate    : 1;
         policer_rlimit_en   : 1;
         policer_rlimit_prof : 2;
