@@ -231,7 +231,7 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(rss_indir_set_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct debug_q_dump_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct debug_q_dump_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct create_eq_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct rdma_create_queue_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct create_ah_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct create_ah_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct create_mr_cmd) != 64);
