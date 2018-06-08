@@ -109,6 +109,42 @@ func (hd *Datapath) UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 
 // DeleteIPSecSAEncrypt deletes an IPSecSA encrypt rule in the datapath
 func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
+	ipSecSADecryptDelReqMsg := &halproto.IpsecSAEncryptDeleteRequestMsg{
+		Request: []*halproto.IpsecSAEncryptDeleteRequest{
+			{
+				KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle{
+					KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle_CbId{
+						CbId: sa.Status.IPSecSAEncryptID,
+					},
+					VrfKeyOrHandle: vrfKey,
+				},
+			},
+		},
+	}
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.IPSecclient.IpsecSAEncryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Encrypt SA Rule. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.IPSecclient.IpsecSAEncryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Encrypt SA Rule. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -196,6 +232,42 @@ func (hd *Datapath) UpdateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netpro
 
 // DeleteIPSecSADecrypt deletes an IPSecSA decrypt rule in the datapath
 func (hd *Datapath) DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
+	ipSecSADecryptDelReqMsg := &halproto.IpsecSADecryptDeleteRequestMsg{
+		Request: []*halproto.IpsecSADecryptDeleteRequest{
+			{
+				KeyOrHandle: &halproto.IpsecSADecryptKeyHandle{
+					KeyOrHandle: &halproto.IpsecSADecryptKeyHandle_CbId{
+						CbId: sa.Status.IPSecSADecryptID,
+					},
+					VrfKeyOrHandle: vrfKey,
+				},
+			},
+		},
+	}
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.IPSecclient.IpsecSADecryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Decrypt SA Rule. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.IPSecclient.IpsecSADecryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Decrypt SA Rule. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -297,6 +369,44 @@ func (hd *Datapath) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 
 // DeleteIPSecPolicy deletes an IPSec Policy in the datapath
 func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
+	ipSecPolicyDeleteReqMsg := &halproto.IpsecRuleDeleteRequestMsg{
+		Request: []*halproto.IpsecRuleDeleteRequest{
+			{
+				KeyOrHandle: &halproto.IpsecRuleKeyHandle{
+					KeyOrHandle: &halproto.IpsecRuleKeyHandle_RuleKey{
+						RuleKey: &halproto.IPSecRuleKey{
+							IpsecRuleId:    ipSec.Status.IPSecPolicyID,
+							VrfKeyOrHandle: vrfKey,
+						},
+					},
+				},
+			},
+		},
+	}
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.IPSecclient.IpsecRuleDelete(context.Background(), ipSecPolicyDeleteReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Policy. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.IPSecclient.IpsecRuleDelete(context.Background(), ipSecPolicyDeleteReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Policy. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
