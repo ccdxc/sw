@@ -6,6 +6,7 @@
 
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/nw/route_acl.hpp"
+#include "nic/hal/src/nw/route.hpp"
 
 namespace hal {
 
@@ -179,6 +180,7 @@ route_acl_add_route(route_t *route)
     }
 
     route_rule = route_acl_rule_alloc(route->hal_handle);
+    route->route_rule = route_rule;
     route_rule->field[ROUTE_TUPLE_VRF_ID].value.u32 = route->key.vrf_id;
     route_rule->field[ROUTE_TUPLE_VRF_ID].mask_range.u32 = 0xFFFFFFFF;
     // TODO: Extend for v6
@@ -190,6 +192,7 @@ route_acl_add_route(route_t *route)
     acl_commit(acl_ctx);
 
 end:
+    acl_deref(acl_ctx);
     return ret;
 }
 
@@ -208,17 +211,13 @@ route_acl_del_route(route_t *route)
         goto end;
     }
 
-    route_rule = route_acl_rule_alloc(route->hal_handle);
-    route_rule->field[ROUTE_TUPLE_VRF_ID].value.u32 = route->key.vrf_id;
-    route_rule->field[ROUTE_TUPLE_VRF_ID].mask_range.u32 = 0xFFFFFFFF;
-    // TODO: Extend for v6
-    route_rule->field[ROUTE_TUPLE_IP_PREFIX].value.u32 = route->key.pfx.addr.addr.v4_addr;
-    route_rule->field[ROUTE_TUPLE_IP_PREFIX].mask_range.u32 = route->key.pfx.len;
+    route_rule = route->route_rule;
 
     route_acl_rule_del(&acl_ctx, route_rule);
     acl_commit(acl_ctx);
 
 end:
+    acl_deref(acl_ctx);
     return ret;
 }
 
@@ -231,7 +230,7 @@ route_acl_lookup(route_key_t *key, hal_handle_t *handle)
     hal_ret_t ret = HAL_RET_OK;
     const acl_ctx_t *acl_ctx = acl_get("route_acl");
     route_tuple_t tuple = {0};
-    route_acl_rule_t *rule;
+    route_acl_rule_t *rule = NULL;
     route_acl_user_data_t *udata = NULL;
 
     if (!key) {
@@ -241,7 +240,7 @@ route_acl_lookup(route_key_t *key, hal_handle_t *handle)
 
     tuple.vrf_id = key->vrf_id;
     tuple.ip_pfx = key->pfx.addr.addr.v4_addr;
-    acl_classify(acl_ctx, (const uint8_t*)&tuple, (const acl_rule_t **)&rule, 0x01);
+    ret = acl_classify(acl_ctx, (const uint8_t*)&tuple, (const acl_rule_t **)&rule, 0x01);
 
     if (rule == NULL) {
         ret = HAL_RET_ROUTE_NOT_FOUND;

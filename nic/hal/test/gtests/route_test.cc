@@ -240,12 +240,18 @@ TEST_F(route_test, test1)
     EndpointSpec                ep_spec, ep_spec1;
     EndpointResponse            ep_rsp;
     EndpointUpdateRequest       ep_req, ep_req1;
+    EndpointDeleteRequest       ep_dreq;
+    EndpointDeleteResponse      ep_dresp;
     NetworkSpec                 nw_spec, nw_spec1;
     NetworkResponse             nw_rsp, nw_rsp1;
     NexthopSpec                 nh_spec;
     NexthopResponse             nh_rsp;
+    NexthopDeleteRequest        nh_dspec;
+    NexthopDeleteResponse       nh_dresp;
     RouteSpec                   route_spec;
     RouteResponse               route_rsp;
+    RouteDeleteRequest          rdel_spec;
+    RouteDeleteResponse         rdel_rsp;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     NetworkKeyHandle            *nkh = NULL;
 
@@ -377,7 +383,7 @@ TEST_F(route_test, test1)
     ret = hal::route_create(route_spec, &route_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    // ::google::protobuf::uint64 route_hdl2 = route_rsp.mutable_status()->route_handle();
+    ::google::protobuf::uint64 route_hdl2 = route_rsp.mutable_status()->route_handle();
 
     hal::route_key_t key = {0};
     hal_handle_t handle = 0;
@@ -386,6 +392,58 @@ TEST_F(route_test, test1)
     key.pfx.len = 32;
     hal::route_acl_lookup(&key, &handle);
     EXPECT_EQ(handle, route_hdl1);
+
+    // route delete
+    rdel_spec.mutable_key_or_handle()->set_route_handle(route_hdl1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::route_delete(rdel_spec, &rdel_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Find route1 which is deleted
+    key.vrf_id = 1;
+    key.pfx.addr.addr.v4_addr = 0xa0000001;
+    key.pfx.len = 32;
+    ret = hal::route_acl_lookup(&key, &handle);
+    HAL_TRACE_ERR("handle: {}", handle);
+    EXPECT_EQ(handle, route_hdl2);
+
+    // route delete
+    rdel_spec.mutable_key_or_handle()->set_route_handle(route_hdl2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::route_delete(rdel_spec, &rdel_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Find route1 which is deleted
+    key.vrf_id = 1;
+    key.pfx.addr.addr.v4_addr = 0xa0000001;
+    key.pfx.len = 32;
+    ret = hal::route_acl_lookup(&key, &handle);
+    EXPECT_EQ(ret, HAL_RET_ROUTE_NOT_FOUND);
+
+    // Delete nexthop1
+    nh_dspec.mutable_key_or_handle()->set_nexthop_handle(nh_hdl1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nexthop_delete(nh_dspec, &nh_dresp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete nexthop2
+    nh_dspec.mutable_key_or_handle()->set_nexthop_handle(nh_hdl2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nexthop_delete(nh_dspec, &nh_dresp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete EP
+    ep_dreq.mutable_key_or_handle()->set_endpoint_handle(ep_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_delete(ep_dreq, &ep_dresp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
 
     // Uncomment these to have gtest work for CLI
 #if 0

@@ -7,9 +7,11 @@
 #define __ROUTE_ACL_HPP__
 
 #include "nic/fte/acl/acl.hpp"
-#include "nic/hal/src/nw/route.hpp"
 
 namespace hal {
+
+typedef struct route_s route_t;
+typedef struct route_key_s route_key_t;
 
 using acl::acl_ctx_t;
 using acl::acl_config_t;

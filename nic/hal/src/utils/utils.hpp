@@ -12,6 +12,7 @@
 
 using types::ApiStatus;
 using hal::utils::block_list;
+using google::protobuf::Message;
 
 namespace hal {
 
@@ -73,6 +74,7 @@ hal_find_changed_lists (block_list *exist_list,                         // _IN
                         block_list **new_list,                          // _OUT
                         bool *has_changed);                              // _OUT
 
+void proto_msg_dump(Message& msg);
 
 }    // namespace hal
 

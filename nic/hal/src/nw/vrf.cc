@@ -517,7 +517,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt  = { 0 };
 
-    HAL_TRACE_DEBUG("Creating vrf with id {}", spec.key_or_handle().vrf_id());
+    hal_api_trace(" API Begin: Vrf Create ");
 
     // dump spec
     vrf_spec_dump(spec);
@@ -954,6 +954,8 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     const VrfKeyHandle       &kh       = spec.key_or_handle();
     vrf_update_app_ctxt_t    app_ctxt  = { 0 };
 
+    hal_api_trace(" API Begin: Vrf Update ");
+
     // dump spec
     vrf_spec_dump(spec);
 
@@ -1319,6 +1321,10 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
     cfg_op_ctxt_t         cfg_ctxt = { 0 };
     dhl_entry_t           dhl_entry = { 0 };
     const VrfKeyHandle    &kh = req.key_or_handle();
+
+    hal_api_trace(" API Begin: Vrf Update ");
+
+    proto_msg_dump(req);
 
     // validate the request message
     ret = validate_vrf_delete_req(req, rsp);
@@ -1712,6 +1718,7 @@ vrf_keyhandle_to_str (vrf_t *vrf)
     return buf;
 }
 
+using google::protobuf::Message;
 //-----------------------------------------------------------------------------
 // print vrf spec
 //-----------------------------------------------------------------------------

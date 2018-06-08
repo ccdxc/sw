@@ -9,6 +9,7 @@
 #include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/utils/block_list/block_list.hpp"
+#include "nic/hal/src/nw/route_acl.hpp"
 
 using nw::RouteSpec;
 using nw::RouteResponse;
@@ -32,6 +33,7 @@ typedef struct route_key_s {
 typedef struct route_s {
     hal_spinlock_t    slock;                // lock to protect this structure
     route_key_t       key;                  // route key
+    route_acl_rule_t *route_rule;           // rule in route ACL. Used during delete
     hal_handle_t      hal_handle;           // HAL allocated handle
 
     hal_handle_t      nh_handle;            // nexthop handle
@@ -92,6 +94,7 @@ route_init (route_t *route)
     }
     HAL_SPINLOCK_INIT(&route->slock, PTHREAD_PROCESS_SHARED);
 
+    route->route_rule = NULL;
     route->hal_handle = HAL_HANDLE_INVALID;
     route->nh_handle  = HAL_HANDLE_INVALID;
 
@@ -151,11 +154,11 @@ route_lookup_by_handle (hal_handle_t handle)
     }
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
-        HAL_TRACE_DEBUG("Failed to find object with handle {}", handle);
+        HAL_TRACE_ERR("Failed to find object with handle {}", handle);
         return NULL;
     }
     if (hal_handle->obj_id() != HAL_OBJ_ID_ROUTE) {
-        HAL_TRACE_DEBUG("Failed to find route with handle {}", handle);
+        HAL_TRACE_ERR("Failed to find route with handle {}", handle);
         return NULL;
     }
     return (route_t *)hal_handle->obj();

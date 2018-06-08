@@ -776,6 +776,11 @@ nexthop_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    if (nh->ep_handle != HAL_HANDLE_INVALID) {
+        ep_t *ep = find_ep_by_handle(nh->ep_handle);
+        ret = ep_del_nh(ep, nh);
+    }
+
     // Remove object from handle id based hash table
     hal_handle_free(hal_handle);
 

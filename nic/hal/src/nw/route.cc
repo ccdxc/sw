@@ -13,7 +13,6 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/src/nw/route.hpp"
-#include "nic/hal/src/nw/route_acl.hpp"
 
 namespace hal {
 
@@ -408,15 +407,15 @@ route_lookup_key_or_handle (RouteKeyHandle& kh)
     route_key_t route_key = {0};
     route_t     *route = NULL;
 
-    vrf = vrf_lookup_key_or_handle(kh.route_key().vrf_key_handle());
-    if (vrf == NULL) {
-        goto end;
-    }
-
-    route_key.vrf_id = vrf->vrf_id;
-    ip_pfx_spec_to_pfx(&route_key.pfx, kh.route_key().ip_prefix());
-
     if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
+        vrf = vrf_lookup_key_or_handle(kh.route_key().vrf_key_handle());
+        if (vrf == NULL) {
+            HAL_TRACE_ERR("Failed to find vrf for : {}",
+                          vrf_spec_keyhandle_to_str(kh.route_key().vrf_key_handle()));
+            goto end;
+        }
+        route_key.vrf_id = vrf->vrf_id;
+        ip_pfx_spec_to_pfx(&route_key.pfx, kh.route_key().ip_prefix());
         route = route_lookup_by_key(&route_key);
     } else if (kh.key_or_handle_case() == RouteKeyHandle::kRouteHandle) {
         route = route_lookup_by_handle(kh.route_handle());
@@ -921,8 +920,11 @@ route_to_str (route_t *route)
     buf = route_str[route_str_next++ & 0x3];
     memset(buf, 0, 50);
     if (route) {
-        snprintf(buf, 50, "vrf_id: %lu, pfx: %s, nh_handle: %lu", route->key.vrf_id,
-                 ippfx2str(&route->key.pfx), route->nh_handle);
+        snprintf(buf, 50, "vrf_id: %lu, pfx: %s, route_handle: %lu, "
+                 "nh_handle: %lu",
+                 route->key.vrf_id,
+                 ippfx2str(&route->key.pfx), route->hal_handle,
+                 route->nh_handle);
     }
     return buf;
 }

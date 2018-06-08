@@ -873,7 +873,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     hal_ret_t                       ret = HAL_RET_OK;
     vrf_id_t                        tid;
     InterfaceKeyHandle              if_key_handle;
-    ep_t                            *ep = NULL;
+    ep_t                            *ep = NULL, *tmp_ep = NULL;
     vrf_t                           *vrf = NULL;
     l2seg_t                         *l2seg = NULL;
     if_t                            *hal_if = NULL;
@@ -882,8 +882,10 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     L2SegmentKeyHandle              l2seg_key_handle;
 
+    hal_api_trace(" API Begin: Endpoint Create ");
+
     // dump incoming request
-    endpoint_dump(spec);
+    proto_msg_dump(spec);
 
     ret = validate_endpoint_create(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -930,6 +932,14 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     ret = ep_init_from_spec(ep, spec, true);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(hal_prepare_rsp(ret));
+        goto end;
+    }
+
+    // check for duplicate EP
+    tmp_ep = find_ep_by_l2_key(ep->l2_key.l2_segid, ep->l2_key.mac_addr);
+    if (tmp_ep) {
+        HAL_TRACE_ERR("EP Create failed. EP with Mac already present.");
+        ret = HAL_RET_DUP_INS_FAIL;
         goto end;
     }
 
@@ -1807,6 +1817,11 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     dhl_entry_t             dhl_entry     = { 0 };
     ep_update_app_ctxt_t    app_ctxt      = { 0 };
 
+    hal_api_trace(" API Begin: Endpoint Update ");
+
+    // dump incoming request
+    proto_msg_dump(req);
+
     ret = validate_endpoint_update_spec(req, rsp);
     if (ret != HAL_RET_OK) {
         goto end;
@@ -2062,6 +2077,11 @@ endpoint_delete (EndpointDeleteRequest& req,
     cfg_op_ctxt_t    cfg_ctxt = { 0 };
     dhl_entry_t      dhl_entry = { 0 };
     ApiStatus        api_status;
+
+    hal_api_trace(" API Begin: Endpoint Delete ");
+
+    // dump proto message
+    proto_msg_dump(req);
 
     // validate the request message
     ret = validate_endpoint_delete_req(req, rsp);
@@ -2368,12 +2388,12 @@ ep_del_nh (ep_t *ep, nexthop_t *nh)
     ret = ep->nh_list->remove(&nh->hal_handle);
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed to add nh {} to ep {}",
-                        nh->nh_id, ep_l2_key_to_str(ep));
+        HAL_TRACE_DEBUG("Failed to del nh {} from ep {}",
+                        nexthop_to_str(nh), ep_l2_key_to_str(ep));
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Deleted nh {} from ep {}", nh->nh_id,
+    HAL_TRACE_DEBUG("Deleted nh {} from ep {}", nexthop_to_str(nh),
                     ep_l2_key_to_str(ep));
 end:
     return ret;

@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -732,5 +733,20 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Proto Message dump
+//------------------------------------------------------------------------------
+void
+proto_msg_dump (Message& msg)
+{
+    std::string    msg_str;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(msg, &msg_str);
+    HAL_TRACE_DEBUG("Proto Message:");
+    HAL_TRACE_DEBUG("{}", msg_str.c_str());
+}
 
 }    // namespace hal
