@@ -5,6 +5,8 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatIconRegistry } from '@angular/material';
 
 /**-----
  Venice UI -  imports
@@ -12,11 +14,8 @@ import { Component } from '@angular/core';
 import { ClusterComponent } from './cluster.component';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/cluster.service';
-
-/**-----
- Third-parties imports
- ------------------*/
- import { MatIconRegistry } from '@angular/material';
+import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { SharedModule } from '@app/components/shared/shared.module';
 
 @Component({
   template: ''
@@ -37,7 +36,10 @@ describe('ClusterComponent', () => {
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
         ]),
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        NoopAnimationsModule,
+        SharedModule,
+        MaterialdesignModule
       ],
       providers: [
         ControllerService,

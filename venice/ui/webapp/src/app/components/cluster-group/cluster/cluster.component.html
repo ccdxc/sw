@@ -1,3 +1,79 @@
-<p>
-    cluster works!
-</p>
+<app-pagebody [icon]="bodyicon" title={{cluster?.meta.name}}>
+  <mat-expansion-panel class="global-mat-expansion-panel" [expanded] = "true">
+    <mat-expansion-panel-header class="cluster-meta-panel-header">
+        <mat-panel-title class="cluster-meta-panel-title">
+            Metadata
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="cluster-meta-panel-content">
+      <div fxLayout="row">
+        <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">UUID:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.meta.uuid}}</div>
+        </div>
+        <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">Resource Version:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.meta['resource-version']}}</div>
+        </div>
+      </div>
+      <div fxLayout="row">
+        <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">Created On:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.meta['creation-time'] | date: 'MM-dd-yyyy HH:mm a'}}</div>
+        </div>
+        <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">Last Modified:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.meta['mod-time'] | date: 'MM-dd-yyyy HH:mm a'}}</div>
+        </div>
+      </div>
+    </div>
+  </mat-expansion-panel>
+  <mat-expansion-panel class="global-mat-expansion-panel" [expanded] = "true">
+    <mat-expansion-panel-header class="cluster-spec-panel-header">
+        <mat-panel-title class="cluster-spec-panel-title">
+            Spec
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="cluster-meta-panel-content">
+      <div fxLayout="row">
+       <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">Quorum Nodes:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.spec['quorum-nodes']}}</div>
+        </div>
+        <div fxFlex="50">
+            <div class="cluster-spec-panel-content-label">Virtual IP:</div>
+            <div class="cluster-spec-panel-content-value">{{cluster?.spec['virtual-ip']}}</div>
+          </div>
+        </div>
+      <div fxLayout="row">
+        <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">NTP Servers:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.spec['ntp-servers']}}</div>
+        </div>
+        <div fxFlex="50">
+            <div class="cluster-spec-panel-content-label">Auto Admit NICs:</div>
+            <div class="cluster-spec-panel-content-value">{{cluster?.spec['auto-admit-nics']}}</div>
+          </div>
+        </div>
+    </div>
+  </mat-expansion-panel>
+  <mat-expansion-panel class="global-mat-expansion-panel" [expanded] = "true">
+    <mat-expansion-panel-header class="cluster-status-panel-header">
+        <mat-panel-title class="cluster-status-panel-title">
+            Status
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="cluster-status-panel-content">
+      <div fxLayout="row">
+        <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">Leader:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.status.leader}}</div>
+        </div>
+        <div fxFlex="50">
+          <div class="cluster-meta-panel-content-label">Last Leader Transition Time:</div>
+          <div class="cluster-meta-panel-content-value">{{cluster?.status['last-leader-transition-time'] | date: 'MM-dd-yyyy HH:mm a'}}</div>
+        </div>
+      </div>
+    </div>
+  </mat-expansion-panel>
+</app-pagebody>

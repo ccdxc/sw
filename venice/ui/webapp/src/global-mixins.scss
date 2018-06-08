@@ -1,15 +1,17 @@
 @import '~@angular/material/theming';
 
 /*********  Font Mixins  *********/
-@mixin primary-font($size:14px, $color: #676763) {
+@mixin primary-font($size:14px, $color: #676763, $weight: normal) {
   font-family: "Fira Sans Condensed";
   font-size: $size;
+  font-weight: $weight;
   color: $color;
 } 
 
-@mixin secondary-font($size:14px, $color: #676763) {
+@mixin secondary-font($size:14px, $color: #676763, $weight: normal) {
   font-family: "Roboto Condensed";
   font-size: $size;
+  font-weight: $weight;
   color: $color;
 } 
 

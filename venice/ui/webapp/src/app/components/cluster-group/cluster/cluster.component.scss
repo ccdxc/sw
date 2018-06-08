@@ -1,0 +1,23 @@
+@import 'styles';
+@import 'global-mixins';
+
+.cluster-meta-panel-content-label,
+.cluster-spec-panel-content-label,
+.cluster-status-panel-content-label {
+    @include primary-font(14px, #676763, bold !important);
+    display: inline-block;
+    width: 200px;
+    margin-top: 10px;
+}
+
+.cluster-meta-panel-content-value,
+.cluster-spec-panel-content-value,
+.cluster-status-panel-content-value {
+    @include secondary-font();
+    display: inline-block;
+    margin-left: 13px;
+}
+
+.pagebody-icon {
+    opacity: 0.5 !important
+}

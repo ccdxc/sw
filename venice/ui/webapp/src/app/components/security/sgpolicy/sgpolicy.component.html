@@ -2,11 +2,11 @@
   <mat-expansion-panel class="global-mat-expansion-panel" [expanded]="true">
     <mat-expansion-panel-header class="sgpolicy-expansionpanel-header">
       <mat-panel-title class="sgpolicy-summary-panel-header">
-        Security Policiy Details
+        Security Policy Details
       </mat-panel-title>
     </mat-expansion-panel-header>
     <div class="sgpolicy-summary-panel-content">
-      <div flex fxLayout="row">
+      <div fxLayout="row">
         <div fxFlex="50">
           <div class="sgpolicy-summary-panel-content-label">Policy Name:</div>
           <div class="sgpolicy-summary-panel-content-value">{{policyName}} </div>
@@ -16,7 +16,7 @@
             <div class="sgpolicy-summary-panel-content-value">{{creationTime | date:'MM-dd-yyyy HH:mm a'}}</div>
         </div>
       </div>
-      <div flex fxLayout="row">
+      <div fxLayout="row">
         <div fxFlex="50">
             <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
             <div class="sgpolicy-summary-panel-content-value">{{creator}}</div>
