@@ -80,6 +80,8 @@ public:
  
     static void run_service(hal_handle_t ep_h, std::string cmd);
 
+    static string prefix_cmd(hal_handle_t ep_h);
+
     static void process_e2e_packets(void);
 
 protected:
@@ -194,6 +196,8 @@ protected:
                  cmd = prefix_cmd + " ifconfig " + EP + " 0x" + ip.str();
                  f << cmd << "\n";                          
              }
+             cmd = prefix_cmd + " ifconfig lo 127.0.0.1";
+             f << cmd << "\n";
              i++;
         }
         for (uint32_t i=0; i<handles.size(); i++) {
@@ -224,7 +228,7 @@ protected:
         }
         f.close();
         std::system("chmod +x cmd.sh && ./cmd.sh && rm cmd.sh");
-    } 
+    }
 
     static fte::ctx_t ctx_;
 

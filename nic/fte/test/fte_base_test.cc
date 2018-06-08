@@ -563,6 +563,16 @@ fte_base_test::process_e2e_packets (void)
                     rc = inject_pkt(&cpu_rxhdr, (uint8_t *)inp, nread);
                     EXPECT_EQ(rc, HAL_RET_OK);
                     EXPECT_FALSE(ctx_.drop());
+#ifdef DEBUG
+                    printf("Received packet:");
+                    for (int i = 0; i< nread; i++) {
+                        if (i % 16 == 0) {
+                            printf("\n");
+                        }
+                        printf(" 0x%02x", (unsigned char)inp[i]);
+                    }
+                    printf("\n");
+#endif
 
                     fte::flow_t *iflow = ctx_.flow(hal::FLOW_ROLE_INITIATOR);
                     if (proto == IPPROTO_TCP) {
@@ -575,6 +585,16 @@ fte_base_test::process_e2e_packets (void)
                 }
 
                 fix_checksum((uint8_t *)outp, pkt_len);
+#ifdef DEBUG 
+                printf("Received packet:");
+                for (int i = 0; i< pkt_len; i++) {
+                    if (i % 16 == 0) {
+                        printf("\n");
+                    }
+                    printf(" 0x%02x", (unsigned char)outp[i]);
+                }
+                printf("\n");
+#endif
                 nwrite = write(handles[hdl.other_hdl].fd, outp, pkt_len);
                 if (nwrite < 0) {
                     continue;
@@ -592,4 +612,13 @@ fte_base_test::run_service(hal_handle_t ep_h, std::string service)
 
     std::string cmd = prefix_cmd + " " + service;
     std::system(cmd.c_str());
+}
+
+std::string 
+fte_base_test::prefix_cmd(hal_handle_t ep_h)
+{
+    int idx = std::distance(eps.begin(), eps.find(ep_h));
+    std::string prefix_cmd = "ip netns exec EP" + to_string(idx+1);
+
+    return prefix_cmd;
 }

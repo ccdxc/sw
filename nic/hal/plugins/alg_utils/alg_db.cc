@@ -114,8 +114,10 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     expected_flow_t *entry = NULL;
     exp_flow_key_t key, lookup_key;
 
-    key = lookup_key = {};
+    if (!expected_flow_ht()->num_entries()) 
+        return NULL;
 
+    bzero((void *)&key, sizeof(exp_flow_key_t));
     SET_EXP_FLOW_KEY(key, ikey);
 
     // Exact match

@@ -149,8 +149,11 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
     hal::flow_key_t  app_sess_key, exp_flow_key;
 
     app_sess_key.proto = (types::IPProtocol)IP_PROTO_TCP;
-    app_sess_key.sip.v4_addr = 0x14000001;
-    app_sess_key.dip.v4_addr = 0x14000002;
+    app_sess_key.svrf_id = 1;
+    app_sess_key.dvrf_id = 1;
+    app_sess_key.dir = 1;
+    app_sess_key.sip.v4_addr = 0x16000001;
+    app_sess_key.dip.v4_addr = 0x16000002;
     app_sess_key.sport = 12345;
     app_sess_key.dport = 111;
 
@@ -159,6 +162,7 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
     exp_flow_key = app_sess_key;
     exp_flow_key.svrf_id = 1;
     exp_flow_key.dvrf_id = 1;
+    exp_flow_key.flow_type = hal::FLOW_TYPE_V4;
     exp_flow_key.proto = types::IPPROTO_TCP;
     exp_flow_key.dport = 22345;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,

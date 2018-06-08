@@ -952,14 +952,16 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * Alloc APP session, L4 Session and RPC info
              */
             ret = g_rpc_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
-            ret = g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
-            l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
-            rpc_info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
-            HAL_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
-            l4_sess->isCtrl = TRUE;
-            l4_sess->info = rpc_info;
+            HAL_ASSERT_RETURN((ret == HAL_RET_OK || ret == HAL_RET_ENTRY_EXISTS), ret);
+            if (ret == HAL_RET_OK) {
+                ret = g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
+                HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+                l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
+                rpc_info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
+                HAL_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
+                l4_sess->isCtrl = TRUE;
+                l4_sess->info = rpc_info;
+            }
             reset_rpc_info(rpc_info);
 
 

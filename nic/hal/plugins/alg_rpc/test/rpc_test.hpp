@@ -30,6 +30,8 @@ protected:
         hal_handle_t intfh2 =  add_uplink(2);
         client_eph = add_endpoint(l2segh, intfh1, 0x0A000001 , 0xAABB0A000001, 0);
         server_eph = add_endpoint(l2segh, intfh2, 0x0A000002 , 0xAABB0A000002, 0);
+        s_e2e_eph = add_endpoint(l2segh, intfh1, 0x40000001 , 0xEEBB0D000001, 0, true);
+        c_e2e_eph = add_endpoint(l2segh, intfh2, 0x40000002 , 0xEEBB0D000002, 0, true);
 
         // firewall rules
         std::vector<v4_rule_t> rules = {
@@ -37,6 +39,12 @@ protected:
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
+                               dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
+                               alg: nwsec::APP_SVC_SUN_RPC } },
+            v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
+                        from: {},
+                        to: {},
+                        app: { proto:IPPROTO_UDP,
                                dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
                                alg: nwsec::APP_SVC_SUN_RPC } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
@@ -61,4 +69,5 @@ protected:
 public:
     static void sunrpc_session_create(void *);
     static void msrpc_session_create(void *);
+    static hal_handle_t c_e2e_eph, s_e2e_eph;
 };
