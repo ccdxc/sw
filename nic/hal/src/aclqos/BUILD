@@ -32,6 +32,7 @@ cc_library(
         "//nic/utils/block_list",
         "//nic/fte:fte_includes",
         "//nic/hal/src/nw:nw_includes",
+        "//nic/hal/src/firewall:firewall_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",
         "//nic:spdlog",

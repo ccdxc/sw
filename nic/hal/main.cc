@@ -128,7 +128,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&debug_svc);
         server_builder->RegisterService(&table_svc);
         server_builder->RegisterService(&l4lb_svc);
-        server_builder->RegisterService(&nwsec_svc);
         server_builder->RegisterService(&dos_svc);
         server_builder->RegisterService(&nat_svc);
         server_builder->RegisterService(&tlscb_svc);
@@ -156,8 +155,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&rdma_svc);
         server_builder->RegisterService(&gft_svc);
         server_builder->RegisterService(&system_svc);
-        // Revisit. DOL was not able to create Tenant with security profile.
-        server_builder->RegisterService(&nwsec_svc);
         server_builder->RegisterService(&dos_svc);
     }
 

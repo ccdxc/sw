@@ -186,7 +186,17 @@
             "lib"       : "aclqos/libaclqos.so",
             "init_func" : "aclqos_init",
             "exit_func" : "aclqos_exit",
-            "auto_load" : "true"
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "firewall",
+            "provider"  : "pensando.io",
+            "lib"       : "firewall/libfirewall.so",
+            "init_func" : "firewall_init",
+            "exit_func" : "firewall_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
         }
     ],
 

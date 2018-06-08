@@ -134,6 +134,7 @@ cc_library(
         "//nic:grpc_includes",
         "//nic/hal/src/nw:nw",
         "//nic/hal/src/aclqos:aclqos",
+        "//nic/hal/src/firewall:firewall",
     ],
     alwayslink = 1,
 )

@@ -21,6 +21,7 @@ cc_library(
         "//nic/hal:hal_includes",
         "//nic/hal/src/nw:nw_includes",
         "//nic/hal/src/aclqos:aclqos_includes",
+        "//nic/hal/src/firewall:firewall_includes",
     ]
 )
 

@@ -110,6 +110,8 @@ class SecurityGroupObjectHelper:
         return self.rsgs
 
     def Configure(self):
+        if GlobalOptions.classic:
+            return
         logger.info("Configuring %d Security Groups" % len(self.sgs))
         if GlobalOptions.agent:
             agentapi.ConfigureSecurityGroups(self.sgs)
