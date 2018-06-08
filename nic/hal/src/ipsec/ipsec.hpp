@@ -26,6 +26,7 @@ using ipsec::IpsecRuleResponse;
 using ipsec::IpsecRuleResponseMsg;
 using ipsec::IpsecRuleDeleteRequest;
 using ipsec::IpsecRuleDeleteRequestMsg;
+using ipsec::IpsecRuleDeleteResponse;
 using ipsec::IpsecRuleDeleteResponseMsg;
 using ipsec::IpsecRuleGetRequest;
 using ipsec::IpsecRuleGetRequestMsg;
@@ -37,6 +38,7 @@ using ipsec::IpsecSAEncryptResponse;
 using ipsec::IpsecSAEncryptResponseMsg;
 using ipsec::IpsecSAEncryptDeleteRequest;
 using ipsec::IpsecSAEncryptDeleteRequestMsg;
+using ipsec::IpsecSAEncryptDeleteResponse;
 using ipsec::IpsecSAEncryptDeleteResponseMsg;
 using ipsec::IpsecSAEncryptGetRequest;
 using ipsec::IpsecSAEncryptGetResponse;
@@ -49,6 +51,7 @@ using ipsec::IpsecSADecryptResponse;
 using ipsec::IpsecSADecryptResponseMsg;
 using ipsec::IpsecSADecryptDeleteRequest;
 using ipsec::IpsecSADecryptDeleteRequestMsg;
+using ipsec::IpsecSADecryptDeleteResponse;
 using ipsec::IpsecSADecryptDeleteResponseMsg;
 using ipsec::IpsecSADecryptGetRequest;
 using ipsec::IpsecSADecryptGetResponse;
@@ -411,7 +414,7 @@ hal_ret_t ipsec_saencrypt_update(ipsec::IpsecSAEncrypt& spec,
                        ipsec::IpsecSAEncryptResponse *rsp);
 
 hal_ret_t ipsec_saencrypt_delete(ipsec::IpsecSAEncryptDeleteRequest& req,
-                       ipsec::IpsecSAEncryptDeleteResponseMsg *rsp);
+                       ipsec::IpsecSAEncryptDeleteResponse *rsp);
 
 hal_ret_t ipsec_saencrypt_get(ipsec::IpsecSAEncryptGetRequest& req,
                     ipsec::IpsecSAEncryptGetResponseMsg *rsp);
@@ -434,7 +437,7 @@ hal_ret_t ipsec_sadecrypt_update(ipsec::IpsecSADecrypt& spec,
                        ipsec::IpsecSADecryptResponse *rsp);
 
 hal_ret_t ipsec_sadecrypt_delete(ipsec::IpsecSADecryptDeleteRequest& req,
-                       ipsec::IpsecSADecryptDeleteResponseMsg *rsp);
+                       ipsec::IpsecSADecryptDeleteResponse *rsp);
 
 hal_ret_t ipsec_sadecrypt_get(ipsec::IpsecSADecryptGetRequest& req,
                     ipsec::IpsecSADecryptGetResponseMsg *rsp);
@@ -471,7 +474,7 @@ hal_ret_t ipsec_rule_update(ipsec::IpsecRuleSpec& spec,
                        ipsec::IpsecRuleResponse *rsp);
 
 hal_ret_t ipsec_rule_delete(ipsec::IpsecRuleDeleteRequest& req,
-                       ipsec::IpsecRuleDeleteResponseMsg *rsp);
+                       ipsec::IpsecRuleDeleteResponse *rsp);
 
 hal_ret_t ipsec_rule_get(ipsec::IpsecRuleGetRequest& req,
                     ipsec::IpsecRuleGetResponseMsg *rsp);

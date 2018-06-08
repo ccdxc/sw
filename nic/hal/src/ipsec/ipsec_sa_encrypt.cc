@@ -374,7 +374,7 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
 // process a IPSEC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipsec_saencrypt_delete (ipsec::IpsecSAEncryptDeleteRequest& req, ipsec::IpsecSAEncryptDeleteResponseMsg *rsp)
+ipsec_saencrypt_delete (ipsec::IpsecSAEncryptDeleteRequest& req, ipsec::IpsecSAEncryptDeleteResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     ipsec_sa_t*               ipsec;
@@ -384,7 +384,7 @@ ipsec_saencrypt_delete (ipsec::IpsecSAEncryptDeleteRequest& req, ipsec::IpsecSAE
     auto kh = req.key_or_handle();
     ipsec = find_ipsec_sa_by_id(kh.cb_id());
     if (ipsec == NULL) {
-        rsp->add_api_status(types::API_STATUS_OK);
+        rsp->set_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
 
@@ -395,12 +395,12 @@ ipsec_saencrypt_delete (ipsec::IpsecSAEncryptDeleteRequest& req, ipsec::IpsecSAE
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_DELETE, &pd_func_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
     // fill stats of this IPSEC CB
-    rsp->add_api_status(types::API_STATUS_OK);
+    rsp->set_api_status(types::API_STATUS_OK);
 
     return HAL_RET_OK;
 }

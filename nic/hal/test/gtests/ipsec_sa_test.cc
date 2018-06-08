@@ -295,8 +295,8 @@ TEST_F(ipsec_encrypt_test, test1)
 
     IpsecSAEncryptDeleteRequest del_enc_req;
     IpsecSADecryptDeleteRequest del_dec_req;
-    IpsecSAEncryptDeleteResponseMsg del_enc_rsp;
-    IpsecSADecryptDeleteResponseMsg del_dec_rsp;
+    IpsecSAEncryptDeleteResponse del_enc_rsp;
+    IpsecSADecryptDeleteResponse del_dec_rsp;
 
     IpsecRuleSpec rule_req;
     IpsecRuleResponse rule_rsp;

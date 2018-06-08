@@ -484,8 +484,9 @@ ipsec_rule_get (IpsecRuleGetRequest& req, IpsecRuleGetResponseMsg *rsp)
 // process a IPSEC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipsec_rule_delete (ipsec::IpsecRuleDeleteRequest& req, ipsec::IpsecRuleDeleteResponseMsg *rsp)
+ipsec_rule_delete (ipsec::IpsecRuleDeleteRequest& req, ipsec::IpsecRuleDeleteResponse *rsp)
 {
+    rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 

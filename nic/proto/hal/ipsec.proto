@@ -221,9 +221,14 @@ message IpsecRuleDeleteRequestMsg {
   repeated IpsecRuleDeleteRequest    request = 1;    // batched delete request
 }
 
+// IpsecRuleDeleteResponse is response to IpsecRuleDeleteRequest
+message IpsecRuleDeleteResponse {
+  types.ApiStatus    api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
 // IpsecRuleDeleteResponseMsg is batched response to IpsecRuleDeleteRequestMsg
 message IpsecRuleDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated IpsecRuleDeleteResponse   response = 1;    // batched delete response
 }
 
 // IpsecRuleGetRequest is used to get information about a ipsec rule
@@ -294,9 +299,14 @@ message IpsecSAEncryptDeleteRequestMsg {
   repeated IpsecSAEncryptDeleteRequest    request = 1;    // batched delete request
 }
 
+// IpsecSAEncryptDeleteResponse is response to delete a ipsec_sa
+message IpsecSAEncryptDeleteResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
+}
+
 // IpsecSAEncryptDeleteResponseMsg is batched response to IpsecSADeleteRequestMsg
 message IpsecSAEncryptDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated IpsecSAEncryptDeleteResponse    response = 1;    // batched delete response
 }
 
 // IpsecSAEncryptGetRequest is used to get information about a ipsec_sa
@@ -352,9 +362,14 @@ message IpsecSADecryptDeleteRequestMsg {
   repeated IpsecSADecryptDeleteRequest    request = 1;    // batched delete request
 }
 
+// IpsecSADecryptDeleteResponse is response to delete a ipsec_sa
+message IpsecSADecryptDeleteResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
+}
+
 // IpsecSADecryptDeleteResponseMsg is batched response to IpsecSADeleteRequestMsg
 message IpsecSADecryptDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated IpsecSADecryptDeleteResponse    response = 1;    // batched delete response
 }
 
 // IpsecSADecryptGetRequest is used to get information about a ipsec_sa
