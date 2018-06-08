@@ -43,11 +43,12 @@ static void ionic_q_show(struct seq_file *s, const char *w,
 	seq_printf(s, "%ssize:\t%#llx\n", w, (u64)q->size);
 	seq_printf(s, "%sdma:\t%#llx\n", w, (u64)q->dma);
 	seq_printf(s, "%sprod:\t%#06x (%#llx)\n",
-		   w, q->prod, (u64)q->prod * q->stride);
+		   w, q->prod, (u64)q->prod << q->stride_log2);
 	seq_printf(s, "%scons:\t%#06x (%#llx)\n",
-		   w, q->cons, (u64)q->cons * q->stride);
+		   w, q->cons, (u64)q->cons << q->stride_log2);
 	seq_printf(s, "%smask:\t%#06x\n", w, q->mask);
-	seq_printf(s, "%sstride:\t%#06x\n", w, q->stride);
+	seq_printf(s, "%sdepth_log2:\t%u\n", w, q->depth_log2);
+	seq_printf(s, "%sstride_log2:\t%u\n", w, q->stride_log2);
 	seq_printf(s, "%sdbell:\t%#llx\n", w, q->dbell);
 }
 

@@ -25,6 +25,7 @@ struct ionic_ctx {
 	struct verbs_context	vctx;
 
 	bool			fallback;
+	uint32_t		pg_shift;
 
 	int			version;
 	int			opcodes;
@@ -104,10 +105,6 @@ struct ionic_ah {
 struct ionic_dev {
 	struct verbs_device	vdev;
 	uint8_t			abi_version;
-	size_t			pg_size;
-
-	uint32_t		cqe_size;
-	uint32_t		max_cq_depth;
 };
 
 static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibdev)

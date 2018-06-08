@@ -3,19 +3,22 @@
 #include "ionic_queue.h"
 
 int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
-		     uint16_t depth, uint16_t stride)
+		     int depth, size_t stride)
 {
-	depth = ionic_u16_mask(depth);
-	stride = ionic_u16_power(stride);
-
-	if (!depth || !stride)
+	if (depth <= 0 || depth > 0xffff)
 		return -EINVAL;
 
-	q->size = ((uint32_t)depth + 1) * stride;
-	if (q->size < PAGE_SIZE) {
-		q->size = PAGE_SIZE;
-		depth = PAGE_SIZE / stride - 1;
-	}
+	if (stride == 0 || stride > 0x10000)
+		return -EINVAL;
+
+	q->depth_log2 = order_base_2(depth + 1);
+	q->stride_log2 = order_base_2(stride);
+
+	if (q->depth_log2 + q->stride_log2 < PAGE_SHIFT)
+		q->depth_log2 = PAGE_SHIFT - q->stride_log2;
+
+	q->size = BIT_ULL(q->depth_log2 + q->stride_log2);
+	q->mask = BIT(q->depth_log2) - 1;
 
 	q->ptr = dma_zalloc_coherent(dma_dev, q->size, &q->dma, GFP_KERNEL);
 	if (!q->ptr)
@@ -29,8 +32,6 @@ int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
 
 	q->prod = 0;
 	q->cons = 0;
-	q->mask = depth;
-	q->stride = stride;
 	q->dbell = 0;
 
 	return 0;

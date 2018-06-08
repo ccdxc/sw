@@ -3,7 +3,7 @@
 
 #include <infiniband/kern-abi.h>
 
-#define IONIC_ABI_VERSION 2
+#define IONIC_ABI_VERSION 3
 
 struct ionic_ctx_req {
 	struct ibv_get_context req;
@@ -13,6 +13,9 @@ struct ionic_ctx_req {
 struct ionic_ctx_resp {
 	struct ib_uverbs_get_context_resp resp;
 	__u32 fallback;
+	__u32 page_shift;
+
+	__u64 dbell_offset;
 
 	__u16 version;
 	__u8 qp_opcodes[7];
@@ -22,15 +25,14 @@ struct ionic_ctx_resp {
 	__u8 rq_qtype;
 	__u8 cq_qtype;
 	__u8 admin_qtype;
-
-	__u64 dbell_offset;
 };
 
 struct ionic_qdesc {
 	__u64 addr;
 	__u32 size;
 	__u16 mask;
-	__u16 stride;
+	__u8 depth_log2;
+	__u8 stride_log2;
 };
 
 struct ionic_ah_resp {

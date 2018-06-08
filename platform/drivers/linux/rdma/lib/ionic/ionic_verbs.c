@@ -30,7 +30,7 @@ static int ionic_max_send_inline(uint16_t stride)
 static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 				      struct ibv_comp_channel *channel, int vec)
 {
-	struct ionic_dev *dev = to_ionic_dev(ibctx->device);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_cq *cq;
 	struct ionic_cq_req req = {};
 	struct ionic_cq_resp resp = {};
@@ -54,7 +54,8 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 
 	pthread_spin_init(&cq->lock, PTHREAD_PROCESS_PRIVATE);
 
-	rc = ionic_queue_init(&cq->q, dev->pg_size, ncqe, sizeof(struct cqwqe_be_t));
+	rc = ionic_queue_init(&cq->q, ctx->pg_shift, ncqe,
+			      sizeof(struct cqwqe_be_t));
 	if (rc)
 		goto err_queue;
 
@@ -63,7 +64,8 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 	req.cq.addr = (uintptr_t)cq->q.ptr;
 	req.cq.size = cq->q.size;
 	req.cq.mask = cq->q.mask;
-	req.cq.stride = cq->q.stride;
+	req.cq.depth_log2 = cq->q.depth_log2;
+	req.cq.stride_log2 = cq->q.stride_log2;
 
 	rc = ibv_cmd_create_cq(ibctx, ncqe, channel, vec, &cq->ibcq,
 			       &req.req, sizeof(req),
@@ -318,7 +320,7 @@ again:
 	*cqe = *qcqe;
 
 	ionic_dbg(ctx, "poll cq prod %d", cq->q.prod);
-	ionic_dbg_xdump(ctx, "cqe", cqe, cq->q.stride);
+	ionic_dbg_xdump(ctx, "cqe", cqe, 1u << cq->q.stride_log2);
 
 	ionic_dbg_cqe(ctx, cqe);
 
@@ -528,7 +530,6 @@ static int ionic_check_qp_limits(struct ionic_ctx *ctx,
 static int ionic_alloc_queues(struct ionic_ctx *ctx, struct ionic_qp *qp,
 			      struct ibv_qp_cap *cap)
 {
-	struct ionic_dev *dev = to_ionic_dev(ctx->vctx.context.device);
 	uint16_t min_depth, min_stride;
 	int rc;
 
@@ -539,7 +540,7 @@ static int ionic_alloc_queues(struct ionic_ctx *ctx, struct ionic_qp *qp,
 		min_stride = ionic_get_sqe_size(cap->max_send_sge,
 						cap->max_inline_data);
 
-		rc = ionic_queue_init(&qp->sq, dev->pg_size,
+		rc = ionic_queue_init(&qp->sq, ctx->pg_shift,
 				      min_depth, min_stride);
 		if (rc)
 			goto err_sq;
@@ -568,7 +569,7 @@ static int ionic_alloc_queues(struct ionic_ctx *ctx, struct ionic_qp *qp,
 		min_depth = cap->max_recv_wr;
 		min_stride = ionic_get_rqe_size(cap->max_recv_sge);
 
-		rc = ionic_queue_init(&qp->rq, dev->pg_size,
+		rc = ionic_queue_init(&qp->rq, ctx->pg_shift,
 				      min_depth, min_stride);
 		if (rc)
 			goto err_rq;
@@ -656,12 +657,14 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	req.sq.addr = (uintptr_t)qp->sq.ptr;
 	req.sq.size = qp->sq.size;
 	req.sq.mask = qp->sq.mask;
-	req.sq.stride = qp->sq.stride;
+	req.sq.depth_log2 = qp->sq.depth_log2;
+	req.sq.stride_log2 = qp->sq.stride_log2;
 
 	req.rq.addr = (uintptr_t)qp->rq.ptr;
 	req.rq.size = qp->rq.size;
 	req.rq.mask = qp->rq.mask;
-	req.rq.stride = qp->rq.stride;
+	req.rq.depth_log2 = qp->rq.depth_log2;
+	req.rq.stride_log2 = qp->rq.stride_log2;
 
 	rc = ibv_cmd_create_qp_ex2(ibctx, &qp->vqp, sizeof(qp->vqp), ex,
 				   &req.req, sizeof(req.req), sizeof(req),
@@ -702,9 +705,10 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 
 	ex->cap.max_send_wr = qp->sq.mask;
 	ex->cap.max_recv_wr = qp->rq.mask;
-	ex->cap.max_send_sge = ionic_max_send_sge(qp->sq.stride);
-	ex->cap.max_recv_sge = ionic_max_recv_sge(qp->rq.stride);
-	ex->cap.max_inline_data = ionic_max_send_inline(qp->sq.stride);
+	ex->cap.max_send_sge = ionic_max_send_sge(1u << qp->sq.stride_log2);
+	ex->cap.max_recv_sge = ionic_max_recv_sge(1u << qp->rq.stride_log2);
+	ex->cap.max_inline_data =
+		ionic_max_send_inline(1u << qp->sq.stride_log2);
 
 	return &qp->vqp.qp;
 
@@ -815,7 +819,7 @@ static int ionic_destroy_qp(struct ibv_qp *ibqp)
 	return 0;
 }
 
-static int64_t ionic_prep_inline(void *data, size_t max_data,
+static int64_t ionic_prep_inline(void *data, uint32_t max_data,
 				 struct ibv_sge *ibv_sgl, int num_sge)
 {
 	static const int64_t bit_31 = 1u << 31;
@@ -908,7 +912,7 @@ static void ionic_prep_base(struct ionic_qp *qp,
 	}
 
 	ionic_dbg(ctx, "post send prod %d", qp->sq.prod);
-	ionic_dbg_xdump(ctx, "wqe", wqe, qp->sq.stride);
+	ionic_dbg_xdump(ctx, "wqe", wqe, 1u << qp->sq.stride_log2);
 
 	ionic_queue_produce(&qp->sq);
 }
@@ -921,17 +925,18 @@ static int ionic_prep_common(struct ionic_qp *qp,
 			     __u32 *wqe_length_field)
 {
 	int64_t signed_len;
+	uint32_t mval;
 
 	if (wr->send_flags & IBV_SEND_INLINE) {
 		wqe->base.num_sges = 0;
 		wqe->base.inline_data_vld = 1;
-		signed_len = ionic_prep_inline(wqe->u.non_atomic.sg_arr,
-					       ionic_max_send_inline(qp->sq.stride),
+		mval = ionic_max_send_inline(1u << qp->sq.stride_log2);
+		signed_len = ionic_prep_inline(wqe->u.non_atomic.sg_arr, mval,
 					       wr->sg_list, wr->num_sge);
 	} else {
 		wqe->base.num_sges = wr->num_sge;
-		signed_len = ionic_prep_sgl(wqe->u.non_atomic.sg_arr,
-					    ionic_max_send_sge(qp->sq.stride),
+		mval = ionic_max_send_sge(1u << qp->sq.stride_log2);
+		signed_len = ionic_prep_sgl(wqe->u.non_atomic.sg_arr, mval,
 					    wr->sg_list, wr->num_sge);
 	}
 
@@ -955,7 +960,7 @@ static int ionic_prep_send(struct ionic_qp *qp,
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
 
-	memset(wqe, 0, qp->sq.stride);
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
 
 	switch (wr->opcode) {
 	case IBV_WR_SEND:
@@ -1016,7 +1021,7 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
 
-	memset(wqe, 0, qp->sq.stride);
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
 
 	switch (wr->opcode) {
 	case IBV_WR_SEND:
@@ -1045,7 +1050,7 @@ static int ionic_prep_rdma(struct ionic_qp *qp,
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
 
-	memset(wqe, 0, qp->sq.stride);
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
 
 	switch (wr->opcode) {
 	case IBV_WR_RDMA_READ:
@@ -1091,7 +1096,7 @@ static int ionic_prep_atomic(struct ionic_qp *qp,
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
 
-	memset(wqe, 0, qp->sq.stride);
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
 
 	switch (wr->opcode) {
 	case IBV_WR_ATOMIC_CMP_AND_SWP:
@@ -1177,19 +1182,23 @@ static void ionic_post_hbm(struct ionic_ctx *ctx, struct ionic_qp *qp)
 {
 	void *hbm_ptr;
 	void *wqe_ptr;
-	uint16_t pos, end, mask, stride;
+	uint32_t stride;
+	uint16_t pos, end, mask;
+	uint8_t stride_log2;
+
+	stride_log2 = qp->sq.stride_log2;
+	stride = 1u << stride_log2;
 
 	pos = qp->sq_hbm_prod;
 	end = qp->sq.prod;
 	mask = qp->sq.mask;
-	stride = qp->sq.stride;
 
 	while (pos != end) {
-		hbm_ptr = qp->sq_hbm_ptr + pos * stride;
+		hbm_ptr = qp->sq_hbm_ptr + ((size_t)pos << stride_log2);
 		wqe_ptr = ionic_queue_at(&qp->sq, pos);
 
 		mmio_wc_start();
-		mmio_memcpy_x64(hbm_ptr, wqe_ptr, qp->sq.stride);
+		mmio_memcpy_x64(hbm_ptr, wqe_ptr, stride);
 		mmio_flush_writes();
 
 		pos = (pos + 1) & mask;
@@ -1273,14 +1282,15 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 	struct ionic_rq_meta *meta;
 	struct rqwqe_t *wqe;
 	int64_t signed_len;
+	uint32_t mval;
 
 	meta = &qp->rq_meta[qp->rq.prod];
 	wqe = ionic_queue_at_prod(&qp->rq);
 
-	memset(wqe, 0, qp->rq.stride);
+	memset(wqe, 0, 1u << qp->rq.stride_log2);
 
-	signed_len = ionic_prep_sgl(wqe->sge_arr,
-				    ionic_max_recv_sge(qp->rq.stride),
+	mval = ionic_max_recv_sge(1u << qp->rq.stride_log2);
+	signed_len = ionic_prep_sgl(wqe->sge_arr, mval,
 				    wr->sg_list, wr->num_sge);
 	if (signed_len < 0)
 		return (int)-signed_len;
@@ -1291,7 +1301,7 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 	meta->len = (uint32_t)signed_len;
 
 	ionic_dbg(ctx, "post recv prod %d", qp->rq.prod);
-	ionic_dbg_xdump(ctx, "wqe", wqe, qp->rq.stride);
+	ionic_dbg_xdump(ctx, "wqe", wqe, 1u << qp->rq.stride_log2);
 
 	ionic_queue_produce(&qp->rq);
 
@@ -1376,7 +1386,7 @@ static struct ibv_srq *ionic_create_srq_ex(struct ibv_context *ibctx,
 		goto err_cmd;
 
 	ex->attr.max_wr = qp->rq.mask;
-	ex->attr.max_sge = ionic_max_recv_sge(qp->rq.stride);
+	ex->attr.max_sge = ionic_max_recv_sge(1u << qp->rq.stride_log2);
 
 	return &qp->vsrq.srq;
 

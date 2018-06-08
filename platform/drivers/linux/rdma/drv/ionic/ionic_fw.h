@@ -434,12 +434,12 @@ static inline u32 ionic_v1_eqe_evt(struct ionic_v1_eqe *eqe)
 	return le32_to_cpu(eqe->evt);
 }
 
-static inline u32 ionic_v1_eqe_evt_type(u32 evt)
+static inline u8 ionic_v1_eqe_evt_type(u32 evt)
 {
 	return (evt >> IONIC_V1_EQE_TYPE_SHIFT) & IONIC_V1_EQE_TYPE_MASK;
 }
 
-static inline u32 ionic_v1_eqe_evt_code(u32 evt)
+static inline u8 ionic_v1_eqe_evt_code(u32 evt)
 {
 	return (evt >> IONIC_V1_EQE_CODE_SHIFT) & IONIC_V1_EQE_CODE_MASK;
 }

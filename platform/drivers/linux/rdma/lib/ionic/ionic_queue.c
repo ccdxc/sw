@@ -1,23 +1,53 @@
 #include <errno.h>
+#include <string.h>
 
 #include "ionic_queue.h"
 #include "ionic_memory.h"
 
-int ionic_queue_init(struct ionic_queue *q, size_t pg_size,
-		     uint16_t depth, uint16_t stride)
+static int ionic_order_base2(size_t val)
 {
-	depth = ionic_u16_mask(depth);
-	stride = ionic_u16_power(stride);
+	int order = 32;
 
-	if (!depth || !stride)
-		return EINVAL;
+	if (val <= 1)
+		return 0;
 
-	q->size = ((uint32_t)depth + 1) * stride;
+	val -= 1;
 
-	if (q->size < pg_size) {
-		depth = pg_size / stride - 1;
-		q->size = pg_size;
-	}
+	val |= val >> 1;
+	val |= val >> 2;
+	val |= val >> 4;
+	val |= val >> 8;
+	val |= val >> 16;
+
+	/* leave zero or exactly one high bit set
+	 * or exactly one low bit set */
+	val ^= val >> 1;
+
+	if (sizeof(size_t) == 8)
+		order += ffs(val >> 32);
+	if (order == 32)
+		order = ffs(val);
+
+	return order;
+}
+
+int ionic_queue_init(struct ionic_queue *q, int pg_shift,
+		     int depth, size_t stride)
+{
+	if (depth <= 0 || depth > 0xffff)
+		return -EINVAL;
+
+	if (stride == 0 || stride > 0x10000)
+		return -EINVAL;
+
+	q->depth_log2 = ionic_order_base2(depth + 1);
+	q->stride_log2 = ionic_order_base2(stride);
+
+	if (q->depth_log2 + q->stride_log2 < pg_shift)
+		q->depth_log2 = pg_shift - q->stride_log2;
+
+	q->size = 1ull << (q->depth_log2 + q->stride_log2);
+	q->mask = (1u << q->depth_log2) - 1;
 
 	q->ptr = ionic_map_anon(q->size);
 	if (!q->ptr)
@@ -25,8 +55,6 @@ int ionic_queue_init(struct ionic_queue *q, size_t pg_size,
 
 	q->prod = 0;
 	q->cons = 0;
-	q->mask = depth;
-	q->stride = stride;
 	q->dbell = 0;
 
 	return 0;

@@ -107,6 +107,8 @@ struct ionic_eq {
 
 	struct ionic_queue	q;
 
+	u32			eqid;
+
 	bool			enable;
 	bool			armed;
 
@@ -317,77 +319,6 @@ static inline struct ionic_qp *to_ionic_srq(struct ib_srq *ibsrq)
 static inline struct ionic_ah *to_ionic_ah(struct ib_ah *ibah)
 {
         return container_of(ibah, struct ionic_ah, ibah);
-}
-
-struct ionic_eqe {
-	__le32		event;
-};
-
-enum ionic_eqe_event_bits {
-	/* bit fields */
-	IONIC_EQE_QID_SHIFT	= 0,
-	IONIC_EQE_QID_MASK	= 0x00ffffffu,
-	IONIC_EQE_COLOR_SHIFT	= 24,
-	IONIC_EQE_COLOR_BIT	= 0x01000000u,
-	IONIC_EQE_CODE_SHIFT	= 25,
-	IONIC_EQE_CODE_MASK	= 0x1e000000u,
-	IONIC_EQE_CLS_SHIFT	= 29,
-	IONIC_EQE_CLS_MASK	= 0xe0000000u,
-
-	/* cq events */
-	IONIC_EQE_CLS_CQ	= 0,
-	/* non-error code 0..7 */
-	IONIC_EQE_CODE_CQ_COMP		= 0,
-	/* error code 8..15 */
-	IONIC_EQE_CODE_CQ_ERR		= 8,
-
-	/* qp events */
-	IONIC_EQE_CLS_QP	= 1,
-	/* non-error code 0..7 */
-	IONIC_EQE_CODE_QP_COMM_EST	= 0,
-	IONIC_EQE_CODE_QP_SQ_DRAINED	= 1,
-	IONIC_EQE_CODE_QP_LAST_WQE	= 2,
-	/* error code 8..15 */
-	IONIC_EQE_CODE_QP_ERR_FATAL	= 8,
-	IONIC_EQE_CODE_QP_ERR_REQUEST	= 9,
-	IONIC_EQE_CODE_QP_ERR_ACCESS	= 10,
-
-	/* srq events */
-	IONIC_EQE_CLS_SRQ	= 2,
-	/* non-error code 0..7 */
-	IONIC_EQE_CODE_SRQ_LEVL		= 0,
-	/* error code 8..15 */
-	IONIC_EQE_CODE_SRQ_ERR		= 8,
-
-	/* port events */
-	IONIC_EQE_CLS_PORT	= 6,
-	/* code 0..15 reserved */
-	IONIC_EQE_CODE_PORT_RSVD	= 0,
-
-	/* device events */
-	IONIC_EQE_CLS_DEV	= 7,
-	/* code 0..15 reserved */
-	IONIC_EQE_CODE_DEV_RSVD		= 0,
-};
-
-static inline u32 ionic_eqe_qid(u32 event)
-{
-	return (event & IONIC_EQE_QID_MASK) >> IONIC_EQE_QID_SHIFT;
-}
-
-static inline bool ionic_eqe_color(u32 event)
-{
-	return !!(event & IONIC_EQE_COLOR_BIT);
-}
-
-static inline u8 ionic_eqe_code(u32 event)
-{
-	return (event & IONIC_EQE_CODE_MASK) >> IONIC_EQE_CODE_SHIFT;
-}
-
-static inline u8 ionic_eqe_cls(u32 event)
-{
-	return (event & IONIC_EQE_CLS_MASK) >> IONIC_EQE_CLS_SHIFT;
 }
 
 enum ionic_intr_bits {

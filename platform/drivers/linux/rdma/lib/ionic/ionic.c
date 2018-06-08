@@ -18,12 +18,10 @@ static int ionic_env_fallback(void)
 static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 						 int cmd_fd)
 {
-	struct ionic_dev *dev = to_ionic_dev(ibdev);
 	struct ionic_ctx *ctx;
 	struct ionic_ctx_req req = {};
 	struct ionic_ctx_resp resp = {};
-	uint16_t version, compat;
-	int rc;
+	int rc, version, compat;
 
 	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx,
 					   RDMA_DRIVER_UNKNOWN);
@@ -42,6 +40,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	verbs_set_ops(&ctx->vctx, &fallback_ctx_ops);
 
 	ctx->fallback = resp.fallback != 0;
+	ctx->pg_shift = resp.page_shift;
 
 	if (!ctx->fallback) {
 		version = resp.version;
@@ -85,7 +84,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		ctx->rq_qtype = resp.rq_qtype;
 		ctx->cq_qtype = resp.cq_qtype;
 
-		ctx->dbpage = ionic_map_device(dev->pg_size, cmd_fd,
+		ctx->dbpage = ionic_map_device(1u << ctx->pg_shift, cmd_fd,
 					       resp.dbell_offset);
 		if (!ctx->dbpage) {
 			rc = errno;
@@ -109,13 +108,12 @@ err_ctx:
 
 static void ionic_free_context(struct ibv_context *ibctx)
 {
-	struct ionic_dev *dev = to_ionic_dev(ibctx->device);
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 
 	tbl_destroy(&ctx->qp_tbl);
 	pthread_mutex_destroy(&ctx->mut);
 
-	ionic_unmap(ctx->dbpage, dev->pg_size);
+	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
 
 	verbs_uninit_context(&ctx->vctx);
 	free(ctx);
@@ -128,9 +126,6 @@ static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev
 	dev = calloc(1, sizeof(*dev));
 	if (!dev)
 		return NULL;
-
-	/* XXX hardcode value */
-	dev->pg_size = 0x1000;
 
 	return &dev->vdev;
 }
