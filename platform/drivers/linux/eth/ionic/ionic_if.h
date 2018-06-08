@@ -30,6 +30,7 @@ enum cmd_opcode {
 	CMD_OPCODE_TXQ_INIT			= 5,
 	CMD_OPCODE_RXQ_INIT			= 6,
 	CMD_OPCODE_FEATURES			= 7,
+	CMD_OPCODE_HANG_NOTIFY			= 8,
 
 	CMD_OPCODE_Q_ENABLE			= 9,
 	CMD_OPCODE_Q_DISABLE			= 10,
@@ -792,6 +793,26 @@ struct features_comp {
 	u32 rsvd2;
 	u32 rsvd3:31;
 	u32 color:1;
+};
+
+/**
+ * struct hang_notify_cmd - Hang notify command
+ * @opcode:     opcode = 8
+ */
+struct hang_notify_cmd {
+	u16 opcode;
+	u16 rsvd[31];
+};
+
+/**
+ * struct hang_notify_comp - Hang notify command completion
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ */
+struct hang_notify_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
 };
 
 /**

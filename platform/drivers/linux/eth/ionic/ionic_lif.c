@@ -369,7 +369,14 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 
 static void ionic_tx_timeout(struct net_device *netdev)
 {
-	// TODO implement
+	struct lif *lif = netdev_priv(netdev);
+	struct ionic_dev *idev = &lif->ionic->idev;
+
+	ionic_dev_cmd_hang_notify(idev);
+	ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+
+	// TODO implement reset and re-init queues and so on
+	// TODO to get interface back on its feet
 }
 
 static int ionic_vlan_rx_filter(struct net_device *netdev, bool add,

@@ -31,6 +31,7 @@ union dev_cmd {
 	struct admin_cmd cmd;
 	struct nop_cmd nop;
 	struct reset_cmd reset;
+	struct hang_notify_cmd hang_notify;
 	struct identify_cmd identify;
 	struct lif_init_cmd lif_init;
 	struct adminq_init_cmd adminq_init;
@@ -42,6 +43,7 @@ union dev_cmd_comp {
 	struct admin_comp comp;
 	struct nop_comp nop;
 	struct reset_comp reset;
+	struct hang_notify_comp hang_notify;
 	struct identify_comp identify;
 	struct lif_init_comp lif_init;
 	struct adminq_init_comp adminq_init;
@@ -188,6 +190,8 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct nop_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct reset_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct hang_notify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct hang_notify_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct identify_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct identify_comp) != 16);
 	BUILD_BUG_ON(sizeof(union identity) != 4096);
@@ -337,6 +341,7 @@ u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 void ionic_dev_cmd_reset(struct ionic_dev *idev);
+void ionic_dev_cmd_hang_notify(struct ionic_dev *idev);
 void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,

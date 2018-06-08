@@ -135,6 +135,15 @@ void ionic_dev_cmd_reset(struct ionic_dev *idev)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+void ionic_dev_cmd_hang_notify(struct ionic_dev *idev)
+{
+	union dev_cmd cmd = {
+		.hang_notify.opcode = CMD_OPCODE_HANG_NOTIFY,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr)
 {
 	union dev_cmd cmd = {
