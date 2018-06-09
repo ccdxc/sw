@@ -7,6 +7,12 @@ if [ "$PACKER_BUILDER_TYPE" != "virtualbox-iso" ]; then
   exit 0
 fi
 
+if [ "$SWARM_ENV" != "" ]; then
+  echo "**** building swarm env ****"
+  exit 0
+fi
+
+
 ## Add all the repositories
 sudo yum install -y yum-utils
 sudo yum-config-manager  -y --add-repo https://download.docker.com/linux/centos/docker-ce.repo

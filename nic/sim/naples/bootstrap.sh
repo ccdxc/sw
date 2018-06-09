@@ -67,7 +67,7 @@ function setup_intf2()
         nsenter -t $pid -n ip link set $INTF2 netns 1  >& /dev/null
         if [ $? -eq 0 ]; then
             set -x
-            ovs-vsctl add-port data-net pen-intf2
+            brctl addif br0 $INTF2
             ip link set up dev $INTF2
             set +x
         fi
@@ -112,6 +112,13 @@ exec > $LOGDIR/bootstrap.log
 exec 2>&1
 set -x
 
+#setup the bridge
+brctl addbr br0
+brctl stp br0 off
+brctl addif br0 eth1
+ip link set up dev br0
+ip link set up dev eth1
+echo "$1"
 # setup the uplinks in background
 $(setup_intf1 $1 >& $LOGDIR/bootstrap-intf1.log) &
 $(setup_intf2 $1 >& $LOGDIR/bootstrap-intf2.log) &
