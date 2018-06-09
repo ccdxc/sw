@@ -104,9 +104,11 @@ InterfaceServiceImpl::LifGetQState(ServerContext *context,
                                    GetQStateResponseMsg *resps)
 {
     HAL_TRACE_DEBUG("Rcvd Get QState Request");
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (int i = 0; i < reqs->reqs_size(); i++) {
         hal::LifGetQState(reqs->reqs(i), resps->add_resps());
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -115,10 +117,12 @@ InterfaceServiceImpl::LifSetQState(ServerContext *context,
                                    const SetQStateRequestMsg *reqs,
                                    SetQStateResponseMsg *resps)
 {
-    HAL_TRACE_DEBUG("Rcvd Get QState Request");
+    HAL_TRACE_DEBUG("Rcvd Set QState Request");
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (int i = 0; i < reqs->reqs_size(); i++) {
         hal::LifSetQState(reqs->reqs(i), resps->add_resps());
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
