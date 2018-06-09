@@ -109,7 +109,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 
 	// call the datapath
 	var intfInfo *types.IntfInfo
-	if ep.Status.NodeUUID == na.NodeUUID {
+	if ep.Spec.NodeUUID == na.NodeUUID {
 		// User specified a local ep create on a specific lif
 		lifID, err := na.findIntfID(ep, Local)
 		if err != nil {
@@ -204,7 +204,7 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// call the datapath
-	if ep.Status.NodeUUID == na.NodeUUID {
+	if ep.Spec.NodeUUID == na.NodeUUID {
 		err = na.Datapath.UpdateLocalEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
@@ -256,7 +256,7 @@ func (na *Nagent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// call the datapath
-	if ep.Status.NodeUUID == na.NodeUUID {
+	if ep.Spec.NodeUUID == na.NodeUUID {
 		err = na.Datapath.DeleteLocalEndpoint(ep, nw, ep.Status.EnicID)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
@@ -381,7 +381,7 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 			log.Errorf("could not enumerate lifs. Err: %v", err)
 			return 0, fmt.Errorf("could not enumerate lifs. Err: %v", err)
 		}
-		epLIF, err := na.findAvailableInterface(lifCount, ep.Status.IPv4Address, "lif")
+		epLIF, err := na.findAvailableInterface(lifCount, ep.Spec.IPv4Address, "lif")
 		if err != nil {
 			log.Errorf("could not find an available lif. Err: %v", err)
 			return 0, fmt.Errorf("could not find an available lif. Err: %v", err)
@@ -400,7 +400,7 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 			log.Errorf("could not enumerate uplinks. Err: %v", err)
 			return 0, fmt.Errorf("could not enumerate uplinks. Err: %v", err)
 		}
-		epUplink, err := na.findAvailableInterface(uplinkCount, ep.Status.IPv4Address, "uplink")
+		epUplink, err := na.findAvailableInterface(uplinkCount, ep.Spec.IPv4Address, "uplink")
 		if err != nil {
 			log.Errorf("could not find an available uplink. Err: %v", err)
 			return 0, fmt.Errorf("could not find an available uplink. Err: %v", err)

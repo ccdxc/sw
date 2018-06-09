@@ -20,9 +20,9 @@ import (
 func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
-	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
+	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
-	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
+	ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
 	if err != nil {
 		return nil, fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
 	}
@@ -31,14 +31,6 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		IpAf: halproto.IPAddressFamily_IP_AF_INET,
 		V4OrV6: &halproto.IPAddress_V4Addr{
 			V4Addr: ipv4Touint32(ipaddr),
-		},
-	}
-
-	// convert v6 address
-	v6Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &halproto.IPAddress_V6Addr{
-			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
 		},
 	}
 
@@ -73,8 +65,8 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKey,
-		UsegVlan:           ep.Status.UsegVlan,
-		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		UsegVlan:           ep.Spec.UsegVlan,
+		IpAddress:          []*halproto.IPAddress{&v4Addr},
 		SgKeyHandle:        sgHandles,
 	}
 
@@ -112,7 +104,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 					EnicInfo: &halproto.EnicInfo{
 						L2SegmentKeyHandle: &l2Key,
 						MacAddress:         macaddr,
-						EncapVlanId:        ep.Status.UsegVlan,
+						EncapVlanId:        ep.Spec.UsegVlan,
 					},
 				},
 			},
@@ -186,7 +178,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 // UpdateLocalEndpoint updates the endpoint
 func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
-	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
+	ipaddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
 
 	// convert v4 address
 	v4Addr := halproto.IPAddress{
@@ -200,7 +192,7 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	v6Addr := halproto.IPAddress{
 		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
 		V4OrV6: &halproto.IPAddress_V6Addr{
-			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
+			V6Addr: []byte(net.ParseIP(ep.Spec.IPv6Address)),
 		},
 	}
 
@@ -229,7 +221,7 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKeyHandle, //FIXME
-		UsegVlan:           ep.Status.UsegVlan,
+		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SgKeyHandle:        sgHandles,
 	}
@@ -276,7 +268,7 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 // DeleteLocalEndpoint deletes an endpoint
 func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error {
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
-	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
+	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 
 	l2Key := &halproto.L2SegmentKeyHandle{
@@ -376,9 +368,9 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
-	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
+	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
-	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
+	ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
 
 	if err != nil {
 		return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
@@ -417,7 +409,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKey,
-		UsegVlan:           ep.Status.UsegVlan,
+		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          []*halproto.IPAddress{&v4Addr},
 		SgKeyHandle:        sgHandles,
 	}
@@ -480,7 +472,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 // UpdateRemoteEndpoint updates an existing endpoint
 func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
-	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
+	ipaddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
 
 	// convert v4 address
 	v4Addr := halproto.IPAddress{
@@ -494,7 +486,7 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	v6Addr := halproto.IPAddress{
 		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
 		V4OrV6: &halproto.IPAddress_V6Addr{
-			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
+			V6Addr: []byte(net.ParseIP(ep.Spec.IPv6Address)),
 		},
 	}
 
@@ -523,7 +515,7 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKeyHandle, //FIXME
-		UsegVlan:           ep.Status.UsegVlan,
+		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SgKeyHandle:        sgHandles,
 	}
@@ -570,7 +562,7 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 // DeleteRemoteEndpoint deletes remote endpoint
 func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error {
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
-	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
+	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 
 	l2Key := &halproto.L2SegmentKeyHandle{

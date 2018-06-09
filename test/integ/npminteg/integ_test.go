@@ -226,7 +226,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 				waitCh <- fmt.Errorf("Endpoint name did not match")
 				return
 			}
-			if ep.Status.HomingHostName != hostName {
+			if ep.Spec.HomingHostName != hostName {
 				waitCh <- fmt.Errorf("host name did not match")
 				return
 			}

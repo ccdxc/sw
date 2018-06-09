@@ -54,10 +54,8 @@ func TestEndpointPost(t *testing.T) {
 			NetworkName:   "preCreatedNetwork",
 			InterfaceType: "UPLINK",
 			Interface:     "uplink1",
-		},
-		Status: netproto.EndpointStatus{
-			NodeUUID:    "dummy-node-uuid",
-			IPv4Address: "10.1.1.0/24",
+			NodeUUID:      "dummy-node-uuid",
+			IPv4Address:   "10.1.1.0/24",
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &postData, &resp)
@@ -89,6 +87,8 @@ func TestEndpointUpdate(t *testing.T) {
 		NetworkName:   "preCreatedNetwork",
 		InterfaceType: "UPLINK",
 		Interface:     "uplink1",
+		NodeUUID:      "dummy-node-uuid",
+		IPv4Address:   "10.1.1.0/24",
 	}
 	putData := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -98,10 +98,6 @@ func TestEndpointUpdate(t *testing.T) {
 			Name:      "preCreatedEndpoint",
 		},
 		Spec: updatedEndpointSpec,
-		Status: netproto.EndpointStatus{
-			NodeUUID:    "dummy-node-uuid",
-			IPv4Address: "10.1.1.0/24",
-		},
 	}
 	err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/default/preCreatedEndpoint", &putData, &resp)
 	AssertOk(t, err, "Error updating endpoint to REST Server")
@@ -138,10 +134,8 @@ func TestEndpointDelete(t *testing.T) {
 			NetworkName:   "preCreatedNetwork",
 			InterfaceType: "UPLINK",
 			Interface:     "uplink1",
-		},
-		Status: netproto.EndpointStatus{
-			NodeUUID:    "dummy-node-uuid",
-			IPv4Address: "10.1.1.0/24",
+			NodeUUID:      "dummy-node-uuid",
+			IPv4Address:   "10.1.1.0/24",
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &deleteData, &resp)

@@ -88,10 +88,6 @@ func (d *DummyAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.End
 		TypeMeta:   api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: epinfo.ObjectMeta,
 		Spec:       epinfo.Spec,
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.1.1.1/24",
-			IPv4Gateway: "10.1.1.254",
-		},
 	}
 
 	// container and switch interface names

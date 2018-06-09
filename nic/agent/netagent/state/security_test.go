@@ -79,9 +79,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 			WorkloadUUID:   "testWorkloadUUID",
 			NetworkName:    "default",
 			SecurityGroups: []string{"test-sg"},
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/24",
+			IPv4Address:    "10.0.0.1/24",
 		},
 	}
 

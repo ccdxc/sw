@@ -782,11 +782,9 @@ func createEndpoint(baseURL string) error {
 			NetworkName:   "kg1",
 			InterfaceType: "uplink",
 			Interface:     "uplink1",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.2.1/16",
-			MacAddress:  "00:22:0A:00:02:01",
-			NodeUUID:    "GWUUID",
+			IPv4Address:   "10.0.2.1/16",
+			MacAddress:    "00:22:0A:00:02:01",
+			NodeUUID:      "GWUUID",
 		},
 	}
 
@@ -801,11 +799,9 @@ func createEndpoint(baseURL string) error {
 			NetworkName:   "kg2",
 			InterfaceType: "uplink",
 			Interface:     "uplink2",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.2.1/16",
-			MacAddress:  "00:22:0A:00:02:01",
-			NodeUUID:    "GWUUID",
+			IPv4Address:   "10.0.2.1/16",
+			MacAddress:    "00:22:0A:00:02:01",
+			NodeUUID:      "GWUUID",
 		},
 	}
 
@@ -820,11 +816,9 @@ func createEndpoint(baseURL string) error {
 			NetworkName:   "public",
 			InterfaceType: "uplink",
 			Interface:     "uplink2",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "20.1.1.1/16",
-			MacAddress:  "00:22:14:01:01:01",
-			NodeUUID:    "GWUUID",
+			IPv4Address:   "20.1.1.1/16",
+			MacAddress:    "00:22:14:01:01:01",
+			NodeUUID:      "GWUUID",
 		},
 	}
 

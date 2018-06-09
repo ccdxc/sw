@@ -27,14 +27,14 @@ class AgentEndpointObjectSpec:
         self.WorkloadUUID = ep.GID()
         self.WorkloadName = ep.GID()
         self.NetworkName = ep.segment.GID()
-        return
-
-class AgentEndpointObjectStatus:
-    def __init__(self, ep):
         self.IPv4Address = ep.ipaddrs[0].get() + "/32"
         #self.IPv6Address = ep.ipv6addrs[0].get()
         self.MacAddress = ep.macaddr.get()
         self.NodeUUID = "remote"
+        return
+
+class AgentEndpointObjectStatus:
+    def __init__(self, ep):
         return
 
 
@@ -53,11 +53,9 @@ class AgentEndpointObject(base.AgentObjectBase):
             "workload-uuid": self.spec.WorkloadUUID,\
             "workload-name": self.spec.WorkloadName,\
             "network-name": self.spec.NetworkName,\
-        }
-        ep["status"] = {\
-            "ipv4-address": self.status.IPv4Address,\
-            "mac-address": self.status.MacAddress,\
-            "node-uuid": self.status.NodeUUID,\
+            "ipv4-address": self.spec.IPv4Address,\
+            "mac-address": self.spec.MacAddress,\
+            "node-uuid": self.spec.NodeUUID,\
         }
         return json.dumps(ep)
 

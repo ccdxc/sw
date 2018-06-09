@@ -46,9 +46,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
+			IPv4Address:  "10.0.0.1/16",
 		},
 	}
 
@@ -81,9 +79,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "invalid",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
+			IPv4Address:  "10.0.0.1/16",
 		},
 	}
 	_, _, err = ag.EndpointCreateReq(ep2)
@@ -105,9 +101,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID2",
 			WorkloadUUID: "testWorkloadUUID2",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
+			IPv4Address:  "10.0.0.1/16",
 		},
 	}
 	_, _, err = ag.EndpointCreateReq(&depinfo)
@@ -163,10 +157,8 @@ func TestLocalEndpointUpdate(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    ag.NodeUUID,
+			IPv4Address:  "10.0.0.1/16",
+			NodeUUID:     ag.NodeUUID,
 		},
 	}
 
@@ -215,9 +207,7 @@ func TestEndpointUpdate(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/24",
+			IPv4Address:  "10.0.0.1/24",
 		},
 	}
 
@@ -263,7 +253,7 @@ func TestEndpointUpdate(t *testing.T) {
 
 	// update the remote endpoint
 	epupd.Spec.SecurityGroups = []string{"test-sg"}
-	epupd.Status.NodeUUID = ag.NodeUUID
+	epupd.Spec.NodeUUID = ag.NodeUUID
 	err = ag.UpdateEndpoint(&epupd)
 	AssertOk(t, err, "Error updating endpoint")
 
@@ -323,9 +313,7 @@ func TestEndpointConcurrency(t *testing.T) {
 					EndpointUUID: "testEndpointUUID",
 					WorkloadUUID: "testWorkloadUUID",
 					NetworkName:  "default",
-				},
-				Status: netproto.EndpointStatus{
-					IPv4Address: "10.0.0.1/24",
+					IPv4Address:  "10.0.0.1/24",
 				},
 			}
 
@@ -394,12 +382,9 @@ func TestLocalEndpointPointingToAnyLif(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    ag.NodeUUID,
-		},
-	}
+			IPv4Address:  "10.0.0.1/16",
+			NodeUUID:     ag.NodeUUID,
+		}}
 
 	// create the endpoint
 	_, err = ag.CreateEndpoint(epinfo)
@@ -444,10 +429,8 @@ func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
 			NetworkName:   "default",
 			InterfaceType: "lif",
 			Interface:     "lif1",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    ag.NodeUUID,
+			IPv4Address:   "10.0.0.1/16",
+			NodeUUID:      ag.NodeUUID,
 		},
 	}
 
@@ -492,10 +475,8 @@ func TestRemoteEndpointPointingToAnyUplink(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    "different-uuid-than-agent",
+			IPv4Address:  "10.0.0.1/16",
+			NodeUUID:     "different-uuid-than-agent",
 		},
 	}
 
@@ -542,10 +523,8 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 			NetworkName:   "default",
 			InterfaceType: "uplink",
 			Interface:     "uplink1",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    "some-different-uuid-than-agent",
+			IPv4Address:   "10.0.0.1/16",
+			NodeUUID:      "some-different-uuid-than-agent",
 		},
 	}
 
@@ -611,10 +590,8 @@ func TestRemoteEndpointPointingToLocalTunnel(t *testing.T) {
 			NetworkName:   "default",
 			InterfaceType: "tunnel",
 			Interface:     "public-tunnel",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    "remote",
+			IPv4Address:   "10.0.0.1/16",
+			NodeUUID:      "remote",
 		},
 	}
 
@@ -691,10 +668,8 @@ func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
 			NetworkName:   "default",
 			Interface:     "public-ns/public-tunnel",
 			InterfaceType: "tunnel",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    "remote",
+			IPv4Address:   "10.0.0.1/16",
+			NodeUUID:      "remote",
 		},
 	}
 
@@ -741,9 +716,7 @@ func TestEndpointCreateOnNonExistentNamespace(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
+			IPv4Address:  "10.0.0.1/16",
 		},
 	}
 
@@ -788,9 +761,7 @@ func TestLocalEndpointDatapathCreateFailure(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "BadIPAddress",
+			IPv4Address:  "BadIPAddress",
 		},
 	}
 
@@ -835,10 +806,8 @@ func TestRemoteEndpointDatapathCreateFailure(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "BadIPAddress",
-			NodeUUID:    "remote",
+			IPv4Address:  "BadIPAddress",
+			NodeUUID:     "remote",
 		},
 	}
 
@@ -884,10 +853,8 @@ func TestRemoteEndpointOnNonExistentInterface(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			Interface:    "bad-interface",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    "remote",
+			IPv4Address:  "10.0.0.1/16",
+			NodeUUID:     "remote",
 		},
 	}
 
@@ -933,10 +900,8 @@ func TestNonExistentEndpointUpdate(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			Interface:    "bad-interface",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    ag.NodeUUID,
+			IPv4Address:  "10.0.0.1/16",
+			NodeUUID:     ag.NodeUUID,
 		},
 	}
 
@@ -982,10 +947,8 @@ func TestRemoteEndpointOnNonExistentRemoteTunnel(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			Interface:    "remoteNS/nonExistentRemoteNatPool",
-		},
-		Status: netproto.EndpointStatus{
-			IPv4Address: "10.0.0.1/16",
-			NodeUUID:    "remote",
+			IPv4Address:  "10.0.0.1/16",
+			NodeUUID:     "remote",
 		},
 	}
 

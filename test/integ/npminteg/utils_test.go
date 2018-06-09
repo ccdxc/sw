@@ -76,12 +76,10 @@ func (ag *Dpagent) createEndpointReq(tenant, namespace, net, epname, host string
 			Namespace: namespace,
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: epname,
-			WorkloadName: epname,
-			WorkloadUUID: epname,
-			NetworkName:  net,
-		},
-		Status: netproto.EndpointStatus{
+			EndpointUUID:   epname,
+			WorkloadName:   epname,
+			WorkloadUUID:   epname,
+			NetworkName:    net,
 			HomingHostAddr: host,
 			HomingHostName: host,
 		},
@@ -101,12 +99,10 @@ func (ag *Dpagent) deleteEndpointReq(tenant, net, epname, host string) (*netprot
 			Name:   epname,
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: epname,
-			WorkloadName: epname,
-			WorkloadUUID: epname,
-			NetworkName:  net,
-		},
-		Status: netproto.EndpointStatus{
+			EndpointUUID:   epname,
+			WorkloadName:   epname,
+			WorkloadUUID:   epname,
+			NetworkName:    net,
 			HomingHostAddr: host,
 			HomingHostName: host,
 		},

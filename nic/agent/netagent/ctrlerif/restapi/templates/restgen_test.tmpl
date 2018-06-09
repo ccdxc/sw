@@ -113,8 +113,6 @@ import (
                                     NetworkName:    "preCreatedNetwork",
                                     InterfaceType:  "UPLINK",
                                     Interface:      "uplink1",
-                                },
-                                Status: netproto.{{title $crudObject}}Status{
                                     NodeUUID:   "dummy-node-uuid",
                                     IPv4Address:    "10.1.1.0/24",
                                 },
@@ -683,6 +681,8 @@ import (
                                 			                              NetworkName:  "preCreatedNetwork",
                                                                     InterfaceType:  "UPLINK",
                                                                     Interface:      "uplink1",
+                                                                    NodeUUID:   "dummy-node-uuid",
+                                                                    IPv4Address:    "10.1.1.0/24",
                                 		                            }
                                 {{lower .}}Data := netproto.Endpoint{
                                     TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -692,10 +692,6 @@ import (
                                         Name:   "preCreated{{title $crudObject}}",
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
-                                    Status: netproto.{{title $crudObject}}Status{
-                                        NodeUUID:   "dummy-node-uuid",
-                                        IPv4Address:    "10.1.1.0/24",
-                                    },
                                 }
                                 err := netutils.HTTPPut("http://"+agentRestURL+"/api/endpoints/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                 AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
@@ -1066,8 +1062,6 @@ import (
                                     NetworkName:    "preCreatedNetwork",
                                     InterfaceType:  "UPLINK",
                                     Interface:      "uplink1",
-                                },
-                                Status: netproto.{{title $crudObject}}Status{
                                     NodeUUID:   "dummy-node-uuid",
                                     IPv4Address:    "10.1.1.0/24",
                                 },

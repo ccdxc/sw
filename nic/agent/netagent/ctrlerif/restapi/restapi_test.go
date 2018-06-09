@@ -92,10 +92,8 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "preCreatedNetwork",
-		},
-		Status: netproto.EndpointStatus{
-			NodeUUID:    "dummy-node-uuid",
-			IPv4Address: "10.1.1.0/24",
+			NodeUUID:     "dummy-node-uuid",
+			IPv4Address:  "10.1.1.0/24",
 		},
 	}
 	_, err = nagent.CreateEndpoint(&ep)

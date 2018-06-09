@@ -193,12 +193,10 @@ func TestEndpointRPC(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testContainerUUID",
-			WorkloadName: "testContainerName",
-			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
+			EndpointUUID:   "testEndpointUUID",
+			WorkloadUUID:   "testContainerUUID",
+			WorkloadName:   "testContainerName",
+			NetworkName:    "default",
 			HomingHostAddr: "192.168.1.1",
 			HomingHostName: "testHost",
 		},
@@ -207,7 +205,7 @@ func TestEndpointRPC(t *testing.T) {
 	// make create endpoint call
 	eps, err := endpointRPRClient.CreateEndpoint(context.Background(), &epinfo)
 	AssertOk(t, err, "Error creating endpoint")
-	Assert(t, (eps.Status.IPv4Address == "10.1.1.1/24"), "Endpoint address was incorrect", eps)
+	Assert(t, (eps.Spec.IPv4Address == "10.1.1.1/24"), "Endpoint address was incorrect", eps)
 
 	// verify we can get the sg
 	ometa := api.ObjectMeta{Name: "testEndpoint", Tenant: "default"}
@@ -237,12 +235,10 @@ func TestEndpointRPC(t *testing.T) {
 			Tenant:    "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID2",
-			WorkloadUUID: "testContainerUUID2",
-			WorkloadName: "testContainerName2",
-			NetworkName:  "default",
-		},
-		Status: netproto.EndpointStatus{
+			EndpointUUID:   "testEndpointUUID2",
+			WorkloadUUID:   "testContainerUUID2",
+			WorkloadName:   "testContainerName2",
+			NetworkName:    "default",
 			HomingHostAddr: "192.168.1.1",
 			HomingHostName: "testHost",
 		},

@@ -220,14 +220,14 @@ func (c *Server) AddPod(r *http.Request) (interface{}, error) {
 			Tenant:    "default", // FIXME: where should we get the tenant from?
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: args.ContainerID,
-			WorkloadUUID: args.ContainerID,
-			WorkloadName: string(podArgs.K8sPodName),
-			NetworkName:  "default", // FIXME: get the network name from somewhere
-		},
-		Status: netproto.EndpointStatus{
-			HomingHostAddr: "", // FIXME: get my host name/addr
+			EndpointUUID:   args.ContainerID,
+			WorkloadUUID:   args.ContainerID,
+			WorkloadName:   string(podArgs.K8sPodName),
+			NetworkName:    "default", // FIXME: get the network name from somewhere
+			HomingHostAddr: "",        // FIXME: get my host name/addr
 			HomingHostName: "",
+			IPv4Address:    "10.1.1.1/24",
+			IPv4Gateway:    "10.1.1.254",
 		},
 	}
 
@@ -248,7 +248,7 @@ func (c *Server) AddPod(r *http.Request) (interface{}, error) {
 	}
 
 	// create ipv4 address and netmask
-	ipAddr, ipNet, _ := net.ParseCIDR(ep.Status.IPv4Address)
+	ipAddr, ipNet, _ := net.ParseCIDR(ep.Spec.IPv4Address)
 	ipv4AddrMask := net.IPNet{
 		IP:   ipAddr,
 		Mask: ipNet.Mask,
@@ -268,7 +268,7 @@ func (c *Server) AddPod(r *http.Request) (interface{}, error) {
 				IP:   ipAddr,
 				Mask: ipNet.Mask,
 			},
-			Gateway: net.ParseIP(ep.Status.IPv4Gateway),
+			Gateway: net.ParseIP(ep.Spec.IPv4Gateway),
 		},
 	}
 
@@ -296,13 +296,11 @@ func (c *Server) DelPod(r *http.Request) (interface{}, error) {
 			Tenant:    "default", // FIXME: get tenant name?
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: args.ContainerID,
-			WorkloadUUID: args.ContainerID,
-			WorkloadName: string(podArgs.K8sPodName),
-			NetworkName:  "default", // FIXME: get the network name from somewhere
-		},
-		Status: netproto.EndpointStatus{
-			HomingHostAddr: "", // FIXME: get my host name/addr
+			EndpointUUID:   args.ContainerID,
+			WorkloadUUID:   args.ContainerID,
+			WorkloadName:   string(podArgs.K8sPodName),
+			NetworkName:    "default", // FIXME: get the network name from somewhere
+			HomingHostAddr: "",        // FIXME: get my host name/addr
 			HomingHostName: "",
 		},
 	}
