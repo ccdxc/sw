@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
-
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
-	upgrade "github.com/pensando/sw/nic/upgrade_manager/example/go/nic/upgrade_manager/proto"
+	upgrade "github.com/pensando/sw/nic/upgrade_manager/example/go-examples/nic/upgrade_manager/proto"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 type service struct {
@@ -45,7 +44,7 @@ func main() {
 	upgrade.UpgRespWatch(c1, s1)
 	err = c1.Dial()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Could not connect to upgrade manager. Err: %v", err)
 	}
 	u := upgrade.NewUpgReq(c1)
 	u.SetKey(10)
