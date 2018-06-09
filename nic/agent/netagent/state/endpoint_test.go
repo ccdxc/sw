@@ -443,7 +443,7 @@ func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
 			//WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			InterfaceType: "lif",
-			Interface:     "default-lif-0",
+			Interface:     "lif1",
 		},
 		Status: netproto.EndpointStatus{
 			IPv4Address: "10.0.0.1/16",
@@ -541,7 +541,7 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 			//WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			InterfaceType: "uplink",
-			Interface:     "default-uplink-0",
+			Interface:     "uplink1",
 		},
 		Status: netproto.EndpointStatus{
 			IPv4Address: "10.0.0.1/16",

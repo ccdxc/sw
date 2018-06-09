@@ -298,26 +298,29 @@ func (na *Nagent) ListEndpoint() []*netproto.Endpoint {
 
 func (na *Nagent) findAvailableInterface(count uint64, IPAddress, intfType string) (string, error) {
 	// convert the ip address to int
+	var interfaceOffset int
 	ip, _, err := net.ParseCIDR(IPAddress)
 	if err != nil {
 		log.Errorf("Error parsing the IP Address. Err: %v", err)
 		return "", err
 	}
+	if len(IPAddress) == 16 {
+		intIP := binary.BigEndian.Uint32(ip[12:16])
+		interfaceOffset = int(uint64(intIP) % count)
+	} else {
+		intIP := binary.BigEndian.Uint32(ip)
+		interfaceOffset = int(uint64(intIP) % count)
+	}
+
+	// All lifs and uplink IDs start with 1
+	if interfaceOffset == 0 {
+		interfaceOffset++
+	}
 	switch strings.ToLower(intfType) {
 	case "uplink":
-		if len(IPAddress) == 16 {
-			intIP := binary.BigEndian.Uint32(ip[12:16])
-			return fmt.Sprintf("default-uplink-%d", uint64(intIP)%count), nil
-		}
-		intIP := binary.BigEndian.Uint32(ip)
-		return fmt.Sprintf("default-uplink-%d", uint64(intIP)%count), nil
+		return fmt.Sprintf("uplink%d", interfaceOffset), nil
 	case "lif":
-		if len(IPAddress) == 16 {
-			intIP := binary.BigEndian.Uint32(ip[12:16])
-			return fmt.Sprintf("default-lif-%d", uint64(intIP)%count), nil
-		}
-		intIP := binary.BigEndian.Uint32(ip)
-		return fmt.Sprintf("default-lif-%d", uint64(intIP)%count), nil
+		return fmt.Sprintf("lif%d", interfaceOffset), nil
 	default:
 		log.Errorf("Invalid interface type.")
 		return "", fmt.Errorf("invalid interface type specified. %v", intfType)

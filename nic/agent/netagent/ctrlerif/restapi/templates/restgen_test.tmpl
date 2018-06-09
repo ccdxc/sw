@@ -112,7 +112,7 @@ import (
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
                                     InterfaceType:  "UPLINK",
-                                    Interface:      "default-uplink-0",
+                                    Interface:      "uplink1",
                                 },
                                 Status: netproto.{{title $crudObject}}Status{
                                     NodeUUID:   "dummy-node-uuid",
@@ -320,7 +320,7 @@ import (
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
                                                        IPPrefix: "10.1.1.0/24",
-                                                       Interface: "default-uplink-1",
+                                                       Interface: "uplink2",
                                                        GatewayIP: "10.1.1.1",
                                                    },
                                                 }
@@ -587,7 +587,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                                                       Interface: "default-uplink-2",
+                                                                       Interface: "uplink2",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
                                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
@@ -682,7 +682,7 @@ import (
                                 			                              WorkloadUUID: "updatedWorkloadUUID",
                                 			                              NetworkName:  "preCreatedNetwork",
                                                                     InterfaceType:  "UPLINK",
-                                                                    Interface:      "default-uplink-0",
+                                                                    Interface:      "uplink1",
                                 		                            }
                                 {{lower .}}Data := netproto.Endpoint{
                                     TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -1065,7 +1065,7 @@ import (
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
                                     InterfaceType:  "UPLINK",
-                                    Interface:      "default-uplink-0",
+                                    Interface:      "uplink1",
                                 },
                                 Status: netproto.{{title $crudObject}}Status{
                                     NodeUUID:   "dummy-node-uuid",

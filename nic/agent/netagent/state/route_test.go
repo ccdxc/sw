@@ -24,7 +24,7 @@ func TestRouteCreateDelete(t *testing.T) {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.1.1.0/24",
-			Interface: "default-uplink-1",
+			Interface: "uplink2",
 			GatewayIP: "10.1.1.1",
 		},
 	}
@@ -72,7 +72,7 @@ func TestRouteUpdate(t *testing.T) {
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.1.1.0/24",
 			GatewayIP: "10.1.1.1",
-			Interface: "default-uplink-1",
+			Interface: "uplink2",
 		},
 	}
 
@@ -84,7 +84,7 @@ func TestRouteUpdate(t *testing.T) {
 	Assert(t, route.Name == "testRoute", "Route names did not match", route)
 
 	rtSpec := netproto.RouteSpec{
-		Interface: "default-uplink-3",
+		Interface: "uplink3",
 	}
 
 	rt.Spec = rtSpec
@@ -102,7 +102,7 @@ func TestRouteUpdate(t *testing.T) {
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.1.1.0/24",
 			GatewayIP: "10.1.1.100",
-			Interface: "default-uplink-1",
+			Interface: "uplink2",
 		},
 	}
 	err = ag.UpdateRoute(&updRt)
@@ -126,7 +126,7 @@ func TestRouteCreateOnNonExistingNamespace(t *testing.T) {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.1.1.0/24",
-			Interface: "default-uplink-1",
+			Interface: "uplink2",
 			GatewayIP: "10.1.1.1",
 		},
 	}
@@ -151,7 +151,7 @@ func TestRouteCreateDatapathFailure(t *testing.T) {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.1.1.0/24",
-			Interface: "default-uplink-1",
+			Interface: "uplink2",
 			GatewayIP: "BadGwIP",
 		},
 	}
@@ -176,7 +176,7 @@ func TestRouteUpdateOnNonExistentRoute(t *testing.T) {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.1.1.0/24",
-			Interface: "default-uplink-1",
+			Interface: "uplink2",
 			GatewayIP: "10.1.1.1",
 		},
 	}

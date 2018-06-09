@@ -106,7 +106,7 @@ func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetR
 			Spec: &halproto.InterfaceSpec{
 				KeyOrHandle: &halproto.InterfaceKeyHandle{
 					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-						InterfaceId: 3,
+						InterfaceId: 1,
 					},
 				},
 				Type: halproto.IfType_IF_TYPE_UPLINK,
@@ -117,7 +117,7 @@ func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetR
 			Spec: &halproto.InterfaceSpec{
 				KeyOrHandle: &halproto.InterfaceKeyHandle{
 					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-						InterfaceId: 4,
+						InterfaceId: 2,
 					},
 				},
 				Type: halproto.IfType_IF_TYPE_UPLINK,

@@ -45,7 +45,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"default-uplink-1\"},\"status\":{\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"uplink2\"},\"status\":{\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"url": {
 					"raw": "{{node1}}/api/endpoints/",
@@ -157,7 +157,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"lif\",\"interface\":\"default-lif-1\"},\"status\":{\"useg-vlan\":100,\"ipv4-address\":\"10.30.10.11/32\",\"mac-address\":\"00:22:0A:00:03:11\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"lif\",\"interface\":\"lif2\"},\"status\":{\"useg-vlan\":100,\"ipv4-address\":\"10.30.10.11/32\",\"mac-address\":\"00:22:0A:00:03:11\"}}"
 				},
 				"url": {
 					"raw": "{{node1}}/api/endpoints/",

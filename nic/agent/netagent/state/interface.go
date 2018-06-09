@@ -60,7 +60,12 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 				return err
 			}
 			// lifIndex finds an available lif. Uses % operator to ensure uniform distribution
-			lif, ok = na.findIntfByName(fmt.Sprintf("default-lif-%d", intf.Status.InterfaceID%lifCount))
+			intfOffset := intf.Status.InterfaceID % lifCount
+			// lif ids start from 1
+			if intfOffset == 0 {
+				intfOffset++
+			}
+			lif, ok = na.findIntfByName(fmt.Sprintf("lif%d", intfOffset))
 		}
 
 		if !ok {
@@ -190,7 +195,8 @@ func (na *Nagent) GetHwInterfaces() error {
 	if err != nil {
 		return err
 	}
-	for i, lif := range lifs.Response {
+	for _, lif := range lifs.Response {
+		id := lif.Spec.KeyOrHandle.GetLifId()
 		l := &netproto.Interface{
 			TypeMeta: api.TypeMeta{
 				Kind: "Interface",
@@ -198,7 +204,7 @@ func (na *Nagent) GetHwInterfaces() error {
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
-				Name:      fmt.Sprintf("default-lif-%d", i),
+				Name:      fmt.Sprintf("lif%d", id),
 			},
 			Spec: netproto.InterfaceSpec{
 				Type: "LIF",
@@ -213,7 +219,8 @@ func (na *Nagent) GetHwInterfaces() error {
 		na.Unlock()
 	}
 
-	for i, uplink := range uplinks.Response {
+	for _, uplink := range uplinks.Response {
+		id := uplink.Spec.KeyOrHandle.GetInterfaceId()
 		u := &netproto.Interface{
 			TypeMeta: api.TypeMeta{
 				Kind: "Interface",
@@ -221,7 +228,7 @@ func (na *Nagent) GetHwInterfaces() error {
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
-				Name:      fmt.Sprintf("default-uplink-%d", i),
+				Name:      fmt.Sprintf("uplink%d", id),
 			},
 			Spec: netproto.InterfaceSpec{
 				Type: "UPLINK",

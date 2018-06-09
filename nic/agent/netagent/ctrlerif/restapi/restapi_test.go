@@ -214,7 +214,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "192.168.1.0/24",
 			GatewayIP: "192.168.1.1",
-			Interface: "default-uplink-1",
+			Interface: "uplink-2",
 		},
 	}
 

@@ -33,10 +33,10 @@ function create_networks {
 function create_endpoints {
   EP_URL="$NAPLES_AGENT_IP:9007/api/endpoints/"
 
-  curl -d'{"Kind":"Endpoint","Meta":{"Name":"kg1-router","Tenant":"default","Namespace":"kg1"},"spec":{"NetworkName":"kg1","Interface":"default-uplink-0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
+  curl -d'{"Kind":"Endpoint","Meta":{"Name":"kg1-router","Tenant":"default","Namespace":"kg1"},"spec":{"NetworkName":"kg1","Interface":"uplink-0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
   validate_get "kg1" $EP_URL
 
-  curl -d'{"kind":"Endpoint","Meta":{"Name":"public-router","Tenant":"default","Namespace":"public"},"spec":{"NetworkName":"public","Interface":"default-uplink-1"},"status":{"IPv4Address":"20.1.1.1/24","MacAddress":"00:33:33:33:33:33","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
+  curl -d'{"kind":"Endpoint","Meta":{"Name":"public-router","Tenant":"default","Namespace":"public"},"spec":{"NetworkName":"public","Interface":"uplink-2"},"status":{"IPv4Address":"20.1.1.1/24","MacAddress":"00:33:33:33:33:33","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
   validate_get "public" $EP_URL
 
   echo "All endpoints created"
@@ -45,10 +45,10 @@ function create_endpoints {
 function create_routes {
   ROUTE_URL="$NAPLES_AGENT_IP:9007/api/routes/"
 
-  curl -d'{"Kind":"Route","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"ip-prefix":"10.1.1.0/24", "interface":"default-uplink-0","gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
+  curl -d'{"Kind":"Route","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"ip-prefix":"10.1.1.0/24", "interface":"uplink-0","gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
   validate_get "kg1" $ROUTE_URL
 
-  curl -d'{"Kind":"Route","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"ip-prefix":"20.1.1.0/24", "interface":"default-uplink-1","gateway-ip":"20.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
+  curl -d'{"Kind":"Route","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"ip-prefix":"20.1.1.0/24", "interface":"uplink-2","gateway-ip":"20.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
   validate_get "public" $ROUTE_URL
 
   echo "All Routes created"
