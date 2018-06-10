@@ -19,7 +19,11 @@ extern "C" hal_ret_t proxy_plugin_init(hal_cfg_t *hal_cfg) {
     fte::register_feature(FTE_FEATURE_TCP_PROXY_TRIGGER_CONNECTION, tcp_exec_trigger_connection);
     fte::register_feature(FTE_FEATURE_QUIESCE, quiesce_exec);
     fte::register_feature(FTE_FEATURE_TLS_PROXY, tls_exec);
-    fte::register_feature(FTE_FEATURE_IPSEC, ipsec_exec);
+    fte::feature_info_t ipsec_info = {
+        state_size: sizeof(ipsec_info_t),
+    };
+
+    fte::register_feature(FTE_FEATURE_IPSEC, ipsec_exec, ipsec_info);
     fte::register_feature(FTE_FEATURE_P4PT, p4pt_exec);
     return HAL_RET_OK;
 }

@@ -626,17 +626,18 @@ ctx_t::update_flow_table()
             rflow_attrs.lkp_inst = 1;
         }
 
-        if (dl2seg_ == NULL) {
-            HAL_TRACE_DEBUG("fte: dest l2seg not known");
-            return HAL_RET_L2SEG_NOT_FOUND;
+        if (rflow_attrs.vrf_hwid == 0) {
+            if (dl2seg_ == NULL) {
+                HAL_TRACE_DEBUG("fte: dest l2seg not known");
+                return HAL_RET_L2SEG_NOT_FOUND;
+            }
+
+		    args.l2seg = dl2seg_;
+            pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+		    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
+		    rflow_attrs.vrf_hwid = args.hwid;
+            // rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(dl2seg_);
         }
-
-		args.l2seg = dl2seg_;
-        pd_func_args.pd_l2seg_get_flow_lkupid = &args;
-		hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
-		rflow_attrs.vrf_hwid = args.hwid;
-        // rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(dl2seg_);
-
         // TODO(goli) fix tnnl w_idx lookup
         if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
             rflow_attrs.tnnl_rw_idx = 0;

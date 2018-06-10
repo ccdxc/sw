@@ -9,6 +9,19 @@
 namespace hal {
 namespace proxy {
 
+#define IPSEC_PLUGIN_RFLOW_ACTION_DO_NOTHING 1
+#define IPSEC_PLUGIN_RFLOW_ACTION_ENCRYPT    2
+#define IPSEC_PLUGIN_RFLOW_ACTION_DECRYPT    3
+
+// Will update to global define later.
+#define IPSEC_ARM_LIF 1003
+#define IPSEC_SVC_LIF 1004
+
+typedef struct ipsec_info_s {
+    uint32_t vrf;
+    uint32_t action;
+} ipsec_info_t;
+
 extern "C" hal_ret_t proxy_plugin_init(hal_cfg_t *hal_cfg);
 
 fte::pipeline_action_t tcp_exec(fte::ctx_t &ctx);
