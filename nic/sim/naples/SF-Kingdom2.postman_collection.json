@@ -115,7 +115,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ipv4-subnet\": \"20.0.0.0/8\", \"ipv4-gateway\":\"20.1.1.1\", \"vlan-id\":200}}"
+					"raw": "{\"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ipv4-subnet\": \"20.0.0.0/8\", \"ipv4-gateway\":\"20.1.1.2\", \"vlan-id\":200}}"
 				},
 				"description": ""
 			},
@@ -229,7 +229,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/8\", \"interface\":\"uplink2\",\"gateway-ip\":\"20.1.1.1\"}}"
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"20.0.0.0/8\", \"interface\":\"uplink2\",\"gateway-ip\":\"20.1.1.2\"}}"
 				},
 				"description": ""
 			},
@@ -249,25 +249,6 @@
 				"body": {
 					"mode": "raw",
 					"raw": "{\"kind\":\"NatPool\",\"meta\":{\"name\":\"pool-1\",\"tenant\":\"default\",\"namespace\":\"kg2\"},\"spec\":{\"ip-range\":\"10.100.0.0-10.100.255.255\"}}"
-				},
-				"description": ""
-			},
-			"response": []
-		},
-		{
-			"name": "natbinding/client",
-			"request": {
-				"url": "{{node2}}/api/nat/bindings/",
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"NatBinding\",\"meta\":{\"name\":\"client\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"nat-pool\":\"kg2/pool-1\", \"ip-address\":\"10.0.2.1\"}}"
 				},
 				"description": ""
 			},
