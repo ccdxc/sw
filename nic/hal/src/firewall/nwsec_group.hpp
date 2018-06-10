@@ -522,6 +522,7 @@ nwsec_rule_init (nwsec_rule_t *rule)
     }
 
     rule->ht_ctxt.reset();
+    // Slab free will be called when the ref count drops to zero
     ref_init(&rule->ref_count, [] (const ref_t * ref) {
         nwsec_rule_t * rule = container_of(ref, nwsec_rule_t, ref_count);
         HAL_TRACE_DEBUG("Calling rule free");

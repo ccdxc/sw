@@ -619,12 +619,8 @@ ipsec_cfg_rule_action_spec_extract (const ipsec::IpsecSAAction& spec,
 // Rule routines
 //-----------------------------------------------------------------------------
 
-static inline ipsec_cfg_rule_t *
-ipsec_cfg_rule_alloc (void)
-{
-    return ((ipsec_cfg_rule_t *)g_hal_state->ipsec_cfg_rule_slab()->alloc());
-}
-
+// Slab delete must not be called directly. It will be called from the acl ref
+// library when the ref_count drops to zero
 void
 ipsec_cfg_rule_free (void *rule)
 {
@@ -644,6 +640,27 @@ ipsec_cfg_rule_uninit (ipsec_cfg_rule_t *rule)
     return;
 }
 
+static inline void
+ipsec_cfg_rule_uninit_free (ipsec_cfg_rule_t *rule)
+{
+    if (rule) {
+        ipsec_cfg_rule_uninit(rule);
+        ipsec_cfg_rule_free(rule);
+    }
+}
+
+static inline ipsec_cfg_rule_t *
+ipsec_cfg_rule_alloc (void)
+{
+    ipsec_cfg_rule_t *rule;
+    rule = (ipsec_cfg_rule_t *)g_hal_state->ipsec_cfg_rule_slab()->alloc();
+    // Slab free will be called when the ref count drops to zero
+    ref_init(&rule->ref_count, [] (const acl::ref_t * ref_count) {
+        ipsec_cfg_rule_uninit_free(RULE_MATCH_USER_DATA(ref_count, ipsec_cfg_rule_t, ref_count));
+    });
+    return rule;
+}
+
 static inline ipsec_cfg_rule_t *
 ipsec_cfg_rule_alloc_init (void)
 {
@@ -656,14 +673,6 @@ ipsec_cfg_rule_alloc_init (void)
     return rule;
 }
 
-static inline void
-ipsec_cfg_rule_uninit_free (ipsec_cfg_rule_t *rule)
-{
-    if (rule) {
-        ipsec_cfg_rule_uninit(rule);
-        ipsec_cfg_rule_free(rule);
-    }
-}
 
 static inline void
 ipsec_cfg_rule_db_add (dllist_ctxt_t *head, ipsec_cfg_rule_t *rule)

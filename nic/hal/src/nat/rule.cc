@@ -73,12 +73,8 @@ nat_cfg_rule_action_spec_build (nat_cfg_rule_action_t *action,
 // Rule routines
 //-----------------------------------------------------------------------------
 
-static inline nat_cfg_rule_t *
-nat_cfg_rule_alloc (void)
-{
-    return ((nat_cfg_rule_t *)g_hal_state->nat_cfg_rule_slab()->alloc());
-}
-
+// Slab delete must not be called directly. It will be called from the acl ref
+// library when the ref_count drops to zero
 void
 nat_cfg_rule_free (void *rule)
 {
@@ -98,6 +94,25 @@ nat_cfg_rule_uninit (nat_cfg_rule_t *rule)
     return;
 }
 
+static inline void
+nat_cfg_rule_uninit_free (nat_cfg_rule_t *rule)
+{
+    nat_cfg_rule_uninit(rule);
+    nat_cfg_rule_free(rule);
+}
+
+static inline nat_cfg_rule_t *
+nat_cfg_rule_alloc (void)
+{
+    nat_cfg_rule_t *rule;
+    rule = (nat_cfg_rule_t *) g_hal_state->nat_cfg_rule_slab()->alloc();
+    // Slab free will be called when the ref count drops to zero
+    ref_init(&rule->ref_count, [] (const acl::ref_t * ref_count) {
+        nat_cfg_rule_uninit_free(RULE_MATCH_USER_DATA(ref_count, nat_cfg_rule_t, ref_count));
+    });
+    return rule;
+}
+
 static inline nat_cfg_rule_t *
 nat_cfg_rule_alloc_init (void)
 {
@@ -108,13 +123,6 @@ nat_cfg_rule_alloc_init (void)
 
     nat_cfg_rule_init(rule);
     return rule;
-}
-
-static inline void
-nat_cfg_rule_uninit_free (nat_cfg_rule_t *rule)
-{
-    nat_cfg_rule_uninit(rule);
-    nat_cfg_rule_free(rule);
 }
 
 static inline void
@@ -134,7 +142,6 @@ nat_cfg_rule_cleanup (nat_cfg_rule_t *rule)
 {
     rule_match_cleanup(&rule->match);
     nat_cfg_rule_db_del(rule);
-    nat_cfg_rule_uninit_free(rule);
 }
 
 void
@@ -146,6 +153,9 @@ nat_cfg_rule_list_cleanup (dllist_ctxt_t *head)
     dllist_for_each_safe(curr, next, head) {
         rule = dllist_entry(curr, nat_cfg_rule_t, list_ctxt);
         nat_cfg_rule_cleanup(rule);
+        // Decrement ref count for the rule. When ref count goes to zero
+        // the acl ref library will free up the entry from the slab
+        ref_dec(&rule->ref_count);
     }
 }
 

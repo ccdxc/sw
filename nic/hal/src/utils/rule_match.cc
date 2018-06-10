@@ -374,7 +374,6 @@ rule_lib_alloc()
     ipv4_rule_t *rule = (ipv4_rule_t *)g_hal_state->ipv4_rule_slab()->alloc();
     rule->data.category_mask = 0x01;
     ref_init(&rule->ref_count, [] (const ref_t * ref_count) {
-
         ipv4_rule_t *rule  = (ipv4_rule_t *)acl_rule_from_ref(ref_count);
         ref_dec((acl::ref_t *)rule->data.userdata);
         g_hal_state->ipv4_rule_slab()->free((void *)acl_rule_from_ref(ref_count));
