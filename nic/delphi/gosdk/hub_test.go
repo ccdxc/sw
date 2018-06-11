@@ -1,4 +1,4 @@
-package hub
+package gosdk
 
 import (
 	"bufio"

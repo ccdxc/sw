@@ -1,0 +1,28 @@
+syntax = "proto3";
+package compilertest;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+// Simplest possible message
+message MessageA {
+    delphi.ObjectMeta  Meta  = 1;
+    uint32             Key = 2;
+    string             StringValue = 3;
+}
+
+// Message with key being a message
+message MessageKey {
+    uint32 Value = 1;
+}
+message MessageB {
+    delphi.ObjectMeta  Meta  = 1;
+    MessageKey         Key = 2;
+    string             StringValue = 3;
+}
+
+// Message with an array field
+message MessageC {
+    delphi.ObjectMeta  Meta  = 1;
+    uint32             Key = 2;
+    repeated string    StringValue = 3;
+}

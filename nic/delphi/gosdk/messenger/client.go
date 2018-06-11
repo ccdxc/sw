@@ -70,6 +70,27 @@ func (c *client) IsConnected() bool {
 	return true
 }
 
+func (c *client) sendMessage(msgType delphi_messanger.MessageType, objlist []*delphi_messanger.ObjectData) error {
+	c.msgid++
+	message := delphi_messanger.Message{
+		Type:      msgType,
+		MessageId: c.msgid,
+		Objects:   objlist,
+	}
+
+	e := make([]byte, 0)
+	buffer := proto.NewBuffer(e)
+
+	buffer.EncodeMessage(&message)
+
+	_, err := c.connection.Write(buffer.Bytes())
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
 func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.MountData) error {
 
 	mountRequest := delphi_messanger.MountReqMsg{
@@ -93,46 +114,12 @@ func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.Mou
 		},
 	}
 
-	c.msgid++
-	message := delphi_messanger.Message{
-		Type:      delphi_messanger.MessageType_MountReq,
-		MessageId: c.msgid,
-		Objects:   objects,
-	}
-
-	e := make([]byte, 0)
-	buffer := proto.NewBuffer(e)
-
-	buffer.EncodeMessage(&message)
-
-	_, err = c.connection.Write(buffer.Bytes())
-	if err != nil {
-		panic(err)
-	}
-
-	return nil
+	return c.sendMessage(delphi_messanger.MessageType_MountReq, objects)
 }
 
 func (c *client) SendChangeReq(objlist []*delphi_messanger.ObjectData) error {
 
-	c.msgid++
-	message := delphi_messanger.Message{
-		Type:      delphi_messanger.MessageType_ChangeReq,
-		MessageId: c.msgid,
-		Objects:   objlist,
-	}
-
-	e := make([]byte, 0)
-	buffer := proto.NewBuffer(e)
-
-	buffer.EncodeMessage(&message)
-
-	_, err := c.connection.Write(buffer.Bytes())
-	if err != nil {
-		panic(err)
-	}
-
-	return nil
+	return c.sendMessage(delphi_messanger.MessageType_ChangeReq, objlist)
 }
 
 func (c *client) Close() {
@@ -152,10 +139,13 @@ func (c *client) HandleMessage(message *delphi_messanger.Message) error {
 		c.svcid = mountResp.GetServiceID()
 		c.handler.HandleMountResp(uint16(c.svcid),
 			message.GetStatus(), mountResp.GetObjects())
+
 	case delphi_messanger.MessageType_Notify:
 		c.handler.HandleNotify(message.GetObjects())
+
 	case delphi_messanger.MessageType_StatusResp:
 		c.handler.HandleStatusResp()
+
 	default:
 		panic(message.GetType())
 	}

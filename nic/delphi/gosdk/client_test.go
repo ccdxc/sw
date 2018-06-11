@@ -1,17 +1,15 @@
-package clientTest
+package gosdk
 
 import (
 	"log"
 	"testing"
 
-	"github.com/pensando/sw/nic/delphi/gosdk"
-	"github.com/pensando/sw/nic/delphi/gosdk/hub"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
 type service struct {
 	mountDone chan struct{}
-	gotNotify chan *InterfaceSpec
+	gotNotify chan struct{}
 	name      string
 }
 
@@ -29,31 +27,29 @@ func (s *service) Name() string {
 
 func (s *service) OnInterfaceSpecCreate(obj *InterfaceSpec) {
 	log.Printf("%s Created! %s\n", s.Name(), obj.GetMacAddress())
-	s.gotNotify <- obj
+	s.gotNotify <- struct{}{}
 }
 
 func (s *service) OnInterfaceSpecDelete(obj *InterfaceSpec) {
 	log.Printf("%s Updated! %s\n", s.Name(), obj.GetMacAddress())
-	s.gotNotify <- obj
+	s.gotNotify <- struct{}{}
 }
 
 func (s *service) OnInterfaceSpecUpdate(obj *InterfaceSpec) {
 	log.Printf("%s Deleted!\n", s.Name())
-	s.gotNotify <- obj
+	s.gotNotify <- struct{}{}
 }
 
-func TestA(t *testing.T) {
-	h := hub.NewHub()
-
-	log.Printf("Starting hub")
+func TestClientBasic(t *testing.T) {
+	h := NewHub()
 	h.Start()
 
 	s1 := &service{
 		mountDone: make(chan struct{}),
-		gotNotify: make(chan *InterfaceSpec),
+		gotNotify: make(chan struct{}),
 		name:      "test1",
 	}
-	c1, err := gosdk.NewClient(s1)
+	c1, err := NewClient(s1)
 	if err != nil {
 		t.Errorf("NewClient(): %s", err)
 	}
@@ -67,11 +63,11 @@ func TestA(t *testing.T) {
 
 	s2 := &service{
 		mountDone: make(chan struct{}),
-		gotNotify: make(chan *InterfaceSpec),
+		gotNotify: make(chan struct{}),
 		name:      "test2",
 	}
-	c2, err := gosdk.NewClient(s2)
-	InterfaceSpecMount(c2, delphi.MountMode_ReadMode)
+	c2, err := NewClient(s2)
+	c2.MountKind("Interface", delphi.MountMode_ReadMode)
 	err = c2.Dial()
 	if err != nil {
 		t.Errorf("Dial(): %s", err)
@@ -86,28 +82,19 @@ func TestA(t *testing.T) {
 	spec := NewInterfaceSpec(c1)
 	spec.GetKey().SetIfidx(1)
 	spec.SetMacAddress("TestMacAddress")
-	msg := spec.GetMessage()
 	log.Printf("### SPEC: %+v", spec)
-	log.Printf("### MESSAGE: %s", msg.String())
 
+	//c1.SetObject(spec)
 	log.Printf("### Client 1 Set Object done")
 
 	for i := 0; i < 2; i++ {
 		select {
 		case _ = <-s1.gotNotify:
 			log.Printf("### Client 1 Got Notify")
-		case obj := <-s2.gotNotify:
+		case _ = <-s2.gotNotify:
 			log.Printf("### Client 2 Got Notify")
-			if obj.GetKey().GetIfidx() != 1 {
-				t.Fail()
-			}
 		}
 	}
-
-	log.Printf("Client1 Data:\n")
-	c1.DumpSubtrees()
-	log.Printf("Client2 Data:\n")
-	c2.DumpSubtrees()
 
 	spec.Delete()
 
@@ -124,28 +111,5 @@ func TestA(t *testing.T) {
 	log.Printf("Client2 Data:\n")
 	c2.DumpSubtrees()
 
-	log.Printf("Stopping hub")
 	h.Stop()
-}
-
-func TestB(t *testing.T) {
-	msg := &InterfaceSpec_{
-		Meta: nil,
-		Key: &IntfIndex_{
-			Ifidx: 1,
-		},
-		MacAddress: "test",
-	}
-
-	if msg.GetKey().GetIfidx() != 1 {
-		t.Fail()
-	}
-
-	if msg.GetMeta() != nil {
-		t.Fail()
-	}
-
-	if msg.GetMacAddress() != "test" {
-		t.Fail()
-	}
 }

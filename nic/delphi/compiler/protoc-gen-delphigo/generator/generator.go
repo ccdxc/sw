@@ -572,6 +572,7 @@ type Generator struct {
 	init             []string                   // Lines to emit in the init function.
 	indent           string
 	writeOutput      bool
+	delphi           *delphi
 }
 
 // New creates a new generator and allocates the request and response protobufs.
@@ -580,6 +581,7 @@ func New() *Generator {
 	g.Buffer = new(bytes.Buffer)
 	g.Request = new(plugin.CodeGeneratorRequest)
 	g.Response = new(plugin.CodeGeneratorResponse)
+	g.delphi = newDelphi()
 	return g
 }
 
@@ -2871,7 +2873,77 @@ const (
 )
 
 // Delphi changes start here
+//
+// Delpi objects are wrappers around the actual message buffer objects that
+// control access to the message buffer object and propagate changes without
+// the need of the user to explicitly call SetObject().
+//
+// The original protobuf objects names are suffixed with and underscore(_)
+//
+// Things that work at the moment:
+// 1. Messages with fields of scalar values
+// 2. Messages with fields of message value
+// 3. Messages with fields of arrays to scalar values (i.e. repeated)
+//
+// Things that don't work:
+// - Everthing else, including Messages with fields of arrays to messages
+//   values, and referring messages to different files.
+//
 
+// delphi is stored in the Generator struct.
+type delphi struct {
+	arrayWrappers map[string]*delphiArrayWrapper
+	messages      map[string]*delphiMessage
+}
+
+// delphiMessage represents a protobuf message
+//   name is the altered name of the message. ie. InterfaceSpec_
+//   wrapper is a pointer to the Delphi wrapper object
+//   fields is the list of the message's fields
+type delphiMessage struct {
+	name    string
+	wrapper *delphiWrapper
+	fields  []*delphiField
+}
+
+// delphiField represents a field in a protobuf wrapper
+//   name is the name of the field
+//   isWrapper is true if the *type* of the field is another delphi wrapper
+//   isArray is true if the field is repeated, i.e. array
+//   typeName is the type the field should be declare as in the delphi wrapper
+//     struct
+type delphiField struct {
+	name      string
+	isWrapper bool
+	isArray   bool
+	typeName  string
+}
+
+// delphiArrayWrapper represents a wrapper of a repeate type. e.g. StringArray
+//   wrapperName is the name of the wrapper. e.g. StringArray
+//   typeName is the name of the underlying type. e.g string
+type delphiArrayWrapper struct {
+	wrapperName string
+	typeName    string
+}
+
+// delphiWrapper represents a wrapper around a protobuf message.
+//   name is the name of the wrapper. e.g. InterfaceSpec
+//   message is the name of the undeflying message. e.g. InterfaceSpec_
+type delphiWrapper struct {
+	name    string
+	message string
+}
+
+func newDelphi() *delphi {
+	return &delphi{
+		arrayWrappers: make(map[string]*delphiArrayWrapper),
+		messages:      make(map[string]*delphiMessage),
+	}
+}
+
+// trim is used to get the wrapper name from the message name.
+// e.g. InterfaceSpec_ -> InterfaceSpec
 func trim(s string) string {
 	if s[len(s)-1] == '_' {
 		return s[:len(s)-1]
@@ -2880,12 +2952,26 @@ func trim(s string) string {
 	}
 }
 
+// upperFirst is used to convert scalar types to uppercase first when
+// constructing wrapper around them.
+// e.g. an array of string would be:
+// stringArray -> StringArray
+func upperFirst(s string) string {
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
+}
+
+// lowerFirst is mainly used to convert fields to private fields in the wrapper
+// and anywhere else similar converstaion is needed.
 func lowerFirst(s string) string {
 	r := []rune(s)
 	r[0] = unicode.ToLower(r[0])
 	return string(r)
 }
 
+// isGenFile returns true if the file we are looking at is one of the files we
+// need to generate code for
 func (g *Generator) isGenFile(name string) bool {
 	for _, genFile := range g.Request.FileToGenerate {
 		if name == genFile {
@@ -2895,9 +2981,13 @@ func (g *Generator) isGenFile(name string) bool {
 	return false
 }
 
+// isMessage returns true if a field's type is a message
 func (g *Generator) isMessage(field *descriptor.FieldDescriptorProto) bool {
 	if field.TypeName != nil {
 		fqn := strings.Split(*field.TypeName, ".")
+		// Special case. The delphi.Meta should return false and be treated
+		// as a scalar value as far as the wrapper is concerned. Ideally
+		// the delphi.Meta should be removed from a being a field.
 		if fqn[1] == "delphi" {
 			return false
 		}
@@ -2905,51 +2995,58 @@ func (g *Generator) isMessage(field *descriptor.FieldDescriptorProto) bool {
 	return *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE
 }
 
-func (g *Generator) isDelphiObj(msg *Descriptor) bool {
-	for _, field := range msg.Field {
-		if *field.Name == "Key" {
+// idDelphiObj returns true if the message is a delphi obje. I.e. it has "Key"
+// and "Meta" fields
+//
+func isDelphiObj(msg *delphiMessage) bool {
+	for _, field := range msg.fields {
+		if field.name == "Key" {
 			return true
 		}
 	}
 	return false
 }
 
-func (g *Generator) fieldPackageName(msg *Descriptor, field *descriptor.FieldDescriptorProto) string {
-	fqn := strings.Split(*field.TypeName, ".")
-	if fqn[1] == g.packageName {
-		return ""
-	}
-	return fqn[1] + "."
-}
-
-func (g *Generator) fieldWrapperName(msg *Descriptor, field *descriptor.FieldDescriptorProto) string {
-	fqn := strings.Split(*field.TypeName, ".")
-	return trim(fqn[len(fqn)-1])
-}
-
-// DelphiRename Append an underscore to the message names
+// DelphiRename runs early on and rename messages by appending an underscore to
+// their name
 func (g *Generator) DelphiRename() {
 	for _, file := range g.Request.ProtoFile {
 		if g.isGenFile(*file.Name) {
 			for _, desc := range file.MessageType {
 				nestedTypes := make(map[string]struct{})
 				for _, nested := range desc.NestedType {
-					nestedTypes["."+*file.Package+"."+*desc.Name+"."+*nested.Name] = struct{}{}
+					nestedTypes["."+*file.Package+"."+*desc.Name+"."+
+						*nested.Name] = struct{}{}
 				}
 				oldDescName := *desc.Name
 				newName := *desc.Name + "_"
 				desc.Name = &newName
+				// the type name is usually something like this:
+				// .FILENAME.MESSAGENAME if they are a message
+				// for nested fields the name is:
+				// .FILENAME.MESSAGENAME.NESTEDTYPENAME
 				for _, field := range desc.Field {
 					if field.Type.String() == "TYPE_MESSAGE" {
 						_, ok := nestedTypes[*field.TypeName]
 						if ok == false {
+							// Here we just rename:
+							// .FILENAME.MESSAGENAME
+							// to
+							// .FILENAME.MESSAGENAME_
+							// ignoring delphi.Meta
 							if !strings.HasPrefix(*field.TypeName, ".delphi") {
 								newTypeName := *field.TypeName + "_"
 								field.TypeName = &newTypeName
 							}
 						} else {
+							// Here we rename:
+							// .FILENAME.MESSAGENAME.NESTEDTYPENAME
+							// to
+							// .FILENAME.MESSAGENAME_.NESTEDTYPENAME
+							// ignoring delphi.Meta
 							if !strings.HasPrefix(*field.TypeName, ".delphi") {
-								newTypeName := strings.Replace(*field.TypeName, oldDescName, *desc.Name, -1)
+								newTypeName := strings.Replace(*field.TypeName,
+									oldDescName, *desc.Name, -1)
 								field.TypeName = &newTypeName
 							}
 						}
@@ -2960,71 +3057,130 @@ func (g *Generator) DelphiRename() {
 	}
 }
 
+// delphiAddArrayWrapper keeps track of what types we need to generate an
+// array wrapper for
+func (g *Generator) delphiAddArayWrapper(wrapperName, typeName string) {
+	g.delphi.arrayWrappers[wrapperName+"Array"] = &delphiArrayWrapper{
+		wrapperName: wrapperName,
+		typeName:    typeName,
+	}
+}
+
 func (g *Generator) delphiGenerateImports() {
 	g.P(`import gosdk "github.com/pensando/sw/nic/delphi/gosdk"`)
 }
 
+// delphiGenerate first goes through the messages and extract information and
+// fills in the g.delphi structure. Then it generates the wrappers.
 func (g *Generator) delphiGenerate(file *FileDescriptor) {
 	if !g.isGenFile(*file.Name) {
 		return
 	}
 
+	g.delphi.messages = make(map[string]*delphiMessage)
+	for _, desc := range file.desc {
+		msg := new(delphiMessage)
+		msg.name = *desc.Name
+		msg.wrapper = &delphiWrapper{
+			name:    trim(*desc.Name),
+			message: *desc.Name,
+		}
+
+		for _, field := range desc.Field {
+			f := new(delphiField)
+			f.name = *field.Name
+			var typeName string
+			if g.isMessage(field) {
+				f.isWrapper = true
+				typeName, _ = g.GoType(desc, field)
+				if isRepeated(field) {
+					panic("Not supported yet!")
+				}
+				typeName = trim(typeName[1:])
+			} else {
+				if isRepeated(field) {
+					f.isWrapper = true
+					f.isArray = true
+					arrWrp := new(delphiArrayWrapper)
+					typeName, _ = g.GoType(desc, field)
+					typeName = typeName[2:]
+					arrWrp.wrapperName = upperFirst(typeName) + "Array"
+					arrWrp.typeName = typeName
+					typeName = arrWrp.wrapperName
+					g.delphi.arrayWrappers[arrWrp.wrapperName] = arrWrp
+				} else {
+					f.isWrapper = false
+					typeName, _ = g.GoType(desc, field)
+				}
+			}
+			f.typeName = typeName
+
+			msg.fields = append(msg.fields, f)
+		}
+
+		g.delphi.messages[msg.name] = msg
+	}
+
 	g.delphiGenerateInterfaceDecl()
 
-	for _, desc := range file.desc {
-		g.delphiGenerateWrapper(desc)
+	for _, msg := range g.delphi.messages {
+		g.delphiGenerateMessage(msg)
+	}
+
+	for name := range g.delphi.arrayWrappers {
+		g.delphiGenerateArrayWrapper(name)
 	}
 }
 
+// delphiWrapper is an interface that is implemented by all the wrappers and
+// is used to propagate change notification to the root wrapper
 func (g *Generator) delphiGenerateInterfaceDecl() {
 	g.P("type delphiWrapper interface {")
 	g.P("  bubbleSave()")
 	g.P("}\n")
 }
 
-func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
-	wrapperName := trim(*msg.Name)
+// this is the main function that generates all the wrappers
+// (minus the array wrappers)
+// TODO: FIXME: Break this down to smaller pieces
+func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 
 	// struct
-	g.P("type " + wrapperName + " struct {")
+	g.P("type " + msg.wrapper.name + " struct {")
 	g.In()
 	g.P("sdkClient  gosdk.Client")
 	g.P("parent delphiWrapper")
-	for _, field := range msg.Field {
-		typename, _ := g.GoType(msg, field)
-		fieldname := *field.Name
-
-		if field.OneofIndex != nil {
-			panic("OneOf not supported yet!")
+	for _, field := range msg.fields {
+		if field.name == "Meta" { // special case
+			g.P(lowerFirst(field.name) + " " + field.typeName)
+		} else if field.isWrapper {
+			g.P(lowerFirst(field.name) + " *" + field.typeName)
+		} else {
+			g.P(lowerFirst(field.name) + " " + field.typeName)
 		}
-		if g.isMessage(field) {
-			desc := g.ObjectNamed(field.GetTypeName())
-			if d, ok := desc.(*Descriptor); ok && d.GetOptions().GetMapEntry() {
-				panic("Maps not supported yet!")
-			}
-		}
-		if isRepeated(field) {
-			//panic("Arrays not supported yet!")
-		}
-		g.P(lowerFirst(fieldname) + " " + trim(typename))
 	}
 	g.Out()
 	g.P("}\n")
 
 	// Getters & Setters
-	for _, field := range msg.Field {
-		typename, _ := g.GoType(msg, field)
-		fieldname := *field.Name
-		wrappername := trim(typename)
-		g.P("func (o *" + wrapperName + ")Get" + fieldname + "() " + wrappername + "{")
+	for _, field := range msg.fields {
+		var typeName string
+		if field.isWrapper {
+			typeName = "*" + field.typeName
+		} else {
+			typeName = field.typeName
+		}
+		g.P("func (o *" + msg.wrapper.name + ")Get" + field.name + "() " +
+			typeName + "{")
 		g.In()
-		g.P("return o." + lowerFirst(fieldname))
+		g.P("return o." + lowerFirst(field.name))
 		g.Out()
 		g.P("}\n")
-		if !g.isMessage(field) {
-			g.P("func (o *" + wrapperName + ")Set" + fieldname + "(val " + wrappername + ") {")
+		if !field.isWrapper {
+			g.P("func (o *" + msg.wrapper.name + ")Set" + field.name + "(val " +
+				typeName + ") {")
 			g.In()
-			g.P("o." + lowerFirst(fieldname) + " = val")
+			g.P("o." + lowerFirst(field.name) + " = val")
 			g.P("o.bubbleSave()")
 			g.Out()
 			g.P("}\n")
@@ -3032,7 +3188,7 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 	}
 
 	// bubbleSave
-	g.P("func (o *" + wrapperName + ") bubbleSave() {")
+	g.P("func (o *" + msg.wrapper.name + ") bubbleSave() {")
 	g.P("  if o.parent != nil {")
 	g.P("    o.parent.bubbleSave()")
 	g.P("  } else {")
@@ -3041,62 +3197,62 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 	g.P("}\n")
 
 	// save
-	g.P("func (o *" + wrapperName + ") save() {")
-	if g.isDelphiObj(msg) {
+	g.P("func (o *" + msg.wrapper.name + ") save() {")
+	if isDelphiObj(msg) {
 		g.P("  o.sdkClient.SetObject(o)")
 	} else {
-		g.P("  panic(\"Not a delphi object!!\")")
+		g.P("  panic(\"Not a delphi object\")")
 	}
 	g.P("}\n")
 
 	// Delete
-	if g.isDelphiObj(msg) {
-		g.P("func (o *" + wrapperName + ") Delete() {")
+	if isDelphiObj(msg) {
+		g.P("func (o *" + msg.wrapper.name + ") Delete() {")
 		g.In()
 		g.P("o.sdkClient.DeleteObject(o) ")
 		g.Out()
 		g.P("}\n")
 	}
 
-	// childNew<NAME>
-	g.P("func childNew" + wrapperName + "(parent delphiWrapper, sdkClient gosdk.Client) *" + wrapperName + "{")
-	g.P("  w := New" + wrapperName + "(sdkClient)")
-	g.P("  w.parent = parent")
-	g.P("  return w")
-	g.P("}\n")
-
 	// New<NAME>
-	g.P("func New" + wrapperName + "(sdkClient gosdk.Client) *" + wrapperName + " {")
+	g.P("func New" + msg.wrapper.name + "(sdkClient gosdk.Client) *" +
+		msg.wrapper.name + " {")
 	g.In()
-	g.P("w := &" + wrapperName + "{}")
+	g.P("w := &" + msg.wrapper.name + "{}")
 	g.P("w.sdkClient = sdkClient")
-	for _, field := range msg.Field {
-		fieldname := *field.Name
-		if g.isMessage(field) {
-			g.P("w." + lowerFirst(fieldname) + " = " + g.fieldPackageName(msg, field) + "childNew" + g.fieldWrapperName(msg, field) + "(w, sdkClient)")
-		}
-		if fieldname == "Meta" {
+	for _, field := range msg.fields {
+		if field.name == "Meta" { // special case
 			g.P("w.meta = &delphi.ObjectMeta{")
-			g.P("  Kind: \"" + wrapperName + "\",")
+			g.P("  Kind: \"" + msg.wrapper.name + "\",")
 			g.P("}")
+		} else if field.isWrapper {
+			g.P("w." + lowerFirst(field.name) + " = " +
+				"childNew" + field.typeName + "(w, sdkClient)")
 		}
 	}
 	g.P("return w")
 	g.Out()
 	g.P("}\n")
 
+	// childNew<NAME>
+	g.P("func childNew" + msg.wrapper.name +
+		"(parent delphiWrapper, sdkClient gosdk.Client) *" +
+		msg.wrapper.name + "{")
+	g.P("  w := New" + msg.wrapper.name + "(sdkClient)")
+	g.P("  w.parent = parent")
+	g.P("  return w")
+	g.P("}\n")
+
 	// GetProtoMsg
-	g.P("func (o *" + wrapperName + ") GetProtoMsg() *" + *msg.Name + "{")
+	g.P("func (o *" + msg.wrapper.name + ") GetProtoMsg() *" + msg.name + "{")
 	g.In()
-	g.P("return &" + *msg.Name + "{")
+	g.P("return &" + msg.name + "{")
 	g.In()
-	for _, field := range msg.Field {
-		fieldname := *field.Name
-		if g.isMessage(field) {
-			// g.P(lowerFirst(fieldname) + ": " + g.fieldPackageName(msg, field) + "New" + g.fieldWrapperName(msg, field) + "(sdkClient),")
-			g.P(fieldname + ": o." + lowerFirst(fieldname) + ".GetProtoMsg(),")
+	for _, field := range msg.fields {
+		if field.isWrapper {
+			g.P(field.name + ": o." + lowerFirst(field.name) + ".GetProtoMsg(),")
 		} else {
-			g.P(fieldname + ": o." + lowerFirst(fieldname) + ",")
+			g.P(field.name + ": o." + lowerFirst(field.name) + ",")
 		}
 	}
 	g.Out()
@@ -3105,102 +3261,159 @@ func (g *Generator) delphiGenerateWrapper(msg *Descriptor) {
 	g.P("}\n")
 
 	// GetMessage
-	g.P("func (o *" + wrapperName + ") GetMessage() proto.Message {")
-	g.In()
+	g.P("func (o *" + msg.wrapper.name + ") GetMessage() proto.Message {")
 	g.P("return o.GetProtoMsg()")
-	g.Out()
 	g.P("}\n")
 
-	// TriggerEvent
-	if g.isDelphiObj(msg) {
-
+	// // TriggerEvent
+	if isDelphiObj(msg) {
 		// GetKeyString
-		for _, field := range msg.Field {
-			fieldname := *field.Name
-			if fieldname == "Key" {
-				g.P("func (obj *" + wrapperName + ") GetKeyString() string {")
-				if g.isMessage(field) {
-					g.P("return obj." + lowerFirst(fieldname) + ".GetProtoMsg()" + ".String()")
+		for _, field := range msg.fields {
+			if field.name == "Key" {
+				g.P("func (obj *" + msg.wrapper.name +
+					") GetKeyString() string {")
+				if field.isWrapper {
+					g.P("return obj." + lowerFirst(field.name) +
+						".GetProtoMsg()" + ".String()")
 				} else {
-					// FIXME: This has to be per type and not just %v
-					g.P("// FIXME: This has to be per type and not just %v")
-					g.P("return fmt.Sprintf(\"%v\", (obj." + lowerFirst(fieldname) + "))")
+					g.P("return fmt.Sprintf(\"%v\", (obj." +
+						lowerFirst(field.name) + "))")
 				}
 				g.P("}\n")
 			}
 		}
 
-		g.P("func (obj *" + wrapperName + ") TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {")
+		// TriggerEvent
+		g.P("func (obj *" + msg.wrapper.name +
+			") TriggerEvent(oldObj gosdk.BaseObject, " +
+			"op delphi.ObjectOperation, rl []gosdk.BaseReactor) {")
 		g.P("  for _, r := range rl {")
-		g.P("    rctr, ok := r.(" + wrapperName + "Reactor)")
+		g.P("    rctr, ok := r.(" + msg.wrapper.name + "Reactor)")
 		g.P("    if ok == false {")
 		g.P("      panic(\"Not a Reactor\")")
 		g.P("    }")
 		g.P("    if op == delphi.ObjectOperation_SetOp {")
 		g.P("      if oldObj == nil {")
-		g.P("        rctr.On" + wrapperName + "Create(obj)")
+		g.P("        rctr.On" + msg.wrapper.name + "Create(obj)")
 		g.P("      } else {")
-		g.P("        rctr.On" + wrapperName + "Update(obj)")
+		g.P("        rctr.On" + msg.wrapper.name + "Update(obj)")
 		g.P("      }")
 		g.P("    } else {")
-		g.P("      rctr.On" + wrapperName + "Delete(obj)")
+		g.P("      rctr.On" + msg.wrapper.name + "Delete(obj)")
 		g.P("    }")
 		g.P("  }")
 		g.P("}\n")
 
 		// Reactor Interface Definition
-		g.P("type " + wrapperName + "Reactor interface {")
-		g.P("  On" + wrapperName + "Create(obj *" + wrapperName + ")")
-		g.P("  On" + wrapperName + "Update(obj *" + wrapperName + ")")
-		g.P("  On" + wrapperName + "Delete(obj *" + wrapperName + ")")
+		g.P("type " + msg.wrapper.name + "Reactor interface {")
+		g.P("  On" + msg.wrapper.name + "Create(obj *" +
+			msg.wrapper.name + ")")
+		g.P("  On" + msg.wrapper.name + "Update(obj *" +
+			msg.wrapper.name + ")")
+		g.P("  On" + msg.wrapper.name + "Delete(obj *" +
+			msg.wrapper.name + ")")
 		g.P("}\n")
 
 		// GetPath
-		g.P("func (obj *" + wrapperName + ") GetPath() string {")
-		g.P("  return \"" + wrapperName + "\" + \"|\" + obj.GetKeyString()")
+		g.P("func (obj *" + msg.wrapper.name + ") GetPath() string {")
+		g.P("  return \"" + msg.wrapper.name +
+			"\" + \"|\" + obj.GetKeyString()")
 		g.P("}\n")
 	}
 
 	// new<NAME>FromMessage
-	g.P("func " + "new" + wrapperName + "FromMessage (msg *" + *msg.Name + ") *" + wrapperName + " {")
-	g.P("  return &" + wrapperName + "{")
-	for _, field := range msg.Field {
-		if g.isMessage(field) {
-			g.P(lowerFirst(*field.Name) + ": new" + g.fieldWrapperName(msg, field) + "FromMessage(msg." + *field.Name + "),")
+	g.P("func " + "new" + msg.wrapper.name + "FromMessage (msg *" +
+		msg.name + ") *" + msg.wrapper.name + " {")
+	g.P("  return &" + msg.wrapper.name + "{")
+	for _, field := range msg.fields {
+		if field.isWrapper {
+			g.P(lowerFirst(field.name) + ": new" + field.typeName +
+				"FromMessage(msg." + field.name + "),")
 		} else {
-			g.P(lowerFirst(*field.Name) + ": msg." + *field.Name + ",")
+			g.P(lowerFirst(field.name) + ": msg." + field.name + ",")
 		}
 	}
 	g.P("  }")
 	g.P("}\n")
 
 	// Factory Definition
-	if g.isDelphiObj(msg) {
-		g.P("func " + lowerFirst(wrapperName) + "Factory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {")
-		g.P("  var msg " + *msg.Name)
+	if isDelphiObj(msg) {
+		g.P("func " + lowerFirst(msg.wrapper.name) +
+			"Factory(sdkClient gosdk.Client, data []byte) " +
+			"(gosdk.BaseObject, error) {")
+		g.P("  var msg " + msg.name)
 		g.P("  err := proto.Unmarshal(data, &msg)")
 		g.P("  if err != nil {")
 		g.P("    return nil, err")
 		g.P("  }")
-		g.P("  w := new" + wrapperName + "FromMessage(&msg)")
+		g.P("  w := new" + msg.wrapper.name + "FromMessage(&msg)")
 		g.P("  w.sdkClient = sdkClient")
 		g.P("  return w, nil")
 		g.P("}\n")
 
-		g.init = append(g.init, "gosdk.RegisterFactory(\""+wrapperName+"\", "+lowerFirst(wrapperName)+"Factory)")
+		g.init = append(g.init, "gosdk.RegisterFactory(\""+
+			msg.wrapper.name+"\", "+lowerFirst(msg.wrapper.name)+"Factory)")
 	}
 
 	//<NAME>Mount
-	if g.isDelphiObj(msg) {
-		g.P("func " + wrapperName + "Mount(client gosdk.Client, mode delphi.MountMode) {")
-		g.P("  client.MountKind(\"" + wrapperName + "\", mode)")
+	if isDelphiObj(msg) {
+		g.P("func " + msg.wrapper.name +
+			"Mount(client gosdk.Client, mode delphi.MountMode) {")
+		g.P("  client.MountKind(\"" + msg.wrapper.name + "\", mode)")
 		g.P("}\n")
 	}
 
 	//<NAME>Watch
-	if g.isDelphiObj(msg) {
-		g.P("func " + wrapperName + "Watch(client gosdk.Client, reactor " + wrapperName + "Reactor) {")
-		g.P("  client.WatchKind(\"" + wrapperName + "\", reactor)")
+	if isDelphiObj(msg) {
+		g.P("func " + msg.wrapper.name + "Watch(client gosdk.Client, reactor " +
+			msg.wrapper.name + "Reactor) {")
+		g.P("  client.WatchKind(\"" + msg.wrapper.name + "\", reactor)")
 		g.P("}\n")
 	}
+}
+
+func (g *Generator) delphiGenerateArrayWrapper(name string) {
+	typeName := g.delphi.arrayWrappers[name].typeName
+
+	// struct
+	g.P("type " + name + " struct {")
+	g.P("parent delphiWrapper")
+	g.P("  values []" + typeName)
+	g.P("}\n")
+
+	// Append
+	g.P("func (arr *" + name + ") Append(value " + typeName + ") {")
+	g.P(" arr.values = append(arr.values, value)")
+	g.P(" arr.parent.bubbleSave()")
+	g.P("}\n")
+
+	// Get
+	g.P("func (arr *" + name + ") Get(pos int) " + typeName + " {")
+	g.P("  return arr.values[pos]")
+	g.P("}\n")
+
+	// new<NAME>ArrayFromMessage
+	g.P("func new" + name +
+		"FromMessage (msg []" + typeName + ") *" + name + " {")
+	g.P("  arr := new(" + name + ")")
+	g.P("  arr.values = make([]" + typeName + ", len(msg))")
+	g.P("  copy(arr.values, msg)")
+	g.P("  return arr")
+	g.P("}\n")
+
+	// childNew<NAME>Array
+	g.P("func childNew" + name + " (parent delphiWrapper, " +
+		"sdkClient gosdk.Client) *" + name + " {")
+	g.P("  arr := new(" + name + ")")
+	g.P("  arr.values = make([]" + typeName + ", 0)")
+	g.P("  arr.parent = parent")
+	g.P("  return arr")
+	g.P("}\n")
+
+	//GetProtoMsg
+	g.P("func (arr *" + name + ") GetProtoMsg() []" + typeName + "{")
+	g.P("  v := make([]" + typeName + ", len(arr.values))")
+	g.P("  copy(v, arr.values)")
+	g.P("  return v")
+	g.P("}\n")
 }
