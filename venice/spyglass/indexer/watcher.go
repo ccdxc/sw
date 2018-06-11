@@ -249,7 +249,10 @@ func (idr *Indexer) createWatchers() error {
 // Start watch handlers for api-server objects
 func (idr *Indexer) startWatchers() {
 
+	idr.Add(1)
 	go func() {
+
+		defer idr.Done()
 
 		// The following code snipped performs Select on a slice of channels
 		// Initialize the SelectCase slice, with one channel per Kind and
@@ -285,9 +288,14 @@ func (idr *Indexer) startWatchers() {
 
 			// Handle the events updates from object watchers
 			if !ok {
-				// If any of the channel is closed, restart the watcher
-				idr.stopWatchers()
-				go idr.Start()
+				// If the indexer is stopped or is in the process of being
+				// stopped, this is an expected condition and no recovery is
+				// needed. In all other cases, it is a watcher error that
+				// needs to be re-established.
+				if idr.GetRunningStatus() == true {
+					idr.stopWatchers()
+					go idr.Start()
+				}
 				return
 			}
 
@@ -460,6 +468,9 @@ func (idr *Indexer) startWriter(id int) {
 
 // Stop all the watchers
 func (idr *Indexer) stopWatchers() {
+
+	idr.Lock()
+	defer idr.Unlock()
 
 	for key, watcher := range idr.watchers {
 		if watcher != nil {

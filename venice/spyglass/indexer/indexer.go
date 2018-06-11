@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	apiservice "github.com/pensando/sw/api/generated/apiclient"
@@ -82,6 +83,10 @@ type Indexer struct {
 
 	// Total count of objects indexed
 	count uint64
+
+	// Running status of the indexer
+	// Used by Set/GetRunningStatus() functions
+	runningStatus uint32
 }
 
 // WatchHandler is handler func for watch events on API-server objects
@@ -166,6 +171,7 @@ func (idr *Indexer) Start() error {
 	}
 
 	// start the watchers
+	idr.SetRunningStatus(true)
 	idr.startWatchers()
 
 	// start the Elastic Writer Pool
@@ -183,6 +189,11 @@ func (idr *Indexer) Start() error {
 // Stop stops all the watchers for API-server objects
 func (idr *Indexer) Stop() {
 
+	if idr.GetRunningStatus() == false {
+		return
+	}
+
+	idr.SetRunningStatus(false)
 	idr.stopWatchers()
 	idr.stopWriters()
 	idr.Wait()
@@ -285,6 +296,23 @@ func (idr *Indexer) Delete(index, docType, ID string) error {
 	}
 
 	return nil
+}
+
+// SetRunningStatus updates the running status
+func (idr *Indexer) SetRunningStatus(status bool) {
+	if status {
+		atomic.StoreUint32(&idr.runningStatus, 1)
+	} else {
+		atomic.StoreUint32(&idr.runningStatus, 0)
+	}
+}
+
+// GetRunningStatus returns the current running status
+func (idr *Indexer) GetRunningStatus() bool {
+	if atomic.LoadUint32(&idr.runningStatus) == 1 {
+		return true
+	}
+	return false
 }
 
 // Initialize the searchDB with indices
