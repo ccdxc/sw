@@ -171,6 +171,7 @@ helper-containers:
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.2 .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.2 .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.2 .
+	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.1 .
 
 # running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
 container-compile:
