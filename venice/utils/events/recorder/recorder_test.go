@@ -4,6 +4,7 @@ package recorder
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver"
 	"github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
@@ -22,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/policygen"
 )
 
 const (
@@ -48,26 +51,27 @@ var (
 )
 
 // createEventsProxy helper function that creates events proxy RPC server and client
-func createEventsProxy(t *testing.T, eventsStorePath string) (*epgrpc.RPCServer, *rpckit.RPCClient) {
+func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.RPCServer, *rpckit.RPCClient, *writers.MockWriter) {
 	// create events dispatcher
 	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 
 	// create mock writer
-	mockWriter := writers.NewMockWriter("mock", mockBufferLen, logger)
+	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock-%s", t.Name()), mockBufferLen, logger)
 	writerEventCh, offsetTracker, err := evtsDispatcher.RegisterWriter(mockWriter)
 	AssertOk(t, err, "failed to register mock writer")
 	mockWriter.Start(writerEventCh, offsetTracker)
 
+	evtsDispatcher.ProcessFailedEvents()
 	// create grpc server
-	rpcServer, err := epgrpc.NewRPCServer(globals.EvtsProxy, testServerURL, evtsDispatcher, logger)
+	rpcServer, err := epgrpc.NewRPCServer(globals.EvtsProxy, proxyURL, evtsDispatcher, logger)
 	AssertOk(t, err, "failed to create rpc server")
 
 	// create grpc client
 	rpcClient, err := rpckit.NewRPCClient(globals.EvtsProxy, rpcServer.GetListenURL())
 	AssertOk(t, err, "failed to create rpc client")
 
-	return rpcServer, rpcClient
+	return rpcServer, rpcClient, mockWriter
 }
 
 // TestEventsRecorder tests the events recorder (record event)
@@ -76,25 +80,27 @@ func TestEventsRecorder(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath)
 
 	// run events proxy server
-	rpcServer, rpcClient := createEventsProxy(t, eventsStorePath)
+	rpcServer, rpcClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
 	defer rpcServer.Stop()
 	defer rpcClient.ClientConn.Close()
+
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
 
 	// create events proxy client
 	proxyClient := evtsproxyproto.NewEventsProxyAPIClient(rpcClient.ClientConn)
 	Assert(t, proxyClient != nil, "failed to created events proxy client")
 
 	// create recorder
-	recorder, err := NewRecorder(
+	evtsRecorder, err := NewRecorder(
 		&monitoring.EventSource{NodeName: "test-node", Component: "test-component"},
-		testEventTypes, rpcServer.GetListenURL())
+		testEventTypes, rpcServer.GetListenURL(), recorderEventsDir)
 	AssertOk(t, err, "failed to create events recorder")
 
-	err = recorder.Event(TestNICDisconnected, "INFO", "test event - 1", nil)
-	AssertOk(t, err, "failed to send event to the proxy")
-
-	err = recorder.Event(TestNICConnected, "INFO", "test event - 2", nil)
-	AssertOk(t, err, "failed to send event to the proxy")
+	evtsRecorder.Event(TestNICDisconnected, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+	evtsRecorder.Event(TestNICConnected, monitoring.SeverityLevel_INFO, "test event - 2", nil)
 
 	// send events using multiple workers and check if things are still intact
 	wg := new(sync.WaitGroup)
@@ -106,12 +112,26 @@ func TestEventsRecorder(t *testing.T) {
 	for i := 0; i < workers; i++ {
 		go func(threadID int, recorder events.Recorder) {
 			for j := 0; j < each; j++ {
+				// record events w/o reference object
 				message := fmt.Sprintf("thread: %v; event: %v", j, threadID)
-				recorder.Event(TestNICDisconnected, "CRITICAL", message, nil)
-				recorder.Event(TestNICConnected, "INFO", message, nil)
+				evtsRecorder.Event(TestNICDisconnected, monitoring.SeverityLevel_CRITICAL, message, nil)
+				evtsRecorder.Event(TestNICConnected, monitoring.SeverityLevel_INFO, message, nil)
+
+				// create test NIC object
+				testNIC := policygen.CreateSmartNIC("00-14-22-01-23-45",
+					cluster.SmartNICSpec_ADMITTED.String(),
+					"esx-1",
+					&cluster.SmartNICCondition{
+						Type:   cluster.SmartNICCondition_HEALTHY.String(),
+						Status: cluster.ConditionStatus_FALSE.String(),
+					})
+
+				// record events with reference object
+				evtsRecorder.Event(TestNICDisconnected, monitoring.SeverityLevel_CRITICAL, message, testNIC)
+				evtsRecorder.Event(TestNICConnected, monitoring.SeverityLevel_INFO, message, testNIC)
 			}
 			wg.Done()
-		}(i, recorder)
+		}(i, evtsRecorder)
 	}
 
 	wg.Wait()
@@ -123,47 +143,66 @@ func TestInvalidEventInputs(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath)
 
 	// run events proxy server
-	rpcServer, rpcClient := createEventsProxy(t, eventsStorePath)
+	rpcServer, rpcClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
 	defer rpcServer.Stop()
 	defer rpcClient.ClientConn.Close()
+
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
 
 	// create events proxy client
 	proxyClient := evtsproxyproto.NewEventsProxyAPIClient(rpcClient.ClientConn)
 	Assert(t, proxyClient != nil, "failed to created events proxy client")
 
 	// create recorder
-	recorder, err := NewRecorder(
+	evtsRecorder, err := NewRecorder(
 		&monitoring.EventSource{NodeName: "test-node", Component: "test-component"},
-		testEventTypes, rpcServer.GetListenURL())
+		testEventTypes, rpcServer.GetListenURL(), recorderEventsDir)
 	AssertOk(t, err, "failed to create events recorder")
 
-	// test invalid event type
-	err = recorder.Event("InvalidEvent", "INFO", "test event - 1", nil)
-	Assert(t, err.Error() == events.NewError(events.ErrInvalidEventType, "").Error(),
-		"expected invalid event type error, found:", err.Error())
+	// send events using multiple workers and check if things are still intact
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
 
-	// test invalid severity
-	err = recorder.Event(TestNICConnected, "INVALID", "test event - 1", nil)
-	Assert(t, err.Error() == events.NewError(events.ErrInvalidSeverity, "").Error(),
-		"expected invalid event type error, found:", err.Error())
+	// test invalid event type
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				wg.Done()
+			}
+		}()
+
+		evtsRecorder.Event("InvalidEvent", monitoring.SeverityLevel_INFO, "test event - 1", nil)
+	}()
+
+	// test invalid severity - 100
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				wg.Done()
+			}
+		}()
+
+		evtsRecorder.Event(TestNICConnected, 100, "test event - 1", nil)
+	}()
+
+	wg.Wait()
 }
 
 // TestEventRecorderInstantiation tests event recorder instantiation cases
 func TestEventRecorderInstantiation(t *testing.T) {
 	// nil event source
-	_, err := NewRecorder(nil, testEventTypes, testServerURL)
+	_, err := NewRecorder(nil, testEventTypes, testServerURL, "")
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 
 	// nil event types
-	_, err = NewRecorder(&monitoring.EventSource{}, nil, testServerURL)
+	_, err = NewRecorder(&monitoring.EventSource{}, nil, testServerURL, "")
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 
 	// empty event types
-	_, err = NewRecorder(&monitoring.EventSource{}, []string{}, testServerURL)
-	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
-
-	// empty events proxy URL
-	_, err = NewRecorder(&monitoring.EventSource{}, testEventTypes, "")
+	_, err = NewRecorder(&monitoring.EventSource{}, []string{}, testServerURL, "")
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 }
 
@@ -172,7 +211,12 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath)
 
-	proxyRPCServer, proxyRPCClient := createEventsProxy(t, eventsStorePath)
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+
+	proxyRPCServer, proxyRPCClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
 	defer proxyRPCServer.Stop()
 	defer proxyRPCClient.ClientConn.Close()
 
@@ -183,8 +227,10 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	var totalEventsSent uint64
 	go func() {
 		defer wg.Done()
+		var evtsRecorder events.Recorder
+
 		testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: t.Name()}
-		recorder, err := NewRecorder(testEventSource, testEventTypes, proxyRPCServer.GetListenURL())
+		evtsRecorder, err = NewRecorder(testEventSource, testEventTypes, proxyRPCServer.GetListenURL(), recorderEventsDir)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -196,13 +242,11 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 			case <-stopEventRecorder:
 				return
 			case <-ticker.C:
-				if err = recorder.Event(TestNICConnected, "INFO", "test event - 1", nil); err == nil {
-					atomic.AddUint64(&totalEventsSent, 1)
-				}
+				evtsRecorder.Event(TestNICConnected, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+				atomic.AddUint64(&totalEventsSent, 1)
 
-				if err = recorder.Event(TestNICDisconnected, "CRITICAL", "test event - 2", nil); err == nil {
-					atomic.AddUint64(&totalEventsSent, 1)
-				}
+				evtsRecorder.Event(TestNICDisconnected, monitoring.SeverityLevel_CRITICAL, "test event - 2", nil)
+				atomic.AddUint64(&totalEventsSent, 1)
 			}
 		}
 	}()
@@ -215,9 +259,9 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	proxyRPCServer.Stop()
 
 	// reset the counter
-	totalEventsSent = 0
+	atomic.StoreUint64(&totalEventsSent, 0)
 
-	// proxy won't be able to accept any events for 2s
+	// proxy won't be able to accept any events for 2s but the events will be stored in a backup file
 	time.Sleep(2 * time.Second)
 	os.RemoveAll(eventsStorePath)
 
@@ -244,4 +288,139 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	close(stopEventRecorder)
 
 	wg.Wait()
+}
+
+// TestRecorderFileBackup make sure the events are recorded to a file when the proxy is not reachable
+func TestRecorderFileBackup(t *testing.T) {
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+
+	testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: t.Name()}
+	evtsRecorder, err := NewRecorder(testEventSource, testEventTypes, "", recorderEventsDir)
+	AssertOk(t, err, "failed to create recorder")
+
+	stopEventRecorder := make(chan struct{})
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+
+	// start recording events
+	var totalEventsSent uint64
+	go func() {
+		defer wg.Done()
+
+		ticker := time.NewTicker(10 * time.Millisecond)
+		for {
+			select {
+			case <-stopEventRecorder:
+				return
+			case <-ticker.C:
+				evtsRecorder.Event(TestNICConnected, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+				atomic.AddUint64(&totalEventsSent, 1)
+
+				evtsRecorder.Event(TestNICDisconnected, monitoring.SeverityLevel_CRITICAL, "test event - 2", nil)
+				atomic.AddUint64(&totalEventsSent, 1)
+			}
+		}
+	}()
+
+	time.Sleep(60 * time.Millisecond)
+	close(stopEventRecorder)
+	wg.Wait()
+
+	// make sure events are recorded to a backup file
+	AssertEventually(t, func() (bool, interface{}) {
+		var size int64
+		_ = filepath.Walk(recorderEventsDir, func(_ string, info os.FileInfo, err error) error {
+			if !info.IsDir() {
+				size += info.Size()
+			}
+			return err
+		})
+
+		if size > 0 {
+			return true, nil
+		}
+
+		return false, fmt.Sprintf("expected size of the file to be >0, got: %v", size)
+	}, "failed to record events to backup file", string("5ms"), string("5s"))
+}
+
+// TestRecorderFailedEventsForwarder tests the recorder with continuous evtsproxy restarts
+func TestRecorderFailedEventsForwarder(t *testing.T) {
+	eventsStorePath := filepath.Join(eventsDir, t.Name())
+	defer os.RemoveAll(eventsStorePath)
+
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+
+	proxyRPCServer, proxyRPCClient, mockWriter := createEventsProxy(t, testServerURL, eventsStorePath)
+	defer proxyRPCServer.Stop()
+	defer proxyRPCClient.ClientConn.Close()
+	defer mockWriter.Stop()
+
+	stopWorkers := make(chan struct{})
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+
+	// record events
+	var totalEventsSent uint64
+	go func() {
+		defer wg.Done()
+		testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: t.Name()}
+		evtsRecorder, err := NewRecorder(testEventSource, testEventTypes, proxyRPCServer.GetListenURL(), recorderEventsDir)
+		if err != nil {
+			log.Errorf("failed to create recorder, err: %v", err)
+			return
+		}
+
+		ticker := time.NewTicker(10 * time.Millisecond)
+		for {
+			select {
+			case <-stopWorkers:
+				return
+			case <-ticker.C:
+				evtsRecorder.Event(TestNICConnected, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+				atomic.AddUint64(&totalEventsSent, 1)
+
+				evtsRecorder.Event(TestNICDisconnected, monitoring.SeverityLevel_CRITICAL, "test event - 2", nil)
+				atomic.AddUint64(&totalEventsSent, 1)
+			}
+		}
+	}()
+
+	var totalEventsReceived uint64
+	// restart proxy in short intervals
+	go func() {
+		defer wg.Done()
+		proxyURL := proxyRPCServer.GetListenURL()
+		ticker := time.NewTicker(60 * time.Millisecond)
+		for {
+			select {
+			case <-stopWorkers:
+				return
+			case <-ticker.C:
+				proxyRPCServer.Stop()
+				time.Sleep(20 * time.Millisecond)
+				atomic.AddUint64(&totalEventsReceived, uint64(mockWriter.GetTotalEvents()))
+				proxyRPCServer, proxyRPCClient, mockWriter = createEventsProxy(t, proxyURL, eventsStorePath)
+			}
+		}
+	}()
+
+	time.Sleep(3 * time.Second)
+
+	close(stopWorkers)
+	wg.Wait()
+
+	// let the mock writer receive all the events
+	time.Sleep(2 * time.Second)
+	atomic.AddUint64(&totalEventsReceived, uint64(mockWriter.GetTotalEvents()))
+
+	// check if all the events has been received by the mock writer
+	Assert(t, totalEventsSent == totalEventsReceived, "mock writer did not receive all the events recorded, expected: %d, got: %d",
+		totalEventsSent, totalEventsReceived)
 }

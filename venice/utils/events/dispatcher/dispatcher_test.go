@@ -41,7 +41,7 @@ var (
 		},
 		EventAttributes: monitoring.EventAttributes{
 			Source:   dummyEvtSource,
-			Severity: "INFO",
+			Severity: monitoring.SeverityLevel_name[int32(monitoring.SeverityLevel_INFO)],
 			Type:     "DUMMY",
 			Count:    1,
 		},

@@ -188,7 +188,7 @@ func (m *MockWriter) receiveEvents() {
 			// all the incoming batch of events needs to be processed in order to avoid losing track of events
 			for {
 				if err := m.WriteEvents(evts.GetEvents()); err != nil {
-					m.logger.Debugf("failed to send events to the events manager. err: %v", err)
+					m.logger.Debugf("mock writer failed to process events, err: %v", err)
 					time.Sleep(1 * time.Second)
 				} else { // successfully sent the event to events manager
 					m.eventsOffsetTracker.UpdateOffset(evts.GetOffset())

@@ -2,10 +2,14 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
@@ -84,6 +88,8 @@ func (l *leaderService) start() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	l.cancel = cancel
 
+	recorder.Event(env.ElectionStarted, monitoring.SeverityLevel_INFO, "Leader election started", nil)
+
 	election, err := l.store.Contest(ctx, l.leaderKey, l.id, ttl)
 	if err != nil {
 		log.Errorf("Failed to start leader election with error: %v", err)
@@ -116,6 +122,7 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 			}
 		case <-ctx.Done():
 			log.Infof("Leader election cancelled")
+			recorder.Event(env.ElectionCancelled, monitoring.SeverityLevel_INFO, "Leader election cancelled", nil)
 			return
 		}
 	}
@@ -140,6 +147,8 @@ func (l *leaderService) stop() {
 		l.cancel()
 		l.cancel = nil
 	}
+
+	recorder.Event(env.ElectionStopped, monitoring.SeverityLevel_INFO, "Leader election stopped", nil)
 }
 
 // processEvent handles leader election events.
@@ -159,11 +168,14 @@ func (l *leaderService) processEvent(leader string) {
 		}
 
 	} else if l.IsLeader() {
+		recorder.Event(env.LeaderLost, monitoring.SeverityLevel_INFO, fmt.Sprintf("Node '%s' lost leadership", l.leader), nil)
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
 	} else if l.leader != leader {
+		recorder.Event(env.LeaderChanged, monitoring.SeverityLevel_INFO, fmt.Sprintf("Leader changed from '%s' to '%s'", l.leader, leader), nil)
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventChange, Leader: leader})
 	}
 	log.Infof("Setting leader to %v", leader)
+	recorder.Event(env.LeaderElected, monitoring.SeverityLevel_INFO, fmt.Sprintf("Node '%s' elected as the leader", leader), nil)
 	l.leader = leader
 }
 

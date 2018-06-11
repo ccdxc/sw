@@ -222,29 +222,38 @@ func (t *tInfo) updateResolver(serviceName, url string) {
 }
 
 // assertElasticEvents helper function to assert events received by elastic with the total events sent
-func (t *tInfo) assertElasticEvents(te *testing.T, query es.Query, expectedNumEvents int, timeout string) {
+// it asserts unique events and deduped events.
+// passing -1 for uniqueEventsSent will skip the unique event count check.
+func (t *tInfo) assertElasticEvents(te *testing.T, query es.Query, uniqueEventsSent, totalEventsSent int, timeout string) {
 	AssertEventually(te,
 		func() (bool, interface{}) {
+			var totalEventsReceived int
+			var uniqueEventsReceived int
+			var evt monitoring.Event
+
 			resp, err := t.esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				indexType,
 				query,
 				nil, 0, 10000, sortBy)
 
-			obtainedNumEvents := 0
 			if err == nil {
-				var evt monitoring.Event
-
+				uniqueEventsReceived = len(resp.Hits.Hits)
 				for _, hit := range resp.Hits.Hits {
 					_ = json.Unmarshal(*hit.Source, &evt)
-					obtainedNumEvents += int(evt.GetCount())
+					totalEventsReceived += int(evt.GetCount())
 				}
 
-				if obtainedNumEvents == expectedNumEvents {
+				if (uniqueEventsSent == -1 || uniqueEventsReceived == uniqueEventsSent) &&
+					totalEventsReceived == totalEventsSent {
 					return true, nil
 				}
 			}
 
-			return false, fmt.Sprintf("expected: %d, got: %d", expectedNumEvents, obtainedNumEvents)
+			if uniqueEventsSent == -1 {
+				return false, fmt.Sprintf("expected: %d, got: %d", totalEventsSent, totalEventsReceived)
+			}
+
+			return false, fmt.Sprintf("expected: %d with overall count: %d, got: %d - %d", uniqueEventsSent, totalEventsSent, uniqueEventsReceived, totalEventsReceived)
 		}, "couldn't get the expected event", "20ms", timeout)
 }

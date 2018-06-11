@@ -46,9 +46,10 @@ func GetEventKey(event *monitoring.Event) string {
 
 	if event.GetObjectRef() != nil {
 		keyComponents = append(keyComponents, []string{
-			event.GetTenant(),
-			event.GetNamespace(),
-			event.GetKind()}...)
+			event.GetObjectRef().GetTenant(),
+			event.GetObjectRef().GetNamespace(),
+			event.GetObjectRef().GetKind(),
+			event.GetObjectRef().GetName()}...)
 	}
 
 	return strings.Join(keyComponents, "")

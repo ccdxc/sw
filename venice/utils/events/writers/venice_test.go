@@ -61,7 +61,6 @@ func setup(t *testing.T) (*mockes.ElasticServer, *evtsmgr.EventsManager,
 	// run gRPC events manager server
 	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, testServerURL, mr, logger)
 	AssertOk(t, err, "failed to run gRPC events manager server")
-	testServerURL = evtsMgr.RPCServer.GetListenURL()
 
 	// create venice writer
 	veniceWriter, err := NewVeniceWriter("venice_writer", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), logger)

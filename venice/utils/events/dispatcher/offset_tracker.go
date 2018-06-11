@@ -135,5 +135,7 @@ func (o *offsetTrackerImpl) GetOffset() (int64, error) {
 		return -1, err
 	}
 
+	log.Debugf("last processed offset for %s: {%v}", o.name, offset)
+
 	return offset, nil
 }

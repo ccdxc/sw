@@ -1,12 +1,16 @@
 package services
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 
 	"fmt"
 
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -14,7 +18,7 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func setupTestCluster(t *testing.T) (*integration.ClusterV3, kvstore.Interface) {
+func setupTestCluster(t *testing.T, tmpDir string) (*integration.ClusterV3, kvstore.Interface) {
 	os.Chdir("/tmp")
 	cluster := integration.NewClusterV3(t)
 	s := runtime.NewScheme()
@@ -26,6 +30,11 @@ func setupTestCluster(t *testing.T) (*integration.ClusterV3, kvstore.Interface) 
 	if err != nil {
 		t.Fatalf("Failed to create store, error: %v", err)
 	}
+
+	_, err = recorder.NewRecorder(
+		&monitoring.EventSource{NodeName: "test", Component: "cmd"},
+		env.GetEventTypes(), "", tmpDir)
+
 	return cluster, store
 }
 
@@ -56,7 +65,12 @@ func (m *mockObserver) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 }
 
 func TestLeaderService(t *testing.T) {
-	cluster, store := setupTestCluster(t)
+	// create events recorder
+	tmpDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create events recorder backup directory")
+	defer os.RemoveAll(tmpDir)
+
+	cluster, store := setupTestCluster(t, tmpDir)
 	defer cleanupTestCluster(t, cluster, store)
 
 	id := "foo"
@@ -99,7 +113,12 @@ func TestLeaderService(t *testing.T) {
 }
 
 func TestLeaderServiceWithObserverError(t *testing.T) {
-	cluster, store := setupTestCluster(t)
+	// create events recorder
+	tmpDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create events recorder backup directory")
+	defer os.RemoveAll(tmpDir)
+
+	cluster, store := setupTestCluster(t, tmpDir)
 	defer cleanupTestCluster(t, cluster, store)
 
 	id := "foo"
@@ -124,7 +143,12 @@ func TestLeaderServiceWithObserverError(t *testing.T) {
 }
 
 func TestLeaderRegisterService(t *testing.T) {
-	cluster, store := setupTestCluster(t)
+	// create events recorder
+	tmpDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create events recorder backup directory")
+	defer os.RemoveAll(tmpDir)
+
+	cluster, store := setupTestCluster(t, tmpDir)
 	defer cleanupTestCluster(t, cluster, store)
 
 	id := "TestLeaderRegisterService"

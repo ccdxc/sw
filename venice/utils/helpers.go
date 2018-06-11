@@ -3,6 +3,7 @@
 package utils
 
 import (
+	"os"
 	"strings"
 	"time"
 
@@ -43,4 +44,15 @@ retryloop:
 // IsEmpty checks if the given string is empty
 func IsEmpty(str string) bool {
 	return len(strings.TrimSpace(str)) == 0
+}
+
+// GetHostname helper function to return the hostname
+func GetHostname() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Errorf("failed to get hostname, err: %v", err)
+		return ""
+	}
+
+	return hostname
 }

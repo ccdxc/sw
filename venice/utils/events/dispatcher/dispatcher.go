@@ -269,6 +269,8 @@ func (d *dispatcherImpl) Shutdown() {
 		} else {
 			d.distributeEvents(evts, offset)
 		}
+
+		d.eventsStore.Close()
 		d.Unlock()
 
 		// close all the writers

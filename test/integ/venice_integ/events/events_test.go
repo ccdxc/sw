@@ -4,6 +4,8 @@ package events
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -11,10 +13,12 @@ import (
 	uuid "github.com/satori/go.uuid"
 	es "gopkg.in/olivere/elastic.v5"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/policygen"
 )
 
 // This test tests the complete flow of an event from the recorder to elasticsearch
@@ -41,42 +45,62 @@ func TestEvents(t *testing.T) {
 	// uuid to make each source unique
 	componentID := uuid.NewV4().String()
 	testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: componentID}
+
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+
 	// create recorder
-	recorder, err := recorder.NewRecorder(testEventSource, testEventTypes, ti.evtsProxy.RPCServer.GetListenURL())
+	evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
+		ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
 	AssertOk(t, err, "failed to create events recorder")
 
 	// send events  (recorder -> proxy -> dispatcher -> writer -> evtsmgr -> elastic)
-	err = recorder.Event(eventType1, "INFO", "test event - 1", nil)
-	AssertOk(t, err, "failed to send event to the proxy")
-
-	err = recorder.Event(eventType2, "INFO", "test event - 2", nil)
-	AssertOk(t, err, "failed to send event to the proxy")
+	evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+	evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test event - 2", nil)
 
 	// verify that it has reached elasticsearch; these are the first occurrences of an event
 	// so it should have reached elasticsearch wthout being deduped.
 	query := es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewTermQuery("type", eventType1))
-	ti.assertElasticEvents(t, query, 1, "2s")
+	ti.assertElasticEvents(t, query, 1, 1, "2s")
 	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test event -2").Operator("and"))
-	ti.assertElasticEvents(t, query, 1, "2s")
+	ti.assertElasticEvents(t, query, 1, 1, "2s")
 
 	// send duplicates and check whether they're compressed
 	numDuplicates := 25
 	for i := 0; i < numDuplicates; i++ {
-		err = recorder.Event(eventType1, "INFO", "test dup event - 1", nil)
-		AssertOk(t, err, "failed to send event to the proxy")
-
-		err = recorder.Event(eventType2, "INFO", "test dup event - 2", nil)
-		AssertOk(t, err, "failed to send event to the proxy")
+		evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test dup event - 1", nil)
+		evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test dup event - 2", nil)
 	}
 
 	// ensure the deduped events reached elasticsearch
 	// test duplciate event - 1
 	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test dup event - 1").Operator("and"))
-	ti.assertElasticEvents(t, query, numDuplicates, "2s")
+	ti.assertElasticEvents(t, query, 1, numDuplicates, "2s") // 1 - there should be only one event with count = numDuplicates
 
 	// test duplicate event - 2
 	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test dup event - 2").Operator("and"))
-	ti.assertElasticEvents(t, query, numDuplicates, "2s")
+	ti.assertElasticEvents(t, query, 1, numDuplicates, "2s")
+
+	// create test NIC object
+	testNIC := policygen.CreateSmartNIC("00-14-22-01-23-45",
+		cluster.SmartNICSpec_ADMITTED.String(),
+		"esx-1",
+		&cluster.SmartNICCondition{
+			Type:   cluster.SmartNICCondition_HEALTHY.String(),
+			Status: cluster.ConditionStatus_FALSE.String(),
+		})
+
+	// record events with reference object
+	for i := 0; i < numDuplicates; i++ {
+		evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test dup event - 1", testNIC)
+		evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test dup event - 2", testNIC)
+	}
+
+	// query by kind
+	queryByKind := es.NewTermQuery("object-ref.kind", testNIC.GetKind())
+	ti.assertElasticEvents(t, queryByKind, 2, numDuplicates*2, "2s")
 }
 
 // TestEventsProxyRestart tests the events flow with events proxy restart
@@ -100,10 +124,17 @@ func TestEventsProxyRestart(t *testing.T) {
 	// uuid to make each source unique
 	componentID := uuid.NewV4().String()
 	totalEventsSentBySrc := make([]int, numRecorders)
+
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
-			recorder, err := recorder.NewRecorder(testEventSource, testEventTypes, ti.evtsProxy.RPCServer.GetListenURL())
+			evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
+				ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -116,17 +147,14 @@ func TestEventsProxyRestart(t *testing.T) {
 					wg.Done()
 					return
 				case <-ticker.C:
-					if err = recorder.Event(eventType1, "INFO", "test event - 1", nil); err == nil {
-						totalEventsSentBySrc[i]++
-					}
+					evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+					totalEventsSentBySrc[i]++
 
-					if err = recorder.Event(eventType2, "INFO", "test event - 2", nil); err == nil {
-						totalEventsSentBySrc[i]++
-					}
+					evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test event - 2", nil)
+					totalEventsSentBySrc[i]++
 
-					if err = recorder.Event(eventType3, "CRITICAL", "test event - 3", nil); err == nil {
-						totalEventsSentBySrc[i]++
-					}
+					evtsRecorder.Event(eventType3, monitoring.SeverityLevel_CRITICAL, "test event - 3", nil)
+					totalEventsSentBySrc[i]++
 				}
 			}
 		}(i)
@@ -136,12 +164,16 @@ func TestEventsProxyRestart(t *testing.T) {
 	go func() {
 		proxyURL := ti.evtsProxy.RPCServer.GetListenURL()
 
-		time.Sleep(1 * time.Second)
-		ti.stopEvtsProxy()
+		// try restarting events proxy multiple times and make sure the events pipeline is intact
+		// and the events are dlivered to elastic
+		for i := 0; i < 3; i++ {
+			time.Sleep(1 * time.Second)
+			ti.stopEvtsProxy()
 
-		// proxy won't be able to accept any events for 2s
-		time.Sleep(1 * time.Second)
-		ti.startEvtsProxy(proxyURL)
+			// proxy won't be able to accept any events for 2s
+			time.Sleep(1 * time.Second)
+			ti.startEvtsProxy(proxyURL)
+		}
 
 		// let the recorders send some events after the proxy restart
 		time.Sleep(1 * time.Second)
@@ -164,7 +196,7 @@ func TestEventsProxyRestart(t *testing.T) {
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component", fmt.Sprintf("%v-.*", componentID))
-	ti.assertElasticEvents(t, query, totalEventsSent, "5s")
+	ti.assertElasticEvents(t, query, -1, totalEventsSent, "6s") // -1 asks the assertion to not check for the unique events count; as we're not sure of it.
 }
 
 // TestEventsMgrRestart tests the events flow with events manager restart
@@ -188,10 +220,17 @@ func TestEventsMgrRestart(t *testing.T) {
 	// uuid to make each source unique
 	componentID := uuid.NewV4().String()
 	totalEventsSentBySrc := make([]int, numRecorders)
+
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
-			recorder, err := recorder.NewRecorder(testEventSource, testEventTypes, ti.evtsProxy.RPCServer.GetListenURL())
+			evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
+				ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -204,17 +243,14 @@ func TestEventsMgrRestart(t *testing.T) {
 					wg.Done()
 					return
 				case <-ticker.C:
-					if err = recorder.Event(eventType1, "INFO", "test event - 1", nil); err == nil {
-						totalEventsSentBySrc[i]++
-					}
+					evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+					totalEventsSentBySrc[i]++
 
-					if err = recorder.Event(eventType2, "INFO", "test event - 2", nil); err == nil {
-						totalEventsSentBySrc[i]++
-					}
+					evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test event - 2", nil)
+					totalEventsSentBySrc[i]++
 
-					if err = recorder.Event(eventType3, "CRITICAL", "test event - 3", nil); err == nil {
-						totalEventsSentBySrc[i]++
-					}
+					evtsRecorder.Event(eventType3, monitoring.SeverityLevel_CRITICAL, "test event - 3", nil)
+					totalEventsSentBySrc[i]++
 				}
 			}
 		}(i)
@@ -253,5 +289,5 @@ func TestEventsMgrRestart(t *testing.T) {
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component", fmt.Sprintf("%v-.*", componentID))
-	ti.assertElasticEvents(t, query, totalEventsSent, "5s")
+	ti.assertElasticEvents(t, query, -1, totalEventsSent, "5s")
 }

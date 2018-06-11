@@ -3,7 +3,6 @@
 package events
 
 import (
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 )
 
@@ -29,7 +28,7 @@ type Recorder interface {
 	// eventType should be one of the valid event type
 	// severity shoule be one of INFO, WARNING, CRITICAL
 	// message is a free form text explaining the reason of the event
-	Event(eventType, severity, message string, objRef *api.ObjectRef) error
+	Event(eventType string, severity monitoring.SeverityLevel, message string, objRef interface{})
 }
 
 // Dispatcher processes all the incoming events for any duplication to avoid
