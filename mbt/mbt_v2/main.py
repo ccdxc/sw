@@ -108,8 +108,11 @@ def create_reference_object(ref_object_spec):
     if ref_object_spec.constraints:
         constraints = GrpcReqRspMsg.extract_constraints(ref_object_spec.constraints)[0]
 
+    ext_refs       = {}
+    immutable_objs = {}
+
     print ("Creating with constraints: " + str(constraints))
-    (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj_inst.create_with_constraints(constraints)
+    (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj_inst.create_with_constraints(ext_refs, constraints, immutable_objs)
 
     if expected_api_status != api_status:
         print ("Expected: " + expected_api_status + ", Got: " + api_status)
@@ -154,7 +157,8 @@ for test_spec in test_specs:
                 if int(step.step.num) == 6                        \
                    and cfg_spec_obj.service_name() == 'L2Segment' \
                    and cfg_spec_obj.name() == 'L2Segment':
-                    continue
+                    # continue
+                    pass
 
                 max_objects = cfg_spec_obj.max_objects()
 
@@ -195,7 +199,12 @@ for test_spec in test_specs:
                         if cfg_spec_obj.name() in mbt_handle_store:
                             count = 0
 
-                            for mbt_handle in mbt_handle_store[cfg_spec_obj.name()]:
+                            mbt_handle_set = set(mbt_handle_store[cfg_spec_obj.name()])
+
+                            if cfg_spec_obj.name() == 'L2Segment':
+                                mbt_handle_set.update(cfg_spec_obj.get_config_object_list())
+
+                            for mbt_handle in mbt_handle_set:
 
                                 (api_status, rsp_msg) = method(mbt_handle)
 

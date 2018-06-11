@@ -13,6 +13,7 @@ from grpc_meta.utils import ApiStatus
 import utils
 import mbt_obj_store
 import sys
+import os
 
 grpc_meta_types.set_random_seed()
 
@@ -55,7 +56,7 @@ def dump_enums_list(enums_list, field_values):
         debug_print(key_str + ", " + field_value_str + ", value: " + str(field_values[key].number))
 
 def dump_ext_refs(ext_refs):
-    # return
+    return
     debug_print("static message: external ref dump start")
     for (_key, _value) in ext_refs.items():
         debug_print("external ref key: " + str(_key))
@@ -182,8 +183,12 @@ class GrpcReqRspMsg:
     def generate_scalar_field(message, field, negative_test=False):
         debug_print("scalar field: " + field.name)
 
+        max_value = False
+        if 'GEN_MAX_VALUE' in os.environ:
+            max_value = True
+
         type_specific_func = grpc_meta_types.type_map[field.type]
-        val = type_specific_func(field, negative_test)
+        val = type_specific_func(field, negative_test, max_value)
         if field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
             sub_message = getattr(message, field.name)
             sub_message.extend([val])
@@ -588,6 +593,12 @@ class GrpcReqRspMsg:
                     # extract all the enum values
                     enum_values_list = list(message.DESCRIPTOR.fields_by_name[field.name].enum_type.values)
 
+                    # remove enum with NONE value from list
+                    if mbt_obj_store.skip_none_enum() == True:
+                        for enum in enum_values_list:
+                            if 'NONE' in enum.name:
+                                enum_values_list.remove(enum)
+
                     # shuffle the enum values list
                     shuffle(enum_values_list)
 
@@ -646,3 +657,91 @@ class GrpcReqRspMsg:
         message = self._message_type()
         self.static_generate_message(message, key, ext_refs, external_constraints, immutable_objects, enums_list, field_values)
         return message
+
+
+def walk_proto(proto_msg_type,
+               cb,
+               cb_args,
+               num_objects,
+               ext_refs,
+               ext_constraints,
+               immutable_objs):
+
+    grpc_req_rsp_msg = GrpcReqRspMsg(proto_msg_type())
+
+    # value: (enum field full name, list of remaining values)
+    enums_list = []
+
+    # key:   enum field full name
+    # value: value chosen for the enum
+    field_values = {}
+
+    count = 0
+
+    # In each iteration, one value of the enum in the last index of enums_list is chosen.
+    # Next candidate is chosen after generating the message since the initial
+    # enums_list and field_values are empty.
+    # Enums are appended to enums_list during message generation.
+    while True:
+        dbg = debug()
+        set_debug(0)
+        dump_enums_list(enums_list, field_values)
+        set_debug(dbg)
+
+        debug_print ("Generating request msg for object: " + str(proto_msg_type))
+
+        # generate a msg
+        req_msg = grpc_req_rsp_msg.generate_message(None,
+                                                    ext_refs,
+                                                    ext_constraints,
+                                                    immutable_objs,
+                                                    enums_list,
+                                                    field_values)
+
+        debug_print ("DONE generating request msg for object: " + str(proto_msg_type))
+
+        # invoke callback
+        ret_cb = cb(req_msg,
+                    cb_args,
+                    ext_refs,
+                    ext_constraints,
+                    immutable_objs,
+                    enums_list,
+                    field_values)
+
+        # terminate the walk if callback returns false
+        if (ret_cb == False):
+            break
+
+        count += 1
+
+        # terminate the walk if num_objects count is reached
+        if count == num_objects:
+            break
+
+        # reset for next iteration
+        ext_refs = {}
+
+        # choose the next candidate
+        while len(enums_list) != 0:
+            # extract the last element from enums list
+            (enum_field_name, remaining_values_list) = enums_list[-1]
+
+            if len(remaining_values_list) != 0:
+                # extract the last elemet from values list
+                enum_value = remaining_values_list.pop()
+
+                # populate the field_values with the chosen enum value
+                field_values[enum_field_name] = enum_value
+
+                break
+
+            # if remaining_values_list is empty (no more values to choose for this enum),
+            # remove it from enums_list and field_values
+            enums_list.pop()
+            field_values.pop(enum_field_name, None)
+
+        # terminate the walk if no enums pending
+        if len(enums_list) == 0:
+            break
+

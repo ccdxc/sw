@@ -6,9 +6,9 @@ objects:
     - object:
         name : L2Segment
         key_handle : L2SegmentKeyHandle
+        max_objects : 500
         ignore:
         ignore_v2:
-            - op : Delete
         create:
             api      : L2SegmentCreate
             request  : L2SegmentRequestMsg

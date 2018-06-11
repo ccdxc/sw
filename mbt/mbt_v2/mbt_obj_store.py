@@ -37,6 +37,9 @@ _ref_obj_store         = []
 # Boolean to track whether to iterate over enum values or not
 _walk_enum = False
 
+# Boolean to track whether to skip NONE enum value
+_skip_none_enum = False
+
 # overall max limit for any object
 def max_objects():
     return 1000
@@ -55,6 +58,14 @@ def walk_enum():
 def set_walk_enum(walk_enum):
     global _walk_enum
     _walk_enum = walk_enum
+
+def skip_none_enum():
+    global _skip_none_enum
+    return _skip_none_enum
+
+def set_skip_none_enum(skip_none_enum):
+    global _skip_none_enum
+    _skip_none_enum = skip_none_enum
 
 #################################################
 # key1:  str(type(key_or_handle)) + str(key_or_handle.SerializeToString())

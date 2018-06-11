@@ -3,6 +3,8 @@ import re
 import string
 import random
 import os
+import sys
+import math
 
 from google.protobuf.descriptor import FieldDescriptor
 
@@ -67,10 +69,34 @@ def get_constraints(field):
             return constraints.split('=')
     return None
 
-def generate_float(field, negative_test=False):
+def generate_float(field, negative_test=False, max_val=False):
+    if max_val == True:
+        return sys.float_info.max
+
     return random.uniform(0.0, 99999.99)
 
-def generate_int(field, negative_test=False):
+def generate_int(field, negative_test=False, max_val=False):
+    if max_val == True:
+        if field.type == FieldDescriptor.TYPE_INT32          \
+           or field.type == FieldDescriptor.TYPE_SINT32      \
+           or field.type == FieldDescriptor.TYPE_SFIXED32:
+
+            return int(math.pow(2, 31)) - 1
+
+        elif field.type == FieldDescriptor.TYPE_UINT32       \
+             or field.type == FieldDescriptor.TYPE_FIXED32:  \
+
+            return int(math.pow(2, 32)) - 1
+
+        elif field.type == FieldDescriptor.TYPE_INT64        \
+             or field.type == FieldDescriptor.TYPE_SINT64    \
+             or field.type == FieldDescriptor.TYPE_SFIXED64:
+
+            return int(math.pow(2, 63)) - 1
+
+        else:
+            return int(math.pow(2, 64)) - 1
+
     if is_unique_field(field):
         if field.full_name in int_dict:
             int_dict[field.full_name] += 1
@@ -89,17 +115,17 @@ def generate_int(field, negative_test=False):
             return random.randint(int(val[0]), int(val[1]))
     return random.randint(0, 99999)
 
-def generate_bool(field, negative_test=False):
+def generate_bool(field, negative_test=False, max_val=False):
     return random.choice([True, False])
 
-def generate_string(field, negative_test=False):
+def generate_string(field, negative_test=False, max_val=False):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for _ in range(16))
 
-def generate_enum(field, negative_test=False):
+def generate_enum(field, negative_test=False, max_val=False):
     return random.randint(0, len(field.enum_type.values) - 1)
 
-def generate_bytes(field, negative_test=False):
+def generate_bytes(field, negative_test=False, max_val=False):
     return random.getrandbits(128).to_bytes(16, byteorder='big')
 
 type_map = {

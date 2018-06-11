@@ -14,6 +14,26 @@ max_infra_types = 1
 current_infra_types = 0
 wire_encap_type = [types_pb2.ENCAP_TYPE_NONE, types_pb2.ENCAP_TYPE_DOT1Q, types_pb2.ENCAP_TYPE_VXLAN]
 tunnel_encap_type = [types_pb2.ENCAP_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN]
+uniq_val_dict = {}
+
+def get_unique_int_val(key_str):
+    if key_str in uniq_val_dict:
+        uniq_val_dict[key_str] += 1
+    else:
+        uniq_val_dict[key_str] = 10000
+
+    return uniq_val_dict[key_str]
+
+# Select a random enum for given enum type
+def get_random_enum_desc_val(enum_type):
+    index = random.randrange(len(enum_type.DESCRIPTOR.values))
+    return enum_type.DESCRIPTOR.values[index]
+
+# Returns a randomly selected enum for given enum type
+# and a unique value for that enum
+def get_enum_unique_val(enum_type):
+    enum_desc_val = get_random_enum_desc_val(enum_type)
+    return (enum_desc_val.number, get_unique_int_val(enum_desc_val.name))
 
 def PreCreateCb(data, req_spec, resp_spec):
     global current_infra_types
@@ -33,7 +53,9 @@ def PreCreateCb(data, req_spec, resp_spec):
         else:
             current_infra_types += 1
 
-    req_spec.request[0].wire_encap.encap_type = random.choice(wire_encap_type)
+    req_spec.request[0].wire_encap.encap_type  = random.choice(wire_encap_type)
+    req_spec.request[0].wire_encap.encap_value = get_unique_int_val('wire_encap_type')
+
     req_spec.request[0].tunnel_encap.encap_type = random.choice(tunnel_encap_type)
 
 def PostCreateCb(data, req_spec, resp_spec):

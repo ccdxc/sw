@@ -165,57 +165,51 @@ class ConfigSpecObjectWrapper():
     def create_ops(self):
         return self._num_create_ops
 
+    def get_config_object_list(self):
+        return self._mbt_handle_list
+
     def get_config_object(self, index):
         if index < len(self._mbt_handle_list):
             return self._mbt_handle_list[index]
         else:
             return None
 
-    # generate a new create request method
-    # invoke precb if any
-    # invoke create method
-    # invoke postcb if any
-    # returns the create response msg
-    def create_with_constraints_internal(self, constraint=None, ext_refs={}, enums_list=[], field_values={}):
+
+    # Invoke pre_cb.
+    # Invoke API (send the message).
+    # Store in global store:
+    #     key:   allocated mbt_handle
+    #     value: (key_or_handle, ext_refs, immutable_objs) extracted from generated message
+    # Store in global key_or_handle store:
+    #     key:   key_or_handle
+    #     value: mbt_handle
+    # Invoke post_cb.
+    #
+    # Returns: mbt_status, api_status, mbt_handle, rsp_msg
+    def invoke_create_api(self, req_msg):
+
         api_status = 'API_STATUS_ERR'
         mbt_handle = -1
         rsp_msg    = None
 
         config_method = self._config_methods[ConfigMethodType.CREATE]
 
-        if config_method.ignore() == True:
-            debug_print ("Ignoring CREATE")
-            api_status = 'API_STATUS_OK'
-            return (mbt_obj_store.MbtRetStatus.MBT_RET_OK, api_status, mbt_handle, rsp_msg)
-
         if self.create_ops() >= self.max_objects():
             debug_print("Max objects: " + str(self.max_objects()) + " reached for Service: " + self.service_name() + ", Object: " + self.name())
             return (mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED, api_status, mbt_handle, rsp_msg)
-
-        grpc_req_rsp_msg = GrpcReqRspMsg(config_method.request()())
-
-        # external refs and immutable objects are applicable only for non-create-methods
-        immutable_objs  = {}
-        ext_constraints = constraint
-
-        debug_print ("Creating request msg for object: " + config_method.request_method_name())
-
-        req_msg = grpc_req_rsp_msg.generate_message(None,
-                                                    ext_refs,
-                                                    ext_constraints,
-                                                    immutable_objs,
-                                                    enums_list,
-                                                    field_values)
 
         data = ConfigData()
 
         if config_method.pre_cb():
             debug_print ("PRE_CB for object: " + config_method.request_method_name())
+
             ret_val = config_method.pre_cb().call(data, req_msg, None)
-            if ret_val is not None:
-                if ret_val == False:
-                    return (mbt_obj_store.MbtRetStatus.MBT_RET_ERR, api_status, mbt_handle, rsp_msg)
+
             debug_print ("PRE_CB done for object: " + config_method.request_method_name())
+
+            # pre_cb returns False if msg has to be ignored (not to be sent)
+            if ret_val is not None and ret_val == False:
+                return (mbt_obj_store.MbtRetStatus.MBT_RET_ERR, api_status, mbt_handle, rsp_msg)
 
         debug_print (req_msg)
 
@@ -253,22 +247,84 @@ class ConfigSpecObjectWrapper():
         if rsp_msg is not None:
             api_status = GrpcReqRspMsg.GetApiStatusObject(rsp_msg)
 
-        debug_print ("DONE request msg for object: " + config_method.request_method_name())
-
         return (mbt_obj_store.MbtRetStatus.MBT_RET_OK, api_status, mbt_handle, rsp_msg)
 
-    def create_with_constraints(self, constraint=None, ext_refs={}, enums_list=[], field_values={}, max_retries=1):
 
+    def create_cb(self,
+                  req_msg,
+                  cb_args,
+                  ext_refs,
+                  ext_constraints,
+                  immutable_objs,
+                  enums_list,
+                  field_values):
+
+        ret_list            = cb_args['ret_list']
+        expected_api_status = cb_args['expected_api_status']
+
+        (mbt_status, api_status, mbt_handle, rsp_msg) = self.invoke_create_api(req_msg)
+
+        # terminate the walk since max objects is reached
+        if mbt_status == mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED:
+            return False
+
+        # MBT_RET_ERR indicates error during msg generation and msg was not sent out.
+        # Continue the walk since only the current msg is affected
+        if mbt_status == mbt_obj_store.MbtRetStatus.MBT_RET_ERR:
+            return True
+
+        ret_list.append((mbt_status, api_status, mbt_handle, rsp_msg))
+
+        if api_status != expected_api_status:
+            print("Expected: " + expected_api_status + ", Got: " + api_status)
+            assert False
+
+        return True
+
+
+    # Generates a message.
+    # Invokes API (sends the message).
+    # If any error during generation/send, retries max_retries times
+    def create_with_constraints(self, ext_refs, ext_constraints, immutable_objs, max_retries=1):
         mbt_status = mbt_obj_store.MbtRetStatus.MBT_RET_ERR
         api_status = 'API_STATUS_ERR'
         mbt_handle = -1
         rsp_msg    = None
-        count      = 0
+
+        config_method = self._config_methods[ConfigMethodType.CREATE]
+
+        if config_method.ignore() == True:
+            debug_print ("Ignoring CREATE")
+            api_status = 'API_STATUS_OK'
+            return (mbt_obj_store.MbtRetStatus.MBT_RET_OK, api_status, mbt_handle, rsp_msg)
+
+        if self.create_ops() >= self.max_objects():
+            debug_print("Max objects: " + str(self.max_objects()) + " reached for Service: " + self.service_name() + ", Object: " + self.name())
+            return (mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED, api_status, mbt_handle, rsp_msg)
+
+        grpc_req_rsp_msg = GrpcReqRspMsg(config_method.request()())
+
+        enums_list   = []
+        field_values = {}
+
+        count = 0
 
         while True:
-            (mbt_status, api_status, mbt_handle, rsp_msg) = self.create_with_constraints_internal(constraint, ext_refs, enums_list, field_values)
+            debug_print ("Generating request msg for object: " + config_method.request_method_name())
 
-            # if generation was successful, then break
+            # generate a msg
+            req_msg = grpc_req_rsp_msg.generate_message(None,
+                                                        ext_refs,
+                                                        ext_constraints,
+                                                        immutable_objs,
+                                                        enums_list,
+                                                        field_values)
+
+            debug_print ("DONE generating request msg for object: " + config_method.request_method_name())
+
+            (mbt_status, api_status, mbt_handle, rsp_msg) = self.invoke_create_api(req_msg)
+
+            # if msg send was successful, then break
             if mbt_status != mbt_obj_store.MbtRetStatus.MBT_RET_ERR:
                 break
 
@@ -278,68 +334,40 @@ class ConfigSpecObjectWrapper():
 
         return (mbt_status, api_status, mbt_handle, rsp_msg)
 
+
     def create(self, expected_api_status, num_objects):
-        ret = []
+        api_status = 'API_STATUS_ERR'
+        mbt_handle = -1
+        rsp_msg    = None
 
-        # value: (enum field full name, list of remaining values)
-        enums_list = []
+        config_method = self._config_methods[ConfigMethodType.CREATE]
 
-        # key:   enum field full name
-        # value: value chosen for the enum
-        field_values = {}
+        if config_method.ignore() == True:
+            debug_print ("Ignoring CREATE")
+            api_status = 'API_STATUS_OK'
+            return [(mbt_obj_store.MbtRetStatus.MBT_RET_OK, api_status, mbt_handle, rsp_msg)]
 
-        count = 0
+        if self.create_ops() >= self.max_objects():
+            debug_print("Max objects: " + str(self.max_objects()) + " reached for Service: " + self.service_name() + ", Object: " + self.name())
+            return [(mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED, api_status, mbt_handle, rsp_msg)]
 
-        # In each iteration, one value of the enum in the last index of enums_list is chosen.
-        # Next candidate is chosen after invoking create_with_constraints since the initial
-        # enums_list and field_values are empty.
-        # Enums are appended to enums_list inside create_with_constraints invocation.
-        while True:
-            dump_enums_list(enums_list, field_values)
+        ext_refs        = {}
+        immutable_objs  = {}
+        ext_constraints = None
 
-            ext_refs = {}
+        cb_args                        = {}
+        cb_args['ret_list']            = []
+        cb_args['expected_api_status'] = expected_api_status
 
-            (mbt_status, api_status, mbt_handle, rsp_msg) = self.create_with_constraints(None, ext_refs, enums_list, field_values, 1)
+        walk_proto(config_method.request(),
+                   self.create_cb,
+                   cb_args,
+                   num_objects,
+                   ext_refs,
+                   ext_constraints,
+                   immutable_objs)
 
-            if mbt_status == mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED:
-                break
-
-            # check return values only if mbt_status is MBT_RET_OK
-            if mbt_status != mbt_obj_store.MbtRetStatus.MBT_RET_ERR:
-                ret.append((mbt_status, api_status, mbt_handle, rsp_msg))
-
-                if api_status != expected_api_status:
-                    print("Expected: " + expected_api_status + ", Got: " + api_status)
-                    assert False
-
-                count += 1
-                if count == num_objects:
-                    break
-
-            # choose the next candidate
-            while len(enums_list) != 0:
-                # extract the last element from enums list
-                (enum_field_name, remaining_values_list) = enums_list[-1]
-
-                if len(remaining_values_list) != 0:
-                    # extract the last elemet from values list
-                    enum_value = remaining_values_list.pop()
-
-                    # populate the field_values with the chosen enum value
-                    field_values[enum_field_name] = enum_value
-
-                    break
-
-                # if remaining_values_list is empty (no more values to choose for this enum),
-                # remove it from enums_list and field_values
-                enums_list.pop()
-                field_values.pop(enum_field_name, None)
-
-            # if no enums pending
-            if len(enums_list) == 0:
-                break
-
-        return ret
+        return cb_args['ret_list']
 
 
     def internal_op(self, mbt_handle, config_method_type, config_method_name):

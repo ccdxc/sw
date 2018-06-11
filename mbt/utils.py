@@ -160,42 +160,35 @@ def alloc_handle():
     mbt_handle += 1
     return mbt_handle
 
-# __DEPRECATED__
-def create_config_from_kh(kh_str):
-    assert False
-    cfg_spec_obj = mbt_obj_store.cfg_spec_obj_store_kh(kh_str)
-
-    (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(None)
-
-    if mbt_obj_store.config_objects(mbt_handle) is not None:
-        (service_name, key_or_handle, ext_refs, immutable_objs, create_req_msg) = mbt_obj_store.config_objects(mbt_handle)
-        return key_or_handle
 
 def create_config_from_kh(kh_str, constraints, ext_refs):
     expected_api_status = 'API_STATUS_OK'
 
     cfg_spec_obj = mbt_obj_store.cfg_spec_obj_store_kh(kh_str)
 
-    enums_list   = []
-    field_values = {}
+    immutable_objs = {}
+
+    max_reached = False
 
     # TODO which key_or_handle to return if multiple constaints?
     if constraints is not None:
         for constraint in constraints:
-            (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(constraint, ext_refs, enums_list, field_values, mbt_obj_store.default_max_retires())
+            (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(ext_refs, constraint, immutable_objs, mbt_obj_store.default_max_retires())
 
             if mbt_status == mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED:
                 api_status = 'API_STATUS_OK'
+                max_reached = True
                 mbt_handle = cfg_spec_obj.get_config_object(0)
 
             if expected_api_status != api_status:
                 msg.err_print ("Expected: " + expected_api_status + ", Got: " + api_status)
                 assert False
     else:
-        (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(None, ext_refs, enums_list, field_values, mbt_obj_store.default_max_retires())
+        (mbt_status, api_status, mbt_handle, rsp_msg) = cfg_spec_obj.create_with_constraints(ext_refs, constraints, immutable_objs, mbt_obj_store.default_max_retires())
 
         if mbt_status == mbt_obj_store.MbtRetStatus.MBT_RET_MAX_REACHED:
             api_status = 'API_STATUS_OK'
+            max_reached = True
             mbt_handle = cfg_spec_obj.get_config_object(0)
 
         if expected_api_status != api_status:
@@ -204,6 +197,12 @@ def create_config_from_kh(kh_str, constraints, ext_refs):
 
     if mbt_obj_store.config_objects(mbt_handle) is not None:
         (_service_name, _key_or_handle, _ext_refs, _immutable_objs, _create_req_msg) = mbt_obj_store.config_objects(mbt_handle)
+
+        # If max objects is reached, ext_refs does not get updated since the generator is not invoked.
+        # Update the ext_refs with ext_refs for the message corresponding to mbt_handle
+        if max_reached == True:
+            ext_refs.update(_ext_refs)
+
         return _key_or_handle
 
     return None
