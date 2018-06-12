@@ -144,28 +144,6 @@ static chksum_decomp_chain_t  *chksum_decomp_chain;
 
 dp_mem_t *comp_pad_buf;
 
-static const char *integrity_type_name[] = {
-    "M_CRC64",
-    "CRC32C",
-    "ADLER32",
-    "M_ADLER32"
-};
-
-static const char *integrity_src_name[] = {
-    "SRC_COMP_DATA",
-    "SRC_UNCOMP_DATA
-};
-
-static const char *sha_type_name[] = {
-    "SHA512",
-    "SHA256"
-};
-
-static const char *sha_en_name[] = {
-    "disabled",
-    "enabled"
-};
-
 // Forward declaration with default param values
 int run_cp_test(cp_desc_t& desc,
                 dp_mem_t *dst_buf,
