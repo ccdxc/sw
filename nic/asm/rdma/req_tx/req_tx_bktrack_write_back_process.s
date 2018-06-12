@@ -34,9 +34,15 @@ req_tx_bktrack_write_back_process:
      // set SQ c_index to the backtracked value
      tblwr         SQ_C_INDEX, K_SQ_C_INDEX // Branch Delay Slot
 
-     // Empty backtrack and retransmit timer rings
+     // Empty backtrack ring upon completion of bktracking. Also,
+     // clear bktrack_in_progress in SQCB1 so that it can start
+     // accepting response packets
      tblwr         SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
-     tblwr         SQ_TIMER_C_INDEX, SQ_TIMER_P_INDEX
+
+     SQCB1_ADDR_GET(r1)
+     add           r1, FIELD_OFFSET(sqcb1_t, bktrack_in_progress), r1
+     memwr.b       r1, 0
+
 
 update_spec_cindex:
  
@@ -48,7 +54,6 @@ update_spec_cindex:
 
      tblmincri     SPEC_SQ_C_INDEX,  d.log_num_wqes, 1
      phvwr  p.common.p4_intr_global_drop, 1
-
 
 end:
      nop.e

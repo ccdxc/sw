@@ -1004,10 +1004,10 @@ struct dcqcn_cb_t {
     cur_timestamp:  32; // For debugging on Model since model doesnt have timestamps
 };
 
-
-#define RDMA_UD_FEEDBACK          0x1
-#define RDMA_RC_FEEDBACK          0x2
-#define RDMA_CQ_ARM_FEEDBACK      0x3
+#define RDMA_UD_FEEDBACK              0x1
+#define RDMA_RC_FEEDBACK              0x2
+#define RDMA_CQ_ARM_FEEDBACK          0x3
+#define RDMA_TIMER_EXPIRY_FEEDBACK    0x4
 
 struct rdma_feedback_t {
     feedback_type:8;
@@ -1025,6 +1025,13 @@ struct rdma_feedback_t {
             sarm  : 1;
             pad   : 62;
         }arm;
+        /* TYPE: RDMA_TIMER_EXPIRY_FEEDBACK */
+        struct {
+            rexmit_psn: 24;
+            ssn: 24;
+            tx_psn: 24;
+            pad: 8;
+        }timer_expiry;
     }; 
 };
 

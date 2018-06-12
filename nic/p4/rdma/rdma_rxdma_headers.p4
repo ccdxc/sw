@@ -277,3 +277,15 @@ header_type rdma_cq_feedback_header_t {
     }
 }
 
+//248
+header_type rdma_timer_expiry_feedback_header_t {
+    fields {
+        common_header_bits  : 160;
+        feedback_type       : 8;
+        rexmit_psn          : 24;
+        ssn                 : 24;
+        tx_psn              : 24;
+        pad                 : 8;
+    }
+}
+

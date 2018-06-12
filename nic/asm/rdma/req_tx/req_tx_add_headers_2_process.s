@@ -5,7 +5,6 @@
 
 struct req_tx_phv_t p;
 struct req_tx_s6_t3_k k;
-struct sqcb1_t d;
 
 #define IN_P            t3_s2s_add_hdr_info
 #define IN_TO_S_P       to_s6_sq_to_stage

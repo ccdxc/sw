@@ -8,7 +8,7 @@ struct sqcb1_t d;
 #define IN_P t3_s2s_sqcb1_write_back_info
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
-#define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit16_ebit31)
+#define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit24_ebit31)
 #define K_E_RSP_PSN CAPRI_KEY_FIELD(IN_P, e_rsp_psn)
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit2, msn_sbit19_ebit23)
@@ -20,7 +20,9 @@ req_rx_sqcb1_write_back_process:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_3
     bcf            [!c1], bubble_to_next_stage
-    nop            // Branch Delay Slot
+    seq            c1, d.bktrack_in_progress, 1
+    bcf            [c1], drop_response
+    tbladd.c1      d.nxt_to_go_token_id, 1
 
     tblwr          d.rrq_in_progress, CAPRI_KEY_FIELD(IN_P, rrq_in_progress)
     tblwr          d.rrqwqe_cur_sge_id, K_CUR_SGE_ID
@@ -29,7 +31,7 @@ req_rx_sqcb1_write_back_process:
     tblwr          d.rexmit_psn, K_REXMIT_PSN
     tblwr          d.msn, K_MSN
     seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1
-    tblmincri.c1   d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
+    tbladd.c1      d.nxt_to_go_token_id, 1
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
     bcf            [!c1], skip_cindex_update
     SQCB2_ADDR_GET(r5) //BD-slot
@@ -58,6 +60,7 @@ post_bktrack_ring:
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
     seq            c1, CAPRI_KEY_FIELD(IN_P, dma_cmd_eop), 1
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c1)
+    tblwr          d.bktrack_in_progress, 1
 
 
 end:
@@ -76,4 +79,10 @@ bubble_to_next_stage:
 exit:
      nop.e
      nop
+
+drop_response:
+    CAPRI_SET_TABLE_3_VALID(0)
+    //skip to payload end
+    DMA_CMD_STATIC_BASE_GET_E(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
+    DMA_SKIP_CMD_SETUP(r7, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 

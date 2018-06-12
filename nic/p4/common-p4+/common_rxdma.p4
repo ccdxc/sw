@@ -726,6 +726,7 @@ table rx_table_s3_t3 {
     }
     actions {
         rx_table_s3_t3_action;
+        rx_table_s3_t3_action1;
         rx_table_s3_t3_cfg_action;
     }
 }
@@ -1029,7 +1030,8 @@ action common_p4plus_stage0_app_header_table_action(data0, data1, data2, data3,
         common_p4plus_stage0_app_header_table_action_dummy14; \
         common_p4plus_stage0_app_header_table_action_dummy15; \
         common_p4plus_stage0_app_header_table_action_dummy16; \
-        common_p4plus_stage0_app_header_table_action_dummy17;
+        common_p4plus_stage0_app_header_table_action_dummy17; \
+        common_p4plus_stage0_app_header_table_action_dummy18;
 
 @pragma stage 0
 @pragma raw_index_table

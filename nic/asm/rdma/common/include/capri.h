@@ -78,8 +78,22 @@
 #define CAPRI_RXDMA_DETH_IMMETH_SMAC1(_r) \
    add _r, k.{rdma_bth_deth_immeth_smac_1_sbit8_ebit15}, k.{rdma_bth_deth_immeth_smac_1_sbit0_ebit7}, 8
 
-#define RDMA_UD_FEEDBACK_WRID(_r) \
-    add _r, k.{rdma_ud_feedback_wrid_sbit32_ebit55...rdma_ud_feedback_wrid_sbit56_ebit63}, k.{rdma_ud_feedback_wrid_sbit0_ebit7...rdma_ud_feedback_wrid_sbit24_ebit31}, 32 
+// Feedback header fields
+#define CAPRI_FEEDBACK_FEEDBACK_TYPE k.rdma_ud_feedback_feedback_type
+
+// UD feedback header fields
+#define CAPRI_UD_FEEDBACK_WRID(_r) \
+    add _r, k.{rdma_ud_feedback_wrid_sbit32_ebit47...rdma_ud_feedback_wrid_sbit56_ebit63}, k.{rdma_ud_feedback_wrid_sbit0_ebit7...rdma_ud_feedback_wrid_sbit24_ebit31}, 32
+#define CAPRI_UD_FEEDBACK_OPTYPE k.rdma_ud_feedback_optype
+#define CAPRI_UD_FEEDBACK_STATUS k.rdma_ud_feedback_status
+
+// Timer expiry feedback header fields
+#define CAPRI_TIMER_EXPIRY_FEEDBACK_SSN(_r) \
+    add _r, k.rdma_timer_expiry_feedback_ssn_sbit8_ebit23, k.rdma_timer_expiry_feedback_ssn_sbit0_ebit7, 16
+#define CAPRI_TIMER_EXPIRY_FEEDBACK_REXMIT_PSN \
+    k.{rdma_timer_expiry_feedback_rexmit_psn_sbit0_ebit7...rdma_timer_expiry_feedback_rexmit_psn_sbit8_ebit23}
+#define CAPRI_TIMER_EXPIRY_FEEDBACK_TX_PSN \
+    k.{rdma_timer_expiry_feedback_tx_psn_sbit0_ebit7...rdma_timer_expiry_feedback_tx_psn_sbit16_ebit23}
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6
 

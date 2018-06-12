@@ -54,7 +54,7 @@
 #define tx_table_s1_t0_action req_tx_dummy_sqpt_process
 #define tx_table_s1_t0_action1 req_tx_sqpt_process
 #define tx_table_s1_t0_action3 req_tx_bktrack_sqcb2_process
-#define tx_table_s1_t0_action4 req_tx_timer_process
+#define tx_table_s1_t0_action4 req_tx_timer_expiry_process
 #define tx_table_s1_t0_action4 req_tx_sqcb2_cnp_process
 #define tx_table_s1_t0_action5 req_tx_sqcb2_fence_process
 #define tx_table_s1_t2_action req_tx_sqsge_iterate_process
@@ -680,7 +680,7 @@ action req_tx_bktrack_sqcb2_process () {
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.pad, t0_s2s_sqcb0_to_sqcb2_info.pad);
 
 }
-action req_tx_timer_process () {
+action req_tx_timer_expiry_process () {
     // from ki global
     GENERATE_GLOBAL_K
 

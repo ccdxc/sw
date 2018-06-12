@@ -245,7 +245,7 @@ class RdmaSQstate(Packet):
 
         BitField("rsvd_state_flags", 0, 5),
         BitField("dcqcn_rl_failure", 0, 1),
-        BitField("bktrack_in_progress", 0, 1),
+        BitField("sqcb0_bktrack_in_progress", 0, 1),
         BitField("retry_timer_on", 0, 1),
 
         BitField("poll_in_progress", 0, 1),
@@ -301,8 +301,9 @@ class RdmaSQstate(Packet):
         IntField("rrqwqe_cur_sge_offset", 0),
         BitField("rrq_in_progress", 0, 1),
         BitField("rsvd2", 0, 7),
+        ByteField("sqcb1_bktrack_in_progress", 0),
 
-        BitField("pad1", 0, 72),
+        BitField("pad1", 0, 64),
 
         #SQCB2
         X3BytesField("dst_qp", 0),

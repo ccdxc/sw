@@ -8,6 +8,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define SQCB1_TO_RRQWQE_P t0_s2s_sqcb1_to_rrqwqe_info
 #define ECN_INFO_P t3_s2s_ecn_info
 #define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
+#define SQCB1_TO_TIMER_EXPIRY_P t3_s2s_sqcb1_to_timer_expiry_info
 
 %%
 
@@ -15,6 +16,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_cqcb_process
     .param    req_rx_dcqcn_ecn_process
     .param    req_rx_recirc_mpu_only_process
+    .param    req_rx_timer_expiry_process
 
 .align
 req_rx_sqcb1_process:
@@ -31,6 +33,10 @@ req_rx_sqcb1_process:
     // Initialize cqwqe to success initially
     phvwrpair      p.cqwqe.status, CQ_STATUS_SUCCESS, p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
 
+    // If bktrack is in progress do not process any response packets to
+    // avoid updating CB state while bktrack logic is updating the same
+    bbeq            d.bktrack_in_progress[0], 1, drop_packet
+
     // copy cur_timestamp loaded in r4 into phv to DMA ack_timestamp
     // into sqcb2 for valid aeth packet
     phvwr          p.ack_timestamp, r4
@@ -38,13 +44,12 @@ req_rx_sqcb1_process:
     // get token_id for this packet
     phvwr          p.common.rdma_recirc_token_id, d.token_id
 
-process_recirc_pkt:
     // check if its this packet's turn, if not recirc
-    cmov           r2, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID
-    seq            c2, r2, d.nxt_to_go_token_id
+    seq            c2, d.token_id, d.nxt_to_go_token_id
     bcf            [!c2], recirc_for_turn
-    tbladd.c1      d.token_id, 1 // Branch Delay Slot
+    tbladd         d.token_id, 1 // Branch Delay Slot
 
+process_recirc_pkt:
     //Check if ECN bits are set in Packet and congestion management is enabled.                      
     sne            c5, k.rdma_bth_ecn, 3
     sne            c6, d.congestion_mgmt_enable, 1
@@ -256,13 +261,15 @@ drop_feedback:
     nop
 
 process_feedback:
-    seq            c1, k.rdma_ud_feedback_feedback_type, RDMA_UD_FEEDBACK
+    seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_TIMER_EXPIRY_FEEDBACK
+    bcf            [c1], timer_expiry
+    seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_UD_FEEDBACK
     bcf            [!c1], drop_feedback
 
 ud_feedback:
-    phvwr          p.cqwqe.op_type, k.rdma_ud_feedback_optype // Branch Delay Slot
-    RDMA_UD_FEEDBACK_WRID(r7)
-    phvwrpair      p.cqwqe.id.wrid, r7, p.cqwqe.status, k.rdma_ud_feedback_status
+    phvwr          p.cqwqe.op_type, CAPRI_UD_FEEDBACK_OPTYPE // Branch Delay Slot
+    CAPRI_UD_FEEDBACK_WRID(r7)
+    phvwrpair      p.cqwqe.id.wrid, r7, p.cqwqe.status, CAPRI_UD_FEEDBACK_STATUS
 
     CAPRI_RESET_TABLE_2_ARG()
     CAPRI_SET_TABLE_0_VALID(0)
@@ -273,21 +280,52 @@ ud_feedback:
     nop.e
     nop
 
+timer_expiry:
+    // It is ok to update max_tx_psn/max_ssn while bktrack is in progress
+    // (provided max_tx_psn/max_ssn is lesser than tx_psn/ssn) as it is
+    // not updated as part of bktrack process itself
+    scwlt24        c1, d.max_tx_psn, CAPRI_TIMER_EXPIRY_FEEDBACK_TX_PSN
+    tblwr.c1       d.max_tx_psn, CAPRI_TIMER_EXPIRY_FEEDBACK_TX_PSN
+     
+    CAPRI_TIMER_EXPIRY_FEEDBACK_SSN(r1)
+    scwlt24        c1, d.max_ssn, r1
+    bbeq           d.bktrack_in_progress[0], 1, drop_feedback
+    tblwr.c1       d.max_ssn, r1 // Branch Delay Slot
+
+    CAPRI_RESET_TABLE_3_ARG()
+    phvwr     CAPRI_PHV_FIELD(SQCB1_TO_TIMER_EXPIRY_P, rexmit_psn), CAPRI_TIMER_EXPIRY_FEEDBACK_REXMIT_PSN
+
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_timer_expiry_process, r0)
+    CAPRI_SET_TABLE_0_VALID(0)
+
+    nop.e
+    nop
+
 recirc_pkt:
     // clear recirc bit and process the packet based on recirc reason
     phvwr          p.common.p4_intr_recirc, 0
+    seq            c2, CAPRI_APP_DATA_RECIRC_TOKEN_ID, d.nxt_to_go_token_id
+    bcf            [!c2], recirc_for_turn
+
+    // if bktrack is in progress then drop all response packets to prevent
+    // rxdma from updating CB state. Before dropping recirc packets increment
+    // nxt_to_go_token_id so that new response packets can be procssed after
+    // bktracking is done
+    seq            c2, d.bktrack_in_progress, 1 // Branch Delay Slot
+    bcf            [c2], drop_packet
+    tbladd.c2      d.nxt_to_go_token_id, 1 // Branch Delay Slot
 
     seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
     bcf            [c2], process_recirc_pkt
     nop            // Branch Delay Slot
 
+drop_packet:
     // Drop if not a known recirc reason
+    CAPRI_SET_TABLE_0_VALID(0)
     phvwr.e        p.common.p4_intr_global_drop, 1
     nop
 
 recirc_for_turn:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
-
-    phvwr       p.common.p4_intr_recirc, 1
-    phvwr.e     p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
-    nop
+    phvwr.e        p.common.p4_intr_recirc, 1
+    phvwr.c1       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
