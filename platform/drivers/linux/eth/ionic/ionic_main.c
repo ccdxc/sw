@@ -255,18 +255,19 @@ static void ionic_dev_cmd_work(struct work_struct *work)
 {
 	struct ionic *ionic = container_of(work, struct ionic, cmd_work);
 	struct ionic_admin_ctx *ctx;
+	unsigned long irqflags;
 	int err = 0;
 
-	spin_lock_bh(&ionic->cmd_lock);
+	spin_lock_irqsave(&ionic->cmd_lock, irqflags);
 	if (list_empty(&ionic->cmd_list)) {
-		spin_unlock_bh(&ionic->cmd_lock);
+		spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 		return;
 	}
 
 	ctx = list_first_entry(&ionic->cmd_list,
 			       struct ionic_admin_ctx, list);
 	list_del(&ctx->list);
-	spin_unlock_bh(&ionic->cmd_lock);
+	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
 	dev_dbg(ionic->dev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,

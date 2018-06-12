@@ -205,10 +205,11 @@ err_out:
 	return err;
 #else
 	struct ionic *ionic = lif->ionic;
+	unsigned long irqflags;
 
-	spin_lock_bh(&ionic->cmd_lock);
+	spin_lock_irqsave(&ionic->cmd_lock, irqflags);
 	list_add(&ctx->list, &ionic->cmd_list);
-	spin_unlock_bh(&ionic->cmd_lock);
+	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
 	schedule_work(&ionic->cmd_work);
 
