@@ -145,8 +145,10 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
 hal_ret_t
 mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 {
+    hal_ret_t           ret = HAL_RET_OK;
+    pd::pd_func_args_t  pd_func_args = {0};
+
     hal::pd::pd_mpu_trace_enable_args_t args;
-    pd::pd_func_args_t                  pd_func_args = {0};
 
     memset(&args, 0, sizeof(hal::pd::pd_mpu_trace_enable_args_t));
 
@@ -172,49 +174,61 @@ mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
         break;
     }
 
-    args.max_mpu_per_stage = max_mpu_per_stage();
-    args.mpu_trace_size    = mpu_trace_size();
-    args.stage_id          = req.stage_id();
-    args.mpu               = req.mpu();
-    args.watch_pc          = req.watch_pc();
-    args.base_addr         = req.base_addr();
-    args.buf_size          = 5;
+    args.max_mpu_per_stage             = max_mpu_per_stage();
+    args.stage_id                      = req.stage_id();
+    args.mpu_trace_info.mpu_trace_size = mpu_trace_size();
+    args.mpu                           = req.mpu();
+    args.mpu_trace_info.watch_pc       = req.spec().watch_pc();
+    args.mpu_trace_info.base_addr      = req.spec().base_addr();
+    args.mpu_trace_info.buf_size       = 5;
 
-    if (req.enable() == true) {
-        args.enable = 1;
+    if (req.spec().enable() == true) {
+        args.mpu_trace_info.enable = 1;
     }
 
-    if (req.trace_enable() == true) {
-        args.trace_enable = 1;
+    if (req.spec().trace_enable() == true) {
+        args.mpu_trace_info.trace_enable = 1;
     }
 
-    if (req.phv_debug() == true) {
-        args.phv_debug = 1;
+    if (req.spec().phv_debug() == true) {
+        args.mpu_trace_info.phv_debug = 1;
     }
 
-    if (req.phv_error() == true) {
-        args.phv_error = 1;
+    if (req.spec().phv_error() == true) {
+        args.mpu_trace_info.phv_error = 1;
     }
 
-    if (req.table_key() == true) {
-        args.table_key = 1;
+    if (req.spec().table_key() == true) {
+        args.mpu_trace_info.table_key = 1;
     }
 
-    if (req.instructions() == true) {
-        args.instructions = 1;
+    if (req.spec().instructions() == true) {
+        args.mpu_trace_info.instructions = 1;
     }
 
-    if (req.wrap() == true) {
-        args.wrap = 1;
+    if (req.spec().wrap() == true) {
+        args.mpu_trace_info.wrap = 1;
     }
 
-    if (req.reset() == true) {
-        args.reset = 1;
+    if (req.spec().reset() == true) {
+        args.mpu_trace_info.reset = 1;
     }
 
     pd_func_args.pd_mpu_trace_enable = &args;
-    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_MPU_TRACE_ENABLE,
-                                &pd_func_args);
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_MPU_TRACE_ENABLE,
+                               &pd_func_args);
+
+    debug::MpuTraceResponse *resp = rsp->add_response();
+
+    if (ret != HAL_RET_OK) {
+        resp->set_api_status(types::API_STATUS_ERR);
+        return ret;
+    }
+
+    resp->set_api_status(types::API_STATUS_OK);
+    resp->mutable_spec()->set_base_addr(args.mpu_trace_info.base_addr);
+
+    return ret;
 }
 
 //------------------------------------------------------------------------------

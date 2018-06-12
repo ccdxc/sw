@@ -61,6 +61,7 @@ cc_binary(
         "//nic:google_includes",
         "//nic:libprotobuf",
         "@sdk//obj:sdk_logger",
+        "@sdk//obj:sdk_pal",
     ],
     linkopts = [
         "-lzmq",
@@ -68,6 +69,7 @@ cc_binary(
         "-pthread",
         "-lz",
         "-lm",
+        "-ldl"
     ],
 )
 

@@ -205,21 +205,25 @@ enum MpuTracePipelineType {
   MPU_TRACE_PIPELINE_P4P_TXDMA  = 4;   // P4+ TXDMA pipeline
 }
 
+message MpuTraceSpec {
+  bool     enable        =  1;    // enable/disable trace for every table result
+  bool     trace_enable  =  2;    // trace is enable only if TRACE instruction is executed
+  bool     phv_debug     =  3;    // trace if PHV has phv_debug set
+  bool     phv_error     =  4;    // trace if PHV has table error set
+  uint64   watch_pc      =  5;    // start trace when PC == watch_pc
+  uint64   base_addr     =  6;    // base addr where trace is present
+  bool     table_key     =  7;    // set table and key trace
+  bool     instructions  =  8;    // set instructions trace
+  bool     wrap          =  9;    // wrap the trace
+  bool     reset         =  10;   // reset trace buffer index to 0. Clear wrap.
+}
+
 // parameters to enable/disable MPU tracing
 message MpuTraceRequest {
-  MpuTracePipelineType    pipeline_type =  1;    // pipeline type
-  uint32                  stage_id      =  2;    // stage id
-  uint32                  mpu           =  3;    // MPU number
-  bool                    enable        =  4;    // enable/disable trace for every table result
-  bool                    trace_enable  =  5;    // trace is enable only if TRACE instruction is executed
-  bool                    phv_debug     =  6;    // trace if PHV has phv_debug set
-  bool                    phv_error     =  7;    // trace if PHV has table error set
-  uint64                  watch_pc      =  8;    // start trace when PC == watch_pc
-  uint64                  base_addr     =  9;    // base addr where trace is present
-  bool                    table_key     =  10;   // set table and key trace
-  bool                    instructions  =  11;   // set instructions trace
-  bool                    wrap          =  12;   // wrap the trace
-  bool                    reset         =  13;   // reset trace buffer index to 0. Clear wrap.
+  MpuTracePipelineType  pipeline_type =  1;    // pipeline type
+  uint32                stage_id      =  2;    // stage id
+  uint32                mpu           =  3;    // MPU number
+  MpuTraceSpec          spec          =  4;    // MPU trace info
 }
 
 // Batched MPU trace enable/disable request msg
@@ -229,8 +233,9 @@ message MpuTraceRequestMsg {
 
 // MPU trace enable/disable status
 message MpuTraceResponse {
-  types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  uint32            debug_index = 2;    // current index in trace buffer
+  types.ApiStatus  api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  MpuTraceSpec     spec        = 2;    // MPU trace info
+  uint32           debug_index = 3;    // current index in trace buffer
 }
 
 // Batched MPU trace response

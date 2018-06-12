@@ -179,10 +179,10 @@ public:
             req->set_mpu(mpu);
         }
 
-        req->set_wrap(1);
-        req->set_table_key(true);
-        req->set_instructions(false);
-        req->set_enable(enable);
+        req->mutable_spec()->set_wrap(1);
+        req->mutable_spec()->set_table_key(true);
+        req->mutable_spec()->set_instructions(false);
+        req->mutable_spec()->set_enable(enable);
 
         status = debug_stub_->MpuTraceUpdate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
