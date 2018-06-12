@@ -39,6 +39,10 @@ func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *monitor
 		temp := *event
 		if err := e.dispatcher.Action(temp); err != nil {
 			log.Errorf("failed to forward event {%s} from the proxy, err: %v", temp.GetUUID(), err)
+
+			// dispatcher could have been stopped; throw error so, that the caller retries.
+			// any failure here could result in duplicate events from the recorder
+			return &api.Empty{}, err
 		}
 	}
 

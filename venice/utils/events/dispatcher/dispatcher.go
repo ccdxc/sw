@@ -181,13 +181,15 @@ func (d *dispatcherImpl) ProcessFailedEvents() {
 			continue
 		}
 
-		select {
-		case <-w.eventsCh.Stopped():
-			d.logger.Debugf("event receiver channel for writer {%s} stopped; cannot deliver events", writerName)
-		case w.eventsCh.Chan() <- newBatch(evts, currentEvtsOffset):
-			d.logger.Infof("sent failed/pending events to the writer {%s}", writerName)
-		default: // to avoid blocking
-			d.logger.Debugf("could not send failed/pending events to the writer {%s}", writerName)
+		if len(evts) > 0 {
+			select {
+			case <-w.eventsCh.Stopped():
+				d.logger.Debugf("event receiver channel for writer {%s} stopped; cannot deliver events", writerName)
+			case w.eventsCh.Chan() <- newBatch(evts, currentEvtsOffset):
+				d.logger.Infof("sent failed/pending events to the writer {%s}", writerName)
+			default: // to avoid blocking
+				d.logger.Debugf("could not send failed/pending events to the writer {%s}", writerName)
+			}
 		}
 	}
 }

@@ -114,7 +114,7 @@ func (t *tInfo) startEvtsProxy(listenURL string) error {
 	log.Infof("starting events proxy")
 
 	t.evtsProxy, err = evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL,
-		t.evtsMgr.RPCServer.GetListenURL(), 10*time.Second, 100*time.Millisecond, t.proxyEventsStoreDir, t.logger)
+		t.evtsMgr.RPCServer.GetListenURL(), 100*time.Second, 100*time.Millisecond, t.proxyEventsStoreDir, t.logger)
 	if err != nil {
 		return fmt.Errorf("failed start events proxy, err: %v", err)
 	}
@@ -221,39 +221,64 @@ func (t *tInfo) updateResolver(serviceName, url string) {
 	})
 }
 
-// assertElasticEvents helper function to assert events received by elastic with the total events sent
-// it asserts unique events and deduped events.
-// passing -1 for uniqueEventsSent will skip the unique event count check.
-func (t *tInfo) assertElasticEvents(te *testing.T, query es.Query, uniqueEventsSent, totalEventsSent int, timeout string) {
+// assertElasticTotalEvents helper function to assert events received by elastic with the total events sent.
+// exact == true; asserts totalEventsReceived == totalEventsSent
+// exact == false; asserts totalEventsReceived >= totalEventsSent
+func (t *tInfo) assertElasticTotalEvents(te *testing.T, query es.Query, exact bool, totalEventsSent int, timeout string) {
 	AssertEventually(te,
 		func() (bool, interface{}) {
 			var totalEventsReceived int
-			var uniqueEventsReceived int
 			var evt monitoring.Event
 
-			resp, err := t.esClient.Search(context.Background(),
-				elastic.GetIndex(globals.Events, globals.DefaultTenant),
-				indexType,
-				query,
-				nil, 0, 10000, sortBy)
+			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortBy)
+			if err != nil {
+				return false, err
+			}
 
-			if err == nil {
-				uniqueEventsReceived = len(resp.Hits.Hits)
-				for _, hit := range resp.Hits.Hits {
-					_ = json.Unmarshal(*hit.Source, &evt)
-					totalEventsReceived += int(evt.GetCount())
+			for _, hit := range resp.Hits.Hits {
+				_ = json.Unmarshal(*hit.Source, &evt)
+				totalEventsReceived += int(evt.GetCount())
+			}
+
+			if exact {
+				if !(totalEventsReceived == totalEventsSent) {
+					return false, fmt.Sprintf("expected: %d, got: %d", totalEventsSent, totalEventsReceived)
 				}
-
-				if (uniqueEventsSent == -1 || uniqueEventsReceived == uniqueEventsSent) &&
-					totalEventsReceived == totalEventsSent {
-					return true, nil
+			} else {
+				if !(totalEventsReceived >= totalEventsSent) {
+					return false, fmt.Sprintf("expected: >=%d, got: %d", totalEventsSent, totalEventsReceived)
 				}
 			}
 
-			if uniqueEventsSent == -1 {
-				return false, fmt.Sprintf("expected: %d, got: %d", totalEventsSent, totalEventsReceived)
+			return true, nil
+		}, "couldn't get the expected number of total events", "20ms", timeout)
+}
+
+// assertElasticUniqueEvents helper function to assert events received by elastic with the total unique events sent.
+// exact == true; asserts uniqueEventsReceived == uniqueEventsSent
+// exact == false; asserts uniqueEventsReceived >= uniqueEventsSent
+func (t *tInfo) assertElasticUniqueEvents(te *testing.T, query es.Query, exact bool, uniqueEventsSent int, timeout string) {
+	AssertEventually(te,
+		func() (bool, interface{}) {
+			var uniqueEventsReceived int
+
+			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortBy)
+			if err != nil {
+				return false, err
 			}
 
-			return false, fmt.Sprintf("expected: %d with overall count: %d, got: %d - %d", uniqueEventsSent, totalEventsSent, uniqueEventsReceived, totalEventsReceived)
-		}, "couldn't get the expected event", "20ms", timeout)
+			uniqueEventsReceived = len(resp.Hits.Hits)
+
+			if exact {
+				if !(uniqueEventsReceived == uniqueEventsSent) {
+					return false, fmt.Sprintf("expected: %d, got: %d", uniqueEventsSent, uniqueEventsReceived)
+				}
+			} else {
+				if !(uniqueEventsReceived >= uniqueEventsSent) {
+					return false, fmt.Sprintf("expected: >=%d, got: %d", uniqueEventsSent, uniqueEventsReceived)
+				}
+			}
+
+			return true, nil
+		}, "couldn't get the expected number of unique events", "20ms", timeout)
 }

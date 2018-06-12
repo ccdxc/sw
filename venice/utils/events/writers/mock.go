@@ -103,7 +103,18 @@ func (m *MockWriter) WriteEvents(evts []*monitoring.Event) error {
 		if m.eventsBySourceAndType[sourceKey] == nil {
 			m.eventsBySourceAndType[sourceKey] = map[string][]string{}
 		}
-		m.eventsBySourceAndType[sourceKey][evt.GetType()] = append(m.eventsBySourceAndType[sourceKey][evt.GetType()], evtUUID)
+
+		found := false
+		for _, uuid := range m.eventsBySourceAndType[sourceKey][evt.GetType()] {
+			if uuid == evtUUID { // exisiting UUID
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			m.eventsBySourceAndType[sourceKey][evt.GetType()] = append(m.eventsBySourceAndType[sourceKey][evt.GetType()], evtUUID)
+		}
 	}
 
 	return nil

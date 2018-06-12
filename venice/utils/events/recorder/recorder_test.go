@@ -353,7 +353,7 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath)
 
 	// create recorder events directory
-	recorderEventsDir, err := ioutil.TempDir("", "")
+	recorderEventsDir, err := ioutil.TempDir(eventsDir, "")
 	AssertOk(t, err, "failed to create recorder events directory")
 	defer os.RemoveAll(recorderEventsDir)
 
@@ -366,16 +366,14 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 
+	testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: t.Name()}
+	evtsRecorder, err := NewRecorder(testEventSource, testEventTypes, proxyRPCServer.GetListenURL(), recorderEventsDir)
+	AssertOk(t, err, "failed to create recorder")
+
 	// record events
 	var totalEventsSent uint64
 	go func() {
 		defer wg.Done()
-		testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: t.Name()}
-		evtsRecorder, err := NewRecorder(testEventSource, testEventTypes, proxyRPCServer.GetListenURL(), recorderEventsDir)
-		if err != nil {
-			log.Errorf("failed to create recorder, err: %v", err)
-			return
-		}
 
 		ticker := time.NewTicker(10 * time.Millisecond)
 		for {
@@ -421,6 +419,9 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	atomic.AddUint64(&totalEventsReceived, uint64(mockWriter.GetTotalEvents()))
 
 	// check if all the events has been received by the mock writer
-	Assert(t, totalEventsSent == totalEventsReceived, "mock writer did not receive all the events recorded, expected: %d, got: %d",
+	// It is expected to receive duplicates when the proxy restarts continuously because we
+	// may come across situations where the proxy might restart while it is half way
+	// processing the failed events from recorder. And the recorder will retry sending all of them once again.
+	Assert(t, totalEventsSent <= totalEventsReceived, "mock writer did not receive all the events recorded, expected: >=%d, got: %d",
 		totalEventsSent, totalEventsReceived)
 }
