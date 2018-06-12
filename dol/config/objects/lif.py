@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import copy
+import array
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -20,6 +21,7 @@ import test.callbacks.eth.toeplitz as toeplitz
 import pdb
 
 import ctypes
+
 
 class QInfoStruct(ctypes.Structure):
     _fields_ = [("dryrun", ctypes.c_bool),
@@ -86,23 +88,23 @@ class LifObject(base.ConfigObjectBase):
             self.pd_allocator = objects.TemplateFieldObject("range/0/128")
             self.mr_key_allocator = objects.TemplateFieldObject("range/0/8192")
 
-        if hasattr(spec, 'rss') and spec.rss.enable:
-            self.rss_enable = True
+        if hasattr(spec, 'rss'):
             self.rss_type = (haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4") |
                             haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4_TCP") |
                             haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4_UDP") |
                             haldefs.interface.LifRssType.Value("RSS_TYPE_IPV6") |
                             haldefs.interface.LifRssType.Value("RSS_TYPE_IPV6_TCP") |
                             haldefs.interface.LifRssType.Value("RSS_TYPE_IPV6_UDP"))
-            self.rss_key = toeplitz.toeplitz_msft_key
+            self.rss_key = array.array('B', toeplitz.toeplitz_msft_key)
+            self.rss_indir = array.array('B', [0] * 128)
         else:
-            self.rss_enable = False
-            self.rss_type = 0
-            self.rss_key = toeplitz.toeplitz_msft_key
+            self.rss_type = haldefs.interface.LifRssType.Value("RSS_TYPE_NONE")
+            self.rss_key = array.array('B', toeplitz.toeplitz_msft_key)
+            self.rss_indir = array.array('B', [0] * 128)
 
         self.tenant     = tenant
         self.spec       = spec
-        
+
         self.tx_qos_class = None
         self.rx_qos_class = None
         if self.tenant.IsQosEnabled():
@@ -182,9 +184,9 @@ class LifObject(base.ConfigObjectBase):
             req_spec.packet_filter.receive_broadcast = True
             req_spec.packet_filter.receive_promiscuous = self.promiscuous
             req_spec.packet_filter.receive_all_multicast = self.allmulticast
-        req_spec.rss.enable = self.rss_enable
         req_spec.rss.type = self.rss_type
         req_spec.rss.key = bytes(self.rss_key)
+        req_spec.rss.indir = bytes(self.rss_indir)
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)

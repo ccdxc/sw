@@ -44,13 +44,13 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
     HAL_ASSERT(num_queues < ETH_RSS_MAX_QUEUES);
 
     if (num_queues > 0) {
-        // TODO: please seriously stop hacking the code ... follow the layering,
-        // it is pretty simple apis all over
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {
+            HAL_TRACE_DEBUG("{}: hw_lif_id {} index {} type {} qid {}\n",
+                __FUNCTION__, hw_lif_id, index, rss->type, rss->indir[index]);
             pd::pd_rss_indir_table_entry_add_args_t args;
             args.hw_lif_id = hw_lif_id;
             args.index = index;
-            args.enable = rss->enable;
+            args.enable = rss->type;
             args.qid = index % num_queues;
             pd_func_args.pd_rss_indir_table_entry_add = &args;
             pd::hal_pd_call(pd::PD_FUNC_ID_RSS_INDIR_TABLE_ADD, &pd_func_args);

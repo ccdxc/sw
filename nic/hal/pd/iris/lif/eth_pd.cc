@@ -105,9 +105,13 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     uint64_t addr;
     eth_rx_rss_indir_actiondata data = { 0 };
 
-    HAL_ASSERT(hw_lif_id < MAX_LIFS);
-    HAL_ASSERT(index < ETH_RSS_LIF_INDIR_TBL_SZ);
-    HAL_ASSERT(qid < ETH_RSS_MAX_QUEUES);
+    if (hw_lif_id >= MAX_LIFS ||
+        index >= ETH_RSS_LIF_INDIR_TBL_SZ ||
+        qid >= ETH_RSS_MAX_QUEUES) {
+        HAL_TRACE_ERR("{}: {}, index : {}, qid : {}",
+                      __FUNCTION__, hw_lif_id, index, qid);
+        return HAL_RET_ERR;
+    };
 
     data.eth_rx_rss_indir_action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = enable;
     data.eth_rx_rss_indir_action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid = qid;
@@ -118,12 +122,14 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
     addr = tbl_base + tbl_index;
 
+    HAL_TRACE_DEBUG("{}: hw_lif_id : {}, index : {}, addr : {:x}, enable : {}, qid : {}",
+                    __FUNCTION__, hw_lif_id, index, addr, enable, qid);
+
     capri_hbm_write_mem(addr,
             (uint8_t *)&data.eth_rx_rss_indir_action_u,
             sizeof(data.eth_rx_rss_indir_action_u));
-
-    HAL_TRACE_DEBUG("rss_indir_table add, hw_lif_id : {}, index : {}, addr : {}",
-                    hw_lif_id, index, addr);
+    p4plus_invalidate_cache(addr, sizeof(data.eth_rx_rss_indir_action_u),
+        P4PLUS_CACHE_INVALIDATE_RXDMA);
 
     return HAL_RET_OK;
 }
@@ -136,9 +142,12 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
     uint64_t tbl_index;
     uint64_t addr;
 
-    HAL_ASSERT(hw_lif_id < MAX_LIFS);
-    HAL_ASSERT(index < ETH_RSS_LIF_INDIR_TBL_SZ);
-    HAL_ASSERT(data != NULL);
+    if (hw_lif_id >= MAX_LIFS ||
+        index >= ETH_RSS_LIF_INDIR_TBL_SZ) {
+        HAL_TRACE_ERR("{}: hw_lif_id : {} index : {}",
+            __FUNCTION__, hw_lif_id, index);
+        return HAL_RET_ERR;
+    };
 
     tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
                 (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
@@ -149,9 +158,6 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
     capri_hbm_read_mem(addr,
             (uint8_t *)&data->eth_rx_rss_indir_action_u,
              sizeof(data->eth_rx_rss_indir_action_u));
-
-    HAL_TRACE_DEBUG("rss_indir_table get, hw_lif_id : {}, index : {}, addr : {}",
-                    hw_lif_id, index, addr);
 
     return HAL_RET_OK;
 }

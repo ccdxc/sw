@@ -18,6 +18,8 @@
 #define NUM_MAX_COSES 16
 // Size of RSS seed in bytes
 #define ETH_RSS_KEY_LENGTH          40
+// Number of RSS indirection entries
+#define ETH_RSS_INDIR_LENGTH        128
 
 using intf::LifSpec;
 using intf::LifResponse;
@@ -53,9 +55,9 @@ typedef struct lif_cos_info_s {
 
 // Lif RSS config structure
 typedef struct lif_rss_info_s {
-    bool        enable;
     uint32_t    type;
     uint8_t     key[ETH_RSS_KEY_LENGTH];
+    uint8_t     indir[ETH_RSS_INDIR_LENGTH];
 } __PACK__ lif_rss_info_t;
 
 // Lif queue info structure
@@ -80,7 +82,7 @@ typedef struct lif_s {
     lif_qos_info_t      qos_info;
     bool                qstate_init_done;// qstate map init status.
     pkt_filter_t        packet_filters;  // Packet Filter Modes
-    lif_rss_info_t      rss;             // rss enable
+    lif_rss_info_t      rss;             // rss configuration
 
     // operational state of interface
     hal_handle_t        hal_handle;      // HAL allocated handle

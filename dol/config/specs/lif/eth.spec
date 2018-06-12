@@ -2,8 +2,7 @@
 meta:
     id: LIF_ETH
 
-rss:
-  enable: True
+rss: True
 
 tx_qos_class : QOS_CLASS_USER_DEFINED_1
 rx_qos_class : QOS_CLASS_USER_DEFINED_2

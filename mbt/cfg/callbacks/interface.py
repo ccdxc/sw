@@ -182,4 +182,4 @@ def LifPreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].packet_filter.receive_promiscuous = False
     req_spec.request[0].packet_filter.receive_broadcast = False
     req_spec.request[0].packet_filter.receive_all_multicast = False
-
+    req_spec.request[0].rss.type = 0

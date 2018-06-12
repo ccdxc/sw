@@ -380,9 +380,13 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
     }
 
     // Check if RSS key is correct size
-    if (spec.rss().enable() && spec.rss().key().size() > ETH_RSS_KEY_LENGTH) {
-        HAL_TRACE_ERR("{}: Invalid key size {}",
-                      __FUNCTION__, spec.rss().key().size());
+    if (spec.rss().type() &&
+        (spec.rss().key().size() != ETH_RSS_KEY_LENGTH ||
+         spec.rss().indir().size() !=  ETH_RSS_INDIR_LENGTH)) {
+        HAL_TRACE_ERR("{}: Invalid Args: key size {} indir size {}",
+                      __FUNCTION__,
+                      spec.rss().key().size(),
+                      spec.rss().indir().size());
         return HAL_RET_INVALID_ARG;
     }
 
@@ -690,10 +694,11 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->packet_filters.receive_all_multicast = spec.packet_filter().
                                                 receive_all_multicast();
     // RSS configuration
-    lif->rss.enable = spec.rss().enable();
     lif->rss.type = spec.rss().type();
     memcpy(&lif->rss.key, (uint8_t *)spec.rss().key().c_str(),
            sizeof(lif->rss.key));
+    memcpy(&lif->rss.indir, (uint8_t *)spec.rss().indir().c_str(),
+           sizeof(lif->rss.indir));
 
     //lif->allmulti = spec.allmulti();
     lif->enable_rdma = spec.enable_rdma();
@@ -811,9 +816,13 @@ validate_lif_update (LifSpec& spec, LifResponse *rsp)
     }
 
     // Check if RSS key is correct size
-    if (spec.rss().enable() && spec.rss().key().size() > ETH_RSS_KEY_LENGTH) {
-        HAL_TRACE_ERR("{}: Invalid key size {}",
-                      __FUNCTION__, spec.rss().key().size());
+    if (spec.rss().type() &&
+        (spec.rss().key().size() != ETH_RSS_KEY_LENGTH ||
+         spec.rss().indir().size() != ETH_RSS_INDIR_LENGTH)) {
+        HAL_TRACE_ERR("{}: Invalid Args: key size {} indir size {}",
+                      __FUNCTION__,
+                      spec.rss().key().size(),
+                      spec.rss().indir().size());
         return HAL_RET_INVALID_ARG;
     }
 
@@ -876,10 +885,11 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     if (app_ctxt->rss_config_changed) {
-        lif_clone->rss.enable = spec->rss().enable();
         lif_clone->rss.type = spec->rss().type();
         memcpy(&lif_clone->rss.key, (uint8_t *)spec->rss().key().c_str(),
                sizeof(lif_clone->rss.key));
+        memcpy(&lif_clone->rss.indir, (uint8_t *)spec->rss().indir().c_str(),
+               sizeof(lif_clone->rss.indir));
     }
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1110,7 +1120,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 {
     hal_ret_t ret   = HAL_RET_OK;
     LifSpec   *spec = app_ctxt->spec;
-    int cmp;
+    int cmp_key, cmp_indir;
     policer_t new_rx_policer = { POLICER_TYPE_PPS };
     policer_t new_tx_policer = { POLICER_TYPE_PPS };
 
@@ -1144,11 +1154,11 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->qstate_map_init_set = true;
     }
 
-    cmp = memcmp(lif->rss.key, (uint8_t*)spec->rss().key().c_str(),
+    cmp_key = memcmp(lif->rss.key, (uint8_t*)spec->rss().key().c_str(),
                  sizeof(lif->rss.key));
-    if (lif->rss.enable != spec->rss().enable() ||
-        lif->rss.type != spec->rss().type() ||
-        cmp) {
+    cmp_indir = memcmp(lif->rss.indir, (uint8_t*)spec->rss().indir().c_str(),
+                 sizeof(lif->rss.indir));
+    if (lif->rss.type != spec->rss().type() || cmp_key || cmp_indir) {
         app_ctxt->rss_config_changed = true;
         HAL_TRACE_DEBUG("{}:rss configuration changed", __FUNCTION__);
     }
@@ -1582,7 +1592,6 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->mutable_pinned_uplink_if_key_handle()->set_if_handle(lif->pinned_uplink);
     qos_policer_to_spec(&lif->qos_info.rx_policer, spec->mutable_rx_policer());
     qos_policer_to_spec(&lif->qos_info.tx_policer, spec->mutable_tx_policer());
-    spec->mutable_rss()->set_enable(lif->rss.enable);
     spec->mutable_rss()->set_type(lif->rss.type);
     spec->mutable_rss()->set_key(lif->rss.key, sizeof(lif->rss.key));
 
