@@ -263,7 +263,6 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Node) Defaults(ver string) bool {
 	var ret bool
-	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -314,15 +313,7 @@ func (m *NodeSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NodeSpec) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		for k := range m.Roles {
-			m.Roles[k] = "CONTROLLER"
-		}
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -612,15 +603,6 @@ func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
-	}
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -655,19 +637,6 @@ func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *NodeSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapCmd["NodeSpec"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapCmd["NodeSpec"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
 	return ret
 }
 
@@ -859,18 +828,6 @@ func init() {
 
 		if _, ok := NodeCondition_ConditionType_value[m.Type]; !ok {
 			return errors.New("NodeCondition.Type did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapCmd["NodeSpec"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCmd["NodeSpec"]["all"] = append(validatorMapCmd["NodeSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*NodeSpec)
-
-		for k, v := range m.Roles {
-			if _, ok := NodeSpec_NodeRole_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Roles", k)
-			}
 		}
 		return nil
 	})

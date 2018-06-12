@@ -1272,21 +1272,19 @@
             "type": "string"
           },
           {
-            "name": "spec.roles",
-            "description": "Roles is of list of roles a node can be configured with.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
             "name": "status.phase",
             "description": "Current lifecycle phase of the node.",
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.quorum",
+            "description": "Quorum node or not.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3003,24 +3001,6 @@
     },
     "clusterNodeSpec": {
       "type": "object",
-      "properties": {
-        "roles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "enum": [
-            "CONTROLLER",
-            "QUORUM"
-          ],
-          "default": "CONTROLLER",
-          "x-ui-hints": {
-            "CONTROLLER": "Controller",
-            "QUORUM": "Quorum"
-          },
-          "description": "Roles is of list of roles a node can be configured with."
-        }
-      },
       "description": "NodeSpec contains the configuration of the node."
     },
     "clusterNodeStatus": {
@@ -3042,6 +3022,11 @@
             "UNKNOWN": "Unknown"
           },
           "description": "Current lifecycle phase of the node."
+        },
+        "quorum": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Quorum node or not."
         },
         "conditions": {
           "type": "array",

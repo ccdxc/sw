@@ -1038,12 +1038,7 @@ var CreateNetworkFlags = []cli.Flag{
 }
 
 // CreateNodeFlags specifies flagsfor node create operation
-var CreateNodeFlags = []cli.Flag{
-
-	cli.StringSliceFlag{
-		Name: "roles",
-	},
-}
+var CreateNodeFlags = []cli.Flag{}
 
 // CreatePermissionFlags specifies flagsfor permission create operation
 var CreatePermissionFlags = []cli.Flag{

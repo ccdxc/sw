@@ -42,9 +42,6 @@ var _ = Describe("node tests", func() {
 					Name:      nonQnode,
 					Namespace: "tenant1",
 				},
-				Spec: cmd.NodeSpec{
-					Roles: []string{cmd.NodeSpec_CONTROLLER.String()},
-				},
 			}
 
 			node, err = nodeIf.Create(ts.tu.NewLoggedInContext(context.Background()), node)

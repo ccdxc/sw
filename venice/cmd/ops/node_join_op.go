@@ -13,17 +13,6 @@ import (
 	"github.com/pensando/sw/venice/utils/errors"
 )
 
-func hasRole(nodeSpec *cmd.NodeSpec, role cmd.NodeSpec_NodeRole) bool {
-	if nodeSpec != nil && nodeSpec.Roles != nil {
-		for _, r := range nodeSpec.Roles {
-			if role.String() == r {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // NodeJoinOp contains state for node addition
 type NodeJoinOp struct {
 	cluster *cmd.Cluster
@@ -65,17 +54,15 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 	// Transport key is an asymmetric key that allows multiple CMD instances to securely agree on a
 	// symmetric key that can be used to transport secrets across CMD instances.
 	var transportKeyBytes []byte
-	if hasRole(&o.node.Spec, cmd.NodeSpec_QUORUM) || hasRole(&o.node.Spec, cmd.NodeSpec_CONTROLLER) {
-		if !env.CertMgr.IsReady() {
-			return nil, errors.NewInternalError(fmt.Errorf("CertMgr not ready"))
-		}
-		transportKey, err := env.CertMgr.GetKeyAgreementKey(o.node.Name)
-		defer env.CertMgr.DestroyKeyAgreementKey(o.node.Name)
-		if err != nil {
-			return nil, errors.NewInternalError(fmt.Errorf("Error getting key-agreement-key: %v", err))
-		}
-		transportKeyBytes = env.CertMgr.MarshalKeyAgreementKey(transportKey)
+	if !env.CertMgr.IsReady() {
+		return nil, errors.NewInternalError(fmt.Errorf("CertMgr not ready"))
 	}
+	transportKey, err := env.CertMgr.GetKeyAgreementKey(o.node.Name)
+	defer env.CertMgr.DestroyKeyAgreementKey(o.node.Name)
+	if err != nil {
+		return nil, errors.NewInternalError(fmt.Errorf("Error getting key-agreement-key: %v", err))
+	}
+	transportKeyBytes = env.CertMgr.MarshalKeyAgreementKey(transportKey)
 
 	// Send prejoin request to the new node.
 	preJoinReq := &grpc.ClusterPreJoinReq{
@@ -86,7 +73,7 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 	}
 
 	nodeTransportKeys := make(map[string][]byte)
-	err := sendPreJoins(nil, preJoinReq, []string{o.node.Name}, nodeTransportKeys)
+	err = sendPreJoins(nil, preJoinReq, []string{o.node.Name}, nodeTransportKeys)
 	if err != nil {
 		return nil, errors.NewBadRequest(err.Error())
 	}

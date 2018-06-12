@@ -119,13 +119,13 @@ var typesMapCmd = map[string]*runtime.Struct{
 		},
 	},
 	"cluster.NodeSpec": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"Roles": runtime.Field{Name: "Roles", JSONTag: "roles", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
-		},
+		Fields: map[string]runtime.Field{},
 	},
 	"cluster.NodeStatus": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Phase": runtime.Field{Name: "Phase", JSONTag: "phase", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Quorum": runtime.Field{Name: "Quorum", JSONTag: "quorum", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 
 			"Conditions": runtime.Field{Name: "Conditions", JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.NodeCondition"},
 		},
