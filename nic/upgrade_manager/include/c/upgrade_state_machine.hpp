@@ -3,7 +3,7 @@
 #ifndef __UPGRADE_STATE_MACHINE_H__
 #define __UPGRADE_STATE_MACHINE_H__
 
-#include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
+#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
 
 namespace upgrade {
 

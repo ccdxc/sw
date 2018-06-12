@@ -5,7 +5,7 @@ cc_library(
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [
-        "//nic/upgrade_manager/proto:upgrade_gen",
+        "//nic/upgrade_manager/upgrade:upgrade_gen",
     ],
 )
 

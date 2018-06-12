@@ -4,7 +4,7 @@
 #define __UPGRAGE_HANDLER_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/upgrade_manager/proto/upgrade.delphi.hpp"
+#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
 
 namespace upgrade {
