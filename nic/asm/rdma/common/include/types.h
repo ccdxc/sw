@@ -26,7 +26,7 @@
 #define HBM_NUM_SGES_PER_CACHELINE 4
 #define SQCB_ADDR_SHIFT    9
 #define RQCB_ADDR_SHIFT    9
-#define CQCB_ADDR_SHIFT    9
+#define CQCB_ADDR_SHIFT    6
 #define RDMA_PAYLOAD_DMA_CMDS_START 8
 
 #define LOG_SIZEOF_CQCB_T   6   // 2^6 = 64 Bytes
@@ -322,6 +322,13 @@ struct app_data0_0_t {
     payload_len      : 14;
     struct rdma_hdr0_t rdma_hdr;   // 112 bits
 };
+
+struct cq_rx_flags_t {
+    _feedback: 1;
+    _rsvd: 15;
+};
+
+#define CQ_RX_FLAG_RDMA_FEEDBACK       0x0001
 
 struct req_rx_flags_t {
     _feedback: 1;
@@ -1021,9 +1028,10 @@ struct rdma_feedback_t {
         /* Type: RDMA_CQ_ARM_FEEDBACK */
         struct {
             cindex: 16;
+            color : 1;
             arm   : 1;
             sarm  : 1;
-            pad   : 62;
+            pad   : 61;
         }arm;
         /* TYPE: RDMA_TIMER_EXPIRY_FEEDBACK */
         struct {

@@ -32,7 +32,7 @@ def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
-def TestCaseVerify(tc):
+def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
@@ -40,33 +40,40 @@ def TestCaseVerify(tc):
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
-    # verify that tx_psn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
-        return False
+    if step.step_id == 0:
 
-    # verify that p_index is incremented by 1
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', ring0_mask,  1):
-        return False
+        # verify that tx_psn is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
+            return False
+    
+        # verify that p_index is incremented by 1
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', ring0_mask,  1):
+            return False
+    
+        # verify that c_index is incremented by 1
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', ring0_mask, 1):
+            return False
+    
+        # verify that ssn is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 1):
+            return False
+    
+        # verify that lsn is not incremented for send
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 0):
+            return False
+    
+        # verify that busy is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
+            return False
+    
+        # verify that in_progress is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
+            return False
 
-    # verify that c_index is incremented by 1
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', ring0_mask, 1):
-        return False
+    elif step.step_id == 1:
 
-    # verify that ssn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 1):
-        return False
-
-    # verify that lsn is not incremented for send
-    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 0):
-        return False
-
-    # verify that busy is 0
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
-        return False
-
-    # verify that in_progress is 0
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
-        return False
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
 
     return True
 

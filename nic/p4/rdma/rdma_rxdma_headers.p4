@@ -271,9 +271,9 @@ header_type rdma_cq_feedback_header_t {
         common_header_bits  : 160;
         feedback_type       : 8;
         cindex              : 16;
+        color               : 1;
         arm                 : 1;
         sarm                : 1;
-        pad                 : 70;
     }
 }
 

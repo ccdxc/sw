@@ -367,17 +367,17 @@ class RdmaCQstate(Packet):
         BitField("host", 0, 4),
         ShortField("pid", 0),
 
-        ShortField("p_index0", 0),
-        ShortField("c_index0", 0),
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
 
-        ShortField("p_index1", 0),
-        ShortField("c_index1", 0),
+        LEShortField("p_index1", 0),
+        LEShortField("c_index1", 0),
 
-        ShortField("p_index2", 0),
-        ShortField("c_index2", 0),
+        LEShortField("p_index2", 0),
+        LEShortField("c_index2", 0),
 
-        ShortField("proxy_pindex", 0),
-        ShortField("proxy_s_pindex", 0),
+        LEShortField("proxy_pindex", 0),
+        LEShortField("proxy_s_pindex", 0),
 
         IntField("pt_base_addr", 0),
         BitField("log_cq_page_size", 0xc, 5),
@@ -445,6 +445,11 @@ class RdmaQstateObject(object):
         self.queue_type = queue_type
         self.addr = addr
         self.size = size
+        self.proxy_cindex = 0
+        if queue_type == 'RDMA_CQ':
+            self.proxy_cindex_en = True
+        else:
+            self.proxy_cindex_en = False
         self.Read()
 
     def Write(self):
@@ -493,17 +498,24 @@ class RdmaQstateObject(object):
 
     def incr_cindex(self, ring, ring_size):
         assert(ring < 7)
-        self.set_cindex(ring, ((self.get_cindex(ring) + 1) & (ring_size - 1)))
+        prev_value = self.get_cindex(ring)
+        new_value = ((self.get_cindex(ring) + 1) & (ring_size - 1))
+        logger.info("  incr_cindex(%d): pre-val: %d new-val: %d ring_size %d" % (ring, prev_value, new_value, ring_size))
+        self.set_cindex(ring, new_value)
 
     def set_pindex(self, ring, value):
         assert(ring < 7)
         setattr(self.data, 'p_index%d' % ring, value)
-        #Avoid writting Qstate/PI to ASIC, and let DB pick up updated PI (0x9)
+        #Avoid writing Qstate/PI to ASIC, and let DB pick up updated PI (0x9)
 
     def set_cindex(self, ring, value):
         assert(ring < 7)
         setattr(self.data, 'c_index%d' % ring, value)
-        self.WriteWithDelay()
+        if self.proxy_cindex_en == 1 and ring == 0:
+           self.proxy_cindex = value
+        #CQ will update cindex to HW using doorbell. Do not write to HW
+        if self.queue_type != 'RDMA_CQ':
+            self.WriteWithDelay()
 
     def set_ring_base(self, value):
         self.data.ring_base = value
@@ -519,20 +531,43 @@ class RdmaQstateObject(object):
 
     def get_cindex(self, ring):
         assert(ring < 7)
-        return getattr(self.data, 'c_index%d' % ring)
+        if self.proxy_cindex_en == 1 and ring == 0:
+           return self.proxy_cindex
+        else:
+           return getattr(self.data, 'c_index%d' % ring)
 
     def get_proxy_cindex(self):
         return getattr(self.data, 'proxy_cindex')
+
+    def reset_proxy_s_pindex(self):
+        assert(self.queue_type == 'RDMA_CQ')
+        setattr(self.data, 'proxy_s_pindex', getattr(self.data, 'proxy_pindex'))
+        self.WriteWithDelay()
 
     def reset_cindex(self, ring):
         assert(ring < 7)
         self.set_cindex(ring, self.get_pindex(ring))
         self.WriteWithDelay()
 
-    def ArmCq(self):
-        assert(self.queue_type == 'RDMA_CQ')
-        setattr(self.data, 'arm', 1)
+   # This is depricated. Use RING based ARM instead
+   #def ArmCq(self):
+   #    assert(self.queue_type == 'RDMA_CQ')
+   #    setattr(self.data, 'arm', 1)
+   #    self.WriteWithDelay()
+
+    def reset_Arm(self):
+        setattr(self.data, 'arm', 0)
         self.WriteWithDelay()
+
+    def reset_sArm(self):
+        setattr(self.data, 'sarm', 0)
+        self.WriteWithDelay()
+
+    def get_Arm(self):
+        return getattr(self.data, 'arm')
+
+    def get_sArm(self):
+        return getattr(self.data, 'sarm')
 
     def Show(self, lgh = logger):
         lgh.ShowScapyObject(self.data) 

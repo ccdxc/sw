@@ -43,7 +43,7 @@ def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
-def TestCaseVerify(tc):
+def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
@@ -51,26 +51,33 @@ def TestCaseVerify(tc):
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
-    # verify that e_psn is incremented by 3
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
-        return False
+    if step.step_id == 1:
+    
+        # verify that e_psn is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
+            return False
+    
+        # verify that proxy_cindex is incremented by 1
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask,  1):
+            return False
+    
+        # verify that token_id is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 3):
+            return False
+    
+        # verify that nxt_to_go_token_id is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 3):
+            return False
+    
+    
+        ############     CQ VALIDATIONS #################
+        if not ValidateRespRxCQChecks(tc):
+            return False
 
-    # verify that proxy_cindex is incremented by 1
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask,  1):
-        return False
+    elif step.step_id == 2:
 
-    # verify that token_id is incremented by 3
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 3):
-        return False
-
-    # verify that nxt_to_go_token_id is incremented by 3
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 3):
-        return False
-
-
-    ############     CQ VALIDATIONS #################
-    if not ValidateRespRxCQChecks(tc):
-        return False
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
 
     return True
 

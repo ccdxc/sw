@@ -34,7 +34,7 @@ def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
-def TestCaseVerify(tc):
+def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
@@ -46,35 +46,42 @@ def TestCaseVerify(tc):
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
 
-    ############     RQ VALIDATIONS #################
+    if step.step_id == 0:
+    
+        ############     RQ VALIDATIONS #################
+    
+        # verify that e_psn is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 1):
+            return False
+    
+        # verify that pindex is set to that of CQ (send imm as dbell behavior)
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'p_index0', tc.pvtdata.rq_cq_post_qstate.proxy_pindex):
+            return False
+    
+        # verify that cindex is set to that of CQ (send imm as dbell behavior), cindex catches up to pindex before the test finishes
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'c_index0', tc.pvtdata.rq_cq_post_qstate.proxy_pindex):
+            return False
+    
+        # verify that proxy_cindex is incremented by 1 - immdt as dbell doesn't touch proxy_cindex
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask,  1):
+            return False
+    
+        # verify that token_id is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
+            return False
+    
+        # verify that nxt_to_go_token_id is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
+            return False
+    
+        ############     CQ VALIDATIONS #################
+        if not ValidateRespRxCQChecks(tc):
+            return False
+    
+    elif step.step_id == 1:
 
-    # verify that e_psn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 1):
-        return False
-
-    # verify that pindex is set to that of CQ (send imm as dbell behavior)
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'p_index0', tc.pvtdata.rq_cq_post_qstate.proxy_pindex):
-        return False
-
-    # verify that cindex is set to that of CQ (send imm as dbell behavior), cindex catches up to pindex before the test finishes
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'c_index0', tc.pvtdata.rq_cq_post_qstate.proxy_pindex):
-        return False
-
-    # verify that proxy_cindex is incremented by 1 - immdt as dbell doesn't touch proxy_cindex
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask,  1):
-        return False
-
-    # verify that token_id is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
-        return False
-
-    # verify that nxt_to_go_token_id is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
-        return False
-
-    ############     CQ VALIDATIONS #################
-    if not ValidateRespRxCQChecks(tc):
-        return False
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
 
     return True
 

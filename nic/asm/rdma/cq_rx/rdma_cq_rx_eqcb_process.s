@@ -22,7 +22,7 @@ struct eqcb_t d;
 #define IN_P t2_s2s_cqcb_to_eq_info
 
 #define K_CQ_ID CAPRI_KEY_FIELD(IN_P, cq_id)
-#define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit15, eqcb_addr_sbit24_ebit63)
+#define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit15, eqcb_addr_sbit56_ebit63)
 
 %%
 

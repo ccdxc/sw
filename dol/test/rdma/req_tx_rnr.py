@@ -255,6 +255,11 @@ def TestCaseStepVerify(tc, step):
         if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC2'):
             return False
 
+    elif step.step_id == 4:
+
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
+
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.sq_cq_pre_qstate = copy.deepcopy(rs.lqp.sq_cq.qstate.data)

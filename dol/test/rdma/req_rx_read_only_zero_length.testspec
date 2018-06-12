@@ -179,14 +179,14 @@ session:
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
 
-    #set CI for CQ ring to that of PI in DB data
+    #set CI for CQ ring to that of proxy CI in DB data
     - step:
 
         trigger:
             doorbell:
                 object: ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ/doorbell
                 fields:
-                    upd : 0x1 # Set CI to PI(DB data)
+                    upd : 0x4 #Set CI
 
         expect:
 

@@ -45,10 +45,6 @@ def TestCaseSetup(tc):
     rs.lqp.dcqcn_data.sq_cindex = tc.pvtdata.sq_cindex 
     rs.lqp.WriteDcqcnCb()
 
-    # ARM CQ and Set EQ's CI=PI for EQ enablement
-    rs.lqp.sq_cq.qstate.ArmCq()
-    rs.lqp.eq.qstate.reset_cindex(0)
-
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data

@@ -19,16 +19,26 @@ class Doorbell(doorbell.Doorbell):
         queue_id = self.ring.queue.id
 
         # Data
-        p_index = self.ring.queue.qstate.get_pindex(ring_id)
+
+        #upd_lo = upd & 0x3
+        upd_hi = (upd >> 2) & 0x3
+        if upd_hi == 1:
+            index = self.ring.queue.qstate.get_cindex(ring_id)
+        elif upd_hi == 2:
+            index = self.ring.queue.qstate.get_pindex(ring_id)
+        else:
+            index = 0
+        #lgh.info("UPD: %d Hi: %d, Lo: %d, Index: %d" % (upd, upd_hi, upd_lo, index))
+
         pid = getattr(test_spec, 'pid', 0)
 
         address = 0x400000 + (upd << 17) + (lif_id << 6) + (queue_type << 3)
-        data = (pid << 48) | (queue_id << 24) | (ring_id << 16) | p_index
+        data = (pid << 48) | (queue_id << 24) | (ring_id << 16) | index
 
         lgh.info("Ringing Doorbell: %s" % self.GID())
         lgh.info("- Addr:0x%x (Qtype:%d/LIF:%d/Upd:%d)" %
                  (address, queue_type, lif_id, upd))
         lgh.info("- Data:0x%x (Pindex:%d/RingID:%d/QID:%d/PID:%d)" %
-                 (data, p_index, ring_id, queue_id, pid))
+                 (data, index, ring_id, queue_id, pid))
 
         model_wrap.step_doorbell(address, data)

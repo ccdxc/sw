@@ -19,10 +19,6 @@ def TestCaseSetup(tc):
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
 
-    # ARM CQ and Set EQ's CI=PI for EQ enablement
-    rs.lqp.rq_cq.qstate.ArmCq()
-    rs.lqp.eq.qstate.reset_cindex(0)
-
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
@@ -75,14 +71,7 @@ def TestCaseVerify(tc):
         return False
 
     ############     CQ VALIDATIONS #################
-    rs.lqp.rq_cq.qstate.Read()
-    ring0_mask = (rs.lqp.num_rq_wqes - 1)
-    tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
-    log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_post_qstate, 'log_num_wqes')
-    ring0_mask = (2 ** log_num_cq_wqes) - 1
-
-    # verify that pindex is NOT incremented  (i.e., No completion posted)
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', ring0_mask, 0):
+    if not ValidateNoCQChanges(tc):
         return False
 
     ###########   Key Invadlidation checks ### #####

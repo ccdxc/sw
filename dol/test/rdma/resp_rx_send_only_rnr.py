@@ -38,7 +38,7 @@ def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
-def TestCaseVerify(tc):
+def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession

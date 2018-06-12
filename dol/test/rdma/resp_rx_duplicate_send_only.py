@@ -18,10 +18,6 @@ def TestCaseSetup(tc):
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
 
-    # ARM CQ and Set EQ's CI=PI for EQ enablement
-    rs.lqp.rq_cq.qstate.ArmCq()
-    rs.lqp.eq.qstate.reset_cindex(0)
-
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
@@ -117,15 +113,14 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 0):
             return False
 
-        rs.lqp.rq_cq.qstate.Read()
-        ring0_mask = (rs.lqp.num_rq_wqes - 1)
-        tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
-        log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_post_qstate, 'log_num_wqes')
-        ring0_mask = (2 ** log_num_cq_wqes) - 1
-
-        # verify that pindex is NOT incremented  (i.e., No completion posted)
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', ring0_mask, 0):
+        ############     CQ VALIDATIONS #################
+        if not ValidateNoCQChanges(tc):
             return False
+
+    elif step.step_id == 3:
+
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)

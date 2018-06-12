@@ -12,22 +12,19 @@
 #define CQ_ARM_PRI 1 
 #define CQ_SARM_PRI 2
 
-#define CQ_P_INDEX  d.ring0.pindex
-#define CQ_P_INDEX_HX  d.{ring0.pindex}.hx
-#define CQ_C_INDEX  d.ring0.cindex
-#define CQ_C_INDEX_HX  d.{ring0.cindex}.hx
+#define CQ_P_INDEX     d.{ring0.pindex}.hx
+#define CQ_C_INDEX     d.{ring0.cindex}.hx
+
+#define CQ_ARM_C_INDEX    d.{ring1.cindex}.hx
+#define CQ_ARM_P_INDEX    d.{ring1.pindex}.hx
+
+#define CQ_SARM_C_INDEX    d.{ring2.cindex}.hx
+#define CQ_SARM_P_INDEX    d.{ring2.pindex}.hx
+
+#define CQ_PROXY_PINDEX     d.{proxy_pindex}.hx
+#define CQ_PROXY_S_PINDEX   d.{proxy_s_pindex}.hx
 
 #define CQ_COLOR    d.color
-
-#define CQ_ARM_C_INDEX d.{ring1.cindex}
-#define CQ_ARM_P_INDEX d.{ring1.pindex}
-#define CQ_ARM_C_INDEX_HX d.{ring1.cindex}.hx
-#define CQ_ARM_P_INDEX_HX d.{ring1.pindex}.hx
-
-#define CQ_SARM_C_INDEX d.{ring2.cindex}
-#define CQ_SARM_P_INDEX d.{ring2.pindex}
-#define CQ_SARM_C_INDEX_HX d.{ring2.cindex}.hx
-#define CQ_SARM_P_INDEX_HX d.{ring2.pindex}.hx
 
 struct cqcb_t {
     struct capri_intrinsic_qstate_t intrinsic;

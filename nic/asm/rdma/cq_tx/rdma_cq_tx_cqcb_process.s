@@ -63,6 +63,7 @@ prepare_feedback:
 
         phvwr     p.rdma_feedback.feedback_type, RDMA_CQ_ARM_FEEDBACK 
         phvwr     p.rdma_feedback.arm.cindex, CQ_C_INDEX
+        phvwr     p.rdma_feedback.arm.color, d.color
         phvwr     p.rdma_feedback.arm.arm, r7[CQ_ARM_RING_ID:CQ_ARM_RING_ID] 
         phvwr     p.rdma_feedback.arm.sarm, r7[CQ_SARM_RING_ID:CQ_SARM_RING_ID]
 
@@ -80,7 +81,7 @@ prepare_feedback:
 
         phvwrpair p.p4_intr_rxdma.intr_qid, CAPRI_TXDMA_INTRINSIC_QID, p.p4_intr_rxdma.intr_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE
         phvwr     p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
-        phvwr     p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
+        phvwr     p.p4_to_p4plus.raw_flags, CQ_RX_FLAG_RDMA_FEEDBACK
         phvwri    p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
         #phvwri    p.p4_to_p4plus.table0_valid, 1
 

@@ -31,7 +31,7 @@ struct cqcb_t d;
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
 
-    #c1 : d.proxy_pindex == 0
+    #c1 : CQ_PROXY_PINDEX == 0
     #c2 : d.arm == 1
     #c3 : cqwqe_dma == True. Do cqwqe dma in cqcb stage.
     
@@ -51,7 +51,7 @@ resp_rx_cqcb_process:
     #Initialize c3(no_dma) to False
     setcf            c3, [!c0] //BD Slot
 
-    seq             c1, d.proxy_pindex, 0
+    seq             c1, CQ_PROXY_PINDEX, 0
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
@@ -60,11 +60,11 @@ resp_rx_cqcb_process:
 
     /* get the page index corresponding to p_index */
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
-    srlv            PAGE_INDEX, d.proxy_pindex, NUM_LOG_WQE
+    srlv            PAGE_INDEX, CQ_PROXY_PINDEX, NUM_LOG_WQE
     
     add             r1, d.pt_pg_index, 0
     beq             r1, PAGE_INDEX, no_translate_dma
-    add             r1, d.proxy_pindex, 0  //BD slot
+    add             r1, CQ_PROXY_PINDEX, 0  //BD slot
 
     //Compute the number of pages of CQ
     add             NUM_LOG_PAGES, d.log_num_wqes, d.log_wqe_size
@@ -74,7 +74,7 @@ resp_rx_cqcb_process:
     beq             r1, PAGE_INDEX, translate_next
     add             PT_PINDEX, r0, d.pt_next_pg_index //Branch delay slot
     b               fire_cqpt
-    add             PT_PINDEX, r0, d.proxy_pindex //Branch delay slot    
+    add             PT_PINDEX, r0, CQ_PROXY_PINDEX //Branch delay slot    
 
 translate_next:
 
@@ -126,7 +126,7 @@ fire_cqpt:
     bcf     [!c3], incr_pindex
     nop
     b       do_dma
-    add             r1, r0, d.proxy_pindex
+    add             r1, r0, CQ_PROXY_PINDEX
     
 no_translate_dma:
     
@@ -140,7 +140,7 @@ no_translate_dma:
 do_dma:
 
     // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
-    //r1 has d.proxy_pindex by the time we reach here
+    //r1 has CQ_PROXY_PINDEX by the time we reach here
     mincr           r1, NUM_LOG_WQE, r0
     sll             PAGE_OFFSET, r1, d.log_wqe_size
 
@@ -179,13 +179,14 @@ eqcb_setup:
     RESP_RX_EQCB_ADDR_GET(r5, r2, d.eq_id) // BD Slot
     phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
     phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), r5
+    tblwr.c6       CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
 
 skip_eqcb:
 
     // increment p_index
-    tblmincri       d.proxy_pindex, d.log_num_wqes, 1
-    crestore        [c1], CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0x1
-    tblwr.c1        d.proxy_s_pindex, d.proxy_pindex
+    tblmincri       CQ_PROXY_PINDEX, d.log_num_wqes, 1
+    crestore        [c1], K_BTH_SE, 0x1
+    tblwr.c1        CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
 
     tblwr.c6    d.{arm...sarm}, 0
 
@@ -193,7 +194,7 @@ skip_eqcb:
 
     //for send with imm_as_dbell, set the pindex 
     //optimizing conditional checks
-    RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(d.{proxy_pindex}.hx) //Branch Delay Slot
+    RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(d.proxy_pindex) //Branch Delay Slot
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_WAKEUP_DPATH)
     RESP_RX_POST_WAKEUP_DPATH_INCR_PINDEX(DMA_CMD_BASE, 

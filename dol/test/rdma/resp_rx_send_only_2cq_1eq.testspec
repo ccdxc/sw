@@ -290,6 +290,14 @@ descriptors:
 session:
     - step:
         trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ_ARM/doorbell
+                fields:
+                    upd : 0xD # Increment PI and DB_SCHED_EVAL
+        expect:
+ 
+    - step:
+        trigger:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=RQ_DESC_1
@@ -350,14 +358,14 @@ session:
                     object  : ref://testcase/packets/id=EXP_PKT_2
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
-    #set CI for CQ ring to that of PI in DB data
+    #set CI for CQ ring to that of proxy CI in DB data
     - step:
 
         trigger:
             doorbell:
                 object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ/doorbell
                 fields:
-                    upd : 0x1 # Set CI to PI(DB data)
+                    upd : 0x4 #Set CI
 
         expect:
 

@@ -71,6 +71,10 @@ def TestCaseStepVerify(tc, step):
         if not ValidateRespRxCQChecks(tc):
             return False
     
+    elif step.step_id == 2:
+
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
 
     return True
 

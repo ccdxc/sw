@@ -39,7 +39,7 @@ req_rx_cqcb_process:
     #Initialize c3(no_dma) to False
     setcf            c3, [!c0] //BD Slot
 
-    seq             c1, d.proxy_pindex, 0
+    seq             c1, CQ_PROXY_PINDEX, 0
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
@@ -47,11 +47,11 @@ req_rx_cqcb_process:
     phvwr           p.cqwqe.color, CQ_COLOR
 
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
-    srlv            r3, d.proxy_pindex, NUM_LOG_WQE
+    srlv            r3, CQ_PROXY_PINDEX, NUM_LOG_WQE
 
     add             r1, d.pt_pg_index, 0
     beq             r1, r3, no_translate_dma
-    add             r1, d.proxy_pindex, 0  //BD slot
+    add             r1, CQ_PROXY_PINDEX, 0  //BD slot
 
     //Compute the number of pages of CQ
     add             NUM_LOG_PAGES, d.log_num_wqes, d.log_wqe_size
@@ -61,7 +61,7 @@ req_rx_cqcb_process:
     beq             r1, r3, translate_next 
     add             PT_PINDEX, r0, d.pt_next_pg_index //Branch delay slot    
     b               fire_cqpt
-    add             PT_PINDEX, r0, d.proxy_pindex //Branch delay slot    
+    add             PT_PINDEX, r0, CQ_PROXY_PINDEX //Branch delay slot    
 
 translate_next:
 
@@ -112,7 +112,7 @@ fire_cqpt:
     bcf     [!c3], incr_pindex
     nop
     b       do_dma
-    add             r1, r0, d.proxy_pindex
+    add             r1, r0, CQ_PROXY_PINDEX
     
 no_translate_dma:
 
@@ -125,7 +125,7 @@ no_translate_dma:
 do_dma:
 
     // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
-    //r1 has d.proxy_pindex by the time we reach here
+    //r1 has CQ_PROXY_PINDEX by the time we reach here
     mincr           r1, NUM_LOG_WQE, r0
     sll             r1, r1, d.log_wqe_size
 
@@ -154,7 +154,7 @@ eqcb_eval:
     setcf.c2        c6, [c0] //BD Slot
 
     //if (sarm == 1) && (arm = 0) && (bth_se == 1), fire_eqcb
-    bbeq.c1         CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 1, eqcb_setup
+    bbeq.c1         K_BTH_SE, 1, eqcb_setup
     setcf           c6, [c0] //BD Slot
 
     setcf           c6, [!c0]
@@ -164,13 +164,14 @@ eqcb_setup:
     REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
     phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
     phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), r5
+    tblwr.c6       CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
 
 skip_eqcb:
    
     // increment p_index
-    tblmincri       d.proxy_pindex, d.log_num_wqes, 1
+    tblmincri       CQ_PROXY_PINDEX, d.log_num_wqes, 1
     crestore        [c1], CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0x1
-    tblwr.c1        d.proxy_s_pindex, d.proxy_pindex
+    tblwr.c1        CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
 
     bbne        d.wakeup_dpath, 1, skip_wakeup
     tblwr.c6    d.{arm...sarm}, 0 //Branch Delay Slot

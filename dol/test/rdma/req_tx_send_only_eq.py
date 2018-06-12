@@ -19,7 +19,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
 
     # ARM CQ and Set EQ's CI=PI for EQ enablement
-    rs.lqp.sq_cq.qstate.ArmCq()
+    #rs.lqp.sq_cq.qstate.ArmCq()
     rs.lqp.eq.qstate.reset_cindex(0)
 
     # Read CQ pre state
@@ -48,7 +48,7 @@ def TestCaseStepVerify(tc, step):
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
-    if step.step_id == 0:
+    if step.step_id == 1:
 
         # verify that tx_psn is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
@@ -82,7 +82,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
             return False
 
-    elif step.step_id == 1:
+    elif step.step_id == 2:
         msn = tc.pvtdata.sq_pre_qstate.ssn - 1
 
         # verify that msn is incremented to that of ssn of this msg
@@ -123,6 +123,11 @@ def TestCaseStepVerify(tc, step):
         ############     EQ VALIDATIONS #################
         if not ValidateEQChecks(tc):
             return False
+
+    elif step.step_id == 3:
+
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)

@@ -17,6 +17,9 @@
 #define CQ_RX_DMA_CMD_EQ          (CQ_RX_MAX_DMA_CMDS - 1)
 
 
+#define CQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
+    CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
+
 #define CQ_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_hi, _log_num_cq_entries) \
     EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_hi, _log_num_cq_entries);
 

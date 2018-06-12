@@ -40,7 +40,7 @@ def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
-def TestCaseVerify(tc):
+def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
@@ -48,49 +48,56 @@ def TestCaseVerify(tc):
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
-    ############     RQ VALIDATIONS #################
-    # verify that e_psn is incremented by 3
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
-        return False
-
-    # verify that proxy_cindex is incremented by 1
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask,  1):
-        return False
-
-    # verify that token_id is incremented by 3
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 3):
-        return False
-
-    # verify that nxt_to_go_token_id is incremented by 3
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 3):
-        return False
-
-    ############     CQ VALIDATIONS #################
-    if not ValidateRespRxCQChecks(tc):
-        return False
-
-    ###########   Key Invadlidation checks ### #####
-    # read the key table entry for the rkey being invalidated 
-    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
-
-    if not (kt_entry.data.state == 1): # KEY_STATE_FREE = 1
-        logger.info("RDMA TestCaseVerify(): Rkey invalidated fails for hw_lif %d qp %s rkey %d " % 
+    if step.step_id == 0:
+    
+        ############     RQ VALIDATIONS #################
+        # verify that e_psn is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
+            return False
+    
+        # verify that proxy_cindex is incremented by 1
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask,  1):
+            return False
+    
+        # verify that token_id is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 3):
+            return False
+    
+        # verify that nxt_to_go_token_id is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 3):
+            return False
+    
+        ############     CQ VALIDATIONS #################
+        if not ValidateRespRxCQChecks(tc):
+            return False
+    
+        ###########   Key Invadlidation checks ### #####
+        # read the key table entry for the rkey being invalidated 
+        kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
+    
+        if not (kt_entry.data.state == 1): # KEY_STATE_FREE = 1
+            logger.info("RDMA TestCaseVerify(): Rkey invalidated fails for hw_lif %d qp %s rkey %d " % 
+                    (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
+            logger.info("RDMA TestCaseVerify(): Invalidated rkey is not in Free state: state %d" %
+                    kt_entry.data.state)
+            return False
+    
+        logger.info("RDMA TestCaseVerify(): Rkey is invalidated for hw_lif %d qp %s rkey %d" % 
                 (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
-        logger.info("RDMA TestCaseVerify(): Invalidated rkey is not in Free state: state %d" %
-                kt_entry.data.state)
-        return False
+        # validate the key again for further tests
+        kt_entry.data.state = 2  
+        kt_entry.WriteWithDelay()
+        if not (kt_entry.data.state == 2): # KEY_STATE_VALID = 2
+            logger.info("RDMA TestCaseVerify(): Unable to set Rkey to valid state for hw_lif %d qp %s rkey %d " % 
+                    (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
+            logger.info("RDMA TestCaseVerify(): Rkey current state: state %d" %
+                    kt_entry.data.state)
+            return False
 
-    logger.info("RDMA TestCaseVerify(): Rkey is invalidated for hw_lif %d qp %s rkey %d" % 
-            (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
-    # validate the key again for further tests
-    kt_entry.data.state = 2  
-    kt_entry.WriteWithDelay()
-    if not (kt_entry.data.state == 2): # KEY_STATE_VALID = 2
-        logger.info("RDMA TestCaseVerify(): Unable to set Rkey to valid state for hw_lif %d qp %s rkey %d " % 
-                (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
-        logger.info("RDMA TestCaseVerify(): Rkey current state: state %d" %
-                kt_entry.data.state)
-        return False
+    elif step.step_id == 1:
+
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
 
     return True
 

@@ -32,7 +32,7 @@ def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
-def TestCaseVerify(tc):
+def TestCaseVerify(tc, step):
     logger.info("RDMA TestCaseVerify() Implementation.")
     return True
 

@@ -92,6 +92,50 @@ def ValidateReqRxCQChecks(tc, desc_name):
 
     return True
 
+#this should be used after driver/DOL synced cindex to HW, by ringing CQ doorbell(ring 0) with set_cindex option
+def ValidatePostSyncCQChecks(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.sq_cq_post_qstate = rs.lqp.sq_cq.qstate.data
+
+    # verify that c_index_0 is set to the same as proxy_pindex
+    if not VerifyFieldsEqual(tc, tc.pvtdata.sq_cq_post_qstate, 'c_index0', tc.pvtdata.sq_cq_post_qstate, 'proxy_pindex'):
+        return False
+
+#   # verify that p_index_0 is set equal to that of c_index_0
+#   if not VerifyFieldsEqual(tc, tc.pvtdata.sq_cq_post_qstate, 'c_index0', tc.pvtdata.sq_cq_post_qstate, 'p_index0'):
+#       return False
+
+    # verify that p_index1 is set to that of cindex1 //ARM
+    if not VerifyFieldsEqual(tc, tc.pvtdata.sq_cq_post_qstate, 'p_index1', tc.pvtdata.sq_cq_post_qstate, 'c_index1'):
+        return False
+
+    # verify that p_index2 is set to that of cindex2 //SARM
+    if not VerifyFieldsEqual(tc, tc.pvtdata.sq_cq_post_qstate, 'p_index2', tc.pvtdata.sq_cq_post_qstate, 'c_index2'):
+        return False
+
+    rs.lqp.rq_cq.qstate.Read()
+    tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+
+    # verify that c_index_0 is set to the same as proxy_pindex
+    if not VerifyFieldsEqual(tc, tc.pvtdata.rq_cq_post_qstate, 'c_index0', tc.pvtdata.rq_cq_post_qstate, 'proxy_pindex'):
+        return False
+
+#   # verify that p_index_0 is set equal to that of c_index_0
+#   if not VerifyFieldsEqual(tc, tc.pvtdata.rq_cq_post_qstate, 'c_index0', tc.pvtdata.rq_cq_post_qstate, 'p_index0'):
+#       return False
+
+    # verify that p_index1 is set to that of cindex1 //ARM
+    if not VerifyFieldsEqual(tc, tc.pvtdata.rq_cq_post_qstate, 'p_index1', tc.pvtdata.rq_cq_post_qstate, 'c_index1'):
+        return False
+
+    # verify that p_index2 is set to that of cindex2 //SARM
+    if not VerifyFieldsEqual(tc, tc.pvtdata.rq_cq_post_qstate, 'p_index2', tc.pvtdata.rq_cq_post_qstate, 'c_index2'):
+        return False
+
+    return True
+
+
 def ValidateNoCQChanges(tc):
     rs = tc.config.rdmasession
     rs.lqp.rq_cq.qstate.Read()
@@ -102,10 +146,10 @@ def ValidateNoCQChanges(tc):
     # verify that no change to p_index
     if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'proxy_pindex', ring0_mask, 0):
         return False
-
-    # verify that no change to c_index
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'c_index0', ring0_mask, 0):
-        return False
+#
+#   # verify that no change to c_index
+#   if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'c_index0', ring0_mask, 0):
+#       return False
 
     return True
 

@@ -837,3 +837,109 @@ modules:
         spec    : resp_rx_write_only_zero_len_nak.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_TX_SEND_ONLY_EQ_ARM
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_eq_arm
+        spec    : req_tx_send_only_eq_arm.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_EQ_ARM_SE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_eq_arm_se
+        spec    : req_tx_send_only_eq_arm_se.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_ARM_EQ
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_arm_eq
+        spec    : req_tx_send_only_arm_eq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_SARM_EQ
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_sarm_eq
+        spec    : req_tx_send_only_sarm_eq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_SARM_EQ_NO_SE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_sarm_eq_no_se
+        spec    : req_tx_send_only_sarm_eq_no_se.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_ARM_SARM_EQ
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_arm_sarm_eq
+        spec    : req_tx_send_only_arm_sarm_eq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_ARM_SARM_EQ_SE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_arm_sarm_eq_se
+        spec    : req_tx_send_only_arm_sarm_eq_se.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ARM_EQ
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_arm_eq
+        spec    : resp_rx_send_only_arm_eq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ARM_EQ_SE
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_arm_eq_se
+        spec    : resp_rx_send_only_arm_eq_se.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_SARM_EQ
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_sarm_eq
+        spec    : resp_rx_send_only_sarm_eq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_SARM_EQ_SE
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_sarm_eq_se
+        spec    : resp_rx_send_only_sarm_eq_se.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ARM_SARM_EQ
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_arm_sarm_eq
+        spec    : resp_rx_send_only_arm_sarm_eq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ARM_SARM_EQ_SE
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_arm_sarm_eq_se
+        spec    : resp_rx_send_only_arm_sarm_eq_se.testspec
+        ignore  : False
+
+
+

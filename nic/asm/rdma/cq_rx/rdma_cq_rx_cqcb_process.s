@@ -11,9 +11,11 @@ struct cq_rx_s5_t2_k k;
 #define IN_TO_S_P to_s5_info
 
 #define K_ARM_CINDEX CAPRI_KEY_FIELD(IN_P, cindex)
+#define K_ARM_COLOR  CAPRI_KEY_FIELD(IN_P, color)
 #define K_ARM        CAPRI_KEY_FIELD(IN_P, arm)
 #define K_SARM       CAPRI_KEY_FIELD(IN_P, sarm)
-#define K_CQ_ID       CAPRI_KEY_FIELD(IN_P, cq_id)
+#define K_CQ_ID      CAPRI_KEY_FIELD(IN_P, cq_id)
+#define K_CQCB_ADDR  CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit4, cqcb_addr_sbit29_ebit33)
 
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
@@ -35,28 +37,30 @@ cqcb_process:
 check_arm:
 
     //if (arm):
-    //    if (arm_cindex < proxy_pindex):
+    //    if (arm_color != color) || (arm_cindex != proxy_pindex):
     //        #post EQ event
     //    else:
     //        #set ARM bit
 
     bbne          K_ARM, 1, check_sarm
-    scwlt         c1, K_ARM_CINDEX, d.proxy_pindex //BD slot
+    sne           c1, K_ARM_COLOR, d.color //BD Slot
+    sne.!c1       c1, K_ARM_CINDEX, CQ_PROXY_PINDEX
     bcf           [c1], post_eq_event
-    tblwr.!c1     d.arm, 1
+    tblwr.!c1     d.arm, 1 //BD Slot
     
 check_sarm:
 
     //if (sarm):
-    //    if (arm_cindex < proxy_s_pindex):
+    //    if (arm_color != color) || (arm_cindex != proxy_s_pindex):
     //        #post EQ event
     //    else:
     //        set SARM bit
 
     bbne          K_SARM, 1, die_down
-    scwlt         c1, K_ARM_CINDEX, d.proxy_s_pindex //BD slot
+    sne           c1, K_ARM_COLOR, d.color //BD Slot
+    sne.!c1       c1, K_ARM_CINDEX, CQ_PROXY_S_PINDEX
     bcf           [c1], post_eq_event
-    tblwr.!c1     d.sarm, 1
+    tblwr.!c1     d.sarm, 1 //BD Slot
   
 die_down:
 
@@ -73,16 +77,15 @@ post_eq_event:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_cq_rx_eqcb_process, r0)
 
     tblwr.e d.{arm...sarm}, 0
-    nop //Exit Slot
+    tblwr   CQ_PROXY_S_PINDEX, K_ARM_CINDEX //Exit Slot
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_4
     bcf           [!c1], exit
-    CQCB0_ADDR_GET(r2) //BD Slot
 
     //invoke the same routine, but with valid cqcb addr
-    CAPRI_GET_TABLE_2_K(cq_rx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r2)
+    CAPRI_GET_TABLE_2_K_NO_VALID(cq_rx_phv_t, r7) //nop
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, K_CQCB_ADDR)
 
 exit:
     nop.e

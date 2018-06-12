@@ -100,9 +100,11 @@ header_type cq_rx_cqcb0_to_cq_info_t {
     fields {
         cq_id                            :  24;
         cindex                           :  16;
+        color                            :   1;
         arm                              :   1;
         sarm                             :   1;
-        pad                              :  96;
+        cqcb_addr                        :  34;
+        pad                              :  61;
     }
 }
 
@@ -208,9 +210,9 @@ action rdma_stage0_cq_feedback_action () {
     // cq_feedback_header bits
     modify_field(rdma_cq_feedback_scr.feedback_type, rdma_cq_feedback.feedback_type);
     modify_field(rdma_cq_feedback_scr.cindex, rdma_cq_feedback.cindex);
+    modify_field(rdma_cq_feedback_scr.color, rdma_cq_feedback.color);
     modify_field(rdma_cq_feedback_scr.arm, rdma_cq_feedback.arm);
     modify_field(rdma_cq_feedback_scr.sarm, rdma_cq_feedback.sarm);
-    modify_field(rdma_cq_feedback_scr.pad, rdma_cq_feedback.pad);
 }
 
 /*
@@ -258,8 +260,10 @@ action cq_rx_cqcb_process_dummy () {
     // stage to stage
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.cq_id, t2_s2s_cqcb0_to_cq_info.cq_id);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.cindex, t2_s2s_cqcb0_to_cq_info.cindex);
+    modify_field(t2_s2s_cqcb0_to_cq_info_scr.color, t2_s2s_cqcb0_to_cq_info.color);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.arm, t2_s2s_cqcb0_to_cq_info.arm);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.sarm, t2_s2s_cqcb0_to_cq_info.sarm);
+    modify_field(t2_s2s_cqcb0_to_cq_info_scr.cqcb_addr, t2_s2s_cqcb0_to_cq_info.cqcb_addr);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.pad, t2_s2s_cqcb0_to_cq_info.pad);
 
 }
@@ -276,8 +280,10 @@ action cq_rx_cqcb_process () {
     // stage to stage
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.cq_id, t2_s2s_cqcb0_to_cq_info.cq_id);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.cindex, t2_s2s_cqcb0_to_cq_info.cindex);
+    modify_field(t2_s2s_cqcb0_to_cq_info_scr.color, t2_s2s_cqcb0_to_cq_info.color);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.arm, t2_s2s_cqcb0_to_cq_info.arm);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.sarm, t2_s2s_cqcb0_to_cq_info.sarm);
+    modify_field(t2_s2s_cqcb0_to_cq_info_scr.cqcb_addr, t2_s2s_cqcb0_to_cq_info.cqcb_addr);
     modify_field(t2_s2s_cqcb0_to_cq_info_scr.pad, t2_s2s_cqcb0_to_cq_info.pad);
 
 }

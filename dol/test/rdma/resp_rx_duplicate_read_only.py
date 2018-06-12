@@ -170,6 +170,11 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_in_progress', 0):
             return False
 
+    elif step.step_id == 3:
+
+        if not ValidatePostSyncCQChecks(tc):
+            return False 
+
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
     tc.pvtdata.rq_cq_pre_qstate = copy.deepcopy(rs.lqp.rq_cq.qstate.data)
