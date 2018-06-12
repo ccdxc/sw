@@ -14,6 +14,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define PHV_GLOBAL_COMMON_P phv_global_common
 
 %%
+    .param    resp_rx_stats_process
 
 .align
 resp_rx_rqcb_process_ext:
@@ -51,6 +52,14 @@ skip_roce_opt_parsing:
     CAPRI_SET_FIELD2(TO_S_STATS_INFO_P, pyld_bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 recirc_pkt:
+    seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 7
+    bcf     [!c1], exit
+    nop // BD Slot
+
+    // invoke stats_process as mpu_only program and it keeps
+    // bubbling down and handles actual stats in stage 7.
+    CAPRI_SET_FIELD2(TO_S_STATS_INFO_P, incr_recirc_drop, 1)
+    CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
 exit:
     nop.e
     nop

@@ -102,7 +102,7 @@ class RdmaRQstate(Packet):
 
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
-        ByteField("rqcb1_rsvd4", 0),                                            
+        ByteField("work_not_done_recirc_cnt", 0),                                            
         BitField("srq_enabled", 0, 1),
         BitField("cache", 0, 1),
         BitField("immdt_as_dbell", 0, 1),
@@ -110,7 +110,7 @@ class RdmaRQstate(Packet):
         BitField("nak_prune", 0, 1),
         BitField("rqcb1_rsvd0", 0, 3),
 
-        BitField("disable_speculation", 0, 1),
+        BitField("busy", 0, 1),
         BitField("rqcb1_rsvd1", 0, 7),
         BitField("in_progress", 0, 1),
         BitField("rqcb1_rsvd2", 0, 7),
@@ -189,7 +189,8 @@ class RdmaRQstate(Packet):
         ShortField("num_ring_dbell", 0),
         ShortField("num_pkts_in_cur_msg", 0),
         ShortField("max_pkts_in_any_msg", 0),
-        BitField("pad", 0, 224),
+        ShortField("num_recirc_drop_pkts", 0),
+        BitField("pad", 0, 208),
     ]
 
 class RdmaSQstate(Packet):

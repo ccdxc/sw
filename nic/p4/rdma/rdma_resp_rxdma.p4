@@ -365,7 +365,8 @@ header_type resp_rx_rsq_backtrack_adjust_info_t {
 header_type resp_rx_to_stage_stats_info_t {
     fields {
         pyld_bytes                       :   16;
-        pad                              :  112;
+        incr_recirc_drop                 :    1;
+        pad                              :  111;
     }
 }
 
@@ -1419,6 +1420,7 @@ action resp_rx_stats_process () {
 
     // to stage
     modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.incr_recirc_drop, to_s7_stats_info.incr_recirc_drop);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

@@ -1218,7 +1218,8 @@ typedef struct rqcb4_s {
 } rqcb4_t;
 
 typedef struct rqcb5_s {
-    uint8_t     rsvd[28];
+    uint8_t     rsvd[26];
+    uint16_t    num_recirc_drop_pkts;
     uint16_t    max_pkts_in_any_msg;
     uint16_t    num_pkts_in_cur_msg;
     uint16_t    num_ring_dbell;

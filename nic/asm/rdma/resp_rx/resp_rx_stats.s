@@ -31,6 +31,9 @@ resp_rx_stats_process:
     tbladd           d.num_bytes, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes)
     tblmincri        d.num_pkts, MASK_32, 1
 
+    seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, incr_recirc_drop), 1
+    tblmincri.c7     d.num_recirc_drop_pkts, MASK_16, 1
+
     crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_RING_DBELL | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ)
 
     tblmincri.c6     d.num_ring_dbell, MASK_16, 1

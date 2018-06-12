@@ -126,7 +126,7 @@ struct rqcb1_t {
 
     token_id: 8;            //rw by S0
     nxt_to_go_token_id: 8;  // written by S4, read by S0
-    rsvd4 : 8;
+    work_not_done_recirc_cnt: 8; //rw by S0
     srq_enabled: 1;         //Ronly
     cache: 1;               //Ronly
     immdt_as_dbell: 1;      //Ronly
@@ -134,7 +134,7 @@ struct rqcb1_t {
     nak_prune: 1;           //rw by S0
     rsvd0: 3;
 
-    disable_speculation: 1; //rw by S0
+    busy: 1; // set to 1 by S0, to 0 by S3
     rsvd1: 7;
     in_progress: 1;         // wirtten by S4, read by S0
     rsvd2: 7;
@@ -224,7 +224,8 @@ struct rqcb5_t {
     num_ring_dbell: 16;
     num_pkts_in_cur_msg: 16;
     max_pkts_in_any_msg : 16;
-    pad: 224;
+    num_recirc_drop_pkts: 16;
+    pad: 208;
 };
 
 struct rqcb_t {

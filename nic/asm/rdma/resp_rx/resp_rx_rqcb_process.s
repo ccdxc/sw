@@ -14,7 +14,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 //#define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
 #define RQCB_TO_RQCB1_P t0_s2s_rqcb_to_rqcb1_info
 #define TO_S_WB1_P to_s3_wb1_info
-//#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
+#define TO_S_STATS_INFO_P to_s7_stats_info
 #define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
@@ -57,7 +57,7 @@ resp_rx_rqcb_process:
     // is this a fresh packet ?
     seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     bcf     [!c1], recirc_pkt
-    nop     //BD Slot
+    cmov    TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
 
     //fresh packet
     // populate global fields
@@ -80,26 +80,32 @@ resp_rx_rqcb_process:
 skip_roce_opt_parsing:
 
     // get a tokenid for the fresh packet
-    phvwr  p.common.rdma_recirc_token_id, d.token_id
+    phvwr  p.common.rdma_recirc_token_id, TOKEN_ID
 
-    CAPRI_SET_FIELD2(TO_S_WB1_P, my_token_id, d.token_id)
+    CAPRI_SET_FIELD2(TO_S_WB1_P, my_token_id, TOKEN_ID)
+    // every fresh packet gets a unique token id 
+    tbladd    d.token_id, 1 
+
+    // recirc if busy==1 or work_not_done_recirc_cnt !=0
+    bbeq    d.busy, 1, recirc_wait_for_turn
+    seq     c1, d.work_not_done_recirc_cnt, 0 // BD Slot
+
+    bcf     [!c1], recirc_wait_for_turn
 
 #   CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
 #   CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 start_recirc_packet:
     # subtract the pad bytes from the payload length.
-    sub     REM_PYLD_BYTES, CAPRI_APP_DATA_PAYLOAD_LEN, CAPRI_APP_DATA_BTH_PAD
-    crestore [c7, c6, c5, c4, c3, c2, c1], r7, (RESP_RX_FLAG_UD | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
-    // c7: UD, c6: cswap, c5: fna, c4: write, c3: read, c2: send, c1: only
+    sub     REM_PYLD_BYTES, CAPRI_APP_DATA_PAYLOAD_LEN, CAPRI_APP_DATA_BTH_PAD // BD Slot in straight path
 
-    bcf     [c7], process_ud
+    bbeq     CAPRI_APP_DATA_RAW_FLAG_UD, 1, process_ud
     //set DMA cmd ptr
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID, 0) //BD Slot
 
     //Check if ECN bits are set in Packet and congestion management is enabled.                      
     bbne     d.congestion_mgmt_enable, 1, skip_cnp_receive
-    sne      c2, k.rdma_bth_ecn, 3  //c2 is not used after assignment above. Re-using it.
+    sne      c2, k.rdma_bth_ecn, 3  
     bcf      [c2], skip_cnp_send
 
     //Process sending CNP packet to the requester.
@@ -110,11 +116,15 @@ start_recirc_packet:
 skip_cnp_send:
     // Check if its CNP packet.
     sne     c2, CAPRI_APP_DATA_BTH_OPCODE, RDMA_PKT_OPC_CNP
-    bcf     [c7 | c2], skip_cnp_receive
+    // The below check was checking if either UD or CNP. This is not needed
+    // since we already branch to UD above
+    bcf     [c2], skip_cnp_receive
 
     add     r5, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5) 
-    nop.e
+    // For a CNP packet, write_back is not invoked
+    // nxt_to_go_token_id is not incremented. so decrement token_id
+    tblsub.e    d.token_id, 1 
     nop
 
 skip_cnp_receive:
@@ -122,47 +132,50 @@ skip_cnp_receive:
     seq     c7, CAPRI_APP_DATA_BTH_ACK_REQ, 1
     or.c7   r7, r7, RESP_RX_FLAG_ACK_REQ
 
+    crestore [c6, c5, c4, c3, c2, c1], r7, (RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
+    // c6: cswap, c5: fna, c4: write, c3: read, c2: send, c1: only
+
+    setcf       c7, [c2 & !c1]
+    // c7 : send FML
+
+    seq         c2, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0 // c2 from above crestore is not used below. So reusing c2 here 
+    // skip_token_id_check if fresh packet except send FML, OR 
+    // recirc packet with reason other than work_not_done
+    // recirc packets with any other reason do not come here
+    bcf         [c7 | !c2], skip_token_id_check
+
+token_id_check:
+    // Slow path: token id check is mandatory
+    // if fresh packet with send FML, OR
+    // recirc packet with reason work_not_done
+    seq         c2, TOKEN_ID, d.nxt_to_go_token_id // BD Slot in straight path
+
+    bcf         [!c2], recirc_wait_for_turn
+
+skip_token_id_check:
+    //got my turn, do sanity checks
+    // is pkt psn same as e_psn ?
+    seq         c7, d.e_psn, CAPRI_APP_DATA_BTH_PSN //BD Slot 
+    tblwr.c7    d.nak_prune, 0
+    bcf         [!c7], seq_err_or_duplicate
+
+    seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type //BD Slot
+    bcf         [!c7], inv_req_nak
+
+    // check if payload_len is <= pmtu
+    sll         r1, 1, d.log_pmtu  //BD Slot
+    blt         r1, REM_PYLD_BYTES, inv_req_nak
+    nop // BD Slot
+
     bcf     [c1 | c6 | c5 | c3], process_only_rd_atomic
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7) //BD Slot
 
-/****** Slow path: SEND/WRITE FIRST/MIDDLE/LAST ******/
+/****** Multi-packet: SEND/WRITE FIRST/MIDDLE/LAST ******/
 process_send_write_fml:
     crestore    [c6, c5, c4, c3, c2, c1], r7, (RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_SEND | RESP_RX_FLAG_LAST | RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_FIRST) 
     //  c6: immdt, c5: write, c4: send, c3: last, c2: middle, c1: first
     //  using c5 in below code, make sure its not used
     
-    // if it is a first packet, disable further speculation
-    tblwr.c1    d.disable_speculation, 1
-
-    // check if it is my turn. if not, recirc.
-    seq         c5, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
-    cmov        TOKEN_ID, c5, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID
-    //  using c5 derived in above crestore, make sure its not used
-    seq         c7, TOKEN_ID, d.nxt_to_go_token_id
-
-    bcf         [!c7], recirc_wait_for_turn
-    tbladd.c5   d.token_id, 1  //BD Slot
-
-    //got my turn, do sanity checks
-
-    // if it is the last packet, enable speculation again
-    tblwr.c3    d.disable_speculation, 0
-
-    // is pkt psn same as e_psn ?
-    seq         c7, d.e_psn, CAPRI_APP_DATA_BTH_PSN 
-    tblwr.c7    d.nak_prune, 0
-    bcf         [!c7], seq_err_or_duplicate
-
-    // check serv_type
-    seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type //BD Slot
-    bcf         [!c7], inv_req_nak
-
-    sll         r1, 1, d.log_pmtu  //BD Slot
-
-    // packet_length should not be more than PMTU
-    blt         r1, REM_PYLD_BYTES, inv_req_nak
-    nop
-
     // last packet should be at least 1 byte
     beq.c3      REM_PYLD_BYTES, r0, inv_req_nak     
     nop
@@ -191,7 +204,7 @@ process_send_write_fml:
     bcf         [c4], process_send
     phvwr       p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID //BD Slot
      
-/****** Slow path: WRITE FIRST/MIDDLE/LAST ******/
+/****** Fast path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
     // check if rnr case for Write Last with Immdt
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
@@ -242,6 +255,7 @@ wr_skip_immdt_as_dbell:
 
 /****** Slow path: SEND FIRST/MIDDLE/LAST ******/
 process_send:
+    //  c6: immdt, c5: write, c4: send, c3: last, c2: middle, c1: first
 
     // check if rnr case for Send First
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
@@ -307,31 +321,12 @@ send_in_progress:
 process_only_rd_atomic:
     // for read and atomic, start DMA commands from flit 9 instead of 8
     RXDMA_DMA_CMD_PTR_SET_C(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0, !c1) //BD Slot
-    seq         c7, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
-    bbeq        d.disable_speculation, 0, skip_token_id_check
-    tbladd.c7   d.token_id, 1  //BD Slot
-    cmov        TOKEN_ID, c7, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID
-    seq         c1, TOKEN_ID, d.nxt_to_go_token_id
-    bcf         [!c1], recirc_wait_for_turn
-skip_token_id_check:
-
-    // is pkt psn same as e_psn ?
-    seq         c7, d.e_psn, CAPRI_APP_DATA_BTH_PSN //BD Slot in straight path
-    tblwr.c7    d.nak_prune, 0
-    bcf         [!c7], seq_err_or_duplicate
-
-    seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type //BD Slot
-    bcf         [!c7], inv_req_nak
-
-    // check if payload_len is <= pmtu
-    sll         r1, 1, d.log_pmtu  //BD Slot 
-    blt         r1, REM_PYLD_BYTES, inv_req_nak
 
     // increment msn
     /* TODO below instructions can be optimized using tblmincri
        and delaying the subsequent phvwr by a few instructions
      */
-    add         r1, r0, d.msn   //BD Slot
+    add         r1, r0, d.msn   
     mincr       r1, 24, 1
     tblwr       d.msn, r1
 
@@ -526,11 +521,12 @@ process_read:
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
 
 process_atomic:
-    /* Disable speculation so that other requests
+    /* Only atomic requests update the busy bit
+       Set busy bit so that other requests
        don't end up modifying e_psn, RSQ pindex etc
        before atomic errors out in stage 1
      */ 
-    tblwr           d.disable_speculation, 1
+    tblwr           d.busy, 1
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
     CAPRI_SET_FIELD2(TO_S_ATOMIC_INFO_P, rsqwqe_ptr, RSQWQE_P)
 
@@ -568,7 +564,11 @@ recirc_atomic_rnr:
 
     b           process_rnr
     // enable speculation
-    tblwr       d.disable_speculation, 0 // BD Slot
+    tblwr       d.busy, 0 // BD Slot
+
+recirc_work_done:
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
 /****** Logic for handling out-of-order packets ******/
 seq_err_or_duplicate:
@@ -733,16 +733,16 @@ skip_nak:
 /****** Logic for UD ******/
 
 process_ud:
+    crestore [c2, c1], r7, (RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
+    // c2: send, c1: only
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
 
     seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type
     seq         c3, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     // if it doesn't match serv_type OR not send OR not only, drop
     bcf         [!c7 | !c2 | !c1], ud_drop
-    tbladd.c3   d.token_id, 1 // BD Slot
-
     // check if payload_len is <= pmtu
-    sll         r1, 1, d.log_pmtu
+    sll         r1, 1, d.log_pmtu // BD Slot
     blt         r1, REM_PYLD_BYTES, ud_drop
 
     // check if q_key matches
@@ -834,20 +834,23 @@ recirc_wait_for_turn:
 
     phvwr       p.common.p4_intr_recirc, 1
     phvwr.e     p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
-    nop
+    tbladd      d.work_not_done_recirc_cnt, 1 // Exit Slot
 
 /****** Logic to handle already recirculated packets ******/
 recirc_pkt:
     // turn off recirc, if this thread needs recirc again, respective
     // code would enable recirc flag there.
-    phvwr   p.common.p4_intr_recirc, 0
+    phvwr   p.common.p4_intr_recirc, 0 
 
     seq     c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
     bcf     [c2], recirc_sge_work_pending
     seq     c3, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // BD Slot
+    tblsub.c3  d.work_not_done_recirc_cnt, 1
     bcf     [c3], start_recirc_packet
     seq     c4, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_ATOMIC_RNR // BD Slot
     bcf     [c4], recirc_atomic_rnr
+    seq     c5, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_DONE // BD Slot
+    bcf     [c5], recirc_work_done
     nop     //BD Slot
 
     // For any any known or non-handled recirc reasons, drop the packet

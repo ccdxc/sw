@@ -47,13 +47,13 @@ resp_rx_rqcb1_write_back_process:
     bbeq            K_GLOBAL_FLAG(_only), 1, skip_updates_for_only
     tblwr           d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)   //BD Slot
 
-    //If atomic request, enable speculation again
+    // If atomic request, set busy to 0
     add             GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
     crestore        [c3, c2], GLOBAL_FLAGS, (RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA)
     # c3: cswap, c2: fna
     setcf           c1, [c3 | c2]
     # c1: atomic
-    tblwr.c1        d.disable_speculation, 0
+    tblwr.c1        d.busy, 0
 
     // updates for multi-packet case
     tblwr       d.{current_sge_offset...current_sge_id}, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_id)

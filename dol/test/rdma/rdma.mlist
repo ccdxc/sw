@@ -615,3 +615,11 @@ modules:
         module  : resp_rx_atomic_rnr
         spec    : resp_rx_atomic_rnr.testspec
         ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_FML_RECIRC
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_fml_recirc
+        spec    : resp_rx_write_fml_recirc.testspec
+        ignore  : False
