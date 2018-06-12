@@ -26,7 +26,7 @@ tls_enc_queue_sesq_process:
     CAPRI_CLEAR_TABLE0_VALID
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd_gc_slot_dma_cmd_type) / 16)
 
-    smeqb       c5, k.to_s7_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    smeqb       c5, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
 
     /* Barco bypass: Skip TLS header DMA command */
     phvwri.c5   p.dma_cmd_tls_hdr_dma_cmd_type, 0
@@ -52,13 +52,13 @@ dma_cmd_sesq_slot:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_sesq_slot_dma_cmd, r4, ring_entry_descr_addr, ring_entry_descr_addr)    
 
-    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
     nop
 
 tls_sesq_produce:
 
-    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
     add.c1      r7, k.tls_global_phv_fid, r0
     add.!c1     r7, k.to_s7_other_fid, r0
 

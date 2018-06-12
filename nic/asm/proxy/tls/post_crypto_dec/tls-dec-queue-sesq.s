@@ -50,13 +50,13 @@ dma_cmd_sesq_slot:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_sesq_slot_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
 
-    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
     nop
 
 tls_sesq_produce:
 
-    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
     add.c1      r7, k.tls_global_phv_fid, r0
     add.!c1     r7, k.to_s7_other_fid, r0
 
@@ -65,14 +65,14 @@ tls_sesq_produce:
     CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd_sesq_dbell_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
                                 r1, db_data_data)
                               
-    sne         c1, k.tls_global_phv_l7_proxy_en, r0
+    sne         c1, k.tls_global_phv_flags_l7_proxy_en, r0
     bcf         [c1], tls_queue_sesq_process_done
     nop
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd_sesq_dbell_dma_cmd)
     b           tls_queue_sesq_process_done
     nop
 tls_sesq_produce_skip:
-    sne         c1, k.tls_global_phv_l7_proxy_en, r0
+    sne         c1, k.tls_global_phv_flags_l7_proxy_en, r0
     phvwri.!c1  p.dma_cmd_sesq_slot_dma_cmd_eop, 1
     phvwri.!c1  p.dma_cmd_sesq_slot_dma_cmd_wr_fence, 1
         

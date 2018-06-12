@@ -27,7 +27,7 @@ tls_enc_rx_bsq_enc_process:
 	   RING_FREE(idesc, RNMDR);
 	   dtlsp->dec_una.desc = HEAD_DESC(*dtlsp, dec);
 	*/
-    bbeq        k.tls_global_phv_post_cbc_enc, 1, tls_enc_rx_bsq_enc_process_do_cbc
+    bbeq        k.tls_global_phv_flags_post_cbc_enc, 1, tls_enc_rx_bsq_enc_process_do_cbc
     nop
 
     /*

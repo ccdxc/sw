@@ -27,7 +27,7 @@ tls_enc_rx_bsq_enc_dummy_process:
     phvwr   p.to_s7_other_fid, d.other_fid
     phvwri  p.to_s7_enc_completions, 1
 
-    bbne        k.tls_global_phv_post_cbc_enc, 1, tls_enc_rx_bsq_enc_dummy_process_non_cbc
+    bbne        k.tls_global_phv_flags_post_cbc_enc, 1, tls_enc_rx_bsq_enc_dummy_process_non_cbc
     nop
     
     seq     c1, d.qhead, r0

@@ -135,10 +135,10 @@
                             (CAPRI_SEM_TNMDR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
 
-//#define CAPRI_TNMPR_RING_SIZE               16384
-//#define CAPRI_TNMPR_RING_SHIFT              14
-#define CAPRI_TNMPR_RING_SIZE               1024
-#define CAPRI_TNMPR_RING_SHIFT              10
+#define CAPRI_TNMPR_RING_SIZE               16384
+#define CAPRI_TNMPR_RING_SHIFT              14
+//#define CAPRI_TNMPR_RING_SIZE               1024
+//#define CAPRI_TNMPR_RING_SHIFT              10
 #define CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR \
                             (CAPRI_SEM_TNMPR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_TNMPR_ALLOC_CI_RAW_ADDR \

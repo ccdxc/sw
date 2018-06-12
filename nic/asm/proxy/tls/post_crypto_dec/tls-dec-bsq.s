@@ -41,9 +41,7 @@ tls_dec_post_crypto_process:
     phvwr       p.tls_global_phv_sesq_pi, d.u.read_tls_stg0_d.sw_sesq_pi
     tblmincri   d.u.read_tls_stg0_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
 
-    phvwr       p.to_s6_debug_dol, d.u.read_tls_stg0_d.debug_dol
-    phvwr       p.to_s7_debug_dol, d.u.read_tls_stg0_d.debug_dol
-    phvwr	p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
+    phvwr       p.tls_global_phv_debug_dol, d.u.read_tls_stg0_d.debug_dol
 
     /*
      * Check if this is AES-CCM decrypt case, which has some differences in the barco
@@ -87,9 +85,9 @@ tls_dec_post_crypto_process:
 tls_dec_post_crypto_skip_bsq_dbell:
 
     sne         c1, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_NONE
-    phvwri.c1   p.tls_global_phv_l7_proxy_en, 1
+    phvwri.c1   p.tls_global_phv_flags_l7_proxy_en, 1
     seq         c2, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_SPAN
-    phvwri.c2   p.tls_global_phv_l7_proxy_type_span, 1
+    phvwri.c2   p.tls_global_phv_flags_l7_proxy_type_span, 1
 
 table_read_rx_bsq_dec: 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_rx_bsq_dec_dummy_process,

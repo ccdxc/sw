@@ -32,7 +32,7 @@ tls_dec_read_desc_process:
 
     sne         c1, r0, d.{status}.wx
     /* Barco Error */
-    phvwri.c1    p.tls_global_phv_barco_op_failed, 1
+    phvwri.c1    p.tls_global_phv_flags_barco_op_failed, 1
 
 table_read_bsq_consume:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_bsq_consume_process,

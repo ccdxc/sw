@@ -64,10 +64,10 @@ header_type l7_desc_alloc_d_t {
         modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.sesq_pi, tls_global_phv.sesq_pi);                           \
-        modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
-        modify_field(tls_global_phv_scratch.barco_op_failed, tls_global_phv.barco_op_failed);           \
-        modify_field(tls_global_phv_scratch.l7_proxy_en, tls_global_phv.l7_proxy_en);                   \
-        modify_field(tls_global_phv_scratch.l7_proxy_type_span, tls_global_phv.l7_proxy_type_span);
+        modify_field(tls_global_phv_scratch.debug_dol, tls_global_phv.debug_dol);                       \
+        modify_field(tls_global_phv_scratch.flags_barco_op_failed, tls_global_phv.flags_barco_op_failed);           \
+        modify_field(tls_global_phv_scratch.flags_l7_proxy_en, tls_global_phv.flags_l7_proxy_en);                   \
+        modify_field(tls_global_phv_scratch.flags_l7_proxy_type_span, tls_global_phv.flags_l7_proxy_type_span);
 
 
 /* Global PHV definition */
@@ -76,10 +76,10 @@ header_type tls_global_phv_t {
         qstate_addr                     : HBM_ADDRESS_WIDTH;
         fid                             : 16;
         sesq_pi                         : 16;
-        dec_flow                        : 1;
-        barco_op_failed                 : 1;
-        l7_proxy_en                     : 1;
-        l7_proxy_type_span              : 1;
+        debug_dol                       : 8;
+        flags_barco_op_failed           : 1;
+        flags_l7_proxy_en               : 1;
+        flags_l7_proxy_type_span        : 1;
     }
 }
 
@@ -96,17 +96,14 @@ header_type to_stage_5_phv_t {
 header_type to_stage_6_phv_t {
     fields {
         do_post_ccm_dec                 : 1;
-        debug_dol                       : 8;
     }
 }
 #define GENERATE_TO_S6                                                              \
     modify_field(to_s6_scratch.do_post_ccm_dec, to_s6.do_post_ccm_dec);             \
-    modify_field(to_s6_scratch.debug_dol, to_s6.debug_dol);
 
 header_type to_stage_7_phv_t {
     fields {
         odesc                           : ADDRESS_WIDTH;
-        debug_dol                       : 8;
         other_fid                       : 16;
         l7_desc                         : 32;
     }
@@ -114,7 +111,6 @@ header_type to_stage_7_phv_t {
 
 #define GENERATE_TO_S7                                                              \
     modify_field(to_s7_scratch.odesc, to_s7.odesc);                                 \
-    modify_field(to_s7_scratch.debug_dol, to_s7.debug_dol);                         \
     modify_field(to_s7_scratch.other_fid, to_s7.other_fid);                         \
     modify_field(to_s7_scratch.l7_desc, to_s7.l7_desc);
 

@@ -24,7 +24,7 @@ struct phv_                 p;
 tls_enc_post_read_odesc:
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s7_debug_stage4_7_thread, CAPRI_MPU_STAGE_6, CAPRI_MPU_TABLE_0)
 
-    smeqb       c1, k.{to_s6_debug_dol_sbit0_ebit6...to_s6_debug_dol_sbit7_ebit7}, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
 
     /*
      * If its the post-encrypt of AES-CBC-HMAC-SHA2, the output page is
@@ -33,7 +33,7 @@ tls_enc_post_read_odesc:
      * Note: The branch delay slots for the two 'bbeq' instructions below are used to
      * execute common instructions instead of nop.
      */
-    bbeq        k.tls_global_phv_post_cbc_enc, 1, tls_enc_post_read_odesc_do_cbc
+    bbeq        k.tls_global_phv_flags_post_cbc_enc, 1, tls_enc_post_read_odesc_do_cbc
     phvwr       p.odesc_A0, d.u.tls_read_odesc_d.A0
     bbeq        k.to_s6_do_post_ccm_enc, 1, tls_enc_post_read_odesc_do_ccm
     phvwr       p.odesc_O0, d.u.tls_read_odesc_d.O0

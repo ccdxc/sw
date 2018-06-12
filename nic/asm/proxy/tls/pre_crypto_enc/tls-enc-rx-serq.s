@@ -24,7 +24,7 @@ tls_enc_rx_serq_process:
     CAPRI_CLEAR_TABLE0_VALID
 
     /* Part of the configuration read and setup */
-    seq         c1, k.to_s2_do_pre_ccm_enc, 1
+    seq         c1, k.tls_global_phv_flags_do_pre_ccm_enc, 1
     phvwr.!c1   p.crypto_iv_salt, d.salt
     phvwr.c1    p.ccm_header_with_aad_B_0_nonce_salt, d.salt
     CAPRI_OPERAND_DEBUG(d.salt)

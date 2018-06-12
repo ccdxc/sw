@@ -39,7 +39,7 @@ tls_enc_tdesc_alloc_process:
          * When set to use random IV from barco DRBG, we'll launch a table-read program to generate and
 	 * read a random value from the DRBG cryptoram to use as explicit-IV field for encrypt request.
          */
-	smeqb       c1, k.to_s3_debug_dol, TLS_DDOL_EXPLICIT_IV_USE_RANDOM, TLS_DDOL_EXPLICIT_IV_USE_RANDOM
+	smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_EXPLICIT_IV_USE_RANDOM, TLS_DDOL_EXPLICIT_IV_USE_RANDOM
 	b.!c1       tls_enc_serq_consume_done
 	nop
 

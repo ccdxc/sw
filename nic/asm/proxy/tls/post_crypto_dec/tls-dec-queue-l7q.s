@@ -21,11 +21,11 @@ tls_dec_queue_l7q_process:
     CAPRI_CLEAR_TABLE1_VALID
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd_gc_slot_dma_cmd_type) / 16)
 
-    sne         c1, k.tls_global_phv_l7_proxy_en, r0
+    sne         c1, k.tls_global_phv_flags_l7_proxy_en, r0
     bcf         [!c1], tls_queue_l7q_process_done
     nop
 
-    sne         c2, k.tls_global_phv_l7_proxy_type_span, r0
+    sne         c2, k.tls_global_phv_flags_l7_proxy_type_span, r0
     bcf         [c2], dma_cmd_l7_desc_span
     nop
 
@@ -55,7 +55,7 @@ dma_cmd_l7q_slot:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r1, l7_ring_entry_descr_addr,l7_ring_entry_descr_addr)
 
-    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_l7q_produce_skip
     nop
 

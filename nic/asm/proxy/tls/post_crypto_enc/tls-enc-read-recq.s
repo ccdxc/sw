@@ -26,7 +26,7 @@ struct tx_table_s3_t0_d     d;
 tls_enc_read_recq:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s7_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
 
-    seq     c1, k.tls_global_phv_post_cbc_enc, 1
+    seq     c1, k.tls_global_phv_flags_post_cbc_enc, 1
 
     add.c1  r3, r0, k.to_s3_idesc
 

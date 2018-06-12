@@ -41,9 +41,7 @@ tls_enc_post_crypto_process:
     phvwr       p.tls_global_phv_sesq_pi, d.u.read_tls_stg0_d.sw_sesq_pi
     tblmincri   d.u.read_tls_stg0_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
 
-    phvwr       p.to_s6_debug_dol, d.u.read_tls_stg0_d.debug_dol
-    phvwr       p.to_s7_debug_dol, d.u.read_tls_stg0_d.debug_dol
-    phvwr       p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
+    phvwr       p.tls_global_phv_debug_dol, d.u.read_tls_stg0_d.debug_dol
 
     /*
      * Check if this is post-encrypt stage of AES-CBC-HMAC-SHA2 (MAC-then-encrypt) or CCM
@@ -54,7 +52,7 @@ tls_enc_post_crypto_process:
     seq.s       c1, 0, r2
     phvwri.c1   p.to_s6_do_post_ccm_enc, 1
     slt.s       c2, 0, r2
-    phvwri.c2   p.tls_global_phv_post_cbc_enc, 1
+    phvwri.c2   p.tls_global_phv_flags_post_cbc_enc, 1
 
     phvwrpair   p.tls_global_phv_qstate_addr,               \
                     k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0], \

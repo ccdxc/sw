@@ -28,7 +28,7 @@ tls_dec_bsq_consume_process:
 
 
     /* For now, if we have a Barco Op error, bail out right here */
-    sne     c1, r0, k.tls_global_phv_barco_op_failed
+    sne     c1, r0, k.tls_global_phv_flags_barco_op_failed
     bcf     [c1], tls_dec_bsq_consume_process_done
     nop
 

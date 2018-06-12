@@ -21,7 +21,7 @@ struct tx_table_s5_t0_d d;
     .param      tls_enc_pre_crypto_stats_process
         
 tls_enc_queue_brq_process:
-    smeqb       c5, k.to_s5_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    smeqb       c5, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
 
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s6_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID

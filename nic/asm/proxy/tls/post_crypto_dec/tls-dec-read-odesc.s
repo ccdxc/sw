@@ -24,10 +24,10 @@ struct phv_                 p;
 tls_dec_post_read_odesc:
     CAPRI_SET_DEBUG_STAGE4_7(p.stats_debug_stage4_7_thread, CAPRI_MPU_STAGE_6, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
-    smeqb       c5, k.{to_s6_debug_dol_sbit0_ebit6...to_s6_debug_dol_sbit7_ebit7}, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    smeqb       c5, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
 
-    sne         c1, k.tls_global_phv_l7_proxy_en, r0
-    sne         c2, k.tls_global_phv_l7_proxy_type_span, r0
+    sne         c1, k.tls_global_phv_flags_l7_proxy_en, r0
+    sne         c2, k.tls_global_phv_flags_l7_proxy_type_span, r0
     
     phvwr.c1    p.l7_desc_A0, d.u.tls_read_odesc_d.A0
 

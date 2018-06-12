@@ -67,8 +67,8 @@ header_type read_rnmpr_free_pi_d_t {
         modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.sesq_pi, tls_global_phv.sesq_pi);                           \
-        modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
-        modify_field(tls_global_phv_scratch.post_cbc_enc, tls_global_phv.post_cbc_enc);                 \
+        modify_field(tls_global_phv_scratch.debug_dol, tls_global_phv.debug_dol);                       \
+        modify_field(tls_global_phv_scratch.flags_post_cbc_enc, tls_global_phv.flags_post_cbc_enc);     \
 
 
 /* Global PHV definition */
@@ -77,8 +77,8 @@ header_type tls_global_phv_t {
         qstate_addr                     : HBM_ADDRESS_WIDTH;
         fid                             : 16;
         sesq_pi                         : 16;
-        dec_flow                        : 1;
-        post_cbc_enc                    : 1;
+        debug_dol                       : 8;
+        flags_post_cbc_enc              : 1;
     }
 }
 
@@ -104,18 +104,15 @@ header_type to_stage_5_phv_t {
 header_type to_stage_6_phv_t {
     fields {
         do_post_ccm_enc                 : 1;
-        debug_dol                       : 8;
     }
 }
 
 #define GENERATE_TO_S6_K                                                                                \
     modify_field(to_s6_scratch.do_post_ccm_enc, to_s6.do_post_ccm_enc);                                 \
-    modify_field(to_s6_scratch.debug_dol, to_s6.debug_dol);
 
 header_type to_stage_7_phv_t {
     fields {
         odesc                           : HBM_ADDRESS_WIDTH;
-        debug_dol                       : 8;
         other_fid                       : 16;
         rnmdr_free                      : 8;
         rnmpr_free                      : 8;
@@ -127,7 +124,6 @@ header_type to_stage_7_phv_t {
 
 #define GENERATE_TO_S7_K                                                                                \
     modify_field(to_s7_scratch.odesc, to_s7.odesc);                                                     \
-    modify_field(to_s7_scratch.debug_dol, to_s7.debug_dol);                                             \
     modify_field(to_s7_scratch.other_fid, to_s7.other_fid);                                             \
     modify_field(to_s7_scratch.rnmdr_free, to_s7.rnmdr_free);                                           \
     modify_field(to_s7_scratch.rnmpr_free, to_s7.rnmpr_free);                                           \

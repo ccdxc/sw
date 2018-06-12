@@ -46,7 +46,7 @@ table_read_idesc:
 	                    r2, TABLE_SIZE_512_BITS)
 
     /* Skip allocating the descriptor and the page when we are bypassing Barco offload */
-    smeqb   c1, k.to_s1_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    smeqb   c1, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
     bcf     [c1], tls_enc_read_serq_entry_process_done
     nop
 

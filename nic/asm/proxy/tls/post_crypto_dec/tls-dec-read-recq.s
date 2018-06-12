@@ -35,8 +35,8 @@ tls_dec_read_recq:
 
 table_read_L7_RNMDR_ALLOC_IDX:
     # Allocate L7 only if SPAN proxy is enabled
-    seq     c1, k.tls_global_phv_l7_proxy_en, 1
-    seq     c2, k.tls_global_phv_l7_proxy_type_span, 1
+    seq     c1, k.tls_global_phv_flags_l7_proxy_en, 1
+    seq     c2, k.tls_global_phv_flags_l7_proxy_type_span, 1
     bcf     [!c1 | !c2], tls_dec_read_recq_done
     nop
     

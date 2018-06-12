@@ -107,12 +107,10 @@ rsvd,cosA,cosB,cos_sel,eval_last,host,total,pid, pi_0,ci_0
 #define GENERATE_GLOBAL_K                                                                               \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
-        modify_field(tls_global_phv_scratch.split, tls_global_phv.split);                               \
-        modify_field(tls_global_phv_scratch.pending_rx_serq, tls_global_phv.pending_rx_serq);           \
-        modify_field(tls_global_phv_scratch.pending_rx_brq, tls_global_phv.pending_rx_brq);             \
-        modify_field(tls_global_phv_scratch.pending_queue_brq, tls_global_phv.pending_queue_brq);       \
-        modify_field(tls_global_phv_scratch.tls_global_pad0, tls_global_phv.tls_global_pad0);           \
+        modify_field(tls_global_phv_scratch.flags_do_pre_ccm_enc, tls_global_phv.flags_do_pre_ccm_enc); \
+        modify_field(tls_global_phv_scratch.flags_pad0, tls_global_phv.flags_pad0);                     \
         modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
+        modify_field(tls_global_phv_scratch.debug_dol, tls_global_phv.debug_dol);                       \
         modify_field(tls_global_phv_scratch.tls_hdr_type, tls_global_phv.tls_hdr_type);                 \
         modify_field(tls_global_phv_scratch.tls_hdr_version_major, tls_global_phv.tls_hdr_version_major);\
         modify_field(tls_global_phv_scratch.tls_hdr_version_minor, tls_global_phv.tls_hdr_version_minor);\
@@ -124,12 +122,10 @@ header_type tls_global_phv_t {
     fields {
         fid                             : 16;
         dec_flow                        : 8;
-        split                           : 1;
-        pending_rx_serq                 : 1;
-        pending_rx_brq                  : 1;
-        pending_queue_brq               : 1;
-        tls_global_pad0                 : 4;
+        flags_do_pre_ccm_enc            : 1;
+        flags_pad0                      : 7;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
+        debug_dol                       : 8;
         tls_hdr_type                    : 8;
         tls_hdr_version_major           : 8;
         tls_hdr_version_minor           : 8;
@@ -138,17 +134,10 @@ header_type tls_global_phv_t {
     }
 }
 
-header_type to_stage_1_phv_t {
-    fields {
-        debug_dol                       : 8;
-    }
-}
-
 header_type to_stage_2_phv_t {
     fields {
         serq_ci                         : 16;
         idesc                           : HBM_ADDRESS_WIDTH;
-        do_pre_ccm_enc                  : 1;
     }
 }
 
@@ -157,7 +146,6 @@ header_type to_stage_3_phv_t {
         tnmdr_pi                        : 16;
         tnmpr_pi                        : 16;
         serq_ci                         : 16;
-        debug_dol                       : 8;
     }
 }
 
@@ -165,8 +153,6 @@ header_type to_stage_4_phv_t {
     fields {
         idesc                           : HBM_ADDRESS_WIDTH;
         odesc                           : HBM_ADDRESS_WIDTH;
-        debug_dol                       : 8;
-        do_pre_ccm_enc                  : 1;
         do_pre_mpp_enc                  : 1;
     }
 }
@@ -177,7 +163,6 @@ header_type to_stage_5_phv_t {
         odesc                           : HBM_ADDRESS_WIDTH;
         opage                           : HBM_ADDRESS_WIDTH;
         sw_barco_pi                     : 16;
-        debug_dol                       : 8;
     }
 }
 
@@ -242,9 +227,6 @@ metadata tls_stage_queue_brq_d_t tls_queue_brq_d;
 
 @pragma scratch_metadata
 metadata tls_stage_pre_crypto_stats_d_t tls_pre_crypto_stats_d;
-
-@pragma pa_header_union ingress to_stage_1
-metadata to_stage_1_phv_t to_s1;
 
 @pragma pa_header_union ingress to_stage_2
 metadata to_stage_2_phv_t to_s2;
@@ -318,8 +300,6 @@ metadata dma_cmd_phv2mem_t dma_cmd_dbell;
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
 @pragma scratch_metadata
-metadata to_stage_1_phv_t to_s1_scratch;
-@pragma scratch_metadata
 metadata to_stage_2_phv_t to_s2_scratch;
 @pragma scratch_metadata
 metadata to_stage_3_phv_t to_s3_scratch;
@@ -360,8 +340,6 @@ action read_tls_stg1_7(TLSCB_1_PARAMS) {
 
     GENERATE_GLOBAL_K
 
-    modify_field(to_s1_scratch.debug_dol, to_s1.debug_dol);
-
     GENERATE_TLSCB_1_D
 }
 
@@ -375,7 +353,6 @@ action tls_rx_serq(TLSCB_CONFIG_AEAD_PARAMS) {
     /* To Stage 2 fields */
     modify_field(to_s2_scratch.serq_ci, to_s2.serq_ci);
     modify_field(to_s2_scratch.idesc, to_s2.idesc);
-    modify_field(to_s2_scratch.do_pre_ccm_enc, to_s2.do_pre_ccm_enc);
 
     GENERATE_TLSCB_CONFIG_AEAD
 }
@@ -400,8 +377,7 @@ action read_tnmpr(tnmpr_pidx) {
  * Stage 2 table 3 action
  */
 action tls_read_pkt_descr_aol(PKT_DESCR_AOL_ACTION_PARAMS) {
-
-    modify_field(to_s2_scratch.do_pre_ccm_enc, to_s2.do_pre_ccm_enc);
+    GENERATE_GLOBAL_K
 
     // d for stage 2 table 3
     GENERATE_PKT_DESCR_AOL_D
@@ -426,9 +402,6 @@ action tls_serq_consume(TLSCB_0_PARAMS_NON_STG0) {
  */
 action tdesc_alloc(desc, pad) {
     // k + i for stage 3 table 1
-
-    // from to_stage 3
-    modify_field(to_s3_scratch.debug_dol, to_s3.debug_dol);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -481,8 +454,6 @@ action tls_bld_brq4(TLSCB_CONFIG_AEAD_PARAMS) {
     /* To Stage 4 table 0 fields */
     modify_field(to_s4_scratch.idesc, to_s4.idesc);
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
-    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
-    modify_field(to_s4_scratch.do_pre_ccm_enc, to_s4.do_pre_ccm_enc);
     modify_field(to_s4_scratch.do_pre_mpp_enc, to_s4.do_pre_mpp_enc);
 
     /* D vector */
@@ -495,8 +466,6 @@ action tls_read_random_iv(TLSCB_0_PARAMS_NON_STG0) {
     GENERATE_GLOBAL_K
 
     /* To Stage 4 table 1 fields */
-    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
-    modify_field(to_s4_scratch.do_pre_ccm_enc, to_s4.do_pre_ccm_enc);
 
     /* D vector */
     GENERATE_TLSCB_0_D_NON_STG0
@@ -508,8 +477,6 @@ action tls_read_barco_pi(TLSCB_0_PARAMS_NON_STG0) {
     GENERATE_GLOBAL_K
 
     /* To Stage 4 table 2 fields */
-    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
-    modify_field(to_s4_scratch.do_pre_ccm_enc, to_s4.do_pre_ccm_enc);
 
     /* D vector */
     GENERATE_TLSCB_0_D_NON_STG0
@@ -527,7 +494,6 @@ action tls_queue_brq5(BARCO_CHANNEL_PARAMS) {
     modify_field(to_s5_scratch.odesc, to_s5.odesc);
     modify_field(to_s5_scratch.opage, to_s5.opage);
     modify_field(to_s5_scratch.sw_barco_pi, to_s5.sw_barco_pi);
-    modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
     GENERATE_S2_S5_T0
 

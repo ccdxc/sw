@@ -102,10 +102,6 @@ rsvd,cosA,cosB,cos_sel,eval_last,host,total,pid, pi_0,ci_0
 #define GENERATE_GLOBAL_K                                                                               \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
-        modify_field(tls_global_phv_scratch.split, tls_global_phv.split);                               \
-        modify_field(tls_global_phv_scratch.pending_rx_serq, tls_global_phv.pending_rx_serq);           \
-        modify_field(tls_global_phv_scratch.pending_rx_brq, tls_global_phv.pending_rx_brq);             \
-        modify_field(tls_global_phv_scratch.pending_queue_brq, tls_global_phv.pending_queue_brq);       \
         modify_field(tls_global_phv_scratch.write_arq, tls_global_phv.write_arq);                       \
         modify_field(tls_global_phv_scratch.do_pre_ccm_dec, tls_global_phv.do_pre_ccm_dec);             \
         modify_field(tls_global_phv_scratch.tls_global_pad0, tls_global_phv.tls_global_pad0);           \
@@ -122,13 +118,9 @@ header_type tls_global_phv_t {
     fields {
         fid                             : 16;
         dec_flow                        : 8;
-        split                           : 1;
-        pending_rx_serq                 : 1;
-        pending_rx_brq                  : 1;
-        pending_queue_brq               : 1;
         write_arq                       : 1;
         do_pre_ccm_dec                  : 1;
-        tls_global_pad0                 : 2;
+        tls_global_pad0                 : 6;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
         tls_hdr_type                    : 8;
         tls_hdr_version_major           : 8;

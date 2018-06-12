@@ -40,13 +40,13 @@ table_read_QUEUE_BRQ:
      * When set to use random IV from barco DRBG, the explicit-IV field in the request will be
      * set by another program which reads the random number memory, so we dont set it here.
      */
-    smeqb       c1, k.to_s4_debug_dol, TLS_DDOL_EXPLICIT_IV_USE_RANDOM, TLS_DDOL_EXPLICIT_IV_USE_RANDOM
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_EXPLICIT_IV_USE_RANDOM, TLS_DDOL_EXPLICIT_IV_USE_RANDOM
 
     /*
      * The PHV for IV/nonce for GCM/CCM are different format made as unions. We'll build the phv
      * accordingly.
      */
-    bbeq        k.to_s4_do_pre_ccm_enc, 1, tls_enc_bld_ccm_hdr_phv
+    bbeq        k.tls_global_phv_flags_do_pre_ccm_enc, 1, tls_enc_bld_ccm_hdr_phv
     nop
         
     phvwr.!c1   p.crypto_iv_explicit_iv, d.u.tls_bld_brq4_d.sequence_no
@@ -121,7 +121,7 @@ tls_enc_queue_to_brq_mpp_ring:
      * If we're doing BYPASS-BARCO, we'll use the 'PIDX_SET' for the BSQ PI using
      * the sw shadow copy in the doorbell.
      */
-    smeqb       c4, k.to_s4_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    smeqb       c4, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
     bcf         [!c4], tls_enc_bsq_doorbell_skip
     nop
     CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd_dbell_dma_cmd, LIF_TLS, 0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6,

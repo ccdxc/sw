@@ -29,7 +29,7 @@ tls_enc_pkt_descriptor_process:
      * request encoding as compared to GCM (barco-command[31:24] value 0x05,
      * endian-swapped).
      */
-    bbeq        k.to_s2_do_pre_ccm_enc, 1, tls_enc_pkt_descriptor_ccm_process
+    bbeq        k.tls_global_phv_flags_do_pre_ccm_enc, 1, tls_enc_pkt_descriptor_ccm_process
     nop
         
     /* Setup idesc */

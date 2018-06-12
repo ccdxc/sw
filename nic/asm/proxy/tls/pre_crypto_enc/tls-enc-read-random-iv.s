@@ -36,7 +36,7 @@ table_read_RANDOM_IV:
      * The rest of the barco-request data is being filled in by the Stage-4-table-0 program
      * (tls-enc-bld-barco-req.s), and the barco request in the phv will be DMAed later into BRQ slot.
      */
-    seq       c1, k.to_s4_do_pre_ccm_enc, 1
+    seq       c1, k.tls_global_phv_flags_do_pre_ccm_enc, 1
     phvwr.!c1 p.crypto_iv_explicit_iv, d.random_num
     phvwr.c1  p.ccm_header_with_aad_B_0_nonce_explicit_iv, d.random_num
         

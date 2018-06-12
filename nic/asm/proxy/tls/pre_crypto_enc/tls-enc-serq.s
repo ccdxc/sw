@@ -44,11 +44,7 @@ tls_enc_pre_crypto_process:
     tblmincri       d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
 
     /* Dst too far apart for phvwrpair */
-    phvwr       p.to_s5_debug_dol, d.u.read_tls_stg0_d.debug_dol
-    phvwr       p.to_s4_debug_dol, d.u.read_tls_stg0_d.debug_dol
-
-    phvwr       p.to_s3_debug_dol, d.u.read_tls_stg0_d.debug_dol
-    phvwr       p.to_s1_debug_dol, d.u.read_tls_stg0_d.debug_dol
+    phvwr       p.tls_global_phv_debug_dol, d.u.read_tls_stg0_d.debug_dol
 
     /*
      * Check if this is CCM encrypt case, which has some differences in the barco
@@ -58,8 +54,7 @@ tls_enc_pre_crypto_process:
     phvwr       p.barco_desc_command, d.u.read_tls_stg0_d.barco_command
 
     seq         c1, d.u.read_tls_stg0_d.barco_command[7:0], 0x05
-    phvwri.c1   p.to_s2_do_pre_ccm_enc, 1
-    phvwri.c1   p.to_s4_do_pre_ccm_enc, 1
+    phvwri.c1   p.tls_global_phv_flags_do_pre_ccm_enc, 1
 
     smeqb       c1, d.u.read_tls_stg0_d.barco_command[7:0], 0xf0, 0x30
     phvwri.!c1   p.to_s4_do_pre_mpp_enc, 1

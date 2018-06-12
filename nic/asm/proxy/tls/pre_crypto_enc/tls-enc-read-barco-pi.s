@@ -35,8 +35,8 @@ table_read_BARCO_PI:
      * TODO: Add all barco ring PI's in this HBM global table to be shared across programs.
      */
     phvwr           p.to_s5_sw_barco_pi, d.{barco_pi}.hx
-    smeqb           c4, k.to_s4_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
-    seq             c5, k.to_s4_do_pre_ccm_enc, 1
+    smeqb           c4, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    seq             c5, k.tls_global_phv_flags_do_pre_ccm_enc, 1
     setcf           c6, [!c4 & !c5]
     tblmincri.c6.f  d.{barco_pi}.hx, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
 
