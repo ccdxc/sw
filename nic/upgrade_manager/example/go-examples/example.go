@@ -2,8 +2,7 @@ package main
 
 import (
 	"github.com/pensando/sw/nic/delphi/gosdk"
-	"github.com/pensando/sw/nic/delphi/proto/delphi"
-	upgrade "github.com/pensando/sw/nic/upgrade_manager/example/go-examples/nic/upgrade_manager/proto"
+	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -12,23 +11,11 @@ type service struct {
 }
 
 func (s *service) OnMountComplete() {
-	log.Printf("OnMountComplete() done for %s\n", s.name)
+	log.Infof("OnMountComplete() done for %s\n", s.name)
 }
 
 func (s *service) Name() string {
 	return s.name
-}
-
-func (s *service) OnUpgRespCreate(obj *upgrade.UpgResp) {
-	log.Printf("OnUpgRespCreate called %d\n", obj.GetUpgRespVal())
-}
-
-func (s *service) OnUpgRespUpdate(obj *upgrade.UpgResp) {
-	log.Printf("OnUpgRespUpdate called %d\n", obj.GetUpgRespVal())
-}
-
-func (s *service) OnUpgRespDelete(obj *upgrade.UpgResp) {
-	log.Printf("OnUpgRespDelete called %d\n", obj.GetUpgRespVal())
 }
 
 func main() {
@@ -39,16 +26,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	upgrade.UpgReqMount(c1, delphi.MountMode_ReadWriteMode)
-	upgrade.UpgRespMount(c1, delphi.MountMode_ReadMode)
-	upgrade.UpgRespWatch(c1, s1)
+	upg, err := upgsdk.NewUpgSdk(s1.name, c1)
+	if err != nil {
+		panic(err)
+	}
+
 	err = c1.Dial()
 	if err != nil {
-		log.Fatalf("Could not connect to upgrade manager. Err: %v", err)
+		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
 	}
-	u := upgrade.NewUpgReq(c1)
-	u.SetKey(10)
-	u.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)
+
+	upg.StartUpgrade()
 	a := make(chan struct{})
 	_ = <-a
 }

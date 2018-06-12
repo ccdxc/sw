@@ -1,13 +1,9 @@
-.PHONY: all protobuf run_tests
+.PHONY: all clean 
 
-all: run_test
+all: build
 
-protobuf:
-	protoc --delphigo_out=Mnic/delphi/proto/delphi/delphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi:. \
-		/usr/src/github.com/pensando/sw/nic/upgrade_manager/upgrade/upgrade.proto -I /usr/src/github.com/pensando/sw -I .  -I /usr/src/github.com/pensando/sw/nic/upgrade_manager
-
-run_test: protobuf
+build:
 	go build
 
 clean:
-	rm -rf go
+	rm -rf go-examples
