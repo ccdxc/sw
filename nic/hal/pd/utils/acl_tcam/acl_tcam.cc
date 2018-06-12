@@ -112,7 +112,8 @@ acl_tcam::~acl_tcam()
 
 hal_ret_t
 acl_tcam::place_entry_(void *key, void *key_mask, void *data,
-                       priority_t priority, TcamEntry **tentry_p)
+                       priority_t priority, TcamEntry **tentry_p,
+                       bool with_target_spot, uint32_t target_spot)
 {
     // Follow the below steps to place an entry
     // 1. Find the start of the next priority and the end
@@ -148,7 +149,6 @@ acl_tcam::place_entry_(void *key, void *key_mask, void *data,
     move_chain_t *move_chain = NULL;
     TcamEntry *tentry = NULL;
     uint32_t free_spot = tcam_size_;
-    uint32_t target_spot;
     uint32_t num_moves = 0;
     bool cur_exists = false;
 
@@ -159,75 +159,101 @@ acl_tcam::place_entry_(void *key, void *key_mask, void *data,
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Table {} placing entry failed due to internal "
                       "error finding allowed range. Err {}",
-                        table_name_.c_str(), ret);
+                      table_name_.c_str(), ret);
         goto end;
     }
 
     if (!allow_same_priority_ && cur_exists) {
         HAL_TRACE_ERR("Table {} placing entry failed due to an existing "
                       "entry with the same priority {}. Err {}",
-                        table_name_.c_str(), priority, ret);
+                      table_name_.c_str(), priority, ret);
         ret = HAL_RET_ENTRY_EXISTS;
         goto end;
     }
 
-    // Find a free spot between prev_end and next_start
-    if (prev_exists) {
-        ret = inuse_bmp_->next_free(prev_end, &free_spot);
-        if (ret != HAL_RET_OK) {
-            // There is no space after prev_end. Maybe there's space
-            // before
-            free_spot = tcam_size_;
-        }
-    } else {
-        ret = inuse_bmp_->first_free(&free_spot);
-        if (ret != HAL_RET_OK) {
-            // There is no space at all!
-            HAL_TRACE_ERR("Table {} placing entry failed due to no space",
-                            table_name_.c_str());
+    if (with_target_spot) {
+        // Ensure that target-spot is free
+        if (inuse_bmp_->is_set(target_spot)) {
+            HAL_TRACE_ERR("Table {} placing entry at {} failed due to "
+                          "an existing entry at the location",
+                          table_name_.c_str(), target_spot);
+            ret = HAL_RET_ENTRY_EXISTS;
             goto end;
         }
-    }
 
-    if (next_exists) {
-        target_down = next_start;
-    } 
-    
-    if (prev_exists) {
-        target_up = prev_end;
-    }
-
-    if ((free_spot > target_down) ||
-        (free_spot < target_up)) {
-        // We need to move some entries
-        // Create a move chain
-        move_chain = create_move_chain_(target_up, target_down, &free_spot, &num_moves);
-        if (move_chain == NULL) {
-            // There is no space at all
-            HAL_TRACE_ERR("Table {} placing entry failed due to no space",
-                            table_name_.c_str());
-            ret = HAL_RET_NO_RESOURCE;
+        // Ensure that target-spot honors the priority range invariants
+        if ((prev_exists && (target_spot <= prev_end)) ||
+            (next_exists && (target_spot >= next_start))) {
+            HAL_TRACE_ERR("Table {} placing entry of priority {} at {} "
+                          "failed due to being outside of "
+                          "allowed range {}-{}",
+                          table_name_.c_str(),
+                          priority, target_spot,
+                          prev_exists ? prev_end+1 : 0,
+                          next_exists ? next_start-1 : tcam_size_-1);
+            ret = HAL_RET_INVALID_ARG;
             goto end;
         }
-    }
-
-    // Move the entries in the move chain
-    ret = move_entries_(move_chain, free_spot, num_moves);
-    if (ret != HAL_RET_OK) {
-        // Oops moving failed
-        HAL_TRACE_ERR("Table {} placing entry failed due to failure "
-                      " in moving entries. Err: {}",
-                        table_name_.c_str(), ret);
-        goto end;
-    }
-
-    if (move_chain) {
-        // If we moved entries, then the new entry has to be programmed
-        // at the location we moved last
-        target_spot = move_chain[num_moves-1];
     } else {
-        // Program the entry at the free_spot we found
-        target_spot = free_spot;
+        // Find a free spot between prev_end and next_start
+        if (prev_exists) {
+            ret = inuse_bmp_->next_free(prev_end, &free_spot);
+            if (ret != HAL_RET_OK) {
+                // There is no space after prev_end. Maybe there's space
+                // before
+                free_spot = tcam_size_;
+                ret = HAL_RET_OK;
+            }
+        } else {
+            ret = inuse_bmp_->first_free(&free_spot);
+            if (ret != HAL_RET_OK) {
+                // There is no space at all!
+                HAL_TRACE_ERR("Table {} placing entry failed due to no space",
+                              table_name_.c_str());
+                goto end;
+            }
+        }
+
+        if (next_exists) {
+            target_down = next_start;
+        } 
+
+        if (prev_exists) {
+            target_up = prev_end;
+        }
+
+        if ((free_spot > target_down) ||
+            (free_spot < target_up)) {
+            // We need to move some entries
+            // Create a move chain
+            move_chain = create_move_chain_(target_up, target_down, &free_spot, &num_moves);
+            if (move_chain == NULL) {
+                // There is no space at all
+                HAL_TRACE_ERR("Table {} placing entry failed due to no space",
+                              table_name_.c_str());
+                ret = HAL_RET_NO_RESOURCE;
+                goto end;
+            }
+        }
+
+        // Move the entries in the move chain
+        ret = move_entries_(move_chain, free_spot, num_moves);
+        if (ret != HAL_RET_OK) {
+            // Oops moving failed
+            HAL_TRACE_ERR("Table {} placing entry failed due to failure "
+                          " in moving entries. Err: {}",
+                          table_name_.c_str(), ret);
+            goto end;
+        }
+
+        if (move_chain) {
+            // If we moved entries, then the new entry has to be programmed
+            // at the location we moved last
+            target_spot = move_chain[num_moves-1];
+        } else {
+            // Program the entry at the free_spot we found
+            target_spot = free_spot;
+        }
     }
 
     tentry = TcamEntry::factory(key, key_mask, swkey_len_, data, swdata_len_,
@@ -274,6 +300,33 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Table {} placing entry with priority {} failed, ret {}",
                       table_name_, priority, ret);
+        goto end;
+    }
+
+    // Allocate a handle and update mapping
+    handle = alloc_handle_();
+    tcam_entry_map_[handle] = tentry;
+
+    *handle_p = handle;
+
+end:
+    stats_update(INSERT, ret);
+    return ret;
+}
+
+hal_ret_t
+acl_tcam::insert_withid(void *key, void *key_mask, void *data,
+                        priority_t priority, uint32_t index,
+                        acl_tcam_entry_handle_t *handle_p)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    acl_tcam_entry_handle_t handle;
+    TcamEntry *tentry = NULL;
+
+    ret = place_entry_(key, key_mask, data, priority, &tentry, true, index);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Table {} placing entry with priority {} at {} failed, ret {}",
+                      table_name_, priority, index, ret);
         goto end;
     }
 
@@ -1043,6 +1096,7 @@ acl_tcam::stats_update(acl_tcam::api ap, hal_ret_t rs)
             else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_INS_FAIL_INVALID_ARG);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
             else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
+            else if(rs == HAL_RET_ENTRY_EXISTS) stats_incr(STATS_INS_FAIL_ENTRY_EXISTS);
             else HAL_ASSERT(0);
             break;
         case UPDATE:

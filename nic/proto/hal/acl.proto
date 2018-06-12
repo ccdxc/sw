@@ -166,9 +166,22 @@ message AclRequestMsg {
   repeated AclSpec request = 1;    // batched acls
 }
 
+// Acl oper state for enterprise pipeline
+message AclStatusEpd {
+  uint32 hw_tcam_idx = 1; // HW tcam index
+}
+
+// Acl oper state for cloud pipeline
+message AclStatusCpd {
+}
+
 // AclStatus represents the operational status of an ACL entry
 message AclStatus {
-  fixed64 acl_handle = 1;    // id of the acl returned by HAL
+  fixed64        acl_handle = 1;    // id of the acl returned by HAL
+  oneof qos_class_pd_status {
+    AclStatusEpd epd_status = 2;    // Acl oper state for enterprise pipeline
+    AclStatusCpd cpd_status = 3;    // Acl oper state for cloud pipeline
+  }
 }
 
 // AclResponse is response to one Acl

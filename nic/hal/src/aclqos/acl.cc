@@ -1272,18 +1272,24 @@ populate_action_spec (acl_action_spec_t *as,
                       acl::AclActionInfo *ainfo)
 {
     ainfo->set_action(as->action);
-    ainfo->mutable_copp_key_handle()->set_copp_handle(as->copp_handle);
-    ainfo->mutable_redirect_if_key_handle()->set_if_handle(as->redirect_if_handle);
+    if (as->copp_handle != HAL_HANDLE_INVALID) {
+        ainfo->mutable_copp_key_handle()->set_copp_handle(as->copp_handle);
+    }
+    if (as->redirect_if_handle != HAL_HANDLE_INVALID) {
+        ainfo->mutable_redirect_if_key_handle()->set_if_handle(as->redirect_if_handle);
+    }
 #ifdef ACL_DOL_TEST_ONLY
-    // Internal fields for use only with DOL/testing infra
-    // For production builds this needs to be removed
-    ainfo->mutable_internal_actions()->set_mac_sa_rewrite_en(as->int_as.mac_sa_rewrite);
-    ainfo->mutable_internal_actions()->set_mac_da_rewrite_en(as->int_as.mac_da_rewrite);
-    ainfo->mutable_internal_actions()->set_ttl_dec_en(as->int_as.ttl_dec);
-    ainfo->mutable_internal_actions()->set_qid(as->int_as.qid);
-    ainfo->mutable_internal_actions()->set_qid_valid(as->int_as.qid_en);
-    ainfo->mutable_internal_actions()->mutable_encap_info()->set_encap_value(as->int_as.tnnl_vnid);
-    // TODO rewrite actions
+    if (as->redirect_if_handle != HAL_HANDLE_INVALID) {
+        // Internal fields for use only with DOL/testing infra
+        // For production builds this needs to be removed
+        ainfo->mutable_internal_actions()->set_mac_sa_rewrite_en(as->int_as.mac_sa_rewrite);
+        ainfo->mutable_internal_actions()->set_mac_da_rewrite_en(as->int_as.mac_da_rewrite);
+        ainfo->mutable_internal_actions()->set_ttl_dec_en(as->int_as.ttl_dec);
+        ainfo->mutable_internal_actions()->set_qid(as->int_as.qid);
+        ainfo->mutable_internal_actions()->set_qid_valid(as->int_as.qid_en);
+        ainfo->mutable_internal_actions()->mutable_encap_info()->set_encap_value(as->int_as.tnnl_vnid);
+        // TODO rewrite actions
+    }
 #endif
     return HAL_RET_OK;
 }
@@ -2069,12 +2075,15 @@ acl_restore_cb (void *obj, uint32_t len)
     // allocate ACL obj from slab
     acl = acl_alloc_init();
     if (acl == NULL) {
-        HAL_TRACE_ERR("Failed to alloc/init acl, err : {}", ret);
+        HAL_TRACE_ERR("Failed to alloc/init acl");
         return 0;
     }
 
     // initialize acl attrs from its spec
-    acl_init_from_spec(acl, acl_info.spec());
+    ret = acl_init_from_spec(acl, acl_info.spec());
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
     acl_init_from_status(acl, acl_info.status());
     acl_init_from_stats(acl, acl_info.stats());
 
@@ -2084,8 +2093,20 @@ acl_restore_cb (void *obj, uint32_t len)
     ret = acl_restore_add(acl, acl_info);
     if (ret != HAL_RET_OK) {
         acl_restore_abort(acl, acl_info);
+        acl = NULL;
+        goto end;
     }
     acl_restore_commit(acl, acl_info);
+end:
+    if (ret != HAL_RET_OK) {
+        if (acl) {
+            // PD wouldn't have been allocated if we're coming here
+            // PD gets allocated in restore_add and if it failed,
+            // restore_abort would free everything
+            acl_free(acl, true);
+            acl = NULL;
+        }
+    }
     return 0;    // TODO: fix me
 }
 

@@ -159,7 +159,8 @@ drop_reason_codes_to_bitmap (drop_reason_codes_t *codes)
 #endif
 
 static hal_ret_t
-acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
+acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update, 
+                    bool is_restore, uint32_t restore_tcam_index)
 {
     hal_ret_t                              ret = HAL_RET_OK;
     acl_tcam                               *acl_tbl = NULL;
@@ -484,18 +485,21 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     // Insert the entry
-    if (update) {
+    if (is_restore) {
+        ret = acl_tbl->insert_withid(&key, &mask, &data, acl_get_priority(pi_acl), 
+                                     restore_tcam_index, &pd_acl->handle);
+    } else if (update) {
         ret = acl_tbl->update(pd_acl->handle, &key, &mask, &data,
                               acl_get_priority(pi_acl));
     } else {
         ret = acl_tbl->insert(&key, &mask, &data, acl_get_priority(pi_acl), &pd_acl->handle);
     }
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to program for nacl: {}",
-                      pd_acl->pi_acl->key);
+        HAL_TRACE_ERR("Unable to program for nacl: {}, ret: {}",
+                      pd_acl->pi_acl->key, ret);
     } else {
-        HAL_TRACE_DEBUG("Programmed for nacl: {}",
-                        pd_acl->pi_acl->key);
+        HAL_TRACE_DEBUG("Programmed for nacl: {}, ret: {}",
+                        pd_acl->pi_acl->key, ret);
     }
 
     return ret;
@@ -535,11 +539,12 @@ acl_pd_deprogram_hw (pd_acl_t *pd_acl)
 // Program HW
 // ----------------------------------------------------------------------------
 static hal_ret_t
-acl_pd_program_hw (pd_acl_t *pd_acl, bool update)
+acl_pd_program_hw (pd_acl_t *pd_acl, bool update,
+                   bool is_restore = false, uint32_t restore_tcam_index = 0)
 {
     hal_ret_t   ret;
 
-    ret = acl_pd_pgm_acl_tbl(pd_acl, update);
+    ret = acl_pd_pgm_acl_tbl(pd_acl, update, is_restore, restore_tcam_index);
     return ret;
 }
 
@@ -729,15 +734,27 @@ pd_acl_mem_free (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_acl_get (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-#if 0
-    acl_t         *acl = args->acl;
-    pd_acl_t      *acl_pd = (pd_acl_t *)acl->pd;
-    AclGetResponse *rsp = args->rsp;
+    hal_ret_t         ret = HAL_RET_OK;
+    acl_tcam          *acl_tbl = NULL;
+    pd_acl_get_args_t *args = pd_func_args->pd_acl_get;
+    acl_t             *acl = args->acl;
+    pd_acl_t          *pd_acl = (pd_acl_t *)acl->pd;
+    AclGetResponse    *rsp = args->rsp;
+    uint32_t          hw_tcam_idx;
 
     auto acl_info = rsp->mutable_status()->mutable_epd_status();
-#endif
 
+    acl_tbl = g_hal_state_pd->acl_table();
+    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+
+    ret = acl_tbl->get_index(pd_acl->handle, &hw_tcam_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to get tcam index for nacl: {} ret: {}",
+                      pd_acl->pi_acl->key, ret);
+        return ret;
+    }
+
+    acl_info->set_hw_tcam_idx(hw_tcam_idx);
     return ret;
 }
 
@@ -788,16 +805,14 @@ pd_acl_restore (pd_func_args_t *pd_func_args)
         goto end;
     }
 
-    // TODO: Eventually call table program hw and hw calls will be
-    //       a NOOP in p4pd code
-#if 0
-    // program hw
-    ret = acl_pd_program_hw(acl_pd);
+    // This call will just populate table libs and calls to HW will be
+    // a NOOP in p4pd code
+    ret = acl_pd_program_hw(acl_pd, false, 
+                            true, args->acl_status->epd_status().hw_tcam_idx());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
         goto end;
     }
-#endif
 
 end:
 

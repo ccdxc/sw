@@ -58,6 +58,7 @@ public:
         STATS_INS_SUCCESS,
         STATS_INS_FAIL_INVALID_ARG,
         STATS_INS_FAIL_NO_RES,
+        STATS_INS_FAIL_ENTRY_EXISTS,
         STATS_INS_FAIL_HW,
         STATS_UPD_SUCCESS,
         STATS_UPD_FAIL_INVALID_ARG,
@@ -84,6 +85,9 @@ public:
 
     hal_ret_t insert(void *key, void *key_mask, void *data,
                      priority_t priority, acl_tcam_entry_handle_t *handle);
+    hal_ret_t insert_withid(void *key, void *key_mask, void *data,
+                            priority_t priority, uint32_t index, 
+                            acl_tcam_entry_handle_t *handle);
     hal_ret_t update(acl_tcam_entry_handle_t handle, 
                      void *key, void *key_mask, void *data,
                      priority_t priority);
@@ -138,7 +142,8 @@ private:
                    bool priority_0_lowest, bool allow_same_priority);
 
     hal_ret_t place_entry_(void *key, void *key_mask, void *data,
-                           priority_t priority, TcamEntry **tentry_p);
+                           priority_t priority, TcamEntry **tentry_p,
+                           bool with_target_spot = false, uint32_t target_spot = 0);
     hal_ret_t cleanup_entry_(TcamEntry *tentry);
 
     acl_tcam_entry_handle_t alloc_handle_(void) { return ++handle_allocator; }
