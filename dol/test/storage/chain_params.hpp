@@ -61,6 +61,7 @@ typedef struct {
     uint64_t status_addr0;
     uint64_t status_addr1;	    // Destination for the PDMA of status from status_addr0
     uint64_t comp_buf_addr;     // Compressed data buffer address (source of SGL PDMA)
+    uint64_t alt_buf_addr;      // Alternate source data buffer address for SGL PDMA in error condition
 
     // post compression, options available are:
     // - PDMA compressed data to pdma_out_sgl_pa (sgl_pdma_en), or
@@ -86,7 +87,7 @@ typedef struct {
              intr_en              :1,	// enable intr_data write to intr_pa
              next_db_action_barco_push:1,	// next_db action is actually a Barco push
              stop_chain_on_error  :1, // stop chaining on error
-             copy_src_dst_on_error:1,
+             chain_alt_desc_on_error:1,// chain with alternate set of descriptors on error
     // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.
     // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
              aol_pad_en           :1, // enable AOL length padding
@@ -98,6 +99,7 @@ typedef struct {
                                       // the last block with the right amount of pad data.
                                       // This mode requires sgl_pad_hash_en as P4+ will glean
                                       // the buffers info from the supplied sgl_vec_pa.
+             sgl_pdma_alt_src_on_error:1,// SGL PDMA with alternate source buffer on error
              desc_vec_push_en     : 1;// barco_desc_addr points to a vector of descriptors to be pushed
 } chain_params_comp_t;
 

@@ -15,6 +15,7 @@ struct phv_ p;
  * Registers usage:
  * CAUTION: r1 is also implicitly used by LOAD_TABLE1_FOR_ADDR_PC_IMM()
  */
+#define r_src_qaddr                 r7  // qstate address
  
 %%
    .param storage_seq_barco_ring_pndx_read
@@ -72,7 +73,7 @@ xts_error:
    nop
 
    // cancel any barco push prep
-   DMA_CMD_CANCEL(dma_p2m_19)
+   SEQ_XTS_NEXT_DB_CANCEL(dma_p2m_19)
    
    // else if intr_en then complete any status DMA and 
    // override doorbell to raising an interrupt

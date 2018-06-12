@@ -290,6 +290,7 @@ private:
     uint32_t                last_dc_output_data_len;
     uint32_t                last_decrypt_output_data_len;
 
+    bool                    decomp_bypass;
     bool                    destructor_free_buffers;
     bool                    suppress_info_log;
     bool                    success;

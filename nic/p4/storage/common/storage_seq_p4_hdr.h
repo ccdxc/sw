@@ -22,7 +22,7 @@ header_type seq_q_state_t {
     pid             : 16;   // PID value to be compared with that from host
     p_ndx           : 16;   // Producer Index
     c_ndx           : 16;   // Consumer Index
-    w_ndx           : 16;   // Working consumer index
+    w_ndx           : 16;   // unused
     num_entries     : 16;   // Number of queue entries (power of 2 of this value)
     base_addr       : 64;   // Base address of queue entries
     entry_size      : 16;   // Size of each queue entry
@@ -33,13 +33,13 @@ header_type seq_q_state_t {
     dst_qaddr       : 34;   // Destination queue state address
     desc1_next_pc_valid: 1;
     desc1_next_pc   : 28;   // desc bytes 64-127 next program's PC
-    pad             : 135;
+    pad             : 159;
                             // 
     // When canceling a doorbell push DMA command that is also the last (EOP)
     // in the DMA command set, NOP can't be used due to the EOP. The
     // workaround is to convert the doorbell push into a PHV2MEM into
     // the location below.
-    eop_p2m_rsvd    : 32;   // reserved for PHV2MEM eop cmd cancel write
+    eop_p2m_rsvd    : 8;    // reserved for PHV2MEM eop cmd cancel write
   }
 }
 
@@ -107,6 +107,7 @@ header_type seq_comp_status_desc1_t {
                             // for SGL PDMA transfer (if sgl_pdma_en is set) 
     sgl_vec_addr    : 64;   // SGL vector for padding operation
     pad_buf_addr    : 64;   // pad buffer address
+    alt_buf_addr    : 64;   // Alternate source data buffer address for SGL PDMA in error condition
     data_len        : 16;   // Length of the compression data
     pad_boundary_shift: 5;  // log2(padding boundray)
     stop_chain_on_error: 1; // 1 => don't ring next DB on error
@@ -117,8 +118,9 @@ header_type seq_comp_status_desc1_t {
     sgl_sparse_format_en: 1;
     sgl_pdma_en     : 1;
     sgl_pdma_pad_only:1;
+    sgl_pdma_alt_src_on_error:1;
     desc_vec_push_en:1;
-    copy_src_dst_on_error: 1; // not yet supported
+    chain_alt_desc_on_error: 1;
   }
 }
 
@@ -368,7 +370,6 @@ header_type storage_seq_pad176_t {
 // kivec0: header union with stage_2_stage for table 0,
 header_type seq_kivec0_t {
   fields {
-    w_ndx           : 16;   // Working consumer index
     dst_lif         : 11;   // Destination LIF number
     dst_qtype       : 3;    // Destination LIF type (within the LIF)
     dst_qid         : 24;   // Destination queue number (within the LIF)
@@ -383,7 +384,6 @@ header_type seq_kivec1_t {
     src_qtype       : 3;    // Source LIF type (within the LIF)
     src_qid         : 24;   // Source queue number (within the LIF)
     src_qaddr       : 34;   // Source queue state address
-    barco_ring_addr : 34;   // Barco ring address
   }
 }
 
@@ -457,8 +457,9 @@ header_type seq_kivec5_t {
     sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1;
     sgl_pdma_pad_only   : 1;
+    sgl_pdma_alt_src_on_error: 1;
     desc_vec_push_en    : 1;
-    copy_src_dst_on_error: 1;
+    chain_alt_desc_on_error: 1;
   }
 }
 
@@ -501,6 +502,14 @@ header_type seq_kivec7xts_t {
   }
 }
 
+// kivec8: header union with stage_2_stage for table 1 (160 bits max)
+header_type seq_kivec8_t {
+  fields {
+    alt_buf_addr       : 64;
+    alt_buf_addr_en    : 1;
+  }
+}
+
 #define SEQ_Q_STATE_COPY_INTRINSIC(q_state)                             \
   modify_field(q_state.rsvd, rsvd);                                     \
   modify_field(q_state.cosA, cosA);                                     \
@@ -532,7 +541,6 @@ header_type seq_kivec7xts_t {
   modify_field(q_state.pad, pad);                                       \
 
 #define SEQ_KIVEC0_USE(scratch, kivec)                                  \
-  modify_field(scratch.w_ndx, kivec.w_ndx);                             \
   modify_field(scratch.dst_lif, kivec.dst_lif);                         \
   modify_field(scratch.dst_qtype, kivec.dst_qtype);                     \
   modify_field(scratch.dst_qid, kivec.dst_qid);                         \
@@ -543,7 +551,6 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.src_qtype, kivec.src_qtype);                     \
   modify_field(scratch.src_qid, kivec.src_qid);                         \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
-  modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);         \
 
 #define SEQ_KIVEC2_USE(scratch, kivec)                                  \
   modify_field(scratch.sgl_pdma_dst_addr, kivec.sgl_pdma_dst_addr);     \
@@ -588,8 +595,9 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.sgl_pad_en, kivec.sgl_pad_en);                   \
   modify_field(scratch.sgl_sparse_format_en, kivec.sgl_sparse_format_en); \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
-  modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
+  modify_field(scratch.chain_alt_desc_on_error, kivec.chain_alt_desc_on_error);\
   modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
+  modify_field(scratch.sgl_pdma_alt_src_on_error, kivec.sgl_pdma_alt_src_on_error);\
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
@@ -617,6 +625,10 @@ header_type seq_kivec7xts_t {
   modify_field(scratch.comp_desc_addr, kivec.comp_desc_addr);           \
   modify_field(scratch.comp_sgl_src_addr, kivec.comp_sgl_src_addr);     \
 
+#define SEQ_KIVEC8_USE(scratch, kivec)                                  \
+  modify_field(scratch.alt_buf_addr, kivec.alt_buf_addr);               \
+  modify_field(scratch.alt_buf_addr_en, kivec.alt_buf_addr_en);         \
+  
 // Macros for ASM param addresses (hardcoded in P4)
 #define seq_barco_chain_action_start	    0x82000000
 #define seq_comp_status_handler_start       0x82010000

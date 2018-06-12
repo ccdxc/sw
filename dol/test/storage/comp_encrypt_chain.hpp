@@ -18,7 +18,8 @@ public:
         app_max_size_(0),
         app_enc_size_(kCompAppHashBlkSize),
         uncomp_mem_type_(DP_MEM_TYPE_VOID),
-        comp_mem_type_(DP_MEM_TYPE_VOID),
+        comp_mem_type1_(DP_MEM_TYPE_VOID),
+        comp_mem_type2_(DP_MEM_TYPE_VOID),
         comp_status_mem_type1_(DP_MEM_TYPE_VOID),
         comp_status_mem_type2_(DP_MEM_TYPE_VOID),
         encrypt_mem_type_(DP_MEM_TYPE_VOID),
@@ -30,7 +31,8 @@ public:
     uint32_t        app_max_size_;
     uint32_t        app_enc_size_;
     dp_mem_type_t   uncomp_mem_type_;
-    dp_mem_type_t   comp_mem_type_;
+    dp_mem_type_t   comp_mem_type1_;
+    dp_mem_type_t   comp_mem_type2_;
     dp_mem_type_t   comp_status_mem_type1_;
     dp_mem_type_t   comp_status_mem_type2_;
     dp_mem_type_t   encrypt_mem_type_;
@@ -56,9 +58,15 @@ public:
         return *this;
     }
     comp_encrypt_chain_params_t&
-    comp_mem_type(dp_mem_type_t comp_mem_type)
+    comp_mem_type1(dp_mem_type_t comp_mem_type1)
     {
-        comp_mem_type_ = comp_mem_type;
+        comp_mem_type1_ = comp_mem_type1;
+        return *this;
+    }
+    comp_encrypt_chain_params_t&
+    comp_mem_type2(dp_mem_type_t comp_mem_type2)
+    {
+        comp_mem_type2_ = comp_mem_type2;
         return *this;
     }
     comp_encrypt_chain_params_t&
@@ -155,7 +163,9 @@ public:
         push_type_(ACC_RING_PUSH_SEQUENCER),
         seq_comp_qid_(0),
         seq_comp_status_qid_(0),
-        seq_xts_status_qid_(0)
+        seq_xts_status_qid_(0),
+        force_comp_buf2_bypass_(false),
+        force_uncomp_encrypt_(false)
     {
     }
 
@@ -166,6 +176,8 @@ public:
     uint32_t            seq_comp_qid_;
     uint32_t            seq_comp_status_qid_;
     uint32_t            seq_xts_status_qid_;
+    bool                force_comp_buf2_bypass_;// force bypass of comp_buf2 usage
+    bool                force_uncomp_encrypt_;  // force comp error and encrypt uncomp data instead
 
     comp_encrypt_chain_push_params_t&
     enc_dec_blk_type(xts_enc_dec_blk_type_t enc_dec_blk_type)
@@ -207,6 +219,18 @@ public:
     seq_xts_status_qid(uint32_t seq_xts_status_qid)
     {
         seq_xts_status_qid_ = seq_xts_status_qid;
+        return *this;
+    }
+    comp_encrypt_chain_push_params_t&
+    force_comp_buf2_bypass(bool force_comp_buf2_bypass)
+    {
+        force_comp_buf2_bypass_ = force_comp_buf2_bypass;
+        return *this;
+    }
+    comp_encrypt_chain_push_params_t&
+    force_uncomp_encrypt(bool force_uncomp_encrypt)
+    {
+        force_uncomp_encrypt_ = force_uncomp_encrypt;
         return *this;
     }
 };
@@ -265,14 +289,20 @@ public:
 
     uint8_t *comp_data_get(void)
     {
-        return comp_buf->read_thru();
+        return comp_buf2->read_thru();
+    }
+
+    bool force_uncomp_encrypt_get(void)
+    {
+        return force_uncomp_encrypt;
     }
 
     int actual_enc_blks_get(test_resource_query_method_t query_method);
 
 private:
 
-    void  encrypt_setup(uint32_t block_no,
+    void  encrypt_setup(uint32_t src_block_no,
+                        uint32_t dst_block_no,
                         chain_params_comp_t& chain_params);
 
     xts_enc_dec_blk_type_t enc_dec_blk_type;
@@ -282,7 +312,10 @@ private:
 
     // Buffers used for compression->encryption operations
     dp_mem_t        *uncomp_buf;
-    dp_mem_t        *comp_buf;
+    dp_mem_t        *comp_buf1;
+    dp_mem_t        *comp_buf2;
+    dp_mem_t        *seq_sgl_pdma;
+    dp_mem_t        *sgl_pad_vec;
     dp_mem_t        *xts_encrypt_buf;
 
     dp_mem_t        *comp_status_buf1;
@@ -315,7 +348,10 @@ private:
 
     uint32_t        last_cp_output_data_len;
     uint32_t        last_encrypt_output_data_len;
+    uint32_t        expected_status;
 
+    bool            force_comp_buf2_bypass;
+    bool            force_uncomp_encrypt;
     bool            destructor_free_buffers;
     bool            suppress_info_log;
     bool            success;

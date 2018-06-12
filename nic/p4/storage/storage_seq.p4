@@ -84,6 +84,8 @@ metadata seq_kivec3xts_t seq_kivec3xts;
 metadata seq_kivec6_t seq_kivec6;
 @pragma pa_header_union ingress common_t2_s2s
 metadata seq_kivec7xts_t seq_kivec7xts;
+@pragma pa_header_union ingress common_t1_s2s
+metadata seq_kivec8_t seq_kivec8;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -100,6 +102,8 @@ metadata barco_ring_t barco_doorbell_data;
 // Accelerator chaining states
 @pragma dont_trim
 metadata storage_capri_len32_t last_blk_len;
+@pragma dont_trim
+metadata storage_capri_len8_t null_byte;
 @pragma dont_trim
 @pragma pa_align 512
 metadata barco_sgl_tuple2_pad_t barco_sgl_tuple2_pad;
@@ -296,6 +300,9 @@ metadata seq_kivec6_t seq_kivec6_scratch;
 metadata seq_kivec7xts_t seq_kivec7xts_scratch;
 
 @pragma scratch_metadata
+metadata seq_kivec8_t seq_kivec8_scratch;
+
+@pragma scratch_metadata
 metadata seq_barco_entry_t seq_barco_entry_scratch;
 
 @pragma scratch_metadata
@@ -369,7 +376,6 @@ action seq_q_state_pop(/*pc_offset, */rsvd, cosA, cosB, cos_sel, eval_last,
     QUEUE_POP(q_state_scratch)
    
     // Store fields needed in the K+I vector
-    modify_field(seq_kivec0.w_ndx, w_ndx);
     modify_field(seq_kivec0.dst_lif, dst_lif);
     modify_field(seq_kivec0.dst_qtype, dst_qtype);
     modify_field(seq_kivec0.dst_qid, dst_qid);
@@ -383,7 +389,7 @@ action seq_q_state_pop(/*pc_offset, */rsvd, cosA, cosB, cos_sel, eval_last,
 
     // Load the table and program for processing the queue entry in the next stage
     CAPRI_LOAD_TABLE_IDX(common_te0_phv, q_state_scratch.base_addr,
-                         q_state_scratch.w_ndx, q_state_scratch.entry_size,
+                         q_state_scratch.c_ndx, q_state_scratch.entry_size,
                          q_state_scratch.entry_size, q_state_scratch.next_pc)
   }
 }
@@ -399,7 +405,6 @@ action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shad
 			       barco_ring_addr, barco_batch_size, barco_batch_mode) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  SEQ_KIVEC1_USE(seq_kivec1_scratch, seq_kivec1)
   SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -417,7 +422,6 @@ action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shad
   // when calculating the offset for the push operation 
   modify_field(seq_kivec4.barco_desc_size, seq_barco_entry_scratch.barco_desc_size);
   modify_field(seq_kivec4.barco_ring_size, seq_barco_entry_scratch.barco_ring_size);
-  modify_field(seq_kivec1.barco_ring_addr, seq_barco_entry_scratch.barco_ring_addr);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -492,6 +496,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
                                      next_db_en, intr_en, next_db_action_barco_push) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
+  SEQ_KIVEC1_USE(seq_kivec1_scratch, seq_kivec1)
   SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
   SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
 
@@ -572,13 +577,14 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
  *  seq_comp_status_desc1_handler: Part 2 of the comp status decriptor
  *****************************************************************************/
 
-//@pragma little_endian rsvd comp_buf_addr aol_src_vec_addr aol_dst_vec_addr data_len sgl_vec_addr pad_buf_addr
+//@pragma little_endian rsvd comp_buf_addr aol_src_vec_addr aol_dst_vec_addr data_len sgl_vec_addr pad_buf_addr alt_buf_addr
 action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_dst_vec_addr, 
-                                     sgl_vec_addr, pad_buf_addr, data_len,
+                                     sgl_vec_addr, pad_buf_addr, alt_buf_addr, data_len,
                                      pad_boundary_shift, stop_chain_on_error,
                                      data_len_from_desc, aol_pad_en, sgl_pad_en,
                                      sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
-				     desc_vec_push_en, copy_src_dst_on_error) {
+				     sgl_pdma_alt_src_on_error, desc_vec_push_en,
+				     chain_alt_desc_on_error) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
@@ -590,6 +596,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.aol_dst_vec_addr, aol_dst_vec_addr);
   modify_field(seq_comp_status_desc1_scratch.sgl_vec_addr, sgl_vec_addr);
   modify_field(seq_comp_status_desc1_scratch.pad_buf_addr, pad_buf_addr);
+  modify_field(seq_comp_status_desc1_scratch.alt_buf_addr, alt_buf_addr);
   modify_field(seq_comp_status_desc1_scratch.data_len, data_len);
   modify_field(seq_comp_status_desc1_scratch.pad_boundary_shift, pad_boundary_shift);
   modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
@@ -599,8 +606,9 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.sgl_sparse_format_en, sgl_sparse_format_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_pad_only, sgl_pdma_pad_only);
+  modify_field(seq_comp_status_desc1_scratch.sgl_pdma_alt_src_on_error, sgl_pdma_alt_src_on_error);
   modify_field(seq_comp_status_desc1_scratch.desc_vec_push_en, desc_vec_push_en);
-  modify_field(seq_comp_status_desc1_scratch.copy_src_dst_on_error, copy_src_dst_on_error);
+  modify_field(seq_comp_status_desc1_scratch.chain_alt_desc_on_error, chain_alt_desc_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec5.pad_buf_addr, seq_comp_status_desc1_scratch.pad_buf_addr);
@@ -614,8 +622,10 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_kivec5.sgl_sparse_format_en, seq_comp_status_desc1_scratch.sgl_sparse_format_en);
   modify_field(seq_kivec5.sgl_pdma_en, seq_comp_status_desc1_scratch.sgl_pdma_en);
   modify_field(seq_kivec5.sgl_pdma_pad_only, seq_comp_status_desc1_scratch.sgl_pdma_pad_only);
+  modify_field(seq_kivec5.sgl_pdma_alt_src_on_error, seq_comp_status_desc1_scratch.sgl_pdma_alt_src_on_error);
   modify_field(seq_kivec5.desc_vec_push_en, seq_comp_status_desc1_scratch.desc_vec_push_en);
-  modify_field(seq_kivec5.copy_src_dst_on_error, seq_comp_status_desc1_scratch.copy_src_dst_on_error);
+  modify_field(seq_kivec5.chain_alt_desc_on_error, seq_comp_status_desc1_scratch.chain_alt_desc_on_error);
+  modify_field(seq_kivec8.alt_buf_addr, seq_comp_status_desc1_scratch.alt_buf_addr);
 }
 
 /*****************************************************************************
@@ -697,6 +707,7 @@ action seq_comp_sgl_pdma_xfer(addr0, len0, addr1, len1,
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC3_USE(seq_kivec3_scratch, seq_kivec3)
   SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
+  SEQ_KIVEC8_USE(seq_kivec8_scratch, seq_kivec8)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_comp_sgl_scratch.addr0, addr0);

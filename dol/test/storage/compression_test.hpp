@@ -41,6 +41,8 @@ int seq_compress_output_encrypt_app_min_size();
 int seq_compress_output_encrypt_app_max_size();
 int seq_compress_output_encrypt_app_nominal_size();
 int seq_compress_output_encrypt_app_test_size();
+int seq_compress_output_encrypt_force_uncomp_encrypt();
+int seq_compress_output_encrypt_force_comp_buf2_bypass();
 int seq_decrypt_output_decompress_len_update_none();
 int seq_decrypt_output_decompress_len_update_flat();
 int seq_decrypt_output_decompress_len_update_sgl_src();
