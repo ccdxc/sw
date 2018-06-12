@@ -322,6 +322,12 @@ chksum_decomp_chain_t::decomp_setup(void)
     dc_desc.status_data = 0xb0be;
 
     /*
+     * In the same pass, calculate checksum on the uncomp data. 
+     */
+    dc_desc.cmd_bits.integrity_src = COMP_INTEGRITY_SRC_UNCOMP_DATA;
+    dc_desc.cmd_bits.integrity_type = comp_hash_chain->integrity_type_get();
+
+    /*
      * Decomp interrupts are optional, depending on what the application wants
      */
     if (caller_decomp_opaque_buf) {
@@ -354,6 +360,7 @@ chksum_decomp_chain_t::fast_verify(void)
     dp_mem_t            *exp_hash_status_vec;
     cp_status_sha512_t  *exp_chksum_st;
     cp_status_sha512_t  *actual_chksum_st;
+    uint64_t            decomp_integrity_data;
     uint32_t            block_no;
 
     /*
@@ -391,6 +398,21 @@ chksum_decomp_chain_t::fast_verify(void)
                                  app_blk_size)) {
         printf("ERROR: chksum_decomp_chain decompression status "
                "verification failed\n");
+        return -1;
+    }
+
+    /*
+     * Verify checksum of the decompressed data
+     */
+    decomp_integrity_data = comp_status_integrity_data_get(caller_decomp_status_buf);
+    if (!suppress_info_log) {
+        printf("chksum_decomp_chain decomp_integrity_data 0x%lx\n",
+               decomp_integrity_data);
+    }
+    if (decomp_integrity_data != comp_hash_chain->uncomp_integrity_data_get()) {
+        printf("ERROR: chksum_decomp_chain decomp_integrity_data 0x%lx "
+               "mismatches with uncomp_integrity_data 0x%lx\n",
+               decomp_integrity_data, comp_hash_chain->uncomp_integrity_data_get());
         return -1;
     }
 

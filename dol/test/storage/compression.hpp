@@ -51,6 +51,28 @@ typedef struct ccmd {
 #define COMP_CHECKSUM_ADLER32           0
 #define COMP_CHECKSUM_CRC32C            1
 
+constexpr const char *integrity_type_name[] = {
+    "M_CRC64",
+    "CRC32C",
+    "ADLER32",
+    "M_ADLER32"
+};
+
+constexpr const char *integrity_src_name[] = {
+    "SRC_COMP_DATA",
+    "SRC_UNCOMP_DATA"
+};
+
+constexpr const char *sha_type_name[] = {
+    "SHA512",
+    "SHA256"
+};
+
+constexpr const char *sha_en_name[] = {
+    "disabled",
+    "enabled"
+};
+
 typedef struct cp_desc {
   uint64_t src;
   uint64_t dst;
@@ -189,8 +211,42 @@ int decompress_status_verify(dp_mem_t *status,
                              uint32_t exp_output_data_len,
                              bool log_error=true);
 uint32_t comp_status_output_data_len_get(dp_mem_t *status);
+uint64_t comp_status_integrity_data_get(dp_mem_t *status);
 
 int seq_comp_status_desc_fill(chain_params_comp_t& chain_params);
+
+static inline const char *
+integrity_type_name_get(uint32_t type)
+{
+    if (type < ARRAYSIZE(integrity_type_name)) {
+        return integrity_type_name[type];
+    }
+    return "unknown";
+}
+
+static inline const char *
+integrity_src_name_get(uint32_t src)
+{
+    if (src < ARRAYSIZE(integrity_src_name)) {
+        return integrity_src_name[src];
+    }
+    return "unknown";
+}
+
+static inline const char *
+sha_type_name_get(uint32_t type)
+{
+    if (type < ARRAYSIZE(sha_type_name)) {
+        return sha_type_name[type];
+    }
+    return "unknown";
+}
+
+static inline const char *
+sha_en_name_get(bool sha_en)
+{
+    return sha_en_name[sha_en & 1];
+}
 
 }  // namespace tests
 

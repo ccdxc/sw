@@ -38,6 +38,7 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     push_type(ACC_RING_PUSH_INVALID),
     seq_comp_qid(0),
     last_cp_output_data_len(0),
+    uncomp_integrity_data(0),
     destructor_free_buffers(params.destructor_free_buffers_),
     suppress_info_log(params.suppress_info_log_),
     success(false)
@@ -171,6 +172,10 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
                params.app_blk_size_, params.app_hash_size_,
                params.push_type_, params.seq_comp_qid_,
                params.seq_comp_status_qid_);
+        printf("integrity_type %s integrity_src %s sha_en %s sha_type %s\n",
+               integrity_type_name_get(params.integrity_type_),
+               integrity_src_name_get(params.integrity_src_),
+               sha_en_name_get(params.sha_en_), sha_type_name_get(params.sha_type_));
     }
 
     /*
@@ -235,6 +240,12 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      */
     compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf1,
                      comp_status_buf1, comp_buf1, app_blk_size);
+    /*
+     * In the same pass, calculate checksum on the uncomp data. 
+     */
+    cp_desc.cmd_bits.integrity_src = COMP_INTEGRITY_SRC_UNCOMP_DATA;
+    cp_desc.cmd_bits.integrity_type = integrity_type;
+    uncomp_integrity_data = 0;
 
     /*
      * point barco_desc_addr to the first of the descriptors vector,
@@ -474,11 +485,14 @@ comp_hash_chain_t::actual_hash_blks_get(test_resource_query_method_t query_metho
                 return -1;
             }
             last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
+            uncomp_integrity_data = comp_status_integrity_data_get(comp_status_buf2);
             actual_hash_blks = (int)COMP_MAX_HASH_BLKS(last_cp_output_data_len,
                                                        app_hash_size);
             if (!suppress_info_log) {
-                printf("comp_hash_chain: last_cp_output_data_len %u actual_hash_blks %u\n",
-                       last_cp_output_data_len, actual_hash_blks);
+                printf("comp_hash_chain: last_cp_output_data_len %u "
+                       "actual_hash_blks %u uncomp_integrity_data 0x%lx\n",
+                       last_cp_output_data_len, actual_hash_blks,
+                       uncomp_integrity_data);
             }
             if ((actual_hash_blks == 0) || ((uint32_t)actual_hash_blks > num_hash_blks)) {
                 printf("comp_hash_chain: invalid actual_hash_blks %d in relation to "
