@@ -193,10 +193,10 @@ process_send_write_fml:
     tblwr.c3    d.msn, r1
 
     // populate ack info
-    phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, r1
+    phvwrpair   p.s1.ack_info.psn, d.e_psn, p.s1.ack_info.aeth.msn, r1
     RQ_CREDITS_GET(r1, r2, c7)
     AETH_ACK_SYNDROME_GET(r2, r1)
-    phvwr       p.ack_info.aeth.syndrome, r2
+    phvwr       p.s1.ack_info.aeth.syndrome, r2
 
     // increment e_psn
     tblmincri   d.e_psn, 24, 1
@@ -331,13 +331,13 @@ process_only_rd_atomic:
     tblwr       d.msn, r1
 
     // populate ack info
-    phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, r1
+    phvwrpair   p.s1.ack_info.psn, d.e_psn, p.s1.ack_info.aeth.msn, r1
     RQ_CREDITS_GET(r1, r2, c1)
     AETH_ACK_SYNDROME_GET(r2, r1)
-    phvwr       p.ack_info.aeth.syndrome, r2
+    phvwr       p.s1.ack_info.aeth.syndrome, r2
 
     bcf     [c6 | c5 | c3], process_read_atomic
-    phvwr       p.ack_info.aeth.syndrome, r2    //BD Slot
+    phvwr       p.s1.ack_info.aeth.syndrome, r2    //BD Slot
 
     // increment e_psn
     tblmincri   d.e_psn, 24, 1
@@ -598,10 +598,10 @@ duplicate_wr_send:
     */
     sub         r2, d.e_psn, 1 // since d.e_psn is a 24-bit value, sub can be used to decrement
 
-    phvwrpair   p.ack_info.psn, r2, p.ack_info.aeth.msn, d.msn
+    phvwrpair   p.s1.ack_info.psn, r2, p.s1.ack_info.aeth.msn, d.msn
     RQ_CREDITS_GET(r1, r2, c7)
     AETH_ACK_SYNDROME_GET(r2, r1)
-    phvwr       p.ack_info.aeth.syndrome, r2
+    phvwr       p.s1.ack_info.aeth.syndrome, r2
 
 generate_ack:
     add         RQCB2_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
@@ -614,7 +614,7 @@ generate_ack:
                                    DB_ADDR, DB_DATA)
 
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
 
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
@@ -638,7 +638,7 @@ duplicate_rd_atomic:
     // copy bt_info to rqcb2
     add             r6, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, \
                     ((CB_UNIT_SIZE_BYTES * 2) + FIELD_OFFSET(rqcb2_t, bt_info))
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, bt_info, bt_info, r6)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, s2.bt_info, s2.bt_info, r6)
 
     // ring backtrack doorbell to wakeup txdma
     DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 1)
@@ -652,14 +652,14 @@ duplicate_rd_atomic:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
     
     // copy psn/va/r_key/len and op_type
-    phvwr.c3        p.bt_info.len, CAPRI_RXDMA_RETH_DMA_LEN
-    phvwr.!c3       p.bt_info.read_or_atomic, RSQ_OP_TYPE_ATOMIC
-    phvwr.e         p.bt_info.psn, CAPRI_APP_DATA_BTH_PSN
-    phvwr           p.{bt_info.va...bt_info.r_key}, CAPRI_RXDMA_RETH_VA_R_KEY //Exit Slot
+    phvwr.c3        p.s2.bt_info.len, CAPRI_RXDMA_RETH_DMA_LEN
+    phvwr.!c3       p.s2.bt_info.read_or_atomic, RSQ_OP_TYPE_ATOMIC
+    phvwr.e         p.s2.bt_info.psn, CAPRI_APP_DATA_BTH_PSN
+    phvwr           p.{s2.bt_info.va...s2.bt_info.r_key}, CAPRI_RXDMA_RETH_VA_R_KEY //Exit Slot
     
 drop_duplicate_rd_atomic:
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
 
@@ -673,15 +673,15 @@ wr_only_zero_len_inv_req_nak:
 
 inv_req_nak:
     bbne        d.nak_prune, 1, nak
-    phvwr       p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)    //BD Slot
+    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)    //BD Slot
     
     b           skip_nak
    //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR) // BD Slot
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) // BD Slot
 
 seq_err_nak:
     b           nak_prune
-    phvwr       p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) // BD Slot
+    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) // BD Slot
 
 process_rnr:
     ARE_ALL_FLAGS_SET(c7, r7, RESP_RX_FLAG_SEND|RESP_RX_FLAG_FIRST)
@@ -692,7 +692,7 @@ process_rnr:
 
     // decrement e_psn
     tblmincr    d.e_psn, 24, r1
-    phvwr       p.ack_info.aeth.syndrome, AETH_RNR_SYNDROME_INLINE_GET(RNR_NAK_TIMEOUT)    
+    phvwr       p.s1.ack_info.aeth.syndrome, AETH_RNR_SYNDROME_INLINE_GET(RNR_NAK_TIMEOUT)    
 
 nak_prune:
     /* only seq_err_nak and RNR
@@ -703,10 +703,10 @@ nak_prune:
 
     b           skip_nak
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR) // BD Slot
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) // BD Slot
 
 nak: 
-    phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, d.msn
+    phvwrpair   p.s1.ack_info.psn, d.e_psn, p.s1.ack_info.aeth.msn, d.msn
  
     add         RQCB2_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
@@ -720,7 +720,7 @@ nak:
                                    DB_ADDR, DB_DATA)
 
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
 
 skip_nak:
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot

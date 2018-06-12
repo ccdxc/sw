@@ -138,7 +138,7 @@ loop_exit:
     // DMA for releasing atomic resource
     // atomic_release_byte value is 0 as phv gets initialized to 0.
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE)
-    DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, atomic_release_byte, atomic_release_byte, r2)
+    DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, s1.atomic_release_byte, s1.atomic_release_byte, r2)
 
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, va), CAPRI_KEY_FIELD(IN_P, va), \

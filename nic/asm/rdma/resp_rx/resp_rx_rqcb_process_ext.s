@@ -13,6 +13,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 #define PHV_GLOBAL_COMMON_P phv_global_common
 
+#define DMA_CMD_BASE r1
+
 %%
     .param    resp_rx_stats_process
 
@@ -28,7 +30,7 @@ resp_rx_rqcb_process_ext:
     phvwrpair   CAPRI_PHV_FIELD(PHV_GLOBAL_COMMON_P, lif), \
                 CAPRI_RXDMA_INTRINSIC_LIF, \
                 CAPRI_PHV_FIELD(PHV_GLOBAL_COMMON_P, cb_addr), \
-                CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT)
+                CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT) //BD Slot
 
     phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_INFO_P, bth_se), CAPRI_APP_DATA_BTH_SE 
 
@@ -46,10 +48,17 @@ resp_rx_rqcb_process_ext:
 
 skip_roce_opt_parsing:
 
-#   // get a tokenid for the fresh packet
-#   phvwr  p.common.rdma_recirc_token_id, d.token_id
+    // stats should not include pad bytes
+    sub     r2, CAPRI_APP_DATA_PAYLOAD_LEN, CAPRI_APP_DATA_BTH_PAD
+    CAPRI_SET_FIELD2(TO_S_STATS_INFO_P, pyld_bytes, r2)
 
-    CAPRI_SET_FIELD2(TO_S_STATS_INFO_P, pyld_bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
+    seq     c1, CAPRI_APP_DATA_BTH_PAD, r0
+    bcf     [c1], exit
+
+    // If PAD is not 0, introduce a skip command. This command is statically placed after
+    // the payload transfer DMA commands, hence skips any PAD bytes from getting transfered.
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) //BD Slot
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 
 recirc_pkt:
     seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 7

@@ -151,7 +151,7 @@ error_completion:
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
-    phvwr       p.ack_info.aeth.syndrome, CAPRI_KEY_RANGE(IN_P, nak_code_sbit0_ebit6, nak_code_sbit7_ebit7)
+    phvwr       p.s1.ack_info.aeth.syndrome, CAPRI_KEY_RANGE(IN_P, nak_code_sbit0_ebit6, nak_code_sbit7_ebit7)
     phvwr       p.cqwqe.status, CQ_STATUS_LOCAL_ACC_ERR
 
     // set error disable flag such that ptseg code wouldn't enqueue
@@ -178,7 +178,7 @@ error_completion:
                                    DB_ADDR, DB_DATA)
     
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c1) //BD Slot

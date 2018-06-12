@@ -13,8 +13,8 @@ struct eqcb_t d;
 #define TMP r5
 #define EQ_INT_ADDR r6
 
-#define PHV_EQWQE_START eqwqe.cq_id
-#define PHV_EQWQE_END   eqwqe.rsvd
+#define PHV_EQWQE_START s1.eqwqe.cq_id
+#define PHV_EQWQE_END   s1.eqwqe.rsvd
 
 #define PHV_EQ_INT_NUM_START eq_int_num
 #define PHV_EQ_INT_NUM_END eq_int_num
@@ -32,7 +32,7 @@ resp_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwrpair       p.eqwqe.cq_id, CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23), p.eqwqe.color, EQ_COLOR
+    phvwrpair       p.s1.eqwqe.cq_id, CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23), p.s1.eqwqe.color, EQ_COLOR
 
     sllv            r1, EQ_P_INDEX, d.log_wqe_size
     add             EQWQE_P, d.eqe_base_addr, r1
