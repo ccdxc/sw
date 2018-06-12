@@ -1,0 +1,67 @@
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Splugins_Ssfw_Slibsfw_Upkt_Uutils.so   /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Se2etests_Slibe2etest-lib.so                /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Ssvc_Slibhal_Usvc.so                   /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Splugins_Slibplugins.so                /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sfte_Slibfte.so                             /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Slibhal_Usvc_Ugen.so                        /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Splugins_Sproxy_Slibproxyplugin.so     /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Shost_Umem_Slibhost_Umem_Usrc.so     /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Slkl_Sliblkl_Uapi.so                   /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Slibhal_Usrc.so                        /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Seventmgr_Slibeventmgr.so            /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Sfsm_Slibfsm.so                      /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Sbitmap_Slibbitmap.so                /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Snat_Slibnat.so                      /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Slib_Slibhal_Ulib.so                   /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Ssrc_Snw_Slibnw.so                     /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Stls_Slibtls_Uapi.so                   /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Stls_Sengine_Slibpse.so                /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Strace_Slibtrace.so                  /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Slkl_Sliblklshim_Utls.so               /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Sprint_Slibprint.so                  /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Stest_Sutils_Slibhaltestutils.so       /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Smtrack_Slibmtrack.so                /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Spd_Slibpdcommon.so                    /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Sblock_Ulist_Slibblock_Ulist.so      /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Speriodic_Slibperiodic.so              /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Sbm_Uallocator_Slibbm_Uallocator.so  /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sutils_Sagent_Uapi_Slibagent_Uapi.so        /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sfte_Slibfte_Ubase_Utest.so                 /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Splugins_Snetwork_Slibnetwork.so       /nic/lib/
+bazel-bin/_solib_aarch64-linux/libexternal_Sgtest_Slibgtest.so                    /nic/lib/
+bazel-bin/_solib_aarch64-linux/libexternal_Sgtest_Slibgtest_Uwithout_Umain.so     /nic/lib/
+
+# bazel-bin/nic/hal/plugins/sfw/libsfw_pkt_utils.so    /nic/lib/
+# bazel-bin/nic/e2etests/libe2etest-lib.so             /nic/lib/
+# bazel-bin/nic/hal/svc/libhal_svc.so                  /nic/lib/
+# bazel-bin/nic/hal/plugins/libplugins.so              /nic/lib/
+# bazel-bin/nic/fte/libfte.so                          /nic/lib/
+# bazel-bin/nic/libhal_svc_gen.so                      /nic/lib/
+# bazel-bin/nic/hal/plugins/proxy/libproxyplugin.so    /nic/lib/
+# bazel-bin/nic/utils/host_mem/libhost_mem_src.so      /nic/lib/
+# bazel-bin/nic/hal/lkl/liblkl_api.so                  /nic/lib/
+# bazel-bin/nic/hal/libhal_src.so                      /nic/lib/
+# bazel-bin/nic/utils/eventmgr/libeventmgr.so          /nic/lib/
+# bazel-bin/nic/utils/fsm/libfsm.so                    /nic/lib/
+# bazel-bin/nic/utils/bitmap/libbitmap.so              /nic/lib/
+# bazel-bin/nic/utils/nat/libnat.so                    /nic/lib/
+# bazel-bin/nic/hal/lib/libhal_lib.so                  /nic/lib/
+# bazel-bin/nic/hal/src/nw/libnw.so                    /nic/lib/
+# bazel-bin/nic/hal/tls/libtls_api.so                  /nic/lib/
+# bazel-bin/nic/hal/tls/engine/libpse.so               /nic/lib/
+# bazel-bin/nic/utils/trace/libtrace.so                /nic/lib/
+# bazel-bin/nic/hal/lkl/liblklshim_tls.so              /nic/lib/
+# bazel-bin/nic/utils/print/libprint.so                /nic/lib/
+# bazel-bin/nic/hal/test/utils/libhaltestutils.so      /nic/lib/
+# bazel-bin/nic/utils/mtrack/libmtrack.so              /nic/lib/
+# bazel-bin/nic/hal/pd/libpdcommon.so                  /nic/lib/
+# bazel-bin/nic/utils/block_list/libblock_list.so      /nic/lib/
+# bazel-bin/nic/hal/periodic/libperiodic.so            /nic/lib/
+# bazel-bin/nic/utils/bm_allocator/libbm_allocator.so  /nic/lib/
+# bazel-bin/nic/utils/agent_api/libagent_api.so        /nic/lib/
+# bazel-bin/external/gtest/libgtest.so                 /nic/lib/
+# bazel-bin/external/gtest/libgtest_without_main.so    /nic/lib/
+
+# test binaries
+bazel-bin/nic/fte/fte_test                                                        /nic/bin/
+bazel-bin/nic/hal/plugins/network/network_test                                    /nic/bin/

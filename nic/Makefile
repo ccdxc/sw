@@ -177,10 +177,16 @@ package-clean:
 
 package: package-clean
     ifeq ($(ARCH),aarch64)
-		cd ../ && python nic/tools/package.py
+		cd ../ && python nic/tools/package/package.py
     else
-		cd ../ && python nic/tools/package.py x86_64
+		cd ../ && python nic/tools/package/package.py --target zebu --no-strip
     endif
+
+package-sim: package-clean
+	cd ../ && python nic/tools/package/package.py --target sim --no-strip
+
+package-arm-dev: package-clean
+	cd ../ && python nic/tools/package/package.py --target arm-dev --no-strip
 
 release:
     ifneq ($(ARCH),aarch64)

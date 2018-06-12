@@ -77,10 +77,11 @@ cc_library(
     srcs = select ({
         "//conditions:default" : [
 	        "tins/x86_64/lib/libtins.so",
+            "pcap/aarch64/lib/libpcap.so",
         ],
         ":aarch64_mode" : [
             "tins/aarch64/lib/libtins.so",
-            "pcap/aarch64/lib/libpcap.so.0.8",
+            "pcap/aarch64/lib/libpcap.so",
         ],
     }),
 )
