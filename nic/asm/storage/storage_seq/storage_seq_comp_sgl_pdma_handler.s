@@ -32,11 +32,6 @@ struct phv_ p;
  */
 #define l_dma_desc_count            d.pad0      // count of descriptors consumed
  
-/*
- * Registers reuse, post all transfers
- */
-#define r_dma_desc_count            r_src_len
- 
 %%
 
 storage_seq_comp_sgl_pdma_xfer:
@@ -60,6 +55,8 @@ storage_seq_comp_sgl_pdma_xfer:
     * The following is the initial flit where the first set of mem2mem
     * descriptors are available for PDMA use. Note that subsequent macro
     * invocations can advance into one or more subsequent flits!
+    *
+    * See also CAPRI_FLIT_DMA_PTR_FINAL_CHECK() at the end of this module.
     */
    CAPRI_FLIT_DMA_PTR_INITIAL(dma_m2m_4, dma_m2m_7)
 
@@ -95,7 +92,7 @@ possible_padding_apply:
    // r_xfer_len contains the remaining length in the current SGL.
    //
    seq          c1, SEQ_KIVEC3_PAD_LEN, r0
-   bcf          [c1], exit
+   bcf          [c1], dma_ptr_final_check
    
    // CAUTION: Due to registers shortage, r_sgl_rem_len is equated
    // with r_src_len so only one of them can be in use at a time in
@@ -123,26 +120,27 @@ endif1:
 endif0:
    
    sub          r_src_len, SEQ_KIVEC3_PAD_LEN, r_xfer_len
-   beq          r_src_len, r0, exit
+   beq          r_src_len, r0, dma_ptr_final_check
    add          r_src_addr, r_src_addr, r_xfer_len  // delay slot
 
    // Transfer the remaining pad data which must fit in the
    // next SGL entry
    CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE(pdma_xfer_error)
    CHAIN_SGL_PDMA_PTR(inner_label8, inner_label9,
-                      exit, pdma_xfer_error)
+                      dma_ptr_final_check, pdma_xfer_error)
    
    // Catch any driver errors here for debugging, i.e., driver did not 
    // provision the SGL correctly relative to padding length
    bne          r_src_len, r0, pdma_xfer_error
    nop
       
-exit:
+dma_ptr_final_check:
 
    // Ensure that the total number of DMA descriptors consumed by PDMA
    // did not overlap with descriptors used by storage_seq_barco_chain_action.
    CAPRI_FLIT_DMA_PTR_FINAL_CHECK(dma_m2m_4, 4, dma_m2m_14, 14,
                                   pdma_xfer_error)
+exit:
    CLEAR_TABLE1_e
 
 pdma_xfer_error:

@@ -754,8 +754,8 @@ struct capri_dma_cmd_mem2mem_t {
 #define CAPRI_FLIT_DMA_PTR_FINAL_CHECK(_dma_desc_initial, _initial_no,  \
                                        _dma_desc_final, _final_no,      \
                                        _error_label)                    \
-    add         r_dma_desc_count, l_dma_desc_count, r0;                 \
-    bgti        r_dma_desc_count, _final_no - _initial_no, _error_label;\
+    sle         c1, l_dma_desc_count, _final_no - _initial_no;          \
+    bcf         [!c1], _error_label;                                    \
     nop;                                                                \
     
 // Offset/size operands for tblrdp/tblwrp instruction
