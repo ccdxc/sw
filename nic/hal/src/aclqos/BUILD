@@ -38,4 +38,5 @@ cc_library(
         "//nic:spdlog",
     ],
     alwayslink = 1,
+    tags = [ "plugins" ]
 )

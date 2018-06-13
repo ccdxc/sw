@@ -60,9 +60,15 @@ MSFT_GFT_SUBDIRS = \
 .PHONY: subdirs iris_p4 msft_gft $(SUBDIRS)
 default: iris_p4
 
+CLI = ../tools/ncc/capri_cli.py
+cli:
+	$(CLI)
+
 iris_p4: $(IRIS_SUBDIRS)
+	$(MAKE) cli
 
 msft_gft: $(MSFT_GFT_SUBDIRS)
+	$(MAKE) cli
 
 subdirs: $(SUBDIRS)
 

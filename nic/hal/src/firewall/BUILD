@@ -38,4 +38,5 @@ cc_library(
         "//nic/hal/plugins/app_redir:app_redir_includes",
     ],
     alwayslink = 1,
+    tags = [ "plugins" ]
 )

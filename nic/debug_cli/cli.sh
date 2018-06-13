@@ -17,7 +17,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/gen/x86_64/lib:.
 # start the debug CLI prompt
 if [ "$1" = "iris" ] || [ "$1" = "" ]; then
     python3 cli/debug_cli_iris.py repl
-else [ "$1" = "gft" ]; then
+elif [ "$1" = "gft" ]; then
     python3 cli/debug_cli_gft.py repl
 else
     echo "Unknown pipeline $1"

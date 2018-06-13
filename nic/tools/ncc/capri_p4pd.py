@@ -51,9 +51,6 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_output
                 genf = cli_name + '_backend.py'
             elif "p4pd_cli_frontend.py" == f:
                 genf = cli_name + '_frontend.py'
-            elif "p4pd_cli_frontend_common.py" == f:
-                output_dir = cli_outputdir_map['common']
-                genf = 'cli_frontend.py'
             else:
                 genf = f
         else:
@@ -1524,7 +1521,6 @@ class capri_p4pd:
         h_outputdir = gen_dir + '/%s/include' % (self.be.prog_name)
         c_outputdir = gen_dir + '/%s/src/' % (self.be.prog_name)
         py_outputdir = gen_dir + '/%s/cli/' % (self.be.prog_name)
-        cli_outputdir = gen_dir + '/common/cli/'
 
         if not os.path.exists(h_outputdir):
             os.makedirs(h_outputdir)
@@ -1532,8 +1528,6 @@ class capri_p4pd:
             os.makedirs(c_outputdir)
         if not os.path.exists(py_outputdir):
             os.makedirs(py_outputdir)
-        if not os.path.exists(cli_outputdir):
-            os.makedirs(cli_outputdir)
 
         cur_path = os.path.abspath(__file__)
         cur_path = os.path.split(cur_path)[0]
@@ -1546,7 +1540,6 @@ class capri_p4pd:
 
         cli_outputdir_map = {}
         cli_outputdir_map['default'] = py_outputdir
-        cli_outputdir_map['common']  = cli_outputdir
 
         p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir, cli_outputdir_map, prog_name, gen_dir)
 

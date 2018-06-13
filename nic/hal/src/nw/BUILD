@@ -45,4 +45,5 @@ cc_library(
         "//nic/hal/src/firewall:firewall_includes",
     ],
     alwayslink = 1,
+    tags = [ "plugins" ]
 )
