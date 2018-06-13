@@ -135,6 +135,8 @@ header_type chain_sgl_pdma_t {
     len2            : 32;   // SGL data buffer 2 length
     addr3           : 64;   // SGL data buffer 3 address
     len3            : 32;   // SGL data buffer 3 length
+    pad0            : 64;
+    pad1            : 64;
   }
 }
 

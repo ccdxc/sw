@@ -702,7 +702,8 @@ action seq_barco_chain_action(p_ndx) {
 
 @pragma little_endian addr0 addr1 addr2 addr3 len0 len1 len2 len3 
 action seq_comp_sgl_pdma_xfer(addr0, len0, addr1, len1,
-                              addr2, len2, addr3, len3) {
+                              addr2, len2, addr3, len3,
+                              pad0, pad1) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC3_USE(seq_kivec3_scratch, seq_kivec3)
@@ -718,6 +719,8 @@ action seq_comp_sgl_pdma_xfer(addr0, len0, addr1, len1,
   modify_field(seq_comp_sgl_scratch.len2, len2);
   modify_field(seq_comp_sgl_scratch.addr3, addr3);
   modify_field(seq_comp_sgl_scratch.len3, len3);
+  modify_field(seq_comp_sgl_scratch.pad0, pad0);
+  modify_field(seq_comp_sgl_scratch.pad1, pad1);
 
   // DMA to SGL 0
   if (seq_kivec5.data_len <= seq_comp_sgl_scratch.len0) {
@@ -1014,7 +1017,8 @@ action seq_xts_status_handler(err) {
 
 @pragma little_endian addr0 addr1 addr2 addr3 len0 len1 len2 len3 
 action seq_xts_sgl_pdma_xfer(addr0, len0, addr1, len1,
-                             addr2, len2, addr3, len3) {
+                             addr2, len2, addr3, len3,
+                             pad0, pad1) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC3XTS_USE(seq_kivec3xts_scratch, seq_kivec3xts)
@@ -1029,6 +1033,8 @@ action seq_xts_sgl_pdma_xfer(addr0, len0, addr1, len1,
   modify_field(seq_xts_sgl_scratch.len2, len2);
   modify_field(seq_xts_sgl_scratch.addr3, addr3);
   modify_field(seq_xts_sgl_scratch.len3, len3);
+  modify_field(seq_xts_sgl_scratch.pad0, pad0);
+  modify_field(seq_xts_sgl_scratch.pad1, pad1);
 
   // DMA to SGL 0
   if (seq_kivec5xts.data_len <= seq_xts_sgl_scratch.len0) {

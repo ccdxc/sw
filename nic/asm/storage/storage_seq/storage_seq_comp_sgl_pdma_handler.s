@@ -25,7 +25,17 @@ struct phv_ p;
 /*
  * Registers reuse, post 1st series of PDMA transfer
  */
-#define r_sgl_rem_len               r_src_len
+#define r_sgl_rem_len               r_src_len   // SGL tuple remaining length
+ 
+/*
+ * Local vars (due to registers shortage)
+ */
+#define l_dma_desc_count            d.pad0      // count of descriptors consumed
+ 
+/*
+ * Registers reuse, post all transfers
+ */
+#define r_dma_desc_count            r_src_len
  
 %%
 
@@ -48,7 +58,7 @@ storage_seq_comp_sgl_pdma_xfer:
     *              but dma_m2m_7/dma_m2m_8 would not necessarily be adjacent.
     *
     * The following is the initial flit where the first set of mem2mem
-    * descriptors are available for PDMA use. Note that the follow on macro
+    * descriptors are available for PDMA use. Note that subsequent macro
     * invocations can advance into one or more subsequent flits!
     */
    CAPRI_FLIT_DMA_PTR_INITIAL(dma_m2m_4, dma_m2m_7)
@@ -61,15 +71,15 @@ storage_seq_comp_sgl_pdma_xfer:
    
    CHAIN_SGL_PDMA_PTR(inner_label0, inner_label1, 
                       possible_padding_apply, pdma_xfer_error)
-   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE(pdma_xfer_error)
    
    CHAIN_SGL_PDMA_PTR(inner_label2, inner_label3, 
                       possible_padding_apply, pdma_xfer_error)
-   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE(pdma_xfer_error)
    
    CHAIN_SGL_PDMA_PTR(inner_label4, inner_label5, 
                       possible_padding_apply, pdma_xfer_error)
-   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE(pdma_xfer_error)
    CHAIN_SGL_PDMA_PTR(inner_label6, inner_label7,
                       possible_padding_apply, pdma_xfer_error)
    
@@ -118,7 +128,7 @@ endif0:
 
    // Transfer the remaining pad data which must fit in the
    // next SGL entry
-   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()
+   CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE(pdma_xfer_error)
    CHAIN_SGL_PDMA_PTR(inner_label8, inner_label9,
                       exit, pdma_xfer_error)
    
@@ -128,6 +138,11 @@ endif0:
    nop
       
 exit:
+
+   // Ensure that the total number of DMA descriptors consumed by PDMA
+   // did not overlap with descriptors used by storage_seq_barco_chain_action.
+   CAPRI_FLIT_DMA_PTR_FINAL_CHECK(dma_m2m_4, 4, dma_m2m_14, 14,
+                                  pdma_xfer_error)
    CLEAR_TABLE1_e
 
 pdma_xfer_error:
