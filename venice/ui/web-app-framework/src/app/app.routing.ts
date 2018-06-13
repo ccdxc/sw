@@ -4,6 +4,8 @@ import { TestbarchartComponent } from './test/testbarchart/testbarchart.componen
 import { TestplotlyComponent } from './test/testplotly/testplotly.component';
 import { TestRecursiveListComponent } from './test/test-recursive-list/test-recursive-list.component';
 import { TestSearchboxComponent } from './test/test-searchbox/test-searchbox.component';
+import { TestRepeaterComponent } from '@testapp/test-repeater/test-repeater.component';
+import { TestUniqueRepeaterComponent } from '@testapp/test-uniquerepeater/test-uniquerepeater.component';
 
 /**
  * This is the application route configuration file.
@@ -11,14 +13,9 @@ import { TestSearchboxComponent } from './test/test-searchbox/test-searchbox.com
  */
 
 export const routes: Routes = [
-  /* {
-    path: '',
-    loadChildren: '@components/login/login.module#LoginModule',
-    pathMatch: 'full'
-   }, */
   {
     path: '',
-    redirectTo: '/plotly',
+    redirectTo: '/repeater',
     pathMatch: 'full'
   },
   {
@@ -37,7 +34,15 @@ export const routes: Routes = [
   {
     path: 'searchbox',
     component: TestSearchboxComponent
-  }
+  },
+  {
+    path: 'repeater',
+    component: TestRepeaterComponent
+  },
+  {
+    path: 'uniquerepeater',
+    component: TestUniqueRepeaterComponent
+  },
 
 ];
 

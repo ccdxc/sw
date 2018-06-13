@@ -1,2 +1,7 @@
 @import '~@angular/material/theming';
+@import 'global-mixins';
 @include mat-core();
+
+@include penui-primeng-inputtext("");
+@include penui-primeng-dropdown("");
+@include penui-primeng-multiselect("");

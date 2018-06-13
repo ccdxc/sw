@@ -1,0 +1,56 @@
+<div class="repeater">
+  <ng-container *ngFor="let repeater of repeaterList; let first = first; let last = last;" [formGroup]="repeater.formGroup">
+    <div fxFlex="row" fxLayout="start center" class="repeater-group">
+      <!-- Key -->
+      <div fxFlex="nogrow" class="repeater-selector repeater-key">
+          <p-dropdown [styleClass]="styleClass" 
+                      (onChange)="keyDropdownChange(repeater)" 
+                      [formControlName]="keyFormName" 
+                      [options]="keyOptions">
+          </p-dropdown>
+      </div>
+      <!-- Operator-->
+      <div fxFlex="nogrow" class="repeater-selector repeater-operator">
+          <p-dropdown [styleClass]="styleClass" 
+                      (onChange)="emitValues()" 
+                      [formControlName]="operatorFormName" 
+                      [options]="keyToOperator[repeater.formGroup.value[keyFormName]]">
+          </p-dropdown>
+      </div>
+      <!-- Value -->
+      <div fxFlex="nogrow" class="repeater-selector repeater-value">
+          <p-dropdown *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] == 'singleSelect'"  
+                      [styleClass]="styleClass" 
+                      (onChange)="emitValues()" 
+                      [formControlName]="valueFormName" 
+                      [options]="keyToValues[repeater.formGroup.value[keyFormName]]">
+          </p-dropdown>
+          <p-multiSelect *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] =='multiSelect'"
+                          [styleClass]="styleClass" 
+                          (onChange)="emitValues()" 
+                          [maxSelectedLabels]="1" 
+                          [showToggleAll]="false" 
+                          [filter]="false" 
+                          [formControlName]="valueFormName" 
+                          [options]="keyToValues[repeater.formGroup.value[keyFormName]]">
+          </p-multiSelect>
+          <input class="repeater-input" *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] == 'inputField'" 
+                                        (input)="emitValues()" 
+                                        spellcheck="false" 
+                                        type="text"  
+                                        pInputText  
+                                        [placeholder]="keyToValueHintText[repeater.formGroup.value[keyFormName]]" 
+                                        [formControlName]="valueFormName">
+      </div>
+      <!-- Add and delete buttons -->
+      <!-- Only show and if its the last row, and there are keys left -->
+      <div fxFlex="nogrow" *ngIf="last && repeaterList.length < keyOptions.length" class="repeater-and">
+        <span (click)="addRepeater()">+ AND</span>
+      </div> 
+      <!-- Only show if its not the only repeater left -->
+      <div fxFlex="nogrow" *ngIf="repeaterList.length != 1" class="repeater-trash-icon">
+        <mat-icon (click)="removeRepeater(repeater.id)">delete</mat-icon>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -328,8 +328,7 @@ e2e-sanities:
 
 ui-framework:
 	npm version;
-	cd venice/ui/web-app-framework && npm run packagr
-	cd venice/ui/web-app-framework/dist && npm pack .
+	cd venice/ui/web-app-framework && npm run pack
 
 ui:
 	npm version;

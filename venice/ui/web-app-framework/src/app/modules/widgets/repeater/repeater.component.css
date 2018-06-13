@@ -1,0 +1,38 @@
+.repeater-selector {
+    margin: 5px 10px;
+    height: 30px;
+    display: inline-block;
+}
+
+.repeater-key, .repeater-value {
+    height: 30px;
+    width: 170px;
+}
+
+.repeater-operator {
+    width: 87px;
+    height: 30px;
+}
+
+.repeater-input {
+    height: 100%;
+    width: 100%;
+}
+
+.repeater-and {
+    color: #6ba0e5;
+    margin: 10px 0px 10px 5px;
+    display: inline-block;
+}
+
+.repeater-trash-icon {
+    margin-left: 5px;
+    margin-top: 6px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.repeater-and > span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}

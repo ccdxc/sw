@@ -1,0 +1,207 @@
+/**
+ * Takes in an angular theme for consistency, but does not read from it
+ */
+@mixin penui-primeng-inputtext($theme) {
+  $matchColor : #6ba0e5;
+  $errorColor : #e57553;
+  input.ui-inputtext,
+  textarea.ui-inputtext {
+    box-shadow: none !important;
+    background: rgb(247, 247, 247);
+    padding: 10px;
+    border-radius: 2px;
+    resize: none;
+    &:hover, &:focus {
+      border-radius: 2px;
+      background-color: #ffffff !important;
+      border: solid 1px $matchColor !important;
+    }
+
+    &:focus {
+      box-shadow: inset 5px 0 0 0 $matchColor !important;
+    }
+
+    &.error {
+      box-shadow: inset 5px 0 0 0 $errorColor !important;
+      border-radius: 2px;
+      background-color: #ffffff !important;
+      border: solid 1px $errorColor !important;
+    }
+  }
+}
+
+/**
+ * Takes in an angular theme for consistency, but does not read from it
+ */
+@mixin penui-primeng-dropdown($theme) {
+  $matchColor: #6ba0e5;
+  $fontColor: currentColor;
+  $matchFontColor: $matchColor;
+  p-dropdown > div {
+    width: 100% !important;
+    height: 100%;
+    border-radius: 2px;
+    // Disabling primeng transitions so that the elements change color in sync
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    &.ui-state-default {
+      background: rgb(247, 247, 247) !important;
+    }
+
+    .ui-dropdown-label {
+      // Disabling primeng transitions so that the elements change color in sync
+      background: rgb(247, 247, 247) !important;
+      padding-left: 10px; // creates a 5px margin from the box shadow inset once its added
+      -webkit-transition: none !important;
+      -moz-transition: none !important;
+      -o-transition: none !important;
+      transition: none !important;
+    }
+
+    .ui-dropdown-trigger {
+      background: transparent !important;
+      border-left: none;
+    }
+
+    .ui-dropdown-panel {
+      border-radius: 2px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+      background-color: #ffffff;
+      border: solid 1px $matchColor;
+      .ui-dropdown-list {
+        padding: 0px;
+        // Margin changing is to prevent text from moving when the blue bar appears
+        .ui-dropdown-item {
+          color: $fontColor;
+          margin-left: 5px;
+        }
+      }
+    }
+
+    &:hover, &.ui-state-focus, &.ui-dropdown-open {
+      .ui-dropdown-label, &.ui-state-default  {
+        background: white !important;
+      }
+      box-shadow: none;
+      border-radius: 2px;
+      background-color: #ffffff;
+      border: solid 1px $matchColor !important;
+    }
+
+    // adds the left blue selection border
+    &.ui-dropdown-open {
+      box-shadow: inset 5px 0 0 0 $matchColor;
+      .ui-dropdown-label {
+        box-shadow: inset 5px 0 0 0 $matchColor;
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+      }
+    }
+
+    .ui-state-highlight  {
+      background: none;
+      border-left: 5px $matchColor solid !important;
+      border-top-left-radius: 0px;
+      border-bottom-left-radius: 0px;
+
+      // Margin changing is to prevent text from moving when the blue bar appears
+      &.ui-dropdown-item {
+        color: $matchFontColor !important;
+        margin-left: 0px !important;
+      }
+    }
+  }
+}
+
+/**
+ * Styles the primeng multiselect. Include in a class on the p-multiselect
+ * Takes in an angular theme for consistency, but does not read from it
+ */
+@mixin penui-primeng-multiselect($theme) {
+  $matchColor: #6ba0e5;
+  $fontColor: currentColor;
+  p-multiSelect > div {
+    width: 100% !important;
+    height: 100%;
+    background: rgb(247, 247, 247);
+    border-radius: 2px;
+    // Hiding Primeng's menu header
+    .ui-multiselect-header {
+      display: none;
+    }
+    
+    // Setting background color of the selection view label
+    .ui-multiselect-label {
+      background: rgb(247, 247, 247) !important;
+      color: $fontColor;
+      padding-left: 10px !important; // This is to create a 5px margin from the box shadow inset once its added
+    }
+
+    // Setting background color of the selection view trigger icon
+    &.ui-multiselect .ui-multiselect-trigger {
+      background: rgb(247, 247, 247) !important;
+      border-left: none;
+    }
+
+    // Styling the dropdown menu
+    .ui-multiselect-panel {
+      border-radius: 2px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+      background-color: #ffffff;
+      border: solid 1px $matchColor;
+    }
+
+    // Removing the blue shadow highlighting that primeng adds
+    &.ui-state-focus {
+      box-shadow: none;
+    }
+
+    // Changing color of the check box
+    .ui-chkbox-box.ui-state-active {
+      background: $matchColor;
+      border: solid 1px $matchColor;
+    }
+
+    // Changing the highlight and font color in the dropdown menu
+    .ui-state-highlight  {
+      background: none;
+      color: currentColor;
+    }
+
+    // adding border highlighting and changing background to white when the 
+    // mulitselect is hovered on or focused
+    &:hover, &.ui-state-focus, &.ui-multiselect-open {
+      .ui-multiselect-label, .ui-multiselect-trigger, &.ui-state-default  {
+        background: white !important;
+      }
+      box-shadow: none;
+      border-radius: 2px;
+      background-color: #ffffff;
+      border: solid 1px $matchColor !important;
+    }
+
+    // adds the left blue selection border
+    &.ui-multiselect-open {
+      border-radius: 2px;
+
+      border: solid 1px $matchColor !important;
+      box-shadow: inset 5px 0 0 0 $matchColor !important;
+
+      .ui-multiselect-label {
+        box-shadow: inset 5px 0 0 0 $matchColor !important;
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+      }
+
+      &.ui-multiselect .ui-multiselect-trigger {
+        background-color: #ffffff !important;
+      }
+    }
+  }
+}

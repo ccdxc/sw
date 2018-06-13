@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
   BlockUIModule, DropdownModule, SelectItem, SliderModule,
-  ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
+  ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextModule, InputTextareaModule, CheckboxModule,
   MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, Message, OverlayPanelModule,
   SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule
 
@@ -20,14 +20,14 @@ import { TableModule } from 'primeng/table';
   imports: [
     ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
     BlockUIModule, DropdownModule, SliderModule,
-    ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
+    ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
-    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule
+    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule,
   ],
   exports: [
     ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
     BlockUIModule, DropdownModule, SliderModule,
-    ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
+    ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
     SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule
   ],

@@ -1,6 +1,5 @@
-import { Component, OnInit, Input, Output, ViewEncapsulation, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, ViewEncapsulation } from '@angular/core';
 import { ModuleUtility } from '../../ModuleUtility';
-import { PlotlyComponent } from '../plotly/plotly.component';
 
 @Component({
   selector: 'pw-plotlyimage',
@@ -36,7 +35,6 @@ export class PlotlyimageComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    console.log('PlotlyimageComponent.ngInit()');
     if (!this.id) {
       this.id = this.id_prefix + ModuleUtility.s4() + ModuleUtility.s4();
     }
@@ -51,7 +49,6 @@ export class PlotlyimageComponent implements OnInit, OnChanges {
       'width': this.imageWidth + 'px',
       'height': this.imageHeight + 'px'
     };
-    // console.log(this.imageWidth, this.imageHeight);
     return styles;
   }
 

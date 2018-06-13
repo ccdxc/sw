@@ -1,0 +1,8 @@
+<div [formGroup]="formGroup">
+  <app-repeater [data]="data" [formArray]="formGroup.get('test')" (repeaterValues)="handleRepeaterData($event)"></app-repeater>
+  <p-button label="Console log repeater output" (onClick)="repeaterOutput()"></p-button>
+  <p-button label="Console log form Control Output" (onClick)="formControlOutput()"></p-button>
+  <div>
+    <textarea [style.margin]="'10px'" pInputTextarea></textarea>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+.uniquerepeater-selector {
+    margin: 5px 10px;
+    height: 30px;
+    display: inline-block;
+}
+
+.uniquerepeater-key, .uniquerepeater-value {
+    height: 30px;
+    width: 170px;
+}
+
+.uniquerepeater-operator {
+    width: 87px;
+    height: 30px;
+}
+
+.uniquerepeater-input {
+    height: 100%;
+    width: 100%;
+}
+
+.uniquerepeater-and {
+    color: #6ba0e5;
+    margin: 10px 0px 10px 5px;
+    display: inline-block;
+}
+
+.uniquerepeater-trash-icon {
+    margin-left: 5px;
+    margin-top: 6px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.uniquerepeater-and > span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
