@@ -1,0 +1,14 @@
+{
+    "ClusterVIP": "11.1.1.1",
+    "NumVeniceNodes" : 2,
+    "NumQuorumNodes" : 2,
+    "NumNaplesHosts" : 0,
+    "SSHUser":        "root",
+    "SSHPasswd":      "vagrant",
+    "SSHAuthMethod":  "password",
+    "FirstVeniceIP":  "11.1.1.2",
+    "E2EMode":        "MOCK",
+    "User":           "test",
+    "Password":       "pensando",
+    "AuthMethod":     "LOCAL"
+}

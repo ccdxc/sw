@@ -11,6 +11,7 @@ NAPLES_IMAGE = "pensando/naples:#{NAPLES_VER}"
 NAPLES_IMAGE_FILE = "naples-docker-#{NAPLES_VER}.tgz"
 NAPLES_DATA_DIR = "/var/run/naples/"
 AGENT_PORT=9007
+VENICE_IMAGE_FILE = "venice-sim.tar"
 
 if File.exist?(NAPLES_IMAGE_FILE) == false
 
@@ -29,6 +30,7 @@ end
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
 
+  if !ENV['TURIN_DISABLE_NAPLES'] then
   NODE_COUNT.times do |i|
     config.vm.define "node#{i+1}" do |subconfig|
       subconfig.vm.hostname = "node#{i+1}"
@@ -47,6 +49,7 @@ Vagrant.configure("2") do |config|
         vb.cpus = 2
         vb.customize ['modifyvm', :id, '--nictype3', '82545EM']
         vb.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+        vb.linked_clone = true # use base image and clone from it. for multi-VM, saves space
       end
 
       # install app docker images
@@ -117,5 +120,55 @@ Vagrant.configure("2") do |config|
       # Run this on every boot
       subconfig.vm.provision "shell", run: 'always', inline: "/usr/bin/naples-bootstrap.sh $1", args: "#{i+1}"
     end
+    end
+  end
+
+  if ENV['TURIN_ENABLE_VENICE'] then
+      config.vm.define  "venice" do |subconfig|
+          subconfig.vm.box = BOX_IMAGE
+          subconfig.vm.box = "venice/centos74"
+          subconfig.vm.box_version = "0.8"
+          config.ssh.insert_key = false
+          subconfig.vm.provision :shell, inline: 'ulimit -n 4096'
+          subconfig.vm.hostname = "venice"
+
+          # control network (eth1)
+          subconfig.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "control_net", auto_config: false
+
+          subconfig.vm.provider "virtualbox" do |vb|
+              vb.memory = "4096"
+              vb.cpus = 4
+              vb.customize ['modifyvm', :id, '--nictype2', '82545EM']
+              vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+              vb.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+          end
+
+          subconfig.vm.provision "shell", inline: <<-SCRIPT
+            systemctl stop firewalld && systemctl disable firewalld
+            systemctl stop chronyd && systemctl disable chronyd
+            systemctl stop kubelet && systemctl disable kubelet
+            setenforce 0
+            usermod -a -G root vagrant
+            usermod -a -G docker vagrant
+            mkdir -p /etc/docker
+            echo '{ "insecure-registries" : ["registry.test.pensando.io:5000"] }' > /etc/docker/daemon.json
+            systemctl start docker
+            systemctl enable docker
+            ip link set up dev eth1
+            sysctl -w vm.max_map_count=262144
+            chmod 777 /var/run/docker.sock
+          SCRIPT
+
+          subconfig.vm.provision "shell", privileged: false, inline: <<-SCRIPT
+              mkdir -p /home/vagrant/venice
+              if [ -f /vagrant/#{VENICE_IMAGE_FILE} ]; then
+                  cd /home/vagrant/venice
+                  tar xvf /vagrant/#{VENICE_IMAGE_FILE}
+              else
+                  echo TODO download the venice sim binaries here with some credentials and extract the file
+              fi
+              /home/vagrant/venice/venice-bootstrap.sh
+          SCRIPT
+      end
   end
 end

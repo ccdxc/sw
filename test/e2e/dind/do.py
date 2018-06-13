@@ -10,16 +10,19 @@ from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 import ipaddr
 
+# root of the source tree - used in dev mode so that source is mounted every where
 src_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
+
+#script source dir - this needs to be mounted to node1 so that we can post a cluster create object from this script
+# we go ahead and mount this to all venice node to simplify this script
+script_src_dir = os.path.dirname(os.path.realpath(__file__))
+
 registry = "registry.test.pensando.io:5000"
-
 debug = False
-
 exposedPortBase = 10000
 
 def runCommand(cmd, ignore_error=False):
-    # subprocess.call() is multithreaded but can mess up terminal settings.
-    # hence we call 'stty sane' at the exit of the program
+    # subprocess.call() is multithreaded but can mess up terminal settings
     if debug:
         print cmd
         return 0
@@ -29,7 +32,7 @@ def runCommand(cmd, ignore_error=False):
         return subprocess.check_call(cmd, shell=True, stdin=None)
 
 class TestMgmtNode:
-    def __init__(self, name, ipaddress, quorumNames, quorumIPs, nodes, ipList, clustervip, containerIndex):
+    def __init__(self, name, ipaddress, quorumNames, quorumIPs, nodes, ipList, clustervip, containerIndex, nettype, dev_mode):
         self.containerIndex = containerIndex
         self.debug = debug
         self.name = name
@@ -39,13 +42,20 @@ class TestMgmtNode:
         self.nodes = nodes
         self.clustervip = clustervip
         self.ipList = ipList
+        self.nettype = nettype
+        self.dev_mode = dev_mode
     def runCmd(self, command, ignore_error=False):
-        return runCommand("""docker exec -it {} """.format(self.name) + command, ignore_error)
+        return runCommand("""docker exec {} """.format(self.name) + command, ignore_error)
     def startNode(self):
         # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
         # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
-        runCommand("""docker run -td -p {}:9000 -p {}:9200 -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.2 /bin/sh """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
-        self.runCmd("""apk add openssh""")
+        ports_exposed = ""
+        if self.nettype == 'bridge':
+            ports_exposed = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
+        if self.dev_mode:
+            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.3 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
+        else:
+            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.3 /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name))
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys2""")
@@ -54,24 +64,37 @@ class TestMgmtNode:
         self.runCmd("""kubectl   config set-context e2e --cluster=e2e """)
         self.runCmd("""kubectl   config use-context e2e """)
         self.runCmd("""mkdir -p /etc/bash_completion.d""")
-        self.runCmd("""go install ./venice/exe/venice""")
-        self.runCmd("""/usr/local/go/bin/venice auto-completion""")
-        # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
-        # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
-        self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
-        self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
+        if self.dev_mode:
+            self.runCmd("""go install ./venice/exe/venice""")
+            self.runCmd("""/usr/local/go/bin/venice auto-completion""")
+            self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
+            self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
-    def __init__(self, name, ipaddress, containerIndex):
+    def __init__(self, name, ipaddress, containerIndex, nettype, venice_image, venice_image_dir, dev_mode):
         self.containerIndex = containerIndex
         self.debug = debug
         self.name = name
         self.ipaddress = ipaddress
+        self.nettype = nettype
+        self.venice_image = venice_image
+        self.venice_image_dir = venice_image_dir
+        self.dev_mode = dev_mode
     def runCmd(self, command, ignore_error=False):
-        return runCommand("""docker exec -it {} """.format(self.name) + command, ignore_error)
+        return runCommand("""docker exec {} """.format(self.name) + command, ignore_error)
     def startNode(self):
         while runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name), ignore_error=True) == 0 and not debug:
             time.sleep(2)
-        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -p {}:9000 -p {}:9200 -l pens -l pens-dind --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
+        # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
+        # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
+        ports_exposed = ""
+        if self.nettype == 'bridge': # all original ports are exposed for macvlan in its own ip. for bridge, we need to expose explicitly
+            ports_exposed = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
+        if self.dev_mode:
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(ports_exposed, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
+        elif self.venice_image_dir != '':
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(ports_exposed, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
+        else:
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(ports_exposed, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""", ignore_error=True) != 0 and not debug:
             time.sleep(2)
@@ -94,7 +117,12 @@ class Node:
 
     def startCluster(self):
         # this is a shortcut bypassing the untar of image and running the script - just to speed up things
-        self.runCmd("""sh -c 'cd /import/src/github.com/pensando/sw/bin && ../tools/scripts/INSTALL.sh' """)
+        if self.dev_mode:
+            self.runCmd("""sh -c 'cd /import/src/github.com/pensando/sw/bin && ../tools/scripts/INSTALL.sh' """)
+        elif self.venice_image_dir != '':
+            self.runCmd("""sh -c 'cd /venice && ./INSTALL.sh' """)
+        else:
+            self.runCmd("""sh -c 'mkdir -p /tmp/dind && cd /tmp/dind && tar zxvf /venice.tgz && ./INSTALL.sh' """)
     def restartCluster(self):
         self.stopCluster()
         self.startCluster()
@@ -175,7 +203,7 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
 
 def deleteCluster():
     runCommand("""docker stop -t 3 node0 >/dev/null 2>&1""", ignore_error=True)
-    runCommand(""" for i in $(docker ps -f label=pens-dind --format '{{.ID}}'); do docker exec -it $i init 0; done """, ignore_error=True)
+    runCommand(""" for i in $(docker ps -f label=pens-dind --format '{{.ID}}'); do docker exec $i init 0; done """, ignore_error=True)
     runCommand("""docker stop -t 3 $(docker ps -f label=pens --format '{{.ID}}') >/dev/null 2>&1""", ignore_error=True)
     runCommand("""docker network remove pen-dind-net 2>/dev/null""", ignore_error=True)
     runCommand("""docker network remove pen-dind-hnet 2>/dev/null""", ignore_error=True)
@@ -187,7 +215,7 @@ def stopCluster(nodeList, nodes, quorum, clustervip):
     pool = ThreadPool(len(nodeList))
     pool.map(lambda x: x.stopCluster(), nodes)
 
-def createCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
+def createCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip, nettype):
     dind_net = ipaddr.IPv4Network(ipaddr.IPv4Address(clustervip).__str__() + '/24').masked()
     dind_hnet = ipaddr.IPv4Network((ipaddr.IPv4Address(clustervip) - 256 ).__str__() + '/24').masked()
     dind_nnet = ipaddr.IPv4Network((ipaddr.IPv4Address(clustervip) - 512 ).__str__() + '/24').masked()
@@ -200,13 +228,13 @@ def createCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
         docker network create --internal --ip-range {} --subnet {} pen-dind-nnet
     fi""".format(dind_hnet, dind_hnet))
     runCommand("""if ! docker network inspect pen-dind-net >/dev/null 2>&1; then
-        docker network create --ip-range {} --subnet {} pen-dind-net
-    fi""".format(dind_net, dind_net))
+        docker network create -d {} -o parent=eth1 --ip-range {} --subnet {} pen-dind-net
+    fi""".format(nettype, dind_net, dind_net))
 
     pool.map(lambda x: x.doCluster(), nodes)
 
     for i in range(1, 3):
-        if runCommand("""docker exec -it node1 /import/src/github.com/pensando/sw/test/e2e/dind/do.py  -configFile '' -init_cluster_only -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
+        if runCommand("""docker exec node1 /dind/do.py  -configFile '' -init_cluster_only -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
             break
         time.sleep(2)
 
@@ -215,17 +243,29 @@ def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
     pool = ThreadPool(len(nodes))
     pool.map(lambda x: x.restartCluster(), nodes)
     for i in range(1, 3):
-        if runCommand("""docker exec -it node1 /import/src/github.com/pensando/sw/test/e2e/dind/do.py -configFile ''  -init_cluster_only  -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
+        if runCommand("""docker exec node1 /dind/do.py -configFile ''  -init_cluster_only  -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
             break
         time.sleep(2)
 
 parser = argparse.ArgumentParser()
-# these 6 below are used internally not to be directly executed by the caller
+# these 4 below are used internally not to be directly executed by the caller
 parser.add_argument("-clustervip", help="VIP of the cluster")
 parser.add_argument("-quorum", type=str, default="", help="quorum nodes joined by ,")
 parser.add_argument("-init_cluster_only", action='store_true', default=False, help="Init the cluster by posting Cluster object to CMD and exit")
 parser.add_argument("-init_cluster_node", type=str, default="", help="node in which the cluster object is created.")
 # args below are to be called by user
+
+# venice_image_dir is when the images are already extracted on the host before calling the script. Hence we use only 1 copy of the files for all the containers
+parser.add_argument("-venice_image_dir", type=str, default='', help="path to the extracted files of venice.tgz file. when source is not available. ")
+
+# incase of venice_image, each docker container extracts the venice.tgz and loads all the contents - heavy on disk space and time
+parser.add_argument("-venice_image", type=str, default='', help="path to the venice.tgz file. when source is not available. ")
+
+# when the environment does not need to spin up a test node.
+parser.add_argument("-skipnode0", action='store_true', default=False, help="skip creation of node0")
+
+# by default docker bridge is created. But can also use macvlan so that ip address and ports are directly exposed off to a physical device
+parser.add_argument("-nettype", type=str, default="bridge",help="network type: valid values are bridge, macvlan")
 parser.add_argument("-first_venice_ip", type=str, default="192.168.30.11",help="First Venice IP")
 parser.add_argument("-num_naples", type=int, default=1, help="number of naples nodes")
 parser.add_argument("-num_quorum", type=int, default=1, help="number of quorum nodes")
@@ -237,14 +277,24 @@ parser.add_argument("-delete", action='store_true', default=False, help="delete 
 parser.add_argument("-stop", action='store_true', default=False, help="stop venice cluster but keep containers")
 args = parser.parse_args()
 
+dev_mode = True
+if args.venice_image != '' or args.venice_image_dir != '':
+    dev_mode = False
+
+if args.venice_image != '' and args.venice_image_dir != '':
+    print "Only one of venice_image or venice_image_dir need to be specified"
+    sys.exit(1)
+
 if args.init_cluster_only:
     initCluster(args.init_cluster_node, args.quorum.split(","), args.clustervip)
-    os.system("stty sane")
+    sys.exit(0)
+
+if args.nettype != 'bridge' and args.nettype != 'macvlan':
+    print "nettype " + args.nettype + " is not support. Only bridge,macvlan are supported"
     sys.exit(0)
 
 if args.delete:
     deleteCluster()
-    os.system("stty sane")
     sys.exit(0)
 
 datastore={}
@@ -294,7 +344,7 @@ containerIndex = 1
 
 nodes = []
 for addr in xrange(len(nodeList)):
-    node = Node(nodeList[addr], ipList[addr], containerIndex)
+    node = Node(nodeList[addr], ipList[addr], containerIndex, args.nettype, args.venice_image, args.venice_image_dir, dev_mode)
     containerIndex = containerIndex + 1
     nodes.append(node)
 
@@ -307,17 +357,15 @@ for addr in xrange(len(naplesNames)):
 
 if args.stop:
     stopCluster(nodeList, nodes + naplesNodes, quorumNames, clustervip)
-    os.system("stty sane")
     sys.exit(0)
 if args.restart:
     restartCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip)
-    os.system("stty sane")
     sys.exit(0)
 
 deleteCluster()
-testMgmtNode = TestMgmtNode("node0","{}".format(first_venice_ip + num_nodes + num_naples), quorumNames, quorumIPs, nodes, ipList, clustervip, 0)
-createCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip)
-testMgmtNode.startNode()
+testMgmtNode = TestMgmtNode("node0","{}".format(first_venice_ip + num_nodes + num_naples), quorumNames, quorumIPs, nodes, ipList, clustervip, 0, args.nettype, dev_mode)
+createCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip, args.nettype)
+if not args.skipnode0:
+    testMgmtNode.startNode()
 
-os.system("stty sane")
 sys.exit(0)
