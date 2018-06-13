@@ -54,6 +54,7 @@ REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.12
 UI_BUILD_CONTAINER ?= pens-ui-bld:v0.4
 TARGETS ?= ws-tools gen build
+BUILD_CMD ?= bash -c  "make ${TARGETS}"
 
 default:
 	$(MAKE) ws-tools
@@ -175,9 +176,8 @@ helper-containers:
 
 # running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
 container-compile:
-	mkdir -p ${PWD}/bin/cbin
-	mkdir -p ${PWD}/bin/pkg
-	@echo "+++ building ui sources"
+	@mkdir -p ${PWD}/bin/cbin
+	@mkdir -p ${PWD}/bin/pkg
 	@if [ ! -z ${UI_FRAMEWORK} ]; then \
 		echo "+++ populating node_modules from cache for ui-framework";\
 		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
@@ -192,13 +192,14 @@ container-compile:
 		cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
 	fi
 	@if [ -z ${BYPASS_UI} ]; then \
+	    echo "+++ building ui sources" ; \
 		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 	fi
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}" ; \
+		echo "+++ building go sources"; docker run -it --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}";\
+		echo "+++ rebuilding all go sources"; docker run -it --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ;\
 	fi
 
 container-qcompile:
