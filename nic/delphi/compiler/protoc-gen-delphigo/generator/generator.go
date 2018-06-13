@@ -3199,7 +3199,9 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	// save
 	g.P("func (o *" + msg.wrapper.name + ") save() {")
 	if isDelphiObj(msg) {
-		g.P("  o.sdkClient.SetObject(o)")
+		g.P("  if o.GetKeyString() != \"\" {")
+		g.P("    o.sdkClient.SetObject(o)")
+		g.P("  }")
 	} else {
 		g.P("  panic(\"Not a delphi object\")")
 	}

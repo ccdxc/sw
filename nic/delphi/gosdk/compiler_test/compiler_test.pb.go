@@ -195,7 +195,9 @@ func (o *MessageA) bubbleSave() {
 }
 
 func (o *MessageA) save() {
-	o.sdkClient.SetObject(o)
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
 }
 
 func (o *MessageA) Delete() {
@@ -382,7 +384,9 @@ func (o *MessageB) bubbleSave() {
 }
 
 func (o *MessageB) save() {
-	o.sdkClient.SetObject(o)
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
 }
 
 func (o *MessageB) Delete() {
@@ -515,7 +519,9 @@ func (o *MessageC) bubbleSave() {
 }
 
 func (o *MessageC) save() {
-	o.sdkClient.SetObject(o)
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
 }
 
 func (o *MessageC) Delete() {

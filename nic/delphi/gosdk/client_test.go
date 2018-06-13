@@ -96,6 +96,11 @@ func TestClientBasic(t *testing.T) {
 		}
 	}
 
+	log.Printf("Client1 Data:\n")
+	c1.DumpSubtrees()
+	log.Printf("Client2 Data:\n")
+	c2.DumpSubtrees()
+
 	spec.Delete()
 
 	_ = <-s1.gotNotify
