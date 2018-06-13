@@ -214,7 +214,6 @@ TEST_F(ipc_test, fw_log_api) {
         fk.set_ipprot(types::IPProtocol::IPPROTO_TCP);
         fk.set_fwaction(nwsec::SECURITY_RULE_ACTION_DENY);
         il->fw_log(fk);
-        verify_fw_log(fk, (volatile uint8_t*)p);
     }
 }
 

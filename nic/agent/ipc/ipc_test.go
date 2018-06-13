@@ -5,6 +5,7 @@ package ipc
 import (
 	"encoding/binary"
 	"testing"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 
@@ -108,10 +109,15 @@ func TestBasicIPC(t *testing.T) {
 	Assert(t, err == nil, "Failed to write log", err)
 	client2.putBuffer(buf, size)
 
-	ipc1.processIPC()
-	ipc2.processIPC()
+	callCount := 0
+	h := func(ev *FWEvent, ts time.Time) {
+		callCount++
+	}
+	ipc1.processIPC(h)
+	ipc2.processIPC(h)
 	Assert(t, ipc1.rxCount == 2, "Expected 2 msgs")
 	Assert(t, ipc2.rxCount == 1, "Expected 1 msg")
+	Assert(t, callCount == 3, "Expected 3 invocations")
 
 	// some -ve cases for coverage
 	shm, err = NewSharedMem(0, ipcInstances, "/fwlog_ipc_shm")

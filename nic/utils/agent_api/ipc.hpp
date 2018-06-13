@@ -1,3 +1,5 @@
+#ifndef __IPC__HPP__
+#define __IPC__HPP__
 #include <stdint.h>
 class ipc {
 public:
@@ -30,3 +32,4 @@ private:
     static int inst_count_;
     static int max_inst_;
 };
+#endif

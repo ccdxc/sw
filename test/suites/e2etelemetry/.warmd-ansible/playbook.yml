@@ -1,0 +1,46 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: set mmap count to make elastic happy
+    sysctl:
+      name: vm.max_map_count
+      value: 262144
+      sysctl_set: yes
+
+  - name: "check for docker"
+    shell: "test -x /usr/bin/docker"
+    ignore_errors: true
+    register: docker_exists
+
+  - name: "install docker"
+    shell: "curl -sSL https://get.docker.com | CHANNEL=stable sudo -E bash"
+    when: docker_exists|failed
+
+  - name: add vm to docker users
+    shell: usermod -aG docker vm
+
+  - name: enable passwordless sudo
+    lineinfile:
+      path: /etc/sudoers
+      state: present
+      regexp: '^%sudo\s'
+      line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+
+  - name: get dns server
+    shell: systemd-resolve --status | grep "DNS Servers" | awk -F":" '{print $2}' | awk '{print $1}'
+    register: dns_result
+
+  - set_fact:
+      dns_server: "{{ dns_result.stdout | to_json }}"
+
+  - name: create docker daemon.json
+    template:
+      src: daemon.json.j2
+      dest: /etc/docker/daemon.json
+      mode: 0644
+
+  - name: restart docker
+    service:
+      name: docker
+      state: restarted

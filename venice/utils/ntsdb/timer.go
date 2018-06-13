@@ -295,7 +295,7 @@ func mpPoint(table *iTable, tf *timeField) *metric.MetricPoint {
 
 	mfs := make(map[string]*metric.Field)
 	for key, field := range p.fields {
-		switch field.(type) {
+		switch k := field.(type) {
 		case int64:
 			v := field.(int64)
 			mfs[key] = &metric.Field{F: &metric.Field_Int64{Int64: v}}
@@ -308,9 +308,14 @@ func mpPoint(table *iTable, tf *timeField) *metric.MetricPoint {
 		case bool:
 			v := field.(bool)
 			mfs[key] = &metric.Field{F: &metric.Field_Bool{Bool: v}}
+		default:
+			log.Errorf("Unrecognized type %T", k)
 		}
 	}
 
+	if len(mfs) == 0 {
+		log.Errorf("Bad MP -- no fields")
+	}
 	mp := &metric.MetricPoint{
 		Name:   table.name,
 		Tags:   p.keys,

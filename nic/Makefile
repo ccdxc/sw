@@ -1,4 +1,4 @@
-.PHONY: p4 asm hal utils linkmgr sdk third-party agent
+.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim
 
 default: all
 
@@ -328,6 +328,9 @@ plugins:
 utils:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
 
+fte_sim:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/agent_api/fte_sim:fte_sim
+
 linkmgr:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
 
@@ -360,7 +363,7 @@ stage0: p4 gen-proto csrlite go-proto utils capsim-master
 stage1: asm capmodel build-proto sdk third-party agent delphi
 
 # app building stage
-stage2: plugins linkmgr platform pd hal swig-cli hntap
+stage2: plugins linkmgr platform pd hal swig-cli hntap fte_sim
 
 # post build stage
 stage3: post-make package package-size-check halctl upgrade-manager

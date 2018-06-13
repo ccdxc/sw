@@ -98,18 +98,18 @@ func (sm *SharedMem) IPCInstance() *IPC {
 }
 
 // Receive processes messages received on the IPC channel
-func (ipc *IPC) Receive(ctx context.Context) {
+func (ipc *IPC) Receive(ctx context.Context, h func(*ipcproto.FWEvent, time.Time)) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-time.After(pollDelay):
-			ipc.processIPC()
+			ipc.processIPC(h)
 		}
 	}
 }
 
-func (ipc *IPC) processIPC() {
+func (ipc *IPC) processIPC(h func(*ipcproto.FWEvent, time.Time)) {
 	ro := binary.LittleEndian.Uint32(ipc.base[ipc.readIndex:])
 	wo := binary.LittleEndian.Uint32(ipc.base[ipc.writeIndex:])
 	avail := int((wo + ipc.numBufs - ro) % ipc.numBufs)
@@ -117,19 +117,19 @@ func (ipc *IPC) processIPC() {
 		return
 	}
 
+	ts := time.Now()
 	for ix := 0; ix < avail; ix++ {
-		ipc.processMsg(ro)
+		ipc.processMsg(ro, ts, h)
 		ro = (ro + 1) % ipc.numBufs
 	}
 
 	binary.LittleEndian.PutUint32(ipc.base[ipc.readIndex:], ro)
 }
 
-func (ipc *IPC) processMsg(offset uint32) {
+func (ipc *IPC) processMsg(offset uint32, ts time.Time, h func(*ipcproto.FWEvent, time.Time)) {
 	index := GetSharedConstant("IPC_OVH_SIZE") + offset*GetSharedConstant("IPC_BUF_SIZE")
 	msgSize := binary.LittleEndian.Uint32(ipc.base[index:])
 
-	log.Infof(":: msgSize is %v, numBufs: %v::", msgSize, ipc.numBufs)
 	index += GetSharedConstant("IPC_HDR_SIZE")
 	ev := &ipcproto.FWEvent{}
 	if err := proto.Unmarshal(ipc.base[index:(index+msgSize)], ev); err != nil {
@@ -139,7 +139,7 @@ func (ipc *IPC) processMsg(offset uint32) {
 
 	ipc.rxCount++
 
-	log.Infof("=> sip: %v dip: %v sport: %v dport: %v", ev.GetSipv4(), ev.GetDipv4(), ev.GetSport(), ev.GetDport())
+	h(ev, ts)
 }
 
 // GetSharedConstant gets a shared constant from cgo

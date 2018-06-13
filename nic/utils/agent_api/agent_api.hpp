@@ -1,3 +1,6 @@
+#ifndef __AGENT_API_HPP__
+#define __AGENT_API_HPP__
+
 #include "nic/utils/agent_api/ipc.hpp"
 #include "nic/gen/proto/hal/fwlog.pb.h"
 
@@ -27,3 +30,4 @@ private:
     ipc_logger (void) {};
     ipc *pipe_;
 };
+#endif

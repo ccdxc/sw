@@ -107,10 +107,11 @@ class NaplesNode(Node):
         self.startNode()
         self.startCluster()
     def startNode(self):
-        if self.testMode == "HAL":
-            runCommand("""docker run -td -P -l pens --network pen-dind-net  --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --ip {} -v {}:/sw -v {}/bazel-cache:/root/.cache -w /sw/nic --rm --name {} -h {} {}/pensando/nic:1.18 /bin/sh """.format(self.ipaddress, src_dir, src_dir, self.name, self.name, registry))
-            runCommand("""docker exec {}  bash -c "mkdir -p /go/src/github.com/pensando/sw" """.format(self.name))
-            runCommand("""docker exec {}  bash -c "mount -o bind /sw /go/src/github.com/pensando/sw" """.format(self.name))
+        if self.testMode == "TELEMETRY":
+            self.setupCommon()
+            runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/tmagent" """.format(self.name))
+        elif self.testMode == "HAL":
+            self.setupCommon()
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/netagent" """.format(self.name))
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/nmd" """.format(self.name))
         else:
@@ -119,6 +120,11 @@ class NaplesNode(Node):
         runCommand("""docker network connect pen-dind-hnet {}""".format(self.name))
         runCommand("""docker network connect pen-dind-nnet {}""".format(self.name))
         runCommand("""docker exec {}  bash -c "echo {} pen-master | tee -a /etc/hosts " """.format(self.name, self.clustervip))
+    def setupCommon(self):
+            runCommand("""docker run -td -P -l pens --network pen-dind-net  --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --ip {} -v {}:/sw -v {}/bazel-cache:/root/.cache -w /sw/nic --rm --name {} -h {} {}/pensando/nic:1.18 /bin/sh """.format(self.ipaddress, src_dir, src_dir, self.name, self.name, registry))
+            runCommand("""docker exec {}  bash -c "mkdir -p /go/src/github.com/pensando/sw" """.format(self.name))
+            runCommand("""docker exec {}  bash -c "mount -o bind /sw /go/src/github.com/pensando/sw" """.format(self.name))
+
     def stopCluster(self):
         self.runCmd("""killall -q netagent""")
         self.runCmd("""killall -q nmd""")
@@ -128,7 +134,9 @@ class NaplesNode(Node):
         self.startCluster()
     def startCluster(self):
         # start nmd as a native process on NaplesNode
-        if self.testMode == "HAL":
+        if self.testMode == "TELEMETRY":
+            runCommand("""docker exec -d {} bash -c "tools/start_fte_sim.sh" """.format(self.name))
+        elif self.testMode == "HAL":
             runCommand("""docker exec -d {} nmd -cmdregistration {}:9002 -cmdupdates {}:9009 -hostif eth1 -hostname {}-host -resolver {}:9009 -mode managed  & """.format(self.name, self.clustervip, self.clustervip, self.name, self.clustervip))
             runCommand("""docker exec -d {} make e2e-sanity-hal-bringup""".format(self.name))
             runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent -npm pen-npm -resolver-urls {}:9009 -hostif eth1 -datapath hal -mode managed &" """.format(self.name, self.clustervip))

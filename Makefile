@@ -326,6 +326,19 @@ e2e-sanities:
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
+# Target to run telemetry e2e test cases
+e2e-telemetry:
+	$(MAKE) container-compile
+	$(MAKE) install
+	$(MAKE) -C nic e2e-sanity-build
+	@echo "Setting up cluster..."
+	./test/e2e/dind/do.py -configFile test/e2e/telemetry/tb_config.json
+	@stty sane
+	@echo "Running tests..."
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/telemetry -configFile=/import/src/github.com/pensando/sw/test/e2e/telemetry/tb_config.json'
+	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
+	#./test/e2e/dind/do.py -delete
+
 ui-framework:
 	npm version;
 	cd venice/ui/web-app-framework && npm run pack

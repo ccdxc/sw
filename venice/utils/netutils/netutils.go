@@ -8,14 +8,60 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
-
 	"sync"
+	"time"
+	"unsafe"
 
 	"github.com/vishvananda/netlink"
 )
 
 var errPortAllocFailed = errors.New("could not find a free port")
+var endianNess string
+
+func init() {
+	// Determine endianness
+	var test uint32 = 0xff
+	firstByte := (*byte)(unsafe.Pointer(&test))
+	if *firstByte == 0 {
+		endianNess = "big"
+	} else {
+		endianNess = "little"
+	}
+}
+
+// IPv4Uint32ToString converts uint32 ip address to a string
+func IPv4Uint32ToString(ipUint32 uint32) string {
+	var b1, b2, b3, b4 byte
+
+	if endianNess == "little" {
+		b1, b2, b3, b4 = byte(ipUint32>>24), byte(ipUint32>>16),
+			byte(ipUint32>>8), byte(ipUint32)
+	} else {
+		b1, b2, b3, b4 = byte(ipUint32), byte(ipUint32>>8),
+			byte(ipUint32>>16), byte((ipUint32)>>24)
+	}
+
+	return fmt.Sprintf("%d.%d.%d.%d", b1, b2, b3, b4)
+}
+
+// IPv4ToUint32 converts ipaddr string to a uint32
+func IPv4ToUint32(ipaddr string) (uint32, error) {
+	var ipUint32 uint32
+
+	ip := net.ParseIP(ipaddr).To4()
+	if ip == nil {
+		return 0, errors.New("ipv4 to uint32 conversion: invalid ip format")
+	}
+	if endianNess == "little" {
+		ipUint32 = (uint32(ip[3]) | (uint32(ip[2]) << 8) |
+			(uint32(ip[1]) << 16) | (uint32(ip[0]) << 24))
+	} else {
+		ipUint32 = uint32(ip[0]) | (uint32(ip[1]) << 8) |
+			(uint32(ip[2]) << 16) | (uint32(ip[3]) << 24)
+	}
+
+	return ipUint32, nil
+}
 
 // TestListenAddr holds the TCP Endpoint on which a test server can listen.
 type TestListenAddr struct {
