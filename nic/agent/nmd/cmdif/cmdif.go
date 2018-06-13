@@ -174,7 +174,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 		// TODO : Set the filter to watch only for local NIC's MAC
 		//        The local NIC's MAC is obtained as part REST API
 		//        configuration for naples when it is set to managed mode
-		smartNICRPCClient := grpc.NewSmartNICUpdatesClient(client.updatesRPCClient.ClientConn)
+		smartNICRPCClient := grpc.NewSmartNICUpdatesClient(client.getUpdatesRPCClient().ClientConn)
 		stream, err := smartNICRPCClient.WatchNICs(ctx, &api.ObjectMeta{})
 		if err != nil {
 			log.Errorf("Error watching smartNIC: Err: %v watchCtx.Err: %v",
@@ -262,6 +262,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 // Stop stops CmdClient  and all watching go routines
 func (client *CmdClient) Stop() {
 
+	log.Infof("Stopping Client: %+v", client)
 	client.watchCancel()
 	client.Wait()
 

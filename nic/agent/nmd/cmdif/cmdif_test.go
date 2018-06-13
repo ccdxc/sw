@@ -322,10 +322,6 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	srv.nicdb["2222.2222.2222"] = &nic
 	cl.nmd.SetSmartNIC(&nic)
 
-	go func() {
-		cl.runSmartNICWatcher(cl.watchCtx)
-	}()
-
 	// verify client got the nic
 	AssertEventually(t, func() (bool, interface{}) {
 		ag.Lock()
