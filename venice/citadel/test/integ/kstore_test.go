@@ -100,6 +100,8 @@ func (it *integTestSuite) TestKstoreNodeRestartQuick(c *C) {
 }
 
 func (it *integTestSuite) TestKstoreNodeStopStart(c *C) {
+	c.Skip("skipping due to intermittent failure in CI")
+
 	nodeStopStartCase := TestCase{
 		TestName: "NodeStopStartTest",
 		Steps: []TestStep{
