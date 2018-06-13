@@ -18,11 +18,15 @@ class UpgradeMgr : public delphi::objects::UpgReqReactor {
 
     vector<string>    appRespFailStrList_;
     bool              appRespFail_;
+    bool              upgAborted_;
+    bool              upgPassed_;
 public:
     UpgradeMgr(delphi::SdkPtr sk) {
         sdk_ = sk;
         appRespFail_ = false;
-        upgMgrResp_ = make_shared<UpgMgrResp>(sk);
+        upgAborted_  = false;
+        upgPassed_   = false;
+        upgMgrResp_  = make_shared<UpgMgrResp>(sk);
     }
 
     // OnUpgReqCreate gets called when UpgReq object is created

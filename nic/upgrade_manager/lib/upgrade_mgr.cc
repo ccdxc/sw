@@ -14,15 +14,17 @@ using namespace std;
 
 UpgReqStateType UpgradeMgr::GetNextState(void) {
     UpgReqStateType  reqType;
-    if (GetAppRespFail()) {
-        LogInfo("Some application(s) responded with failure");
-        return UpgFailed;
-    }
     vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
     for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
         reqType = (*reqStatus)->upgreqstate();
         break;
     }
+    if (GetAppRespFail() && (reqType != UpgFailed) && (reqType != Cleanup)) {
+        LogInfo("Some application(s) responded with failure");
+        return UpgFailed;
+    }
+    if (reqType == UpgSuccess) 
+        upgPassed_ = true;
     return StateMachine[reqType].stateNext;
 }
 
@@ -119,23 +121,18 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
         (*reqStatus)->set_upgreqstate(type);
         sdk_->SetObject(*reqStatus);
     }
-    if ((type == UpgSuccess) || (type == UpgFailed) || (type == UpgStateTerminal)) {
-        //Notify Agent
-        UpgRespType respType = UpgRespPass;
-        switch (type) {
-            case UpgFailed:
-                respType = UpgRespFail;
-                break;
-            case UpgStateTerminal:
-                respType = UpgRespAbort;
-                break;
-            default:
-                break;
-        } 
+    if (type == UpgStateTerminal) {
+        UpgRespType respType = UpgRespAbort;
+        if (GetAppRespFail())
+            respType = UpgRespFail;
+        if (upgPassed_ && !upgAborted_)
+            respType = UpgRespPass;
         upgMgrResp_->UpgradeFinish(respType, appRespFailStrList_);
         if (appRespFailStrList_.empty()) {
             LogInfo("Emptied all the responses from applications to agent");
             ResetAppResp();
+            upgPassed_ = false;
+            upgAborted_ = false;
         }
     }
     if (type != UpgStateTerminal)
@@ -182,6 +179,7 @@ delphi::error UpgradeMgr::StartUpgrade(uint32_t key) {
 delphi::error UpgradeMgr::AbortUpgrade(uint32_t key) {
     delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
     if (upgReqStatus != NULL) {
+        upgAborted_ = true;
         upgReqStatus->set_upgreqstate(UpgAborted);
         sdk_->SetObject(upgReqStatus);
         LogInfo("Updated Upgrade Request Status UpgAborted");

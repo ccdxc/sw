@@ -57,7 +57,8 @@ public:
     }
 
     HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
+        //HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         LogInfo("UpgHandler HandleStateProcessesQuiesced called for the SVC!!");
         return resp;
     }
