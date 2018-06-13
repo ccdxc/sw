@@ -22,5 +22,14 @@
       },
       "changeOrigin": true,
       "logLevel": "debug"
+  },
+  "/search": {
+    "target": "http://192.168.69.189:10001/v1/search/query",
+    "secure": false,
+    "pathRewrite": {
+      "^/search": ""
+    },
+    "changeOrigin": false,
+    "logLevel": "debug"
   }
 }

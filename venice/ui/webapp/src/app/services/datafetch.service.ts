@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
+import { Utility } from '../common/Utility';
 import { environment } from '../../environments/environment';
 import { AbstractService } from './abstract.service';
 
@@ -29,21 +30,29 @@ export class DatafetchService extends AbstractService {
     return this.constructor.name;
   }
 
+  public isToMockData(): boolean {
+    return  !environment.isRESTAPIReady;
+  }
+
   /**
    * Get url
-   * e.g 'http://192.168.30.11:9000/v1/cmd/nodes';
+   * e.g http://192.168.69.189:10001/v1/search/query
    */
   getGlobalSearchURL(): string {
-    return environment.server_url + ':' + environment.server_port + environment.version_api_string + environment.venice_nodes;
+    if (!environment.production) {
+      if (!this.isToMockData()) {
+        return '/search';
+      }
+    }
+    return Utility.getRESTAPIServerAndPort() + environment.version_api_string +   'search/query';
   }
 
   /**
    *  Invoke search
    */
   public globalSearch(payload: any): Observable<any> {
-
     const url = this.getGlobalSearchURL();
-    return this.invokeAJAXGetCall(url,
+    return this.invokeAJAXPostCall(url, payload,
       this._http, { 'ajax': 'start', 'name': 'DatafetchService-ajax', 'url': url });
   }
 

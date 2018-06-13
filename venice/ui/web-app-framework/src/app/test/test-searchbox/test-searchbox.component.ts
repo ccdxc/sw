@@ -340,4 +340,8 @@ export class TestSearchboxComponent implements OnInit {
     console.log("TestSearchboxComponent.invokeSearch()", searchItems);
   }
 
+  onSuggestionSelect($event) {
+    console.log("TestSearchboxComponent.onSuggestionSelect()", $event);
+  }
+
 }

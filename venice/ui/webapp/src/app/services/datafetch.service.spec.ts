@@ -50,7 +50,7 @@ describe('DatafetchService', () => {
     });
     const url = service.getGlobalSearchURL();
     const req = httpMock.expectOne(url);
-    expect(req.request.method).toBe('GET');
+    expect(req.request.method).toBe('POST');
     req.flush(dummyRecords);
   });
 });

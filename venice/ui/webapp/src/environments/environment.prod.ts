@@ -18,6 +18,7 @@ export const environment = {
   venice_securitygroups: 'security-groups',
   venice_sgpolicy: 'sgpolicy',
   venice_lbpolicy: 'lb-policy',
-  venice_network: 'networks'
+  venice_network: 'networks',
+  venice_search: 'search'
 
 };

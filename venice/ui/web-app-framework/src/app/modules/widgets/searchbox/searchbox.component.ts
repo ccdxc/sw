@@ -77,12 +77,11 @@ export class SearchboxComponent extends AutoComplete implements OnInit, OnChange
   }
 
   onInvokeSearch($event) {
-    console.log("SearchboxComponent.invokeSearch()", this.value);
+    console.log('SearchboxComponent.invokeSearch()', this.value);
     this.invokeSearch.emit(this.value);
   }
   /**
    *  Override super's API
-  
   hide() {
     this.panelVisible = !this._shouldCloseSuggestionPanel();
     this.unbindDocumentClickListener();
@@ -99,9 +98,10 @@ export class SearchboxComponent extends AutoComplete implements OnInit, OnChange
    */
 
   selectItem(option: any, focus: boolean = true) {
-    if (this.multiple && !option.selectedOption) {
+   /*  if (this.multiple && !option.selectedOption) {
+      this.onSelect.emit(option);
       return;
-    }
+    } */
     if (this.multiple) {
 
       this.multiInputEL.nativeElement.value = '';
@@ -110,8 +110,7 @@ export class SearchboxComponent extends AutoComplete implements OnInit, OnChange
         this.value = [...this.value, option];
         this.onModelChange(this.value);
       }
-    }
-    else {
+    } else {
       this.inputEL.nativeElement.value = this.field ? this.objectUtils.resolveFieldData(option, this.field) || '' : option;
       this.value = option;
       this.onModelChange(this.value);

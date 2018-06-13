@@ -153,11 +153,11 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
 
     const jQ = Utility.getJQuery();
     const self = this;
-    jQ('.app-sidenav-item').on('click', function(event) {
+    jQ('.app-sidenav-item').on('click', function (event) {
       self._sideNavMenuItemClickHandler(event);
     });
 
-    jQ('a[aria-expanded]').on('click', function(event) {
+    jQ('a[aria-expanded]').on('click', function (event) {
       self._sideNavMenuGroupHeaderClickHandler(event);
     });
 
@@ -267,7 +267,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     } else if (payload['id'] === 'troubleshooting') {
       this.navigate(['/monitoring', 'troubleshooting']);
     } else if (payload['id'] === 'cluster') {
-        this.navigate(['/cluster-group', 'cluster']);
+      this.navigate(['/cluster-group', 'cluster']);
     } else if (payload['id'] === 'naples') {
       this.navigate(['/cluster-group', 'naples']);
     } else {
@@ -409,11 +409,42 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Build payload for text Search REST-API.
+   * @param searched
+   */
+  protected buildTextSearchPayload(searched: string) {
+    return {
+      'max-results': 50,
+      'query': {
+        'texts': [
+          {
+            'text': [
+              searched
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  /**
+   * This function builds request json for invoking Search API
+   * It should examine the current search context to decide the type of search. (by category, kind, label, fields,etc)
+   * @param searched
+   */
+  protected buildSearchPayload(searched: string) {
+    return this.buildTextSearchPayload(searched);
+  }
+
+
+  /**
    * This API call server to fetch search suggestions
    * @param searched
    */
   protected getVeniceApplicationSearchSuggestions(searched: any) {
-    this._datafetchService.globalSearch(searched).subscribe(
+    const payload = this.buildSearchPayload(searched);
+    const payloadJSON = JSON.stringify(payload);
+    this._datafetchService.globalSearch(payloadJSON).subscribe(
       data => {
         this._processGlobalSearchResult(searched, data);
       },
@@ -430,17 +461,35 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    * @param searched
    * @param data
    *
-   * TODO: using MockDataUtil to return s
+   *
    */
   protected _processGlobalSearchResult(searched, data) {
-    // TODO: take out 'true' below
-    if (true || !this.isRESTServerReady) {
+    if (!this.isRESTServerReady) {
       this.searchVeniceApplicationsSuggestions = MockDataUtil.getGlobalSearchResult(searched, data);
-      if (this.searchVeniceApplicationsSuggestions && this.searchVeniceApplicationsSuggestions.length === 0) {
-        this.searchVeniceApplicationString = searched;
-        this.noSearchSuggestion = 'no search suggestion';
-      }
+    } else {
+      this.searchVeniceApplicationsSuggestions = this._processGlobalSearchResultHelper(searched, data);
     }
+    if (this.searchVeniceApplicationsSuggestions && this.searchVeniceApplicationsSuggestions.length === 0) {
+      this.searchVeniceApplicationString = searched;
+      this.noSearchSuggestion = 'no search suggestion';
+    }
+  }
+
+  /**
+   *
+   * @param searched
+   * @param data
+   *
+   *  TODO : need more work to process search REST-API response
+   */
+  protected _processGlobalSearchResultHelper(searched, data): any {
+    const entries = data['entries'];
+    const list = [];
+    for (let i = 0; entries && i < entries.length; i++) {
+      entries[i].name = entries[i].meta.name ;
+      list.push(entries[i]);
+    }
+    return list;
   }
 
   onInvokeSearch(searchItems) {

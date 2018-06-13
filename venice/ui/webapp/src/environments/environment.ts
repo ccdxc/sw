@@ -5,7 +5,7 @@
 
 export const environment = {
   production: false,
-  isRESTAPIReady: true,
+  isRESTAPIReady: false,
 
   log_format: 'JSON',
   log_level: 0,
@@ -13,16 +13,17 @@ export const environment = {
   logger_localstorage: false,
   logger_webapi: false,
 
-  // for example: http://192.168.30.11:9000/v1/cmd/nodes
-  server_url: 'http://localhost',
-  server_port: '4200',
+  // for example:http://192.168.69.189 is a linux machine has Venice deployed.
+  server_url: 'http://192.168.69.189',
+  server_port: '10001',
   version_api_string: '/v1/',
   login: 'login',
   venice_nodes: 'cmd/nodes',
-  venice_endpoints: 'endpoints', // http://192.168.30.11:9000/v1/endpoints/default/endpoints //TODO: defaults should be as tenant.name
+  venice_endpoints: 'endpoints', // http://192.168.69.189/v1/endpoints/default/endpoints //NOTE: defaults should be as tenant.name
   venice_securitygroups: 'security-groups',
   venice_sgpolicy: 'sgpolicy',
   venice_lbpolicy: 'lb-policy',
-  venice_network: 'networks'
+  venice_network: 'networks',
+  venice_search: 'search'
 
 };
