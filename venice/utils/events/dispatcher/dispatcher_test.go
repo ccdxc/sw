@@ -356,10 +356,6 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 	producerWG := new(sync.WaitGroup)
 	producerWG.Add(numSources + 1) // +1 for the main go routine spinning all the sources
 
-	// to receive an error from the writers
-	errs := make(chan error, numWriters)
-	defer close(errs)
-
 	// channel to stop the event source (producer)
 	stopSendingEvents := make(chan struct{}, numSources)
 
@@ -374,7 +370,7 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 	}
 
 	// monitor the writers to ensure they're receiving the events
-	// error from any writer will be captured in errs channel.
+	// error from any writer will be captured in assertion.
 	for i := 0; i < numWriters; i++ {
 		go func(mockWriter *writers.MockWriter, dispatcher events.Dispatcher) {
 			defer writerWG.Done()
@@ -383,15 +379,12 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 
 			ticker := time.NewTicker(sendInterval + (10 * time.Millisecond))
 
-			// stop after 5 iterations
-			iterations := 0
-
 			totalEventsBySource := map[string]int{}
 
 			// check if the mock writer is receiving events from the dispatcher
 			// totalevents received by the writer from each source should increase after each iteration
 			// as the sources are continuously producing events.
-			for iterations < 5 {
+			for iterations := 0; iterations < 5; iterations++ {
 				select {
 				case <-ticker.C:
 					for s := 0; s < numSources; s++ {
@@ -399,19 +392,22 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 							NodeName:  fmt.Sprintf("node-name%v", s),
 							Component: fmt.Sprintf("component%v", s),
 						}
-
-						temp := mockWriter.GetEventsBySourceAndType(src, "TestNICDisconnected") +
-							mockWriter.GetEventsBySourceAndType(src, "TestNICConnected")
 						sourceKey := fmt.Sprintf("%v-%v", src.GetNodeName(), src.GetComponent())
-						// should be > than the previous iteration
-						if !(temp > totalEventsBySource[sourceKey]) {
-							errs <- fmt.Errorf("expected totalEventsBySource>%v, got:%v, source: %v",
-								totalEventsBySource[sourceKey], temp, src)
-							return
-						}
-						totalEventsBySource[sourceKey] = temp
+
+						AssertEventually(t, func() (bool, interface{}) {
+							temp := mockWriter.GetEventsBySourceAndType(src, "TestNICDisconnected") +
+								mockWriter.GetEventsBySourceAndType(src, "TestNICConnected")
+
+							// should be > than the previous iteration
+							if !(temp > totalEventsBySource[sourceKey]) {
+								return false, fmt.Sprintf("writer {%s}: expected totalEventsBySource: >%d, got: %d, source: %v",
+									mockWriter.Name(), totalEventsBySource[sourceKey], temp, src)
+							}
+							totalEventsBySource[sourceKey] = temp
+
+							return true, nil
+						}, "did not receive all the events produced", string("5ms"), string("5s"))
 					}
-					iterations++
 				}
 			}
 		}(mockWriters[i], dispatcher)
@@ -453,13 +449,15 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 						evt2.ObjectMeta.UUID = uuid.New().String()
 
 						if err := dispatcher.Action(evt1); err != nil {
-							errs <- fmt.Errorf("failed to send event %v", evt1)
+							AssertOk(t, err, "failed to send event %v", evt1)
 						}
 
 						if err := dispatcher.Action(evt2); err != nil {
-							errs <- fmt.Errorf("failed to send event %v", evt2)
+							AssertOk(t, err, "failed to send event %v", evt1)
 						}
 					}
+
+					time.Sleep(10 * time.Millisecond)
 				}
 			}(i)
 		}
@@ -474,13 +472,6 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 
 	// wait for all the producers to stop
 	producerWG.Wait()
-
-	// non-blocking receive on the error channel
-	select {
-	case er := <-errs:
-		t.Fatalf("failed with err: %v", er)
-	default:
-	}
 }
 
 // testEventsDispatcherWithSources helper function to test dispatcher with varying
@@ -594,9 +585,6 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 	producerWG := new(sync.WaitGroup)
 	producerWG.Add(1)
 
-	errs := make(chan error, numWriters)
-	defer close(errs)
-
 	stopSendingEvents := make(chan struct{}, 1)
 
 	// create all the writers
@@ -610,7 +598,7 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 	}
 
 	// ensure all the writers receive the events
-	// any error from the writers will be captured by errs channel.
+	// any error from the writers will be captured in assertion.
 	for i := 0; i < numWriters; i++ {
 		go func(mockWriter *writers.MockWriter, dispatcher events.Dispatcher) {
 			defer writerWG.Done()
@@ -619,37 +607,34 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 
 			ticker := time.NewTicker(sendInterval + (10 * time.Millisecond))
 
-			// stop after 5 iterations
-			iterations := 0
-
 			TestNICConnectedEvents := 0
 			TestNICDisconnectedEvents := 0
 
 			// check if the mock writer is receiving events from the dispatcher
 			// number of events received should keep increasing for every iteration
 			// as the producer is continuously generating events.
-			for iterations < 5 {
+			for iterations := 0; iterations < 5; iterations++ {
 				select {
 				case <-ticker.C:
-					// make sure the writer received these events
-					temp := mockWriter.GetEventsByType("TestNICConnected")
-					// should > than the earlier iteration
-					if !(temp > TestNICConnectedEvents) {
-						errs <- fmt.Errorf("expected TestNICConnectedEvents>%v, got:%v",
-							TestNICConnectedEvents, temp)
-						return
-					}
-					TestNICConnectedEvents = temp
+					AssertEventually(t, func() (bool, interface{}) {
+						// make sure the writer received these events
+						temp := mockWriter.GetEventsByType("TestNICConnected")
+						// should > than the earlier iteration
+						if !(temp > TestNICConnectedEvents) {
+							return false, fmt.Sprintf("writer {%s}: expected TestNICConnectedEvents: >%d, got: %d",
+								mockWriter.Name(), TestNICConnectedEvents, temp)
+						}
+						TestNICConnectedEvents = temp
 
-					temp = mockWriter.GetEventsByType("TestNICDisconnected")
-					if !(temp > TestNICDisconnectedEvents) {
-						errs <- fmt.Errorf("expected TestNICDisconnectedEvents>%v, got:%v",
-							TestNICDisconnectedEvents, temp)
-						return
-					}
-					TestNICDisconnectedEvents = temp
+						temp = mockWriter.GetEventsByType("TestNICDisconnected")
+						if !(temp > TestNICDisconnectedEvents) {
+							return false, fmt.Sprintf("writer {%s}: expected TestNICDisconnectedEvents: >%d, got: %d",
+								mockWriter.Name(), TestNICDisconnectedEvents, temp)
+						}
+						TestNICDisconnectedEvents = temp
 
-					iterations++
+						return true, nil
+					}, "did not receive all the events produced", string("5ms"), string("5s"))
 				}
 			}
 		}(mockWriters[i], dispatcher)
@@ -683,6 +668,8 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 				dispatcher.Action(evt1)
 				dispatcher.Action(evt2)
 			}
+
+			time.Sleep(10 * time.Millisecond)
 		}
 	}()
 
@@ -693,13 +680,6 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 
 	// wait for the producer to stop
 	producerWG.Wait()
-
-	// non-blocking receive on the error channel
-	select {
-	case er := <-errs:
-		t.Fatalf("failed with err: %v", er)
-	default:
-	}
 }
 
 // TestEventsDispatcherRestart tests how the dispatcher behaves during restart.
