@@ -1,6 +1,8 @@
 package upgsdk
 
 import (
+	"errors"
+
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk/nic/upgrade_manager/upgrade"
@@ -11,16 +13,22 @@ import (
 type SvcRole int
 
 const (
-	//Agent role agent
-	Agent SvcRole = 0
-	//NonAgent role non-agent
-	NonAgent SvcRole = 1
+	//AgentRole role agent
+	AgentRole SvcRole = 0
+	//NonAgentRole role non-agent
+	NonAgentRole SvcRole = 1
 )
 
 type upgSdk struct {
 	svcName   string
 	svcRole   SvcRole
 	sdkClient gosdk.Client
+}
+
+//AgentHandlers agents to implement this
+type AgentHandlers interface {
+	UpgSuccessful()
+	UpgFailed()
 }
 
 // UpgSdk is the main Upgrade SDK API
@@ -31,18 +39,24 @@ type UpgSdk interface {
 }
 
 //NewUpgSdk API is used to init upgrade sdk
-func NewUpgSdk(name string, client gosdk.Client) (UpgSdk, error) {
+func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentHandlers) (UpgSdk, error) {
 	log.Infof("NewUpgSdk called for %s\n", name)
 	upgsdk := &upgSdk{
 		svcName:   name,
 		sdkClient: client,
+		svcRole:   role,
 	}
 	upgrade.UpgReqMount(client, delphi.MountMode_ReadWriteMode)
-	UpgRespInit(client)
+	if role == AgentRole {
+		UpgRespInit(client, agentHdlrs)
+	}
 	return upgsdk, nil
 }
 
 func (u *upgSdk) StartUpgrade() error {
+	if u.svcRole != AgentRole {
+		return errors.New("Svc not of role Agent")
+	}
 	upgreq := upgrade.NewUpgReq(u.sdkClient)
 	upgreq.SetKey(10)
 	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)

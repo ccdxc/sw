@@ -18,6 +18,17 @@ func (s *service) Name() string {
 	return s.name
 }
 
+type upgradeCompletion struct {
+}
+
+func (u *upgradeCompletion) UpgSuccessful() {
+	log.Infof("UpgSuccessful got called\n")
+}
+
+func (u *upgradeCompletion) UpgFailed() {
+	log.Infof("UpgFailed got called\n")
+}
+
 func main() {
 	s1 := &service{
 		name: "example",
@@ -26,7 +37,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	upg, err := upgsdk.NewUpgSdk(s1.name, c1)
+	u1 := &upgradeCompletion{}
+	upg, err := upgsdk.NewUpgSdk(s1.name, c1, upgsdk.AgentRole, u1)
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +48,10 @@ func main() {
 		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
 	}
 
-	upg.StartUpgrade()
+	err = upg.StartUpgrade()
+	if err != nil {
+		log.Fatalf("Could not start upgrade because of %s\n", err)
+	}
 	a := make(chan struct{})
 	_ = <-a
 }
