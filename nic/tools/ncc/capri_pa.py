@@ -2251,6 +2251,11 @@ class capri_gress_pa:
                     hf.phv_bit = phv_bit
                     self.pa.logger.debug("%s:Allocated %s at %d in closed flit %d" % \
                         (self.d.name, hf.hfname, hf.phv_bit, fid))
+                    # check unions (useful for syn hdr flds)
+                    if hf.is_fld_union_storage:
+                        for uf in self.fld_unions[hf][0]:
+                            uf.phv_bit = phv_bit
+                            self.allocated_hf[uf] = phv_bit
                     return True
 
             # try current flit - fallthru' to use the common code

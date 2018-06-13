@@ -1414,7 +1414,7 @@ class capri_table:
             # XXX check if there is enough space for action_pc or collision idx for hash
             # tables
             km = self.key_makers[0]
-            km.combined_profile = self.combined_profile
+            km.combined_profile = copy.deepcopy(self.combined_profile)
             km.combined_profile._update_bit_loc_key_off()
             for fid,kf in enumerate(self.km_flits):
                 km.flit_km_profiles[fid] = copy.deepcopy(kf.km_profile)
@@ -2208,7 +2208,7 @@ class capri_table:
 
         if self.start_key_off == -1:
             fk_idx = max_kmB
-            assert km1
+            assert km1, pdb.set_trace()
             if fk_byte in km1.combined_profile.byte_sel:
                 fk_idx = km1.combined_profile.byte_sel.index(fk_byte)
                 self.start_key_off = (fk_idx * 8) + self.start_key_off_delta + max_km_width
