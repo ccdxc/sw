@@ -196,7 +196,16 @@ func TestCrudOps(t *testing.T) {
 			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Created)
 		}
 	}
-
+	// Wait for the create events to be received
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			defer pRcvWatchEventsMutex.Unlock()
+			pRcvWatchEventsMutex.Lock()
+			return len(pExpectWatchEvents) == 2, nil
+		},
+		"failed to receive initial create watch events",
+		"10ms",
+		"2s")
 	{ // --- Get resource via gRPC ---//
 		meta := api.ObjectMeta{Name: "Sahara"}
 		ret, err := apicl.BookstoreV1().Publisher().Get(ctx, &meta)
@@ -361,7 +370,16 @@ func TestCrudOps(t *testing.T) {
 		evp := order2
 		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
-
+	// Wait for the create events to be received
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			defer oRcvWatchEventsMutex.Unlock()
+			oRcvWatchEventsMutex.Lock()
+			return len(oExpectWatchEvents) == 2, nil
+		},
+		"failed to receive initial create watch events",
+		"10ms",
+		"2s")
 	{ // ---  POST an object that will be rejected by APIGw hooks --- //
 		order3 := order2
 		order3.Spec.Id = "order-reject"

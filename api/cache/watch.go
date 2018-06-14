@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -144,6 +145,8 @@ type watchEventQ struct {
 	// config defines the behavior of watchEventQs
 	config WatchEventQConfig
 	stats  watchEventQStats
+	// versioner provides utilities to get/set versions on objects.
+	versioner runtime.Versioner
 	// janitorVerMu protects the janitorVer
 	janitorVerMu sync.Mutex
 	// janitorVer is the version on which the janitor is acting on
@@ -200,6 +203,7 @@ func (w *watchedPrefixes) Add(path string) WatchEventQ {
 	ret.path = path
 	ret.store = w.store
 	ret.config = w.watchConfig
+	ret.versioner = runtime.NewObjectVersioner()
 	w.trie.Insert(prefix, ret)
 	w.log.DebugLog("oper", "AddWatchedPrefix", "prefix", path, "msg", "starting janitor")
 	ret.start()
@@ -331,12 +335,28 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 		// List all objects
 		objs, err := w.store.List(w.path, opts)
 		if err == nil {
+			sort.Slice(objs, func(i int, j int) bool {
+				v1, err := w.versioner.GetVersion(objs[i])
+				if err != nil {
+					// This should never happen. Recovery is undefined, hence panic.
+					panic("could not retrieve object version")
+				}
+				v2, err := w.versioner.GetVersion(objs[j])
+				if err != nil {
+					// This should never happen. Recovery is undefined, hence panic.
+					panic("could not retrieve object version")
+				}
+				return v1 < v2
+			})
+			if len(objs) > 0 {
+				maxver, err = w.versioner.GetVersion(objs[len(objs)-1])
+				if err != nil {
+					// This should never happen. Recovery is undefined, hence panic.
+					panic("could not retrieve object version")
+				}
+			}
 			for _, obj := range objs {
 				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path)
-				_, ver := mustGetObjectMetaVersion(obj)
-				if ver > maxver {
-					maxver = ver
-				}
 				cb(kvstore.Created, obj, nil)
 			}
 		}
