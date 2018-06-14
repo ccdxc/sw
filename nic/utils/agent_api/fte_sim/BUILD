@@ -16,6 +16,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic/include:base_includes",
         "//nic:spdlog",
+        "//nic:google_includes",
         "@sdk//obj:sdk_logger",
     ],
 )
@@ -29,9 +30,9 @@ cc_binary(
         "fte_sim_lib",
         "//nic:grpc",
         "//nic/utils/agent_api:agent_api",
-    ] + [ "//nic/utils/mtrack:mtrack",],
+        "//nic/utils/mtrack:mtrack",
+    ],
     linkopts = [
-        "-L/usr/local/lib",
         "-lzmq",
         "-lpthread",
         "-pthread",
