@@ -51,22 +51,22 @@
 #define rx_table_s7_t3 cq_rx_s7_t3
 
 
-#define rx_table_s0_t0_action cq_rx_cqcb0_process
+#define rx_table_s0_t0_action rdma_cq_rx_cqcb0_process
 
-#define rx_table_s1_t2_action cq_rx_cqcb_process_dummy
+#define rx_table_s1_t2_action rdma_cq_rx_cqcb_process_dummy
 
-#define rx_table_s2_t2_action cq_rx_cqcb_process_dummy
+#define rx_table_s2_t2_action rdma_cq_rx_cqcb_process_dummy
 
-#define rx_table_s3_t2_action cq_rx_cqcb_process_dummy
+#define rx_table_s3_t2_action rdma_cq_rx_cqcb_process_dummy
 
-#define rx_table_s4_t2_action cq_rx_cqcb_process_dummy
+#define rx_table_s4_t2_action rdma_cq_rx_cqcb_process_dummy
 
-#define rx_table_s5_t2_action cq_rx_cqcb_process
+#define rx_table_s5_t2_action rdma_cq_rx_cqcb_process
 
 //dummy
-#define rx_table_s6_t2_action cq_rx_eqcb_process
+#define rx_table_s6_t2_action rdma_cq_rx_eqcb_process
 
-#define rx_table_s7_t2_action cq_rx_eqcb_process
+#define rx_table_s7_t2_action rdma_cq_rx_eqcb_process
 
 #include "../common-p4+/common_rxdma.p4"
 #include "./rdma_rxdma_headers.p4"
@@ -241,7 +241,7 @@ action rdma_stage0_dummy_action () {
 
 }
 
-action cq_rx_cqcb0_process () {
+action rdma_cq_rx_cqcb0_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -251,7 +251,7 @@ action cq_rx_cqcb0_process () {
 }
 
 
-action cq_rx_cqcb_process_dummy () {
+action rdma_cq_rx_cqcb_process_dummy () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -268,7 +268,7 @@ action cq_rx_cqcb_process_dummy () {
 
 }
 
-action cq_rx_cqcb_process () {
+action rdma_cq_rx_cqcb_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -288,7 +288,7 @@ action cq_rx_cqcb_process () {
 
 }
 
-action cq_rx_eqcb_process () {
+action rdma_cq_rx_eqcb_process () {
     // from ki global
     GENERATE_GLOBAL_K
 

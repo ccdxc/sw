@@ -47,9 +47,9 @@
 #define tx_table_s7_t3 cq_tx_s7_t3
 
 
-#define tx_table_s0_t0_action cq_tx_cqcb_process
+#define tx_table_s0_t0_action rdma_cq_tx_cqcb_process
 
-#define tx_table_s1_t0_action cq_tx_feedback_process
+#define tx_table_s1_t0_action rdma_cq_tx_feedback_process
 
 #include "../common-p4+/common_txdma.p4"
 #include "./rdma_txdma_headers.p4"
@@ -126,7 +126,7 @@ metadata cq_tx_feedback_info_t to_s2s_cqcb_to_feedback_info_scr;
 /*
  * Stage 0 table 0 recirc action
  */
-action cq_tx_cqcb_process () {
+action rdma_cq_tx_cqcb_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -136,7 +136,7 @@ action cq_tx_cqcb_process () {
 }
 
 
-action cq_tx_feedback_process () {
+action rdma_cq_tx_feedback_process () {
     // from ki global
     GENERATE_GLOBAL_K
 

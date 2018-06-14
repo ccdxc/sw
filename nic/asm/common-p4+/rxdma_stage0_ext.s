@@ -34,7 +34,7 @@ dummy:
 //Keep it the first one after dummy
 //This has to align with the txdma_stage0.s program
 .align
-rdma_resp_rx_stage0:
+rdma_resp_rx_stage0_ext:
     j resp_rx_rqcb_process_ext
     nop
 
@@ -42,7 +42,7 @@ rdma_resp_rx_stage0:
 //Keep it the second one after dummy
 //This has to align with the txdma_stage0.s program
 .align
-rdma_req_rx_stage0:
+rdma_req_rx_stage0_ext:
     j req_rx_sqcb1_process_ext
     nop
 
