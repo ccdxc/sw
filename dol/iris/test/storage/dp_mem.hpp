@@ -61,6 +61,11 @@ public:
              dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
              uint32_t spec_align_size = 0,
              dp_mem_alloc_fill_t alloc_fill = DP_MEM_ALLOC_FILL_ZERO);
+    dp_mem_t(uint8_t *mem_addr,
+             uint32_t num_lines,
+             uint32_t line_size,
+             dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
+             dp_mem_alloc_fill_t alloc_fill = DP_MEM_ALLOC_FILL_ZERO);
 
     ~dp_mem_t();
 
@@ -131,6 +136,8 @@ private:
     std::unordered_map<uint64_t, dp_mem_t*> fragments_map;
     uint64_t        fragment_key;
     dp_mem_t        *fragment_parent;
+
+    bool            mem_caller_supplied : 1;
 };
 
 }  // namespace dp_mem

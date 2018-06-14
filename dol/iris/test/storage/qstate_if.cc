@@ -4,6 +4,7 @@
 #include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/storage_seq_common.h"
 
 namespace qstate_if {
 
@@ -95,24 +96,14 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
 int setup_seq_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                       uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                      uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
-                      uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
+                      uint64_t base_addr, uint64_t entry_size,
                       char *desc1_pgm_bin) {
 
-  uint8_t q_state[64];
+  storage_seq_qstate_t q_state;
   uint8_t pc_offset;
   uint64_t next_pc = 0;
-  uint64_t dst_qaddr = 0;
 
-  bzero(q_state, sizeof(q_state));
-
-  // Get the dst_qaddr only if destination is used in P4+
-  if (dst_valid) {
-    if (hal_if::get_lif_qstate_addr(dst_lif, dst_qtype, dst_qid, &dst_qaddr) < 0) {
-      printf("Failed to get seq lif_qstate addr \n");
-      return -1;
-    }
-  }
+  bzero(&q_state, sizeof(q_state));
 
   // If no program binary name supplied => no need to set next_pc as 
   // it is a host queue
@@ -129,33 +120,28 @@ int setup_seq_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     return -1;
   }
 
-  utils::write_bit_fields(q_state, 0, 8, pc_offset);
-  utils::write_bit_fields(q_state, 40, 4, total_rings);
-  utils::write_bit_fields(q_state, 44, 4, host_rings);
-  utils::write_bit_fields(q_state, 112, 16, num_entries);
-  utils::write_bit_fields(q_state, 128, 64, base_addr);
-  utils::write_bit_fields(q_state, 192, 16, entry_size);
-  utils::write_bit_fields(q_state, 208, 28, next_pc);
-  // Program only if destination is used in P4+
-  if (dst_valid) {
-    utils::write_bit_fields(q_state, 236, 11, dst_lif);
-    utils::write_bit_fields(q_state, 247, 3, dst_qtype);
-    utils::write_bit_fields(q_state, 250, 24, dst_qid);
-    utils::write_bit_fields(q_state, 274, 34, dst_qaddr);
-  }
+  q_state.pc_offset = pc_offset;
+  q_state.total_wrings = total_rings;
+  q_state.host_wrings = host_rings;
+  q_state.wring_size = htons(num_entries);
+  q_state.wring_base = htonll(base_addr);
+  q_state.entry_size = htons(entry_size);
+  q_state.desc0_next_pc = htonl(next_pc);
+  q_state.enable = true;
+
   if (desc1_pgm_bin) {
     if (hal_if::get_pgm_base_addr(desc1_pgm_bin, &next_pc) < 0) {
       printf("Failed to get base addr of %s\n", desc1_pgm_bin);
       return -1;
     }
     next_pc = next_pc >> 6;
-    utils::write_bit_fields(q_state, 308, 1, 1);    // desc1_next_pc valid
-    utils::write_bit_fields(q_state, 309, 28, next_pc);
+    q_state.desc1_next_pc = htonl(next_pc);
+    q_state.desc1_next_pc_valid = true;
   }
 
   //utils::dump(q_state);
 
-  if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+  if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, (uint8_t *)&q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
     return -1;
   }

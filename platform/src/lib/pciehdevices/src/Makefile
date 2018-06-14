@@ -15,12 +15,14 @@ SOURCES = \
 	$(NULL)
 
 LCFLAGS = \
+	-I $(ASIC_ROOT)/capri/design/common \
 	-I $(ASIC_ROOT)/capri/model/cap_top \
 	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	-I ../../../../include/common \
 	-I ../../include \
 	-I ../../pciehost/include \
 	-I ../include \
+	-I ../../../../../nic/include \
 	$(NULL)
 
 TOPDIR = ../../../..

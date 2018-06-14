@@ -178,6 +178,7 @@ static simdev_api_t sim_server_api = {
     .hal_create_qp = hal_create_qp_wrapper,
     .hal_modify_qp = hal_modify_qp_wrapper,
     .set_lif = hal_set_lif_base,
+    .alloc_hbm_address = hal_alloc_hbm_address,
 };
 
 /*
@@ -270,6 +271,7 @@ sim_server_init(int argc, char *argv[])
 void
 sim_server_shutdown(void)
 {
+    simdev_close();
     pciehsvc_close();
     zmq_wait_remove_fd(simctx.clientfd);
     sims_close_client(simctx.clientfd);

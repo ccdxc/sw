@@ -12,6 +12,7 @@
 #include "nic/gen/proto/hal/barco_rings.grpc.pb.h"
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "gflags/gflags.h"
+#include "nic/include/storage_seq_common.h"
 
 DECLARE_uint64(hal_port);
 DECLARE_string(hal_ip);
@@ -144,6 +145,33 @@ int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id) {
   // TODO: Check number of responses ? 
   if (resp_msg.response(0).status() != 0) return -1;
   else return 0;
+}
+
+int
+get_lif_info(uint32_t sw_lif_id, uint64_t *ret_hw_lif_id)
+{
+    intf::LifGetResponse rsp;
+    intf::LifGetRequest *req __attribute__((unused));
+    intf::LifGetRequestMsg req_msg;
+    intf::LifGetResponseMsg rsp_msg;
+    grpc::ClientContext context;
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_lif_id(sw_lif_id);
+    auto status = interface_stub->LifGet(&context, req_msg, &rsp_msg);
+    if (status.ok()) {
+        for (int i = 0; i < rsp_msg.response().size(); i++) {
+            rsp = rsp_msg.response(i);
+            if (rsp.api_status() == types::API_STATUS_OK) {
+                printf("[INFO] Get Lif %u hw_lif_id 0x%lx\n",
+                       sw_lif_id, rsp.status().hw_lif_id());
+                *ret_hw_lif_id = rsp.status().hw_lif_id();
+                return 0;
+            }
+        }
+    }
+
+    return -1;
 }
 
 int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {

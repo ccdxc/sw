@@ -18,5 +18,9 @@ LCFLAGS += \
 	-I $(TOPDIR)/../nic/include \
 	$(NULL)
 
+SYSTEM_LIBRARIES = \
+        -lpthread \
+        $(NULL)
+
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc

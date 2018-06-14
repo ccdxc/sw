@@ -682,5 +682,22 @@ cc_library(
     ],
 )
 
-exports_files(["tools/ncc/tenjin_wrapper.py",
+# Used by platform builds
+cc_library(
+    name = "platform_asic_hdrs",
+    hdrs = [
+        "asic/capri/design/common/cap_addr_define.h",
+        "asic/capri/model/cap_top/cap_top_csr_defines.h",
+        "asic/capri/model/cap_he/readonly/cap_hens_csr_define.h",
+        "asic/capri/model/cap_txs/cap_txs_csr_define.h",
+        "asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h",
+        "asic/capri/model/cap_top/csr_defines/cap_intr_c_hdr.h",
+        "asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h",
+        "asic/capri/model/cap_top/csr_defines/cap_pxb_c_hdr.h",
+        "asic/capri/model/cap_top/csr_defines/cap_ms_c_hdr.h",
+        "asic/capri/model/cap_top/csr_defines/cap_pp_c_hdr.h",
+    ],
+)
+
+exports_files(["tools/ncc/tenjin_wrapper.py", 
                "asic/capri/verif/common/csr_gen/pbc.yaml"])

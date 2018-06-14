@@ -1329,6 +1329,13 @@ int rdma_pvm_qs_init() {
 int rdma_init(bool dp_init) {
   uint8_t ent[64];
 
+  // nicmgr would have created VRF, l2segments, endpoints, etc. For simplicity,
+  // we will not run RDMA related sanity when nicmgr is present.
+  if (run_nicmgr_tests) {
+      printf("RDMA tests will not be run with nicmgr\n");
+      return 0;
+  }
+
   // Flag to indicate whether there is an NVME datapath initiator 
   // => cq needs to be in capri, sq xlate needs to be setup
   nvme_dp_init = dp_init;

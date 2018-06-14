@@ -180,9 +180,9 @@ struct ionic_admin_ctx {
 
 #ifndef ADMINQ
 	struct list_head list;
+#endif
 	void *side_data;
 	size_t side_data_len;
-#endif
 };
 
 /** ionic_api_adminq_post - Post an admin command.

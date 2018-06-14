@@ -112,7 +112,8 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	work_done = ionic_cq_service(cq, budget, cb, cb_arg);
 
 	if (work_done > 0)
-		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
+		ionic_intr_return_credits(cq->bound_intr, work_done,
+					  false, true);
 
 	if ((work_done < budget) && napi_complete_done(napi, work_done))
 		ionic_intr_mask(cq->bound_intr, false);

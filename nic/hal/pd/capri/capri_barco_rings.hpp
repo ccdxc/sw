@@ -1,6 +1,8 @@
 #ifndef __CAPRI_BARCO_RINGS_H__
 #define __CAPRI_BARCO_RINGS_H__
 
+#ifndef BARCO_CRYPTO_RINGS_CFG_VAL_ONLY
+
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 
 namespace hal {
@@ -145,52 +147,6 @@ typedef struct capri_barco_ring_s {
 #define BARCO_RING_DC_STR       "Barco DC"
 #define BARCO_RING_DC_HOT_STR   "Barco DC Hot"
 
-/*
- * Compression/decompression block register values
- */
-#define BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET          (1 << 30)
-#define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER             0x00001234
-#define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER_MASK        0x0000ffff
-#define BARCO_CRYPTO_CP_UENG_LO_EN_ALL              0x0000ffff
-#define BARCO_CRYPTO_CP_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))
-#define BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_UNCOMP      (1 << (53 - 32))
-#define BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO      (1 << (54 - 32))
-#define BARCO_CRYPTO_CP_UENG_HI_INTEG_APP_STATUS    (1 << (55 - 32))
-#define BARCO_CRYPTO_CP_DIST_DESC_Q_EN              (1 << 0U)
-#define BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_MASK       0xfff
-#define BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_SHFT       2
-#define BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE(sz)        \
-        (((sz) & BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_MASK) << BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_SHFT)
-#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK    0xfff
-#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_SHFT    14
-#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_EN           (1 << 1)
-#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE(sz)     \
-        (((sz) & BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK) << BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_SHFT)
-
-#define BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET          (1 << 30)
-#define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER             0x00001234
-#define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER_MASK        0x0000ffff
-#define BARCO_CRYPTO_DC_UENG_LO_EN_ALL              0x00000003
-#define BARCO_CRYPTO_DC_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))
-#define BARCO_CRYPTO_DC_UENG_HI_CSUM_ON_UNCOMP      (1 << (53 - 32))
-#define BARCO_CRYPTO_DC_UENG_HI_HMEM_FILL_ZERO      (1 << (54 - 32))
-#define BARCO_CRYPTO_DC_UENG_HI_INTEG_APP_STATUS    (1 << (55 - 32))
-#define BARCO_CRYPTO_DC_DIST_DESC_Q_EN              (1 << 0)
-#define BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_MASK       0xfff
-#define BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_SHFT       2
-#define BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE(sz)        \
-        (((sz) & BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_MASK) << BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_SHFT)
-#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK    0xfff
-#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_SHFT    14
-#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_EN           (1 << 1)
-#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(sz)     \
-        (((sz) & BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK) << BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_SHFT)
-
-#define BARCO_CRYPTO_CP_RING_SIZE                   4096
-#define BARCO_CRYPTO_CP_HOT_RING_SIZE               4096
-#define BARCO_CRYPTO_DC_RING_SIZE                   4096
-#define BARCO_CRYPTO_DC_HOT_RING_SIZE               4096
-
 hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag, bool);
 bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag);
   hal_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, hal::barco_asym_descr_t *asym_req_descr);
@@ -242,5 +198,53 @@ hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
 
 }    // namespace pd
 }    // namespace hal
+
+#endif /* BARCO_CRYPTO_RINGS_CFG_VAL_ONLY */
+
+/*
+ * Compression/decompression block register values
+ */
+#define BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET          (1 << 30)
+#define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER             0x00001234
+#define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER_MASK        0x0000ffff
+#define BARCO_CRYPTO_CP_UENG_LO_EN_ALL              0x0000ffff
+#define BARCO_CRYPTO_CP_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))
+#define BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_UNCOMP      (1 << (53 - 32))
+#define BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO      (1 << (54 - 32))
+#define BARCO_CRYPTO_CP_UENG_HI_INTEG_APP_STATUS    (1 << (55 - 32))
+#define BARCO_CRYPTO_CP_DIST_DESC_Q_EN              (1 << 0U)
+#define BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_MASK       0xfff
+#define BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_SHFT       2
+#define BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE(sz)        \
+        (((sz) & BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_MASK) << BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_SHFT)
+#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK    0xfff
+#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_SHFT    14
+#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_EN           (1 << 1)
+#define BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE(sz)     \
+        (((sz) & BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK) << BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_SHFT)
+
+#define BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET          (1 << 30)
+#define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER             0x00001234
+#define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER_MASK        0x0000ffff
+#define BARCO_CRYPTO_DC_UENG_LO_EN_ALL              0x00000003
+#define BARCO_CRYPTO_DC_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))
+#define BARCO_CRYPTO_DC_UENG_HI_CSUM_ON_UNCOMP      (1 << (53 - 32))
+#define BARCO_CRYPTO_DC_UENG_HI_HMEM_FILL_ZERO      (1 << (54 - 32))
+#define BARCO_CRYPTO_DC_UENG_HI_INTEG_APP_STATUS    (1 << (55 - 32))
+#define BARCO_CRYPTO_DC_DIST_DESC_Q_EN              (1 << 0)
+#define BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_MASK       0xfff
+#define BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_SHFT       2
+#define BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE(sz)        \
+        (((sz) & BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_MASK) << BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_SHFT)
+#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK    0xfff
+#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_SHFT    14
+#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_EN           (1 << 1)
+#define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(sz)     \
+        (((sz) & BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK) << BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_SHFT)
+
+#define BARCO_CRYPTO_CP_RING_SIZE                   4096
+#define BARCO_CRYPTO_CP_HOT_RING_SIZE               4096
+#define BARCO_CRYPTO_DC_RING_SIZE                   4096
+#define BARCO_CRYPTO_DC_HOT_RING_SIZE               4096
 
 #endif /* __CAPRI_BARCO_RINGS_H__ */

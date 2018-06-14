@@ -32,10 +32,6 @@ LCFLAGS = \
 
 LCXXFLAGS = $(LCFLAGS)
 
-LIBRARIES = \
-	-lnicmgr \
-	$(NULL)
-
 LLDFLAGS = \
 	-L $(TOPDIR)/../nic/obj \
 	-L $(TOPDIR)/../nic/conf/sdk \
@@ -54,12 +50,12 @@ SYSTEM_LIBRARIES = \
 	-lhalproto \
 	-lindexer \
 	-llogger \
+	-ldl \
 	$(NULL)
 
-ifeq ("$(BUILD_ARCH)", "x86_64")
-	SYSTEM_LIBRARIES += -lpal
-else
-	LIBRARIES += \
+SYSTEM_LIBRARIES += -lpalsdk
+LIBRARIES += \
+		-lnicmgr \
 		-lpal \
 		-lmisc \
 		-lpciehost \
@@ -70,7 +66,6 @@ else
 		-lpcieport \
 		-lpcietlp \
 		$(NULL)
-endif
 
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc

@@ -166,6 +166,10 @@
         {
             "name": "mpu-trace",
             "size_kb": 224
+        },
+        {
+            "name": "nicmgrd",
+            "size_kb": 65536
         }
     ]
 }

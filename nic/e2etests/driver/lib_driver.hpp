@@ -81,6 +81,7 @@ uint64_t get_qstate_addr(uint64_t lif, uint32_t qtype, uint32_t qid);
 std::pair<uint32_t,uint64_t>
 make_doorbell(int upd, int lif, int type, int pid, int qid, int ring, int p_index);
 
+void set_queue_info(uint64_t lif, queue_type qtype, uint32_t qid, queue_info_t queue_info);
 void alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size);
 bool poll_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint32_t max_count, uint16_t *prev_cindex);
 void write_queue(uint64_t lif, queue_type qtype, uint32_t qid);

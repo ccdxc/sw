@@ -55,6 +55,7 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
 
     vrf_stub_ = Vrf::NewStub(channel);
     intf_stub_ = Interface::NewStub(channel);
+    internal_stub_ = Internal::NewStub(channel);
     ep_stub_ = Endpoint::NewStub(channel);
     l2seg_stub_ = L2Segment::NewStub(channel);
     multicast_stub_ = Multicast::NewStub(channel);
@@ -1813,3 +1814,53 @@ int HalClient::ModifyQP(uint32_t lif_id, uint32_t qp_num, uint32_t attr_mask,
     
     return 0;
 }
+
+
+int HalClient::PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr)
+{
+    ClientContext               context;
+    GetProgramAddressRequestMsg req_msg;
+    ProgramAddressResponseMsg   resp_msg;
+
+    auto req = req_msg.add_request();
+    req->set_handle("p4plus");
+    req->set_prog_name(prog_name);
+    req->set_resolve_label(false);
+
+    auto status = internal_stub_->GetProgramAddress(&context, req_msg, &resp_msg);
+    if (!status.ok()) {
+        cout << "[ERROR] " << __FUNCTION__
+             << ": prog_name = " << prog_name
+             << ", Status = " << status.error_code() << ":" << status.error_message()
+             << endl;
+        return -1;
+    }
+
+    *base_addr = resp_msg.response(0).addr();
+    return 0;
+}
+
+
+int HalClient::AllocHbmAddress(const char *handle, uint64_t *addr, uint32_t *size)
+{
+    ClientContext context;
+    AllocHbmAddressRequestMsg req_msg;
+    AllocHbmAddressResponseMsg resp_msg;
+
+    auto req = req_msg.add_request();
+    req->set_handle(handle);
+
+    auto status = internal_stub_->AllocHbmAddress(&context, req_msg, &resp_msg);
+    if (!status.ok()) {
+        cout << "[ERROR] " << __FUNCTION__
+             << ": handle = " << handle
+             << ", Status = " << status.error_code() << ":" << status.error_message()
+             << endl;
+        return -1;
+    }
+
+    *addr = resp_msg.response(0).addr();
+    *size = resp_msg.response(0).size();
+    return 0;
+}
+

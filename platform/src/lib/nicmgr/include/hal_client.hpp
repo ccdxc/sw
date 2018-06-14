@@ -11,6 +11,7 @@
 #include "vrf.grpc.pb.h"
 #include "types.grpc.pb.h"
 #include "interface.grpc.pb.h"
+#include "internal.grpc.pb.h"
 #include "endpoint.grpc.pb.h"
 #include "l2segment.grpc.pb.h"
 #include "multicast.grpc.pb.h"
@@ -20,6 +21,7 @@ using namespace kh;
 using namespace types;
 using namespace vrf;
 using namespace intf;
+using namespace internal;
 using namespace endpoint;
 using namespace l2segment;
 using namespace multicast;
@@ -143,6 +145,9 @@ public:
 
   int LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string table);
 
+  int PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr);
+  int AllocHbmAddress(const char *handle, uint64_t *addr, uint32_t *size);
+
   /* Multicast APIs */
 
   // (vrf_id, l2seg_id, group) > enic_id
@@ -229,6 +234,7 @@ private:
   shared_ptr<Channel> channel;
   std::unique_ptr<Vrf::Stub> vrf_stub_;
   std::unique_ptr<Interface::Stub> intf_stub_;
+  std::unique_ptr<Internal::Stub> internal_stub_;
   std::unique_ptr<Endpoint::Stub> ep_stub_;
   std::unique_ptr<L2Segment::Stub> l2seg_stub_;
   std::unique_ptr<Multicast::Stub> multicast_stub_;

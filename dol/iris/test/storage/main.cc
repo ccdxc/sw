@@ -72,6 +72,10 @@ DEFINE_uint64(nvme_scale_iters, 64,
 DEFINE_bool(combined, false,
             "Combined run of storage and network tests");
 
+// Default nicmgr LIF
+DEFINE_uint64(nicmgr_lif, 1,
+              "nicmgr software LIF ID");
+
 bool run_nvme_dp_tests = false;
 bool run_nvme_dp_scale_tests = false;
 bool run_nvme_dp_scale_perf = false;
@@ -92,6 +96,7 @@ bool run_comp_perf_tests = false;
 bool run_noc_perf_tests = false;
 bool run_rdma_perf_tests = false;
 bool run_rtl_sanity = false;
+bool run_nicmgr_tests = false;
 uint32_t run_acc_scale_tests_map = ACC_SCALE_TEST_NONE;
 
 std::vector<tests::TestEntry> test_suite;
@@ -429,6 +434,7 @@ int main(int argc, char**argv) {
             << "\nRTL: " << FLAGS_rtl
             << "\nWith RTL --skipverify in effect: " << FLAGS_with_rtl_skipverify
             << "\nWith combined --combined in effect: " << FLAGS_combined
+            << "\nnicmgr software LIF ID: " << FLAGS_nicmgr_lif
             << std::endl;
 
   // Set the test group based on flags. Default is to allow all.
@@ -512,6 +518,14 @@ int main(int argc, char**argv) {
       run_noc_perf_tests = true;
       run_comp_perf_tests = true;
       run_rdma_perf_tests = true;
+  } else if (FLAGS_test_group == "nicmgr") {
+
+      // Limit to a few selected tests, particularly we want to
+      // exclude any tests that require RDMA since the l2segments,
+      // endpoints, etc., created for RDMA might cause conflict
+      // with similar resources created by nicmgr.
+      run_acc_scale_tests_map = ACC_SCALE_TEST_ALL;
+      run_nicmgr_tests = true;
   } else {
     printf("Usage: ./storage_test [--hal_port <xxx>] "
            "[--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|acc_scale|rtl_sanity|perf|nvme_dp|nvme_dp_scale|nvme_dp_scale_perf] "

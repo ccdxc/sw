@@ -24,7 +24,8 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
     curr_line(0),
     next_line(0),
     fragment_key(0),
-    fragment_parent(nullptr)
+    fragment_parent(nullptr),
+    mem_caller_supplied(false)
 {
     int         alloc_rc;
 
@@ -136,6 +137,68 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
 }
 
 
+/*
+ * Alternate constructor where memory is supplied by the caller.
+ */
+dp_mem_t::dp_mem_t(uint8_t *mem_addr,
+                   uint32_t num_lines,
+                   uint32_t line_size,
+                   dp_mem_type_t mem_type,
+                   dp_mem_alloc_fill_t alloc_fill) :
+    mem_type(mem_type),
+    cache(nullptr),
+    hbm_addr(0),
+    num_lines(num_lines),
+    line_size(line_size),
+    total_size(num_lines * line_size),
+    curr_line(0),
+    next_line(0),
+    fragment_key(0),
+    fragment_parent(nullptr),
+    mem_caller_supplied(true)
+{
+    /*
+     * Memory supplied by caller must be valid
+     * see fragment_find().
+     */
+    assert(mem_addr && total_size);
+    switch (mem_type) {
+
+    case DP_MEM_TYPE_HBM:
+        hbm_addr = (uint64_t)mem_addr;
+        cache = new (std::nothrow) uint8_t[total_size];
+        if (!cache) {
+            printf("%s unable to allocate cache size %u\n",
+                   __FUNCTION__, total_size);
+            assert(cache);
+        }
+
+        if (alloc_fill == DP_MEM_ALLOC_FILL_ZERO) {
+            all_lines_clear_thru();
+        }
+        break;
+
+    case DP_MEM_TYPE_HOST_MEM:
+
+        /*
+         * cache is the same as the supplied host mem
+         */
+        cache = mem_addr;
+        if (alloc_fill == DP_MEM_ALLOC_FILL_ZERO) {
+            memset(cache, 0, total_size);
+        }
+        break;
+
+    default:
+        printf("%s invalid memory type %u\n",
+               __FUNCTION__, mem_type);
+        assert((mem_type == DP_MEM_TYPE_HBM) ||
+               (mem_type == DP_MEM_TYPE_HOST_MEM));
+        break;
+    }
+}
+
+
 dp_mem_t::~dp_mem_t()
 {
     std::unordered_map<uint64_t, dp_mem_t*>::iterator fragment_it;
@@ -162,7 +225,7 @@ dp_mem_t::~dp_mem_t()
          * There are no methods to free HBM memory but at least we can free
          * allocated local memory
          */
-        if (cache) {
+        if (cache && !mem_caller_supplied) {
             if (is_mem_type_host_mem()) {
                 free_host_mem(cache);
             } else {

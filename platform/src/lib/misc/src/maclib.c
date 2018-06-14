@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "src/lib/misc/include/maclib.h"
+#include "maclib.h"
 
 char *
 mac_to_str(const mac_t *m)

@@ -59,26 +59,66 @@ static uint64_t ring_base_addr_get(bool decr_en, bool is_gcm,
   return ring_base_addr;
 }
 
-int xts_init(void) {
-  uint64_t ring_base_addr;
-  uint64_t opaque_tag_addr;
+static acc_ring_t *
+xts_ring_create(const char *ring_name,
+                accel_ring_id_t ring_id,
+                bool decr_en,
+                bool is_gcm,
+                uint64_t ring_pndx_pa,
+                uint32_t ring_size,
+                uint32_t desc_size,
+                uint32_t pi_size,
+                uint32_t opaque_tag_size)
+{
+    accel_ring_t    *nicmgr_accel_ring;
+    uint64_t        ring_base_pa;
+    uint64_t        ring_opaque_tag_pa;
+    uint64_t        ring_shadow_pndx_pa = 0;
 
-  ring_base_addr = ring_base_addr_get(false, false, opaque_tag_addr);
-  xts0_ring = new acc_ring_t("xts0_ring", CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX,
-                             kXtsQueueSize, kXtsDescSize, ring_base_addr, xts::kXtsPISize,
-                             opaque_tag_addr, sizeof(exp_opaque_tag_encr));
-  ring_base_addr = ring_base_addr_get(true, false, opaque_tag_addr);
-  xts1_ring = new acc_ring_t("xts1_ring", CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX,
-                             kXtsQueueSize, kXtsDescSize, ring_base_addr, xts::kXtsPISize,
-                             opaque_tag_addr, sizeof(exp_opaque_tag_encr));
-  ring_base_addr = ring_base_addr_get(false, true, opaque_tag_addr);
-  gcm0_ring = new acc_ring_t("gcm0_ring", CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
-                             kGcmQueueSize, kGcmDescSize, ring_base_addr, xts::kXtsPISize,
-                             opaque_tag_addr, sizeof(gcm_exp_opaque_tag_encr));
-  ring_base_addr = ring_base_addr_get(true, true, opaque_tag_addr);
-  gcm1_ring = new acc_ring_t("gcm1_ring", CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX, 
-                             kGcmQueueSize, kGcmDescSize, ring_base_addr, xts::kXtsPISize,
-                             opaque_tag_addr, sizeof(gcm_exp_opaque_tag_encr));
+    /*
+     * If working with nicmgr, use the info discovered during the identify phase
+     */
+    if (run_nicmgr_tests) {
+        nicmgr_accel_ring = &queues::nicmgr_accel_ring_tbl[ring_id];
+        ring_size = nicmgr_accel_ring->ring_size;
+        ring_base_pa = nicmgr_accel_ring->ring_base_pa;
+        ring_pndx_pa = nicmgr_accel_ring->ring_pndx_pa;
+        ring_shadow_pndx_pa = nicmgr_accel_ring->ring_shadow_pndx_pa;
+        ring_opaque_tag_pa = nicmgr_accel_ring->ring_opaque_tag_pa;
+        desc_size = nicmgr_accel_ring->ring_desc_size;
+        pi_size = nicmgr_accel_ring->ring_pndx_size;
+        opaque_tag_size = nicmgr_accel_ring->ring_opaque_tag_size;
+
+    } else {
+        ring_base_pa = ring_base_addr_get(decr_en, is_gcm, ring_opaque_tag_pa);
+    }
+
+    printf("%s ring_size %u desc_size %u pi_size %u opaque_tag_size %u\n",
+           __FUNCTION__, ring_size, desc_size, pi_size, opaque_tag_size);
+
+    return new acc_ring_t(ring_name, ring_pndx_pa, ring_shadow_pndx_pa,
+                          ring_size, desc_size, ring_base_pa, pi_size,
+                          ring_opaque_tag_pa, opaque_tag_size);
+}
+
+int xts_init(void)
+{
+  xts0_ring = xts_ring_create("xts0_ring", ACCEL_RING_XTS0, false, false,
+                              CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX,
+                              kXtsQueueSize, kXtsDescSize, xts::kXtsPISize,
+                              sizeof(exp_opaque_tag_encr));
+  xts1_ring = xts_ring_create("xts1_ring", ACCEL_RING_XTS1, true, false,
+                              CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX,
+                              kXtsQueueSize, kXtsDescSize, xts::kXtsPISize,
+                              sizeof(exp_opaque_tag_decr));
+  gcm0_ring = xts_ring_create("gcm0_ring", ACCEL_RING_GCM0, false, true,
+                              CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
+                              kGcmQueueSize, kGcmDescSize, xts::kXtsPISize,
+                              sizeof(gcm_exp_opaque_tag_encr));
+  gcm1_ring = xts_ring_create("gcm1_ring", ACCEL_RING_GCM1, true, true,
+                              CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX,
+                              kGcmQueueSize, kGcmDescSize, xts::kXtsPISize,
+                              sizeof(gcm_exp_opaque_tag_decr));
   return 0;
 }
 

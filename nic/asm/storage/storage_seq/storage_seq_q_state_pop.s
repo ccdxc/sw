@@ -40,16 +40,17 @@ storage_seq_q_state_pop_start:
     * R6 = phv timestamp
     * R7 = qstate ring_not_empty
     */
-   seq          c1, r7[0:0], r0
+   //bbeq         r7[0], 0, drop_n_exit
+   seq          c1, r7[0], r0
    bcf          [c1], drop_n_exit
-   add		r_ci, r0, d.c_ndx         // delay slot
+   add		r_ci, r0, d.c_ndx       // delay slot
+   bbeq         d.abort[0], 1, abort
+   add          r_pi, r0, d.p_ndx       // delay slot     
+   bbeq         d.enable[0], 0, drop_n_exit
 
    // Store fields needed in the K+I vector into the PHV
-   phvwr        p.{seq_kivec0_dst_lif...seq_kivec0_dst_qaddr}, \
-                d.{dst_lif...dst_qaddr}
-                
    phvwrpair	p.seq_kivec1_src_lif, STAGE0_KIVEC_LIF, \
-        	p.seq_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
+        	p.seq_kivec1_src_qtype, STAGE0_KIVEC_QTYPE // delay slot
    phvwrpair	p.seq_kivec1_src_qid, STAGE0_KIVEC_QID, \
    	        p.seq_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
    
@@ -59,16 +60,15 @@ storage_seq_q_state_pop_start:
    sll          r_qdesc0, r_ci, r_qdesc_size
    add          r_qdesc0, r_qdesc0, d.base_addr
 
-   bbeq         d.desc1_next_pc_valid, 0, load_table_default
+   bbeq         d.desc1_next_pc_valid[0], 0, load_table_default
    add          r_qdesc1, r_qdesc0, STORAGE_DEFAULT_TBL_LOAD_SIZE_BYTES // delay slot
    add          r_qdesc_size, r0, STORAGE_DEFAULT_TBL_LOAD_SIZE
-   LOAD_TABLE1_FOR_ADDR64(r_qdesc1, r_qdesc_size, d.desc1_next_pc)
+   LOAD_TABLE1_FOR_ADDR64(r_qdesc1, r_qdesc_size, d.desc1_next_pc[27:0])
 
 load_table_default:   
-   LOAD_TABLE0_FOR_ADDR64_CONT(r_qdesc0, r_qdesc_size, d.next_pc)
+   LOAD_TABLE0_FOR_ADDR64_CONT(r_qdesc0, r_qdesc_size, d.next_pc[27:0])
    
    mincr        r_ci, d.num_entries, 1
-   add          r_pi, r0, d.p_ndx
    mincr        r_pi, d.num_entries, r0
 
    /*
@@ -83,6 +83,18 @@ load_table_default:
                                  STAGE0_KIVEC_LIF,
                                  STAGE0_KIVEC_QTYPE,
                                  STAGE0_KIVEC_QID)
+abort:
+
+   /*
+    * Discard all outstanding descriptors
+    */
+   tblwr        d.abort, r0
+   tblwr.f      d.c_ndx, r_pi
+   QUEUE_DOORBELL_CLEAR_INLINE(r0,
+                               DOORBELL_SCHED_WR_EVAL,
+                               STAGE0_KIVEC_LIF,
+                               STAGE0_KIVEC_QTYPE,
+                               STAGE0_KIVEC_QID)
 drop_n_exit:
 
    phvwr.e	p.p4_intr_global_drop, 1

@@ -16,6 +16,7 @@ DECLARE_uint64(acc_scale_chain_replica);
 DECLARE_uint64(acc_scale_submissions);
 DECLARE_uint64(acc_scale_blk_size);
 DECLARE_uint64(acc_scale_iters);
+DECLARE_uint64(nicmgr_lif);
 DECLARE_string(acc_scale_verify_method);
 DECLARE_bool(rtl);
 DECLARE_bool(with_rtl_skipverify);
@@ -25,6 +26,7 @@ DECLARE_bool(combined);
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
 extern bool run_pdma_tests;
+extern bool run_nicmgr_tests;
 
 enum {
   ACC_SCALE_TEST_NONE           = 0U,

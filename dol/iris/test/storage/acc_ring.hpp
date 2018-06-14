@@ -33,6 +33,7 @@ class acc_ring_t
 public:
     acc_ring_t(const char *ring_name,
                uint64_t cfg_ring_pd_idx,
+               uint64_t shadow_pd_idx_pa,
                uint32_t ring_size,
                uint32_t desc_size,
                uint64_t ring_base_mem_pa = 0,

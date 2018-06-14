@@ -111,6 +111,7 @@ static_assert(sizeof(struct nicmgr_resp_desc) == 128, "");
  */
 enum DeviceType
 {
+    INVALID,
     ETH_PF,
     ETH_VF,
     NVME,

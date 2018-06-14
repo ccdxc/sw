@@ -91,6 +91,8 @@ struct deferred {
 	struct work_struct work;
 };
 
+#define LIF_F_INITED		BIT(0)
+
 #define LIF_NAME_MAX_SZ		(32)
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
@@ -118,7 +120,8 @@ struct lif {
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
 	void *api_private;
-	struct dentry *debugfs;
+	struct dentry *dentry;
+	unsigned int flags;
 };
 
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)

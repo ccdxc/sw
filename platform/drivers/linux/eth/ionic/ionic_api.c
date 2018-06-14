@@ -50,7 +50,7 @@ EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
 struct dentry *ionic_api_get_debugfs(struct lif *lif)
 {
-	return lif->debugfs;
+	return lif->dentry;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_debugfs);
 
@@ -163,13 +163,14 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 {
 	struct ionic_admin_ctx *ctx = cb_arg;
 	struct admin_comp *comp = cq_info->cq_desc;
+	struct device *dev = &q->lif->netdev->dev;
 
 	if (WARN_ON(comp->comp_index != desc_info->index))
 		return;
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
-	dev_dbg(&lif->netdev->dev, "comp admin queue command:\n");
+	dev_dbg(dev, "comp admin queue command:\n");
 	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			 &ctx->comp, sizeof(ctx->comp), true);
 
@@ -181,7 +182,7 @@ int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 #ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-	int err;
+	int err = 0;
 
 	WARN_ON(in_interrupt());
 
