@@ -35,6 +35,7 @@ enum desc_pool_type {
 	DPOOL_STATE_MAX
 };
 
+/* TODO-dpool: revisit on align/pack, dp_destroy */
 struct desc_pool_stack {
 	uint32_t dps_num_dbufs;	/* total number of descriptors */
 	uint32_t dps_top;	/* stack pointer */
