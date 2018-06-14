@@ -12,18 +12,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
-#ifdef BUILD_ARCH_x86_64
-#define USE_READLINE
-#endif
-#ifdef USE_READLINE
-#ifdef BUILD_OS_Darwin
 #include <editline/readline.h>
-#endif
-#ifdef BUILD_OS_Linux
-#include <readline/history.h>
-#include <readline/readline.h>
-#endif
-#endif
 
 #include "pci_ids.h"
 #include "misc.h"
@@ -702,26 +691,6 @@ cmd_dbg(int argc, char *argv[])
 }
 
 /******************************************************************/
-
-#ifndef USE_READLINE
-static char *
-readline(const char *prompt)
-{
-    char line[80];
-
-    fputs(prompt, stdout);
-    fflush(stdout);
-    if (fgets(line, sizeof(line), stdin) != NULL) {
-        return strdup(line);
-    }
-    return NULL;
-}
-
-static void
-add_history(const char *line)
-{
-}
-#endif
 
 static void
 process(int argc, char *argv[])

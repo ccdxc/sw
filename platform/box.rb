@@ -1,7 +1,7 @@
 from "registry.test.pensando.io:5000/pensando/nic:1.22"
 
 PACKAGES = %w[
-  patch readline-devel libedit2 libedit-devel
+  patch libedit2 libedit-devel
 ]
 
 env GOPATH: "/usr"

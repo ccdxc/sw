@@ -4,10 +4,7 @@
  */
 
 #include "dtls.h"
-#if defined(__x86_64__)
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
+#include <editline/readline.h>
 #include "parse.h"
 #include "cli.h"
 #include "clidtls.h"
@@ -86,9 +83,7 @@ cli_procline(char *line)
         free(histline);
         return;
     }
-#if defined(__x86_64__)
     add_history(histline);
-#endif
     free(histline);
     if (argc == CLI_MAXARGS) {
         printf("%% too many arguments\n");
@@ -120,18 +115,6 @@ cli_build_commands(void)
     memcpy(cli_cmtab, __start_cmdtab, cmsize);
     qsort(cli_cmtab, cli_ncmds, sizeof (cli_cmtab[0]), cmp_cmtab);
 }
-
-#if !defined(__x86_64__)
-#include <iostream>
-#include <string>
-char *
-readline(const char *prompt) {
-    static std::string line;
-    std::cout << prompt;
-    getline(std::cin, line);
-    return (char *)line.c_str();
-}
-#endif
 
 void
 cli_run(void)

@@ -9,10 +9,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <ctype.h>
-#if defined(__x86_64__)
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
 #include <regex.h>
 #include <map>
 #include "dtls.h"

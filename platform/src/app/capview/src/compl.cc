@@ -4,7 +4,7 @@
  */
 
 #include "dtls.h"
-#include <readline/readline.h>
+#include <editline/readline.h>
 #include <regex.h>
 #include <map>
 #include <vector>

@@ -15,9 +15,5 @@ LIBRARIES = \
 	-lpal \
 	$(NULL)
 
-ifeq ("$(BUILD_ARCH)", "x86_64")
-SYSTEM_LIBRARIES = -lreadline
-endif
-
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc

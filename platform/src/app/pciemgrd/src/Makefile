@@ -27,9 +27,20 @@ LIBRARIES = \
 	-lmisc \
 	$(NULL)
 
-ifeq ("$(BUILD_ARCH)", "x86_64")
-SYSTEM_LIBRARIES = -lreadline
-endif
+LCXXFLAGS += \
+	-I $(TOPDIR)/src/third-party/lib/edit/include \
+	-I $(TOPDIR)/src/third-party/lib/ncurses/include \
+	$(NULL)
+
+LLDFLAGS = \
+	-L$(TOPDIR)/src/third-party/lib/edit/$(BUILD_ARCH) \
+	-L$(TOPDIR)/src/third-party/lib/ncurses/$(BUILD_ARCH) \
+	$(NULL)
+
+SYSTEM_LIBRARIES = \
+	-ledit \
+	-lncurses \
+	$(NULL)
 
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc
