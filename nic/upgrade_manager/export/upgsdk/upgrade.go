@@ -25,8 +25,35 @@ type upgSdk struct {
 	sdkClient gosdk.Client
 }
 
+//HdlrRespCode application response code
+type HdlrRespCode int
+
+const (
+	//Success response
+	Success HdlrRespCode = 0
+	//Fail response
+	Fail HdlrRespCode = 1
+	//InProgress response
+	InProgress HdlrRespCode = 2
+)
+
+//HdlrResp application response
+type HdlrResp struct {
+	Resp   HdlrRespCode
+	ErrStr string
+}
+
 //AgentHandlers agents to implement this
 type AgentHandlers interface {
+	UpgStatePreUpgCheckComplete(resp *HdlrResp, svcName string)
+	UpgStateProcessQuiesceComplete(resp *HdlrResp, svcName string)
+	UpgStatePostBinRestartComplete(resp *HdlrResp, svcName string)
+	UpgStateDataplaneDowntimePhase1Complete(resp *HdlrResp, svcName string)
+	UpgStateDataplaneDowntimeAdminQComplete(resp *HdlrResp, svcName string)
+	UpgStateDataplaneDowntimePhase2Complete(resp *HdlrResp, svcName string)
+	UpgStateCleanupComplete(resp *HdlrResp, svcName string)
+	UpgStateAbortedComplete(resp *HdlrResp, svcName string)
+
 	UpgSuccessful()
 	UpgFailed()
 }
@@ -46,9 +73,10 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 		sdkClient: client,
 		svcRole:   role,
 	}
-	upgrade.UpgReqMount(client, delphi.MountMode_ReadWriteMode)
 	if role == AgentRole {
+		upgrade.UpgReqMount(client, delphi.MountMode_ReadWriteMode)
 		UpgRespInit(client, agentHdlrs)
+		UpgAppRespInit(client, agentHdlrs)
 	}
 	return upgsdk, nil
 }

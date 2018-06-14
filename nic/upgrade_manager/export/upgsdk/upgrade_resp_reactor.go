@@ -8,16 +8,7 @@ import (
 )
 
 type upgrespctx struct {
-	name       string
 	agentHdlrs AgentHandlers
-}
-
-func (ctx *upgrespctx) OnMountComplete() {
-	log.Infof("OnMountComplete() done for %s\n", ctx.name)
-}
-
-func (ctx *upgrespctx) Name() string {
-	return ctx.name
 }
 
 func (ctx *upgrespctx) invokeAgentHandler(respType upgrade.UpgRespType) {
@@ -51,7 +42,6 @@ func (ctx *upgrespctx) OnUpgRespDelete(obj *upgrade.UpgResp) {
 func UpgRespInit(client gosdk.Client, hdlrs AgentHandlers) {
 	log.Infof("UpgRespInit called\n")
 	ctx := &upgrespctx{
-		name:       "UpgRespSvc",
 		agentHdlrs: hdlrs,
 	}
 	upgrade.UpgRespMount(client, delphi.MountMode_ReadMode)

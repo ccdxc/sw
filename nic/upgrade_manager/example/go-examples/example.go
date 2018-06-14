@@ -29,6 +29,38 @@ func (u *upgradeCompletion) UpgFailed() {
 	log.Infof("UpgFailed got called\n")
 }
 
+func (u *upgradeCompletion) UpgStatePreUpgCheckComplete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStatePreUpgCheckComplete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStateProcessQuiesceComplete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStateProcessQuiesceComplete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStatePostBinRestartComplete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStatePostBinRestartComplete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase1Complete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStateDataplaneDowntimePhase1Complete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStateDataplaneDowntimeAdminQComplete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStateDataplaneDowntimeAdminQComplete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase2Complete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStateDataplaneDowntimePhase2Complete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStateCleanupComplete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStateCleanupComplete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStateAbortedComplete(resp *upgsdk.HdlrResp, svcName string) {
+	log.Infof("UpgStateAbortedComplete got called with status %d error %s for service %s\n", resp.Resp, resp.ErrStr, svcName)
+}
+
 func main() {
 	s1 := &service{
 		name: "example",
