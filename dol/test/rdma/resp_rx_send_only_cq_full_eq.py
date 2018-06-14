@@ -24,9 +24,11 @@ def TestCaseSetup(tc):
     rs.lqp.eq.qstate.reset_cindex(0)
 
     # Read CQ pre state
-    rs.lqp.rq_cq.qstate.reset_proxy_s_pindex()
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_pre_qstate, 'log_num_wqes')
+    num_cq_wqes = 2 ** log_num_cq_wqes
+    rs.lqp.rq_cq.qstate.set_full(0, num_cq_wqes)
 
     # Read EQ pre state
     rs.lqp.eq.qstate.Read()
@@ -46,34 +48,6 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     if step.step_id == 0:
-
-        rs = tc.config.rdmasession
-        rs.lqp.rq_cq.qstate.Read()
-        tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
-    
-        # verify that arm is set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'arm', 1):
-            return False
-
-        # verify that sarm is not set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'sarm', 0):
-            return False
-
-    elif step.step_id == 1:
-
-        rs = tc.config.rdmasession
-        rs.lqp.rq_cq.qstate.Read()
-        tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
-    
-        # verify that sarm is set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'arm', 1):
-            return False
-
-        # verify that sarm is also set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'sarm', 1):
-            return False
-
-    elif step.step_id == 2:
     
         ############     RQ VALIDATIONS #################
         # verify that e_psn is incremented by 1
@@ -112,34 +86,24 @@ def TestCaseStepVerify(tc, step):
         # verify that max_pkts_in_any_msg is 1
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
             return False
-    
-        ############     CQ VALIDATIONS #################
-        if not ValidateRespRxCQChecks(tc):
-            return False
-    
+   #
+   #    ############     CQ VALIDATIONS #################
+   #    if not ValidateNoCQChanges(tc):
+   #        return False
+   #
         ############     EQ VALIDATIONS #################
         if not ValidateEQChecks(tc):
             return False
 
-    elif step.step_id == 3:
+   #elif step.step_id == 1:
 
-        if not ValidatePostSyncCQChecks(tc):
-            return False 
-
-        rs = tc.config.rdmasession
-        rs.lqp.rq_cq.qstate.Read()
-        tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
-    
-        # verify that sarm is not set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'arm', 0):
-            return False
-
-        # verify that sarm is not set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'sarm', 0):
-            return False
-
+   #    if not ValidatePostSyncCQChecks(tc):
+   #        return False 
+   #
     return True
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    rs.lqp.rq_cq.qstate.reset_cindex(0)
     return

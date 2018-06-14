@@ -14,7 +14,8 @@
 
 #define CQ_RX_DMA_CMD_PYLD_BASE   2
 #define CQ_RX_DMA_CMD_START       0
-#define CQ_RX_DMA_CMD_EQ          (CQ_RX_MAX_DMA_CMDS - 1)
+#define CQ_RX_DMA_CMD_EQ          (CQ_RX_MAX_DMA_CMDS - 2)
+#define CQ_RX_DMA_CMD_EQ_INT      (CQ_RX_MAX_DMA_CMDS - 1)
 
 
 #define CQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
@@ -58,8 +59,9 @@ struct cq_rx_phv_t {
     dma_cmd3 : 128;
 
     /* flit 6 */
+    int_assert_data : 32;
     struct eqwqe_t eqwqe; //4 Bytes
-    pad6     : 480;
+    pad6     : 448;
     
     /* flit 0-5 */
     union {

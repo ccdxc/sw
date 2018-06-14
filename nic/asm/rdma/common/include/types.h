@@ -686,10 +686,35 @@ struct cqwqe_t {
     r_key: 32;
 };
 
+# Keep it compatible with - platform/drivers/linux/rdma/drv/ionic/ionic_fw.h
+
+#define EQE_TYPE_WIDTH 3
+#define EQE_CODE_WIDTH 4
+
+#define EQE_TYPE_CQ 0
+
+//0-7 for good cases, 8-15 for error cases
+#define EQE_CODE_CQ_NOTIFY      0
+#define EQE_CODE_CQ_ERR_FULL    8
+
+#define EQE_TYPE_QP 1
+
+#define EQE_CODE_QP_SRQ_LEVEL   0
+#define EQE_CODE_QP_SQ_DRAIN    1
+#define EQE_CODE_QP_COMM_EST    2
+#define EQE_CODE_QP_LAST_WQE    3
+
+#define EQE_CODE_QP_ERR         8
+#define EQE_CODE_QP_ERR_NOCQE   9
+#define EQE_CODE_QP_ERR_REQEST 10
+#define EQE_CODE_QP_ERR_ACCESS 11
+
+
 struct eqwqe_t {
-    cq_id: 24;
+    qid: 24;
+    code: 4;
+    type: 3;
     color: 1;
-    rsvd: 7;
 };
 
 struct rsqwqe_read_t {

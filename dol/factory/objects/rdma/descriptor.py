@@ -178,9 +178,10 @@ class RdmaCqDescriptor(Packet):
 
 class RdmaEqDescriptor(Packet):
     fields_desc = [
-        X3BytesField("cq_id", 0),
+        X3BytesField("qid", 0),
+        BitField("type", 0, 3),
+        BitField("code", 0, 4),
         BitField("color", 0, 1),
-        BitField("rsvd", 0, 7),
     ]
 
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
@@ -617,15 +618,21 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
-        if hasattr(spec.fields, 'cq_id'):
-            self.cq_id = spec.fields.cq_id
+        if hasattr(spec.fields, 'qid'):
+            self.qid = spec.fields.qid
+        if hasattr(spec.fields, 'type'):
+            self.type = spec.fields.type
+        if hasattr(spec.fields, 'code'):
+            self.code = spec.fields.code
         if hasattr(spec.fields, 'color'):
             self.color = spec.fields.color
         self.__create_desc()
 
     def __create_desc(self):
         self.desc = RdmaEqDescriptor(
-            cq_id=self.cq_id,
+            qid=self.qid,
+            type=self.type,
+            code=self.code,
             color=self.color)
         
     def __set_desc(self, desc):
@@ -636,8 +643,8 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        logger.info("Writing EQ Desciptor @0x%x = cq_id: %d " % 
-                       (self.address, self.cq_id))
+        logger.info("Writing EQ Desciptor @0x%x = qid: %d " % 
+                       (self.address, self.qid))
         resmgr.HostMemoryAllocator.write(self.mem_handle, 
                                          bytes(self.desc))
 
@@ -662,15 +669,25 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
         logger.info('\nother(actual):')
         other.Show()
 
-        if self.desc.cq_id != other.desc.cq_id:
+        if self.desc.qid != other.desc.qid:
             return False
 
-        logger.info('cq_id matched\n')
+        logger.info('qid matched\n')
 
         if self.desc.color != other.desc.color:
             return False
 
         logger.info('color matched\n')
+
+        if self.desc.type != other.desc.type:
+            return False
+
+        logger.info('type matched\n')
+
+        if self.desc.code != other.desc.code:
+            return False
+
+        logger.info('code matched\n')
 
         logger.info('EQ descriptor matched\n')
         return True

@@ -48,7 +48,7 @@ class RdmaRQstate(Packet):
         LEShortField("p_index5", 0),
         LEShortField("c_index5", 0),
 
-        IntField("pt_base_addr/rq_hbm_base_addr", 0),
+        XIntField("pt_base_addr/rq_hbm_base_addr", 0),
         
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
@@ -59,11 +59,11 @@ class RdmaRQstate(Packet):
         BitField("serv_type", 0, 3),
         BitField("log_pmtu", 0xa, 5),
         
-        IntField("rsq_base_addr", 0),
+        XIntField("rsq_base_addr", 0),
     
         IntField("pd", 0),
 
-        IntField("header_template_addr", 0),
+        XIntField("header_template_addr", 0),
 
         X3BytesField("dst_qp", 0),
         BitField("read_rsp_lock", 0, 1),
@@ -83,7 +83,7 @@ class RdmaRQstate(Packet):
 
         # RQCB1
         ByteField("pc_offset", 0),
-        IntField("pt_base_addr/rq_hbm_base_addr", 0),
+        XIntField("pt_base_addr/rq_hbm_base_addr", 0),
         
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
@@ -94,11 +94,11 @@ class RdmaRQstate(Packet):
         BitField("serv_type", 0, 3),
         BitField("log_pmtu", 0xa, 5),
         
-        IntField("rsq_base_addr", 0),
+        XIntField("rsq_base_addr", 0),
     
         IntField("pd", 0),
 
-        IntField("header_template_addr", 0),
+        XIntField("header_template_addr", 0),
 
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
@@ -127,7 +127,7 @@ class RdmaRQstate(Packet):
 
         ByteField("rsq_pindex", 0),
 
-        LongField("curr_wqe_ptr", 0),
+        XLongField("curr_wqe_ptr", 0),
         IntField("current_sge_offset", 0),
         ByteField("current_sge_id", 0),
         ByteField("num_sges", 0),
@@ -159,7 +159,7 @@ class RdmaRQstate(Packet):
 
         # RQCB3
         LongField("wrid", 0),
-        LongField("va", 0),
+        XLongField("va", 0),
         IntField("len", 0),
         IntField("r_key", 0),
 
@@ -217,8 +217,8 @@ class RdmaSQstate(Packet):
         LEShortField("p_index4", 0),
         LEShortField("c_index4", 0),
     
-        IntField("pt_base_addr/sq_hbm_base_addr", 0),
-        IntField("sqcb0_header_template_addr", 0),
+        XIntField("pt_base_addr/sq_hbm_base_addr", 0),
+        XIntField("sqcb0_header_template_addr", 0),
         IntField("pd", 0),
         BitField("log_pmtu", 0xa, 5),
         BitField("log_sq_page_size", 0xc, 5),
@@ -238,7 +238,7 @@ class RdmaSQstate(Packet):
 
         ShortField("spec_sq_cindex", 0),
 
-        LongField("curr_wqe_ptr", 0),
+        XLongField("curr_wqe_ptr", 0),
         IntField("current_sge_offset", 0),
         ByteField("current_sge_id", 0),
         ByteField("num_sges", 0),
@@ -267,7 +267,7 @@ class RdmaSQstate(Packet):
         ShortField("sqcb1_p_index5", 0),
         ShortField("c_index5", 0),
 
-        IntField("sqcb1_rrq_base_addr", 0),
+        XIntField("sqcb1_rrq_base_addr", 0),
         ByteField("sqcb1_log_rrq_size", 0),
         BitField("service", 0, 4),
         BitField("congestion_mgmt_enable", 0, 1),
@@ -280,7 +280,7 @@ class RdmaSQstate(Packet):
         X3BytesField("sqcb1_ssn", 0),
         X3BytesField("sqcb1_lsn", 0),
 
-        IntField("sqcb1_header_template_addr", 0),
+        XIntField("sqcb1_header_template_addr", 0),
         ByteField("sqcb1_header_template_size", 0),
 
         ByteField("nxt_to_go_token_id", 0),
@@ -308,9 +308,9 @@ class RdmaSQstate(Packet):
         #SQCB2
         X3BytesField("dst_qp", 0),
         ByteField("sqcb2_header_template_size", 0),
-        IntField("sqcb2_header_template_addr", 0),
+        XIntField("sqcb2_header_template_addr", 0),
 
-        IntField("sqcb2_rrq_base_addr", 0),
+        XIntField("sqcb2_rrq_base_addr", 0),
         BitField("sqcb2_log_rrq_size", 0, 5),
         BitField("log_sq_size", 0, 5),
         BitField("roce_opt_ts_enable", 0, 1),
@@ -379,7 +379,7 @@ class RdmaCQstate(Packet):
         LEShortField("proxy_pindex", 0),
         LEShortField("proxy_s_pindex", 0),
 
-        IntField("pt_base_addr", 0),
+        XIntField("pt_base_addr", 0),
         BitField("log_cq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
@@ -402,8 +402,8 @@ class RdmaCQstate(Packet):
         ShortField("pt_next_pg_index", 0),
         BitField("pad", 0, 16),
 
-        LongField("pt_pa", 0),
-        LongField("pt_next_pa", 0),
+        XLongField("pt_pa", 0),
+        XLongField("pt_next_pa", 0),
     ]
 
 class RdmaEQstate(Packet):
@@ -422,14 +422,16 @@ class RdmaEQstate(Packet):
         ShortField("p_index0", 0),
         ShortField("c_index0", 0),
 
-        LongField("eqe_base_addr", 0),
-        IntField("int_num", 0),
+        XLongField("eqe_base_addr", 0),
+        IntField("rsvd0", 0),
         X3BytesField("eq_id", 0),
         BitField("log_num_wqes", 0, 5),
         BitField("log_wqe_size", 2, 5),
         BitField("int_enabled", 0, 1),
         BitField("color", 0, 1),
         BitField("rsvd", 0, 28),
+        XLongField("int_assert_addr", 0),
+        BitField("rsvd1", 0, 192),
     ]
 
 qt_params = {
@@ -569,6 +571,13 @@ class RdmaQstateObject(object):
     def get_sArm(self):
         return getattr(self.data, 'sarm')
 
+    def set_full(self, ring, num_wqes):
+        self.set_pindex(ring, self.get_cindex(ring))
+        self.incr_cindex(ring, num_wqes)
+        logger.info("Setting ring full(cindex: %d, pindex: %d) for %s @0x%x" % (self.get_cindex(ring), self.get_pindex(ring), self.queue_type, self.addr))
+        self.WriteWithDelay()
+        return
+        
     def Show(self, lgh = logger):
         lgh.ShowScapyObject(self.data) 
 

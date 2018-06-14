@@ -147,34 +147,15 @@ descriptors:
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
     - descriptor:
-        id      : EXP_CQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
         fields:
-            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 17 #OP_TYPE_SEND_RCVD
-            status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetCQExpColor
-            smac: callback://rdma/rdma/GetZeroMAC
-            
-  # - descriptor:
-  #     id      : EXP_EQ_DESC
-  #     template: ref://factory/templates/id=DESC_RDMA_EQ
-  #     fields:
-  #         qid    : ref://testcase/config/rdmasession/lqp/rq_cq/id
-  #         type   : callback://rdma/rdma/GetEQEtypeCQ
-  #         code   : callback://rdma/rdma/GetEQEcodeCQNotify
-  #         color  : callback://rdma/rdma/GetEQExpColor
+            qid    : ref://testcase/config/rdmasession/lqp/rq_cq/id
+            type   : callback://rdma/rdma/GetEQEtypeCQ
+            code   : callback://rdma/rdma/GetEQEcodeCQErrFull
+            color  : callback://rdma/rdma/GetEQExpColor
 
 session:
-    - step:
-        trigger:
-            doorbell:
-                object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ_SARM/doorbell
-                fields:
-                    upd : 0xD # Increment PI and DB_SCHED_EVAL
-        expect:
- 
     - step:
 
         trigger:
@@ -199,25 +180,11 @@ session:
                     object  : ref://testcase/descriptors/id=EXP_RQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
-            #   - descriptor:
-            #       object  : ref://testcase/descriptors/id=EXP_EQ_DESC
-            #       ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
+                    object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=EXP_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
-
-    #set CI for CQ ring to that of proxy CI in DB data
-    - step:
-
-        trigger:
-            doorbell:
-                object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ/doorbell
-                fields:
-                    upd : 0x4 #Set CI
-
-        expect:
 
 

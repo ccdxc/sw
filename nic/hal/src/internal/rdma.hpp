@@ -1338,13 +1338,15 @@ typedef struct cqcb_s {
 #define MAX_EQ_RINGS 1
 
 typedef struct eqcb_s {
+    uint64_t  rsvd1[3];
+    uint64_t  int_assert_addr;
     uint32_t  rsvd: 28;
     uint32_t  color: 1;
     uint32_t  int_enabled: 1;
     uint32_t  log_wqe_size: 5;
     uint32_t  log_num_wqes: 5;
     uint32_t  eq_id:24;
-    uint32_t  int_num;
+    uint32_t  rsvd0;
     uint64_t  eqe_base_addr;
 
     qpcb_ring_t           rings[MAX_EQ_RINGS];

@@ -20,7 +20,7 @@ struct req_rx_s6_t2_k k;
 #define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit2, pt_next_pg_index_sbit11_ebit15)
 #define K_CQCB_ADDR       CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit4, cqcb_addr_sbit29_ebit33)
 #define K_PAGE_OFFSET     CAPRI_KEY_FIELD(IN_P, page_offset)
-#define K_CQ_ID           CAPRI_KEY_FIELD(IN_P, cq_id)
+#define K_CQID            CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit8_ebit23)
 #define K_EQCB_ADDR       CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit2, eqcb_addr_sbit27_ebit33)
 
 %%
@@ -29,8 +29,9 @@ struct req_rx_s6_t2_k k;
 .align
 req_rx_cqpt_process:
 
+    bbeq            CAPRI_KEY_FIELD(IN_P, report_error), 1, fire_eqcb
     //no_translate, no_dma
-    crestore [c3, c2], CAPRI_KEY_RANGE(IN_P, no_translate, no_dma), 0x3
+    crestore [c3, c2], CAPRI_KEY_RANGE(IN_P, no_translate, no_dma), 0x3 //BD Slot
 
     bcf             [c2 & c3], fire_eqcb
     DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
@@ -63,11 +64,13 @@ fire_eqcb:
 
     CAPRI_RESET_TABLE_2_ARG()
 
-    phvwr CAPRI_PHV_FIELD(EQ_INFO_P, cq_id), K_CQ_ID
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5)
-    nop.e
-    nop
-    
+    phvwrpair CAPRI_PHV_FIELD(EQ_INFO_P, qid), \
+              K_CQID, \
+              CAPRI_PHV_RANGE(EQ_INFO_P, eqe_type, eqe_code), \
+              CAPRI_KEY_RANGE(IN_P, eqe_type, eqe_code)
+
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
+
 cqpt_exit:
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r2)
     CAPRI_SET_TABLE_2_VALID(0)

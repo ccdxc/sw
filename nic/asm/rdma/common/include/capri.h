@@ -7,6 +7,7 @@
 #define CAPRI_STAGE_FIRST   0
 #define CAPRI_STAGE_LAST    (CAPRI_NUM_STAGES-1)
 
+#define CAPRI_INT_ASSERT_DATA     0x01000000 
 
 // intrinsic fields
 #define CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
@@ -348,6 +349,10 @@ struct capri_intrinsic_ring_t {
 
 #define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(_base_r, _lock_en, _table_read_size, _table_addr_r) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);\
+    phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
+
+#define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(_base_r, _lock_en, _table_read_size, _table_addr_r) \
+    phvwrpi.e  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);\
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
 
      

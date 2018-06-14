@@ -51,7 +51,7 @@ def TestCaseStepVerify(tc, step):
         rs.lqp.rq_cq.qstate.Read()
         tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
     
-        # verify that sarm is set
+        # verify that arm is set
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'arm', 1):
             return False
 

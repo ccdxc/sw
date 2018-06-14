@@ -48,6 +48,11 @@ resp_rx_cqcb_process:
     // if completion is not necessary, die down
     bbeq    K_GLOBAL_FLAG(_completion), 0, exit
 
+    #check for CQ full
+    add              r2, CQ_PROXY_PINDEX, r0 //BD Slot
+    mincr            r2, d.log_num_wqes, 1
+    seq              c5, r2, CQ_C_INDEX
+    bcf              [c5], report_cqfull_error
     #Initialize c3(no_dma) to False
     setcf            c3, [!c0] //BD Slot
 
@@ -120,7 +125,9 @@ fire_cqpt:
                 d.cq_id, \
                 CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), \
                 CQCB_ADDR
-    
+    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
     bcf     [!c3], incr_pindex
@@ -135,6 +142,9 @@ no_translate_dma:
                 d.cq_id, \
                 CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), \
                 3
+    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_cqpt_process, r0)
     
 do_dma:
@@ -207,6 +217,23 @@ bubble_to_next_stage:
 skip_wakeup:
     nop.e
     nop
+
+report_cqfull_error:
+ 
+    CAPRI_RESET_TABLE_2_ARG()
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), \
+                d.cq_id, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, report_error), \
+                1
+    RESP_RX_EQCB_ADDR_GET(r5, r2, d.eq_id)
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), \
+                1, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), \
+                r5
+    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
+
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_cqpt_process, r0) //Exit Slot
 
 exit:
     nop.e

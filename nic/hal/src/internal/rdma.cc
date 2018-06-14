@@ -1496,17 +1496,9 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     eqcb.log_wqe_size = log2(eqwqe_size);
     eqcb.log_num_wqes = log2(num_eq_wqes);
     eqcb.int_enabled = 1;
-    eqcb.int_num = spec.int_num();
+    //eqcb.int_num = spec.int_num();
     eqcb.eq_id = spec.eq_id();
     eqcb.color = 0;
-
-    // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial EQCB State, eqcb_size: {}",
-                    __FUNCTION__, lif, sizeof(eqcb_t));
-    // Convert data before writting to HBM
-    memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
-    g_lif_manager->WriteQState(lif, Q_TYPE_RDMA_EQ, spec.eq_id(), (uint8_t *)&eqcb, sizeof(eqcb_t));
-    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_EQ, spec.eq_id()));
 
     rsp->set_api_status(types::API_STATUS_OK);
     // Fill the EQ Interrupt address = Intr_table base + 8 bytes for each intr_num
@@ -1517,7 +1509,18 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
     hbm_eq_intr_table_base = off_args.offset;
     HAL_ASSERT(hbm_eq_intr_table_base > 0);
-    rsp->set_eq_intr_tbl_addr(hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t));
+    eqcb.int_assert_addr = hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t);
+
+    rsp->set_eq_intr_tbl_addr(eqcb.int_assert_addr);
+
+    // write to hardware
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial EQCB State, eqcb_size: {}",
+                    __FUNCTION__, lif, sizeof(eqcb_t));
+    // Convert data before writting to HBM
+    memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
+    g_lif_manager->WriteQState(lif, Q_TYPE_RDMA_EQ, spec.eq_id(), (uint8_t *)&eqcb, sizeof(eqcb_t));
+    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_EQ, spec.eq_id()));
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
     return (HAL_RET_OK);

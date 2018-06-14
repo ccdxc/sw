@@ -894,6 +894,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_CQ_FULL_EQ
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_cq_full_eq
+        spec    : req_tx_send_only_cq_full_eq.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_ARM_EQ
         enable  : True
         package : test.rdma
@@ -940,6 +948,16 @@ modules:
         module  : resp_rx_send_only_arm_sarm_eq_se
         spec    : resp_rx_send_only_arm_sarm_eq_se.testspec
         ignore  : False
+
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_CQ_FULL_EQ
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_cq_full_eq
+        spec    : resp_rx_send_only_cq_full_eq.testspec
+        ignore  : False
+
 
 
 

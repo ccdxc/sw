@@ -275,7 +275,10 @@ header_type resp_rx_cqcb_to_pt_info_t {
         cqcb_addr                        :   34;
         pt_next_pg_index                 :   16;
         eqcb_addr                        :   34;
-        pad                              :   25;
+        report_error                     :    1;
+        eqe_type                         :    3;
+        eqe_code                         :    4;
+        pad                              :   17;
     }
 }
 
@@ -409,8 +412,10 @@ header_type resp_rx_rqcb_to_read_atomic_rkey_info_t {
 
 header_type resp_rx_cqcb_to_eq_info_t {
     fields {
-        cq_id                            :   24;
-        pad                              :  136;
+        qid                              :   24;
+        eqe_type                         :    3;
+        eqe_code                         :    4;
+        pad                              :  129;
     }
 }
 
@@ -1250,7 +1255,9 @@ action resp_rx_eqcb_process () {
     // to stage
 
     // stage to stage
-    modify_field(t2_s2s_cqcb_to_eq_info_scr.cq_id, t2_s2s_cqcb_to_eq_info.cq_id);
+    modify_field(t2_s2s_cqcb_to_eq_info_scr.qid, t2_s2s_cqcb_to_eq_info.qid);
+    modify_field(t2_s2s_cqcb_to_eq_info_scr.eqe_type, t2_s2s_cqcb_to_eq_info.eqe_type);
+    modify_field(t2_s2s_cqcb_to_eq_info_scr.eqe_code, t2_s2s_cqcb_to_eq_info.eqe_code);
     modify_field(t2_s2s_cqcb_to_eq_info_scr.pad, t2_s2s_cqcb_to_eq_info.pad);
 
 }
@@ -1474,6 +1481,9 @@ action resp_rx_cqpt_process () {
     modify_field(t2_s2s_cqcb_to_pt_info_scr.cqcb_addr, t2_s2s_cqcb_to_pt_info.cqcb_addr);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.pt_next_pg_index, t2_s2s_cqcb_to_pt_info.pt_next_pg_index);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.eqcb_addr, t2_s2s_cqcb_to_pt_info.eqcb_addr);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.report_error, t2_s2s_cqcb_to_pt_info.report_error);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.eqe_type, t2_s2s_cqcb_to_pt_info.eqe_type);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.eqe_code, t2_s2s_cqcb_to_pt_info.eqe_code);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.pad, t2_s2s_cqcb_to_pt_info.pad);
 
 }

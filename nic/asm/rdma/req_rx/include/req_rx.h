@@ -15,17 +15,17 @@
 
 #define REQ_RX_MAX_DMA_CMDS                20
 #define REQ_RX_DMA_CMD_START_FLIT_ID       7 // flits 8-11 are used for dma cmds
-#define REQ_RX_DMA_CMD_START_FLIT_CMD_ID   2
-#define REQ_RX_DMA_CMD_START               2
-#define REQ_RX_DMA_CMD_MSN_CREDITS         2
-#define REQ_RX_DMA_CMD_FC_DB               3
-#define REQ_RX_DMA_CMD_REXMIT_PSN          4
-#define REQ_RX_DMA_CMD_BKTRACK_DB          5
-#define REQ_RX_DMA_CMD_RNR_TIMEOUT         6
-#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 5
-#define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 3)
-#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 2)
-#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 1)
+#define REQ_RX_DMA_CMD_START_FLIT_CMD_ID   1
+#define REQ_RX_DMA_CMD_START               1
+#define REQ_RX_DMA_CMD_MSN_CREDITS         1
+#define REQ_RX_DMA_CMD_FC_DB               2
+#define REQ_RX_DMA_CMD_REXMIT_PSN          3
+#define REQ_RX_DMA_CMD_BKTRACK_DB          4
+#define REQ_RX_DMA_CMD_RNR_TIMEOUT         5
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
+#define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 4)
+#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 3)
+#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 2)
 //wakeup dpath and EQ are mutually exclusive
 #define REQ_RX_DMA_CMD_WAKEUP_DPATH        REQ_RX_DMA_CMD_EQ
 #define REQ_RX_DMA_CMD_EQ_INTR             (REQ_RX_MAX_DMA_CMDS - 1)
@@ -57,25 +57,30 @@ struct req_rx_phv_t {
     dma_cmd7                : 128;
 
     //flit 7
-    wakeup_dpath_data       : 64;
+    rsvd4                   : 40;
     rexmit_psn              : 24;
     ack_timestamp           : 48;
     err_retry_ctr           : 4;
     rnr_retry_ctr           : 4;
     rnr_timeout             : 8;
-    rsvd3                   : 104;
+    dma_cmd1                : 128;
     dma_cmd2                : 128;
     dma_cmd3                : 128;
 
     //flit 6
-    rsvd2                   : 24;
+    rsvd2                   : 8;
     msn                     : 24;
     rsvd1                   : 3;
     credits                 : 5;
     db_data2                : 64;
     db_data1                : 64;
-    eq_int_num              : 16;
-    struct eqwqe_t eqwqe;
+    union {
+        struct {
+            int_assert_data : 32;
+            struct eqwqe_t eqwqe;
+        };
+        wakeup_dpath_data   : 64;
+    };
     struct cqwqe_t cqwqe;
     my_token_id             : 8;
 

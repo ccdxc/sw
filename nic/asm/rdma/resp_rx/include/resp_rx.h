@@ -158,7 +158,7 @@ struct resp_rx_dma_cmds_flit_t {
 struct resp_rx_phv_s1_t {
     struct ack_info_t ack_info;     //7B
     struct eqwqe_t eqwqe;           //4B
-    eq_int_data: 32;                //4B
+    int_assert_data: 32;            //4B
     union {
         immdt_as_dbell_data: 64;    //8B
         atomic_release_byte: 8;     //1B

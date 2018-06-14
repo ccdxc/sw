@@ -23,9 +23,11 @@ def TestCaseSetup(tc):
     rs.lqp.eq.qstate.reset_cindex(0)
 
     # Read CQ pre state
-    rs.lqp.sq_cq.qstate.reset_proxy_s_pindex()
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_pre_qstate, 'log_num_wqes')
+    num_cq_wqes = 2 ** log_num_cq_wqes
+    rs.lqp.sq_cq.qstate.set_full(0, num_cq_wqes)
 
     # Read EQ pre state
     rs.lqp.eq.qstate.Read()
@@ -50,16 +52,6 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
     if step.step_id == 0:
-
-        rs = tc.config.rdmasession
-        rs.lqp.sq_cq.qstate.Read()
-        tc.pvtdata.sq_cq_post_qstate = rs.lqp.sq_cq.qstate.data
-    
-        # verify that arm is set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_cq_post_qstate, 'arm', 1):
-            return False
-
-    if step.step_id == 1:
 
         # verify that tx_psn is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
@@ -93,7 +85,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
             return False
 
-    elif step.step_id == 2:
+    elif step.step_id == 1:
         msn = tc.pvtdata.sq_pre_qstate.ssn - 1
 
         # verify that msn is incremented to that of ssn of this msg
@@ -127,18 +119,13 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
-
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
-            return False 
-
+#
+#       if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
+#           return False 
+#
         ############     EQ VALIDATIONS #################
         if not ValidateEQChecks(tc):
             return False
-
-    elif step.step_id == 3:
-
-        if not ValidatePostSyncCQChecks(tc):
-            return False 
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
@@ -147,4 +134,6 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    rs.lqp.sq_cq.qstate.reset_cindex(0)
     return

@@ -161,7 +161,9 @@ descriptors:
         id      : EXP_EQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_EQ
         fields:
-            cq_id  : ref://testcase/config/rdmasession/lqp/rq_cq/id
+            qid    : ref://testcase/config/rdmasession/lqp/rq_cq/id
+            type   : callback://rdma/rdma/GetEQEtypeCQ
+            code   : callback://rdma/rdma/GetEQEcodeCQNotify
             color  : callback://rdma/rdma/GetEQExpColor
 
 session:

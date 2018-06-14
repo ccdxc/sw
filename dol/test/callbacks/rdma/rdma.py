@@ -102,6 +102,17 @@ def GetEQExpColor (tc, desc, args = None):
     else:
        return (tc.pvtdata.eq_pre_qstate.color)
 
+def GetEQEtypeCQ (tc, desc, args = None):
+    return 0
+
+def GetEQEcodeCQNotify (tc, desc, args = None):
+    #EQE_CODE_CQ_NOTIFY
+    return 0
+
+def GetEQEcodeCQErrFull (tc, desc, args = None):
+    #EQE_CODE_CQ_ERR_FULL
+    return 8
+
 def GetReqRxCQExpColor (tc, desc, args):
     log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_pre_qstate, 'log_num_wqes')
     ring0_mask = (2 ** log_num_cq_wqes) - 1

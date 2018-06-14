@@ -11,13 +11,12 @@ struct eqcb_t d;
 #define EQWQE_P r1
 #define DMA_CMD_BASE r4
 #define TMP r5
-#define EQ_INT_ADDR r6
 
-#define PHV_EQWQE_START s1.eqwqe.cq_id
-#define PHV_EQWQE_END   s1.eqwqe.rsvd
+#define PHV_EQWQE_START s1.eqwqe.qid
+#define PHV_EQWQE_END   s1.eqwqe.color
 
-#define PHV_EQ_INT_NUM_START eq_int_num
-#define PHV_EQ_INT_NUM_END eq_int_num
+#define PHV_EQ_INT_ASSERT_DATA_BEGIN s1.int_assert_data
+#define PHV_EQ_INT_ASSERT_DATA_END s1.int_assert_data
 
 #define IN_P t2_s2s_cqcb_to_eq_info
 
@@ -32,25 +31,21 @@ resp_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwrpair       p.s1.eqwqe.cq_id, CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23), p.s1.eqwqe.color, EQ_COLOR
+    phvwrpair       p.s1.eqwqe.qid, CAPRI_KEY_RANGE(IN_P, qid_sbit0_ebit7, qid_sbit16_ebit23), p.s1.eqwqe.color, EQ_COLOR
+    phvwrpair       p.s1.eqwqe.code, CAPRI_KEY_FIELD(IN_P, eqe_code), p.s1.eqwqe.type, CAPRI_KEY_FIELD(IN_P, eqe_type)
 
     sllv            r1, EQ_P_INDEX, d.log_wqe_size
     add             EQWQE_P, d.eqe_base_addr, r1
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_EQ)
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQWQE_START, PHV_EQWQE_END, EQWQE_P)
-    #need to move this end-of-command one down when interrupt dma command is enabled
+
+    //Writing Interrupt unconditionally... if needed, add a flag for this purpose
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_EQ_INT)
+    phvwri          p.s1.int_assert_data, CAPRI_INT_ASSERT_DATA
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_ASSERT_DATA_BEGIN, PHV_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
+
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
-
-    // RDMA_EQ_INTR_TABLE_BASE is 34 bytes, so load it into register using 2 instructions
-    addui       EQ_INT_ADDR, r0, hiword(RDMA_EQ_INTR_TABLE_BASE)
-    addi        EQ_INT_ADDR, EQ_INT_ADDR, loword(RDMA_EQ_INTR_TABLE_BASE)
-
-    add             EQ_INT_ADDR, EQ_INT_ADDR, d.int_num, RDMA_EQ_INTR_TABLE_ENTRY_SIZE_SHFT
-
-    add             DMA_CMD_BASE, DMA_CMD_BASE, DMA_CMD_SIZE_BITS
-    //DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_NUM_START, PHV_EQ_INT_NUM_END, EQ_INT_ADDR)
-    
 
     // increment p_index
     tblmincri.e     EQ_P_INDEX, d.log_num_wqes, 1

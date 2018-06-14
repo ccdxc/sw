@@ -36,6 +36,12 @@ req_rx_cqcb_process:
     seq              c1, r1[4:2], STAGE_5
     bcf              [!c1], bubble_to_next_stage
 
+    #check for CQ full
+    add              r2, CQ_PROXY_PINDEX, r0 //BD Slot
+    mincr            r2, d.log_num_wqes, 1
+    seq              c5, r2, CQ_C_INDEX
+    bcf              [c5], report_cqfull_error
+
     #Initialize c3(no_dma) to False
     setcf            c3, [!c0] //BD Slot
 
@@ -105,7 +111,8 @@ fire_cqpt:
     phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_offset), r1, \
               CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0
     phvwr.c3  CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_dma), 1
-    
+    phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
 
@@ -120,6 +127,8 @@ no_translate_dma:
     //cq_id
     phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), d.cq_id, \
               CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), 0x3
+    phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqpt_process, r0)
     
 do_dma:
@@ -183,6 +192,8 @@ skip_eqcb:
     DMA_HBM_PHV2MEM_SETUP(r6, wakeup_dpath_data, wakeup_dpath_data, r1)
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r6)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
+    nop.e
+    nop
 
 bubble_to_next_stage:
     seq         c1, r1[4:2], STAGE_4
@@ -191,7 +202,24 @@ bubble_to_next_stage:
     //invoke the same routine, but with valid d[]
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
     REQ_RX_CQCB_ADDR_GET(r1, K_CQ_ID, K_CQCB_BASE_ADDR_HI)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1) //Exit Slot
+
+report_cqfull_error:
+ 
+    CAPRI_RESET_TABLE_2_ARG()
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), \
+                d.cq_id, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, report_error), \
+                1
+    REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), \
+                1, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), \
+                r5
+    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
+
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqpt_process, r0) //Exit Slot
 
 skip_wakeup:
 exit:
