@@ -106,6 +106,7 @@ if_init (if_t *hal_if)
     hal_if->l2seg_list      = block_list::factory(sizeof(hal_handle_t));
     hal_if->enicif_list     = block_list::factory(sizeof(hal_handle_t));
     hal_if->nh_list         = block_list::factory(sizeof(hal_handle_t));
+    hal_if->ep_list         = block_list::factory(sizeof(hal_handle_t));
     sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
     sdk::lib::dllist_reset(&hal_if->mc_entry_list_head);
 
@@ -138,6 +139,7 @@ if_cleanup (if_t *hal_if)
     block_list::destroy(hal_if->l2seg_list);
     block_list::destroy(hal_if->enicif_list);
     block_list::destroy(hal_if->nh_list);
+    block_list::destroy(hal_if->ep_list);
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
         block_list::destroy(hal_if->acl_list[i]);
     }
@@ -3116,6 +3118,13 @@ validate_if_delete (if_t *hal_if)
         goto end;
     }
 
+    if (hal_if->ep_list->num_elems()) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("If delete failure, EPs still referring:");
+        hal_print_handles_block_list(hal_if->ep_list);
+        goto end;
+    }
+
 end:
     return ret;
 }
@@ -4170,6 +4179,62 @@ if_del_nh (if_t *hal_if, nexthop_t *nh)
     }
 
     HAL_TRACE_DEBUG("Deleted nh {} from hal_if {}", nh->nh_id, hal_if->if_id);
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Adds EP to if back refs
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_add_ep (if_t *hal_if, ep_t *ep)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (hal_if == NULL || ep == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->ep_list->insert(&ep->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add ep {} to hal_if {}",
+                        ep_l2_key_to_str(ep), if_keyhandle_to_str(hal_if));
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Added ep {} to if {}", ep_l2_key_to_str(ep),
+                    if_keyhandle_to_str(hal_if));
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove EP from if
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_del_ep (if_t *hal_if, ep_t *ep)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (hal_if == NULL || ep == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->ep_list->remove(&ep->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to del nh {} from hal_if {}",
+                        ep_l2_key_to_str(ep), if_keyhandle_to_str(hal_if));
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Deleted ep {} from hal_if {}",
+                    ep_l2_key_to_str(ep), if_keyhandle_to_str(hal_if));
 end:
     return ret;
 }

@@ -164,6 +164,7 @@ typedef struct if_s {
     block_list          *enicif_list;           // enicifs, Classic enics
     block_list          *acl_list[IF_ACL_REF_TYPES]; // List of acls matching on src if
     block_list          *nh_list;               // next hops
+    block_list          *ep_list;               // endpoints
 #if 0
     dllist_ctxt_t       mbr_if_list_head;       // list of member ports for uplink PC
     dllist_ctxt_t       l2seg_list_clsc_head;   // l2segments in classic nic

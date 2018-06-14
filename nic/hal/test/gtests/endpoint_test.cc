@@ -196,6 +196,16 @@ TEST_F(endpoint_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
+    // Try deletint if
+    InterfaceDeleteRequest if_del_req;
+    InterfaceDeleteResponse  if_del_rsp;
+    if_del_req.mutable_key_or_handle()->set_interface_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(if_del_req, &if_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+
+
     // Update with IP adds
     ep_req.mutable_vrf_key_handle()->set_vrf_id(1);
     // ep_req.mutable_key_or_handle()->set_endpoint_handle(ep_rsp.endpoint_status().endpoint_handle());

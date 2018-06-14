@@ -48,7 +48,7 @@ def trace_valid():
 #------------------------------------------------------------------------------
 def validate_trace(filename, data, trace_func):
     global return_status
-    for match in re.finditer(r'%s\(\".*?[^\\]\"[^;]*' % trace_func, data, re.S):
+    for match in re.finditer(r'%s\s*\(\".*?[^\\]\"[^;]*' % trace_func, data, re.S):
         #print "Match:   %s: %s" % (match.start(), match.group(0))
         full_trace = match.group(0)
         trace = get_valid_trace(full_trace, trace_func)
@@ -111,7 +111,9 @@ def has_unwanted_patterns(fmt):
 # fte_ctx.cc
 #------------------------------------------------------------------------------
 def get_valid_trace(trace, func):
-    trace = trace.replace(func + "(", '');
+    # Trying to find HAL_TRACE_DEBUG(, HAL_TRACE_DEBUG (
+    trace = re.sub(r"%s\s*\(" % func, '', trace);
+    #trace = trace.replace(func + "(", '');
     s = []
     index = 0
     while index < len(trace):

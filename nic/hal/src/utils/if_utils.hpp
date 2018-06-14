@@ -50,6 +50,8 @@ hal_ret_t if_add_l2seg(if_t *hal_if, l2seg_t *l2seg);
 hal_ret_t if_del_l2seg(if_t *hal_if, l2seg_t *l2seg);
 hal_ret_t if_add_nh(if_t *hal_if, nexthop_t *nh);
 hal_ret_t if_del_nh(if_t *hal_if, nexthop_t *nh);
+hal_ret_t if_add_ep(if_t *hal_if, ep_t *ep);
+hal_ret_t if_del_ep(if_t *hal_if, ep_t *ep);
 hal_ret_t uplink_add_enicif(if_t *uplink, if_t *enic_if);
 hal_ret_t uplink_del_enicif(if_t *uplink, if_t *enic_if);
 hal_ret_t if_handle_lif_update(pd::pd_if_lif_update_args_t *args);

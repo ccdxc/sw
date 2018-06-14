@@ -8,6 +8,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils/utils.hpp"
+#include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/nh.hpp"
@@ -497,6 +498,103 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 
+static inline hal_ret_t
+endpoint_add_to_db (ep_t *ep, vrf_t *vrf)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    ep_l3_key_t l3_key = {0};
+    dllist_ctxt_t *ip_lnode    = NULL;
+    ep_ip_entry_t *pi_ip_entry = NULL;
+    if_t *hal_if = NULL;
+
+    // add EP to L2 DB
+    ret = ep_add_to_l2_db(ep, ep->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add EP {} to L2 DB, err : {}",
+                      ep_l2_key_to_str(ep), ret);
+        goto end;
+    }
+
+    // add EP to L3 DB
+    dllist_for_each(ip_lnode, &ep->ip_list_head) {
+        pi_ip_entry = dllist_entry(ip_lnode, ep_ip_entry_t, ep_ip_lentry);
+        l3_key.vrf_id = vrf->vrf_id;
+        l3_key.ip_addr = pi_ip_entry->ip_addr;
+        ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, ep->hal_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add EP {} to L3 DB, err : {}",
+                          ep_l2_key_to_str(ep), ret);
+            goto end;
+        }
+        HAL_TRACE_DEBUG("Added EP ({}, {}) to L3 DB",
+                        l3_key.vrf_id, ipaddr2str(&l3_key.ip_addr));
+    }
+
+    // add EP as back ref to if
+    if (ep->if_handle != HAL_HANDLE_INVALID) {
+        hal_if = find_if_by_handle(ep->if_handle);
+        HAL_ASSERT(hal_if != NULL);
+        ret = if_add_ep(hal_if, ep);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to add ep to if. err: {}", ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
+static inline hal_ret_t
+endpoint_del_from_db (ep_t *ep)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    dllist_ctxt_t    *curr, *next;
+    ep_ip_entry_t    *pi_ip_entry = NULL;
+    if_t             *hal_if = NULL;
+    vrf_t            *vrf = NULL;
+    ep_l3_key_t      l3_key = { 0 };
+
+    vrf = vrf_lookup_by_handle(ep->vrf_handle);
+
+    // remove EP from L2 DB
+    ret = ep_del_from_l2_db(ep);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete EP from L3 DB, err : {}", ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleted EP {} from L2 DB", ep_l2_key_to_str(ep));
+
+    // remove EP from L3 DB
+    dllist_for_each_safe(curr, next, &ep->ip_list_head) {
+        pi_ip_entry = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
+        l3_key.vrf_id = vrf->vrf_id;
+        l3_key.ip_addr = pi_ip_entry->ip_addr;
+        ret = ep_del_from_l3_db(&l3_key);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del EP:{} from L3 DB",
+                          ep_l2_key_to_str(ep));
+            goto end;
+        }
+        HAL_TRACE_DEBUG("Deleted EP ({}, {}) from L3 DB",
+                        l3_key.vrf_id, ipaddr2str(&l3_key.ip_addr));
+    }
+
+    // del EP as back ref from if
+    if (ep->if_handle != HAL_HANDLE_INVALID) {
+        hal_if = find_if_by_handle(ep->if_handle);
+        HAL_ASSERT(hal_if != NULL);
+        ret = if_add_ep(hal_if, ep);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to add ep to if. err: {}", ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // 1. Update PI DBs as endpoint_create_add_cb() was a success
 //      a. Create the flood list
@@ -510,11 +608,8 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t          *dhl_entry   = NULL;
     ep_t                 *ep          = NULL;
     vrf_t                *vrf         = NULL;
-    hal_handle_t         hal_handle   = 0;
-    dllist_ctxt_t        *ip_lnode    = NULL;
-    ep_ip_entry_t        *pi_ip_entry = NULL;
+    // hal_handle_t         hal_handle   = 0;
     ep_create_app_ctxt_t *app_ctxt    = NULL;
-    ep_l3_key_t          l3_key       = {0};
 
     HAL_ASSERT(cfg_ctxt != NULL);
     // assumption is there is only one element in the list
@@ -523,41 +618,19 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     app_ctxt = (ep_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     ep = (ep_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
+    // hal_handle = dhl_entry->handle;
     vrf = app_ctxt->vrf;
 
     HAL_TRACE_DEBUG("EP create commit cb {}", ep_l2_key_to_str(ep));
 
-    // add EP to L2 DB
-    ret = ep_add_to_l2_db (ep, hal_handle);
+    // Add EP to DBs
+    ret = endpoint_add_to_db(ep, vrf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add EP {} to L2 DB, err : {}",
-                      ep_l2_key_to_str(ep), ret);
+        HAL_TRACE_ERR("unable to add EP to DB. err: {}", ret);
         goto end;
     }
 
-    // add EP to L3 DB
-    dllist_for_each(ip_lnode, &ep->ip_list_head) {
-        pi_ip_entry = dllist_entry(ip_lnode, ep_ip_entry_t, ep_ip_lentry);
-        l3_key.vrf_id = vrf->vrf_id;
-        l3_key.ip_addr = pi_ip_entry->ip_addr;
-        ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, hal_handle);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to add EP {} to L3 DB, err : {}",
-                          ep_l2_key_to_str(ep), ret);
-            goto end;
-        }
-        HAL_TRACE_DEBUG("Added EP ({}, {}) to L3 DB",
-                        l3_key.vrf_id, ipaddr2str(&l3_key.ip_addr));
-    }
-
-    // TODO: Increment the ref counts of dependent objects
-    //  - Have to increment ref count for vrf
-
 end:
-
-    if (ret != HAL_RET_OK) {
-    }
     return ret;
 }
 
@@ -2031,7 +2104,8 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("Delete commit cb");
 
-    ret = endpoint_cleanup(ep);
+    // Remove from DB and remove references
+    ret = endpoint_del_from_db(ep);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to del ep from db, err : {}", ret);
         goto end;
@@ -2039,11 +2113,13 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     hal_handle_free(hal_handle);
 
-    // TODO: Decrement the ref counts of dependent objects
-    //  - Have to decrement ref count for ep profile
-
+    // Free EP
+    ret = ep_free(ep);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to free EP");
+        goto end;
+    }
 end:
-
     return ret;
 }
 

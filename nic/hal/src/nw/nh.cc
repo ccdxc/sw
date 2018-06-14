@@ -124,6 +124,8 @@ nexthop_del_from_db (nexthop_t *nh)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_ht_entry_t    *entry;
+    if_t                        *hal_if;
+    ep_t                        *ep;
 
     HAL_TRACE_DEBUG("removing from nexthop id hash table");
     // remove from hash table
@@ -139,6 +141,27 @@ nexthop_del_from_db (nexthop_t *nh)
         goto end;
     }
 
+    // add nexthop as back ref to if
+    if (nh->if_handle != HAL_HANDLE_INVALID) {
+        hal_if = find_if_by_handle(nh->if_handle);
+        HAL_ASSERT(hal_if != NULL);
+        ret = if_del_nh(hal_if, nh);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
+            goto end;
+        }
+    }
+
+    // add nexthop as back ref to ep
+    if (nh->ep_handle != HAL_HANDLE_INVALID) {
+        ep = find_ep_by_handle(nh->ep_handle);
+        HAL_ASSERT(ep != NULL);
+        ret = ep_del_nh(ep, nh);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
+            goto end;
+        }
+    }
 end:
     return ret;;
 }
@@ -774,11 +797,6 @@ nexthop_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("failed to del nexthop {} from db, err : {}",
                       nexthop_to_str(nh), ret);
         goto end;
-    }
-
-    if (nh->ep_handle != HAL_HANDLE_INVALID) {
-        ep_t *ep = find_ep_by_handle(nh->ep_handle);
-        ret = ep_del_nh(ep, nh);
     }
 
     // Remove object from handle id based hash table

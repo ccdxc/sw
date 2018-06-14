@@ -57,7 +57,7 @@ p4pd_add_flow_stats_table_entry (uint32_t *flow_stats_idx)
 hal_ret_t
 p4pd_del_flow_stats_table_entry (uint32_t flow_stats_idx)
 {
-    directmap                *dm;
+    directmap *dm;
 
     // 0th entry is reserved
     if (!flow_stats_idx) {
@@ -76,7 +76,7 @@ p4pd_del_flow_stats_table_entry (uint32_t flow_stats_idx)
 hal_ret_t
 p4pd_add_flow_stats_table_entries (pd_session_t *session_pd)
 {
-    hal_ret_t    ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
     // program flow_stats table entry for iflow
     if (!session_pd->iflow.flow_stats_hw_id) {
@@ -120,7 +120,7 @@ p4pd_add_flow_stats_table_entries (pd_session_t *session_pd)
 hal_ret_t
 p4pd_del_flow_stats_table_entries (pd_session_t *session_pd)
 {
-    hal_ret_t    ret;
+    hal_ret_t ret = HAL_RET_OK;
 
     ret = p4pd_del_flow_stats_table_entry(session_pd->iflow.flow_stats_hw_id);
     if (ret != HAL_RET_OK) {
@@ -151,7 +151,7 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     sdk_ret_t                sdk_ret;
     directmap                *dm;
     flow_t                   *iflow, *rflow;
-    session_state_actiondata    d = { 0 };
+    session_state_actiondata d = { 0 };
     session_t                *session = (session_t *)session_pd->session;
 
     HAL_ASSERT(session_pd != NULL);
@@ -777,10 +777,10 @@ p4pd_del_flow_hash_table_entries (pd_session_t *session_pd)
 hal_ret_t
 pd_session_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t          ret;
-    pd_session_create_args_t *args = pd_func_args->pd_session_create;
-    pd_session_t       *session_pd;
-    session_t          *session = args->session;
+    hal_ret_t                   ret;
+    pd_session_create_args_t    *args = pd_func_args->pd_session_create;
+    pd_session_t                *session_pd;
+    session_t                   *session = args->session;
 
     HAL_TRACE_DEBUG("Creating pd state for session");
 
