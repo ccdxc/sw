@@ -607,6 +607,14 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	for (i = 0; i < 7; ++i)
 		resp.admin_opcodes[i] = ident->dev.rdma_qp_opcodes[i];
 
+	if (ionic_xxx_haps) {
+		resp.version = 0;
+		for (i = 0; i < 7; ++i)
+			resp.qp_opcodes[i] = 0;
+		for (i = 0; i < 7; ++i)
+			resp.admin_opcodes[i] = 0;
+	}
+
 	resp.sq_qtype = dev->sq_qtype;
 	resp.rq_qtype = dev->rq_qtype;
 	resp.cq_qtype = dev->cq_qtype;
@@ -4163,6 +4171,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	version = le16_to_cpu(ident->dev.rdma_version);
 
+	if (ionic_xxx_haps)
+		version = 0;
+
 	if (version <= IONIC_MAX_RDMA_VERSION) {
 		compat = 0;
 	} else {
@@ -4171,7 +4182,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	while (version > 0 && compat < 7) {
-		if (ident->dev.rdma_qp_opcodes[compat])
+		if (ident->dev.rdma_admin_opcodes[compat])
 			break;
 		--version;
 		++compat;
@@ -4214,6 +4225,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->rdma_version = version;
 	dev->qp_opcodes = ident->dev.rdma_qp_opcodes[compat];
 	dev->admin_opcodes = ident->dev.rdma_admin_opcodes[compat];
+
+	if (ionic_xxx_haps) {
+		dev->qp_opcodes = 0;
+		dev->admin_opcodes = 0;
+	}
 
 	/* XXX hardcode values, should come from identify */
 	dev->admin_qtype = 0;
