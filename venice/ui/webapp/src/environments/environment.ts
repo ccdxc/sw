@@ -5,7 +5,7 @@
 
 export const environment = {
   production: false,
-  isRESTAPIReady: false,
+  isRESTAPIReady: true,
 
   log_format: 'JSON',
   log_level: 0,

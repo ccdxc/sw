@@ -14,8 +14,10 @@ import { MatIconRegistry } from '@angular/material';
 import { ClusterComponent } from './cluster.component';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/cluster.service';
+import { NodesService } from '@app/services/nodes.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
+import { PrimengModule } from '@app/lib/primeng.module';
 
 @Component({
   template: ''
@@ -39,11 +41,13 @@ describe('ClusterComponent', () => {
         HttpClientTestingModule,
         NoopAnimationsModule,
         SharedModule,
-        MaterialdesignModule
+        MaterialdesignModule,
+        PrimengModule
       ],
       providers: [
         ControllerService,
         ClusterService,
+        NodesService,
         MatIconRegistry
       ]
     })

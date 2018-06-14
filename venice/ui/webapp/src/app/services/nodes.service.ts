@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
 import { AbstractService } from './abstract.service';
 
 @Injectable()
-export class ClusterService extends AbstractService {
+export class NodesService extends AbstractService {
   constructor(private _http: HttpClient) {
     super();
   }
@@ -18,7 +18,7 @@ export class ClusterService extends AbstractService {
   */
   protected callServer(url: string, payload: any) {
     return this.invokeAJAXPostCall(url, payload, this._http,
-      { 'ajax': 'start', 'name': 'ClusterService-ajax', 'url': url });
+      { 'ajax': 'start', 'name': 'NodesService-ajax', 'url': url });
   }
 
   /**
@@ -29,16 +29,16 @@ export class ClusterService extends AbstractService {
     return this.constructor.name;
   }
 
-  getClusterURL(): string {
+  getNodesURL(): string {
     if (!environment.production) {
-      return '/cluster';
+      return '/nodes';
     }
-    return environment.server_url + ':' + environment.server_port + '/cluster/cluster';
+    return environment.server_url + ':' + environment.server_port + '/cluster/nodes';
   }
 
-  public getCluster(): Observable<any> {
-    const url = this.getClusterURL();
+  public getNodes(): Observable<any> {
+    const url = this.getNodesURL();
     return this.invokeAJAXGetCall(url,
-      this._http, { 'ajax': 'start', 'name': 'ClusterService-ajax', 'url': url }, true);
+      this._http, { 'ajax': 'start', 'name': 'NodesService-ajax', 'url': url }, true);
   }
 }

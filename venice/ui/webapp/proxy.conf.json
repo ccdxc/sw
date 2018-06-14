@@ -17,9 +17,12 @@
   "/cluster/*": {
     "target": "http://192.168.69.189:10001/v1/cluster",
       "secure": false,
-      "pathRewrite": {
-        "^/cluster": ""
-      },
+      "changeOrigin": true,
+      "logLevel": "debug"
+  },
+  "/nodes/*": {
+    "target": "http://192.168.69.189:10001/v1/cluster",
+      "secure": false,
       "changeOrigin": true,
       "logLevel": "debug"
   },

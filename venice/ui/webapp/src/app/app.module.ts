@@ -30,6 +30,7 @@ import { AbstractService } from '@app/services/abstract.service';
 import { AuthService } from '@app/services/auth.service';
 import { WorkloadService } from '@app/services/workload.service';
 import { ClusterService } from '@app/services/cluster.service'
+import { NodesService } from '@app/services/nodes.service'
 import { DatafetchService } from '@app/services/datafetch.service';
 import { VeniceUIHttpInterceptor } from '@app/inteceptors/httpinterceptor.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -123,6 +124,7 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     AuthService,
     WorkloadService,
     ClusterService,
+    NodesService,
     DatafetchService,
     LogService,
     LogPublishersService,
