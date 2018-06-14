@@ -3898,39 +3898,69 @@ static irqreturn_t ionic_poll_eq_isr(int irq, void *eqptr)
 	return IRQ_HANDLED;
 }
 
-static int ionic_create_eq_cmd(struct ionic_ibdev *dev, struct ionic_eq *eq)
+static int ionic_rdma_devcmd(struct ionic_ibdev *dev,
+			     struct ionic_admin_ctx *admin)
 {
-	struct ionic_admin_ctx admin = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
-		.cmd.rdma_create_queue = {
-			.opcode = cpu_to_le16(CMD_OPCODE_RDMA_CREATE_EQ),
-			.lif_id = cpu_to_le16(dev->lif_id),
-			.qid_ver = cpu_to_le32(eq->eqid |
-					       (dev->rdma_version << 24)),
-			.cid = cpu_to_le32(eq->intr),
-			.dbid = cpu_to_le16(dev->dbid),
-			.depth_log2 = eq->q.depth_log2,
-			.stride_log2 = eq->q.stride_log2,
-			.dma_addr = cpu_to_le64(eq->q.dma),
-		},
-	};
 	int rc;
 
-	rc = ionic_api_adminq_post(dev->lif, &admin);
+	rc = ionic_api_adminq_post(dev->lif, admin);
 	if (rc)
 		goto err_cmd;
 
-	wait_for_completion(&admin.work);
+	wait_for_completion(&admin->work);
 
 	if (0 /* XXX did the queue fail? */) {
 		rc = -EIO;
 		goto err_cmd;
 	}
 
-	rc = ionic_verbs_status_to_rc(admin.comp.comp.status);
+	rc = ionic_verbs_status_to_rc(admin->comp.comp.status);
 
 err_cmd:
 	return rc;
+}
+
+static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
+{
+	struct ionic_admin_ctx admin = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
+		.cmd.rdma_reset = {
+			.opcode = cpu_to_le16(CMD_OPCODE_RDMA_RESET_LIF),
+			.lif_id = cpu_to_le16(dev->lif_id),
+		},
+	};
+
+	if (ionic_xxx_haps)
+		return 0;
+
+	return ionic_rdma_devcmd(dev, &admin);
+}
+
+static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
+					  struct ionic_queue *q,
+					  u32 qid, u32 cid, u16 opcode)
+{
+	struct ionic_admin_ctx admin = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
+		.cmd.rdma_queue = {
+			.opcode = cpu_to_le16(opcode),
+			.lif_id = cpu_to_le16(dev->lif_id),
+			.qid_ver = cpu_to_le32(qid | (dev->rdma_version << 24)),
+			.cid = cpu_to_le32(cid),
+			.dbid = cpu_to_le16(dev->dbid),
+			.depth_log2 = q->depth_log2,
+			.stride_log2 = q->stride_log2,
+			.dma_addr = cpu_to_le64(q->dma),
+		},
+	};
+
+	return ionic_rdma_devcmd(dev, &admin);
+}
+
+static int ionic_create_eq_cmd(struct ionic_ibdev *dev, struct ionic_eq *eq)
+{
+	return ionic_rdma_queue_devcmd(dev, &eq->q, eq->eqid, eq->intr,
+				       CMD_OPCODE_RDMA_CREATE_EQ);
 }
 
 static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev,
@@ -4095,7 +4125,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ib_unregister_device(&dev->ibdev);
 
-	/* TODO: rdma lif reset */
+	ionic_rdma_reset_devcmd(dev);
 
 	/* TODO: destroy adminq */
 	/* TODO: destroy admincq */
@@ -4327,6 +4357,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	ionic_dbgfs_add_dev(dev, lif_dbgfs);
 
+	rc = ionic_rdma_reset_devcmd(dev);
+	if (rc)
+		goto err_reset;
+
 	if (dev->rdma_version > 0) {
 		rc = ionic_create_eqvec(dev);
 		if (rc)
@@ -4473,8 +4507,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	return dev;
 
 err_register:
-	ionic_destroy_eqvec(dev);
 err_eqvec:
+	ionic_rdma_reset_devcmd(dev);
+	ionic_destroy_eqvec(dev);
+err_reset:
 	ionic_dbgfs_rm_dev(dev);
 	kfree(dev->inuse_pgtbl);
 err_pgtbl:

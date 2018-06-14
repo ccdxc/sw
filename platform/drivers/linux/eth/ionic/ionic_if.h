@@ -47,7 +47,7 @@ enum cmd_opcode {
 
 	CMD_OPCODE_RDMA_FIRST_CMD		= 50, //Keep this as first rdma cmd
 
-	CMD_OPCODE_RDMA_LIF_RESET		= 50,
+	CMD_OPCODE_RDMA_RESET_LIF		= 50,
 	CMD_OPCODE_RDMA_CREATE_EQ		= 51,
 	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
 	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
@@ -1132,6 +1132,21 @@ struct debug_q_dump_comp {
  ******************************************************************/
 
 /**
+ * struct rdma_reset_cmd - Reset RDMA LIF cmd
+ * @opcode:        opcode = 52, 53, 54
+ * @lif_id:        hardware lif id
+ *
+ * There is no rdma specific dev command completion struct.  Completion uses
+ * the common struct admin_comp.  Only the status is indicated.  Nonzero status
+ * means the LIF does not support rdma.
+ **/
+struct rdma_reset_cmd {
+	u16 opcode;
+	u16 lif_id;
+	u8 rsvd[60];
+};
+
+/**
  * struct rdma_create_queue_cmd - Create RDMA Queue command
  * @opcode:        opcode = 52, 53, 54
  * @lif_id:        hardware lif id
@@ -1440,6 +1455,7 @@ union adminq_cmd {
 	struct rss_hash_set_cmd rss_hash_set;
 	struct rss_indir_set_cmd rss_indir_set;
 	struct debug_q_dump_cmd debug_q_dump;
+	struct rdma_reset_cmd rdma_reset;
 	struct rdma_create_queue_cmd rdma_create_queue;
 	struct create_ah_cmd create_ah;
 	struct create_mr_cmd create_mr;
