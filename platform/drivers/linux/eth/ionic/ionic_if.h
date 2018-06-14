@@ -1133,7 +1133,7 @@ struct debug_q_dump_comp {
 
 /**
  * struct rdma_reset_cmd - Reset RDMA LIF cmd
- * @opcode:        opcode = 52, 53, 54
+ * @opcode:        opcode = 50
  * @lif_id:        hardware lif id
  *
  * There is no rdma specific dev command completion struct.  Completion uses
@@ -1147,8 +1147,8 @@ struct rdma_reset_cmd {
 };
 
 /**
- * struct rdma_create_queue_cmd - Create RDMA Queue command
- * @opcode:        opcode = 52, 53, 54
+ * struct rdma_queue_cmd - Create RDMA Queue command
+ * @opcode:        opcode = 51, 52, 53
  * @lif_id:        hardware lif id
  * @qid_ver:       (qid | (rdma version << 24))
  * @cid:           intr, eq_id, or cq_id
@@ -1173,7 +1173,7 @@ struct rdma_reset_cmd {
  * There is no rdma specific dev command completion struct.  Completion uses
  * the common struct admin_comp.  Only the status is indicated.
  **/
-struct rdma_create_queue_cmd {
+struct rdma_queue_cmd {
 	u16 opcode;
 	u16 lif_id;
 	u32 qid_ver;
@@ -1456,7 +1456,7 @@ union adminq_cmd {
 	struct rss_indir_set_cmd rss_indir_set;
 	struct debug_q_dump_cmd debug_q_dump;
 	struct rdma_reset_cmd rdma_reset;
-	struct rdma_create_queue_cmd rdma_create_queue;
+	struct rdma_queue_cmd rdma_queue;
 	struct create_ah_cmd create_ah;
 	struct create_mr_cmd create_mr;
 	struct create_cq_cmd create_cq;

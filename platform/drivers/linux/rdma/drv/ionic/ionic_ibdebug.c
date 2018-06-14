@@ -126,6 +126,7 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 {
 	dev->debug = NULL;
 	dev->debug_ah = NULL;
+	dev->debug_aq = NULL;
 	dev->debug_cq = NULL;
 	dev->debug_eq = NULL;
 	dev->debug_mr = NULL;
@@ -145,6 +146,7 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 			    &ionic_dev_info_fops);
 
 	dev->debug_ah = debugfs_create_dir("ah", dev->debug);
+	dev->debug_aq = debugfs_create_dir("aq", dev->debug);
 	dev->debug_cq = debugfs_create_dir("cq", dev->debug);
 	dev->debug_eq = debugfs_create_dir("eq", dev->debug);
 	dev->debug_mr = debugfs_create_dir("mr", dev->debug);
@@ -435,6 +437,83 @@ void ionic_dbgfs_rm_cq(struct ionic_cq *cq)
 		debugfs_remove_recursive(cq->debug);
 
 	cq->debug = NULL;
+}
+
+static int ionic_aq_info_show(struct seq_file *s, void *v)
+{
+	struct ionic_aq *aq = s->private;
+
+	seq_printf(s, "aqid:\t%u\n", aq->aqid);
+	seq_printf(s, "cqid:\t%u\n", aq->cqid);
+
+	if (aq->q.ptr)
+		ionic_q_show(s, "", &aq->q);
+
+	return 0;
+}
+
+static int ionic_aq_info_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ionic_aq_info_show, inode->i_private);
+}
+
+static const struct file_operations ionic_aq_info_fops = {
+	.open = ionic_aq_info_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release,
+};
+
+static int ionic_aq_q_show(struct seq_file *s, void *v)
+{
+	struct ionic_aq *aq = s->private;
+
+	ionic_q_dump(s, &aq->q);
+
+	return 0;
+}
+
+static int ionic_aq_q_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ionic_aq_q_show, inode->i_private);
+}
+
+static const struct file_operations ionic_aq_q_fops = {
+	.open = ionic_aq_q_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release,
+};
+
+void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
+{
+	char name[8];
+
+	aq->debug = NULL;
+
+	if (!dev->debug_aq)
+		return;
+
+	snprintf(name, sizeof(name), "%u", aq->aqid);
+
+	aq->debug = debugfs_create_dir(name, dev->debug_aq);
+	if (!aq->debug)
+		return;
+
+	debugfs_create_file("info", 0220, aq->debug, aq,
+			    &ionic_aq_info_fops);
+
+	if (aq->q.ptr)
+		debugfs_create_file("q", 0220, aq->debug, aq,
+				    &ionic_aq_q_fops);
+}
+
+void ionic_dbgfs_rm_aq(struct ionic_aq *aq)
+{
+	if (aq->debug)
+		debugfs_remove_recursive(aq->debug);
+
+	aq->debug = NULL;
 }
 
 static int ionic_qp_info_show(struct seq_file *s, void *v)

@@ -21,6 +21,8 @@
 #define IONIC_MAX_QPID		0xffffff
 #define IONIC_MAX_HBM_ORDER	15
 
+struct ionic_aq;
+struct ionic_cq;
 struct ionic_eq;
 
 struct ionic_mmap_info {
@@ -88,11 +90,14 @@ struct ionic_ibdev {
 	unsigned long		*inuse_pgtbl;
 	u32			size_pgtbl;
 
+	struct ionic_aq		*adminq;
+	struct ionic_cq		*admincq;
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
 
 	struct dentry		*debug;
 	struct dentry		*debug_ah;
+	struct dentry		*debug_aq;
 	struct dentry		*debug_cq;
 	struct dentry		*debug_eq;
 	struct dentry		*debug_mr;
@@ -121,6 +126,18 @@ struct ionic_eq {
 	char			name[32];
 
 	struct cpumask		cpumask;
+
+	struct dentry		*debug;
+};
+
+struct ionic_aq {
+	struct ionic_ibdev	*dev;
+
+	u32			aqid;
+	u32			cqid;
+
+	spinlock_t		lock; /* for posting */
+	struct ionic_queue	q;
 
 	struct dentry		*debug;
 };
