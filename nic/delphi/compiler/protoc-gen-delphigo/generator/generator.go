@@ -3202,8 +3202,6 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		g.P("  if o.GetKeyString() != \"\" {")
 		g.P("    o.sdkClient.SetObject(o)")
 		g.P("  }")
-	} else {
-		g.P("  panic(\"Not a delphi object\")")
 	}
 	g.P("}\n")
 
@@ -3235,6 +3233,40 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	g.P("return w")
 	g.Out()
 	g.P("}\n")
+
+	// Get<Name>
+	var keyField *delphiField
+	for _, field := range msg.fields {
+		if field.name == "Key" {
+			keyField = field
+		}
+	}
+	if keyField != nil {
+		var intype string
+		if keyField.isWrapper {
+			intype = "*" + keyField.typeName
+		} else {
+			intype = keyField.typeName
+		}
+		g.P("func Get" + msg.wrapper.name + "(sdkClient gosdk.Client, key " +
+			intype + ") *" + msg.wrapper.name + " {")
+		if keyField.isWrapper {
+			g.P("  lookupKey := key.GetProtoMsg().String()")
+		} else {
+			g.P("  lookupKey := fmt.Sprintf(\"%v\", key)")
+		}
+		g.P("  b := sdkClient.GetObject(\"" + msg.wrapper.name +
+			"\", lookupKey)")
+		g.P("  if b == nil {")
+		g.P("    return nil")
+		g.P("  }")
+		g.P("  o, ok := b.(*" + msg.wrapper.name + ")")
+		g.P("  if !ok {")
+		g.P("    panic(\"Couldn't cast to " + msg.wrapper.name + "\")")
+		g.P("  }")
+		g.P("  return o")
+		g.P("}\n")
+	}
 
 	// childNew<NAME>
 	g.P("func childNew" + msg.wrapper.name +

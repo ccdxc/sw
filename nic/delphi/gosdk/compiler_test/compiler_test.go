@@ -30,6 +30,10 @@ func (t *testClient) DeleteObject(obj gosdk.BaseObject) error {
 	return nil
 }
 
+func (*testClient) GetObject(kind string, key string) gosdk.BaseObject {
+	return nil
+}
+
 func (t *testClient) WatchKind(kind string, reactor gosdk.BaseReactor) error {
 	return nil
 }
@@ -148,6 +152,10 @@ func TestMessageA(t *testing.T) {
 	msg.Reset()
 	if msg.String() != "" {
 		t.Errorf(`msg.String() != ""`)
+	}
+
+	if GetMessageA(client, 0) != nil {
+		t.Errorf(`GetMessageA("", "") != nil`)
 	}
 }
 
@@ -334,6 +342,12 @@ func TestMessageBExtra(t *testing.T) {
 	if msg.String() != "" {
 		t.Errorf(`msg.String() != ""`)
 	}
+
+	key := NewMessageKey(nil)
+	key.SetValue(1)
+	if GetMessageB(client, key) != nil {
+		t.Errorf(`GetMessageB("", "") != nil`)
+	}
 }
 
 // TestMessageCExtra add extra tests to MessageB, thare are already tested as
@@ -427,5 +441,9 @@ func TestMessageCExtra(t *testing.T) {
 	msg.Reset()
 	if msg.String() != "" {
 		t.Errorf(`msg.String() != ""`)
+	}
+
+	if GetMessageC(client, 1) != nil {
+		t.Errorf(`GetMessageC("", "") != nil`)
 	}
 }

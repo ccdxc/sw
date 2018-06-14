@@ -4,7 +4,7 @@ default: all
 
 all: pb build
 
-pb:
+client_test.pb.go: client_test.proto
 	make -C ${GOPATH}/src/github.com/pensando/sw/nic/delphi/messanger/proto && \
 	make -C ${GOPATH}/src/github.com/pensando/sw/nic/delphi/proto/delphi && \
 	protoc --delphigo_out=Mnic/delphi/proto/delphi/delphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi:. \
@@ -13,5 +13,5 @@ pb:
 build:
 	go build
 
-test:
-	go test
+test: client_test.pb.go
+	go test -cover

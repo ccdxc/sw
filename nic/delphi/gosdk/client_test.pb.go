@@ -83,61 +83,6 @@ type delphiWrapper interface {
 	bubbleSave()
 }
 
-type IntfIndex struct {
-	sdkClient Client
-	parent    delphiWrapper
-	ifidx     uint32
-}
-
-func (o *IntfIndex) GetIfidx() uint32 {
-	return o.ifidx
-}
-
-func (o *IntfIndex) SetIfidx(val uint32) {
-	o.ifidx = val
-	o.bubbleSave()
-}
-
-func (o *IntfIndex) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *IntfIndex) save() {
-	panic("Not a delphi object")
-}
-
-func NewIntfIndex(sdkClient Client) *IntfIndex {
-	w := &IntfIndex{}
-	w.sdkClient = sdkClient
-	return w
-}
-
-func childNewIntfIndex(parent delphiWrapper, sdkClient Client) *IntfIndex {
-	w := NewIntfIndex(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func (o *IntfIndex) GetProtoMsg() *IntfIndex_ {
-	return &IntfIndex_{
-		Ifidx: o.ifidx,
-	}
-}
-
-func (o *IntfIndex) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func newIntfIndexFromMessage(msg *IntfIndex_) *IntfIndex {
-	return &IntfIndex{
-		ifidx: msg.Ifidx,
-	}
-}
-
 type InterfaceSpec struct {
 	sdkClient  Client
 	parent     delphiWrapper
@@ -194,6 +139,19 @@ func NewInterfaceSpec(sdkClient Client) *InterfaceSpec {
 	}
 	w.key = childNewIntfIndex(w, sdkClient)
 	return w
+}
+
+func GetInterfaceSpec(sdkClient Client, key *IntfIndex) *InterfaceSpec {
+	lookupKey := key.GetProtoMsg().String()
+	b := sdkClient.GetObject("InterfaceSpec", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*InterfaceSpec)
+	if !ok {
+		panic("Couldn't cast to InterfaceSpec")
+	}
+	return o
 }
 
 func childNewInterfaceSpec(parent delphiWrapper, sdkClient Client) *InterfaceSpec {
@@ -271,6 +229,60 @@ func InterfaceSpecMount(client Client, mode delphi.MountMode) {
 
 func InterfaceSpecWatch(client Client, reactor InterfaceSpecReactor) {
 	client.WatchKind("InterfaceSpec", reactor)
+}
+
+type IntfIndex struct {
+	sdkClient Client
+	parent    delphiWrapper
+	ifidx     uint32
+}
+
+func (o *IntfIndex) GetIfidx() uint32 {
+	return o.ifidx
+}
+
+func (o *IntfIndex) SetIfidx(val uint32) {
+	o.ifidx = val
+	o.bubbleSave()
+}
+
+func (o *IntfIndex) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *IntfIndex) save() {
+}
+
+func NewIntfIndex(sdkClient Client) *IntfIndex {
+	w := &IntfIndex{}
+	w.sdkClient = sdkClient
+	return w
+}
+
+func childNewIntfIndex(parent delphiWrapper, sdkClient Client) *IntfIndex {
+	w := NewIntfIndex(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func (o *IntfIndex) GetProtoMsg() *IntfIndex_ {
+	return &IntfIndex_{
+		Ifidx: o.ifidx,
+	}
+}
+
+func (o *IntfIndex) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func newIntfIndexFromMessage(msg *IntfIndex_) *IntfIndex {
+	return &IntfIndex{
+		ifidx: msg.Ifidx,
+	}
 }
 
 func init() {

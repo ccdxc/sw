@@ -8,9 +8,11 @@ import (
 )
 
 type service struct {
-	mountDone chan struct{}
-	gotNotify chan struct{}
-	name      string
+	mountDone       chan struct{}
+	gotCreateNotify chan struct{}
+	gotUpdateNotify chan struct{}
+	gotDeleteNotify chan struct{}
+	name            string
 }
 
 func (s *service) OnMountComplete() {
@@ -27,17 +29,17 @@ func (s *service) Name() string {
 
 func (s *service) OnInterfaceSpecCreate(obj *InterfaceSpec) {
 	log.Printf("%s Created! %s\n", s.Name(), obj.GetMacAddress())
-	s.gotNotify <- struct{}{}
+	s.gotCreateNotify <- struct{}{}
 }
 
 func (s *service) OnInterfaceSpecDelete(obj *InterfaceSpec) {
 	log.Printf("%s Updated! %s\n", s.Name(), obj.GetMacAddress())
-	s.gotNotify <- struct{}{}
+	s.gotDeleteNotify <- struct{}{}
 }
 
 func (s *service) OnInterfaceSpecUpdate(obj *InterfaceSpec) {
 	log.Printf("%s Deleted!\n", s.Name())
-	s.gotNotify <- struct{}{}
+	s.gotUpdateNotify <- struct{}{}
 }
 
 func TestClientBasic(t *testing.T) {
@@ -45,9 +47,11 @@ func TestClientBasic(t *testing.T) {
 	h.Start()
 
 	s1 := &service{
-		mountDone: make(chan struct{}),
-		gotNotify: make(chan struct{}),
-		name:      "test1",
+		mountDone:       make(chan struct{}),
+		gotCreateNotify: make(chan struct{}),
+		gotUpdateNotify: make(chan struct{}),
+		gotDeleteNotify: make(chan struct{}),
+		name:            "test1",
 	}
 	c1, err := NewClient(s1)
 	if err != nil {
@@ -62,9 +66,11 @@ func TestClientBasic(t *testing.T) {
 	log.Printf("### Client 1 Mount done")
 
 	s2 := &service{
-		mountDone: make(chan struct{}),
-		gotNotify: make(chan struct{}),
-		name:      "test2",
+		mountDone:       make(chan struct{}),
+		gotCreateNotify: make(chan struct{}),
+		gotUpdateNotify: make(chan struct{}),
+		gotDeleteNotify: make(chan struct{}),
+		name:            "test2",
 	}
 	c2, err := NewClient(s2)
 	c2.MountKind("Interface", delphi.MountMode_ReadMode)
@@ -89,10 +95,10 @@ func TestClientBasic(t *testing.T) {
 
 	for i := 0; i < 2; i++ {
 		select {
-		case _ = <-s1.gotNotify:
-			log.Printf("### Client 1 Got Notify")
-		case _ = <-s2.gotNotify:
-			log.Printf("### Client 2 Got Notify")
+		case _ = <-s1.gotUpdateNotify:
+			log.Printf("### Client 1 Got Update Notify")
+		case _ = <-s2.gotCreateNotify:
+			log.Printf("### Client 2 Got Create Notify")
 		}
 	}
 
@@ -101,12 +107,19 @@ func TestClientBasic(t *testing.T) {
 	log.Printf("Client2 Data:\n")
 	c2.DumpSubtrees()
 
+	key := NewIntfIndex(c2)
+	key.SetIfidx(1)
+	spec2 := GetInterfaceSpec(c2, key)
+	if spec2.GetMacAddress() != spec.GetMacAddress() {
+		t.Errorf(`spec2.GetMacAddress() != spec.GetMacAddress()`)
+	}
+
 	spec.Delete()
 
-	_ = <-s1.gotNotify
-	log.Printf("### Client 1 Got Notify")
-	_ = <-s2.gotNotify
-	log.Printf("### Client 2 Got Notify")
+	_ = <-s1.gotDeleteNotify
+	log.Printf("### Client 1 Got Delete Notify")
+	_ = <-s2.gotDeleteNotify
+	log.Printf("### Client 2 Got Delete Notify")
 
 	c1.Close()
 	c2.Close()

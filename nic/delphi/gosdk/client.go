@@ -29,6 +29,9 @@ type Client interface {
 	// call this explicitly. It is getting called automatically when there is a
 	// change in any object.
 	SetObject(obj BaseObject) error
+	// GetObject returns the object of kind `kind` with key `key` if it
+	// exists in the local database, else it return nil
+	GetObject(kind string, key string) BaseObject
 	// Delete object, as it names sugests, deletes an object from the database.
 	// Users can use this, or just call <OBJECT>.Delete()
 	DeleteObject(obj BaseObject) error
@@ -112,6 +115,17 @@ func (c *client) SetObject(obj BaseObject) error {
 	return nil
 }
 
+// GetObject returns the object of kind `kind` with key `key` if it
+// exists in the local database, else it return nil
+func (c *client) GetObject(kind string, key string) BaseObject {
+	subtree := c.subtrees[kind]
+	if subtree == nil {
+		return nil
+	}
+
+	return subtree[key]
+}
+
 // Delete object, as it names sugests, deletes an object from the database.
 // Users can use this, or just call <OBJECT>.Delete()
 func (c *client) DeleteObject(obj BaseObject) error {
@@ -182,10 +196,35 @@ func (c *client) run() {
 			}
 		case change := <-c.changeQueue:
 			pending[change.obj.GetKeyString()] = change
+			// update subtree now so a back to back Set/Get will work
+			c.updateSubtree(change.op, change.obj.GetMeta().GetKind(),
+				change.obj.GetKeyString(), change.obj)
 			if tRunning == false {
 				t.Reset(time.Millisecond * 5)
 			}
 		}
+	}
+}
+
+// Update the subtree for a single object
+func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
+	key string, obj BaseObject) {
+	switch op {
+	case delphi.ObjectOperation_SetOp:
+		subtr := c.subtrees[kind]
+		if subtr == nil {
+			subtr = make(subtree)
+			c.subtrees[kind] = subtr
+		}
+		subtr[key] = obj
+	case delphi.ObjectOperation_DeleteOp:
+		subtr := c.subtrees[kind]
+		if subtr == nil {
+			break
+		}
+		delete(subtr, key)
+	default:
+		panic(fmt.Sprintf("Unknown operation %+v", op))
 	}
 }
 
@@ -195,30 +234,16 @@ func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData) {
 	for _, obj := range objlist {
 		factory := factories[obj.Meta.Kind]
 		baseObj, err := factory(c, obj.Data)
+		oldObj := c.GetObject(obj.Meta.Kind, obj.Meta.Key)
 		if err != nil {
 			panic(err)
 		} else {
-			switch obj.GetOp() {
-			case delphi.ObjectOperation_SetOp:
-				subtr := c.subtrees[obj.GetMeta().GetKind()]
-				if subtr == nil {
-					subtr = make(subtree)
-					c.subtrees[obj.GetMeta().GetKind()] = subtr
-				}
-				subtr[obj.GetMeta().GetKey()] = baseObj
-			case delphi.ObjectOperation_DeleteOp:
-				subtr := c.subtrees[obj.GetMeta().GetKind()]
-				if subtr == nil {
-					break
-				}
-				delete(subtr, obj.GetMeta().GetKey())
-			default:
-				panic(fmt.Sprintf("Unknown operation %+v", obj.GetOp()))
-			}
+			c.updateSubtree(obj.GetOp(), obj.GetMeta().GetKind(),
+				obj.GetMeta().GetKey(), baseObj)
 			// FIXME: move somewhere else?
 			rl := c.watchers[obj.GetMeta().GetKind()]
 			if rl != nil {
-				baseObj.TriggerEvent(nil, obj.GetOp(), rl)
+				baseObj.TriggerEvent(oldObj, obj.GetOp(), rl)
 			}
 		}
 	}
@@ -245,9 +270,9 @@ func (c *client) HandleStatusResp() error {
 
 // Dump the database state to the stderr for debugging purposes
 func (c *client) DumpSubtrees() {
-	for _, subtr := range c.subtrees {
+	for kind, subtr := range c.subtrees {
 		for key, obj := range subtr {
-			log.Printf("%v -> %+v\n", key, obj)
+			log.Printf("'%v'-'%v' -> '%+v'\n", kind, key, obj)
 		}
 	}
 }
