@@ -307,9 +307,11 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore.bin";
-    symbols[i].num_params = 1;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[1].name = RNMPR_TABLE_BASE;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_input_page_semaphore.bin";
@@ -319,9 +321,11 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore.bin";
-    symbols[i].num_params = 1;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = TNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+    symbols[i].params[1].name = TNMPR_TABLE_BASE;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_output_page_semaphore.bin";

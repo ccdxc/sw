@@ -37,7 +37,7 @@ esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
     add r7, d.cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
 dma_cmd_ring_doorbell:
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 1, d.ipsec_cb_index, 0, r7, db_data_pid, db_data_index)
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 1, k.ipsec_global_ipsec_cb_index, 0, r7, db_data_pid, db_data_index)
     add r1, r0, k.ipsec_global_ipsec_cb_index
     tblwr d.cb_pindex, r7
     phvwri          p.doorbell_cmd_dma_cmd_eop, 1

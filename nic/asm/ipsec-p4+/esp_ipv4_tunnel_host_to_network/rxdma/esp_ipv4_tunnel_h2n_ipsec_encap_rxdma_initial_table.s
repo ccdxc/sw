@@ -10,23 +10,11 @@ struct phv_ p;
         .param          IPSEC_PAD_BYTES_HBM_TABLE_BASE
         .align 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
-    //sub r1, d.{rxdma_ring_cindex}.hx, 1
-    //seq c5, d.{rxdma_ring_pindex}.hx, r1
-    //bcf [c5], esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full
     add r1, d.cb_pindex, 1
     and r1, r1, IPSEC_CB_RING_INDEX_MASK 
     seq c5, d.cb_cindex, r1
     bcf [c5], esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full
    
-    //sub r1, d.{barco_ring_cindex}.hx, 1
-    //seq c5, d.{barco_ring_pindex}.hx, r1
-    //bcf [c5], esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full
-    //add r1, d.{barco_ring_pindex}.hx, 1
-    //and r1, r1, IPSEC_CB_RING_INDEX_MASK 
-    //seq c5, d.{barco_ring_cindex}.hx, r1
-    //bcf [c5], esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full
- 
- 
     phvwr p.ipsec_global_ipsec_cb_pindex, d.cb_pindex 
     add r7, d.cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
