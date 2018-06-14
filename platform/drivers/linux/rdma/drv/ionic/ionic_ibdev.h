@@ -105,9 +105,10 @@ struct ionic_ibdev {
 struct ionic_eq {
 	struct ionic_ibdev	*dev;
 
-	struct ionic_queue	q;
-
 	u32			eqid;
+	u32			intr;
+
+	struct ionic_queue	q;
 
 	bool			enable;
 	bool			armed;
@@ -116,7 +117,6 @@ struct ionic_eq {
 
 	int			vec;
 	int			cpu;
-	int			intr;
 	int			irq;
 	char			name[32];
 
@@ -149,6 +149,7 @@ struct ionic_cq {
 	struct ib_cq		ibcq;
 
 	u32			cqid;
+	u32			eqid;
 
 	spinlock_t		lock; /* for polling */
 	struct list_head	qp_poll;

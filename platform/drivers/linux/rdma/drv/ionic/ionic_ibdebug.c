@@ -174,12 +174,14 @@ static int ionic_eq_info_show(struct seq_file *s, void *v)
 {
 	struct ionic_eq *eq = s->private;
 
+	seq_printf(s, "eqid:\t%u\n", eq->eqid);
+	seq_printf(s, "intr:\t%u\n", eq->intr);
+
 	ionic_q_show(s, "q.",  &eq->q);
 	seq_printf(s, "enable:\t%u\n", eq->enable);
 	seq_printf(s, "armed:\t%u\n", eq->armed);
 	seq_printf(s, "vec:\t%d\n", eq->vec);
 	seq_printf(s, "cpu:\t%d\n", eq->cpu);
-	seq_printf(s, "intr:\t%u\n", eq->intr);
 	seq_printf(s, "irq:\t%u\n", eq->irq);
 	seq_printf(s, "name:\t%s\n", eq->name);
 
@@ -331,6 +333,7 @@ static int ionic_cq_info_show(struct seq_file *s, void *v)
 	struct ionic_cq *cq = s->private;
 
 	seq_printf(s, "cqid:\t%u\n", cq->cqid);
+	seq_printf(s, "eqid:\t%u\n", cq->eqid);
 	seq_printf(s, "tbl_pos:\t%u\n", cq->tbl_pos);
 	seq_printf(s, "tbl_order:\t%d\n", cq->tbl_order);
 
@@ -408,7 +411,7 @@ void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	if (!dev->debug_cq)
 		return;
 
-	snprintf(name, sizeof(name), "%u", cq->lkey);
+	snprintf(name, sizeof(name), "%u", cq->cqid);
 
 	cq->debug = debugfs_create_dir(name, dev->debug_cq);
 	if (!cq->debug)

@@ -1488,7 +1488,7 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 }
 
 static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
-			       u32 intr)
+			       u32 eqid)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -1503,7 +1503,7 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 			.host_pg_size = PAGE_SIZE,
 			.va_len = cq->q.size,
 			.cq_wqe_size = BIT(cq->q.stride_log2),
-			.eq_id = intr,
+			.eq_id = eqid,
 			/* XXX cleanup */
 			.cq_lkey = cq->lkey,
 		},
@@ -1655,12 +1655,6 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	if (rc)
 		goto err_cq;
 
-	intr = attr->comp_vector;
-	if (intr >= dev->eq_count)
-		intr = 0;
-	if (dev->eq_count)
-		intr = dev->eq_vec[intr]->intr;
-
 	cq = kmalloc(sizeof(*cq), GFP_KERNEL);
 	if (!cq) {
 		rc = -ENOMEM;
@@ -1674,6 +1668,11 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	rc = ionic_get_cqid(dev, &cq->cqid);
 	if (rc)
 		goto err_cqid;
+
+	if (attr->comp_vector >= dev->eq_count)
+		cq->eqid = 0;
+	else
+		cq->eqid = dev->eq_vec[attr->comp_vector]->eqid;
 
 	rc = ionic_get_mrid(dev, &cq->lkey, &rkey);
 	if (rc)
@@ -1717,7 +1716,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 
 	spin_lock_init(&cq->lock);
 
-	rc = ionic_create_cq_cmd(dev, cq, intr);
+	rc = ionic_create_cq_cmd(dev, cq, cq->eqid);
 	if (rc)
 		goto err_cmd;
 
@@ -4006,7 +4005,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev,
 	ionic_queue_dbell_init(&eq->q, eq->intr);
 
 	snprintf(eq->name, sizeof(eq->name), "%s-%d-%d-eq",
-		 DRIVER_NAME, dev->lif_id, eq->intr);
+		 DRIVER_NAME, dev->lif_id, eq->eqid);
 
 	ionic_intr_mask(dev, eq->intr, IONIC_INTR_MASK_SET);
 	ionic_intr_mask_assert(dev, eq->intr, IONIC_INTR_MASK_SET);
