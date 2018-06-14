@@ -26,8 +26,8 @@ def make_templates_outfiles(template_dir, cli_outputdir_map):
 
 
 def create_dirs(dir_name):
-    if not os.path.exists(cli_outputdir):
-        os.makedirs(cli_outputdir)
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
 
 tenjin_prefix = "//::"
 
