@@ -178,9 +178,18 @@ int simdev_read_host_mem(u_int64_t addr, void *buf, size_t size);
 int simdev_write_host_mem(u_int64_t addr, void *buf, size_t size);
 } /* extern "c" */
 
-void hal_create_eq (struct rdma_create_queue_cmd *cmd,
-                    struct admin_comp     *comp,
-                    hal_req_resp_t        *item)
+void hal_rdma_reset_lif (struct rdma_reset_cmd *cmd,
+                         struct admin_comp     *comp,
+                         hal_req_resp_t        *item)
+{
+    comp->status = 0; /* XXX fake ok until real impl */
+    *item->done = 1;
+    return;
+}
+
+void hal_rdma_create_eq (struct rdma_queue_cmd *cmd,
+                         struct admin_comp     *comp,
+                         hal_req_resp_t        *item)
 {
     shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
 
@@ -198,7 +207,7 @@ void hal_create_eq (struct rdma_create_queue_cmd *cmd,
 
     Status status = rdma_svc->RdmaEqCreate(&context, request, &response);
     if (!status.ok()) {
-        cout << "lib_driver.cc: hal_create_eq error: "
+        cout << "lib_driver.cc: hal_rdma_create_eq error: "
             << status.error_code() << ": " << status.error_message() << endl;
 
         comp->status = status.error_code();
@@ -209,8 +218,97 @@ void hal_create_eq (struct rdma_create_queue_cmd *cmd,
     RdmaEqResponse eq_response = response.response(0);
     comp->status = eq_response.api_status();
 
-    cout << "lib_driver.cc: hal_create_eq comp status: " << comp->status << endl;
+    cout << "lib_driver.cc: hal_rdma_create_eq comp status: " << comp->status << endl;
 
+    *item->done = 1;
+    return;
+}
+
+void hal_rdma_create_cq (struct rdma_queue_cmd *cmd,
+                         struct admin_comp     *comp,
+                         hal_req_resp_t        *item)
+{
+    shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
+
+    ClientContext context1;
+
+    RdmaMemRegRequestMsg request;
+    RdmaMemRegResponseMsg response;
+
+    /*
+     * Ideally we are supposed to have a single HAL command for CQ and QP
+     * implementation, but its not the case right now. We need to change it
+     * later. For now call MR registration first and then create_cq 
+     *
+     * Lkey-zero will be reserved in the driver so that it can be used here.
+     */
+    RdmaMemRegSpec *spec = request.add_request();
+    spec->set_hw_lif_id(cmd->lif_id+lif_base);
+    //CQ does not have a PD associated. For now anyway we support only
+    //one PD=1
+    spec->set_pd(1);
+    spec->set_va(0);
+    spec->set_len(1ull << (cmd->depth_log2 * cmd->stride_log2));
+    spec->set_ac_local_wr(1);
+    spec->set_ac_remote_wr(0);
+    spec->set_ac_remote_rd(0);
+    spec->set_ac_remote_atomic(0);
+    spec->set_lkey(0);
+
+    // contiguous, so say page_size == size, and just one dma addr
+    spec->set_hostmem_pg_size(1ull << (cmd->depth_log2 * cmd->stride_log2));
+    spec->add_va_pages_phy_addr(cmd->dma_addr);
+
+    Status status = rdma_svc->RdmaMemReg(&context1, request, &response);
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_rdma_create_cq MemReg error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
+        comp->status = status.error_code();
+        *item->done = 1;
+        return;
+    }
+
+    /*
+     * create CQ
+     */
+    ClientContext context2;    
+    RdmaCqRequestMsg cq_request;
+    RdmaCqResponseMsg cq_response;
+
+    RdmaCqSpec *cq_spec = cq_request.add_request();
+
+    cq_spec->set_cq_num(cmd->qid_ver);
+    cq_spec->set_hw_lif_id(cmd->lif_id+lif_base);
+    cq_spec->set_cq_wqe_size(1u << cmd->stride_log2);
+    cq_spec->set_num_cq_wqes(1u << cmd->depth_log2);
+    cq_spec->set_hostmem_pg_size(1ull << (cmd->stride_log2 + cmd->depth_log2));
+    cq_spec->set_cq_lkey(0);
+
+    status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_rdma_create_cq error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
+        comp->status = status.error_code();
+        *item->done = 1;
+        return;
+    }
+
+    RdmaCqResponse cq_resp = cq_response.response(0);
+    comp->status = cq_resp.api_status();
+
+    cout << "lib_driver.cc: hal_rdma_create_cq comp status: " << comp->status << endl;
+
+    *item->done = 1;
+    return;
+}
+
+void hal_rdma_create_adminq (struct rdma_queue_cmd *cmd,
+                             struct admin_comp     *comp,
+                             hal_req_resp_t        *item)
+{
+    comp->status = 1; /* XXX requires real impl in hal */
     *item->done = 1;
     return;
 }
@@ -575,11 +673,31 @@ public:
 
             switch(req.cmd.opcode)
             {
-            case CMD_OPCODE_RDMA_CREATE_EQ:
-                hal_create_eq((struct rdma_create_queue_cmd *)&req.cmd,
-                              (struct admin_comp *)&req.comp,
-                              &req);
+            case CMD_OPCODE_RDMA_RESET_LIF:
+                hal_rdma_reset_lif((struct rdma_reset_cmd *)&req.cmd,
+                                   (struct admin_comp *)&req.comp,
+                                   &req);
                 break;
+
+            case CMD_OPCODE_RDMA_CREATE_EQ:
+                hal_rdma_create_eq((struct rdma_queue_cmd *)&req.cmd,
+                                   (struct admin_comp *)&req.comp,
+                                   &req);
+                break;
+
+            case CMD_OPCODE_RDMA_CREATE_CQ:
+                hal_rdma_create_cq((struct rdma_queue_cmd *)&req.cmd,
+                                   (struct admin_comp *)&req.comp,
+                                   &req);
+                break;
+
+            case CMD_OPCODE_RDMA_CREATE_ADMINQ:
+                hal_rdma_create_adminq((struct rdma_queue_cmd *)&req.cmd,
+                                       (struct admin_comp *)&req.comp,
+                                       &req);
+                break;
+
+            /* XXX rdma v0 makeshift interface will be removed */
 
             case CMD_OPCODE_V0_RDMA_CREATE_AH:
                 hal_create_ah((struct create_ah_cmd *)&req.cmd,
@@ -639,21 +757,19 @@ extern "C" void init_lib_driver (void)
     consumer_thread = new std::thread(&HalReqThread::run, &reqThr);
 }
 
-extern "C" void hal_create_eq_wrapper (struct rdma_create_queue_cmd *cmd,
-                                       struct admin_comp     *comp,
-                                       u_int32_t             *done)
+extern "C" void hal_rdma_devcmd_wrapper(void *cmd, void *comp, u_int32_t *done)
 {
     hal_req_resp_t item;
 
+    memset(comp, 0, sizeof(item.comp));
     memset(&item, 0, sizeof(item));
-    std::cout << "Queing Req with opcode %d: " << cmd->opcode << std::endl;
-    memcpy(&item.cmd, cmd, sizeof(*cmd));
-    memcpy(&item.comp, comp, sizeof(*comp));
-
+    memcpy(&item.cmd, cmd, sizeof(item.cmd));
+    memcpy(&item.comp, comp, sizeof(item.comp));
     item.done = done;
 
+    std::cout << "Queing Req with opcode %d: " << item.cmd.opcode << std::endl;
+
     reqBuf.add(item);
-    comp->status = 0;
 }
 
 extern "C" void hal_create_ah_wrapper (struct create_ah_cmd  *cmd,

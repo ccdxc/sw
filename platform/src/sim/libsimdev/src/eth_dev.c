@@ -570,17 +570,6 @@ devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
 }
 
 static void
-devcmd_create_eq (struct admin_cmd  *acmd,
-                  struct admin_comp *acomp,
-                  u_int32_t         *done)
-{
-    struct rdma_create_queue_cmd *cmd = (void *)acmd;
-    struct create_eq_comp *comp = (void *)acomp;
-
-    simdev_hal_create_eq(cmd, comp, done);
-}
-
-static void
 devcmd_create_ah (struct admin_cmd  *acmd,
                   struct admin_comp *acomp,
                   u_int32_t         *done)
@@ -711,26 +700,26 @@ devcmd(struct dev_cmd_regs *dc)
         devcmd_debug_q_dump(cmd, comp);
         break;
 
+    case CMD_OPCODE_RDMA_RESET_LIF:
     case CMD_OPCODE_RDMA_CREATE_EQ:
-        devcmd_create_eq(cmd, comp, &dc->done);
+    case CMD_OPCODE_RDMA_CREATE_CQ:
+    case CMD_OPCODE_RDMA_CREATE_ADMINQ:
+        simdev_hal_rdma_devcmd(cmd, comp, &dc->done);
         break;
 
+    /* XXX rdma v0 makeshift interface will be removed */
     case CMD_OPCODE_V0_RDMA_CREATE_AH:
         devcmd_create_ah(cmd, comp, &dc->done);
         break;
-
     case CMD_OPCODE_V0_RDMA_CREATE_MR:
         devcmd_create_mr(cmd, comp, &dc->done);
         break;
-
     case CMD_OPCODE_V0_RDMA_CREATE_CQ:
         devcmd_create_cq(cmd, comp, &dc->done);
         break;
-
     case CMD_OPCODE_V0_RDMA_CREATE_QP:
         devcmd_create_qp(cmd, comp, &dc->done);
         break;
-
     case CMD_OPCODE_V0_RDMA_MODIFY_QP:
         devcmd_modify_qp(cmd, comp, &dc->done);
         break;

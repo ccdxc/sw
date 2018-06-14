@@ -15,7 +15,10 @@ extern "C" {
 #endif
 
 struct admin_comp;
-struct rdma_create_queue_cmd;
+struct rdma_reset_cmd;
+struct rdma_queue_cmd;
+
+/* XXX rdma v0 makeshift interface will be removed */
 struct create_ah_cmd;
 struct create_ah_comp;
 struct create_mr_cmd;
@@ -42,9 +45,9 @@ typedef struct simdev_api_s {
     int (*host_write_mem)(const u_int64_t addr,
                           const void *buf,
                           const size_t size);
-    void (*hal_create_eq)(struct rdma_create_queue_cmd *cmd,
-                          struct admin_comp *comp,
-                          u_int32_t *done);
+    void (*hal_rdma_devcmd)(void *cmd, void *comp, u_int32_t *done);
+
+    /* XXX rdma v0 makeshift interface will be removed */
     void (*hal_create_ah)(struct create_ah_cmd *cmd,
                           struct create_ah_comp *comp,
                           u_int32_t *done);
@@ -60,6 +63,7 @@ typedef struct simdev_api_s {
     void (*hal_modify_qp)(struct modify_qp_cmd *cmd,
                           struct modify_qp_comp *comp,
                           u_int32_t *done);
+
     void (*set_lif) (u_int32_t lif);
 } simdev_api_t;
 

@@ -52,24 +52,16 @@ int simdev_write_mem(u_int64_t addr, void *buf, size_t size);
 int simdev_read_host_mem(u_int64_t addr, void *buf, size_t size);
 int simdev_write_host_mem(u_int64_t addr, void *buf, size_t size);
 void simdev_set_user(const char *user);
-void simdev_hal_create_eq(void *cmd,
-                          void *comp,
-                          u_int32_t *done);
-void simdev_hal_create_ah(void *cmd,
-                          void *comp,
-                          u_int32_t *done);
-void simdev_hal_create_mr(void *cmd,
-                          void *comp,
-                          u_int32_t *done);
-void simdev_hal_create_cq(void *cmd,
-                          void *comp,
-                          u_int32_t *done);
-void simdev_hal_create_qp(void *cmd,
-                          void *comp,
-                          u_int32_t *done);
-void simdev_hal_modify_qp(void *cmd,
-                          void *comp,
-                          u_int32_t *done);
+
+void simdev_hal_rdma_devcmd(void *cmd, void *comp, u_int32_t *done);
+
+/* XXX rdma v0 makeshift interface will be removed */
+void simdev_hal_create_ah(void *cmd, void *comp, u_int32_t *done);
+void simdev_hal_create_mr(void *cmd, void *comp, u_int32_t *done);
+void simdev_hal_create_cq(void *cmd, void *comp, u_int32_t *done);
+void simdev_hal_create_qp(void *cmd, void *comp, u_int32_t *done);
+void simdev_hal_modify_qp(void *cmd, void *comp, u_int32_t *done);
+
 void simdev_set_lif(const u_int32_t lif);
 
 simdev_t *simdev_by_bdf(const u_int16_t bdf);
