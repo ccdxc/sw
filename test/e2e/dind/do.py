@@ -70,7 +70,7 @@ class TestMgmtNode:
             self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
             self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
-    def __init__(self, name, ipaddress, containerIndex, nettype, venice_image, venice_image_dir, dev_mode):
+    def __init__(self, name, ipaddress, containerIndex, nettype=None, venice_image=None, venice_image_dir=None, dev_mode=None):
         self.containerIndex = containerIndex
         self.debug = debug
         self.name = name
