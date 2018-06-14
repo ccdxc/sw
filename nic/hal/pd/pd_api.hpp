@@ -2249,6 +2249,8 @@ typedef struct pd_cpupkt_program_send_ring_doorbell_args_s {
     uint8_t  qtype;
     uint32_t qid;
     uint8_t  ring_number;
+    uint16_t pidx;
+    uint8_t  flags;
 } pd_cpupkt_program_send_ring_doorbell_args_t;
 
 // rdma

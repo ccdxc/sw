@@ -449,6 +449,8 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
     d_args.qtype = CAPRI_HBM_GC_RNMDR_QTYPE;
     d_args.qid = CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER;
     d_args.ring_number = 0;
+    d_args.flags = DB_IDX_UPD_PIDX_SET | DB_SCHED_UPD_SET;
+    d_args.pidx = (gc_pindex + 1) & CAPRI_HBM_GC_PER_PRODUCER_RING_MASK;
     pd_func_args.pd_cpupkt_program_send_ring_doorbell = &d_args;
     ret = pd_cpupkt_program_send_ring_doorbell(&pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -456,7 +458,7 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
         return HAL_RET_HW_FAIL;
     }
 
-    gc_pindex++;
+    gc_pindex = (gc_pindex + 1) & CAPRI_HBM_GC_PER_PRODUCER_RING_MASK;
 
     return HAL_RET_OK;
 }
@@ -599,7 +601,7 @@ pd_cpupkt_program_send_ring_doorbell(pd_func_args_t *pd_func_args)
     uint64_t            qid64 = qid;
 
 
-    addr = 0 | DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_SET;
+    addr = 0 | args->flags;
     addr = addr << DB_UPD_SHFT;
     addr += (dest_lif << DB_LIF_SHFT);
     addr += (qtype << DB_TYPE_SHFT);
@@ -608,6 +610,7 @@ pd_cpupkt_program_send_ring_doorbell(pd_func_args_t *pd_func_args)
     data += ((uint64_t)CPU_ASQ_PID << DB_PID_SHFT);
     data += (qid64 << DB_QID_SHFT);
     data += (ring_number << DB_RING_SHFT);
+    data += (args->pidx);
 
     HAL_TRACE_DEBUG("Ringing Doorbell with addr: {:#x} data: {:#x}",
                     addr, data);
@@ -731,6 +734,7 @@ pd_cpupkt_send(pd_func_args_t *pd_func_args)
     d_args.qtype = qtype;
     d_args.qid = qid;
     d_args.ring_number = ring_number;
+    d_args.flags = DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_SET;
     pd_func_args1.pd_cpupkt_program_send_ring_doorbell = &d_args;
     // ret = cpupkt_program_send_ring_doorbell(dest_lif, qtype, qid, ring_number);
     ret = pd_cpupkt_program_send_ring_doorbell(&pd_func_args1);
