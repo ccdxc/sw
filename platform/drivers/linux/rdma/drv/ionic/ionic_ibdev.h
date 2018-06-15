@@ -77,6 +77,10 @@ struct ionic_ibdev {
 	u32			next_mrid;
 	u8			next_rkey_key;
 
+	unsigned long		*inuse_eqid;
+	u32			size_eqid;
+	u32			next_eqid;
+
 	unsigned long		*inuse_cqid;
 	u32			size_cqid;
 	u32			next_cqid;

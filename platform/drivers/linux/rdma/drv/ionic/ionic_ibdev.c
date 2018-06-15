@@ -225,6 +225,36 @@ static int ionic_get_pgtbl(struct ionic_ibdev *dev, u32 *pos, int order)
 	return 0;
 }
 
+static int ionic_get_eqid(struct ionic_ibdev *dev, u32 *eqid)
+{
+	u32 id;
+
+	mutex_lock(&dev->inuse_lock);
+
+	id = find_next_zero_bit(dev->inuse_eqid, dev->size_eqid, dev->next_eqid);
+	if (id != dev->size_eqid)
+		goto found;
+
+	id = find_first_zero_bit(dev->inuse_eqid, dev->next_eqid);
+	if (id != dev->next_eqid)
+		goto found;
+
+	mutex_unlock(&dev->inuse_lock);
+
+	/* not found */
+	return -ENOMEM;
+
+found:
+	set_bit(id, dev->inuse_eqid);
+	dev->next_eqid = id + 1;
+
+	mutex_unlock(&dev->inuse_lock);
+
+	*eqid = id;
+
+	return 0;
+}
+
 static int ionic_get_cqid(struct ionic_ibdev *dev, u32 *cqid)
 {
 	u32 id;
@@ -358,6 +388,11 @@ static void ionic_put_pgtbl(struct ionic_ibdev *dev, u32 pos, int order)
 	mutex_lock(&dev->inuse_lock);
 	bitmap_release_region(dev->inuse_pgtbl, pos, order);
 	mutex_unlock(&dev->inuse_lock);
+}
+
+static void ionic_put_eqid(struct ionic_ibdev *dev, u32 eqid)
+{
+	clear_bit(eqid, dev->inuse_eqid);
 }
 
 static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
@@ -4017,13 +4052,17 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev,
 	eq->enable = false;
 	INIT_WORK(&eq->work, ionic_poll_eq_work);
 
-	eq->intr = ionic_api_get_intr(dev->lif, &eq->irq);
-	if (eq->intr < 0) {
+	rc = ionic_get_eqid(dev, &eq->eqid);
+	if (rc)
+		goto err_eqid;
+
+	rc = ionic_api_get_intr(dev->lif, &eq->irq);
+	if (rc < 0) {
 		rc = eq->intr;
 		goto err_intr;
 	}
 
-	eq->eqid = eq->intr; /* XXX ionic_get_eqid() */
+	eq->intr = rc;
 
 	ionic_queue_dbell_init(&eq->q, eq->intr);
 
@@ -4066,6 +4105,8 @@ err_cmd:
 err_irq:
 	ionic_api_put_intr(dev->lif, eq->intr);
 err_intr:
+	ionic_put_eqid(dev, eq->eqid);
+err_eqid:
 	ionic_queue_destroy(&eq->q, dev->hwdev);
 err_q:
 	kfree(eq);
@@ -4082,15 +4123,12 @@ static void ionic_destroy_eq(struct ionic_eq *eq)
 	if (eq->enable) {
 		irq_set_affinity_hint(eq->irq, NULL);
 		free_irq(eq->irq, eq);
-		eq->enable = false;
-		flush_work(&eq->work);
 	}
 
-	disable_irq(eq->irq);
-	eq->enable = false;
 	flush_work(&eq->work);
 
 	ionic_api_put_intr(dev->lif, eq->intr);
+	ionic_put_eqid(dev, eq->eqid);
 	ionic_queue_destroy(&eq->q, dev->hwdev);
 	kfree(eq);
 }
@@ -4300,6 +4338,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	ionic_dbgfs_rm_dev(dev);
 
 	kfree(dev->inuse_qpid);
+	kfree(dev->inuse_eqid);
 	kfree(dev->inuse_cqid);
 	kfree(dev->inuse_pgtbl);
 	kfree(dev->inuse_mrid);
@@ -4496,6 +4535,15 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		goto err_mrid;
 	}
 
+	dev->size_eqid = ident->dev.neqs_per_lif;
+	dev->next_eqid = 0;
+	size = sizeof(long) * BITS_TO_LONGS(dev->size_eqid);
+	dev->inuse_eqid = kzalloc(size, GFP_KERNEL);
+	if (!dev->inuse_eqid) {
+		rc = -ENOMEM;
+		goto err_eqid;
+	}
+
 	dev->size_cqid = dev->dev_attr.max_cq;
 	dev->next_cqid = 0;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_cqid);
@@ -4687,6 +4735,8 @@ err_pgtbl:
 err_qpid:
 	kfree(dev->inuse_cqid);
 err_cqid:
+	kfree(dev->inuse_eqid);
+err_eqid:
 	kfree(dev->inuse_mrid);
 err_mrid:
 	kfree(dev->inuse_pdid);
