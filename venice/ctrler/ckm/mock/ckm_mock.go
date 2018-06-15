@@ -22,6 +22,7 @@ import (
 type CKMctrler struct {
 	RPCServer   *grpc.Server
 	listenURL   string
+	listener    net.Listener
 	privateKey  crypto.PrivateKey
 	certificate *x509.Certificate
 	trustChain  []*x509.Certificate
@@ -150,6 +151,7 @@ func NewCKMctrler(listenURL, certPath, keyPath, rootsPath string) (*CKMctrler, e
 	ckmproto.RegisterCertificatesServer(server, ctrler)
 	ctrler.RPCServer = server
 	ctrler.listenURL = listener.Addr().String()
+	ctrler.listener = listener
 	go server.Serve(listener)
 
 	return ctrler, err
@@ -163,6 +165,7 @@ func (c *CKMctrler) GetListenURL() string {
 // Stop stops the gRPC server and performs cleanup
 func (c *CKMctrler) Stop() error {
 	c.RPCServer.Stop()
+	c.listener.Close()
 	return nil
 }
 
