@@ -9,6 +9,7 @@ import (
 
 type upgrespctx struct {
 	agentHdlrs AgentHandlers
+	sdkClient  gosdk.Client
 }
 
 func (ctx *upgrespctx) invokeAgentHandler(respType upgrade.UpgRespType) {
@@ -24,14 +25,19 @@ func (ctx *upgrespctx) invokeAgentHandler(respType upgrade.UpgRespType) {
 	}
 }
 
+func (ctx *upgrespctx) DeleteUpgReqSpec() {
+	upgReq := upgrade.GetUpgReq(ctx.sdkClient, 10)
+	upgReq.Delete()
+}
+
 func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespCreate called %d\n", obj.GetUpgRespVal())
 	ctx.invokeAgentHandler(obj.GetUpgRespVal())
+	ctx.DeleteUpgReqSpec()
 }
 
 func (ctx *upgrespctx) OnUpgRespUpdate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespUpdate called %d\n", obj.GetUpgRespVal())
-	ctx.invokeAgentHandler(obj.GetUpgRespVal())
 }
 
 func (ctx *upgrespctx) OnUpgRespDelete(obj *upgrade.UpgResp) {
@@ -43,6 +49,7 @@ func UpgRespInit(client gosdk.Client, hdlrs AgentHandlers) {
 	log.Infof("UpgRespInit called\n")
 	ctx := &upgrespctx{
 		agentHdlrs: hdlrs,
+		sdkClient:  client,
 	}
 	upgrade.UpgRespMount(client, delphi.MountMode_ReadMode)
 	upgrade.UpgRespWatch(client, ctx)

@@ -394,155 +394,6 @@ type delphiWrapper interface {
 	bubbleSave()
 }
 
-type UpgAppResp struct {
-	sdkClient     gosdk.Client
-	parent        delphiWrapper
-	meta          *delphi.ObjectMeta
-	key           string
-	upgAppRespVal UpgRespStateType
-	upgAppRespStr string
-}
-
-func (o *UpgAppResp) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *UpgAppResp) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *UpgAppResp) GetKey() string {
-	return o.key
-}
-
-func (o *UpgAppResp) SetKey(val string) {
-	o.key = val
-	o.bubbleSave()
-}
-
-func (o *UpgAppResp) GetUpgAppRespVal() UpgRespStateType {
-	return o.upgAppRespVal
-}
-
-func (o *UpgAppResp) SetUpgAppRespVal(val UpgRespStateType) {
-	o.upgAppRespVal = val
-	o.bubbleSave()
-}
-
-func (o *UpgAppResp) GetUpgAppRespStr() string {
-	return o.upgAppRespStr
-}
-
-func (o *UpgAppResp) SetUpgAppRespStr(val string) {
-	o.upgAppRespStr = val
-	o.bubbleSave()
-}
-
-func (o *UpgAppResp) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *UpgAppResp) save() {
-	o.sdkClient.SetObject(o)
-}
-
-func (o *UpgAppResp) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewUpgAppResp(sdkClient gosdk.Client) *UpgAppResp {
-	w := &UpgAppResp{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "UpgAppResp",
-	}
-	return w
-}
-
-func childNewUpgAppResp(parent delphiWrapper, sdkClient gosdk.Client) *UpgAppResp {
-	w := NewUpgAppResp(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func (o *UpgAppResp) GetProtoMsg() *UpgAppResp_ {
-	return &UpgAppResp_{
-		Meta:          o.meta,
-		Key:           o.key,
-		UpgAppRespVal: o.upgAppRespVal,
-		UpgAppRespStr: o.upgAppRespStr,
-	}
-}
-
-func (o *UpgAppResp) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *UpgAppResp) GetKeyString() string {
-	return fmt.Sprintf("%v", (obj.key))
-}
-
-func (obj *UpgAppResp) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(UpgAppRespReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnUpgAppRespCreate(obj)
-			} else {
-				rctr.OnUpgAppRespUpdate(obj)
-			}
-		} else {
-			rctr.OnUpgAppRespDelete(obj)
-		}
-	}
-}
-
-type UpgAppRespReactor interface {
-	OnUpgAppRespCreate(obj *UpgAppResp)
-	OnUpgAppRespUpdate(obj *UpgAppResp)
-	OnUpgAppRespDelete(obj *UpgAppResp)
-}
-
-func (obj *UpgAppResp) GetPath() string {
-	return "UpgAppResp" + "|" + obj.GetKeyString()
-}
-
-func newUpgAppRespFromMessage(msg *UpgAppResp_) *UpgAppResp {
-	return &UpgAppResp{
-		meta:          msg.Meta,
-		key:           msg.Key,
-		upgAppRespVal: msg.UpgAppRespVal,
-		upgAppRespStr: msg.UpgAppRespStr,
-	}
-}
-
-func upgAppRespFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
-	var msg UpgAppResp_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newUpgAppRespFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func UpgAppRespMount(client gosdk.Client, mode delphi.MountMode) {
-	client.MountKind("UpgAppResp", mode)
-}
-
-func UpgAppRespWatch(client gosdk.Client, reactor UpgAppRespReactor) {
-	client.WatchKind("UpgAppResp", reactor)
-}
-
 type UpgReq struct {
 	sdkClient gosdk.Client
 	parent    delphiWrapper
@@ -587,7 +438,9 @@ func (o *UpgReq) bubbleSave() {
 }
 
 func (o *UpgReq) save() {
-	o.sdkClient.SetObject(o)
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
 }
 
 func (o *UpgReq) Delete() {
@@ -601,6 +454,19 @@ func NewUpgReq(sdkClient gosdk.Client) *UpgReq {
 		Kind: "UpgReq",
 	}
 	return w
+}
+
+func GetUpgReq(sdkClient gosdk.Client, key uint32) *UpgReq {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("UpgReq", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgReq)
+	if !ok {
+		panic("Couldn't cast to UpgReq")
+	}
+	return o
 }
 
 func childNewUpgReq(parent delphiWrapper, sdkClient gosdk.Client) *UpgReq {
@@ -729,7 +595,9 @@ func (o *UpgResp) bubbleSave() {
 }
 
 func (o *UpgResp) save() {
-	o.sdkClient.SetObject(o)
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
 }
 
 func (o *UpgResp) Delete() {
@@ -744,6 +612,19 @@ func NewUpgResp(sdkClient gosdk.Client) *UpgResp {
 	}
 	w.upgRespFailStr = childNewStringArray(w, sdkClient)
 	return w
+}
+
+func GetUpgResp(sdkClient gosdk.Client, key uint32) *UpgResp {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("UpgResp", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgResp)
+	if !ok {
+		panic("Couldn't cast to UpgResp")
+	}
+	return o
 }
 
 func childNewUpgResp(parent delphiWrapper, sdkClient gosdk.Client) *UpgResp {
@@ -879,7 +760,9 @@ func (o *UpgStateReq) bubbleSave() {
 }
 
 func (o *UpgStateReq) save() {
-	o.sdkClient.SetObject(o)
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
 }
 
 func (o *UpgStateReq) Delete() {
@@ -893,6 +776,19 @@ func NewUpgStateReq(sdkClient gosdk.Client) *UpgStateReq {
 		Kind: "UpgStateReq",
 	}
 	return w
+}
+
+func GetUpgStateReq(sdkClient gosdk.Client, key uint32) *UpgStateReq {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("UpgStateReq", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgStateReq)
+	if !ok {
+		panic("Couldn't cast to UpgStateReq")
+	}
+	return o
 }
 
 func childNewUpgStateReq(parent delphiWrapper, sdkClient gosdk.Client) *UpgStateReq {
@@ -974,6 +870,170 @@ func UpgStateReqWatch(client gosdk.Client, reactor UpgStateReqReactor) {
 	client.WatchKind("UpgStateReq", reactor)
 }
 
+type UpgAppResp struct {
+	sdkClient     gosdk.Client
+	parent        delphiWrapper
+	meta          *delphi.ObjectMeta
+	key           string
+	upgAppRespVal UpgRespStateType
+	upgAppRespStr string
+}
+
+func (o *UpgAppResp) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *UpgAppResp) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *UpgAppResp) GetKey() string {
+	return o.key
+}
+
+func (o *UpgAppResp) SetKey(val string) {
+	o.key = val
+	o.bubbleSave()
+}
+
+func (o *UpgAppResp) GetUpgAppRespVal() UpgRespStateType {
+	return o.upgAppRespVal
+}
+
+func (o *UpgAppResp) SetUpgAppRespVal(val UpgRespStateType) {
+	o.upgAppRespVal = val
+	o.bubbleSave()
+}
+
+func (o *UpgAppResp) GetUpgAppRespStr() string {
+	return o.upgAppRespStr
+}
+
+func (o *UpgAppResp) SetUpgAppRespStr(val string) {
+	o.upgAppRespStr = val
+	o.bubbleSave()
+}
+
+func (o *UpgAppResp) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *UpgAppResp) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *UpgAppResp) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewUpgAppResp(sdkClient gosdk.Client) *UpgAppResp {
+	w := &UpgAppResp{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "UpgAppResp",
+	}
+	return w
+}
+
+func GetUpgAppResp(sdkClient gosdk.Client, key string) *UpgAppResp {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("UpgAppResp", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgAppResp)
+	if !ok {
+		panic("Couldn't cast to UpgAppResp")
+	}
+	return o
+}
+
+func childNewUpgAppResp(parent delphiWrapper, sdkClient gosdk.Client) *UpgAppResp {
+	w := NewUpgAppResp(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func (o *UpgAppResp) GetProtoMsg() *UpgAppResp_ {
+	return &UpgAppResp_{
+		Meta:          o.meta,
+		Key:           o.key,
+		UpgAppRespVal: o.upgAppRespVal,
+		UpgAppRespStr: o.upgAppRespStr,
+	}
+}
+
+func (o *UpgAppResp) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *UpgAppResp) GetKeyString() string {
+	return fmt.Sprintf("%v", (obj.key))
+}
+
+func (obj *UpgAppResp) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(UpgAppRespReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnUpgAppRespCreate(obj)
+			} else {
+				rctr.OnUpgAppRespUpdate(obj)
+			}
+		} else {
+			rctr.OnUpgAppRespDelete(obj)
+		}
+	}
+}
+
+type UpgAppRespReactor interface {
+	OnUpgAppRespCreate(obj *UpgAppResp)
+	OnUpgAppRespUpdate(obj *UpgAppResp)
+	OnUpgAppRespDelete(obj *UpgAppResp)
+}
+
+func (obj *UpgAppResp) GetPath() string {
+	return "UpgAppResp" + "|" + obj.GetKeyString()
+}
+
+func newUpgAppRespFromMessage(msg *UpgAppResp_) *UpgAppResp {
+	return &UpgAppResp{
+		meta:          msg.Meta,
+		key:           msg.Key,
+		upgAppRespVal: msg.UpgAppRespVal,
+		upgAppRespStr: msg.UpgAppRespStr,
+	}
+}
+
+func upgAppRespFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
+	var msg UpgAppResp_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newUpgAppRespFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func UpgAppRespMount(client gosdk.Client, mode delphi.MountMode) {
+	client.MountKind("UpgAppResp", mode)
+}
+
+func UpgAppRespWatch(client gosdk.Client, reactor UpgAppRespReactor) {
+	client.WatchKind("UpgAppResp", reactor)
+}
+
 type StringArray struct {
 	parent delphiWrapper
 	values []string
@@ -1013,10 +1073,10 @@ func init() {
 	proto.RegisterType((*UpgResp_)(nil), "upgrade.UpgResp_")
 	proto.RegisterType((*UpgStateReq_)(nil), "upgrade.UpgStateReq_")
 	proto.RegisterType((*UpgAppResp_)(nil), "upgrade.UpgAppResp_")
-	gosdk.RegisterFactory("UpgAppResp", upgAppRespFactory)
 	gosdk.RegisterFactory("UpgReq", upgReqFactory)
 	gosdk.RegisterFactory("UpgResp", upgRespFactory)
 	gosdk.RegisterFactory("UpgStateReq", upgStateReqFactory)
+	gosdk.RegisterFactory("UpgAppResp", upgAppRespFactory)
 	proto.RegisterEnum("upgrade.UpgReqType", UpgReqType_name, UpgReqType_value)
 	proto.RegisterEnum("upgrade.UpgRespType", UpgRespType_name, UpgRespType_value)
 	proto.RegisterEnum("upgrade.UpgReqStateType", UpgReqStateType_name, UpgReqStateType_value)
