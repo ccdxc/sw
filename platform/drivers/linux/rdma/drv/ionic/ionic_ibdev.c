@@ -882,7 +882,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	dma_addr_t hdr_dma = 0;
 	int rc, hdr_len = 0;
 
-	hdr = kmalloc(sizeof(*hdr), GFP_KERNEL);
+	hdr = kmalloc(sizeof(*hdr), GFP_ATOMIC);
 	if (!hdr) {
 		rc = -ENOMEM;
 		goto err_hdr;
@@ -894,7 +894,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 
 	/* XXX create ah should take header template */
 	//hdr_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
-	hdr_buf = kmalloc(sizeof(*hdr_buf), GFP_KERNEL);
+	hdr_buf = kmalloc(sizeof(*hdr_buf), GFP_ATOMIC);
 	if (!hdr_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
@@ -963,7 +963,10 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_cmd;
 
-	wait_for_completion(&admin.work);
+	/* XXX hold the cpu with irq disabled... until complete, or 2s. */
+	rc = 0;
+	while (!completion_done(&admin.work) && ++rc < 2000)
+		mdelay(1);
 
 	if (0 /* TODO: admin queue failure */) {
 		rc = -EIO;
@@ -1011,7 +1014,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	if (rc)
 		goto err_ah;
 
-	ah = kmalloc(sizeof(*ah), GFP_KERNEL);
+	ah = kmalloc(sizeof(*ah), GFP_ATOMIC);
 	if (!ah) {
 		rc = -ENOMEM;
 		goto err_ah;
