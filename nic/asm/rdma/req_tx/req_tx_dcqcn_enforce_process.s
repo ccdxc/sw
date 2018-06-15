@@ -33,6 +33,7 @@ struct req_tx_s3_t2_k k;
     .param req_tx_write_back_process
     .param req_tx_add_headers_process
     .param req_tx_load_hdr_template_process
+    .param req_tx_sqcb2_write_back_process
 
 .align
 req_tx_dcqcn_enforce_process:
@@ -126,17 +127,21 @@ load_write_back:
     //It is assumed that hdr_template_inline flag is passed untouched to next table-2.
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
 
-    SQCB2_ADDR_GET(r2)
-    // Same k info as write_back is passed to add_headers as well
-    phvwr          p.common.common_t3_s2s_s2s_data, K_S2S_DATA
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
-
-
     bbne          CAPRI_KEY_FIELD(IN_P, hdr_template_inline), 1, skip_hdr_template_inline
     sll           r2, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT //BD slot
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_hdr_template_process, r2)
 
 skip_hdr_template_inline:
+    SQCB2_ADDR_GET(r2)  
+    bbeq          CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1, skip_add_headers
+    // Same k info as write_back is passed to add_headers as well
+    phvwr          p.common.common_t3_s2s_s2s_data, K_S2S_DATA //BD-slot
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
+    nop.e
+    nop
+
+skip_add_headers:
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, r2)
     nop.e
     nop
 

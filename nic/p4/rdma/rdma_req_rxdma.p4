@@ -22,7 +22,7 @@
 #define common_p4plus_stage0_app_header_table_action_dummy14 rdma_stage0_bth_xrceth_atomiceth_action
 #define common_p4plus_stage0_app_header_table_action_dummy15 rdma_stage0_bth_xrceth_ieth_action
 #define common_p4plus_stage0_app_header_table_action_dummy16 rdma_stage0_recirc_action
-#define common_p4plus_stage0_app_header_table_action_dummy17 rdma_stage0_ud_feedback_action
+#define common_p4plus_stage0_app_header_table_action_dummy17 rdma_stage0_completion_feedback_action
 #define common_p4plus_stage0_app_header_table_action_dummy18 rdma_stage0_timer_expiry_feedback_action
 
 #define rx_stage0_load_rdma_params_dummy1 rdma_stage0_ext_bth_atomiceth_action
@@ -310,7 +310,7 @@ header_type req_rx_sqcb1_to_timer_expiry_info_t {
     }
 }
 
-@pragma pa_header_union ingress app_header rdma_recirc rdma_bth rdma_bth_immeth rdma_bth_reth rdma_bth_reth_immeth rdma_bth_aeth rdma_bth_aeth_atomicaeth rdma_bth_atomiceth rdma_bth_ieth rdma_bth_deth rdma_bth_deth_immeth rdma_bth_xrceth rdma_bth_xrceth_immeth rdma_bth_xrceth_reth rdma_bth_xrceth_reth_immeth rdma_bth_xrceth_atomiceth rdma_bth_xrceth_ieth rdma_ud_feedback rdma_timer_expiry_feedback
+@pragma pa_header_union ingress app_header rdma_recirc rdma_bth rdma_bth_immeth rdma_bth_reth rdma_bth_reth_immeth rdma_bth_aeth rdma_bth_aeth_atomicaeth rdma_bth_atomiceth rdma_bth_ieth rdma_bth_deth rdma_bth_deth_immeth rdma_bth_xrceth rdma_bth_xrceth_immeth rdma_bth_xrceth_reth rdma_bth_xrceth_reth_immeth rdma_bth_xrceth_atomiceth rdma_bth_xrceth_ieth rdma_completion_feedback rdma_timer_expiry_feedback
 
 metadata roce_recirc_header_t rdma_recirc;
 metadata p4_to_p4plus_roce_bth_header_t rdma_bth;
@@ -329,7 +329,7 @@ metadata p4_to_p4plus_roce_bth_xrceth_reth_header_t rdma_bth_xrceth_reth;
 metadata p4_to_p4plus_roce_bth_xrceth_reth_immeth_header_t rdma_bth_xrceth_reth_immeth;
 metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_header_t rdma_bth_xrceth_atomiceth;
 metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth;
-metadata rdma_ud_feedback_header_t rdma_ud_feedback;
+metadata rdma_completion_feedback_header_t rdma_completion_feedback;
 metadata rdma_timer_expiry_feedback_header_t rdma_timer_expiry_feedback;
 
 
@@ -375,7 +375,7 @@ metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_header_t rdma_bth_xrceth_atomice
 @pragma scratch_metadata
 metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth_scr;
 @pragma scratch_metadata
-metadata rdma_ud_feedback_header_t rdma_ud_feedback_scr;
+metadata rdma_completion_feedback_header_t rdma_completion_feedback_scr;
 @pragma scratch_metadata
 metadata rdma_timer_expiry_feedback_header_t rdma_timer_expiry_feedback_scr;
 
@@ -1003,7 +1003,7 @@ action rdma_stage0_bth_xrceth_ieth_action () {
 /*
  * Stage 0 table 0 ud_feedback action
  */
-action rdma_stage0_ud_feedback_action () {
+action rdma_stage0_completion_feedback_action () {
     // k + i for stage 0
 
     // from intrinsic
@@ -1014,13 +1014,13 @@ action rdma_stage0_ud_feedback_action () {
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
 
     // from app header
-    modify_field(rdma_ud_feedback_scr.common_header_bits, rdma_ud_feedback.common_header_bits);
+    modify_field(rdma_completion_feedback_scr.common_header_bits, rdma_completion_feedback.common_header_bits);
 
     // ud_feedback_header bits
-    modify_field(rdma_ud_feedback_scr.feedback_type, rdma_ud_feedback.feedback_type);
-    modify_field(rdma_ud_feedback_scr.wrid, rdma_ud_feedback.wrid);
-    modify_field(rdma_ud_feedback_scr.optype, rdma_ud_feedback.optype);
-    modify_field(rdma_ud_feedback_scr.status, rdma_ud_feedback.status);
+    modify_field(rdma_completion_feedback_scr.feedback_type, rdma_completion_feedback.feedback_type);
+    modify_field(rdma_completion_feedback_scr.wrid, rdma_completion_feedback.wrid);
+    modify_field(rdma_completion_feedback_scr.optype, rdma_completion_feedback.optype);
+    modify_field(rdma_completion_feedback_scr.status, rdma_completion_feedback.status);
 }
 
 

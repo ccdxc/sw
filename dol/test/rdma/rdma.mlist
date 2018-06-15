@@ -261,6 +261,39 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_LOCAL_INV
+        enable  : True
+        package : test.rdma
+        module  : req_tx_local_inv
+        spec    : req_tx_local_inv.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_LOCAL_INV_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_local_inv_err
+        spec    : req_tx_local_inv_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_LOCAL_INV_SEND
+        enable  : True
+        package : test.rdma
+        module  : req_tx_local_inv_and_send
+        spec    : req_tx_local_inv_and_send.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_LOCAL_INV_TWICE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_local_inv_twice
+        spec    : req_tx_local_inv_twice.testspec
+        ignore  : False
+
+
+    - module:
         name    : RDMA_TX_NAK_SEQ_ERR
         enable  : True
         package : test.rdma

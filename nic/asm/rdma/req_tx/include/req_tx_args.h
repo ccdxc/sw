@@ -6,7 +6,8 @@ struct req_tx_sge_to_lkey_info_t {
     sge_bytes                     : 16;
     dma_cmd_start_index           : 8;
     sge_index                     : 8;
-    pad                           : 64; 
+    lkey_invalidate               : 1;
+    pad                           : 63; 
 };
 
 struct req_tx_lkey_to_ptseg_info_t {

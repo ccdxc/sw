@@ -36,6 +36,9 @@ req_tx_write_back_process:
     bbeq          CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
     nop           // Branch Delay Slot
 
+    bbeq          K_GLOBAL_FLAG(error_disable_qp), 1, error_disable_exit
+    nop
+
     bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
     nop           // Branch Delay Slot
 
@@ -112,3 +115,14 @@ rate_enforce_fail:
 spec_fail:
     phvwr.e      p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)
+
+error_disable_exit:
+    /*
+     *  TODO: Incrementing cindex to satisfy model. Ideally, on error disabling we should just exit and be
+     *  in the same state which caused the error.
+     */
+    tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
+    CAPRI_SET_TABLE_2_VALID(0)
+    nop.e
+    nop
+

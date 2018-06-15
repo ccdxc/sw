@@ -26,6 +26,7 @@ struct req_tx_s2_t0_k k;
 %%
     .param    req_tx_sqsge_process
     .param    req_tx_dcqcn_enforce_process
+    .param    req_tx_dummy_sqlkey_process
 
 .align
 req_tx_sqwqe_process:
@@ -41,8 +42,11 @@ skip_color_check:
     phvwr          CAPRI_PHV_FIELD(TO_S5_P, fence), d.base.fence 
 
 skip_fence_check:
+    // Populate optype and wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
+    phvwrpair      p.rdma_feedback.completion.wrid, d.base.wrid,  p.rdma_feedback.completion.optype[3:0], d.base.op_type
+
     .brbegin
-    br             r1[2:0]
+    br             r1[3:0]
     nop            // Branch Delay Slot
 
     .brcase OP_TYPE_SEND
@@ -77,6 +81,41 @@ skip_fence_check:
         b               atomic
         nop             //Branch Delay slot 
 
+    .brcase OP_TYPE_FRPNR 
+        // TODO. Exit for now
+        b               exit
+        nop
+
+    .brcase OP_TYPE_LOCAL_INV
+        b               local_inv
+        nop             //Branch Delay slot
+
+    .brcase OP_TYPE_BIND_MW
+        // TODO. Exit for now
+        b               exit
+        nop
+
+    .brcase OP_TYPE_SEND_INV_IMM
+        // TODO. Exit for now
+        b               exit
+        nop
+
+    .brcase OP_TYPE_FRMR
+        // TODO. Exit for now
+        b               exit
+        nop
+
+    // Undefined op-types.
+    .brcase 13
+        b               exit
+        nop
+    .brcase 14
+        b               exit
+        nop
+    .brcase 15
+        b               exit
+        nop
+
     .brend
 
 set_write_reth:
@@ -92,10 +131,6 @@ send_or_write:
 
     phvwrpair DETH_Q_KEY, d.ud_send.q_key, DETH_SRC_QP, K_GLOBAL_QID
     phvwr BTH_DST_QP, d.ud_send.dst_qp
-
-    // setup cqwqe for UD completion
-    phvwrpair      p.rdma_feedback.feedback_type, RDMA_UD_FEEDBACK, p.rdma_feedback.ud.wrid, d.base.wrid
-    phvwrpair      p.rdma_feedback.ud.optype[3:0], d.base.op_type, p.rdma_feedback.ud.status, 0
 
     // For UD, length should be less than pmtu
     sll            r4, 1,  K_LOG_PMTU
@@ -202,6 +237,27 @@ zero_length:
     nop.e
     nop
 
+local_inv:
+    /*
+     * Fetch lkey address and load dummy-sqlkey MPU-only program in stage3. 
+     * Actual lkey address will be loaded in stage4 for invalidation.
+     */
+
+    // r6 = hbm_addr_get(PHV_GLOBA_KT_BASE_ADDR_GET())
+    KT_BASE_ADDR_GET2(r6, r4)
+
+    // r4 = lkey
+    add            r4, r0, d.local_inv.l_key
+
+    // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+ ((lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
+    KEY_ENTRY_ADDR_GET(r6, r6, r4)
+    //set first = 1, last_pkt = 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqlkey_process, r6)
+
+    nop.e
+    nop
+    
 exit:
 ud_error:
     //For UD we can silently drop

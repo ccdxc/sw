@@ -54,7 +54,6 @@ bind_mw:
     
 local_inv:
     l_key   : None
-    r_key   : None
 
 fast_reg:
     len             : None

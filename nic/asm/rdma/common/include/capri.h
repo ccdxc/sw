@@ -80,13 +80,14 @@
    add _r, k.{rdma_bth_deth_immeth_smac_1_sbit8_ebit15}, k.{rdma_bth_deth_immeth_smac_1_sbit0_ebit7}, 8
 
 // Feedback header fields
-#define CAPRI_FEEDBACK_FEEDBACK_TYPE k.rdma_ud_feedback_feedback_type
+#define CAPRI_FEEDBACK_FEEDBACK_TYPE k.rdma_completion_feedback_feedback_type
 
-// UD feedback header fields
-#define CAPRI_UD_FEEDBACK_WRID(_r) \
-    add _r, k.{rdma_ud_feedback_wrid_sbit32_ebit47...rdma_ud_feedback_wrid_sbit56_ebit63}, k.{rdma_ud_feedback_wrid_sbit0_ebit7...rdma_ud_feedback_wrid_sbit24_ebit31}, 32
-#define CAPRI_UD_FEEDBACK_OPTYPE k.rdma_ud_feedback_optype
-#define CAPRI_UD_FEEDBACK_STATUS k.rdma_ud_feedback_status
+// Completion feedback header fields
+#define CAPRI_COMPLETION_FEEDBACK_WRID(_r) \
+add _r, k.{rdma_completion_feedback_wrid_sbit32_ebit47...rdma_completion_feedback_wrid_sbit56_ebit63}, k.{rdma_completion_feedback_wrid_sbit0_ebit7...rdma_completion_feedback_wrid_sbit24_ebit31}, 32
+
+#define CAPRI_COMPLETION_FEEDBACK_OPTYPE k.rdma_completion_feedback_optype
+#define CAPRI_COMPLETION_FEEDBACK_STATUS k.rdma_completion_feedback_status
 
 // Timer expiry feedback header fields
 #define CAPRI_TIMER_EXPIRY_FEEDBACK_SSN(_r) \

@@ -567,6 +567,13 @@ struct sqwqe_read_t {
     r_key              : 32;
 };
 
+// Local Invalidate
+struct sqwqe_local_inv_t {
+    l_key              : 32;    
+    pad                : 128;
+};
+
+
 // FRMR
 struct sqwqe_frmr_t {
     mr_id              : 24;
@@ -586,6 +593,7 @@ struct sqwqe_t {
                 struct sqwqe_ud_send_t ud_send;
                 struct sqwqe_write_t write;
                 struct sqwqe_read_t read;
+                struct sqwqe_local_inv_t local_inv;
                 struct sqwqe_frmr_t frmr;
             };
             union {
@@ -1036,20 +1044,19 @@ struct dcqcn_cb_t {
     cur_timestamp:  32; // For debugging on Model since model doesnt have timestamps
 };
 
-#define RDMA_UD_FEEDBACK              0x1
-#define RDMA_RC_FEEDBACK              0x2
-#define RDMA_CQ_ARM_FEEDBACK          0x3
-#define RDMA_TIMER_EXPIRY_FEEDBACK    0x4
+#define RDMA_COMPLETION_FEEDBACK      0x1
+#define RDMA_CQ_ARM_FEEDBACK          0x2
+#define RDMA_TIMER_EXPIRY_FEEDBACK    0x3
 
 struct rdma_feedback_t {
     feedback_type:8;
     union {
-        /* TYPE: RDMA_UD_FEEDBACK */
+        /* TYPE: RDMA_COMPLETION_FEEDBACK */
         struct {
             wrid: 64;
             optype: 8;
             status: 8;
-        }ud;
+        }completion;
         /* Type: RDMA_CQ_ARM_FEEDBACK */
         struct {
             cindex: 16;

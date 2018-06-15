@@ -255,7 +255,7 @@ header_type p4_to_p4plus_roce_bth_xrceth_ieth_header_t {
 }
 
 //248
-header_type rdma_ud_feedback_header_t {
+header_type rdma_completion_feedback_header_t {
     fields {
         common_header_bits  : 160;
         feedback_type       : 8;

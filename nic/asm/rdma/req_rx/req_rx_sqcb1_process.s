@@ -263,13 +263,13 @@ drop_feedback:
 process_feedback:
     seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_TIMER_EXPIRY_FEEDBACK
     bcf            [c1], timer_expiry
-    seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_UD_FEEDBACK
+    seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_COMPLETION_FEEDBACK
     bcf            [!c1], drop_feedback
 
-ud_feedback:
-    phvwr          p.cqwqe.op_type, CAPRI_UD_FEEDBACK_OPTYPE // Branch Delay Slot
-    CAPRI_UD_FEEDBACK_WRID(r7)
-    phvwrpair      p.cqwqe.id.wrid, r7, p.cqwqe.status, CAPRI_UD_FEEDBACK_STATUS
+completion_feedback:
+    phvwr          p.cqwqe.op_type, CAPRI_COMPLETION_FEEDBACK_OPTYPE // Branch Delay Slot
+    CAPRI_COMPLETION_FEEDBACK_WRID(r7)
+    phvwrpair      p.cqwqe.id.wrid, r7, p.cqwqe.status, CAPRI_COMPLETION_FEEDBACK_STATUS
 
     CAPRI_RESET_TABLE_2_ARG()
     CAPRI_SET_TABLE_0_VALID(0)

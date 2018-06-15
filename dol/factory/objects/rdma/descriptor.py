@@ -70,6 +70,12 @@ class RdmaSqDescriptorAtomic(Packet):
         LongField("pad", 0),
     ]
 
+class RdmaSqDescriptorLocalInv(Packet):
+    fields_desc = [
+        IntField("l_key", 0),
+        BitField("pad", 0, 128),
+    ]
+
 class RdmaRrqDescriptorBase(Packet):
     fields_desc = [
         BitField("read_resp_or_atomic", 0, 1),
@@ -269,6 +275,13 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            swapdt = self.spec.fields.atomic.swapdt if hasattr(self.spec.fields.atomic, 'swapdt') else 0
            atomic = RdmaSqDescriptorAtomic(r_key=r_key, va=va, cmpdt=cmpdt, swapdt=swapdt)
            desc = desc/atomic
+
+        if hasattr(self.spec.fields, 'local_inv'):
+           logger.info("Reading Local Invalidate")
+           assert(inline_data_vld == 0)
+           l_key = self.spec.fields.local_inv.l_key if hasattr(self.spec.fields.local_inv, 'l_key') else 0
+           local_inv = RdmaSqDescriptorLocalInv(l_key=l_key)
+           desc = desc/local_inv
 
         if inline_data_vld:
            logger.info("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))

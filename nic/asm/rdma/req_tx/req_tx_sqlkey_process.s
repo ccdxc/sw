@@ -1,6 +1,7 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_tx_phv_t p;
 struct req_tx_s4_t0_k k;
@@ -23,9 +24,15 @@ struct key_entry_aligned_t d;
 .align
 req_tx_sqlkey_process:
 
+     // check if lkey-state is valid.
+     seq          c1, d.state, KEY_STATE_VALID  // Branch Delay Slot
+     bcf          [!c1], error_completion
+     
      // if (!(lkey_p->access_ctrl & ACC_CTRL_LOCAL_WRITE))
-     and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE
+     and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE // Branch Delay Slot
      beq          r2, r0, access_violation
+     nop // BD-Slot
+
 
      // if ((lkey_info_p->sge_va < lkey_p->base_va) ||
      //     ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len)))
@@ -94,6 +101,16 @@ set_arg:
      nop.e
      nop
 
+error_completion:
+    add          r1, K_SGE_INDEX, r0
+    CAPRI_SET_TABLE_I_VALID(r1, 0)
+
+    // Set error-disable-qp. TODO: Using just as a place-holder. Full-blown error_disable_qp code will follow.
+    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1
+    nop
+
 access_violation:
+//TODO
+exit:
     nop.e
     nop
