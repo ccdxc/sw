@@ -10,6 +10,7 @@
 #define IONIC_QID_MASK		((1ull << 24) - 1)
 #define IONIC_DBELL_QID_SHIFT	24
 #define IONIC_DBELL_RING_ARM	(1ull << 16)
+#define IONIC_DBELL_RING_SONLY	(1ull << 17)
 
 /** struct ionic_queue - Ring buffer used between device and driver.
  * @ptr:	Buffer virtual address.
@@ -205,14 +206,6 @@ static inline void ionic_queue_dbell_init(struct ionic_queue *q,
 static inline uint64_t ionic_queue_dbell_val(struct ionic_queue *q)
 {
 	return q->dbell | q->prod;
-}
-
-/** ionic_queue_dbell_val_arm - Get current doorbell update-and-arm value.
- * @q:		Queue structure.
- */
-static inline uint64_t ionic_queue_dbell_val_arm(struct ionic_queue *q)
-{
-	return q->dbell | q->prod | IONIC_DBELL_RING_ARM;
 }
 
 /** ionic_dbell_ring - Write the doorbell value to register.

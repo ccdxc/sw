@@ -473,9 +473,8 @@ out:
 	if (likely(cq->q.prod != old_prod)) {
 		ionic_dbg(ctx, "dbell qtype %d val %#lx\n",
 			  ctx->cq_qtype, ionic_queue_dbell_val(&cq->q));
-		/* the cq doorbell is not ready yet */
-		//ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
-		//		 ionic_queue_dbell_val(&cq->q));
+		ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
+				 ionic_queue_dbell_val(&cq->q));
 	}
 
 	pthread_spin_unlock(&cq->lock);
@@ -487,17 +486,16 @@ static int ionic_req_notify_cq(struct ibv_cq *ibcq, int solicited_only)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
+	uint64_t dbell_val;
 
-	IONIC_LOG("");
+	dbell_val = ionic_queue_dbell_val(&cq->q);
 
-	/* XXX need some ring bits for "solicited only" */
 	if (solicited_only)
-		ionic_dbg(ctx, "XXX solicited_only=%d", solicited_only);
+		dbell_val |= IONIC_DBELL_RING_SONLY;
+	else
+		dbell_val |= IONIC_DBELL_RING_ARM;
 
-	/* the cq doorbell is not ready yet */
-	//ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
-	//		 ionic_queue_dbell_val_arm(&cq->q));
-	(void)cq; /* kill warning unused variable */
+	ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype], dbell_val);
 
 	return 0;
 }
