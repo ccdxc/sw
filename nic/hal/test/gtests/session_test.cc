@@ -63,7 +63,7 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
-    hal_base_test::SetUpTestCase();
+    hal_base_test::SetUpTestCase(false);
     hal_test_utils_slab_disable_delete();
   }
 
@@ -1560,6 +1560,9 @@ TEST_F(session_test, test9)
     NetworkKeyHandle           *nkh = NULL;
     SessionDeleteRequest        delreq;
     SessionDeleteResponse       delrsp;
+
+    // Force FTE thread to start
+    sleep(1);
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(9);

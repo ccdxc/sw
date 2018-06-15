@@ -40,6 +40,8 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
     l4_sess->alg = nwsec::APP_SVC_RTSP;
     ctx.set_feature_name(FTE_FEATURE_ALG_RTSP.c_str());
     ctx.register_feature_session_state(&l4_sess->fte_feature_state);
+    ctx.flow_log()->alg = l4_sess->alg;
+    //ctx.flow_log()->parent_session_id = entry->sess_hdl;
 
     // skip firewall check
     sfw_info->skip_sfw = TRUE;

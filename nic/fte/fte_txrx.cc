@@ -79,6 +79,7 @@ fte_start(uint8_t fte_id)
 
     g_inst = g_inst_list[fte_id] = new inst_t(fte_id);
     g_inst->start();
+    HAL_TRACE_DEBUG("Started FTE thread: {}", fte_id);
 }
 
 //------------------------------------------------------------------------------
@@ -307,15 +308,11 @@ void inst_t::start()
                 (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     HAL_ASSERT(hal_cfg);
 
-    // Init logger for this instance if mode is set to true
-    // Disabling this for now as we are hitting memory corruption 
-    // thats causing the assert
-#if 0
+    HAL_TRACE_DEBUG("Starting FTE instance: {}", hal_cfg->shm_mode);
     if (hal_cfg->shm_mode) {
         logger_ = ipc_logger::factory();
         HAL_ASSERT(logger_);
     }
-#endif
 
     while(true) {
         if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {

@@ -180,6 +180,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
             match_rslt->alg = nwsec_rule->fw_rule_action.alg;
             match_rslt->log = nwsec_rule->fw_rule_action.log_action;
             match_rslt->sfw_action = nwsec_rule->fw_rule_action.sec_action;
+            match_rslt->rule_id = nwsec_rule->rule_id;
         }
     } else {
         HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy rule lookup failed ret={}", ret);
@@ -335,8 +336,9 @@ sfw_exec(ctx_t& ctx)
                 // to handle the case if it happens
             }
         }
-        ctx.flow_log()->set_fwaction(match_rslt.sfw_action);
-        ctx.flow_log()->set_alg(match_rslt.alg);
+        ctx.flow_log()->sfw_action = match_rslt.sfw_action;
+        ctx.flow_log()->alg = match_rslt.alg;
+        ctx.flow_log()->rule_id = match_rslt.rule_id;
     } else {
         //Responder Role: Not checking explicitly
         if (ctx.drop_flow()) {

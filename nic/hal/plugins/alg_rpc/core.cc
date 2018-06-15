@@ -170,10 +170,10 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_RPC.c_str());
     ctx.register_feature_session_state(&entry->fte_feature_state);
-    ctx.flow_log()->set_alg(entry->alg);
+    ctx.flow_log()->alg = entry->alg;
     l4_sess = g_rpc_state->get_ctrl_l4sess(entry->app_session);
     if (l4_sess)
-        ctx.flow_log()->set_parent_session_id(l4_sess->sess_hdl);
+        ctx.flow_log()->parent_session_id = l4_sess->sess_hdl;
 
     return HAL_RET_OK;
 }

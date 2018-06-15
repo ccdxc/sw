@@ -413,6 +413,21 @@ struct txpkt_info_s {
 };
 
 typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
+
+//------------------------------------------------------------------------
+// FTE IPC flow logging info - This data structure holds all the info
+// that needs to be populated in the IPC protobuf (fwlog.proto). We dont
+// want to hold the protobuf class in the context for performance reasons
+// If any new field needs to be populated in the pipeline, it needs to be 
+// added to this data structure.
+// -----------------------------------------------------------------------
+typedef struct fte_flow_log_info_s {
+    uint64_t                 rule_id;
+    nwsec::SecurityAction    sfw_action;
+    nwsec::ALGName           alg;
+    hal_handle_t             parent_session_id;
+} fte_flow_log_info_t;
+
 class flow_t;
 class ctx_t;
 
@@ -602,7 +617,7 @@ public:
     bool force_delete() { return force_delete_; }
     void set_force_delete(bool val) { force_delete_ = val; }
 
-    fwlog::FWEvent* flow_log(hal::flow_role_t role=hal::FLOW_ROLE_NONE) {
+    fte_flow_log_info_t* flow_log(hal::flow_role_t role=hal::FLOW_ROLE_NONE) {
         if (role == hal::FLOW_ROLE_NONE) role = role_;
 
         if (role == hal::FLOW_ROLE_INITIATOR) {
@@ -612,7 +627,7 @@ public:
         }
     }
     void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl, 
-                          fwlog::FWEvent *fwlog);
+                          fte_flow_log_info_t *fwlog);
     void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }
 
@@ -672,8 +687,8 @@ private:
     hal_handle_t          dep_handle_;
     pipeline_event_t      event_;
     bool                  update_session_;
-    fwlog::FWEvent        iflow_log_[MAX_STAGES];
-    fwlog::FWEvent        rflow_log_[MAX_STAGES];
+    fte_flow_log_info_t   iflow_log_[MAX_STAGES];
+    fte_flow_log_info_t   rflow_log_[MAX_STAGES];
     ipc_logger            *logger_;
     bool                  ipc_logging_disable_;
 

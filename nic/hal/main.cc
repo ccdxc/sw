@@ -76,6 +76,7 @@ using grpc::ServerContext;
 using grpc::Status;
 
 std::string g_grpc_server_addr;
+hal::hal_cfg_t    hal_cfg;
 
 static void
 svc_reg (hal::hal_cfg_t *hal_cfg)
@@ -188,7 +189,6 @@ main (int argc, char **argv)
     char              *cfg_file = NULL, *catalog_file = NULL;
     char              *default_config_dir = NULL;
     std::string       ini_file = "hal.ini";
-    hal::hal_cfg_t    hal_cfg;
 
 	struct option longopts[] = {
 	   { "config",    required_argument, NULL, 'c' },

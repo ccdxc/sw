@@ -179,33 +179,34 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     thread_prio = sched_get_priority_max(SCHED_FIFO);
     assert(thread_prio >= 0);
 
-    for (i = 0; (i < hal_cfg->num_data_threads && \
-         hal_cfg->features != HAL_FEATURE_SET_GFT); i++) {
+    if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
+        for (i = 0; i < hal_cfg->num_data_threads; i++) {
 
-        // pin each data thread to a specific core
-        cores_mask = 1 << (ffsl(data_cores_mask) - 1);
+            // pin each data thread to a specific core
+            cores_mask = 1 << (ffsl(data_cores_mask) - 1);
 
-        tid = HAL_THREAD_ID_FTE_MIN + i;
+            tid = HAL_THREAD_ID_FTE_MIN + i;
 
-        HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
+            HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
 
-        snprintf(thread_name, sizeof(thread_name), "fte-core-%u", ffsl(data_cores_mask) - 1);
+            snprintf(thread_name, sizeof(thread_name), "fte-core-%u", ffsl(data_cores_mask) - 1);
 
-        g_hal_threads[tid] =
-            thread::factory(static_cast<const char *>(thread_name),
-                            tid,
-                            sdk::lib::THREAD_ROLE_DATA,
-                            cores_mask,
-                            fte_pkt_loop_start,
-                            thread_prio,
-                            gl_super_user ? SCHED_FIFO : SCHED_OTHER,
-                            false);
+            g_hal_threads[tid] =
+                thread::factory(static_cast<const char *>(thread_name),
+                                tid,
+                                sdk::lib::THREAD_ROLE_DATA,
+                                cores_mask,
+                                fte_pkt_loop_start,
+                                thread_prio,
+                                gl_super_user ? SCHED_FIFO : SCHED_OTHER,
+                                false);
 
-        HAL_ABORT(g_hal_threads[tid] != NULL);
+            HAL_ABORT(g_hal_threads[tid] != NULL);
 
-        g_hal_threads[tid]->set_data(hal_cfg);
+            g_hal_threads[tid]->set_data(hal_cfg);
 
-        data_cores_mask = data_cores_mask & (data_cores_mask-1);
+            data_cores_mask = data_cores_mask & (data_cores_mask-1);
+        }
     }
 
     // spawn periodic thread that does background tasks
@@ -665,12 +666,12 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
 
     if (!getenv("DISABLE_FTE") &&
-        !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)) {
+        !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) &&
+         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
         // set the number of instances as read from config
         ipc_logger::set_ipc_instances(hal_cfg->num_data_threads);
         // start fte threads
-        for (uint32_t i = 0; (i < hal_cfg->num_data_threads &&
-                   hal_cfg->features != HAL_FEATURE_SET_GFT); i++) {
+        for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
             // Init IPC logger infra for FTE
             if (!i && hal_cfg->shm_mode && ipc_logger::init() != HAL_RET_OK) {
                 HAL_TRACE_ERR("IPC logger init failed");

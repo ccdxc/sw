@@ -5,6 +5,7 @@
 #pragma once
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 
 using session::FlowAction;
 using nwsec::ALGName;
@@ -31,6 +32,7 @@ typedef struct net_sfw_match_result_s {
     ALGName         alg;
     bool            log;
     SecurityAction  sfw_action;
+    hal::rule_key_t rule_id;
 } net_sfw_match_result_t;
 std::ostream& operator<<(std::ostream& os, const net_sfw_match_result_t& val);
 

@@ -97,7 +97,8 @@ protected:
 
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
-        hal_base_test::SetUpTestCase();
+        hal_base_test::SetUpTestCase(false);
+        sleep(1);
         ipc_logging_disable_ = false;
     }
 
@@ -251,16 +252,6 @@ private:
         EXPECT_NE(ctx_.session()->rflow, nullptr)<< msg;                       \
         EXPECT_FALSE(ctx_.session()->iflow->pgm_attrs.drop)<< msg;             \
         EXPECT_FALSE(ctx_.session()->iflow->pgm_attrs.drop)<< msg;             \
-        EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sipv4(),            \
-                  ctx_.key().sip.v4_addr);                                     \
-        EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dipv4(),            \
-                  ctx_.key().dip.v4_addr);                                     \
-        EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sport()), \
-                  ctx_.key().sport);                                           \
-        EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->dport()), \
-                  ctx_.key().dport);                                           \
-        EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->ipprot(),            \
-                  ctx_.key().proto);                                           \
     }
 
 #define CHECK_DENY_TCP(dep, sep, dst_port, src_port, msg) {             \
@@ -303,14 +294,4 @@ private:
         EXPECT_NE(ctx_.session()->rflow, nullptr) << msg;                      \
         EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.drop) << msg;             \
         EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.drop) << msg;             \
-        EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_RESPONDER)->sipv4(),            \
-                  ctx_.get_key(hal::FLOW_ROLE_RESPONDER).sip.v4_addr);         \
-        EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_RESPONDER)->dipv4(),            \
-                  ctx_.get_key(hal::FLOW_ROLE_RESPONDER).dip.v4_addr);         \
-        EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_RESPONDER)->sport()), \
-                  ctx_.get_key(hal::FLOW_ROLE_RESPONDER).sport);                \
-        EXPECT_EQ(((uint16_t)ctx_.flow_log(hal::FLOW_ROLE_RESPONDER)->dport()), \
-                  ctx_.get_key(hal::FLOW_ROLE_RESPONDER).dport);                \
-        EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_RESPONDER)->ipprot(),            \
-                  ctx_.get_key(hal::FLOW_ROLE_RESPONDER).proto);                \
     }

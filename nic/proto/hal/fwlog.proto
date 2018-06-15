@@ -41,4 +41,5 @@ message FWEvent {
     int64                 timestamp          = 23; // flow timestamp
     uint64                session_id         = 24; // Session that got spawned for the flow
     uint64                parent_session_id  = 25; // Parent session that opened pin hole (ALG)
+    uint64                rule_id            = 26; // Rule id that was hit
 }
