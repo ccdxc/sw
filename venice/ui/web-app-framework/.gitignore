@@ -2,6 +2,7 @@
 
 # compiled output
 dist/*
+!dist/web-app-framework-0.0.0.tgz #for better performance allow checkin of this binary
 /tmp
 /out-tsc
 dist.tgz
