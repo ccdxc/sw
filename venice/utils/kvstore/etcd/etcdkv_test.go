@@ -11,6 +11,7 @@ import (
 	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/venice/utils/runtime"
+	tu "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func clusterSetup(t *testing.T) compliance.TestCluster {
@@ -88,4 +89,10 @@ func TestWatchVersion(t *testing.T) {
 
 	w.Stop()
 	t.Logf("Got expected version from watch")
+}
+
+func TestInvalidEtcdStore(t *testing.T) {
+	// invalid server
+	_, err := NewEtcdStore([]string{}, runtime.NewJSONCodec(runtime.NewScheme()), nil)
+	tu.Assert(t, err != nil, "newstore didn't fail for invalid server")
 }
