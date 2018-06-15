@@ -11,6 +11,13 @@ type upgapprespctx struct {
 	agentHdlrs AgentHandlers
 }
 
+func getAppRespStr(obj *upgrade.UpgAppResp) string {
+	if obj.GetUpgAppRespVal()%2 == 0 {
+		return stateMachine[obj.GetUpgAppRespVal()/2].upgRespStateTypeToStrPass
+	}
+	return stateMachine[obj.GetUpgAppRespVal()/2].upgRespStateTypeToStrFail
+}
+
 func getAppResp(obj *upgrade.UpgAppResp, hdlrResp *HdlrResp) {
 	switch obj.GetUpgAppRespVal() {
 	case upgrade.UpgRespStateType_PreUpgStatePass:
@@ -39,28 +46,28 @@ func getAppResp(obj *upgrade.UpgAppResp, hdlrResp *HdlrResp) {
 		hdlrResp.ErrStr = ""
 	case upgrade.UpgRespStateType_PreUpgStateFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_ProcessesQuiescedFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_PostBinRestartFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_CleanupFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_UpgAbortedFail:
 		hdlrResp.Resp = Fail
-		hdlrResp.ErrStr = obj.GetUpgAppRespStr()
+		hdlrResp.ErrStr = getAppRespStr(obj)
 	}
 }
 

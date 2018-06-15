@@ -78,6 +78,7 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 		UpgRespInit(client, agentHdlrs)
 		UpgAppRespInit(client, agentHdlrs)
 	}
+	initStateMachineVector()
 	return upgsdk, nil
 }
 
