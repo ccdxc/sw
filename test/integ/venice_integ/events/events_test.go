@@ -63,11 +63,11 @@ func TestEvents(t *testing.T) {
 	// verify that it has reached elasticsearch; these are the first occurrences of an event
 	// so it should have reached elasticsearch wthout being deduped.
 	query := es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewTermQuery("type", eventType1))
-	ti.assertElasticUniqueEvents(t, query, true, 1, "2s") // unique == 1
-	ti.assertElasticTotalEvents(t, query, true, 1, "2s")  // total  == 1
+	ti.assertElasticUniqueEvents(t, query, true, 1, "4s") // unique == 1
+	ti.assertElasticTotalEvents(t, query, true, 1, "4s")  // total  == 1
 	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test event -2").Operator("and"))
-	ti.assertElasticUniqueEvents(t, query, true, 1, "2s") // unique == 1
-	ti.assertElasticTotalEvents(t, query, true, 1, "2s")  // total == 1
+	ti.assertElasticUniqueEvents(t, query, true, 1, "4s") // unique == 1
+	ti.assertElasticTotalEvents(t, query, true, 1, "4s")  // total == 1
 
 	// send duplicates and check whether they're compressed
 	numDuplicates := 25
@@ -79,12 +79,12 @@ func TestEvents(t *testing.T) {
 	// ensure the deduped events reached elasticsearch
 	// test duplciate event - 1
 	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test dup event - 1").Operator("and"))
-	ti.assertElasticUniqueEvents(t, query, true, 1, "2s")            // unique == 1
+	ti.assertElasticUniqueEvents(t, query, true, 1, "4s")            // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, numDuplicates, "2s") // total == numDuplicates
 
 	// test duplicate event - 2
 	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test dup event - 2").Operator("and"))
-	ti.assertElasticUniqueEvents(t, query, true, 1, "2s")            // unique == 1
+	ti.assertElasticUniqueEvents(t, query, true, 1, "4s")            // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, numDuplicates, "2s") // total == numDuplicates
 
 	// create test NIC object
@@ -104,8 +104,8 @@ func TestEvents(t *testing.T) {
 
 	// query by kind
 	queryByKind := es.NewTermQuery("object-ref.kind", testNIC.GetKind())
-	ti.assertElasticUniqueEvents(t, queryByKind, true, 2, "2s")              // unique == 2 (eventType1 and eventType2)
-	ti.assertElasticTotalEvents(t, queryByKind, true, numDuplicates*2, "2s") // total == numDuplicates
+	ti.assertElasticUniqueEvents(t, queryByKind, true, 2, "4s")              // unique == 2 (eventType1 and eventType2)
+	ti.assertElasticTotalEvents(t, queryByKind, true, numDuplicates*2, "4s") // total == numDuplicates
 }
 
 // TestEventsProxyRestart tests the events flow with events proxy restart
@@ -295,6 +295,6 @@ func TestEventsMgrRestart(t *testing.T) {
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component", fmt.Sprintf("%v-.*", componentID))
-	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "6s")
-	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "6s")
+	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "10s")
+	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "10s")
 }
