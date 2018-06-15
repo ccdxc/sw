@@ -49,10 +49,10 @@ static_images = {
     'pen-kube-scheduler' : 'registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.7.14',
     'pen-kube-apiserver' : 'registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.7.14',
     'pen-etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.2',
-    'pen-filebeat' : 'registry.test.pensando.io:5000/beats/filebeat:6.2.2',
+    'pen-filebeat' : 'registry.test.pensando.io:5000/beats/filebeat:6.3.0',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.4',
     'pen-influx' : 'registry.test.pensando.io:5000/influxdb:1.4.2',
-    'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.2',
+    'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.3',
     'pen-pause' : 'gcr.io/google_containers/pause-amd64:3.0'
 }
 

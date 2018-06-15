@@ -171,7 +171,7 @@ helper-containers:
 	@cd tools/docker-files/ui-container; docker build -t ${REGISTRY_URL}/${UI_BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.2 .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.3 .
-	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.2 .
+	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.3 .
 	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.1 .
 
 # running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
@@ -243,7 +243,7 @@ start-kibana:
 	-e xpack.watcher.enabled=false \
 	-e xpack.ml.enabled=false \
 	-e xpack.monitoring.enabled=false \
-	-p 127.0.0.1:5601:5601 -d docker.elastic.co/kibana/kibana:6.2.2
+	-p 127.0.0.1:5601:5601 -d registry.test.pensando.io:5000/kibana:6.3.0
 
 # Target to run on Mac to stop kibana docker
 stop-kibana:

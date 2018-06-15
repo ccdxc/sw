@@ -42,8 +42,9 @@ filebeat.prospectors:
   paths:
    - {{.LogDir}}/*.log
   symlinks: true
-  json.message_key: event
   json.keys_under_root: true
+  json.add_error_key: true
+  json.message_key: log
 #================================ General =====================================
 fields:
     category: "venice"
@@ -111,6 +112,7 @@ const loggingFields = `
     - name: beat.version
       description: >
         The version of the beat that generated this event.
+
     - name: "@timestamp"
       type: date
       required: true
@@ -118,15 +120,18 @@ const loggingFields = `
       example: August 26th 2016, 12:35:53.332
       description: >
         The timestamp when the event log record was generated.
+
     - name: tags
       description: >
         Arbitrary tags that can be set per Beat and per transaction
         type.
+
     - name: fields
       type: object
       object_type: keyword
       description: >
         Contains user configurable fields.
+
     - name: error
       type: group
       description: >
@@ -156,44 +161,95 @@ const loggingFields = `
       description: >
         The file from which the line was read. This field contains the absolute path to the file.
         For example: "/var/log/system.log".
+
     - name: offset
       type: long
       required: false
       description: >
         The file offset the reported line starts at.
+
     - name: message
       type: text
       ignore_above: 0
       required: true
       description: >
         The content of the line read from the log file.
+
     - name: stream
       type: keyword
       required: false
       description: >
         Log stream when reading container logs, can be 'stdout' or 'stderr'
+
     - name: prospector.type
       required: true
       description: >
-        The prospector type from which the event was generated. This field is set to the value specified for the "type" option in the prospector section of the Filebeat config file.
+        The input type from which the event was generated. This field is set to the value specified
+        for the "type" option in the input section of the Filebeat config file. (DEPRECATED: see "input.type")
+
+    - name: input.type
+      required: true
+      description: >
+        The input type from which the event was generated. This field is set to the value specified
+        for the "type" option in the input section of the Filebeat config file.
+
     - name: read_timestamp
       description: >
         In case the ingest pipeline parses the timestamp from the log contents, it stores
         the original "@timestamp" (representing the time when the log line was read) in this
         field.
+
     - name: fileset.module
       description: >
         The Filebeat module that generated this event.
+
     - name: fileset.name
       description: >
         The Filebeat fileset that generated this event.
+
+    - name: syslog.facility
+      type: long
+      required: false
+      description: >
+        The facility extracted from the priority.
+
+    - name: syslog.priority
+      type: long
+      required: false
+      description: >
+        The priority of the syslog event.
+
+    - name: syslog.severity_label
+      type: keyword
+      required: false
+      description: >
+        The human readable severity.
+
+    - name: syslog.facility_label
+      type: keyword
+      required: false
+      description: >
+        The human readable facility.
+
+    - name: process.program
+      type: keyword
+      required: false
+      description: >
+        The name of the program.
+
+    - name: process.pid
+      type: long
+      required: false
+      description: >
+        The pid of the process.
+
     - name: caller
       type: text
       ignore_above: 0
       required: true
       description: >
         File name and line number of the caller.
-    - name: host
+    - name: host.name
       type: keyword
       ignore_above: 0
       required: true

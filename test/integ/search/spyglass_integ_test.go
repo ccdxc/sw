@@ -53,8 +53,8 @@ import (
 )
 
 const (
-	registryURL  = "docker.elastic.co"
-	elasticImage = "elasticsearch/elasticsearch:6.2.2"
+	registryURL  = "registry.test.pensando.io:5000"
+	elasticImage = "elasticsearch:6.3.0"
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"

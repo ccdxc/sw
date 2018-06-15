@@ -12,7 +12,7 @@ import (
 
 var (
 	registryURL  = "registry.test.pensando.io:5000"
-	elasticImage = "elasticsearch/elasticsearch:6.2.2"
+	elasticImage = "elasticsearch:6.3.0"
 	elasticHost  = "127.0.0.1"
 )
 
