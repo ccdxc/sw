@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,6 +29,10 @@ func (u *upgradeCompletion) UpgSuccessful() {
 
 func (u *upgradeCompletion) UpgFailed() {
 	log.Infof("UpgFailed got called\n")
+}
+
+func (u *upgradeCompletion) UpgAborted() {
+	log.Infof("UpgAborted got called\n")
 }
 
 func (u *upgradeCompletion) UpgStatePreUpgCheckComplete(resp *upgsdk.HdlrResp, svcName string) {
@@ -83,6 +89,14 @@ func main() {
 	err = upg.StartUpgrade()
 	if err != nil {
 		log.Fatalf("Could not start upgrade because of %s\n", err)
+	}
+	timer := time.NewTimer(time.Second * 5)
+	<-timer.C
+	log.Infof("Timer expired")
+
+	//err = upg.AbortUpgrade()
+	if err != nil {
+		log.Fatalf("Could not abort upgrade because of %s\n", err)
 	}
 	a := make(chan struct{})
 	_ = <-a

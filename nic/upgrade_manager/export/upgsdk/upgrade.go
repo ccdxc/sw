@@ -56,6 +56,7 @@ type AgentHandlers interface {
 
 	UpgSuccessful()
 	UpgFailed()
+	UpgAborted()
 }
 
 // UpgSdk is the main Upgrade SDK API
@@ -63,6 +64,8 @@ type UpgSdk interface {
 
 	//API used initiate upgrade request
 	StartUpgrade() error
+	//API used abort existing upgrade request
+	AbortUpgrade() error
 }
 
 //NewUpgSdk API is used to init upgrade sdk
@@ -89,5 +92,17 @@ func (u *upgSdk) StartUpgrade() error {
 	upgreq := upgrade.NewUpgReq(u.sdkClient)
 	upgreq.SetKey(10)
 	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)
+	return nil
+}
+
+func (u *upgSdk) AbortUpgrade() error {
+	if u.svcRole != AgentRole {
+		return errors.New("Svc not of role Agent")
+	}
+	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
+	if upgreq == nil {
+		return errors.New("No upgrade in progress")
+	}
+	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgAbort)
 	return nil
 }
