@@ -1,12 +1,11 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_gc_tx_read_page_free_pair_pi_k.h"
 #include "capri-macros.h"
 
 struct phv_ p;
 struct gc_tx_read_page_free_pair_pi_read_page_free_pair_pi_d d;
-struct gc_tx_read_page_free_pair_pi_k k;
-
-#define T0_s2s_a0 {t0_s2s_a0_sbit0_ebit31...t0_s2s_a0_sbit32_ebit33}
+struct gc_tx_read_page_free_pair_pi_k_ k;
 
 %%
     .param          RNMPR_TABLE_BASE
@@ -22,19 +21,10 @@ dma_cmd_rnmpr:
      */
     addui           r3, r0, hiword(RNMPR_TABLE_BASE)
     addi            r3, r3, loword(RNMPR_TABLE_BASE)
-    and             r2, d.{index}.wx, ((1 << CAPRI_RNMPR_RING_SHIFT) - 1)
-    add             r3, r3, r2, RNMPR_TABLE_ENTRY_SIZE_SHFT
-    phvwr           p.ring_entry2_descr_addr, k.T0_s2s_a0
+    add             r3, r3, k.t0_s2s_idx, RNMPR_TABLE_ENTRY_SIZE_SHFT
+    phvwr           p.ring_entry2_descr_addr, k.t0_s2s_a0
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry2_dma_dma_cmd, r3, ring_entry2_descr_addr, ring_entry2_descr_addr)
-dma_rnmpr_alloc_pair_ci:
-    /*
-     * Set AP.CI = FP.PI
-     */
-    add             r2, d.{index}.wx, 1
-    phvwr           p.ci_2_index, r2.wx
-    addi            r3, r0, CAPRI_SEM_RNMPR_ALLOC_CI_RAW_ADDR
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_2_dma_dma_cmd, r3, ci_2_index, ci_2_index)
-    CAPRI_DMA_CMD_STOP(ci_2_dma_dma_cmd)
+    CAPRI_DMA_CMD_STOP(ringentry2_dma_dma_cmd)
     nop.e
     nop
 
@@ -48,18 +38,10 @@ dma_cmd_tnmpr:
      */
     addui           r3, r0, hiword(TNMPR_TABLE_BASE)
     addi            r3, r3, loword(TNMPR_TABLE_BASE)
-    and             r2, d.{index}.wx, ((1 << CAPRI_TNMPR_RING_SHIFT) - 1)
-    add             r3, r3, r2, TNMPR_TABLE_ENTRY_SIZE_SHFT
-    phvwr           p.ring_entry2_descr_addr, k.T0_s2s_a0
+    add             r3, r3, k.t0_s2s_idx, TNMPR_TABLE_ENTRY_SIZE_SHFT
+    phvwr           p.ring_entry2_descr_addr, k.t0_s2s_a0
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry2_dma_dma_cmd, r3, ring_entry2_descr_addr, ring_entry2_descr_addr)
-dma_tnmpr_alloc_pair_ci:
-    /*
-     * Set AP.CI = FP.PI
-     */
-    add             r2, d.{index}.wx, 1
-    phvwr           p.ci_2_index, r2.wx
-    addi            r3, r0, CAPRI_SEM_TNMPR_ALLOC_CI_RAW_ADDR
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_2_dma_dma_cmd, r3, ci_2_index, ci_2_index)
-    CAPRI_DMA_CMD_STOP(ci_2_dma_dma_cmd)
+    CAPRI_DMA_CMD_STOP(ringentry2_dma_dma_cmd)
     nop.e
+    nop
     

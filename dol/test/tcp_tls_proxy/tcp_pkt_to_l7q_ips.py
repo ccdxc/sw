@@ -136,11 +136,6 @@ def TestCaseVerify(tc):
               serq_cur.ringentries[tlscb.serq_pi].handle))
         return False
     
-    # Verify PI for RNMPR got incremented by 1
-    if (rnmpr_cur.pi != rnmpr.pi+1):
-        print("RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-        return False
-
     # Verify page is not written to SERQ
     if rnmpr.ringentries[0].handle == serq_cur.swdre_list[0].Addr1:
         print("Page handle not as expected in serq_cur.swdre_list")

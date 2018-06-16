@@ -110,8 +110,10 @@ header_type rx2tx_d_t {
 
         debug_dol_tblsetaddr : 8; // 1 byte
 
+        old_ack_no : 32;
+
         // When this offset changes, modify TCP_TCB_RX2TX_SHARED_WRITE_OFFSET
-        RX2TX_SHARED_STATE      // 20 bytes @ Offset 43
+        RX2TX_SHARED_STATE      // 20 bytes @ Offset 47
     }
 }
 
@@ -446,9 +448,9 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
 
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
-pi_4, ci_4, pi_5, ci_5, debug_dol_tx, debug_dol_tblsetaddr, sesq_base, asesq_base,snd_una,\
+pi_4, ci_4, pi_5, ci_5, debug_dol_tx, debug_dol_tblsetaddr, old_ack_no, sesq_base, asesq_base,snd_una,\
 rcv_nxt, snd_wnd,ft_pi, rto, rx_flag, state, pending_ack_send,\
-saved_pending_ack_send\
+saved_pending_ack_send, pending_dup_ack_send\
 
 
 #define GENERATE_RX2TX_D                                                                               \
@@ -474,6 +476,7 @@ saved_pending_ack_send\
     modify_field(rx2tx_d.ci_5, ci_5);                                                                  \
     modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.debug_dol_tblsetaddr, debug_dol_tblsetaddr);                                  \
+    modify_field(rx2tx_d.old_ack_no, old_ack_no);                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
     modify_field(rx2tx_d.asesq_base,asesq_base);                                                       \
     modify_field(rx2tx_d.snd_una, snd_una);                                                            \
@@ -485,8 +488,7 @@ saved_pending_ack_send\
     modify_field(rx2tx_d.state, state);                                                                \
     modify_field(rx2tx_d.pending_ack_send, pending_ack_send);                                          \
     modify_field(rx2tx_d.saved_pending_ack_send, saved_pending_ack_send);                              \
-
-
+    modify_field(rx2tx_d.pending_dup_ack_send, pending_dup_ack_send);                              \
 
 /*
  * Stage 0 table 0 action

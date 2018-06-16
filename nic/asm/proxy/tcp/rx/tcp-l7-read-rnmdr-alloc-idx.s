@@ -17,7 +17,9 @@ struct s3_t3_tcp_rx_l7_read_rnmdr_d d;
     
 %%
     .param          tcp_rx_l7_rdesc_alloc_start
+    .param          tcp_rx_rpage_alloc_start
     .param          RNMDR_TABLE_BASE
+    .param          RNMPR_TABLE_BASE
     .align
 tcp_rx_l7_read_rnmdr_start:
 
@@ -35,5 +37,23 @@ table_read_RNMDR_DESC:
                         tcp_rx_l7_rdesc_alloc_start,
                         r3, RNMDR_TABLE_ENTRY_SIZE_SHFT,
                         TABLE_SIZE_64_BITS)
+
+    /*
+     * For IPS case, we need to allocate page, as read RNMDR
+     * did not get launched
+     */
+    seq             c1, k.common_phv_l7_proxy_type_redirect, 1
+    b.!c1           l7_read_rnmdr_end
+table_read_RNMPR_PAGE:
+    addui           r3, r0, hiword(RNMPR_TABLE_BASE)
+    addi            r3, r3, loword(RNMPR_TABLE_BASE)
+    CAPRI_NEXT_TABLE_READ_INDEX(2, r4, TABLE_LOCK_DIS,
+                    tcp_rx_rpage_alloc_start, r3,
+                    RNMPR_TABLE_ENTRY_SIZE_SHFT, TABLE_SIZE_64_BITS)
+    nop.e
+    nop
+
+
+l7_read_rnmdr_end:
     nop.e
     nop

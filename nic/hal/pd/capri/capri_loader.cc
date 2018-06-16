@@ -11,12 +11,12 @@
 #include <assert.h>
 #include "nic/include/asic_pd.hpp"
 #include <boost/unordered_map.hpp>
+#include <vector>
 
 /* TODO: Declaring these as globals for now. Figure out usage and define
  *       these appropriately.
  */
 boost::unordered_map<std::string, capri_loader_ctx_t *> loader_instances;
-
 
 /**
  * read_programs: Read all the programs in a specified directory. For now
@@ -35,6 +35,7 @@ read_programs(const char *handle, char *pathname)
     int i = 0;
     capri_loader_ctx_t *ctx;
     capri_program_info_t *program_info;
+    std::vector <std::string> program_names;
 
     /* Load context */
     ctx = loader_instances[handle];
@@ -47,15 +48,20 @@ read_programs(const char *handle, char *pathname)
     if ((dir = opendir (pathname)) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
             if (ent->d_name[0] != '.') {
-                program_info[i].name = ent->d_name;
-                i++;
-                assert(i < MAX_PROGRAMS);
+                program_names.push_back(ent->d_name);
             }
         }
         closedir (dir);
     } else {
         HAL_TRACE_ERR("Cannot open dir {} {}", pathname, strerror(errno));
         return -1;
+    }
+
+    std::sort(program_names.begin(), program_names.end());
+    for (auto it = program_names.cbegin(); it != program_names.cend(); it++) {
+        program_info[i].name = *it;
+        i++;
+        assert(i < MAX_PROGRAMS);
     }
     return i;
 }

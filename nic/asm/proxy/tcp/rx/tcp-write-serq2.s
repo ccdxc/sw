@@ -84,8 +84,10 @@ dma_cmd_ring_tcp_tx_doorbell:
     bcf         [c1 & !c2], tcp_write_serq2_done
     nop
 
-    CAPRI_DMA_CMD_RING_DOORBELL2_INC_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
-                                TCP_SCHED_RING_PENDING_RX2TX, db_data2_pid, db_data2_index)
+    tbladd.f    d.rx2tx_pi, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+                                TCP_SCHED_RING_PENDING_RX2TX, d.rx2tx_pi, db_data2_pid, db_data2_index)
+    phvwr       p.tx_doorbell_or_timer_dma_cmd_wr_fence, 1
 
     seq         c1, k.common_phv_skip_pkt_dma, 1
     bcf         [c1], tx_doorbell_set_eop

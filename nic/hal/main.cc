@@ -288,8 +288,8 @@ main (int argc, char **argv)
         exit(1);
     }
 
-    if (hal_cfg.platform_mode != hal::HAL_PLATFORM_MODE_HAPS &&
-        hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
+    if (hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
+        HAL_TRACE_DEBUG("lkl init");
         if (hal::pd::lkl_init() != HAL_RET_OK) {
             fprintf(stderr, "LKL initialization failed, quitting ...\n");
             exit(1);

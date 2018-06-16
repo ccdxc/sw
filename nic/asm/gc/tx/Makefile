@@ -10,9 +10,10 @@ PROJ = gc_txdma
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
+ALT_ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/alt_asm_out/
 P4_DIR = $(TOPDIR)/p4/gc
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../common-p4+/include -I../../../include -I../../proxy/include
+INC_DIRS = -I. -I$(ALT_ASM_HDR_DIR) -I$(ASM_HDR_DIR) -I../include -I../../common-p4+/include -I../../../include -I../../proxy/include
 SRC_DIR = .
 
 CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim

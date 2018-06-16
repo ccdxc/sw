@@ -253,11 +253,6 @@ table_read_RNMDR_ALLOC_IDX:
     bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_start,
                         RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
-table_read_RNMPR_ALLOC_IDX:
-    //seq             c3, k.s1_s2s_payload_len, r0
-    //bcf             [c3], tcp_rx_end
-    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_start,
-                        RNMPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 table_read_L7_RNDMR_ALLOC_IDX:
     seq             c1, k.common_phv_l7_proxy_en, 1
     b.!c1.e         tcp_rx_end
@@ -462,6 +457,7 @@ tcp_rx_slow_path:
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_pending_ack_send, 1
+    phvwr.c1        p.rx2tx_pending_dup_ack_send, 1
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
     phvwr.c3        p.common_phv_skip_pkt_dma, 1
@@ -531,6 +527,7 @@ tcp_rx_slow_path:
     phvwr.c1        p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri.c1    d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
     phvwr.c1        p.rx2tx_pending_ack_send, 1
+    phvwr.c1        p.rx2tx_pending_dup_ack_send, 1
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
 
@@ -640,6 +637,7 @@ ooo_received:
     phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr           p.rx2tx_pending_ack_send, 1
+    phvwr.c1        p.rx2tx_pending_dup_ack_send, 1
     /*
      * We can receive upto window of rcv_nxt to rcv_nxt + CELL_SIZE *
      * NUM_CELLS into the future.  If we receive an end sequence number beyond

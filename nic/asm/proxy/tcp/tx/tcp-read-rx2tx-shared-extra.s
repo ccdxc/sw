@@ -47,6 +47,7 @@ tcp_tx_start_pending:
     // Debug : Don't send ack based on dol flag
     seq             c1, k.common_phv_debug_dol_dont_send_ack, 1
     smeqb           c2, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    seq             c3, k.common_phv_pending_ack_send, 1
 
     /*
      * For snd_una_update, the next stage is launched by pending stage,
@@ -54,10 +55,13 @@ tcp_tx_start_pending:
      * the PHV, then set global_drop bit
      */
     phvwri.c1       p.app_header_table0_valid, 0
-    setcf           c3, [c1 & !c2]
-    phvwri.c3       p.p4_intr_global_drop, 1
+    setcf           c4, [c1 & !c2]
+    phvwri.c4       p.p4_intr_global_drop, 1
+    bcf             [!c1 & c3], pending_ack
+    nop
     bcf             [c1 | c2], tcp_tx_rx2tx_extra_end
 
+pending_ack:
     /*
      * For pending_ack_send, we need to launch the bubble stage
      */

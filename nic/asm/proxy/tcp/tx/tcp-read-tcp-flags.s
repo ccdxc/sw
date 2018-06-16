@@ -23,8 +23,14 @@ tcp_tx_read_tcp_flags_start:
     CAPRI_CLEAR_TABLE_VALID(2)
 
     CAPRI_OPERAND_DEBUG(d.tcp_flags)
+    /*
+     * FIN only works in bypass barco mode for now.
+     */
+    seq             c1, k.common_phv_debug_dol_bypass_barco, 0
+    b.c1            read_tcp_flags_end
     smeqb           c1, d.tcp_flags, TCPHDR_FIN, TCPHDR_FIN
     phvwri.c1       p.common_phv_fin, 1
     phvwri.c1       p.tcp_header_flags, TCPHDR_ACK | TCPHDR_FIN
+read_tcp_flags_end:
     nop.e
     nop

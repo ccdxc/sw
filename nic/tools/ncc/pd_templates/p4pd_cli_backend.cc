@@ -74,6 +74,7 @@ p4pd_grpc_init(void)
         grpc_server_port = getenv("HAL_GRPC_PORT");
     }
 
+    grpc_init();
     channel =
         grpc::CreateChannel(grpc_server_port, grpc::InsecureChannelCredentials());
 

@@ -250,6 +250,7 @@ header_type write_serq_d_t {
         nde_len                 : 16;
         curr_ts                 : 32;
         ft_pi                   : 16;
+        rx2tx_pi                : 16;
 
         // stats
         pkts_rcvd               : 8;
@@ -561,6 +562,13 @@ metadata s6_t2_s2s_phv_t s6_t2_s2s;
  *****************************************************************************/
 @pragma dont_trim
 metadata rx2tx_t rx2tx;
+header_type rx2tx_pad1_t {
+    fields {
+        pad                 : 24;
+    }
+}
+@pragma dont_trim
+metadata rx2tx_pad1_t rx2tx_pad;
 @pragma dont_trim
 metadata rx2tx_extra_t rx2tx_extra;
 header_type rx2tx_extra_pad_t {
@@ -995,7 +1003,7 @@ action tcp_fc(page, descr, page_cnt, l7_descr) {
 action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
         ato, ooo_offset,
         pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
-        debug_num_phv_to_mem, ft_pi) {
+        debug_num_phv_to_mem, ft_pi, rx2tx_pi) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -1023,6 +1031,7 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(write_serq_d.debug_num_pkt_to_mem, debug_num_pkt_to_mem);
     modify_field(write_serq_d.debug_num_phv_to_mem, debug_num_phv_to_mem);
     modify_field(write_serq_d.ft_pi, ft_pi);
+    modify_field(write_serq_d.rx2tx_pi, rx2tx_pi);
 }
 
 /*

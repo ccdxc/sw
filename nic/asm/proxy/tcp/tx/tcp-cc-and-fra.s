@@ -23,7 +23,8 @@ struct s4_t0_tcp_tx_cc_and_fra_d d;
 
 tcp_cc_and_fra_process_start:
     smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
-    bcf             [c1], tcp_cong_control
+    seq             c2, k.common_phv_pending_ack_send, 1
+    bcf             [c1 & !c2], tcp_cong_control
 
     phvwr           p.to_s5_snd_cwnd, d.snd_cwnd
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,

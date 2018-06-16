@@ -120,11 +120,6 @@ def TestCaseVerify(tc):
         return False
     print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
 
-    # Verify PI for RNMPR got incremented by 1
-    if (rnmpr_cur.pi != rnmpr.pi+1):
-        print("RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-        return False
-
     # Verify page
     #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
     #    print("Page handle not as expected in brq_cur.swdre_list")

@@ -25,19 +25,22 @@ struct s5_t0_tcp_tx_xmit_d d;
      */
 
 tcp_xmit_process_start:
+    seq             c1, k.common_phv_pending_ack_send, 1
+    bcf             [c1], tcp_tx_enqueue
+
     smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
     bcf             [c1], tcp_tx_xmit_snd_una_update
 
     seq             c1, k.common_phv_pending_rto, 1
     bcf             [c1], tcp_tx_retransmit
 
+tcp_tx_enqueue:
     /*
      * For RTO case, snd_nxt is snd_una, initialize snd_nxt for other cases
      */
     seq             c1, k.t0_s2s_snd_nxt, r0
     phvwr.c1        p.t0_s2s_snd_nxt, d.snd_nxt
 
-tcp_tx_enqueue:
     seq             c1, k.common_phv_pending_sesq, 1
     seq.!c1         c1, k.common_phv_pending_asesq, 1
 
@@ -89,10 +92,10 @@ flow_read_xmit_cursor_start:
     /* Get the point where we are supposed to read from */
     seq             c1, d.xmit_cursor_addr, r0
     bcf             [c1], flow_read_xmit_cursor_done
-    add             r1, d.xmit_cursor_addr, r0
 
     // TODO : r1 needs to be capped by the window size
     add             r1, d.xmit_len, r0
+
     phvwrpair       p.to_s6_xmit_cursor_addr, d.xmit_cursor_addr[33:0], \
                         p.to_s6_xmit_cursor_len, r1
     tbladd          d.snd_nxt, r1
@@ -239,5 +242,6 @@ tcp_tx_end_program:
 tcp_tx_retransmit:
     seq             c1, d.rto_pi, k.t0_s2s_rto_pi
     b.!c1           tcp_tx_end_program // old timer, ignore it
+    nop
     b               rearm_rto
     tbladd          d.rto_backoff, 1

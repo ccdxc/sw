@@ -74,6 +74,7 @@ header_type common_t0_s2s_phv_t {
         a0                      : 34;
         a1                      : 34;
         a2                      : 34;
+        idx                     : 16;
     }
 }
 
@@ -234,6 +235,7 @@ action read_descr_free_pair_pi(index) {
     modify_field(t0_s2s_scratch.a0, t0_s2s.a0);
     modify_field(t0_s2s_scratch.a1, t0_s2s.a1);
     modify_field(t0_s2s_scratch.a2, t0_s2s.a2);
+    modify_field(t0_s2s_scratch.idx, t0_s2s.idx);
 
     // d for stage 3
     modify_field(read_descr_free_pair_pi_d.index, index);
@@ -250,6 +252,7 @@ action read_page_free_pair_pi(index) {
     modify_field(t0_s2s_scratch.a0, t0_s2s.a0);
     modify_field(t0_s2s_scratch.a1, t0_s2s.a1);
     modify_field(t0_s2s_scratch.a2, t0_s2s.a2);
+    modify_field(t0_s2s_scratch.idx, t0_s2s.idx);
 
     // d for stage 4
     modify_field(read_page_free_pair_pi_d.index, index);

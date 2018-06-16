@@ -28,6 +28,9 @@ table_launch_cc_and_fra:
                         TCP_TCB_CC_AND_FRA_OFFSET, TABLE_SIZE_512_BITS)
 
     smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    seq             c2, k.common_phv_pending_ack_send, 1
+    bcf             [c1 & c2], tcp_retx_reschedule_and_quit
+    nop
     bcf             [c1], tcp_retx_snd_una_update
 
     seq             c1, k.common_phv_pending_rto, 1
@@ -58,7 +61,18 @@ retx_empty:
     /*
      * retx empty, update head/tail/xmit desc and cursors
      */
+    // DEBUG CODE ONLY
+    //addi            r1, r0, 0xc0009000
+    //seq             c1, d.debug1, 0
+    //tblwr.c1        d.debug1, r1
+
+    //memwr.wx        d.debug1, k.to_s3_sesq_desc_addr
+    //tbladd          d.debug1, 4
+    // END DEBUG CODE ONLY
+
+    //tbladd          d.{debug1}.wx, 1
     tblwr           d.retx_head_desc, k.to_s3_sesq_desc_addr
+
     tblwr           d.retx_tail_desc, k.to_s3_sesq_desc_addr
     tblwr           d.retx_next_desc, r0
 
@@ -97,14 +111,16 @@ queue_to_tail:
 
 
 tcp_retx_snd_una_update:
+    seq             c1, k.common_phv_snd_una, d.retx_snd_una
+    b.c1            tcp_retx_end_program
+
     sub             r1, k.common_phv_snd_una, d.retx_snd_una
     /*
      * c1 = less than data in head descriptor needs to be cleaned up
      */
     slt             c1, r1, d.retx_head_len
     b.!c1           tcp_retx_snd_una_update_free_head
-    tbladd.!c1      d.retx_snd_una, d.retx_head_len
-    tbladd          d.retx_snd_una, r1
+    tbladd.c1       d.retx_snd_una, r1
     tblsub          d.retx_head_len, r1
     tbladd.e        d.retx_head_offset, r1
     tbladd          d.retx_xmit_cursor, r1
@@ -112,10 +128,41 @@ tcp_retx_snd_una_update:
 tcp_retx_snd_una_update_free_head:
 
     /*
+     * Since we are using memwr to update old_tail->next_desc (above),
+     * we have a race condition where the memwr has not gone through
+     * but tail has been updated. We may end up performing incorrect
+     * linked list operations, if we get an ACK fast enough to cause
+     * us to clean up the linked list.
+     *
+     * For now the best we can detect this condition and reschedule if
+     * that is the case
+     * 
+     * if (head != tail && head->next != tail) {
+     *      if (t0_s2s_next_addr is NULL): reschedule
+     */
+
+    sne             c1, d.retx_head_desc, d.retx_tail_desc
+    sne             c2, d.retx_next_desc, d.retx_tail_desc
+    seq             c3, k.t0_s2s_next_addr, 0
+    bcf             [c1 & c2 & c3], tcp_retx_reschedule_and_quit
+
+    /*
+     * Another race condition is where stage 1 has read
+     * t0_s2s_next_addr before next_desc got updated
+     * here, in which case we will update next_desc to
+     * itself, which we should not do. We need to
+     * reschedule to read the right value
+     */
+    sne             c1, d.retx_next_desc, 0
+    seq             c2, d.retx_next_desc, k.t0_s2s_next_addr
+    bcf             [c1 & c2], tcp_retx_reschedule_and_quit
+
+    /*
      * We need to free d.retx_head_desc. Pass the address to read_nmdr_gc stage
      * to free it
      */
     phvwr           p.t1_s2s_free_desc_addr, d.retx_head_desc
+    tbladd          d.retx_snd_una, d.retx_head_len
 
     // write new descriptor address, offset and length
     tblwr           d.retx_head_desc, d.retx_next_desc
@@ -141,11 +188,12 @@ tcp_retx_snd_una_update_free_head:
     sle             c1, r1, r0
     b.c1            free_descriptor
 
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC,
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
                         DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd          d.tx_ring_pi, 1
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
-                        TCP_SCHED_RING_PENDING_TX, 0)
+                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
     memwr.dx        r4, r3
 
 free_descriptor:
@@ -155,9 +203,28 @@ free_descriptor:
     nop
 
 tcp_retx_retransmit:
+    seq             c1, d.retx_head_desc, r0
+    b.c1            tcp_retx_end_program
     phvwr           p.t0_s2s_snd_nxt, d.retx_snd_una
     phvwr           p.to_s6_xmit_cursor_addr, d.retx_xmit_cursor
     phvwr           p.to_s6_xmit_cursor_len, d.retx_head_len
     phvwri          p.to_s6_pending_tso_data, 1
+    nop.e
+    nop
+
+tcp_retx_end_program:
+    // retransmission timer fired, but we have nothing to retransmit
+    CAPRI_CLEAR_TABLE_VALID(0)
+    nop.e
+    nop
+
+tcp_retx_reschedule_and_quit:
+    tbladd          d.tx_ring_pi, 1
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
+    memwr.dx.e      r4, r3
     nop.e
     nop

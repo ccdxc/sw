@@ -20,8 +20,7 @@ gc_tx_inc_rnmdr_free_pair_pi:
     /*
      * Read page FP.PI, to get index to write the freed descr address to
      */
-    CAPRI_NEXT_TABLE_READ_i(0, TABLE_LOCK_DIS, gc_tx_inc_rnmpr_free_pair_pi,
-                    RNMPR_FREE_IDX, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, gc_tx_inc_rnmpr_free_pair_pi)
 dma_cmd_rnmdr:
     /*
      * Write descriptor address to descr[FP.PI]
@@ -31,6 +30,7 @@ dma_cmd_rnmdr:
     addui           r3, r0, hiword(RNMDR_TABLE_BASE)
     addi            r3, r3, loword(RNMDR_TABLE_BASE)
     and             r2, d.{index}.wx, ((1 << CAPRI_RNMDR_RING_SHIFT) - 1)
+    phvwr           p.t0_s2s_idx, r2
     add             r3, r3, r2, RNMDR_TABLE_ENTRY_SIZE_SHFT
     phvwr           p.ring_entry1_descr_addr, k.Common_phv_desc_addr
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry1_dma_dma_cmd, r3, ring_entry1_descr_addr, ring_entry1_descr_addr)
@@ -53,8 +53,7 @@ gc_tx_inc_tnmdr_free_pair_pi:
     /*
      * Read page FP.PI, to get index to write the freed descr address to
      */
-    CAPRI_NEXT_TABLE_READ_i(0, TABLE_LOCK_DIS, gc_tx_inc_tnmpr_free_pair_pi,
-                    TNMPR_FREE_IDX, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, gc_tx_inc_tnmpr_free_pair_pi)
 dma_cmd_tnmdr:
     /*
      * Write descriptor address to descr[FP.PI]
@@ -64,6 +63,7 @@ dma_cmd_tnmdr:
     addui           r3, r0, hiword(TNMDR_TABLE_BASE)
     addi            r3, r3, loword(TNMDR_TABLE_BASE)
     and             r2, d.{index}.wx, ((1 << CAPRI_TNMDR_RING_SHIFT) - 1)
+    phvwr           p.t0_s2s_idx, r2
     add             r3, r3, r2, TNMDR_TABLE_ENTRY_SIZE_SHFT
     phvwr           p.ring_entry1_descr_addr, k.Common_phv_desc_addr
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry1_dma_dma_cmd, r3, ring_entry1_descr_addr, ring_entry1_descr_addr)

@@ -345,8 +345,6 @@ def TestCaseVerify(tc):
     # 11.
     print("RNMDR old pi=%d,ci=%d / new pi=%d,ci=%d" %
             (rnmdr.pi, rnmdr.ci, rnmdr_cur.pi, rnmdr_cur.ci))
-    print("RNMPR old pi=%d,ci=%d / new pi=%d,ci=%d" %
-            (rnmpr.pi, rnmpr.ci, rnmpr_cur.pi, rnmpr_cur.ci))
 
     print("TNMDR old pi=%d,ci=%d / new pi=%d,ci=%d" %
             (tnmdr.pi, tnmdr.ci, tnmdr_cur.pi, tnmdr_cur.ci))
@@ -384,18 +382,10 @@ def TestCaseVerify(tc):
             print("rnmdr cur %d pi does not match expected %d" % \
                     (rnmdr_cur.pi, rnmdr.pi + tc.pvtdata.pkt_alloc))
             return False
-        if rnmpr_cur.pi != rnmpr.pi + tc.pvtdata.pkt_alloc:
-            print("rnmpr cur %d pi does not match expected %d" % \
-                    (rnmpr_cur.pi, rnmpr.pi + tc.pvtdata.pkt_alloc))
-            return False
         if tc.pvtdata.bypass_barco:
             if rnmdr_cur.ci != rnmdr.ci + tc.pvtdata.pkt_free:
                 print("rnmdr cur %d ci does not match expected %d" % \
                         (rnmdr_cur.ci, rnmdr.ci + tc.pvtdata.pkt_free))
-                return False
-            if rnmpr_cur.ci != rnmpr.ci + tc.pvtdata.pkt_free:
-                print("rnmpr cur ci %d does not match expected %d" % \
-                        (rnmpr_cur.ci, rnmpr.ci + tc.pvtdata.pkt_free))
                 return False
 
     if tc.pvtdata.test_cong_avoid:

@@ -1225,6 +1225,9 @@ pd_tcpcb_create (pd_func_args_t *pd_func_args)
     // get hw-id for this TCPCB
     tcpcb_pd->hw_id = pd_tcpcb_get_base_hw_index(tcpcb_pd);
 
+    HAL_TRACE_DEBUG("Creating TCP CB at addr: 0x{:x} qid: {}",
+            tcpcb_pd->hw_id, tcpcb_pd->tcpcb->cb_id);
+
     // program tcpcb
     ret = p4pd_add_or_del_tcpcb_entry(tcpcb_pd, false);
     if(ret != HAL_RET_OK) {

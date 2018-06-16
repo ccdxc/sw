@@ -27,7 +27,9 @@ typedef enum {
     FLOW_STATE_INVALID = 0,
     FLOW_STATE_SYN_RCVD = 1,
     FLOW_STATE_CONNECT_PENDING = 2,
-    FLOW_STATE_ESTABLISHED = 3
+    FLOW_STATE_ESTABLISHED = 3,
+    FLOW_STATE_SSL_HANDSHAKE_IN_PROGRESS = 4,
+    FLOW_STATE_SSL_HANDSHAKE_DONE = 5
 } lklshim_flow_state_e;
 
 typedef struct lklshim_flow_key_t_ {

@@ -197,14 +197,6 @@ def TestCaseVerify(tc):
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
 
-    # Verify PI for RNMPR or RNMPR_SMALL got incremented
-    if ((rnmpr_cur.pi+rnmpr_small_cur.pi) != (rnmpr.pi+rnmpr_small.pi+num_pkts+proxyr_meta_pages)):
-        print("RNMPR pi check failed old %d new %d expected %d" %
-                  (rnmpr.pi+rnmpr_small.pi, rnmpr_cur.pi+rnmpr_small_cur.pi,
-                   rnmpr.pi+rnmpr_small.pi+num_pkts+proxyr_meta_pages))
-        proxyrcb_cur.StatsPrint()
-        proxyccb_cur.StatsPrint()
-        return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
 

@@ -95,11 +95,6 @@ def TestCaseVerify(tc):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
-    # 4. Verify PI for RNMPR got incremented by 1 
-    if (rnmpr_cur.pi != rnmpr.pi+1):
-        print("RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-        return False
-
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
     # 5. Verify pi/ci did not get updated

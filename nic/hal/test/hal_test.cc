@@ -19,6 +19,7 @@
 #include "nic/gen/proto/hal/telemetry.grpc.pb.h"
 #include "sdk/pal.hpp"
 #include "sdk/types.hpp"
+#include "nic/gen/proto/hal/proxy.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -196,6 +197,16 @@ using telemetry::DropMonitorRuleGetRequestMsg;
 using telemetry::DropMonitorRuleGetResponse;
 using telemetry::DropMonitorRuleGetResponseMsg;
 
+using proxy::Proxy;
+using proxy::ProxySpec;
+using proxy::ProxyRequestMsg;
+using proxy::ProxyResponseMsg;
+using proxy::ProxyFlowConfigRequestMsg;
+using proxy::ProxyFlowConfigRequest;
+using proxy::ProxyGlobalCfgRequest;
+using proxy::ProxyGlobalCfgRequestMsg;
+using proxy::ProxyGlobalCfgResponseMsg;
+
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
 
@@ -248,7 +259,8 @@ public:
     debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
-    telemetry_stub_(Telemetry::NewStub(channel)) {}
+    telemetry_stub_(Telemetry::NewStub(channel)),
+    proxy_stub_(Proxy::NewStub(channel)) {}
 
     int mpu_record_read_hw(mpu_trace_record_t *record)
     {
@@ -1377,6 +1389,18 @@ public:
         return ret;
     }
 
+    int flow_key_populate(uint64_t vrf_id, uint32_t sip, uint32_t dip,
+                         ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
+                         session::FlowKey *flow_key) {
+        flow_key->mutable_v4_key()->set_sip(sip);
+        flow_key->mutable_v4_key()->set_dip(dip);
+        flow_key->mutable_v4_key()->set_ip_proto(proto);
+        flow_key->mutable_v4_key()->mutable_tcp_udp()->set_sport(sport);
+        flow_key->mutable_v4_key()->mutable_tcp_udp()->set_dport(dport);
+
+        return 0;
+    }
+
     int session_populate(uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
                          ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
                          ::session::NatType nat_type,
@@ -1975,6 +1999,93 @@ public:
         return 0;
     }
 
+    int bypass_tls() {
+        ProxyGlobalCfgRequest       *spec;
+        ProxyGlobalCfgRequestMsg    req_msg;
+        ProxyGlobalCfgResponseMsg   rsp_msg;
+        ClientContext               context;
+        Status                      status;
+
+        spec = req_msg.add_request();
+        spec->set_proxy_type(types::PROXY_TYPE_TLS);
+        spec->set_bypass_mode(1);
+
+        status = proxy_stub_->ProxyGlobalCfg(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Proxy bypass succeeded"
+                      << std::endl;
+            return 0;
+
+        } else {
+            std::cout << "Proxy bypass failed"
+                      << std::endl;
+            return -1;
+        }
+    }
+
+    int proxy_enable(types::ProxyType type) {
+        ProxySpec           *spec;
+        ProxyRequestMsg     req_msg;
+        ProxyResponseMsg    rsp_msg;
+        ClientContext       context;
+        Status              status;
+
+        spec = req_msg.add_request();
+        spec->set_proxy_type(type);
+
+        status = proxy_stub_->ProxyEnable(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Proxy create succeeded for "
+                      << type
+                      << std::endl;
+            return 0;
+
+        } else {
+            std::cout << "Proxy create failed for TCP"
+                      << type
+                      << std::endl;
+            return -1;
+        }
+    }
+
+    int proxy_flow_config(bool proxy_enable, int vrf_id,
+            uint32_t sip, uint32_t dip, uint16_t sport,
+            uint16_t dport, int num_entries) {
+        ProxyFlowConfigRequest      *spec;
+        ProxyFlowConfigRequestMsg   req_msg;
+        ProxyResponseMsg            rsp_msg;
+        ClientContext       context;
+        Status              status;
+
+        for (int i = 0; i < num_entries; i++) {
+            spec = req_msg.add_request();
+            spec->mutable_meta()->set_vrf_id(vrf_id);
+            spec->mutable_spec()->set_proxy_type(types::PROXY_TYPE_TCP);
+            spec->set_proxy_en(proxy_enable);
+            spec->set_alloc_qid(true);
+
+            flow_key_populate(
+                    vrf_id,
+                    sip, dip, ::types::IPProtocol::IPPROTO_TCP,
+                    sport + i, dport + i,
+                    spec->mutable_flow_key());
+        }
+
+        status = proxy_stub_->ProxyFlowConfig(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Proxy config succeeded for "
+                      << dip << "/" << sip << " " << dport << "/" << sport
+                      << std::endl;
+            return 0;
+
+        } else {
+            std::cout << "Proxy config failed for TCP"
+                      << dip << "/" << sip << " " << dport << "/" << sport
+                      << std::endl;
+            return -1;
+        }
+    }
+
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
@@ -1988,6 +2099,7 @@ private:
     std::unique_ptr<Endpoint::Stub> ep_stub_;
     std::unique_ptr<Session::Stub> session_stub_;
     std::unique_ptr<Telemetry::Stub> telemetry_stub_;
+    std::unique_ptr<Proxy::Stub> proxy_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -2456,6 +2568,8 @@ main (int argc, char** argv)
     int          mpu = -1;
     char         pipeline_type[32] = {0};
     int          count = 1;
+    bool         proxy_create = false;
+    bool         bypass_tls = false;
 
     uint64_t num_l2segments = 1;
     uint64_t encap_value    = 100;
@@ -2525,6 +2639,10 @@ main (int argc, char** argv)
             pps = atoi(argv[3]);
             policer_rate = atoi(argv[4]);
             policer_burst = atoi(argv[5]);
+        } else if (!strcmp(argv[1], "proxy")) {
+            proxy_create = true;
+        } else if (!strcmp(argv[1], "bypass_tls")) {
+            bypass_tls = true;
         } else if (!strcmp(argv[1], "config")) {
             config = true;
         }
@@ -2566,6 +2684,29 @@ main (int argc, char** argv)
     } else if (system_get == true) {
         hclient.system_get();
         return 0;
+    } else if (proxy_create) {
+        hclient.proxy_enable(types::PROXY_TYPE_TCP);
+        hclient.proxy_enable(types::PROXY_TYPE_TLS);
+
+        // n2n
+        hclient.proxy_flow_config(true, vrf_id,
+            0x0a0a0102,     // sip
+            0x0a0a0104,     // dip
+            0xbaba, // sport
+            80,     // dport
+            100);   // num_entries
+
+        // h2n
+        hclient.proxy_flow_config(true, vrf_id,
+            0x0a0a010c,     // sip
+            0x0a0a0103,     // dip
+            0xbaba, // sport
+            80,     // dport
+            100);   // num_entries
+
+        return 0;
+    } else if (bypass_tls) {
+        hclient.bypass_tls();
     } else if (session_delete_test == true) {
 
         std::cout << "session_delete_test" << std::endl;

@@ -70,15 +70,15 @@
 #define CAPRI_SEM_ARQ_TX_2_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 6)
 #define CAPRI_SEM_TLS_RNMDR_IDX_ADDR        (CAPRI_MEM_SINGLE_SEMA_START + 8 * 7)
 
-//#define CAPRI_RNMDR_RING_SIZE               16384
-//#define CAPRI_RNMDR_RING_SHIFT              14
-#define CAPRI_RNMDR_RING_SIZE               1024
 #define CAPRI_RNMDR_RING_SHIFT              10
+#define CAPRI_RNMDR_RING_SIZE               (1 << CAPRI_RNMDR_RING_SHIFT)
 #define CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR \
                             (CAPRI_SEM_RNMDR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_RNMDR_ALLOC_CI_RAW_ADDR \
                             (CAPRI_SEM_RNMDR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET + \
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
+#define CAPRI_SEM_RNMDR_ALLOC_INC_ADDR \
+                            (CAPRI_SEM_RNMDR_ALLOC_ADDR + CAPRI_SEM_INC_OFFSET)
 #define CAPRI_SEM_RNMDR_ALLOC_INF_ADDR \
                             (CAPRI_SEM_RNMDR_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
 
@@ -89,15 +89,15 @@
 #define CAPRI_SEM_RNMDR_FREE_INC_ADDR \
                             (CAPRI_SEM_RNMDR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
-//#define CAPRI_RNMPR_RING_SIZE               16384
-//#define CAPRI_RNMPR_RING_SHIFT              14
-#define CAPRI_RNMPR_RING_SIZE               1024
 #define CAPRI_RNMPR_RING_SHIFT              10
+#define CAPRI_RNMPR_RING_SIZE               (1 << CAPRI_RNMPR_RING_SHIFT)
 #define CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR \
                             (CAPRI_SEM_RNMPR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_RNMPR_ALLOC_CI_RAW_ADDR \
                             (CAPRI_SEM_RNMPR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET + \
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
+#define CAPRI_SEM_RNMPR_ALLOC_INC_ADDR \
+                            (CAPRI_SEM_RNMPR_ALLOC_ADDR + CAPRI_SEM_INC_OFFSET)
 #define CAPRI_SEM_RNMPR_ALLOC_INF_ADDR \
                             (CAPRI_SEM_RNMPR_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
 
@@ -112,10 +112,8 @@
                             (CAPRI_SEM_RNMPR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
 
-//#define CAPRI_TNMDR_RING_SIZE               16384
-//#define CAPRI_TNMDR_RING_SHIFT              14
-#define CAPRI_TNMDR_RING_SIZE               1024
 #define CAPRI_TNMDR_RING_SHIFT              10
+#define CAPRI_TNMDR_RING_SIZE               (1 << CAPRI_TNMDR_RING_SHIFT)
 #define CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR \
                             (CAPRI_SEM_TNMDR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_TNMDR_ALLOC_CI_RAW_ADDR \
@@ -123,6 +121,8 @@
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_TNMDR_ALLOC_INF_ADDR \
                             (CAPRI_SEM_TNMDR_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
+#define CAPRI_SEM_TNMDR_ALLOC_INC_ADDR \
+                            (CAPRI_SEM_TNMDR_ALLOC_ADDR + CAPRI_SEM_INC_OFFSET)
 
 #define CAPRI_SEM_TNMDR_FREE_RAW_ADDR \
                             (CAPRI_SEM_TNMDR_FREE_ADDR + CAPRI_SEM_RAW_OFFSET)
@@ -135,10 +135,8 @@
                             (CAPRI_SEM_TNMDR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
 
-#define CAPRI_TNMPR_RING_SIZE               16384
-#define CAPRI_TNMPR_RING_SHIFT              14
-//#define CAPRI_TNMPR_RING_SIZE               1024
-//#define CAPRI_TNMPR_RING_SHIFT              10
+#define CAPRI_TNMPR_RING_SHIFT              10
+#define CAPRI_TNMPR_RING_SIZE               (1 << CAPRI_TNMPR_RING_SHIFT)
 #define CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR \
                             (CAPRI_SEM_TNMPR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_TNMPR_ALLOC_CI_RAW_ADDR \
@@ -146,6 +144,8 @@
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_TNMPR_ALLOC_INF_ADDR \
                             (CAPRI_SEM_TNMPR_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
+#define CAPRI_SEM_TNMPR_ALLOC_INC_ADDR \
+                            (CAPRI_SEM_TNMPR_ALLOC_ADDR + CAPRI_SEM_INC_OFFSET)
 
 #define CAPRI_SEM_TNMPR_FREE_RAW_ADDR \
                             (CAPRI_SEM_TNMPR_FREE_ADDR + CAPRI_SEM_RAW_OFFSET)

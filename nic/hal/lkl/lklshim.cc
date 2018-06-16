@@ -278,6 +278,10 @@ lklshim_release_client_syn(uint16_t qid)
     }
 
     HAL_TRACE_DEBUG("lklshim: trying to release client syn for qid = {}", qid);
+    if (flow->netns.state == FLOW_STATE_SSL_HANDSHAKE_IN_PROGRESS) {
+        flow->netns.state = FLOW_STATE_SSL_HANDSHAKE_DONE;
+    }
+    HAL_TRACE_DEBUG("lklshim: trying to release client syn for qid = {}, state {}", qid, flow->netns.state);
 
     void *pkt_skb = NULL;
 
@@ -301,6 +305,9 @@ lklshim_release_client_syn(uint16_t qid)
     HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
     HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
     HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
+
+    lklshim_current_qid = qid;
+    HAL_TRACE_DEBUG("lklshim: saving qid for release client syn for qid = {}", qid);
 
     lklshim_current_qid = qid;
     HAL_TRACE_DEBUG("lklshim: saving qid for release client syn for qid = {}", qid);
@@ -334,15 +341,23 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
      * release the client syn and establish session for the original flow.
      */
     if (!hal::tls::proxy_tls_bypass_mode) {
-        hal::tls::tls_api_start_connection(flow->flow_encap.encrypt_qid, flow->flow_encap.decrypt_qid,
-                                           true, flow->flow_encap.is_server_ctxt, flow->pfi);
-        if(flow->flow_encap.is_server_ctxt) {
-            HAL_TRACE_DEBUG("lklshim: TLS server connection setup done: release client syn for daddr={}, saddr={}, "
-                            "dport={}, sport={}, seqno={}, ackseqno={} ",
-                            ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq),
-                            ntohl(tcp->ack_seq));
-            // Inform LKL
-            lklshim_release_client_syn(flow->iqid);
+        if (flow->netns.state != FLOW_STATE_SSL_HANDSHAKE_IN_PROGRESS) {
+            hal::tls::tls_api_start_connection(flow->flow_encap.encrypt_qid, flow->flow_encap.decrypt_qid,
+                                               true, flow->flow_encap.is_server_ctxt, flow->pfi);
+            flow->netns.state = FLOW_STATE_SSL_HANDSHAKE_IN_PROGRESS;
+            if(flow->flow_encap.is_server_ctxt) {
+                HAL_TRACE_DEBUG("lklshim: TLS server connection setup done: release client syn for daddr={}, saddr={}, "
+                                "dport={}, sport={}, seqno={}, ackseqno={} ",
+                                ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq),
+                                ntohl(tcp->ack_seq));
+                // Inform LKL
+                lklshim_release_client_syn(flow->iqid);
+            }
+        } else {
+            HAL_TRACE_DEBUG("lklshim: TLS server connection already in progress: ignoring for daddr={}, saddr={}, "
+                             "dport={}, sport={}, seqno={}, ackseqno={} ",
+                             ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq),
+                             ntohl(tcp->ack_seq));
         }
     } else {
 

@@ -767,7 +767,7 @@ proxy_flow_enable(types::ProxyType proxy_type,
     proxy_t*            proxy = NULL;
     indexer::status     rs;
 
-    HAL_TRACE_DEBUG("proxy: enable proxy for the flow: {}", proxy_type);
+    HAL_TRACE_DEBUG("proxy: enable proxy for the flow: {}", flow_key);
 
     proxy = find_proxy_by_type(proxy_type);
     if(proxy == NULL) {

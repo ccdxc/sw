@@ -117,11 +117,6 @@ def TestCaseStepVerify(tc, step):
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq[cpu_id].pi].handle))
         return False
 
-    # 5. Verify PI for RNMPR got incremented by 1
-    if (rnmpr_cur.pi != rnmpr.pi+1):
-        print("RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-        return False
-
     # 6. Verify page
     if rnmpr.ringentries[rnmpr.pi].handle != arq_cur.swdre_list[arq[cpu_id].pi].Addr1:
         print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[rnmpr.pi].handle, arq_cur.swdre_list[arq[cpu_id].pi].Addr1))

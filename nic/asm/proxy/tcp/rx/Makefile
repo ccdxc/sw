@@ -22,7 +22,6 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-ack.s \
     $(SRC_DIR)/tcp-ack-slow.s \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
-    $(SRC_DIR)/tcp-read-idx.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-rnmpr-alloc-idx.s \
     $(SRC_DIR)/tcp-l7-read-rnmdr-alloc-idx.s \

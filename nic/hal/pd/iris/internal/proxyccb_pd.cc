@@ -277,6 +277,9 @@ p4pd_get_proxyccb_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd)
     proxyccb->pi = data.u.start_d.pi_0;
     proxyccb->ci = data.u.start_d.ci_0;
 
+    HAL_TRACE_DEBUG("xxx: proxyccb pi/ci for qid {} is {}/{}",
+            proxyccb->cb_id, proxyccb->pi, proxyccb->ci);
+
     return HAL_RET_OK;
 }
 

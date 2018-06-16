@@ -67,6 +67,8 @@ tcp_tx_read_rx2tx_shared_process:
  * tcp_tx_launch_sesq
  *****************************************************************************/
 tcp_tx_launch_sesq:
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
+    phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
@@ -81,6 +83,7 @@ tcp_tx_launch_sesq:
      */
     sne             c1, d.{pi_2}.hx, d.ft_pi
     tblwr.c1        d.{ci_2}, d.{ft_pi}.hx
+    tblwr           d.old_ack_no, d.rcv_nxt
 
     tblmincri.f     d.{ci_0}.hx, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
 
@@ -148,24 +151,13 @@ tcp_tx_launch_asesq_end:
  * tcp_tx_launch_pending_tx
  *****************************************************************************/
 tcp_tx_launch_pending_tx:
+    tblwr.f         d.{ci_5}.hx, d.{pi_5}.hx
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
 
-    /*
-     * saved_pending_ack_send = 0 means we got scheduled to
-     * clean retx
-     */
-    seq             c1, d.saved_pending_ack_send, 1
-    b.!c1           pending_tx_snd_una_update
-    tbladd.f        d.{ci_5}.hx, 1
-    tblwr           d.saved_pending_ack_send, 0
-    phvwri          p.common_phv_pending_rx2tx, 1
-    phvwr           p.common_phv_pending_ack_send, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, \
                         TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
-    b               pending_tx_ring_doorbell
-    nop
 
 pending_tx_snd_una_update:
     /*
@@ -174,7 +166,8 @@ pending_tx_snd_una_update:
      * is not a snd_una_update
      */
 
-    phvwr           p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED
+    phvwrpair       p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, \
+                        p.common_phv_pending_rx2tx, 1
 
     CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
                         tcp_tx_process_pending_start,
@@ -187,12 +180,6 @@ pending_tx_snd_una_update:
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
 pending_tx_ring_doorbell:
-    /*
-     * Ring doorbell to set CI if pi == ci
-     */
-    seq             c1, d.{ci_5}.hx, d.{pi_5}.hx
-    b.!c1           pending_tx_end
-
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
                         DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
@@ -212,28 +199,31 @@ tcp_tx_launch_pending_rx2tx:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
 
-    seq             c1, d.pending_ack_send, 1
-    smeqb           c2, d.rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
-    setcf           c3, [c1 & c2]
-    b.!c3           pending_one_rx2tx
-    phvwri          p.common_phv_pending_rx2tx, 1
-
     /*
-     * Two pending activities, save one for later and reschedule
+     * c1 = send ack
+     *
+     * if dup_ack_send, c1 = 1
+     * else if old_ack_no != rcv_nxt, c1 = d.pending_ack_send
      */
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC,
-                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_TX, 0)
-    memwr.dx        r4, r3
-    tblwr.f         d.saved_pending_ack_send, 1
+    seq             c7, d.old_ack_no, d.rcv_nxt
 
-pending_one_rx2tx:
+    seq             c1, d.pending_dup_ack_send, 1
+    sne.!c1         c2, d.old_ack_no, d.rcv_nxt          
+    seq             c3, d.pending_ack_send, 1
+    setcf.!c1       c1, [c2 & c3]
+    tblwr.c1        d.old_ack_no, d.rcv_nxt
+
+
+    smeqb           c2, d.rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
+    phvwri          p.common_phv_pending_rx2tx, 1
     phvwr.c2        p.common_phv_rx_flag, d.rx_flag
-    tblwr.c2        d.rx_flag, 0
-    b.c2            pending_rx2tx_snd_una_update
-    tbladd.f        d.{ci_1}.hx, 1
     b.c1            pending_ack_send
+    nop
+    b.c2            pending_rx2tx_snd_una_update
+    nop
+    b               tcp_tx_rx2tx_bogus_abort
+    nop
 
 pending_rx2tx_snd_una_update:
     /*
@@ -253,6 +243,7 @@ pending_rx2tx_snd_una_update:
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
     b               pending_rx2tx_doorbell
+    nop
 
 pending_ack_send:
     phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
@@ -262,11 +253,8 @@ pending_ack_send:
 pending_rx2tx_doorbell:
 
     /*
-     * Ring doorbell to set CI if pi == ci
+     * Ring doorbell to set CI
      */
-    seq             c1, d.{ci_1}.hx, d.{pi_1}.hx
-    b.!c1           pending_rx2tx_end
-
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, 0)
@@ -283,13 +271,11 @@ pending_rx2tx_end:
 tcp_tx_st_expired:
     phvwr           p.common_phv_pending_rto, 1
     phvwr           p.t0_s2s_rto_pi, d.{pi_3}.hx
-    tbladd.f        d.{ci_3}.hx, 1
+    tblwr.f         d.{ci_3}.hx, d.{pi_3}.hx
 
     /*
-     * Ring doorbell to set CI if pi == ci
+     * Ring doorbell to set CI
      */
-    seq             c1, d.{ci_3}.hx, d.{pi_3}.hx
-    b.!c1           tcp_tx_st_expired_end
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     // data will be in r3
@@ -347,5 +333,24 @@ tcp_tx_cancel_fast_timer:
  *****************************************************************************/
 tcp_tx_rx2tx_abort:
     phvwri          p.p4_intr_global_drop, 1
+    // Do we need this??? Seeing some loop without
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, 0)
+    memwr.dx        r4, r3
+
+    nop.e
+    CAPRI_CLEAR_TABLE_VALID(0)
+
+/******************************************************************************
+ * tcp_tx_rx2tx_bogus_abort
+ *****************************************************************************/
+tcp_tx_rx2tx_bogus_abort:
+    phvwri          p.p4_intr_global_drop, 1
+
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, 0)
+    memwr.dx        r4, r3
     nop.e
     CAPRI_CLEAR_TABLE_VALID(0)
