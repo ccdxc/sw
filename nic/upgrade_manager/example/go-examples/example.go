@@ -94,9 +94,14 @@ func main() {
 	<-timer.C
 	log.Infof("Timer expired")
 
+	retStr := make([]string, 0)
 	//err = upg.AbortUpgrade()
+	err = upg.GetUpgradeStatus(&retStr)
 	if err != nil {
 		log.Fatalf("Could not abort upgrade because of %s\n", err)
+	}
+	for _, str := range retStr {
+		log.Infof("%s", str)
 	}
 	a := make(chan struct{})
 	_ = <-a
