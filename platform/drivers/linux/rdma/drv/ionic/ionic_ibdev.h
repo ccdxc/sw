@@ -72,6 +72,10 @@ struct ionic_ibdev {
 	u32			size_pdid;
 	u32			next_pdid;
 
+	unsigned long		*inuse_ahid;
+	u32			size_ahid;
+	u32			next_ahid;
+
 	unsigned long		*inuse_mrid;
 	u32			size_mrid;
 	u32			next_mrid;
@@ -209,6 +213,9 @@ struct ionic_qp {
 	};
 
 	u32			qpid;
+	u32			ahid;
+
+	bool			has_ah;
 	bool			has_sq;
 	bool			has_rq;
 	bool			is_srq;
@@ -258,8 +265,6 @@ struct ionic_qp {
 struct ionic_ah {
 	struct ib_ah		ibah;
 	u32			ahid;
-	/* XXX driver should alloc ah id */
-	u32			len;
 };
 
 struct ionic_mr {

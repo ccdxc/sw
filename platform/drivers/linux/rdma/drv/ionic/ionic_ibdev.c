@@ -158,6 +158,36 @@ found:
 	return 0;
 }
 
+static int ionic_get_ahid(struct ionic_ibdev *dev, u32 *ahid)
+{
+	u32 id;
+
+	mutex_lock(&dev->inuse_lock);
+
+	id = find_next_zero_bit(dev->inuse_ahid, dev->size_ahid, dev->next_ahid);
+	if (id != dev->size_ahid)
+		goto found;
+
+	id = find_first_zero_bit(dev->inuse_ahid, dev->next_ahid);
+	if (id != dev->next_ahid)
+		goto found;
+
+	mutex_unlock(&dev->inuse_lock);
+
+	/* not found */
+	return -ENOMEM;
+
+found:
+	set_bit(id, dev->inuse_ahid);
+	dev->next_ahid = id + 1;
+
+	mutex_unlock(&dev->inuse_lock);
+
+	*ahid = id;
+
+	return 0;
+}
+
 static int ionic_get_mrid(struct ionic_ibdev *dev, u32 *lkey, u32 *rkey)
 {
 	u32 id, key;
@@ -376,6 +406,11 @@ found:
 static void ionic_put_pdid(struct ionic_ibdev *dev, u32 pdid)
 {
 	clear_bit(pdid, dev->inuse_pdid);
+}
+
+static void ionic_put_ahid(struct ionic_ibdev *dev, u32 ahid)
+{
+	clear_bit(ahid, dev->inuse_ahid);
 }
 
 static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
@@ -873,6 +908,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 		/* XXX endian? */
 		.cmd.create_ah = {
 			.opcode = CMD_OPCODE_V0_RDMA_CREATE_AH,
+			.ah_id = ah->ahid,
 			.pd_id = pd->pdid,
 		},
 	};
@@ -977,10 +1013,6 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_cmd;
 
-	/* XXX driver should alloc ah id */
-	ah->ahid = (u32)admin.comp.create_ah.handle;
-	ah->len = admin.comp.create_ah.len;
-
 	/* handle is 32 bits, len is 8 bits, in send wqe */
 	WARN_ON(admin.comp.create_ah.handle >> 32);
 	WARN_ON(admin.comp.create_ah.len >> 8);
@@ -1020,10 +1052,9 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 		goto err_ah;
 	}
 
-	/* XXX driver should alloc ah id */
-	//rc = ionic_get_ahid(dev, &ah->ahid);
-	//if (rc)
-	//	goto err_ahid;
+	rc = ionic_get_ahid(dev, &ah->ahid);
+	if (rc)
+		goto err_ahid;
 
 	rc = ionic_create_ah_cmd(dev, ah, pd, attr);
 	if (rc)
@@ -1031,7 +1062,6 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 
 	if (ctx) {
 		resp.ahid = ah->ahid;
-		resp.len = ah->len;
 
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 		if (rc)
@@ -1041,8 +1071,10 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	return &ah->ibah;
 
 err_resp:
-	/* XXX destroy ah */
+	/* XXX destroy ah cmd */
 err_cmd:
+	ionic_put_ahid(dev, ah->ahid);
+err_ahid:
 	kfree(ah);
 err_ah:
 	return ERR_PTR(rc);
@@ -1060,7 +1092,14 @@ static int ionic_query_ah(struct ib_ah *ibah, struct rdma_ah_attr *attr)
 
 static int ionic_destroy_ah(struct ib_ah *ibah)
 {
-	return -ENOSYS;
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibah->device);
+	struct ionic_ah *ah = to_ionic_ah(ibah);
+
+	/* XXX destroy ah cmd */
+	ionic_put_ahid(dev, ah->ahid);
+	kfree(ah);
+
+	return 0;
 }
 
 static int ionic_kernel_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
@@ -2480,6 +2519,7 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 
 		admin.cmd.modify_qp.header_template = hdr_dma;
 		admin.cmd.modify_qp.header_template_size = hdr_len;
+		admin.cmd.modify_qp.header_template_ah_id = qp->ahid;
 
 		/* XXX for HAPS: side-data */
 		if (ionic_xxx_haps) {
@@ -2936,6 +2976,8 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	if (rc)
 		goto err_mrid;
 
+	qp->has_ah = attr->qp_type == IB_QPT_RC;
+
 	qp->has_sq = attr->qp_type != IB_QPT_XRC_TGT;
 
 	qp->has_rq = !attr->srq &&
@@ -2943,6 +2985,12 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 		attr->qp_type != IB_QPT_XRC_TGT;
 
 	qp->is_srq = false;
+
+	if (qp->has_ah) {
+		rc = ionic_get_ahid(dev, &qp->ahid);
+		if (rc)
+			goto err_ahid;
+	}
 
 	spin_lock_init(&qp->sq_lock);
 	spin_lock_init(&qp->rq_lock);
@@ -3015,6 +3063,9 @@ err_cmd:
 err_rq:
 	ionic_qp_sq_destroy(dev, ctx, qp);
 err_sq:
+	if (qp->has_ah)
+		ionic_put_ahid(dev, qp->ahid);
+err_ahid:
 	ionic_put_mrid(dev, qp->sq_lkey);
 err_mrid:
 	ionic_put_qpid(dev, qp->qpid);
@@ -3082,6 +3133,8 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 
 	ionic_qp_rq_destroy(dev, ctx, qp);
 	ionic_qp_sq_destroy(dev, ctx, qp);
+	if (qp->has_ah)
+		ionic_put_ahid(dev, qp->ahid);
 	ionic_put_mrid(dev, qp->sq_lkey);
 	ionic_put_qpid(dev, qp->qpid);
 
@@ -3278,7 +3331,7 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 
 	/* XXX endian? */
 	wqe->u.non_atomic.wqe.ud_send.q_key = wr->remote_qkey;
-	wqe->u.non_atomic.wqe.ud_send.ah_size = ah->len;
+	wqe->u.non_atomic.wqe.ud_send.ah_size = 0;
 	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->remote_qpn;
 	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->ahid;
 
@@ -3683,6 +3736,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	if (rc)
 		goto err_mrid;
 
+	qp->has_ah = false;
 	qp->has_sq = false;
 	qp->has_rq = true;
 	qp->is_srq = true;
@@ -4345,6 +4399,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	kfree(dev->inuse_cqid);
 	kfree(dev->inuse_pgtbl);
 	kfree(dev->inuse_mrid);
+	kfree(dev->inuse_ahid);
 	kfree(dev->inuse_pdid);
 
 	tbl_destroy(&dev->qp_tbl);
@@ -4526,6 +4581,15 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (!dev->inuse_pdid) {
 		rc = -ENOMEM;
 		goto err_pdid;
+	}
+
+	dev->size_ahid = dev->dev_attr.max_ah;
+	dev->next_ahid = 0;
+	size = sizeof(long) * BITS_TO_LONGS(dev->size_ahid);
+	dev->inuse_ahid = kzalloc(size, GFP_KERNEL);
+	if (!dev->inuse_ahid) {
+		rc = -ENOMEM;
+		goto err_ahid;
 	}
 
 	dev->size_mrid = dev->dev_attr.max_mr;
@@ -4742,6 +4806,8 @@ err_cqid:
 err_eqid:
 	kfree(dev->inuse_mrid);
 err_mrid:
+	kfree(dev->inuse_ahid);
+err_ahid:
 	kfree(dev->inuse_pdid);
 err_pdid:
 	tbl_destroy(&dev->qp_tbl);
