@@ -1224,10 +1224,11 @@ struct rdma_create_ah_data {
  **/
 struct create_ah_cmd {
 	u16 opcode;
-	u16 rsvd;
+	u8 rsvd[6];
+	u32 ah_id;
 	u32 pd_id;
 	u64 hdr_info;
-	u8 rsvd2[48];
+	u8 rsvd2[40];
 };
 
 /**
@@ -1421,8 +1422,9 @@ struct modify_qp_cmd {
 	u32 sq_psn;
 	u64 header_template;
 	u32 header_template_size;
+	u32 header_template_ah_id;
 	
-	u32 rsvd2[6];
+	u32 rsvd2[5];
 };
 
 /**
