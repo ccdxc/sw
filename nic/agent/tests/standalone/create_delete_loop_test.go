@@ -73,6 +73,8 @@ var _ = Describe("Agent create delete loop tests", func() {
 			if lisErr != nil {
 				Fail(fmt.Sprintf("could not assign an available port, %v", lisErr))
 			}
+
+			// first build netagent binary
 			agentBuildArgs = []string{"install", agentPkgName}
 			fmt.Println("Building Agent...")
 			out, err := exec.Command("go", agentBuildArgs...).CombinedOutput()

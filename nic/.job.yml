@@ -35,7 +35,7 @@ targets:
   pin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature fte,hostpin --hostpin --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
   pin2:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature fte2 --hostpin --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
   pinvxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature ftevxlan,hpvxlan --hostpin --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
-  agent: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make pull-assets && make checks && cd nic && make nic && make sanity-tests && bash agent/netagent/scripts/sanity.sh ; ret=$? ; make sanity_logs ; exit $ret" ]
+  agent: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make pull-assets && make checks && make unit-test-cover && cd nic && make nic && make sanity-tests && bash agent/netagent/scripts/sanity.sh ; ret=$? ; make sanity_logs ; exit $ret" ]
   agent-single-threaded: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make pull-assets && make checks && cd nic && make nic && make sanity-tests && bash agent/netagent/scripts/sanity.sh single-threaded ; ret=$? ; make sanity_logs ; exit $ret" ]
   agent-arm-xcompile: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw make checks && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -a -v github.com/pensando/sw/nic/agent/cmd/netagent github.com/pensando/sw/nic/agent/cmd/nmd" ]
   agent-standalone: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make checks && cd nic && make pull-assets && make nic && go install github.com/pensando/sw/nic/agent/cmd/netagent && bash agent/netagent/scripts/sanity.sh stand-alone ; ret=$? ; make sanity_logs ; exit $ret"]
@@ -68,7 +68,7 @@ targets:
   #  ToDo re enable this after fixing storage issues and debugging jobd crashes. naples-docker:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make package-sim && make release && ./tools/validate-naples-docker.sh; ret=$? ; make sanity_logs ; exit $ret" ]
   agent/up2up:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./tools/run-agent-sanity.sh --topo agentup2up --feature agentup2up ; ret=$? ; make sanity_logs ; exit $ret" ]
   upgmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all ; ret=$? ; exit $ret" ]
-  delphi:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/delphi/... ; ret=$? ; exit $ret" ]
+  delphi:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/delphi/...  && cd $GOPATH/src/github.com/pensando/sw && go test -v ./nic/delphi/...; ret=$? ; exit $ret" ]
 
 cache:
   name: "sw"

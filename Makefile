@@ -9,7 +9,7 @@ CACHEMOUNT :=
 endif
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|fields|vendor"
+EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|fields|vendor|bazel"
 
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \

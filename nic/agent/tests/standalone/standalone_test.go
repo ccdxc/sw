@@ -16,17 +16,26 @@ import (
 var _ = Describe("Agent standalone tests", func() {
 	Context("When a network is created", func() {
 		var (
-			lis        netutils.TestListenAddr
-			lisErr     = lis.GetAvailablePort()
-			resp       restapi.Response
-			agentArgs  []string
-			networkURL = fmt.Sprintf("http://%s/api/networks/", lis.ListenURL.String())
-			tenantURL  = fmt.Sprintf("http://%s/api/tenants/", lis.ListenURL.String())
+			lis            netutils.TestListenAddr
+			lisErr         = lis.GetAvailablePort()
+			resp           restapi.Response
+			agentArgs      []string
+			agentBuildArgs []string
+			networkURL     = fmt.Sprintf("http://%s/api/networks/", lis.ListenURL.String())
+			tenantURL      = fmt.Sprintf("http://%s/api/tenants/", lis.ListenURL.String())
 		)
 		// Verify if NetAgent is up
 		BeforeEach(func() {
 			if lisErr != nil {
 				Fail(fmt.Sprintf("could not assign an available port, %v", lisErr))
+			}
+
+			// first build netagent binary
+			agentBuildArgs = []string{"install", agentPkgName}
+			fmt.Println("Building Agent...")
+			out, err := exec.Command("go", agentBuildArgs...).CombinedOutput()
+			if err != nil {
+				Fail(fmt.Sprintf("could not build agent binary, Out: %v Err: %v", out, err))
 			}
 
 			// Allow for testing with HAL in jobd
@@ -38,7 +47,7 @@ var _ = Describe("Agent standalone tests", func() {
 
 			fmt.Println("Agent CLI: ", agentArgs)
 			// start as the agent binary needs to run in the background
-			err := exec.Command("netagent", agentArgs...).Start()
+			err = exec.Command("netagent", agentArgs...).Start()
 			if err != nil {
 				Fail(fmt.Sprintf("could not start netagent, Err: %v", err))
 			}
