@@ -15,6 +15,8 @@ using qos::CoppSpec;
 using qos::CoppResponse;
 using kh::CoppKeyHandle;
 using kh::CoppType;
+using qos::CoppDeleteRequest;
+using qos::CoppDeleteResponse;
 
 class copp_test : public hal_base_test {
 protected:
@@ -103,6 +105,16 @@ TEST_F(copp_test, test2)
     ret = hal::copp_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_ENTRY_EXISTS);
+
+    // Delete without copp-type set
+    CoppDeleteRequest del_req;
+    CoppDeleteResponse del_rsp;
+    del_req.Clear();
+    del_rsp.Clear();
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::copp_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_INVALID_ARG);
 }
 
 // Get and update 
@@ -218,6 +230,52 @@ TEST_F(copp_test, test4)
     for (int i = 0; i < kh::CoppType_ARRAYSIZE; i++) {
         ASSERT_EQ(get_success[i], true);
     }
+}
+
+// Delete test
+TEST_F(copp_test, test5)
+{
+    hal_ret_t    ret;
+    CoppGetRequest get_req;
+    CoppGetResponseMsg resp_msg;
+    CoppGetResponse get_rsp;
+    CoppDeleteRequest del_req;
+    CoppDeleteResponse del_rsp;
+    CoppType copp_type = kh::COPP_TYPE_FLOW_MISS;
+
+    get_req.Clear();
+    get_rsp.Clear();
+    resp_msg.Clear();
+
+    get_req.mutable_key_or_handle()->set_copp_type(copp_type);
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    ret = hal::copp_get(get_req, &resp_msg);
+    get_rsp = resp_msg.response(0);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(get_rsp.api_status(), types::API_STATUS_OK);
+
+    // Delete and Get
+    del_req.Clear();
+    del_rsp.Clear();
+
+    del_req.mutable_key_or_handle()->set_copp_type(copp_type);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::copp_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    get_req.Clear();
+    get_rsp.Clear();
+    resp_msg.Clear();
+
+    get_req.mutable_key_or_handle()->set_copp_type(copp_type);
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    ret = hal::copp_get(get_req, &resp_msg);
+    get_rsp = resp_msg.response(0);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_COPP_NOT_FOUND);
+    ASSERT_EQ(get_rsp.api_status(), types::API_STATUS_NOT_FOUND);
 }
 
 

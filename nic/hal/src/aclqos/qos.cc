@@ -1517,9 +1517,9 @@ qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
 
 end:
     if (ret == HAL_RET_OK) {
-        HAL_API_STATS_INC(HAL_API_QOSCLASS_UPDATE_SUCCESS);
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_DELETE_SUCCESS);
     } else {
-        HAL_API_STATS_INC(HAL_API_QOSCLASS_UPDATE_FAIL);
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_DELETE_FAIL);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: qos_class delete ");
@@ -1773,12 +1773,38 @@ qos_class_restore_cb (void *obj, uint32_t len)
     ret = qos_class_restore_add(qos_class, qos_class_info);
     if (ret != HAL_RET_OK) {
         qos_class_restore_abort(qos_class, qos_class_info);
+        qos_class = NULL;
+        goto end;
     }
     qos_class_restore_commit(qos_class, qos_class_info);
+end:
+    if (ret != HAL_RET_OK) {
+        if (qos_class) {
+            // PD wouldn't have been allocated if we're coming here
+            // PD gets allocated in restore_add and if it failed,
+            // restore_abort would free everything
+            qos_class_free(qos_class, true);
+            qos_class = NULL;
+        }
+    }
     return 0;    // TODO: fix me
 }
 
 // Copp
+static inline void
+copp_lock (copp_t *copp,
+           const char *fname, int lineno, const char *fxname)
+{
+    HAL_SPINLOCK_LOCK(&copp->slock);
+}
+
+static inline void
+copp_unlock (copp_t *copp,
+             const char *fname, int lineno, const char *fxname)
+{
+    HAL_SPINLOCK_UNLOCK(&copp->slock);
+}
+
 // ----------------------------------------------------------------------------
 // hash table copp_type => ht_entry
 //  - Get key from entry
@@ -1842,6 +1868,12 @@ copp_init (copp_t *copp)
         return NULL;
     }
     HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
+
+    // initialize the operational state
+    copp->hal_handle   = HAL_HANDLE_INVALID;
+    copp->pd           = NULL;
+
+    copp->acl_list = block_list::factory(sizeof(hal_handle_t));
 
     return copp;
 }
@@ -1986,6 +2018,13 @@ copp_free (copp_t *copp, bool free_pd)
     HAL_SPINLOCK_DESTROY(&copp->slock);
     hal::delay_delete_to_slab(HAL_SLAB_COPP, copp);
     return ret;
+}
+
+static hal_ret_t
+copp_cleanup (copp_t *copp, bool free_pd)
+{
+    block_list::destroy(copp->acl_list);
+    return copp_free(copp, free_pd);
 }
 
 //-----------------------------------------------------------------------------
@@ -2166,7 +2205,7 @@ copp_create_abort_cleanup (copp_t *copp, hal_handle_t hal_handle)
     hal_handle_free(hal_handle);
 
     // 3. free copp
-    copp_free(copp, false);
+    copp_cleanup(copp, false);
 
     return HAL_RET_OK;
 }
@@ -2333,7 +2372,7 @@ end:
             // PD wouldn't have been allocated if we're coming here
             // PD gets allocated in create_add_cb and if it failed,
             // create_abort_cb would free everything
-            copp_free(copp, false);
+            copp_cleanup(copp, false);
             copp = NULL;
         }
     }
@@ -2437,7 +2476,7 @@ copp_make_clone (copp_t *copp, copp_t **copp_clone_p, CoppSpec& spec)
 end:
     if (ret != HAL_RET_OK) {
         if (*copp_clone_p) {
-            copp_free(*copp_clone_p, true);
+            copp_cleanup(*copp_clone_p, true);
             *copp_clone_p = NULL;
         }
     }
@@ -2616,6 +2655,7 @@ copp_process_get (copp_t *copp, qos::CoppGetResponse *rsp)
     rsp->mutable_status()->set_copp_handle(copp->hal_handle);
 
     // TODO: fill stats of this copp
+    rsp->mutable_stats()->set_num_acls(copp->acl_list->num_elems());
 
 
     // Getting PD information
@@ -2668,7 +2708,7 @@ copp_get (CoppGetRequest& req, CoppGetResponseMsg *rsp)
     if (!copp) {
         response->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_API_STATS_INC(HAL_API_COPP_GET_FAIL);
-        return HAL_RET_QOS_CLASS_NOT_FOUND;
+        return HAL_RET_COPP_NOT_FOUND;
     }
 
     copp_process_get(copp, response);
@@ -2676,8 +2716,248 @@ copp_get (CoppGetRequest& req, CoppGetResponseMsg *rsp)
     return HAL_RET_OK;
 }
 
-// copp_delete is not supported
-//
+//------------------------------------------------------------------------------
+// validate copp delete request
+//------------------------------------------------------------------------------
+hal_ret_t
+validate_copp_delete_req (CoppDeleteRequest& req, CoppDeleteResponse *rsp)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    // key-handle field must be set
+    if (!req.has_key_or_handle()) {
+        HAL_TRACE_ERR("spec has no key or handle");
+        ret =  HAL_RET_INVALID_ARG;
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// 1. PD Call to delete PD and free up resources and deprogram HW
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                 ret         = HAL_RET_OK;
+    pd::pd_copp_delete_args_t pd_copp_args = { 0 };
+    dllist_ctxt_t             *lnode      = NULL;
+    dhl_entry_t               *dhl_entry  = NULL;
+    copp_t                    *copp        = NULL;
+    pd::pd_func_args_t        pd_func_args = {0};
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+
+    // TODO: Check the dependency ref count for the copp.
+    //       If its non zero, fail the delete.
+
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    copp = (copp_t *)dhl_entry->obj;
+
+    HAL_TRACE_DEBUG("delete del cb {} handle {}",
+                    copp->key, copp->hal_handle);
+
+    // 1. PD Call to allocate PD resources and HW programming
+    pd::pd_copp_delete_args_init(&pd_copp_args);
+    pd_copp_args.copp = copp;
+    pd_func_args.pd_copp_delete = &pd_copp_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to delete copp pd, err : {}",
+                      ret);
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Update PI DBs as copp_delete_del_cb() was a succcess
+//      a. Delete from copp id hash table
+//      b. Remove object from handle id based hash table
+//      c. Free PI copp
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    dhl_entry_t     *dhl_entry = NULL;
+    copp_t           *copp = NULL;
+    hal_handle_t    hal_handle = 0;
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    copp = (copp_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("delete commit cb {} handle {}",
+                    copp->key, copp->hal_handle);
+
+    // a. Remove from copp id hash table
+    ret = copp_del_from_db(copp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to del copp {} from db, err : {}",
+                      copp->key, ret);
+        goto end;
+    }
+
+    // b. Remove object from handle id based hash table
+    hal_handle_free(hal_handle);
+
+    // c. Free PI copp
+    copp_cleanup(copp, false);
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// If delete fails, nothing to do
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// If delete fails, nothing to do
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+validate_copp_delete (copp_t *copp)
+{
+    if (copp->acl_list->num_elems()) {
+        HAL_TRACE_ERR("Copp delete failure, acls still referring :");
+        hal_print_handles_block_list(copp->acl_list);
+        return HAL_RET_OBJECT_IN_USE;
+    }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// process a copp delete request
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_delete (CoppDeleteRequest& req, CoppDeleteResponse *rsp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    copp_t              *copp = NULL;
+    cfg_op_ctxt_t       cfg_ctxt = { 0 };
+    dhl_entry_t         dhl_entry = { 0 };
+    const CoppKeyHandle &kh = req.key_or_handle();
+
+    hal_api_trace(" API Begin: copp delete ");
+
+    // validate the request message
+    ret = validate_copp_delete_req(req, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("copp delete validation failed, ret : {}",
+                      ret);
+        goto end;
+    }
+
+    copp = find_copp_by_key_handle(kh);
+    if (copp == NULL) {
+        HAL_TRACE_ERR("failed to find copp, type {}, handle {}",
+                      kh.copp_type(), kh.copp_handle());
+        ret = HAL_RET_COPP_NOT_FOUND;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("deleting copp {} handle {}",
+                    copp->key, copp->hal_handle);
+
+    // validate if there no objects referring this copp 
+    ret = validate_copp_delete(copp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("copp delete validation failed, err : {}", ret);
+        goto end;
+    }
+
+    // form ctxt and call infra add
+    dhl_entry.handle = copp->hal_handle;
+    dhl_entry.obj = copp;
+    cfg_ctxt.app_ctxt = NULL;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_del_obj(copp->hal_handle, &cfg_ctxt,
+                             copp_delete_del_cb,
+                             copp_delete_commit_cb,
+                             copp_delete_abort_cb,
+                             copp_delete_cleanup_cb);
+
+end:
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    hal_api_trace(" API End: copp delete ");
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// add acl to copp list
+//-----------------------------------------------------------------------------
+hal_ret_t
+copp_add_acl (copp_t *copp, acl_t *acl)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (copp == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    copp_lock(copp, __FILENAME__, __LINE__, __func__);      // lock
+    ret = copp->acl_list->insert(&acl->hal_handle);
+    copp_unlock(copp, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add acl {} to copp {}",
+                        acl->key, copp->key);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Added acl {} to copp {}", acl->key, copp->key);
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// remove acl from copp list
+//-----------------------------------------------------------------------------
+hal_ret_t
+copp_del_acl (copp_t *copp, acl_t *acl)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (copp == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    copp_lock(copp, __FILENAME__, __LINE__, __func__);      // lock
+    ret = copp->acl_list->remove(&acl->hal_handle);
+    copp_unlock(copp, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove acl {} from from copp {}, err : {}",
+                       acl->key, copp->key, ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleted acl {} from copp {}", acl->key, copp->key);
+
+end:
+    return ret;
+}
 
 //-----------------------------------------------------------------------------
 // given a copp, marshall it for persisting the copp state (spec, status, stats)
@@ -2797,8 +3077,20 @@ copp_restore_cb (void *obj, uint32_t len)
     ret = copp_restore_add(copp, copp_info);
     if (ret != HAL_RET_OK) {
         copp_restore_abort(copp, copp_info);
+        copp = NULL;
+        goto end;
     }
     copp_restore_commit(copp, copp_info);
+end:
+    if (ret != HAL_RET_OK) {
+        if (copp) {
+            // PD wouldn't have been allocated if we're coming here
+            // PD gets allocated in restore_add and if it failed,
+            // restore_abort would free everything
+            copp_free(copp, true);
+            copp = NULL;
+        }
+    }
     return 0;    // TODO: fix me
 }
 }    // namespace hal

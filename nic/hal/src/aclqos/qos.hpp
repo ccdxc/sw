@@ -37,6 +37,8 @@ using qos::CoppStatus;
 using qos::CoppResponse;
 using qos::CoppRequestMsg;
 using qos::CoppResponseMsg;
+using qos::CoppDeleteRequest;
+using qos::CoppDeleteResponse;
 using qos::CoppGetRequest;
 using qos::CoppGetRequestMsg;
 using qos::CoppGetResponse;
@@ -330,6 +332,9 @@ typedef struct copp_s {
     // operational state of copp
     hal_handle_t   hal_handle;    // HAL allocated handle
 
+    // Back references
+    block_list     *acl_list;   // Acl list
+
     pd::pd_copp_t  *pd;
 } __PACK__ copp_t;
 
@@ -385,6 +390,8 @@ hal_ret_t copp_create(qos::CoppSpec& spec,
                       qos::CoppResponse *rsp);
 hal_ret_t copp_update(qos::CoppSpec& spec,
                       qos::CoppResponse *rsp);
+hal_ret_t copp_delete(qos::CoppDeleteRequest& req,
+                      qos::CoppDeleteResponse *rsp);
 hal_ret_t copp_get(qos::CoppGetRequest& req,
                    qos::CoppGetResponseMsg *rsp);
 hal_ret_t copp_store_cb(void *obj, uint8_t *mem,

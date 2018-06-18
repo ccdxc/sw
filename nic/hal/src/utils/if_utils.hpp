@@ -82,6 +82,10 @@ hal_ret_t qos_class_del_lif_rx(qos_class_t *qos_class, lif_t *lif);
 hal_ret_t qos_class_add_lif_tx(qos_class_t *qos_class, lif_t *lif);
 hal_ret_t qos_class_del_lif_tx(qos_class_t *qos_class, lif_t *lif);
 
+//copp
+hal_ret_t copp_add_acl(copp_t *copp, acl_t *acl);
+hal_ret_t copp_del_acl(copp_t *copp, acl_t *acl);
+
 // nexthop
 hal_ret_t nexthop_add_route (nexthop_t *nh, route_t *route);
 hal_ret_t nexthop_del_route (nexthop_t *nh, route_t *route);

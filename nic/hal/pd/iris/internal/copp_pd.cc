@@ -124,7 +124,7 @@ copp_pd_deprogram_hw (pd_copp_t *pd_copp)
 
 #define COPP_ACTION(_d, _arg) _d.copp_action_u.copp_execute_copp._arg
 static hal_ret_t
-copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
+copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
 {
     hal_ret_t       ret = HAL_RET_OK;
     sdk_ret_t       sdk_ret;
@@ -184,7 +184,9 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
     // TODO Fixme. Setting entry-valid to 0 until copp is verified and values
     // are determined
     COPP_ACTION(d, entry_valid) = 0;
-    if (update) {
+    if (is_restore) {
+        sdk_ret = copp_tbl->insert_withid(&d, pd_copp->hw_policer_id);
+    } else if (update) {
         sdk_ret = copp_tbl->update(pd_copp->hw_policer_id, &d);
     } else {
         sdk_ret = copp_tbl->insert(&d, &pd_copp->hw_policer_id);
@@ -209,12 +211,12 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
 // Program HW
 // ----------------------------------------------------------------------------
 static hal_ret_t
-copp_pd_program_hw (pd_copp_t *pd_copp, bool update)
+copp_pd_program_hw (pd_copp_t *pd_copp, bool update, bool is_restore = false)
 {
     hal_ret_t ret;
     copp_t    *copp = pd_copp->pi_copp;
 
-    ret = copp_pd_program_copp_tbl(pd_copp, update);
+    ret = copp_pd_program_copp_tbl(pd_copp, update, is_restore);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error programming the copp table "
                       "Copp {} ret {}",
@@ -311,12 +313,9 @@ pd_copp_update (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_copp_delete (pd_func_args_t *pd_func_args)
 {
-    // Deletion of copp is not allowed
-    return HAL_RET_INVALID_ARG;
-
-#if 0
-    hal_ret_t ret = HAL_RET_OK;
-    pd_copp_t *pd_copp;
+    hal_ret_t             ret = HAL_RET_OK;
+    pd_copp_delete_args_t *args = pd_func_args->pd_copp_delete;
+    pd_copp_t             *pd_copp;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
@@ -328,12 +327,11 @@ pd_copp_delete (pd_func_args_t *pd_func_args)
     // free up the resource and memory
     ret = copp_pd_cleanup(pd_copp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed pd copp cleanup Copp {}, ret {}",
+        HAL_TRACE_ERR("failed pd copp cleanup {}, ret {}",
                       args->copp->key, ret);
     }
 
     return ret;
-#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -420,14 +418,14 @@ end:
 hal_ret_t
 pd_copp_get (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-#if 0
-    copp_t         *copp = args->copp;
-    pd_copp_t      *copp_pd = (pd_copp_t *)copp->pd;
-    CoppGetResponse *rsp = args->rsp;
+    hal_ret_t          ret = HAL_RET_OK;
+    pd_copp_get_args_t *args = pd_func_args->pd_copp_get;
+    copp_t             *copp = args->copp;
+    pd_copp_t          *pd_copp = (pd_copp_t *)copp->pd;
+    CoppGetResponse    *rsp = args->rsp;
 
     auto copp_info = rsp->mutable_status()->mutable_epd_status();
-#endif
+    copp_info->set_hw_policer_idx(pd_copp->hw_policer_id);
 
     return ret;
 }
@@ -438,13 +436,12 @@ pd_copp_get (pd_func_args_t *pd_func_args)
 static hal_ret_t
 copp_pd_restore_data (pd_copp_restore_args_t *args)
 {
-    hal_ret_t      ret = HAL_RET_OK;
-#if 0
+    hal_ret_t ret = HAL_RET_OK;
     copp_t    *copp = args->copp;
-    pd_copp_t *copp_pd = (pd_copp_t *)copp->pd;
+    pd_copp_t *pd_copp= (pd_copp_t *)copp->pd;
 
     auto copp_info = args->copp_status->epd_status();
-#endif
+    pd_copp->hw_policer_id = copp_info.hw_policer_idx();
 
     return ret;
 }
@@ -479,16 +476,13 @@ pd_copp_restore (pd_func_args_t *pd_func_args)
         goto end;
     }
 
-    // TODO: Eventually call table program hw and hw calls will be
-    //       a NOOP in p4pd code
-#if 0
-    // program hw
-    ret = copp_pd_program_hw(copp_pd);
+    // This call will just populate table libs and calls to HW will be
+    // a NOOP in p4pd code
+    ret = copp_pd_program_hw(copp_pd, false, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
         goto end;
     }
-#endif
 
 end:
 

@@ -211,6 +211,14 @@ acl_add_refs (acl_t *acl)
         }
     }
 
+    if (as->copp_handle != HAL_HANDLE_INVALID) {
+        ret = copp_add_acl(find_copp_by_handle(as->copp_handle), acl);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add ref to copp ret {}", ret);
+            goto end;
+        }
+    }
+
 end:
     return ret;
 }
@@ -261,6 +269,14 @@ acl_rem_refs (acl_t *acl)
                          IF_ACL_REF_TYPE_REDIRECT);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to del ref to redirect if ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (as->copp_handle != HAL_HANDLE_INVALID) {
+        ret = copp_del_acl(find_copp_by_handle(as->copp_handle), acl);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del ref to copp ret {}", ret);
             goto end;
         }
     }

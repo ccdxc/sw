@@ -242,8 +242,21 @@ message CoppRequestMsg {
   repeated CoppSpec request = 1;    // batched Copps
 }
 
+// Copp oper state for enterprise pipeline
+message CoppStatusEpd {
+  uint32 hw_policer_idx = 1; // HW policer index
+}
+
+// Copp oper state for cloud pipeline
+message CoppStatusCpd {
+}
+
 message CoppStatus {
-  fixed64 copp_handle = 1;    // id of the Copp returned by HAL
+  fixed64         copp_handle = 1;    // id of the Copp returned by HAL
+  oneof qos_class_pd_status {
+    CoppStatusEpd epd_status  = 2;    // Copp oper state for enterprise pipeline
+    CoppStatusCpd cpd_status  = 3;    // Copp oper state for cloud pipeline
+  }
 }
 
 // CoppResponse is response to one Copp
@@ -257,15 +270,38 @@ message CoppResponseMsg {
   repeated CoppResponse response = 1;    // batched responses
 }
 
+// CoppDeleteRequest  is used to delete a Copp object
+message CoppDeleteRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  // key_or_handle is to identify Copp being deleted
+  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+}
+
+// CoppDeleteRequestMsg is used to delete a batch of Copps
+message CoppDeleteRequestMsg {
+  repeated CoppDeleteRequest request = 1;    // batch of requests
+}
+
+// CoppDeleteResponse is response to Copp delete request
+message CoppDeleteResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// CoppDeleteResponseMsg is batched response to CoppDeleteRequestMsg
+message CoppDeleteResponseMsg {
+  repeated CoppDeleteResponse response = 1;    // batched responses
+}
+
 // CoppStats captures all the statistics of given Copp
 message CoppStats {
   PolicerStats    policer_stats = 1;    // Policer statistics
+  uint32          num_acls      = 2;    // Number of acls referencing this copp 
 }
 
 // CoppGetRequest is used to get information about a Copp
 message CoppGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
-                                         // key_or_handle is Copp's unique identifier
+  // key_or_handle is Copp's unique identifier
   kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
