@@ -79,7 +79,7 @@ int test_run_perf_rdma_e2e_write() {
   auto func1 = [nvme_status, nvme_cmd] () {
     return check_nvme_status(nvme_status, nvme_cmd);
   };
-  Poller poll;
+  Poller poll(FLAGS_long_poll_interval);
   rc = poll(func1);
   testcase_begin(tcid, iter);
 
@@ -98,7 +98,7 @@ int test_run_perf_rdma_e2e_write() {
   auto func2 = [nvme_status, nvme_cmd] () {
     return check_nvme_status(nvme_status, nvme_cmd);
   };
-  Poller poll;
+  Poller poll(FLAGS_long_poll_interval);
   rc = poll(func2);
   testcase_end(tcid, iter);
 
