@@ -548,8 +548,7 @@ const_ib_gid_to_network_type(enum ib_gid_type gid_type,
 	return ib_gid_to_network_type(gid_type, &gid_copy);
 }
 
-static int ionic_add_gid(struct ib_device *ibdev, u8 port, unsigned int index,
-			 const union ib_gid *gid,
+static int ionic_add_gid(const union ib_gid *gid,
 			 const struct ib_gid_attr *attr, void **context)
 {
 	enum rdma_network_type net;
@@ -561,8 +560,7 @@ static int ionic_add_gid(struct ib_device *ibdev, u8 port, unsigned int index,
 	return 0;
 }
 
-static int ionic_del_gid(struct ib_device *ibdev, u8 port, unsigned int index,
-			 void **context)
+static int ionic_del_gid(const struct ib_gid_attr *attr, void **context)
 {
 	return 0;
 }
