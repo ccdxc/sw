@@ -19,8 +19,8 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 						 int cmd_fd)
 {
 	struct ionic_ctx *ctx;
-	struct ionic_ctx_req req = {};
-	struct ionic_ctx_resp resp = {};
+	struct uionic_ctx req = {};
+	struct uionic_ctx_resp resp = {};
 	int rc, version, compat;
 
 	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx,
@@ -32,8 +32,8 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 	req.fallback = ionic_env_fallback();
 
-	rc = ibv_cmd_get_context(&ctx->vctx, &req.req, sizeof(req),
-				 &resp.resp, sizeof(resp));
+	rc = ibv_cmd_get_context(&ctx->vctx, &req.ibv_cmd, sizeof(req),
+				 &resp.ibv_resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 

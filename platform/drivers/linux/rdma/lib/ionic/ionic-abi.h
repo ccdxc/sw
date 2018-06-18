@@ -2,66 +2,20 @@
 #define __IONIC_ABI_H__
 
 #include <infiniband/kern-abi.h>
+#include <infiniband/verbs.h>
+#include <rdma/ionic-abi.h>
+#include <kernel-abi/ionic-abi.h>
 
 #define IONIC_ABI_VERSION 3
 
-struct ionic_ctx_req {
-	struct ibv_get_context req;
-	__u32 fallback;
-};
-
-struct ionic_ctx_resp {
-	struct ib_uverbs_get_context_resp resp;
-	__u32 fallback;
-	__u32 page_shift;
-
-	__u64 dbell_offset;
-
-	__u16 version;
-	__u8 qp_opcodes[7];
-	__u8 admin_opcodes[7];
-
-	__u8 sq_qtype;
-	__u8 rq_qtype;
-	__u8 cq_qtype;
-	__u8 admin_qtype;
-};
-
-struct ionic_qdesc {
-	__u64 addr;
-	__u32 size;
-	__u16 mask;
-	__u8 depth_log2;
-	__u8 stride_log2;
-};
-
-struct ionic_ah_resp {
-	struct ib_uverbs_create_ah_resp resp;
-	__u32 ahid;
-};
-
-struct ionic_cq_req {
-	struct ibv_create_cq req;
-	struct ionic_qdesc cq;
-};
-
-struct ionic_cq_resp {
-	struct ib_uverbs_create_cq_resp resp;
-	__u32 cqid;
-};
-
-struct ionic_qp_req {
-	struct ibv_create_qp_ex req;
-	struct ionic_qdesc sq;
-	struct ionic_qdesc rq;
-};
-
-struct ionic_qp_resp {
-	struct ib_uverbs_ex_create_qp_resp resp;
-	__u32 qpid;
-	__u32 rsvd;
-	__u64 sq_hbm_offset;
-};
+DECLARE_DRV_CMD(uionic_ctx, IB_USER_VERBS_CMD_GET_CONTEXT,
+		ionic_ctx_req, ionic_ctx_resp);
+DECLARE_DRV_CMD(uionic_ah, IB_USER_VERBS_CMD_CREATE_AH,
+		empty, ionic_ah_resp);
+DECLARE_DRV_CMD(uionic_cq, IB_USER_VERBS_CMD_CREATE_CQ,
+		ionic_cq_req, ionic_cq_resp);
+DECLARE_DRV_CMD(uionic_qp, IB_USER_VERBS_EX_CMD_CREATE_QP,
+		ionic_qp_req, ionic_qp_resp);
 
 /* XXX cleanup: move to fw abi file, this file is for user/kernel abi */
 

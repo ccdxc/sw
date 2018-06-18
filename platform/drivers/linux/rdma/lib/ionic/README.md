@@ -23,6 +23,8 @@ Reference the ionic user space driver sources from the providers dir.
 
 ```sh
 ln -s /path/to/sw/platform/drivers/linux/rdma/lib/ionic providers/ionic
+ln -s /path/to/sw/platform/drivers/linux/rdma/drv/ionic/uapi/rdma/ionic-abi.h \
+	kernel-headers/rdma/ionic-abi.h
 ```
 
 Edit the CMakeLists.txt, adding ionic, and (optional, recommended) removing all
@@ -63,6 +65,23 @@ index e63f4cf56367..6247d12de235 100644
 
  # Binaries
  add_subdirectory(ibacm) # NO SPARSE
+```
+
+Also edit CMakeLists.txt in kernel-headers.
+
+```diff
+diff --git a/kernel-headers/CMakeLists.txt b/kernel-headers/CMakeLists.txt
+index 04b9896..fdcb8e3 100644
+--- a/kernel-headers/CMakeLists.txt
++++ b/kernel-headers/CMakeLists.txt
+@@ -63,6 +63,7 @@ rdma_kernel_provider_abi(
+   rdma/hns-abi.h
+   rdma/i40iw-abi.h
+   rdma/ib_user_verbs.h
++  rdma/ionic-abi.h
+   rdma/mlx4-abi.h
+   rdma/mlx5-abi.h
+   rdma/mthca-abi.h
 ```
 
 ### Build and Run In-place

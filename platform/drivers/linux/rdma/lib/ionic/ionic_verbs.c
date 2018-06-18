@@ -32,8 +32,8 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_cq *cq;
-	struct ionic_cq_req req = {};
-	struct ionic_cq_resp resp = {};
+	struct uionic_cq req = {};
+	struct uionic_cq_resp resp = {};
 
 	int rc;
 
@@ -68,8 +68,8 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 	req.cq.stride_log2 = cq->q.stride_log2;
 
 	rc = ibv_cmd_create_cq(ibctx, ncqe, channel, vec, &cq->ibcq,
-			       &req.req, sizeof(req),
-			       &resp.resp, sizeof(resp));
+			       &req.ibv_cmd, sizeof(req),
+			       &resp.ibv_resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 
@@ -621,8 +621,8 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_qp *qp;
 	struct ionic_cq *cq;
-	struct ionic_qp_req req;
-	struct ionic_qp_resp resp;
+	struct uionic_qp req;
+	struct uionic_qp_resp resp;
 	int rc;
 
 	rc = ionic_check_qp_limits(ctx, &ex->cap);
@@ -665,8 +665,8 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	req.rq.stride_log2 = qp->rq.stride_log2;
 
 	rc = ibv_cmd_create_qp_ex2(ibctx, &qp->vqp, sizeof(qp->vqp), ex,
-				   &req.req, sizeof(req.req), sizeof(req),
-				   &resp.resp, sizeof(resp.resp), sizeof(resp));
+				   &req.ibv_cmd, sizeof(req.ibv_cmd), sizeof(req),
+				   &resp.ibv_resp, sizeof(resp.ibv_resp), sizeof(resp));
 	if (rc)
 		goto err_cmd;
 
@@ -1427,7 +1427,7 @@ static struct ibv_ah *ionic_create_ah(struct ibv_pd *ibpd,
 				      struct ibv_ah_attr *attr)
 {
 	struct ionic_ah *ah;
-	struct ionic_ah_resp resp;
+	struct uionic_ah_resp resp;
 	int rc;
 
 	ah = calloc(1, sizeof(*ah));
@@ -1437,7 +1437,7 @@ static struct ibv_ah *ionic_create_ah(struct ibv_pd *ibpd,
 	}
 
 	rc = ibv_cmd_create_ah(ibpd, &ah->ibah, attr,
-			       &resp.resp, sizeof(resp));
+			       &resp.ibv_resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 
