@@ -6,6 +6,7 @@
 
 #include "pnso_sim.h"
 #include "pnso_sim_osal.h"
+#include "osal_thread.h"
 
 /* using exactly 64k simplifies wrapping case */
 struct {
@@ -39,7 +40,7 @@ static pnso_sim_req_id_t req_free_q_dequeue()
  * - all dequeue operations for a given session happen on a single thread
  */
 struct pnso_sim_q {
-	pthread_t thread;
+	osal_thread_t thread;
 	uint16_t depth;
 	uint16_t head;
 	uint16_t tail;
@@ -396,21 +397,20 @@ pnso_error_t pnso_sim_start_worker_thread()
 
 	t_worker_ctx.req_q->stop_worker = false;
 
-	rc = pthread_create(&t_worker_ctx.req_q->thread, NULL, pnso_sim_run_worker_loop,
-			    (void *) &t_worker_ctx);
+	rc = osal_thread_run(&t_worker_ctx.req_q->thread, pnso_sim_run_worker_loop,
+			     (void *) &t_worker_ctx);
 	return rc;
 }
 
 void pnso_sim_stop_worker_thread()
 {
-	void *ret;
 	struct pnso_sim_q *q = t_worker_ctx.req_q;
 
 	PNSO_ASSERT(q);
 
 	q->stop_worker = true;
 
-	pthread_join(q->thread, &ret);
+	osal_thread_stop(&q->thread);
 	pnso_sim_finit_req_queue();
 }
 
