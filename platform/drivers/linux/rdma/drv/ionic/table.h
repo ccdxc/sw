@@ -15,12 +15,12 @@
 #define TBL_ROOT_CAPACITY       (1u << (TBL_KEY_SHIFT - TBL_NODE_SHIFT))
 
 struct tbl_node {
-	void			*val[TBL_NODE_CAPACITY];
+	void			__rcu *val[TBL_NODE_CAPACITY];
 };
 
 struct tbl_root {
 	/* for lookup in table */
-	struct tbl_node		*node[TBL_ROOT_CAPACITY];
+	struct tbl_node		__rcu *node[TBL_ROOT_CAPACITY];
 
 	/* for insertion and deletion in table */
 	int			refcount[TBL_ROOT_CAPACITY];
@@ -146,7 +146,7 @@ static inline void tbl_insert(struct tbl_root *tbl, void *val, uint32_t key)
 	if (WARN_ON(key >> TBL_KEY_SHIFT))
 		return;
 
-	node = tbl->node[node_i];
+	node = rcu_dereference(tbl->node[node_i]);
 	if (!node)
 		node = tbl->free_node;
 
@@ -190,7 +190,7 @@ static inline void tbl_delete(struct tbl_root *tbl, uint32_t key)
 	if (WARN_ON(key >> TBL_KEY_SHIFT))
 		return;
 
-	node = tbl->node[node_i];
+	node = rcu_dereference(tbl->node[node_i]);
 	if (WARN_ON(!node) || WARN_ON(!node->val[key & TBL_NODE_MASK]))
 		return;
 

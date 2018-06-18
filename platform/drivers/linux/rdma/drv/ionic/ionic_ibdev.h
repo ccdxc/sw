@@ -233,7 +233,7 @@ struct ionic_qp {
 	u16			sq_npg_prod;
 	u16			sq_npg_cons;
 
-	void			*sq_hbm_ptr;
+	void			__iomem *sq_hbm_ptr;
 	u16			sq_hbm_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */

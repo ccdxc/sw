@@ -639,17 +639,17 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	if (!ctx->fallback) {
 		/* try to allocate dbid for user ctx */
 		if (ionic_xxx_kdbid)
-			ctx->dbid = dev->dbid; /* XXX kernel dbid in user space */
+			rc = dev->dbid; /* XXX kernel dbid in user space */
 		else
-			ctx->dbid = ionic_api_get_dbid(dev->lif);
-		if (ctx->dbid < 0) {
-			rc = ctx->dbid;
+			rc = ionic_api_get_dbid(dev->lif);
+		if (rc < 0) {
 			/* maybe allow fallback to kernel space */
 			ctx->fallback = req.fallback > 0;
 			if (!ctx->fallback)
 				goto err_dbid;
-			ctx->dbid = ~0u;
+			rc = -1;
 		}
+		ctx->dbid = rc;
 	}
 	if (ctx->fallback)
 		dev_dbg(&dev->ibdev.dev, "fallback kernel space\n");
@@ -953,17 +953,17 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 		hdr_buf->vlan_cfi = 0;
 		hdr_buf->vlan_pri = 0;
 	} else {
-		hdr_buf->vlan = hdr->vlan.tag & 0xfff;
-		hdr_buf->vlan_cfi = (hdr->vlan.tag >> 12) & 1;
-		hdr_buf->vlan_pri = (hdr->vlan.tag >> 13) & 7;
+		hdr_buf->vlan = (__force int)hdr->vlan.tag & 0xfff;
+		hdr_buf->vlan_cfi = ((__force int)hdr->vlan.tag >> 12) & 1;
+		hdr_buf->vlan_pri = ((__force int)hdr->vlan.tag >> 13) & 7;
 	}
 
 	if (hdr->ipv4_present) {
 		hdr_buf->ip_ver = 4;
 		hdr_buf->ip_tos = hdr->ip4.tos;
 		hdr_buf->ip_ttl = hdr->ip4.ttl;
-		hdr_buf->ip.v4.saddr = hdr->ip4.saddr;
-		hdr_buf->ip.v4.daddr = hdr->ip4.daddr;
+		hdr_buf->ip.v4.saddr = (__force unsigned)hdr->ip4.saddr;
+		hdr_buf->ip.v4.daddr = (__force unsigned)hdr->ip4.daddr;
 	} else {
 		hdr_buf->ip_ver = 6;
 		hdr_buf->ip_tos = hdr->grh.traffic_class;
@@ -1947,7 +1947,7 @@ static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ib_wc *wc,
 	if (cqe->op_type == OP_TYPE_RDMA_OPER_WITH_IMM) {
 		wc->opcode = IB_WC_RECV_RDMA_WITH_IMM;
 		wc->wc_flags |= IB_WC_WITH_IMM;
-		wc->ex.imm_data = cqe->imm_data; /* be32 in wc */
+		wc->ex.imm_data = cqe->imm_data;
 	} else {
 		wc->opcode = IB_WC_RECV;
 		if (0 /* TODO: cqe has invalidated rkey */) {
@@ -1955,7 +1955,7 @@ static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ib_wc *wc,
 			wc->ex.invalidate_rkey = be32_to_cpu(cqe->imm_data);
 		} else if (cqe->color_flags & IMM_DATA_VLD_MASK) {
 			wc->wc_flags |= IB_WC_WITH_IMM;
-			wc->ex.imm_data = cqe->imm_data; /* be32 in wc */
+			wc->ex.imm_data = cqe->imm_data;
 		}
 	}
 
@@ -2653,7 +2653,7 @@ static void ionic_qp_sq_destroy_hbm(struct ionic_ibdev *dev,
 		list_del(&qp->sq_hbm_mmap.ctx_ent);
 		mutex_unlock(&ctx->mmap_mut);
 	} else {
-		iounmap(&qp->sq_hbm_ptr);
+		iounmap(qp->sq_hbm_ptr);
 	}
 
 	ionic_api_put_hbm(dev->lif, qp->sq_hbm_pgid, qp->sq_hbm_order);
@@ -3245,7 +3245,7 @@ static int ionic_prep_common(struct ionic_qp *qp,
 			     struct ionic_sq_meta *meta,
 			     struct sqwqe_t *wqe,
 			     /* XXX length field offset differs per opcode */
-			     __u32 *wqe_length_field)
+			     __be32 *wqe_length_field)
 {
 	s64 signed_len;
 	u32 mval;
@@ -3502,7 +3502,7 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 
 static void ionic_post_hbm(struct ionic_ibdev *dev, struct ionic_qp *qp)
 {
-	void *hbm_ptr;
+	void __iomem *hbm_ptr;
 	void *wqe_ptr;
 	u32 stride;
 	u16 pos, end, mask;
@@ -4049,8 +4049,8 @@ static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_reset = {
-			.opcode = cpu_to_le16(CMD_OPCODE_RDMA_RESET_LIF),
-			.lif_id = cpu_to_le16(dev->lif_id),
+			.opcode = (__force u16)cpu_to_le16(CMD_OPCODE_RDMA_RESET_LIF),
+			.lif_id = (__force u16)cpu_to_le16(dev->lif_id),
 		},
 	};
 
@@ -4660,8 +4660,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	ibdev->node_type = RDMA_NODE_IB_CA;
 	ibdev->phys_port_cnt = 1;
-	ibdev->num_comp_vectors = max(1, dev->eq_count);
-	/* XXX should not use max, but count may be zero: see ionic_create_eqvec */
+	ibdev->num_comp_vectors = dev->eq_count;
+
+	/* XXX ib_register_device requires vectors, but for now count may be zero: see ionic_create_eqvec */
+	if (!ibdev->num_comp_vectors)
+		ibdev->num_comp_vectors = 1;
 
 	addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
 

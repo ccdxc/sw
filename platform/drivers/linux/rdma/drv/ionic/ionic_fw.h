@@ -70,9 +70,9 @@ static inline u32 ionic_v1_cqe_qtf_qid(u32 qtf)
 
 /* queue pair v1 sge */
 struct ionic_v1_sge {
-	__le64				va;
-	__le32				length;
-	__le32				lkey;
+	__be64				va;
+	__be32				length;
+	__be32				lkey;
 };
 
 /* queue pair v1 recv wqe */
@@ -177,9 +177,19 @@ enum ionic_v1_status {
 
 static inline size_t ionic_v1_send_wqe_min_size(int min_sge, int min_data)
 {
-	return max(sizeof(struct ionic_v1_send_wqe),
-		   max(offsetof(struct ionic_v1_send_wqe, send.sgl[min_sge]),
-		       offsetof(struct ionic_v1_send_wqe, send.data[min_data])));
+	size_t sz_wqe, sz_sgl, sz_data;
+
+	sz_wqe = sizeof(struct ionic_v1_send_wqe);
+	sz_sgl = offsetof(struct ionic_v1_send_wqe, send.sgl[min_sge]);
+	sz_data = offsetof(struct ionic_v1_send_wqe, send.data[min_data]);
+
+	if (sz_sgl > sz_wqe)
+		sz_wqe = sz_sgl;
+
+	if (sz_data > sz_wqe)
+		sz_wqe = sz_data;
+
+	return sz_wqe;
 }
 
 static inline int ionic_v1_send_wqe_max_sge(u8 stride_log2)
@@ -200,8 +210,15 @@ static inline int ionic_v1_send_wqe_max_data(u8 stride_log2)
 
 static inline size_t ionic_v1_recv_wqe_min_size(int min_sge)
 {
-	return max(sizeof(struct ionic_v1_recv_wqe),
-		   offsetof(struct ionic_v1_recv_wqe, sgl[min_sge]));
+	size_t sz_wqe, sz_sgl;
+
+	sz_wqe = sizeof(struct ionic_v1_recv_wqe);
+	sz_sgl = offsetof(struct ionic_v1_recv_wqe, sgl[min_sge]);
+
+	if (sz_sgl > sz_wqe)
+		sz_wqe = sz_sgl;
+
+	return sz_wqe;
 }
 
 static inline int ionic_v1_recv_wqe_max_sge(u8 stride_log2)
@@ -536,9 +553,9 @@ static inline enum ionic_qp_type ib_qp_type_to_ionic(enum ib_qp_type ibtype)
 }
 
 struct sge_t {
-	__u64 va;
-	__u32 len;
-	__u32 lkey;
+	__be64 va;
+	__be32 len;
+	__be32 lkey;
 };
 
 struct cqwqe_be_t {
@@ -546,20 +563,20 @@ struct cqwqe_be_t {
 		__u64 wrid;
 		struct {
 			__u32 rsvd;
-			__u32 msn;
+			__be32 msn;
 		};
 	} id;
 	__u8  op_type;
 	__u8  status;
 	__u8  rsvd2;
 	__u8  qp_hi;
-	__u16 qp_lo;
+	__be16 qp_lo;
 	__u8  src_qp_hi;
-	__u16 src_qp_lo;
+	__be16 src_qp_lo;
 	__u16 smac[3];
 	__u8  color_flags;
-	__u32 imm_data;
-	__u32 r_key;
+	__be32 imm_data;
+	__be32 r_key;
 }__attribute__ ((__packed__));
 
 struct sqwqe_base_t {
@@ -574,34 +591,34 @@ struct sqwqe_base_t {
 }__attribute__ ((__packed__));
 
 struct sqwqe_rc_send_t {
-	__u32 imm_data;
-	__u32 inv_key;
+	__be32 imm_data;
+	__be32 inv_key;
 	__u32 rsvd1;
-	__u32 length;
+	__be32 length;
 	__u32 rsvd2;
 }__attribute__ ((__packed__));
 
 struct sqwqe_ud_send_t {
-	__u32 imm_data;
+	__be32 imm_data;
 	__u32 q_key;
-	__u32 length;
+	__be32 length;
 	__u32 ah_size:8;
 	__u32 dst_qp:24;
 	__u32 ah_handle;
 }__attribute__ ((__packed__));
 
 struct sqwqe_rdma_t {
-	__u32 imm_data;
-	__u64 va;
-	__u32 length;
-	__u32 r_key;
+	__be32 imm_data;
+	__be64 va;
+	__be32 length;
+	__be32 r_key;
 }__attribute__ ((__packed__));
 
 struct sqwqe_atomic_t {
-	__u32 r_key;
-	__u64 va;
-	__u64 swap_or_add_data;
-	__u64 cmp_data;
+	__be32 r_key;
+	__be64 va;
+	__be64 swap_or_add_data;
+	__be64 cmp_data;
 	__u64 pad;
 	struct sge_t sge;
 }__attribute__ ((__packed__));
@@ -612,7 +629,10 @@ struct sqwqe_non_atomic_t {
 		struct sqwqe_ud_send_t ud_send;
 		struct sqwqe_rdma_t rdma;
 	}wqe;
-	struct sge_t sg_arr[2];
+	union {
+		struct sge_t sg_arr[2];
+		u8 sg_data[32];
+	};
 }__attribute__ ((__packed__));
 
 struct sqwqe_t {
@@ -637,40 +657,58 @@ static inline u16 ionic_cqe_size(void)
 	return IONIC_CQE_SIZE;
 }
 
-static inline u16 ionic_sq_wqe_size(u16 max_sge, u16 max_inline)
+static inline u16 ionic_sq_wqe_size(u16 min_sge, u16 min_inline)
 {
-	u16 sgl_size = max_t(u16, max_sge * IONIC_SGE_SIZE, max_inline);
+	size_t sz_wqe, sz_sgl, sz_data;
 
-	BUILD_BUG_ON(IONIC_SQ_WQE_MINSIZE != sizeof(struct sqwqe_t));
-	BUILD_BUG_ON(IONIC_SQ_WQE_SIZE != offsetof(struct sqwqe_t,
-						   u.non_atomic.sg_arr));
+	sz_wqe = sizeof(struct sqwqe_t);
+	sz_sgl = offsetof(struct sqwqe_t, u.non_atomic.sg_arr[min_sge]);
+	sz_data = offsetof(struct sqwqe_t, u.non_atomic.sg_data[min_inline]);
 
-	return max_t(u16, IONIC_SQ_WQE_MINSIZE, IONIC_SQ_WQE_SIZE + sgl_size);
+	if (sz_sgl > sz_wqe)
+		sz_wqe = sz_sgl;
+
+	if (sz_data > sz_wqe)
+		sz_wqe = sz_data;
+
+	return sz_wqe;
 }
 
 static inline int ionic_sq_wqe_max_sge(u16 wqe_size)
 {
-	return (wqe_size - IONIC_SQ_WQE_SIZE) / IONIC_SGE_SIZE;
+	struct sqwqe_t *wqe = (void *)0;
+	struct sge_t *sge = (void *)(unsigned long)wqe_size;
+
+	return sge - wqe->u.non_atomic.sg_arr;
 }
 
 static inline int ionic_sq_wqe_max_inline(u16 wqe_size)
 {
-	return wqe_size - IONIC_SQ_WQE_SIZE;
+	struct sqwqe_t *wqe = (void *)0;
+	u8 *data = (void *)(unsigned long)wqe_size;
+
+	return data - wqe->u.non_atomic.sg_data;
 }
 
-static inline u16 ionic_rq_wqe_size(u16 max_sge)
+static inline u16 ionic_rq_wqe_size(u16 min_sge)
 {
-	u16 sgl_size = max_sge * IONIC_SGE_SIZE;
+	size_t sz_wqe, sz_sgl;
 
-	BUILD_BUG_ON(IONIC_RQ_WQE_MINSIZE != sizeof(struct rqwqe_t));
-	BUILD_BUG_ON(IONIC_RQ_WQE_SIZE != offsetof(struct rqwqe_t, sge_arr));
+	sz_wqe = sizeof(struct rqwqe_t);
+	sz_sgl = offsetof(struct rqwqe_t, sge_arr[min_sge]);
 
-	return max_t(u16, IONIC_RQ_WQE_MINSIZE, IONIC_RQ_WQE_SIZE + sgl_size);
+	if (sz_sgl > sz_wqe)
+		sz_wqe = sz_sgl;
+
+	return sz_wqe;
 }
 
 static inline int ionic_rq_wqe_max_sge(u16 wqe_size)
 {
-	return (wqe_size - IONIC_RQ_WQE_SIZE) / IONIC_SGE_SIZE;
+	struct rqwqe_t *wqe = (void *)0;
+	struct sge_t *sge = (void *)(unsigned long)wqe_size;
+
+	return sge - wqe->sge_arr;
 }
 
 static inline bool ionic_cqe_color(struct cqwqe_be_t *cqe)
