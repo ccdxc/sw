@@ -167,6 +167,7 @@ func (it *integTestSuite) TestKstoreNodeStopStart(c *C) {
 }
 
 func (it *integTestSuite) TestKstoreNodeRestartQuickWriteLoss(c *C) {
+	c.Skip("skipping due to known issues")
 
 	nodeRestartQuickWriteLossCase := TestCase{
 		TestName: "NodeRestartQuickWriteLossTest",
