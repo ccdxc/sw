@@ -38,7 +38,6 @@ struct ionic_qdesc {
 struct ionic_ah_resp {
 	struct ib_uverbs_create_ah_resp resp;
 	__u32 ahid;
-	__u32 len;
 };
 
 struct ionic_cq_req {

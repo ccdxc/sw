@@ -99,7 +99,6 @@ struct ionic_qp {
 struct ionic_ah {
 	struct ibv_ah		ibah;
 	uint32_t		ahid;
-	uint32_t		len;
 };
 
 struct ionic_dev {

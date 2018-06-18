@@ -1004,7 +1004,7 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 
 	/* XXX endian? */
 	wqe->u.non_atomic.wqe.ud_send.q_key = wr->wr.ud.remote_qkey;
-	wqe->u.non_atomic.wqe.ud_send.ah_size = ah->len;
+	wqe->u.non_atomic.wqe.ud_send.ah_size = 0;
 	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->wr.ud.remote_qpn;
 	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->ahid;
 
@@ -1442,7 +1442,6 @@ static struct ibv_ah *ionic_create_ah(struct ibv_pd *ibpd,
 		goto err_cmd;
 
 	ah->ahid = resp.ahid;
-	ah->len = resp.len;
 
 	return &ah->ibah;
 
