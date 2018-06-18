@@ -13,4 +13,6 @@ cc_library(
         "//nic/utils/trace",
         "//nic/hal/pd:pdcommon",
     ],
+    alwayslink = 1,
+    tags = [ "sharedlib" ]
 )

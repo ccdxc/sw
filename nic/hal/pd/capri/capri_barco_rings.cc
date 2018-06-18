@@ -367,7 +367,8 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
         return FALSE;
     }
     else {
-        HAL_TRACE_DEBUG("Poll:{}: Retrieved opaque tag value: {}", barco_ring->ring_name, curr_opaque_tag);
+        HAL_TRACE_DEBUG("Poll:{}: Retrieved opaque tag addr: {:#x}value: {:#x}", 
+                    barco_ring->ring_name, barco_ring->opaque_tag_addr, curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
             ret = TRUE;
@@ -1586,6 +1587,7 @@ hal_ret_t capri_barco_rings_init(void)
 {
     uint16_t        idx;
     uint64_t        opa_tag_addr = 0;
+    uint32_t        opa_tag_def_val = 0;
     hal_ret_t       ret = HAL_RET_OK;
 
     for (idx = 0; idx < types::BarcoRings_ARRAYSIZE; idx++) {
@@ -1603,6 +1605,14 @@ hal_ret_t capri_barco_rings_init(void)
             }
             HAL_TRACE_DEBUG("Ring: {}: Allocated opaque tag @ {:x}",
                 barco_rings[idx].ring_name, opa_tag_addr);
+            if(capri_hbm_write_mem(opa_tag_addr, (uint8_t *)&opa_tag_def_val, sizeof(opa_tag_def_val))) {
+                HAL_TRACE_ERR("Ring: {}: Failed to initialized opaque tag @ {:x}",
+                    barco_rings[idx].ring_name, opa_tag_addr);
+                return HAL_RET_HW_FAIL;
+            } 
+            HAL_TRACE_DEBUG("Ring: {}: initialized opaque tag to 0 @ {:x}",
+                barco_rings[idx].ring_name, opa_tag_addr);
+
             barco_rings[idx].opaque_tag_addr = opa_tag_addr;
         }
         if (barco_rings[idx].init) {
