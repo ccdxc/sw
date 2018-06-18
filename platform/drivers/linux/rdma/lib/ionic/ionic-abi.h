@@ -5,6 +5,7 @@
 #include <infiniband/verbs.h>
 #include <rdma/ionic-abi.h>
 #include <kernel-abi/ionic-abi.h>
+#include "ionic_fw.h"
 
 #define IONIC_ABI_VERSION 3
 
@@ -17,7 +18,7 @@ DECLARE_DRV_CMD(uionic_cq, IB_USER_VERBS_CMD_CREATE_CQ,
 DECLARE_DRV_CMD(uionic_qp, IB_USER_VERBS_EX_CMD_CREATE_QP,
 		ionic_qp_req, ionic_qp_resp);
 
-/* XXX cleanup: move to fw abi file, this file is for user/kernel abi */
+/* XXX cleanup: makeshift interface */
 
 #define IONIC_FULL_FLAG_DELTA        0x80
 
