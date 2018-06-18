@@ -14,106 +14,7 @@ import (
 )
 
 const (
-	eventMapping       = `{"settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"kind":{"type":"keyword"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"keyword"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"keyword"},"namespace":{"type":"text"},"tenant":{"type":"keyword"},"uri":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
-	eventMappingPretty = `{
-    "settings": {
-        "number_of_shards": 1,
-        "number_of_replicas": 0,
-        "codec": "best_compression"
-    },
-    "mappings": {
-        "events": {
-            "properties": {
-                "api-version": {
-                    "type": "text"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "kind": {
-                    "type": "keyword"
-                },
-                "message": {
-                    "type": "text"
-                },
-                "meta": {
-                    "properties": {
-                        "creation-time": {
-                            "type": "date"
-                        },
-                        "labels": {
-                            "properties": {
-                                "key": {
-                                    "type": "text"
-                                },
-                                "value": {
-                                    "type": "text"
-                                }
-                            }
-                        },
-                        "mod-time": {
-                            "type": "date"
-                        },
-                        "name": {
-                            "type": "keyword"
-                        },
-                        "namespace": {
-                            "type": "text"
-                        },
-                        "resource-version": {
-                            "type": "text"
-                        },
-                        "self-link": {
-                            "type": "text"
-                        },
-                        "tenant": {
-                            "type": "keyword"
-                        },
-                        "uuid": {
-                            "type": "text"
-                        }
-                    }
-                },
-                "object-ref": {
-                    "properties": {
-                        "kind": {
-                            "type": "keyword"
-                        },
-                        "name": {
-                            "type": "keyword"
-                        },
-                        "namespace": {
-                            "type": "text"
-                        },
-                        "tenant": {
-                            "type": "keyword"
-                        },
-                        "uri": {
-                            "type": "text"
-                        }
-                    }
-                },
-                "severity": {
-                    "type": "keyword"
-                },
-                "source": {
-                    "properties": {
-                        "component": {
-                            "type": "keyword"
-                        },
-                        "node-name": {
-                            "type": "text"
-                        }
-                    }
-                },
-                "type": {
-                    "type": "keyword"
-                }
-            }
-        }
-    }
-}`
-	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"kind":{"type":"keyword"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"keyword"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"keyword"},"namespace":{"type":"text"},"tenant":{"type":"keyword"},"uri":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
+	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uri":{"type":"text"}}},"severity":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"source":{"properties":{"component":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"node-name":{"type":"text"}}},"type":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"}}}}}`
 	eventTemplateMappingPretty = `{
     "index_patterns": "*.events.*",
     "settings": {
@@ -131,7 +32,13 @@ const (
                     "type": "integer"
                 },
                 "kind": {
-                    "type": "keyword"
+                    "fields": {
+                        "keyword": {
+                            "ignore_above": 256,
+                            "type": "keyword"
+                        }
+                    },
+                    "type": "text"
                 },
                 "message": {
                     "type": "text"
@@ -155,7 +62,13 @@ const (
                             "type": "date"
                         },
                         "name": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "namespace": {
                             "type": "text"
@@ -167,7 +80,13 @@ const (
                             "type": "text"
                         },
                         "tenant": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "uuid": {
                             "type": "text"
@@ -177,16 +96,34 @@ const (
                 "object-ref": {
                     "properties": {
                         "kind": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "name": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "namespace": {
                             "type": "text"
                         },
                         "tenant": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "uri": {
                             "type": "text"
@@ -194,12 +131,24 @@ const (
                     }
                 },
                 "severity": {
-                    "type": "keyword"
+                    "fields": {
+                        "keyword": {
+                            "ignore_above": 256,
+                            "type": "keyword"
+                        }
+                    },
+                    "type": "text"
                 },
                 "source": {
                     "properties": {
                         "component": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "node-name": {
                             "type": "text"
@@ -207,14 +156,20 @@ const (
                     }
                 },
                 "type": {
-                    "type": "keyword"
+                    "fields": {
+                        "keyword": {
+                            "ignore_above": 256,
+                            "type": "keyword"
+                        }
+                    },
+                    "type": "text"
                 }
             }
         }
     }
 }`
 
-	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression"},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"type":"keyword"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"keyword"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}}}}}}`
+	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression"},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}}}}}}`
 	searchMappingPretty = `{
     "settings": {
         "number_of_shards": 3,
@@ -228,7 +183,13 @@ const (
                     "type": "text"
                 },
                 "kind": {
-                    "type": "keyword"
+                    "fields": {
+                        "keyword": {
+                            "ignore_above": 256,
+                            "type": "keyword"
+                        }
+                    },
+                    "type": "text"
                 },
                 "meta": {
                     "properties": {
@@ -249,7 +210,13 @@ const (
                             "type": "date"
                         },
                         "name": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "namespace": {
                             "type": "text"
@@ -261,7 +228,13 @@ const (
                             "type": "text"
                         },
                         "tenant": {
-                            "type": "keyword"
+                            "fields": {
+                                "keyword": {
+                                    "ignore_above": 256,
+                                    "type": "keyword"
+                                }
+                            },
+                            "type": "text"
                         },
                         "uuid": {
                             "type": "text"

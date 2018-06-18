@@ -62,7 +62,7 @@ func TestEvents(t *testing.T) {
 
 	// verify that it has reached elasticsearch; these are the first occurrences of an event
 	// so it should have reached elasticsearch wthout being deduped.
-	query := es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewTermQuery("type", eventType1))
+	query := es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewTermQuery("type.keyword", eventType1))
 	ti.assertElasticUniqueEvents(t, query, true, 1, "4s") // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, 1, "4s")  // total  == 1
 	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test event -2").Operator("and"))
@@ -103,7 +103,7 @@ func TestEvents(t *testing.T) {
 	}
 
 	// query by kind
-	queryByKind := es.NewTermQuery("object-ref.kind", testNIC.GetKind())
+	queryByKind := es.NewTermQuery("object-ref.kind.keyword", testNIC.GetKind())
 	ti.assertElasticUniqueEvents(t, queryByKind, true, 2, "4s")              // unique == 2 (eventType1 and eventType2)
 	ti.assertElasticTotalEvents(t, queryByKind, true, numDuplicates*2, "4s") // total == numDuplicates
 }
@@ -200,7 +200,7 @@ func TestEventsProxyRestart(t *testing.T) {
 
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
-	query := es.NewRegexpQuery("source.component", fmt.Sprintf("%v-.*", componentID))
+	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
 	ti.assertElasticUniqueEvents(t, query, false, 3*numRecorders, "6s") // mininum of (3 event types * numRecorders = unique events)
 	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "6s") // there can be duplicates because of proxy restarts; so check for received >= sent
 }
@@ -294,7 +294,7 @@ func TestEventsMgrRestart(t *testing.T) {
 
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
-	query := es.NewRegexpQuery("source.component", fmt.Sprintf("%v-.*", componentID))
+	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
 	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "10s")
 	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "10s")
 }

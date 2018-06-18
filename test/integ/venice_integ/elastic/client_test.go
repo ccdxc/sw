@@ -308,7 +308,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
 	// Query 2: term query; look for events with severity == event.Severity
 	// term queries are used for keyword searches (exact values)
 	// whereas, match queries are full_text searches
-	query2 := es.NewTermQuery("severity", event.Severity)
+	query2 := es.NewTermQuery("severity.keyword", event.Severity)
 	result, err = client.Search(ctx, indexName, indexType, query2, nil, from, maxResults, sortBy)
 	if err != nil {
 		log.Fatalf("failed to search events for query: %v, err:%v", query2, err)

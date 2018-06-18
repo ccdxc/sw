@@ -245,10 +245,27 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 
 	// check for override by field name
 	if kind, ok := fieldOrTypeOverride[docType][key]; ok {
-		eType := ElasticMapping{
-			"type": kind,
+		if kind == "keyword" {
+
+			// Generate both text and keyword mapping
+			kwMap := make(map[string]interface{})
+			kwMap[string("type")] = "keyword"
+			kwMap[string("ignore_above")] = 256
+			kw := ElasticMapping{
+				"keyword": kwMap,
+			}
+
+			cMap := make(map[string]interface{})
+			cMap[string("type")] = "text"
+			cMap[string("fields")] = kw
+			config[key] = cMap
+
+		} else {
+			eType := ElasticMapping{
+				"type": kind,
+			}
+			config[key] = eType
 		}
-		config[key] = eType
 		return
 	}
 

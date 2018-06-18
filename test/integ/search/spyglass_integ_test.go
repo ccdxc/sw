@@ -98,13 +98,13 @@ func randStr(n int) string {
 	return string(r)
 }
 
-func getSearchURLWithParams(query string, from, maxResults int32, sortBy string) string {
+func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, sortBy string) string {
 
 	// convert to query-string to url-encoded string
 	// to escape special characters like space, comma, braces.
 	u := url.URL{Path: query}
 	urlQuery := url.QueryEscape(query)
-	log.Debugf("Query: %s Encoded: %s Escaped: %s", query, u.String(), urlQuery)
+	t.Logf("Query: %s Encoded: %s Escaped: %s", query, u.String(), urlQuery)
 	str := fmt.Sprintf("http://127.0.0.1:%s/v1/search/query?QueryString=%s&From=%d&MaxResults=%d",
 		tInfo.apiGwPort, urlQuery, from, maxResults)
 	if sortBy != "" {
@@ -127,7 +127,6 @@ func validateElasticsearch(t *testing.T) {
 			tInfo.esClient, err = elastic.NewClient(tInfo.elasticURL, nil, tInfo.l)
 			if err != nil {
 				t.Logf("error creating client: %v", err)
-				log.Errorf("error creating client: %v", err)
 				return false, nil
 			}
 			return true, nil
@@ -211,7 +210,7 @@ func TestSpyglass(t *testing.T) {
 		t.Fatal("failed to start finder")
 	}
 	defer fdr.Stop()
-	log.Infof("Finder search endpoint addr: %s", fdr.GetListenURL())
+	t.Logf("Finder search endpoint addr: %s", fdr.GetListenURL())
 	tInfo.finderURL = fdr.GetListenURL()
 	_, port, err := net.SplitHostPort(tInfo.finderURL)
 	if err != nil {
@@ -252,7 +251,7 @@ func TestSpyglass(t *testing.T) {
 		func() (bool, interface{}) {
 
 			if expectedCount != idr.GetObjectCount() {
-				log.Errorf("Retrying, indexed objects count mismatch - expected: %d actual: %d",
+				t.Logf("Retrying, indexed objects count mismatch - expected: %d actual: %d",
 					expectedCount, idr.GetObjectCount())
 				return false, nil
 			}
@@ -268,10 +267,10 @@ func TestSpyglass(t *testing.T) {
 
 			restcl := netutils.NewHTTPClient()
 			restcl.SetHeader("Authorization", tInfo.authzHeader)
-			_, err = restcl.Req("GET", getSearchURLWithParams("tesla", 0, 10, ""), nil, &resp)
+			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, ""), nil, &resp)
 			if err != nil {
-				log.Errorf("GET on search REST endpoint: %s failed, err:%+v",
-					getSearchURLWithParams("tesla", 0, 10, ""), err)
+				t.Logf("GET on search REST endpoint: %s failed, err:%+v",
+					getSearchURLWithParams(t, "tesla", 0, 10, ""), err)
 				return false, nil
 			}
 			return true, nil
@@ -307,7 +306,7 @@ func TestSpyglass(t *testing.T) {
 		func() (bool, interface{}) {
 
 			if expectedCount != idr.GetObjectCount() {
-				log.Errorf("Retrying, indexed objects count mismatch expected: %d actual: %d",
+				t.Logf("Retrying, indexed objects count mismatch expected: %d actual: %d",
 					expectedCount, idr.GetObjectCount())
 				return false, nil
 			}
@@ -390,7 +389,7 @@ func performSearchTests(t *testing.T) {
 				From:        0, // from offset-0
 				MaxResults:  3, // get 3 results
 			},
-			"meta.name",
+			"meta.name.keyword",
 			3,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
@@ -413,7 +412,7 @@ func performSearchTests(t *testing.T) {
 				From:        3, // from offset-3
 				MaxResults:  2, // get 2 results
 			},
-			"meta.name",
+			"meta.name.keyword",
 			2,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
@@ -709,6 +708,55 @@ func performSearchTests(t *testing.T) {
 			nil,
 		},
 
+		// Text search (case insensitive) on kind
+		{
+			search.SearchRequest{
+				QueryString: "smartnic",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		// Text search (case insensitive and prefix match) on kind
+		{
+			search.SearchRequest{
+				QueryString: "smart*",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+
 		// Negative test cases
 		{
 			// Invalid Kind
@@ -854,9 +902,9 @@ func performSearchTests(t *testing.T) {
 				},
 				From:       0, // from offset-0
 				MaxResults: 3, // get 3 results
-				SortBy:     "meta.name",
+				SortBy:     "meta.name.keyword",
 			},
-			"meta.name",
+			"meta.name.keyword",
 			3,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
@@ -880,9 +928,9 @@ func performSearchTests(t *testing.T) {
 				},
 				From:       3, // from offset-3
 				MaxResults: 2, // get 2 results
-				SortBy:     "meta.name",
+				SortBy:     "meta.name.keyword",
 			},
-			"meta.name",
+			"meta.name.keyword",
 			2,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
@@ -1074,6 +1122,68 @@ func performSearchTests(t *testing.T) {
 			},
 			nil,
 		},
+
+		{
+			// Text search (case insensitive) that matches on Kind
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"smartnic"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Text search (case insensitive and prefix match) that matches on Kind
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"smart*"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			objectCount,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+
 		{
 			// Text search that matches on meta.Namespace
 			search.SearchRequest{
@@ -1475,9 +1585,9 @@ func performSearchTests(t *testing.T) {
 					var resp search.SearchResponse
 					var searchURL string
 					if len(tc.query.QueryString) != 0 {
-						fmt.Printf("## QueryString query: %s\n", tc.query.QueryString)
+						t.Logf("## QueryString query: %s\n", tc.query.QueryString)
 						// Query using URI params - via GET method
-						searchURL = getSearchURLWithParams(tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.sortBy)
+						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.sortBy)
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
@@ -1486,7 +1596,7 @@ func performSearchTests(t *testing.T) {
 						// Query using Body - via POST method
 						// GET with body is not supported by many http clients including
 						// net/http package.
-						fmt.Printf("## Query Body: %+v\n", tc.query)
+						t.Logf("## Query Body: %+v\n", tc.query)
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
@@ -1497,14 +1607,14 @@ func performSearchTests(t *testing.T) {
 					if (err != nil && tc.err == nil) ||
 						(err == nil && tc.err != nil) ||
 						(err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
-						log.Errorf("Search request URL: %s didn't match expected error, expected:%+v actual:%+v",
+						t.Logf("## Search request URL: %s didn't match expected error, expected:%+v actual:%+v",
 							searchURL, tc.err, err)
 						return false, nil
 					}
 
 					// Match on expected hits
 					if resp.ActualHits != tc.expectedHits {
-						log.Errorf("Result mismatch expected: %d received: %d resp: {%+v}",
+						t.Logf("Result mismatch expected: %d received: %d resp: {%+v}",
 							tc.expectedHits, resp.ActualHits, resp)
 						return false, nil
 					}
@@ -1516,53 +1626,53 @@ func performSearchTests(t *testing.T) {
 
 					// Validate the response for exact match
 					// Verify count of tenant entries
-					log.Debugf("Query: %s, result : %+v", searchURL, resp)
+					t.Logf("Query: %s, result : %+v", searchURL, resp)
 					if len(tc.aggresults) != len(resp.AggregatedEntries.Tenants) {
-						log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
+						t.Logf("Tenant entries count didn't match, expected %d actual:%d",
 							len(tc.aggresults), len(resp.AggregatedEntries.Tenants))
 						return false, nil
 					}
 
 					// Tenant verification
 					for tenantKey, tenantVal := range tc.aggresults {
-						log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
+						t.Logf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
 						if _, ok := resp.AggregatedEntries.Tenants[tenantKey]; !ok {
-							log.Errorf("Tenant %s not found", tenantKey)
+							t.Logf("Tenant %s not found", tenantKey)
 							return false, nil
 						}
 
 						// Verify count of category entries match for each tenant
 						if len(tenantVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories) {
-							log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
+							t.Logf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
 								tenantKey, len(tenantVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories))
 							return false, nil
 						}
 
 						// Category verification
 						for categoryKey, categoryVal := range tenantVal {
-							log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
+							t.Logf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
 							if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
-								log.Errorf("Category %s not found", categoryKey)
+								t.Logf("Category %s not found", categoryKey)
 								return false, nil
 							}
 
 							// Verify count of kind entries match for each (tenant,category)
 							if len(categoryVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
-								log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
+								t.Logf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
 									tenantKey, categoryKey, len(categoryVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
 								return false, nil
 							}
 
 							// Kind verification
 							for kindKey, kindVal := range categoryVal {
-								log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
+								t.Logf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
 								if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
-									log.Errorf("Kind %s not found", kindKey)
+									t.Logf("Kind %s not found", kindKey)
 									return false, nil
 								}
 
 								// make an interim object map from the entries slice
-								log.Debugf("Kinds: %+v", resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey])
+								t.Logf("Kinds: %+v", resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey])
 								entries := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey].Entries
 								omap := make(map[string]interface{}, len(entries))
 								for _, val := range entries {
@@ -1571,9 +1681,9 @@ func performSearchTests(t *testing.T) {
 
 								// object verification
 								for objKey := range kindVal {
-									log.Debugf("Verifying Object Key: %s", objKey)
+									t.Logf("Verifying Object Key: %s", objKey)
 									if _, ok := omap[objKey]; !ok {
-										log.Errorf("Object %s not found", objKey)
+										t.Logf("Object %s not found", objKey)
 										return false, nil
 									}
 								}
@@ -1629,7 +1739,7 @@ func startAPIserverAPIgw(t *testing.T) {
 	tInfo.apiServerAddr = "localhost" + ":" + tInfo.apiServerPort
 	apiCl, err := apicache.NewGrpcUpstream("spyglass-integ-test", tInfo.apiServerAddr, tInfo.l)
 	if err != nil {
-		fmt.Printf("Cannot create gRPC client - %v", err)
+		t.Logf("Cannot create gRPC client - %v", err)
 		os.Exit(-1)
 	}
 	tInfo.apiClient = apiCl

@@ -152,7 +152,7 @@ func (fdr *Finder) QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 	// Process kinds requirement
 	kindReq := es.NewBoolQuery().QueryName("KindQuery")
 	for _, cat := range req.Query.Kinds {
-		kindReq = kindReq.Should(es.NewTermQuery("kind", cat)).MinimumNumberShouldMatch(1)
+		kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", cat)).MinimumNumberShouldMatch(1)
 	}
 	if len(req.Query.Kinds) > 0 {
 		query = query.Must(kindReq)
@@ -303,7 +303,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	}
 
 	// Kind-Aggregation #3
-	aggKind := es.NewTermsAggregation().Field("kind")
+	aggKind := es.NewTermsAggregation().Field("kind.keyword")
 
 	// Add Top-aggregations to Kind-Aggregation
 	aggKind = aggKind.SubAggregation(elastic.TopHitsKey, topAgg)
@@ -315,7 +315,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	aggCategory = aggCategory.SubAggregation(elastic.KindAggKey, aggKind)
 
 	// Tenant-Aggregation #1
-	aggTenant := es.NewTermsAggregation().Field("meta.tenant")
+	aggTenant := es.NewTermsAggregation().Field("meta.tenant.keyword")
 
 	// Add Category-Aggregation to Tenant-Aggregation
 	aggTenant = aggTenant.SubAggregation(elastic.CategoryAggKey, aggCategory)
