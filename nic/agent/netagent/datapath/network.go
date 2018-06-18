@@ -17,6 +17,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	var nwKey halproto.NetworkKeyHandle
 	var macAddr uint64
 	var wireEncap halproto.EncapInfo
+	var bcastPolicy halproto.BroadcastFwdPolicy
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -107,9 +108,11 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	if nw.Spec.VxlanVNI != 0 {
 		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_VXLAN
 		wireEncap.EncapValue = nw.Spec.VxlanVNI
+		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_NONE
 	} else {
 		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_DOT1Q
 		wireEncap.EncapValue = nw.Spec.VlanID
+		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD
 	}
 
 	// build l2 segment data
@@ -120,8 +123,8 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 				SegmentId: nw.Status.NetworkID,
 			},
 		},
-		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
-		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
+		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_NONE,
+		BcastFwdPolicy: bcastPolicy,
 		WireEncap:      &wireEncap,
 		VrfKeyHandle:   vrfKey,
 		NetworkKeyHandle: []*halproto.NetworkKeyHandle{
