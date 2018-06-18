@@ -628,7 +628,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	if (rc)
 		goto err_ctx;
 
-	ctx = kmalloc(sizeof(*ctx), GFP_KERNEL);
+	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
 	if (!ctx) {
 		rc = -ENOMEM;
 		goto err_ctx;
@@ -786,7 +786,7 @@ static struct ib_pd *ionic_alloc_pd(struct ib_device *ibdev,
 	struct ionic_pd *pd;
 	int rc;
 
-	pd = kmalloc(sizeof(*pd), GFP_KERNEL);
+	pd = kzalloc(sizeof(*pd), GFP_KERNEL);
 	if (!pd) {
 		rc = -ENOMEM;
 		goto err_pd;
@@ -1044,7 +1044,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	if (rc)
 		goto err_ah;
 
-	ah = kmalloc(sizeof(*ah), GFP_ATOMIC);
+	ah = kzalloc(sizeof(*ah), GFP_ATOMIC);
 	if (!ah) {
 		rc = -ENOMEM;
 		goto err_ah;
@@ -1422,7 +1422,7 @@ static struct ib_mr *ionic_get_dma_mr(struct ib_pd *ibpd, int access)
 	struct ionic_mr *mr;
 	int rc;
 
-	mr = kmalloc(sizeof(*mr), GFP_KERNEL);
+	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
 	if (!mr) {
 		rc = -ENOMEM;
 		goto err_mr;
@@ -1467,7 +1467,7 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 	if (rc)
 		goto err_mr;
 
-	mr = kmalloc(sizeof(*mr), GFP_KERNEL);
+	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
 	if (!mr) {
 		rc = -ENOMEM;
 		goto err_mr;
@@ -1733,7 +1733,7 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_cq;
 
-	cq = kmalloc(sizeof(*cq), GFP_KERNEL);
+	cq = kzalloc(sizeof(*cq), GFP_KERNEL);
 	if (!cq) {
 		rc = -ENOMEM;
 		goto err_cq;
@@ -2945,7 +2945,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	if (rc)
 		goto err_qp;
 
-	qp = kmalloc(sizeof(*qp), GFP_KERNEL);
+	qp = kzalloc(sizeof(*qp), GFP_KERNEL);
 	if (!qp) {
 		rc = -ENOMEM;
 		goto err_qp;
@@ -3720,7 +3720,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	if (rc)
 		goto err_srq;
 
-	qp = kmalloc(sizeof(*qp), GFP_KERNEL);
+	qp = kzalloc(sizeof(*qp), GFP_KERNEL);
 	if (!qp) {
 		rc = -ENOSYS;
 		goto err_srq;
