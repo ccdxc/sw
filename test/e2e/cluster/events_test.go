@@ -35,7 +35,7 @@ var _ = Describe("events test", func() {
 	It("CMD should start recording events once the cluster is up", func() {
 		// check for CMD events
 		Eventually(func() error {
-			query := es.NewTermQuery("source.component", globals.Cmd)
+			query := es.NewTermQuery("source.component.keyword", globals.Cmd)
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
@@ -53,8 +53,8 @@ var _ = Describe("events test", func() {
 
 		// check for `LeaderElected` event
 		Eventually(func() error {
-			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component", globals.Cmd),
-				es.NewTermQuery("type", cmdenv.LeaderElected))
+			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Cmd),
+				es.NewTermQuery("type.keyword", cmdenv.LeaderElected))
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
