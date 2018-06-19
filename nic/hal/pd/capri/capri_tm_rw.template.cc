@@ -38,7 +38,7 @@ typedef struct capri_tm_cfg_profile_s {
     uint32_t hbm_fifo_size;
     bool     sw_init_enabled;
     bool     sw_cfg_write_enabled;
-} __PACK__ capri_tm_cfg_profile_t;
+} capri_tm_cfg_profile_t;
 
 typedef struct capri_tm_port_asic_profile_s {
     uint32_t reserved_mtus;
@@ -46,7 +46,7 @@ typedef struct capri_tm_port_asic_profile_s {
     uint32_t recirc_q;
     uint32_t rate_limiter;
     bool     uses_credits;
-} __PACK__ capri_tm_asic_port_profile_t;
+} capri_tm_asic_port_profile_t;
 
 typedef struct capri_tm_asic_profile_s {
     uint32_t                     cell_alloc_units;
@@ -56,7 +56,7 @@ typedef struct capri_tm_asic_profile_s {
     uint32_t                     hbm_fifo_reserved_bytes_per_context[NUM_TM_HBM_FIFO_TYPES];
     uint32_t                     cpu_copy_tail_drop_threshold;
     uint32_t                     span_tail_drop_threshold;
-} __PACK__ capri_tm_asic_profile_t;
+} capri_tm_asic_profile_t;
 
 typedef struct capri_tm_buf_hbm_cfg_s {
     bool valid;
@@ -64,31 +64,31 @@ typedef struct capri_tm_buf_hbm_cfg_s {
     uint64_t control_offset;
     uint32_t payload_chunks;
     uint32_t control_chunks;
-} __PACK__ capri_tm_buf_hbm_cfg_t;
+} capri_tm_buf_hbm_cfg_t;
 
 typedef struct capri_tm_buf_cfgs_s {
     uint32_t               chunks_per_q[NUM_TM_PORT_TYPES];
     capri_tm_buf_hbm_cfg_t hbm_fifo[NUM_TM_HBM_FIFO_TYPES][HAL_TM_MAX_HBM_CONTEXTS];
-} __PACK__ capri_tm_buf_cfg_t;
+} capri_tm_buf_cfg_t;
 
 typedef struct capri_tm_hbm_context_stats_s {
     uint64_t good_pkts_in;
     uint64_t good_pkts_out;
     uint64_t errored_pkts_in;
     uint32_t max_oflow_fifo_depth;
-} __PACK__ capri_tm_hbm_context_stats_t;
+} capri_tm_hbm_context_stats_t;
 
 typedef struct capri_tm_shadow_stats_s {
     hal_spinlock_t slock; // Lock for accessing the stats
     capri_tm_hbm_context_stats_t cur_vals[NUM_TM_HBM_FIFO_TYPES][HAL_TM_MAX_HBM_CONTEXTS];
     capri_tm_hbm_context_stats_t prev_vals[NUM_TM_HBM_FIFO_TYPES][HAL_TM_MAX_HBM_CONTEXTS];
-} __PACK__ capri_tm_shadow_stats_t;
+} capri_tm_shadow_stats_t;
 
 typedef struct capri_tm_ctx_s {
+    capri_tm_shadow_stats_t stats;
     capri_tm_asic_profile_t asic_profile;
     capri_tm_cfg_profile_t  cfg_profile;
     capri_tm_buf_cfg_t      buf_cfg;
-    capri_tm_shadow_stats_t stats;
     std::atomic<bool>       init_complete;
 } capri_tm_ctx_t;
 

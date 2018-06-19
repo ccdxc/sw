@@ -254,17 +254,17 @@ pipeline_lookup_(const lifqid_t& lifq)
 }
 
 static inline pipeline_action_t
-pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, 
+pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
                       uint8_t end)
 {
     pipeline_action_t rc = PIPELINE_CONTINUE;
 
-    HAL_TRACE_DEBUG("Invoking pipeline with start: {} end: {} for ev {}", 
+    HAL_TRACE_DEBUG("Invoking pipeline with start: {} end: {} for ev {}",
                     start, end, ctx.pipeline_event());
 
     if (ctx.pipeline_event() == FTE_SESSION_DELETE) {
         ctx.set_hal_cleanup(true);
-    } 
+    }
 
     for (int i = start; i < end; i++) {
         feature_t *feature = pipeline->features[i];
@@ -289,7 +289,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
         default:
             rc = feature->exec_handler(ctx);
         };
-        HAL_TRACE_DEBUG("fte:exec_handler feature={} pipeline={} event={} action={}", 
+        HAL_TRACE_DEBUG("fte:exec_handler feature={} pipeline={} event={} action={}",
                         feature->name, pipeline->name, ctx.pipeline_event(), rc);
 
         if (rc != PIPELINE_CONTINUE) {
@@ -364,7 +364,7 @@ execute_pipeline(ctx_t &ctx)
                           ctx.arm_lifq());
             return HAL_RET_INVALID_ARG;
         }
-        
+
         HAL_TRACE_DEBUG("fte: executing pipeline {} lifq={} dir={}",
                         pipeline->name, pipeline->lifq, ctx.direction());
 
@@ -380,23 +380,23 @@ execute_pipeline(ctx_t &ctx)
 
         if (ctx.role() == hal::FLOW_ROLE_RESPONDER && rflow_end > rflow_start) {
             // Invoke all responder feature handlers if we are processing Rflow
-            rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end); 
+            rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end);
         } else {
             // Invoke all initiator feature handlers
             rc = pipeline_invoke_exec_(pipeline, ctx, iflow_start, iflow_end);
         }
-       
+
         // If we are processing Iflow and Rflow in the same
-        // context swap the flow objects and invoke pipeline 
+        // context swap the flow objects and invoke pipeline
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR &&  ctx.valid_rflow()) {
             if (rc == PIPELINE_CONTINUE || rc == PIPELINE_FINISH)  {
-                //Swap the derived flow objects 
+                //Swap the derived flow objects
                 //for the reverse flow
                 ctx.swap_flow_objs();
-                
+
                 ctx.set_role(hal::FLOW_ROLE_RESPONDER);
                 rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end);
-                
+
                 //Swap back before GFT update happens
                 ctx.swap_flow_objs();
             } else if (rc == PIPELINE_END) {
@@ -428,7 +428,7 @@ void unregister_features_and_pipelines() {
     FTE Init API to initialize FTE top-level data structure
 --------------------------------------------------------------*/
 
-hal_ret_t init(void) 
+hal_ret_t init(void)
 {
     return HAL_RET_OK;
 }
