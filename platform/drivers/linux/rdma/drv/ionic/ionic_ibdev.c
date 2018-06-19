@@ -1973,22 +1973,31 @@ out:
 static int ionic_poll_send(struct ionic_qp *qp, struct ib_wc *wc)
 {
 	struct ionic_sq_meta *meta;
-	int npolled = 1;
 
-	/* completed all send queue requests? */
-	if (ionic_queue_empty(&qp->sq))
-		return 0;
-
-	meta = &qp->sq_meta[qp->sq.cons];
-
-	/* waiting for a cqe to complete the next request? */
-	if (ionic_op_is_local(meta->op)) {
-		if (meta->seq == qp->sq_npg_cons)
+	do {
+		/* completed all send queue requests? */
+		if (ionic_queue_empty(&qp->sq))
 			return 0;
-	} else {
-		if (meta->seq == qp->sq_msn_cons)
-			return 0;
-	}
+
+		meta = &qp->sq_meta[qp->sq.cons];
+
+		/* waiting for a cqe to complete the next request? */
+		if (ionic_op_is_local(meta->op)) {
+			if (meta->seq == qp->sq_npg_cons)
+				return 0;
+
+			qp->sq_npg_cons = (qp->sq_npg_cons + 1) & qp->sq.mask;
+		} else {
+			if (meta->seq == qp->sq_msn_cons)
+				return 0;
+
+			qp->sq_msn_cons = (qp->sq_msn_cons + 1) & qp->sq.mask;
+		}
+
+		ionic_queue_consume(&qp->sq);
+
+		/* produce wc only if signaled or error status */
+	} while (!meta->signal && !meta->status);
 
 	memset(wc, 0, sizeof(*wc));
 
@@ -2000,26 +2009,10 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ib_wc *wc)
 	/* XXX possible use-after-free after rcu read unlock */
 	wc->qp = &qp->ibqp;
 
-	if (wc->status != IB_WC_SUCCESS)
-		goto out;
-
-	if (!meta->signal) {
-		npolled = 0;
-		goto out;
-	}
-
 	wc->opcode = ionic_to_ib_wc_opcd(meta->op);
 	wc->byte_len = meta->len;
 
-out:
-	if (ionic_op_is_local(meta->op))
-		qp->sq_npg_cons = (qp->sq_npg_cons + 1) & qp->sq.mask;
-	else
-		qp->sq_msn_cons = (qp->sq_msn_cons + 1) & qp->sq.mask;
-
-	ionic_queue_consume(&qp->sq);
-
-	return npolled;
+	return 1;
 }
 
 static int ionic_poll_send_many(struct ionic_qp *qp, struct ib_wc *wc, int nwc)
