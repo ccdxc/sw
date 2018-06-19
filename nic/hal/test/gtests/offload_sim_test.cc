@@ -527,7 +527,7 @@ TEST_F(pnso_sim_test, async_request) {
         sleep_count++;
     }
     EXPECT_EQ(rc, 0);
-    EXPECT_GT(sleep_count, 1);
+    EXPECT_GE(sleep_count, 1);
     EXPECT_LT(sleep_count, 1000);
 
     /* Check that callback was called exactly once */
