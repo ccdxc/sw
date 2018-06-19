@@ -9,6 +9,8 @@ templates:
     outputpath: "{FILE}_services.go"
   - template: "transport.tmpl"
     outputpath: "{FILE}_transport.go"
+  - template: "events.tmpl"
+    outputpath: "{FILE}_events.go"
   - template: "common.tmpl"
     outputpath: "common.go"
     once: true

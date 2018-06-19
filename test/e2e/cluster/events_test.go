@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 	es "gopkg.in/olivere/elastic.v5"
 
-	cmdenv "github.com/pensando/sw/venice/cmd/env"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
@@ -54,7 +54,7 @@ var _ = Describe("events test", func() {
 		// check for `LeaderElected` event
 		Eventually(func() error {
 			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Cmd),
-				es.NewTermQuery("type.keyword", cmdenv.LeaderElected))
+				es.NewTermQuery("type.keyword", cmd.LeaderElected))
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),

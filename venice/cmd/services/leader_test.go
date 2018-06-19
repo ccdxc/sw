@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -33,7 +33,7 @@ func setupTestCluster(t *testing.T, tmpDir string) (*integration.ClusterV3, kvst
 
 	_, err = recorder.NewRecorder(
 		&monitoring.EventSource{NodeName: "test", Component: "cmd"},
-		env.GetEventTypes(), "", tmpDir)
+		cmd.GetEventTypes(), "", tmpDir)
 
 	return cluster, store
 }

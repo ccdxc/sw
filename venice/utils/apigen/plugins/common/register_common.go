@@ -107,6 +107,16 @@ func parseObjectPrefix(val interface{}) (interface{}, error) {
 	return c, nil
 }
 
+// parseEventTypes parses the list of enum names from the given interface
+func parseEventTypes(val interface{}) (interface{}, error) {
+	enumNames, ok := val.([]string)
+	if !ok {
+		return nil, errInvalidOption
+	}
+
+	return enumNames, nil
+}
+
 // CheckArgs defines a function to check args for validators
 type CheckArgs func(string) bool
 
@@ -641,4 +651,5 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
 	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
 	reg.RegisterOptionParser("venice.default", parseStringSliceOptions)
+	reg.RegisterOptionParser("venice.eventTypes", parseEventTypes)
 }

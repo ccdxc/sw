@@ -1536,6 +1536,32 @@ func getFileName(name string) string {
 	return strings.Title(strings.TrimSuffix(filepath.Base(name), filepath.Ext(filepath.Base(name))))
 }
 
+// returns the list of event types
+func getEventTypes(s *descriptor.Service) ([]string, error) {
+	ets := []string{}
+	enumNames, err := reg.GetExtension("venice.eventTypes", s)
+	if err != nil {
+		return ets, nil
+	}
+
+	// look through all the enums and construct slice of event types
+	if enumNames != nil {
+		for _, eName := range enumNames.([]string) {
+			eventTypes, err := s.File.Reg.LookupEnum("", fmt.Sprintf(".%s.%s", s.File.GetPackage(), eName))
+			if err != nil {
+				continue
+			}
+
+			// read individual event type
+			for _, val := range eventTypes.GetValue() {
+				ets = append(ets, val.GetName())
+			}
+		}
+	}
+
+	return ets, nil
+}
+
 //--- Mutators functions ---//
 func reqMutator(req *plugin.CodeGeneratorRequest) {
 	mutator.AddAutoGrpcEndpoints(req)
@@ -1598,6 +1624,7 @@ func init() {
 	reg.RegisterFunc("getDefaulterManifest", getDefaulterManifest)
 	reg.RegisterFunc("getRelPath", getRelPath)
 	reg.RegisterFunc("getMsgMap", getMsgMap)
+	reg.RegisterFunc("getEventTypes", getEventTypes)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

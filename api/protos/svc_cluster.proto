@@ -12,6 +12,16 @@ import "tenant.proto";
 
 //-------------------------------- R E S T / g R P C  A P I ----------------------------------------------------
 
+// list of V1 event types supported by the cluster service
+enum EventTypesV1 {
+    ElectionStarted   = 0; // Leader election started in the cluster
+    ElectionCancelled = 1; // Leader election cancelled
+    ElectionStopped   = 2; // Leader election stopped
+    LeaderElected     = 3; // Leader elected for the cluster
+    LeaderLost        = 4; // Node lost leadership during the election
+    LeaderChanged     = 5; // Leader changed in the election
+}
+
 service ClusterV1 {
     // Prefix for all resources served by this service.
     option (venice.apiPrefix) = "cluster";
@@ -48,4 +58,8 @@ service ClusterV1 {
         Object: "Tenant"
         Method: [ "get", "put", "delete", "post", "list" ]
     };
+
+    // name of enums containing event types.
+    // e.g: V2 can include "EventTypesV1" and "EventTypesV2" in this list.
+    option(venice.eventTypes) = "EventTypesV1";
 }

@@ -55,7 +55,7 @@ func main() {
 	// update the event source.
 	if _, err = recorder.NewRecorder(
 		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
-		env.GetEventTypes(), "", ""); err != nil {
+		cmd.GetEventTypes(), "", ""); err != nil {
 		fmt.Printf("failed to create events recorder, err: %v", err)
 	}
 

@@ -73,6 +73,8 @@ extend google.protobuf.ServiceOptions {
   repeated RestEndpoint naplesRestService = 51254;
   // apiAction specifies parameters for an action endpoints
   repeated ActionEndpoint apiAction = 51255;
+  // list of enum names containing the event types supported by this service
+  repeated string eventTypes = 51256;
 };
 
 // Venice Option extensions applicable to rpc Methods.
