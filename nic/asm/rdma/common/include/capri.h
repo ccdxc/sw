@@ -1046,6 +1046,9 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DMA_SKIP_CMD_SETUP(_base_r, _cmd_eop, _skip_to_eop) \
     phvwrpi      _base_r, offsetof(DMA_CMD_SKIP_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_SKIP_T, skip_to_eop, cmdtype), (_skip_to_eop << SKIP_SKIP_TO_EOP_OFFSET) | (_cmd_eop << SKIP_CMDEOP_OFFSET) | (DMA_CMD_TYPE_SKIP << SKIP_CMDTYPE_OFFSET);
 
+#define DMA_SKIP_CMD_SETUP_C(_base_r, _cmd_eop, _skip_to_eop, _cf) \
+    phvwrpi._cf  _base_r, offsetof(DMA_CMD_SKIP_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_SKIP_T, skip_to_eop, cmdtype), (_skip_to_eop << SKIP_SKIP_TO_EOP_OFFSET) | (_cmd_eop << SKIP_CMDEOP_OFFSET) | (DMA_CMD_TYPE_SKIP << SKIP_CMDTYPE_OFFSET);
+
 #define DMA_SET_END_OF_CMDS(_cmd_t, _base_r)                                  \
     phvwrp     _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 1
 

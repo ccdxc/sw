@@ -39,7 +39,7 @@ req_rx_sqcb1_process:
 
     // copy cur_timestamp loaded in r4 into phv to DMA ack_timestamp
     // into sqcb2 for valid aeth packet
-    phvwr          p.ack_timestamp, r4
+    phvwr          p.ack_timestamp, r4 // Branch Delay slot
 
     // get token_id for this packet
     phvwr          p.common.rdma_recirc_token_id, d.token_id
@@ -302,20 +302,17 @@ timer_expiry:
     nop
 
 recirc_pkt:
+    // If backtrack is already in progress then continue with processing
+    // until req_rx_sqcb1_write_back, where bktrack_in_progress flag is checked
+    // and recirc packet is dropped if in the middle of bktracking. This allows
+    // nxt_to_go_token_id to be incremented in write_back stage for recirc packets
+
     // clear recirc bit and process the packet based on recirc reason
     phvwr          p.common.p4_intr_recirc, 0
     seq            c2, CAPRI_APP_DATA_RECIRC_TOKEN_ID, d.nxt_to_go_token_id
     bcf            [!c2], recirc_for_turn
 
-    // if bktrack is in progress then drop all response packets to prevent
-    // rxdma from updating CB state. Before dropping recirc packets increment
-    // nxt_to_go_token_id so that new response packets can be procssed after
-    // bktracking is done
-    seq            c2, d.bktrack_in_progress, 1 // Branch Delay Slot
-    bcf            [c2], drop_packet
-    tbladd.c2      d.nxt_to_go_token_id, 1 // Branch Delay Slot
-
-    seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
+    seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // Branch Delay Slot
     bcf            [c2], process_recirc_pkt
     nop            // Branch Delay Slot
 

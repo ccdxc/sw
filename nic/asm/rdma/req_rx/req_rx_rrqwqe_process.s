@@ -36,27 +36,14 @@ struct req_rx_s1_t0_k k;
 
 .align
 req_rx_rrqwqe_process:
-
     add            r5, r0, K_GLOBAL_FLAGS
     ARE_ALL_FLAGS_SET(c1, r5, REQ_RX_FLAG_ACK)
     add            r6, K_REXMIT_PSN, r0
 
-    bcf            [!c1], read_or_atomic
+    bcf            [!c1], read_or_atomic_or_implicit_nak
     ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION)  // Branch Delay Slot
 
 ack_or_nak_or_rnr_or_implicit_nak:
-    //SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
-
-    CAPRI_RESET_TABLE_3_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, e_rsp_psn), K_E_RSP_PSN, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), K_CUR_SGE_OFFSET, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), K_CUR_SGE_ID
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rrq_in_progress), CAPRI_KEY_FIELD(IN_P, rrq_in_progress), \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, tbl_id), 3
-    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6
-    
     CAPRI_SET_TABLE_0_VALID(0)
 
     // r1 = aeth_syndrome
@@ -86,32 +73,20 @@ ack_or_nak_or_rnr_or_implicit_nak:
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24        c5, d.psn, K_BTH_PSN // Branch Delay Slot
-    bcf            [!c5], ack_or_nak_or_rnr
-
-implicit_nak:
-    // PSN of the next expected read/atomic response is start psn 
-    // contained in rrq wqe or exp_rsp_psn stored
-    // in sqcb1 if already few read response packets were received
-    seq            c2, CAPRI_KEY_FIELD(IN_P, rrq_in_progress), 1
-    cmov           r6, c2, K_E_RSP_PSN, d.psn
-
-    phvwr          p.rexmit_psn, r6 
-    phvwr          p.msn, r2
-    phvwr          p.cqwqe.id.msn, r2
-
-    // If ack msn in implicit nak is already acked' do not post CQ
-    scwle24        c1, r2, K_MSN
-             
-    phvwrpair      CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
-                   CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
-
-    bcf            [!c1],  set_cqcb_arg
-    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1
-
-    b              end
-    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, dma_cmd_eop), 1
+    bcf            [c5], implicit_nak
 
 ack_or_nak_or_rnr:
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
+
+    CAPRI_RESET_TABLE_3_ARG()
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, e_rsp_psn), K_E_RSP_PSN, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), K_CUR_SGE_OFFSET, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), K_CUR_SGE_ID
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rrq_in_progress), CAPRI_KEY_FIELD(IN_P, rrq_in_progress), \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, tbl_id), 3
+    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6
+    
     phvwr          p.msn, r2
     phvwr          p.cqwqe.id.msn, r2
     IS_MASKED_VAL_EQUAL(c3, r1, SYNDROME_MASK, ACK_SYNDROME)
@@ -181,18 +156,8 @@ rnr:
     b              end
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, dma_cmd_eop), 1
 
-read_or_atomic:
-    // if (in_progress) 
-    //     pkt->psn == sqcb1_p->e_rsp_psn
-    //  else
-    //     pkt->psn == rrqwqe_p->psn 
-    seq            c1, CAPRI_KEY_FIELD(IN_P, rrq_in_progress), 1 
-    sne.c1         c2, K_BTH_PSN, K_E_RSP_PSN
-    sne.!c1        c2, K_BTH_PSN, d.psn
-    bcf            [c2], out_of_order_rsp
-    add            r5, r0, K_GLOBAL_FLAGS //Branch Delay Slot
-    
-    ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST)
+read_or_atomic_or_implicit_nak:
+    ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST) // Branch Delay Slot
 
     // atomic or read requires explicit response so msn in atomic or
     // read_resp_last or read_resp_only should be >= the corresponding message's
@@ -200,6 +165,16 @@ read_or_atomic:
     scwlt24.c4     c2, K_AETH_MSN, d.msn
     bcf            [!c3 & c2], invalid_rsp_msn
 
+    // if (in_progress) 
+    //     pkt->psn == sqcb1_p->e_rsp_psn
+    //  else
+    //     pkt->psn == rrqwqe_p->psn 
+    seq            c1, CAPRI_KEY_FIELD(IN_P, rrq_in_progress), 1  // Branch Delay Slot
+    sne.c1         c2, K_BTH_PSN, K_E_RSP_PSN
+    sne.!c1        c2, K_BTH_PSN, d.psn
+    bcf            [c2], implicit_nak
+
+read_or_atomic:
     // if (first)
     //     min((rrqwqe_p->msn -1), sqcb1_to_rrqwqe_info_p->msn)
     // else
@@ -339,7 +314,46 @@ end:
     nop.e
     nop
 
-out_of_order_rsp:
+implicit_nak:
+    // PSN of the next expected read/atomic response is start psn 
+    // contained in rrq wqe or exp_rsp_psn stored
+    // in sqcb1 if already few read response packets were received
+    seq            c2, CAPRI_KEY_FIELD(IN_P, rrq_in_progress), 1
+    cmov           r6, c2, K_E_RSP_PSN, d.psn
+    phvwr          p.rexmit_psn, r6 
+    
+    // if its implicit nak, completion can be posted till wqe before
+    // the first outstanding read request wqe
+    add            r2, d.msn, 0
+    mincr          r2, 24, -1
+    phvwr          p.msn, r2
+    phvwr          p.cqwqe.id.msn, r2
+
+    sne            c1, K_REMAINING_PAYLOAD_BYTES, 0
+    DMA_CMD_STATIC_BASE_GET_C(r3, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP, c1)
+    DMA_SKIP_CMD_SETUP_C(r3, 0 /* CMD_EOP */, 1 /* SKIP_TO_EOP */, c1)
+
+    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
+
+    CAPRI_RESET_TABLE_3_ARG()
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, e_rsp_psn), K_E_RSP_PSN, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), K_CUR_SGE_OFFSET, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), K_CUR_SGE_ID
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rrq_in_progress), CAPRI_KEY_FIELD(IN_P, rrq_in_progress), \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, tbl_id), 3
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
+
+    // If ack msn in implicit nak is already acked' do not post CQ
+    scwle24        c1, r2, K_MSN
+    bcf            [!c1],  set_cqcb_arg
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1
+
+    b              end
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, dma_cmd_eop), 1
+
 invalid_syndrome:
 invalid_rsp_msn:
 invalid_nak_code:

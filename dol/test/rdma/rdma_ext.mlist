@@ -323,6 +323,46 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_ACK_AS_IMPLICIT_NAK
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ack_as_implicit_nak
+        spec    : req_tx_ack_as_implicit_nak.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_NAK_AS_IMPLICIT_NAK
+        enable  : True
+        package : test.rdma
+        module  : req_tx_nak_as_implicit_nak
+        spec    : req_tx_nak_as_implicit_nak.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_RNR_AS_IMPLICIT_NAK
+        enable  : True
+        package : test.rdma
+        module  : req_tx_rnr_as_implicit_nak
+        spec    : req_tx_rnr_as_implicit_nak.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_READ_AS_IMPLICIT_NAK
+        enable  : True
+        package : test.rdma
+        module  : req_tx_read_as_implicit_nak
+        spec    : req_tx_read_as_implicit_nak.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_ATOMIC_AS_IMPLICIT_NAK
+        enable  : True
+        package : test.rdma
+        module  : req_tx_atomic_as_implicit_nak
+        spec    : req_tx_atomic_as_implicit_nak.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SQ_BKTRACK_SGE3_START
         enable  : True
         package : test.rdma
