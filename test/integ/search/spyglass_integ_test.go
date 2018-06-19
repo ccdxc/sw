@@ -98,18 +98,23 @@ func randStr(n int) string {
 	return string(r)
 }
 
-func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, sortBy string) string {
+func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, mode, sortBy string) string {
 
 	// convert to query-string to url-encoded string
 	// to escape special characters like space, comma, braces.
 	u := url.URL{Path: query}
 	urlQuery := url.QueryEscape(query)
-	t.Logf("Query: %s Encoded: %s Escaped: %s", query, u.String(), urlQuery)
+	t.Logf("Query: %s Encoded: %s Escaped: %s Mode: %s SortBy: %s",
+		query, u.String(), urlQuery, mode, sortBy)
 	str := fmt.Sprintf("http://127.0.0.1:%s/v1/search/query?QueryString=%s&From=%d&MaxResults=%d",
 		tInfo.apiGwPort, urlQuery, from, maxResults)
+	if mode != "" {
+		str += fmt.Sprintf("&Mode=%s", mode)
+	}
 	if sortBy != "" {
 		str += fmt.Sprintf("&SortBy=%s", sortBy)
 	}
+	fmt.Printf("\n+++ QUERY URL: %s\n", str)
 	return str
 }
 
@@ -267,10 +272,10 @@ func TestSpyglass(t *testing.T) {
 
 			restcl := netutils.NewHTTPClient()
 			restcl.SetHeader("Authorization", tInfo.authzHeader)
-			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, ""), nil, &resp)
+			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), ""), nil, &resp)
 			if err != nil {
 				t.Logf("GET on search REST endpoint: %s failed, err:%+v",
-					getSearchURLWithParams(t, "tesla", 0, 10, ""), err)
+					getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), ""), err)
 				return false, nil
 			}
 			return true, nil
@@ -328,11 +333,13 @@ func performSearchTests(t *testing.T) {
 
 	// Testcases for various queries on config objects
 	queryTestcases := []struct {
-		query        search.SearchRequest
-		sortBy       string
-		expectedHits int64
-		aggresults   map[string]map[string]map[string]map[string]interface{}
-		err          error
+		query          search.SearchRequest
+		mode           string
+		sortBy         string
+		expectedHits   int64
+		previewResults map[string]map[string]map[string]int64
+		aggResults     map[string]map[string]map[string]map[string]interface{}
+		err            error
 	}{
 		//
 		// Search Test cases with URI params, to test QueryString query
@@ -344,8 +351,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			int64(len(Tenants)),
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -364,8 +373,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -389,8 +400,10 @@ func performSearchTests(t *testing.T) {
 				From:        0, // from offset-0
 				MaxResults:  3, // get 3 results
 			},
+			search.SearchRequest_Full.String(),
 			"meta.name.keyword",
 			3,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -412,8 +425,10 @@ func performSearchTests(t *testing.T) {
 				From:        3, // from offset-3
 				MaxResults:  2, // get 2 results
 			},
+			search.SearchRequest_Full.String(),
 			"meta.name.keyword",
 			2,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -432,8 +447,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"audi": {
 					"Network": {
@@ -461,8 +478,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Security": {
@@ -491,8 +510,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			2 * objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
@@ -534,8 +555,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
@@ -564,8 +587,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -588,8 +613,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			objectCount + int64(len(Tenants)),
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -616,8 +643,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			3*objectCount + int64(len(Tenants)),
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
@@ -674,8 +703,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			1,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -694,8 +725,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			1,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"audi": {
 					"Network": {
@@ -716,7 +749,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults:  maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -740,7 +775,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults:  maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -765,8 +802,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			0,
+			nil,
 			nil,
 			nil,
 		},
@@ -777,8 +816,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			0,
+			nil,
 			nil,
 			nil,
 		},
@@ -789,8 +830,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			0,
+			nil,
 			nil,
 			httpInvalidArgErr,
 		},
@@ -801,8 +844,10 @@ func performSearchTests(t *testing.T) {
 				From:        -1,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			0,
+			nil,
 			nil,
 			httpInvalidArgErr,
 		},
@@ -813,8 +858,10 @@ func performSearchTests(t *testing.T) {
 				From:        1200,
 				MaxResults:  maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			0,
+			nil,
 			nil,
 			httpInvalidArgErr,
 		},
@@ -825,8 +872,10 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  -1,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			0,
+			nil,
 			nil,
 			httpInvalidArgErr,
 		},
@@ -837,10 +886,59 @@ func performSearchTests(t *testing.T) {
 				From:        from,
 				MaxResults:  9000,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			0,
 			nil,
+			nil,
 			httpInvalidArgErr,
+		},
+
+		// Search preview tests - using GET
+		{
+			// Term query with multi-value match on Kind
+			search.SearchRequest{
+				QueryString: "kind:(Network OR SecurityGroup)",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			search.SearchRequest_Preview.String(),
+			"",
+			2 * objectCount,
+			map[string]map[string]map[string]int64{
+				"tesla": {
+					"Network": {
+						"Network": 3,
+					},
+					"Security": {
+						"SecurityGroup": 3,
+					},
+				},
+				"audi": {
+					"Network": {
+						"Network": 2,
+					},
+					"Security": {
+						"SecurityGroup": 2,
+					},
+				},
+			},
+			nil,
+			nil,
+		},
+		{
+			// Non-existent Text in preview mode
+			search.SearchRequest{
+				QueryString: "OzzyOzbuorne",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			search.SearchRequest_Preview.String(),
+			"",
+			0,
+			nil,
+			nil,
+			nil,
 		},
 
 		//
@@ -854,8 +952,10 @@ func performSearchTests(t *testing.T) {
 				From:       from,
 				MaxResults: maxResults,
 			},
+			"", // default mode is Complete
 			"",
 			int64(len(Tenants)),
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -876,8 +976,10 @@ func performSearchTests(t *testing.T) {
 				From:       from,
 				MaxResults: maxResults,
 			},
+			search.SearchRequest_Full.String(),
 			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -904,8 +1006,10 @@ func performSearchTests(t *testing.T) {
 				MaxResults: 3, // get 3 results
 				SortBy:     "meta.name.keyword",
 			},
+			"",
 			"meta.name.keyword",
 			3,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -930,8 +1034,10 @@ func performSearchTests(t *testing.T) {
 				MaxResults: 2, // get 2 results
 				SortBy:     "meta.name.keyword",
 			},
+			"",
 			"meta.name.keyword",
 			2,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -953,7 +1059,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"audi": {
 					"Network": {
@@ -984,7 +1092,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Security": {
@@ -1016,7 +1126,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			2 * objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
@@ -1070,7 +1182,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
@@ -1106,7 +1220,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1137,7 +1253,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1167,7 +1285,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			objectCount,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1198,7 +1318,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			objectCount + int64(len(Tenants)),
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1232,7 +1354,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			3*objectCount + int64(len(Tenants)),
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"tesla": {
 					"Network": {
@@ -1296,7 +1420,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			int64(len(Tenants)),
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1328,7 +1454,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			1,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1359,7 +1487,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			4,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1393,7 +1523,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			2,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1425,7 +1557,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			3,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
@@ -1453,7 +1587,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			1,
+			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"audi": {
 					"Network": {
@@ -1475,7 +1611,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			0,
+			nil,
 			nil,
 			fmt.Errorf("Server responded with 400"),
 		},
@@ -1493,7 +1631,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			0,
+			nil,
 			nil,
 			nil,
 		},
@@ -1511,7 +1651,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			0,
+			nil,
 			nil,
 			fmt.Errorf("Server responded with 400"),
 		},
@@ -1525,7 +1667,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			0,
+			nil,
 			nil,
 			fmt.Errorf("Server responded with 400"),
 		},
@@ -1539,7 +1683,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: maxResults,
 			},
 			"",
+			"",
 			0,
+			nil,
 			nil,
 			fmt.Errorf("Server responded with 400"),
 		},
@@ -1553,7 +1699,9 @@ func performSearchTests(t *testing.T) {
 				MaxResults: -1,
 			},
 			"",
+			"",
 			0,
+			nil,
 			nil,
 			fmt.Errorf("Server responded with 400"),
 		},
@@ -1567,9 +1715,78 @@ func performSearchTests(t *testing.T) {
 				MaxResults: 9000,
 			},
 			"",
+			"",
 			0,
 			nil,
+			nil,
 			fmt.Errorf("Server responded with 400"),
+		},
+
+		// Preview mode test using POST
+		{
+			// Preview mode: Text search that matches on meta.Labels.key
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"us-west"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				Mode:       search.SearchRequest_Preview.String(),
+			},
+			"",
+			"",
+			3*objectCount + int64(len(Tenants)),
+			map[string]map[string]map[string]int64{
+				"tesla": {
+					"Network": {
+						"Network": 3,
+					},
+					"Security": {
+						"SecurityGroup": 3,
+					},
+				},
+				"default": {
+					"Cluster": {
+						"SmartNIC": 5,
+						"Tenant":   2,
+					},
+				},
+				"audi": {
+					"Network": {
+						"Network": 2,
+					},
+					"Security": {
+						"SecurityGroup": 2,
+					},
+				},
+			},
+			nil,
+			nil,
+		},
+		{
+			// Preview mode : Non-existent Text
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"OzzyOzbuorne"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				Mode:       search.SearchRequest_Preview.String(),
+			},
+			"",
+			"",
+			0,
+			nil,
+			nil,
+			nil,
 		},
 	}
 
@@ -1585,9 +1802,9 @@ func performSearchTests(t *testing.T) {
 					var resp search.SearchResponse
 					var searchURL string
 					if len(tc.query.QueryString) != 0 {
-						t.Logf("## QueryString query: %s\n", tc.query.QueryString)
+						t.Logf("@@@ GET QueryString query: %s\n", tc.query.QueryString)
 						// Query using URI params - via GET method
-						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.sortBy)
+						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy)
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
@@ -1596,7 +1813,7 @@ func performSearchTests(t *testing.T) {
 						// Query using Body - via POST method
 						// GET with body is not supported by many http clients including
 						// net/http package.
-						t.Logf("## Query Body: %+v\n", tc.query)
+						t.Logf("@@@ POST Query Body: %+v\n", tc.query)
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
@@ -1624,66 +1841,127 @@ func performSearchTests(t *testing.T) {
 						return true, nil
 					}
 
-					// Validate the response for exact match
-					// Verify count of tenant entries
-					t.Logf("Query: %s, result : %+v", searchURL, resp)
-					if len(tc.aggresults) != len(resp.AggregatedEntries.Tenants) {
-						t.Logf("Tenant entries count didn't match, expected %d actual:%d",
-							len(tc.aggresults), len(resp.AggregatedEntries.Tenants))
-						return false, nil
-					}
+					log.Debugf("Query: %s, result : %+v", searchURL, resp)
 
-					// Tenant verification
-					for tenantKey, tenantVal := range tc.aggresults {
-						t.Logf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
-						if _, ok := resp.AggregatedEntries.Tenants[tenantKey]; !ok {
-							t.Logf("Tenant %s not found", tenantKey)
+					// Verification for "Complete" request mode
+					if tc.mode == search.SearchRequest_Full.String() {
+
+						if len(tc.aggResults) != len(resp.AggregatedEntries.Tenants) {
+							log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
+								len(tc.aggResults), len(resp.AggregatedEntries.Tenants))
 							return false, nil
 						}
 
-						// Verify count of category entries match for each tenant
-						if len(tenantVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories) {
-							t.Logf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
-								tenantKey, len(tenantVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories))
-							return false, nil
-						}
-
-						// Category verification
-						for categoryKey, categoryVal := range tenantVal {
-							t.Logf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
-							if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
-								t.Logf("Category %s not found", categoryKey)
+						// Tenant verification
+						for tenantKey, tenantVal := range tc.aggResults {
+							log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
+							if _, ok := resp.AggregatedEntries.Tenants[tenantKey]; !ok {
+								log.Errorf("Tenant %s not found", tenantKey)
 								return false, nil
 							}
 
-							// Verify count of kind entries match for each (tenant,category)
-							if len(categoryVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
-								t.Logf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
-									tenantKey, categoryKey, len(categoryVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
+							// Verify count of category entries match for each tenant
+							if len(tenantVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories) {
+								log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
+									tenantKey, len(tenantVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories))
 								return false, nil
 							}
 
-							// Kind verification
-							for kindKey, kindVal := range categoryVal {
-								t.Logf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
-								if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
-									t.Logf("Kind %s not found", kindKey)
+							// Category verification
+							for categoryKey, categoryVal := range tenantVal {
+								log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
+								if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
+									log.Errorf("Category %s not found", categoryKey)
 									return false, nil
 								}
 
-								// make an interim object map from the entries slice
-								t.Logf("Kinds: %+v", resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey])
-								entries := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey].Entries
-								omap := make(map[string]interface{}, len(entries))
-								for _, val := range entries {
-									omap[val.GetName()] = nil
+								// Verify count of kind entries match for each (tenant,category)
+								if len(categoryVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
+									log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
+										tenantKey, categoryKey, len(categoryVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
+									return false, nil
 								}
 
-								// object verification
-								for objKey := range kindVal {
-									t.Logf("Verifying Object Key: %s", objKey)
-									if _, ok := omap[objKey]; !ok {
-										t.Logf("Object %s not found", objKey)
+								// Kind verification
+								for kindKey, kindVal := range categoryVal {
+									log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
+									if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
+										log.Errorf("Kind %s not found", kindKey)
+										return false, nil
+									}
+
+									// make an interim object map from the entries slice
+									log.Debugf("Kinds: %+v", resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey])
+									entries := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey].Entries
+									omap := make(map[string]interface{}, len(entries))
+									for _, val := range entries {
+										omap[val.GetName()] = nil
+									}
+
+									// object verification
+									for objKey := range kindVal {
+										log.Debugf("Verifying Object Key: %s", objKey)
+										if _, ok := omap[objKey]; !ok {
+											log.Errorf("Object %s not found", objKey)
+											return false, nil
+										}
+									}
+								}
+							}
+						}
+					}
+
+					// Verification for "Preview" request mode
+					if tc.mode == search.SearchRequest_Preview.String() {
+
+						if len(tc.previewResults) != len(resp.PreviewEntries.Tenants) {
+							log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
+								len(tc.previewResults), len(resp.PreviewEntries.Tenants))
+							return false, nil
+						}
+
+						// Tenant verification
+						for tenantKey, tenantVal := range tc.previewResults {
+							log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
+							if _, ok := resp.PreviewEntries.Tenants[tenantKey]; !ok {
+								log.Errorf("Tenant %s not found", tenantKey)
+								return false, nil
+							}
+
+							// Verify count of category entries match for each tenant
+							if len(tenantVal) != len(resp.PreviewEntries.Tenants[tenantKey].Categories) {
+								log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
+									tenantKey, len(tenantVal), len(resp.PreviewEntries.Tenants[tenantKey].Categories))
+								return false, nil
+							}
+
+							// Category verification
+							for categoryKey, categoryVal := range tenantVal {
+								log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
+								if _, ok := resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
+									log.Errorf("Category %s not found", categoryKey)
+									return false, nil
+								}
+
+								// Verify count of kind entries match for each (tenant,category)
+								if len(categoryVal) != len(resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
+									log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
+										tenantKey, categoryKey, len(categoryVal), len(resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
+									return false, nil
+								}
+
+								// Kind verification
+								for kindKey, expNum := range categoryVal {
+									var actualNum int64
+									var ok bool
+									log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, expNum)
+									if actualNum, ok = resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
+										log.Errorf("Kind %s not found", kindKey)
+										return false, nil
+									}
+
+									if expNum != actualNum {
+										log.Errorf("Entries mismatch for Kind: %s expected: %d obtained: %d", kindKey, expNum, actualNum)
 										return false, nil
 									}
 								}

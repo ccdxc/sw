@@ -244,6 +244,27 @@ message TenantAggregation {
                                                    (gogoproto.jsontag) = "tenants,omitempty"];
 }
 
+// KindPreview contains map of search summary (#hits) grouped by Kind.
+message KindPreview {
+    map <string, int64> Kinds = 1 [(gogoproto.nullable) = true,
+                                  (gogoproto.jsontag) = "kinds,omitempty"];
+}
+
+// CategoryPreview contains map of search summary (#hits)
+// grouped by two levels: first by Category and then by Kind.
+message CategoryPreview {
+    map <string, KindPreview> Categories = 1 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "categories,omitempty"];
+}
+
+// TenantPreview contains map of search summary (#hits)
+// grouped by three levels: first by Tenant, second by Category 
+// and finally by Kind.
+message TenantPreview {
+    map <string, CategoryPreview> Tenants = 1 [(gogoproto.nullable) = true,
+                                              (gogoproto.jsontag) = "tenants,omitempty"];
+}
+
 // SearchRequest is the input to the search API
 //
 // Simple queries can be specified as URI param using "QueryString".
@@ -287,6 +308,18 @@ message TenantAggregation {
 //
 message SearchRequest {
 
+
+    // Search Request Mode
+    enum RequestMode {
+        // In full mode, full results comprising of Object Meta 
+        // grouped by Tenant->Category->Kind is returned. This
+        // is the default mode.
+        Full    = 0;
+        // In preview mode, only the search summary (i.e number of hits)
+        // grouped by Tenant->Category->Kind is returned 
+        Preview = 1;
+    }
+
     // Simple query string
     // This can be specified as URI parameter.
     // For advanced query cases, Users should use specify SearchQuery
@@ -315,13 +348,18 @@ message SearchRequest {
     string SortBy               = 4 [(gogoproto.jsontag) = "sort-by,omitempty",
                                      (venice.check) = "StrLen(0,256)"];
 
+    // Query Mode 
+    string Mode                 = 5 [(venice.check) = "StrEnum(SearchRequest.RequestMode)",
+                                    (venice.default) = "Full",
+                                    (gogoproto.jsontag) = "mode,omitempty"];
+
     // Search query contains the search requirements
     // This is intended for advanced query use cases involving
     // boolean query, structured term query and supports various
     // combinations of text, phrase strings and search modifiers
     // for specific categories, kinds, fields and labels.
     // This cannot be specified as URI parameter.
-    SearchQuery Query           = 5 [(gogoproto.nullable) = true,
+    SearchQuery Query           = 6 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "query,omitempty"];
 }
 
@@ -346,11 +384,19 @@ message SearchResponse {
                                             (gogoproto.jsontag) = "error,omitempty"];
 
     // EntryList is list of all search results with no grouping.
+    // This attribute is populated and valid only in Full request-mode
     repeated Entry Entries              = 7 [(gogoproto.nullable) = true,
                                              (gogoproto.jsontag) = "entries,omitempty"];
 
-    // AggregatedEntries is a three level grouping of all search results,
-    // Grouped by tenant, category and kind in that order.
-    TenantAggregation AggregatedEntries = 8 [(gogoproto.nullable) = true,
+    // PreviewEntries is a three level grouping of search summary (#hits),
+    // grouped by tenant, category and kind in that order. This attribute
+    // is populated and valid only in Preview request-mode
+    TenantPreview PreviewEntries        = 8 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "preview-entries,omitempty"];
+
+    // AggregatedEntries is a three level grouping of full search results,
+    // Grouped by tenant, category and kind in that order. This attribute
+    // is populated and valid only in Full request-mode
+    TenantAggregation AggregatedEntries = 9 [(gogoproto.nullable) = true,
                                             (gogoproto.jsontag) = "aggregated-entries,omitempty"];
 }

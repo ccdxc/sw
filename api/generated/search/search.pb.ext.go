@@ -7,6 +7,7 @@ Input file: search.proto
 package search
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -64,6 +65,27 @@ func (m *CategoryAggregation) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *CategoryAggregation) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *CategoryPreview) Clone(into interface{}) (interface{}, error) {
+	var out *CategoryPreview
+	var ok bool
+	if into == nil {
+		out = &CategoryPreview{}
+	} else {
+		out, ok = into.(*CategoryPreview)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CategoryPreview) Defaults(ver string) bool {
 	return false
 }
 
@@ -173,6 +195,27 @@ func (m *KindAggregation) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *KindPreview) Clone(into interface{}) (interface{}, error) {
+	var out *KindPreview
+	var ok bool
+	if into == nil {
+		out = &KindPreview{}
+	} else {
+		out, ok = into.(*KindPreview)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *KindPreview) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *SearchQuery) Clone(into interface{}) (interface{}, error) {
 	var out *SearchQuery
 	var ok bool
@@ -235,6 +278,7 @@ func (m *SearchRequest) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.MaxResults = 10
+		m.Mode = "Full"
 	}
 	return ret
 }
@@ -282,6 +326,27 @@ func (m *TenantAggregation) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *TenantPreview) Clone(into interface{}) (interface{}, error) {
+	var out *TenantPreview
+	var ok bool
+	if into == nil {
+		out = &TenantPreview{}
+	} else {
+		out, ok = into.(*TenantPreview)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TenantPreview) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *TextRequirement) Clone(into interface{}) (interface{}, error) {
 	var out *TextRequirement
 	var ok bool
@@ -315,6 +380,11 @@ func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+func (m *CategoryPreview) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
 func (m *Entry) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
@@ -336,6 +406,11 @@ func (m *Kind) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *KindAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -422,6 +497,11 @@ func (m *SearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *TenantAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *TenantPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -520,6 +600,15 @@ func init() {
 
 		if !validators.IntRange(m.MaxResults, args) {
 			return fmt.Errorf("%v failed validation", path+"."+"MaxResults")
+		}
+		return nil
+	})
+
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
+		m := i.(*SearchRequest)
+
+		if _, ok := SearchRequest_RequestMode_value[m.Mode]; !ok {
+			return errors.New("SearchRequest.Mode did not match allowed strings")
 		}
 		return nil
 	})

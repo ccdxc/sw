@@ -59,6 +59,13 @@
             "type": "string"
           },
           {
+            "name": "mode",
+            "description": "Query Mode.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "query.categories",
             "description": "OR of Categories to be matched, AND and Exclude are not supported for this type\nThe max category string length is 64 bytes. length of string should be between 0 and 64",
             "in": "query",
@@ -362,6 +369,18 @@
       },
       "description": "CategoryAggregation contains map of search result entries\ngrouped by two levels: first by Category and then by Kind."
     },
+    "searchCategoryPreview": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/searchKindPreview"
+          }
+        }
+      },
+      "description": "CategoryPreview contains map of search summary (#hits)\ngrouped by two levels: first by Category and then by Kind."
+    },
     "searchEntry": {
       "type": "object",
       "properties": {
@@ -414,6 +433,19 @@
         }
       },
       "description": "KindAggregation contains map of search result\nentries grouped by Kind."
+    },
+    "searchKindPreview": {
+      "type": "object",
+      "properties": {
+        "kinds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        }
+      },
+      "description": "KindPreview contains map of search summary (#hits) grouped by Kind."
     },
     "searchSearchQuery": {
       "type": "object",
@@ -527,6 +559,15 @@
           "maxLength": 256,
           "description": "SortyBy is an optional parameter and contains the field name \nto be sorted by, For eg: \"meta.name\"\nThis can be specified as URI parameter."
         },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "Full",
+            "Preview"
+          ],
+          "default": "Full",
+          "title": "Query Mode"
+        },
         "query": {
           "$ref": "#/definitions/searchSearchQuery",
           "description": "Search query contains the search requirements\nThis is intended for advanced query use cases involving\nboolean query, structured term query and supports various\ncombinations of text, phrase strings and search modifiers\nfor specific categories, kinds, fields and labels.\nThis cannot be specified as URI parameter."
@@ -562,11 +603,15 @@
           "items": {
             "$ref": "#/definitions/searchEntry"
           },
-          "description": "EntryList is list of all search results with no grouping."
+          "title": "EntryList is list of all search results with no grouping.\nThis attribute is populated and valid only in Full request-mode"
+        },
+        "preview-entries": {
+          "$ref": "#/definitions/searchTenantPreview",
+          "title": "PreviewEntries is a three level grouping of search summary (#hits),\ngrouped by tenant, category and kind in that order. This attribute\nis populated and valid only in Preview request-mode"
         },
         "aggregated-entries": {
           "$ref": "#/definitions/searchTenantAggregation",
-          "description": "AggregatedEntries is a three level grouping of all search results,\nGrouped by tenant, category and kind in that order."
+          "title": "AggregatedEntries is a three level grouping of full search results,\nGrouped by tenant, category and kind in that order. This attribute\nis populated and valid only in Full request-mode"
         }
       },
       "description": "SearchResponse is the output provided by the search API\nBased on the search request, search results would be part\nof one of the entities : Entries or NestedAggregation.\nIn case of failures, Error would indicate the error status and\ndescription."
@@ -582,6 +627,18 @@
         }
       },
       "description": "TenantAggregation contains map of search result entries\ngrouped by three levels: first by Tenant, second by Category \nand finally by Kind."
+    },
+    "searchTenantPreview": {
+      "type": "object",
+      "properties": {
+        "tenants": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/searchCategoryPreview"
+          }
+        }
+      },
+      "description": "TenantPreview contains map of search summary (#hits)\ngrouped by three levels: first by Tenant, second by Category \nand finally by Kind."
     },
     "searchTextRequirement": {
       "type": "object",

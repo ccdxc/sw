@@ -544,31 +544,33 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	resp.ActualHits = int64(len(result.Hits.Hits))
 	resp.TimeTakenMsecs = result.TookInMillis
 
-	// Decode the Hits, if present
-	resp.Entries = make([]*search.Entry, len(result.Hits.Hits))
+	// Decode the Hits when the request mode is "full"
+	if in.Mode == search.SearchRequest_Full.String() {
+		resp.Entries = make([]*search.Entry, len(result.Hits.Hits))
 
-	for i, entry := range result.Hits.Hits {
-		jsondata, err := entry.Source.MarshalJSON()
-		if err == nil {
+		for i, entry := range result.Hits.Hits {
+			jsondata, err := entry.Source.MarshalJSON()
+			if err == nil {
 
-			databytes := []byte(jsondata)
-			fdr.logger.Debugf("Search hits result - raw string: %d {%s}", i, string(databytes))
+				databytes := []byte(jsondata)
+				fdr.logger.Debugf("Search hits result - raw string: %d {%s}", i, string(databytes))
 
-			str, _ := base64.StdEncoding.DecodeString(string(databytes))
-			fdr.logger.Debugf("Search hits result - base64 string: %d {%s}", i, string(str))
+				str, _ := base64.StdEncoding.DecodeString(string(databytes))
+				fdr.logger.Debugf("Search hits result - base64 string: %d {%s}", i, string(str))
 
-			e := search.Entry{}
-			err = json.Unmarshal([]byte(databytes), &e)
-			if err != nil {
-				fdr.logger.Errorf("Error unmarshalling json data to search.entry : %+v", err)
+				e := search.Entry{}
+				err = json.Unmarshal([]byte(databytes), &e)
+				if err != nil {
+					fdr.logger.Errorf("Error unmarshalling json data to search.entry : %+v", err)
+				}
+
+				fdr.logger.Debugf("Search hits result - entry proto: %d {%+v}", i, e)
+				resp.Entries[i] = &e
+			} else {
+				resp.Entries[i] = nil
+				fdr.logger.Errorf("Failed to marshal hits result-Source i:%d err:%v", i, err)
+				// TBD: Stop here with error or continue with best effort ?
 			}
-
-			fdr.logger.Debugf("Search hits result - entry proto: %d {%+v}", i, e)
-			resp.Entries[i] = &e
-		} else {
-			resp.Entries[i] = nil
-			fdr.logger.Errorf("Failed to marshal hits result-Source i:%d err:%v", i, err)
-			// TBD: Stop here with error or continue with best effort ?
 		}
 	}
 
@@ -576,10 +578,19 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	if tenantAgg, found := result.Aggregations.Terms(elastic.TenantAggKey); found {
 
 		log.Debugf("Found tenant_agg, : %d", len(result.Aggregations))
-		resp.AggregatedEntries = &search.TenantAggregation{
-			Tenants: make(map[string]*search.CategoryAggregation, len(result.Aggregations)),
-		}
 		log.Debugf("tenantAgg Buckets, : %d", len(tenantAgg.Buckets))
+
+		if in.Mode == search.SearchRequest_Full.String() {
+			resp.AggregatedEntries = &search.TenantAggregation{
+				Tenants: make(map[string]*search.CategoryAggregation, len(result.Aggregations)),
+			}
+		}
+
+		if in.Mode == search.SearchRequest_Preview.String() {
+			resp.PreviewEntries = &search.TenantPreview{
+				Tenants: make(map[string]*search.CategoryPreview, len(result.Aggregations)),
+			}
+		}
 
 		for _, tenantBucket := range tenantAgg.Buckets {
 
@@ -589,9 +600,19 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 			if categoryAgg, found := tenantBucket.Terms(elastic.CategoryAggKey); found {
 
 				log.Debugf("categoryAgg Buckets, : %d", len(categoryAgg.Buckets))
-				resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)] = &search.CategoryAggregation{
-					Categories: make(map[string]*search.KindAggregation, len(categoryAgg.Buckets)),
+
+				if in.Mode == search.SearchRequest_Full.String() {
+					resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)] = &search.CategoryAggregation{
+						Categories: make(map[string]*search.KindAggregation, len(categoryAgg.Buckets)),
+					}
 				}
+
+				if in.Mode == search.SearchRequest_Preview.String() {
+					resp.PreviewEntries.Tenants[tenantBucket.Key.(string)] = &search.CategoryPreview{
+						Categories: make(map[string]*search.KindPreview, len(categoryAgg.Buckets)),
+					}
+				}
+
 				for _, categoryBucket := range categoryAgg.Buckets {
 
 					log.Debugf("category key : %s", categoryBucket.Key.(string))
@@ -600,9 +621,19 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 					if kindAgg, found := categoryBucket.Terms(elastic.KindAggKey); found {
 
 						log.Debugf("kindAgg Buckets, : %d", len(kindAgg.Buckets))
-						resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)] = &search.KindAggregation{
-							Kinds: make(map[string]*search.EntryList, len(kindAgg.Buckets)),
+
+						if in.Mode == search.SearchRequest_Full.String() {
+							resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)] = &search.KindAggregation{
+								Kinds: make(map[string]*search.EntryList, len(kindAgg.Buckets)),
+							}
 						}
+
+						if in.Mode == search.SearchRequest_Preview.String() {
+							resp.PreviewEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)] = &search.KindPreview{
+								Kinds: make(map[string]int64, len(kindAgg.Buckets)),
+							}
+						}
+
 						for _, kindBucket := range kindAgg.Buckets {
 
 							log.Debugf("kind key : %s", kindBucket.Key.(string))
@@ -612,36 +643,44 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 								hits := topHits.Hits.Hits
 								log.Debugf("hits per kind : %d", len(hits))
-								resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)] = &search.EntryList{
-									Entries: make([]*search.Entry, len(hits)),
-								}
 
-								for i, entry := range hits {
+								if in.Mode == search.SearchRequest_Full.String() {
+									resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)] = &search.EntryList{
+										Entries: make([]*search.Entry, len(hits)),
+									}
 
-									jsondata, err := entry.Source.MarshalJSON()
-									if err == nil {
+									for i, entry := range hits {
 
-										databytes := []byte(jsondata)
-										fdr.logger.Debugf("Agg Search hits result - raw string: %d {%s}", i, string(databytes))
+										jsondata, err := entry.Source.MarshalJSON()
+										if err == nil {
 
-										str, _ := base64.StdEncoding.DecodeString(string(databytes))
-										fdr.logger.Debugf("Agg Search hits result - base64 string: %d {%s}", i, string(str))
+											databytes := []byte(jsondata)
+											fdr.logger.Debugf("Agg Search hits result - raw string: %d {%s}", i, string(databytes))
 
-										e := search.Entry{}
-										err = json.Unmarshal([]byte(databytes), &e)
-										if err != nil {
-											fdr.logger.Errorf("Error unmarshalling Agg json data to search.entry : %+v", err)
+											str, _ := base64.StdEncoding.DecodeString(string(databytes))
+											fdr.logger.Debugf("Agg Search hits result - base64 string: %d {%s}", i, string(str))
+
+											e := search.Entry{}
+											err = json.Unmarshal([]byte(databytes), &e)
+											if err != nil {
+												fdr.logger.Errorf("Error unmarshalling Agg json data to search.entry : %+v", err)
+											}
+
+											log.Debugf("Entry: %d %s", i, e.GetName())
+											log.Debugf("Agg Search hits result - entry proto: %d {%+v}", i, e)
+											resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &e
+										} else {
+											resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = nil
+											log.Errorf("Failed to marshal Agg hits result-Source i:%d err:%v", i, err)
+											// TBD: Stop here with error or continue with best effort ?
 										}
-
-										log.Debugf("Entry: %d %s", i, e.GetName())
-										log.Debugf("Agg Search hits result - entry proto: %d {%+v}", i, e)
-										resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &e
-									} else {
-										resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = nil
-										log.Errorf("Failed to marshal Agg hits result-Source i:%d err:%v", i, err)
-										// TBD: Stop here with error or continue with best effort ?
 									}
 								}
+
+								if in.Mode == search.SearchRequest_Preview.String() {
+									resp.PreviewEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)] = int64(len(hits))
+								}
+
 							}
 						}
 					}

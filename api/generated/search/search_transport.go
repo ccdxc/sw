@@ -85,6 +85,40 @@ func DecodeGrpcRespCategoryAggregation(ctx context.Context, response interface{}
 	return response, nil
 }
 
+func encodeHTTPCategoryPreview(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPCategoryPreview(_ context.Context, r *http.Request) (interface{}, error) {
+	var req CategoryPreview
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqCategoryPreview encodes GRPC request
+func EncodeGrpcReqCategoryPreview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CategoryPreview)
+	return req, nil
+}
+
+// DecodeGrpcReqCategoryPreview decodes GRPC request
+func DecodeGrpcReqCategoryPreview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CategoryPreview)
+	return req, nil
+}
+
+// EncodeGrpcRespCategoryPreview encodes GRC response
+func EncodeGrpcRespCategoryPreview(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespCategoryPreview decodes GRPC response
+func DecodeGrpcRespCategoryPreview(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPEntry(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -255,6 +289,40 @@ func DecodeGrpcRespKindAggregation(ctx context.Context, response interface{}) (i
 	return response, nil
 }
 
+func encodeHTTPKindPreview(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPKindPreview(_ context.Context, r *http.Request) (interface{}, error) {
+	var req KindPreview
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqKindPreview encodes GRPC request
+func EncodeGrpcReqKindPreview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*KindPreview)
+	return req, nil
+}
+
+// DecodeGrpcReqKindPreview decodes GRPC request
+func DecodeGrpcReqKindPreview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*KindPreview)
+	return req, nil
+}
+
+// EncodeGrpcRespKindPreview encodes GRC response
+func EncodeGrpcRespKindPreview(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespKindPreview decodes GRPC response
+func DecodeGrpcRespKindPreview(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPSearchQuery(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -388,6 +456,40 @@ func EncodeGrpcRespTenantAggregation(ctx context.Context, response interface{}) 
 
 // DecodeGrpcRespTenantAggregation decodes GRPC response
 func DecodeGrpcRespTenantAggregation(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTenantPreview(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTenantPreview(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TenantPreview
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTenantPreview encodes GRPC request
+func EncodeGrpcReqTenantPreview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantPreview)
+	return req, nil
+}
+
+// DecodeGrpcReqTenantPreview decodes GRPC request
+func DecodeGrpcReqTenantPreview(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantPreview)
+	return req, nil
+}
+
+// EncodeGrpcRespTenantPreview encodes GRC response
+func EncodeGrpcRespTenantPreview(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTenantPreview decodes GRPC response
+func DecodeGrpcRespTenantPreview(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

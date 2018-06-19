@@ -37,15 +37,18 @@ func (s *ssearchSearchBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 
 		"search.Category":            apisrvpkg.NewMessage("search.Category"),
 		"search.CategoryAggregation": apisrvpkg.NewMessage("search.CategoryAggregation"),
+		"search.CategoryPreview":     apisrvpkg.NewMessage("search.CategoryPreview"),
 		"search.Entry":               apisrvpkg.NewMessage("search.Entry"),
 		"search.EntryList":           apisrvpkg.NewMessage("search.EntryList"),
 		"search.Error":               apisrvpkg.NewMessage("search.Error"),
 		"search.Kind":                apisrvpkg.NewMessage("search.Kind"),
 		"search.KindAggregation":     apisrvpkg.NewMessage("search.KindAggregation"),
+		"search.KindPreview":         apisrvpkg.NewMessage("search.KindPreview"),
 		"search.SearchQuery":         apisrvpkg.NewMessage("search.SearchQuery"),
 		"search.SearchRequest":       apisrvpkg.NewMessage("search.SearchRequest"),
 		"search.SearchResponse":      apisrvpkg.NewMessage("search.SearchResponse"),
 		"search.TenantAggregation":   apisrvpkg.NewMessage("search.TenantAggregation"),
+		"search.TenantPreview":       apisrvpkg.NewMessage("search.TenantPreview"),
 		"search.TextRequirement":     apisrvpkg.NewMessage("search.TextRequirement"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),

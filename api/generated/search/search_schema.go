@@ -27,6 +27,18 @@ var typesMapSearch = map[string]*runtime.Struct{
 			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.KindAggregation"},
 		},
 	},
+	"search.CategoryPreview": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Categories": runtime.Field{Name: "Categories", JSONTag: "categories", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.KindPreview"},
+		},
+	},
+	"search.CategoryPreview.CategoriesEntry": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.KindPreview"},
+		},
+	},
 	"search.Entry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
@@ -61,6 +73,18 @@ var typesMapSearch = map[string]*runtime.Struct{
 			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.EntryList"},
 		},
 	},
+	"search.KindPreview": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Kinds": runtime.Field{Name: "Kinds", JSONTag: "kinds", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_INT64"},
+		},
+	},
+	"search.KindPreview.KindsEntry": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
+		},
+	},
 	"search.SearchQuery": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Texts": runtime.Field{Name: "Texts", JSONTag: "texts", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.TextRequirement"},
@@ -84,6 +108,8 @@ var typesMapSearch = map[string]*runtime.Struct{
 
 			"SortBy": runtime.Field{Name: "SortBy", JSONTag: "sort-by", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
+			"Mode": runtime.Field{Name: "Mode", JSONTag: "mode", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"Query": runtime.Field{Name: "Query", JSONTag: "query", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.SearchQuery"},
 		},
 	},
@@ -99,6 +125,8 @@ var typesMapSearch = map[string]*runtime.Struct{
 
 			"Entries": runtime.Field{Name: "Entries", JSONTag: "entries", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.Entry"},
 
+			"PreviewEntries": runtime.Field{Name: "PreviewEntries", JSONTag: "preview-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.TenantPreview"},
+
 			"AggregatedEntries": runtime.Field{Name: "AggregatedEntries", JSONTag: "aggregated-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.TenantAggregation"},
 		},
 	},
@@ -112,6 +140,18 @@ var typesMapSearch = map[string]*runtime.Struct{
 			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.CategoryAggregation"},
+		},
+	},
+	"search.TenantPreview": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Tenants": runtime.Field{Name: "Tenants", JSONTag: "tenants", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.CategoryPreview"},
+		},
+	},
+	"search.TenantPreview.TenantsEntry": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.CategoryPreview"},
 		},
 	},
 	"search.TextRequirement": &runtime.Struct{
