@@ -13,6 +13,9 @@ cc_library(
     deps = [
         "//nic/delphi/utils",
     ],
+    linkopts = [
+        "-lrt",
+    ],
 )
 
 cc_test(

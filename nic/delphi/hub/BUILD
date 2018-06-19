@@ -27,6 +27,7 @@ cc_library(
     deps = [
         "//nic/delphi/utils",
         "//nic/delphi/messanger",
+        "//nic/delphi/shm",
         "@third_party//:libev_includes",
     ],
 )

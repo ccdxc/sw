@@ -44,6 +44,8 @@ typedef struct ht_entry_trailer_ {
     int32_t    ht_entry;     // offset back to ht entry
 } PACKED ht_entry_trailer_t;
 
+#define KEY_PTR_FROM_HASH_ENTRY(entry) ((char *)entry + sizeof(ht_entry_t))
+
 // VAL_PTR_FROM_HASH_ENTRY returns a pointer to value part of hash entry
 #define VAL_PTR_FROM_HASH_ENTRY(entry) ((int8_t *)entry + sizeof(ht_entry_t) + \
                                         ROUND_KEYLAN(entry->key_len) + sizeof(ht_entry_trailer_t))
@@ -125,6 +127,9 @@ typedef struct htable_ {
     ht_bucket_t   buckets[0];       // first level buckets
 } htable_t;
 
+// forward declaration for table iterator
+class TableIterator;
+
 // TableMgr class manages a hash table in shared memory
 class TableMgr {
 public:
@@ -134,19 +139,72 @@ public:
     error Release(void *val_ptr);                    // release a hash entry from use
     error Delete(const char *key, int16_t keylen);   // delete an entry
     int32_t RefCount(void *val_ptr);                 // returns ref count of hash entry (for tetsing only)
-
+    void DumpEntry(const char *key, int16_t keylen); // print info about a hash entry
+    void DumpTable();                                // dumps the entire table
+    ht_entry_t *GetNext(ht_entry_t *entry);          // get next entry from current
+    TableIterator Iterator();                        // returns an iterator
 private:
     htable_t      *ht_;
     DelphiShmPtr  shm_ptr_;
 
     // private methods
-    ht_entry_t *createHashEntry(const char *key, int16_t keylen, int16_t val_len);
-    void * findMatchingEntry(int32_t offset, const char *key, int16_t keylen);
+    ht_entry_t * createHashEntry(const char *key, int16_t keylen, int16_t val_len);
+    ht_entry_t * findEntry(const char *key, int16_t keylen);
+    ht_entry_t * findMatchingEntry(int32_t offset, const char *key, int16_t keylen);
     error deleteMatchingEntry(int32_t *offset, const char *key, int16_t keylen);
     error atomicInsert(ht_bucket_t *bkt, ht_entry_t *entry);
+    ht_entry_t * getNextEntry(int idx);
 
 };
 typedef std::unique_ptr<TableMgr> TableMgrUptr;
+
+// TableIterator iterates over hash table
+class TableIterator {
+public:
+    explicit TableIterator(TableMgr *tbl);
+    explicit TableIterator() {};
+    void Next();
+
+    inline int16_t Keylen() {
+        if (IsNil()) {
+            return 0;
+        }
+        return entry_->key_len;
+    }
+    inline int16_t ValLen() {
+        if (IsNil()) {
+            return 0;
+        }
+        return entry_->val_len;
+    }
+    inline char *Key() {
+        if (IsNil()) {
+            return NULL;
+        }
+        return (char *)entry_ + sizeof(ht_entry_t);
+    }
+    inline char *Value() {
+        if (IsNil()) {
+            return NULL;
+        }
+        return (char *)VAL_PTR_FROM_HASH_ENTRY(entry_);
+    }
+    inline bool IsNil() {
+        return (entry_ == NULL);
+    }
+    inline bool IsNotNil() {
+        return (entry_ != NULL);
+    }
+    /*
+    HtableEntry operator*() const;
+    TableIterator & operator++();
+    TableIterator operator++(int);
+    */
+private:
+    TableMgr *tbl_;
+    ht_entry_t *entry_;
+
+};
 
 
 // FNV hash params recommended by https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function

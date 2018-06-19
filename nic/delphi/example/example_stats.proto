@@ -1,0 +1,14 @@
+syntax = "proto3";
+package example;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+message InterfaceMetrics {
+    uint32                 Key          = 1;
+    delphi.Counter         RxPkts       = 2;
+    delphi.Counter         TxPkts       = 3;
+    delphi.Gauge           RxPktRate    = 4;
+    delphi.Gauge           TxPktRate    = 5;
+    delphi.Counter         RxErrors     = 6;
+    delphi.Counter         TxErrors     = 7;
+}

@@ -11,7 +11,7 @@ import subprocess
 
 # increment this version whenever delphi protoc plugin is changed
 # This will force all the proto files to be recompiled
-version = "1.3"
+version = "1.4"
 
 # Wrapper to execute a command
 def runProcess(exe):

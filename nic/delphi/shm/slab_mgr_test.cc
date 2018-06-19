@@ -127,6 +127,7 @@ void * startTestThread(void* targ) {
     }
 
     LogInfo("Allocated {} chunks", ctx->alloc_count);
+    sleep(1);
 
     // free all the memory
     for (int i = 0; i < ctx->max_chunks; i++) {
@@ -135,6 +136,14 @@ void * startTestThread(void* targ) {
     }
 
     LogInfo("Freed {} chunks", ctx->free_count);
+
+    free(ptrs);
+    pthread_exit(NULL);
+    return NULL;
+}
+
+void * startAfTestThread(void* targ) {
+    concurrent_test_ctx_t *ctx = (concurrent_test_ctx_t *)targ;
 
     // allocate and free a million alloc/frees
     for (int i = 0; i < NUM_ALLOCS_FREES; i++) {
@@ -151,7 +160,6 @@ void * startTestThread(void* targ) {
     LogInfo("Allocated {} chunks", ctx->alloc_count);
     LogInfo("Freed {} chunks", ctx->free_count);
 
-    free(ptrs);
     pthread_exit(NULL);
     return NULL;
 }
@@ -180,8 +188,38 @@ TEST_F(SlabMgrTest, ParallelAllocTest) {
     // wait for the tests to complete
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
-        ASSERT_EQ(test_ctx[i].alloc_count, (test_ctx[i].max_chunks + NUM_ALLOCS_FREES)) << "some allocs failed";
-        ASSERT_EQ(test_ctx[i].free_count, (test_ctx[i].max_chunks + NUM_ALLOCS_FREES)) << "some frees failed";
+        ASSERT_EQ(test_ctx[i].alloc_count, (test_ctx[i].max_chunks)) << "some allocs failed";
+        ASSERT_EQ(test_ctx[i].free_count, (test_ctx[i].max_chunks)) << "some frees failed";
+    }
+
+}
+
+TEST_F(SlabMgrTest, AllocFreeBenchmarkTest) {
+    pthread_t    threads[NUM_THREADS];
+    concurrent_test_ctx_t test_ctx[NUM_THREADS];
+
+    // setup thread context
+    for (int i = 0; i < NUM_THREADS; i++) {
+        test_ctx[i].slab_mgr = new SlabAllocator((SlabPool_t *)mem_, mem_, (i + 1));
+        test_ctx[i].alloc_count = 0;
+        test_ctx[i].free_count = 0;
+        int num_pages  = (ktestMemSize / SHM_PAGE_SIZE) - 1;
+        test_ctx[i].max_chunks = (CHUNKS_PER_PAGE(BASE_CHUNK_SIZE) * num_pages) / NUM_THREADS;
+    }
+
+    // start the threads in parallel
+    pthread_attr_t tattr;
+    pthread_attr_init (&tattr);
+    pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&threads[i], &tattr, &startAfTestThread, (void*)&test_ctx[i]);
+    }
+
+    // wait for the tests to complete
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+        ASSERT_EQ(test_ctx[i].alloc_count, NUM_ALLOCS_FREES) << "some allocs failed";
+        ASSERT_EQ(test_ctx[i].free_count, NUM_ALLOCS_FREES) << "some frees failed";
     }
 }
 

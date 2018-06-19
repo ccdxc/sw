@@ -188,6 +188,8 @@ func isTrue(boolPtr *bool) bool {
 var funcMap = template.FuncMap{
 	"ToUpper":    strings.ToUpper,
 	"ToLower":    strings.ToLower,
+	"HasSuffix":  strings.HasSuffix,
+	"HasPrefix":  strings.HasPrefix,
 	"ThrowError": throwError,
 	"IsTrue":     isTrue,
 }

@@ -5,19 +5,17 @@ load("//nic/delphi/compiler:delphi.bzl", "delphi_compile")
 # compile the proto file
 delphi_compile(
     name = "example_gen",
-    srcs = [ 'example.proto' ],
+    srcs = [
+      'example.proto',
+      'example_stats.proto',
+    ],
 )
 
 # compile the service and reactor
 cc_library(
     name = "example_lib",
     srcs = [
-        "example.cc",
-        "example.hpp",
-    ],
-    hdrs = [
-        "example.hpp",
-    ],
+    ] + glob(["*.cc"], exclude = ["*_test.cc", "*_main.cc"],) +  glob(["*.hpp"]),
     deps = [
         "//nic/delphi/sdk",
         ":example_gen",

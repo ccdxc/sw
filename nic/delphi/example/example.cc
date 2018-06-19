@@ -88,11 +88,14 @@ ExampleService::ExampleService(delphi::SdkPtr sk, string name) {
     delphi::objects::InterfaceSpec::Mount(sdk_, delphi::ReadWriteMode);
 
     // create interface event handler
-    intfMgr_ = make_shared<InterfaceMgr>(sdk_);
+    intf_mgr_ = make_shared<InterfaceMgr>(sdk_);
 
     // Register interface reactor
-    delphi::objects::InterfaceSpec::Watch(sdk_, intfMgr_);
+    delphi::objects::InterfaceSpec::Watch(sdk_, intf_mgr_);
 
+    // create interface stats mgr
+    intf_stats_mgr_ = make_shared<InterfaceStatsMgr>();
+    
     LogInfo("Example service constructor got called");
 }
 
@@ -105,7 +108,7 @@ void ExampleService::OnMountComplete() {
     // walk all interface objects and reconcile them
     vector<delphi::objects::InterfaceSpecPtr> iflist = delphi::objects::InterfaceSpec::List(sdk_);
     for (vector<delphi::objects::InterfaceSpecPtr>::iterator intf=iflist.begin(); intf!=iflist.end(); ++intf) {
-        intfMgr_->OnInterfaceSpecCreate(*intf);
+        intf_mgr_->OnInterfaceSpecCreate(*intf);
     }
 
     LogInfo("============== ExampleService Finished Reconciliation ==================\n");

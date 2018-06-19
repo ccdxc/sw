@@ -16,6 +16,10 @@ See [Overview](./Overview.md) for more details on Delphi Framework.
 
 See [here](./Build.md) for instructions on how to build delphi and the examples.
 
+See [here](./shm/Readme.md) for an overview of delphi shared memory implementation.
+
+See [here](./tools/delphictl/Readme.md) for `delphictl` tool reference.
+
 # Delphi Developer Guide
 
 Delphi is a reactive framework. That means almost all code in delphi is written as event reactors on objects. Idea is to make the developers more productive by allowing them to focus on the core logic and eliminate the boilerplate as much as possible.
@@ -282,6 +286,55 @@ TEST_F(ExampleReactorTest, BasicTest) {
 3. After this, you can just start writing test code. In the above example `BasicTest` test case triggers a create event on an interface spec object and verifies that reactor has created the interface status object.
 4. delphi SDK provides a `ASSERT_EQ_EVENTUALLY()` macro which is an asynchronous wrapper to `ASSERT_EQ()` macro with the same syntax. It periodically checks for the condition till it becomes true.
 
+# Delphi Metrics Developer Guide
+
+Delphi also provides a shared memory based metrics publishing mechanism. See [here](./shm/Readme.md) for an overview of underlying shared memory implementation. This section describes how to add new metrics kinds and publish stats.
+
+Publishing metrics is three step process. First, you need to define a proto file describing the schema of the metrics object. Each metrics object can contain multiple attributes. Each attribute can be counter, gauge or histogram. This proto file is compiled it using `delphic` compiler. This will generate the C++/Golang/Python binding for publishing this kind of metrics. Second step is to instantiate a metric object in shared memory. Metrics objects are kept in shared memory in a hash table that can be scanned(i.e. iterated) or looked up using an object key. Third step is to periodically update the attributes. All attributes are kept in their raw form in shared memory(i.e, they are NOT serialized). Delphi compiler will generate the needed code to access these metrics attributes from different languages.
+
+### 1. Define a proto file
+
+```
+syntax = "proto3";
+package example;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+message InterfaceMetrics {
+    uint32                 Key          = 1;
+    delphi.Counter         RxPkts       = 2;
+    delphi.Counter         TxPkts       = 3;
+    delphi.Gauge           RxPktRate    = 4;
+    delphi.Gauge           TxPktRate    = 5;
+    delphi.Counter         RxErrors     = 6;
+    delphi.Counter         TxErrors     = 7;
+}
+```
+
+proto file syntax looks very similar to delphi proto files. Any message with `Metrics` suffix is treated as a metrics object by delphi compiler. Message name becomes the metrics kind. Each metrics object needs to have a field named `Key`. This field uniquely identifies the metrics object instance. This also becomes the key to find the object in shared memory hash table. Key field can be a scalar field or a nested message. All other attributes in the metrics object are stats counters. They can be of type `delphi.Counter` which is a 64bit incrementing counter or it can be `delphi.Gauge` which is a 64bit floating point gauge who's value can go up or down over time. Histogram and summary types will also be supported soon.
+
+### 2. Instantiate a metrics object
+
+```
+    if_stats = delphi::objects::InterfaceMetrics::NewInterfaceMetrics(10001);
+    assert(if_stats != NULL);
+```
+
+This will instantiate new `InterfaceMetrics` object in shared memory with key `10001`.
+
+### 3. Periodically set or increment stats
+
+```
+    // set or increments stats
+    if_stats->RxPkts()->Incr();
+    if_stats->TxPkts()->Incr();
+    if_stats->RxPktRate()->Set(rand() % 5000);
+    if_stats->TxPktRate()->Set(rand() % 8000);
+    if_stats->RxErrors()->Add(rand() % 3);
+    if_stats->TxErrors()->Add(rand() % 5);
+```
+
+Example above shows how to periodically set or increment stats attributes. Note that stats attributes can be accessed using their name as specified in the proto file.
 
 ## Coding Style Guide
 

@@ -63,6 +63,7 @@ TEST_F(KvstoreTest, BasicKvTest) {
 
     // dump kvstore info
     client_shm_->DumpMeta();
+    tbl->DumpTable();
 
     // delete the key
     error err = tbl->Delete(key, strlen(key));
@@ -71,6 +72,7 @@ TEST_F(KvstoreTest, BasicKvTest) {
 
     // dump kvstore info
     client_shm_->DumpMeta();
+    tbl->DumpTable();
 
     // verify find returns error
     char * gptr3 = (char *)tbl->Find(key, strlen(key));
@@ -81,6 +83,122 @@ TEST_F(KvstoreTest, BasicKvTest) {
     ASSERT_EQ(tbl->RefCount(gptr), 1) << "refcount for hash entry is incorrect";
     tbl->Release(gptr2);
     client_shm_->DumpMeta();
+    tbl->DumpTable();
+}
+
+TEST_F(KvstoreTest, TableIteratorTest) {
+    // create a table
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);
+    ASSERT_TRUE(tbl != NULL) << "Failed to create table";
+
+    // create an entry in table
+    const char *key1 = "test_key1";
+    const char *value1 = "test_value1";
+    char *valptr = (char *)tbl->Create(key1, strlen(key1), (strlen(value1) + 1));
+    ASSERT_TRUE(valptr != NULL) << "error creating key";
+    strcpy(valptr, value1);
+
+    // create second entry in table
+    const char *key2 = "test_key2";
+    const char *value2 = "test_value2";
+    valptr = (char *)tbl->Create(key2, strlen(key2), (strlen(value2) + 1));
+    ASSERT_TRUE(valptr != NULL) << "error creating key";
+    strcpy(valptr, value2);
+
+    // verify iterator returns two entries
+    int exp_count = 0;
+    for (TableIterator it = tbl->Iterator(); it.IsNotNil(); it.Next()) {
+        LogInfo("Got key {} value {}", it.Key(), it.Value());
+        ASSERT_TRUE((string(it.Key()) == string(key1)) || (string(it.Key()) == string(key2))) << "invalid key";
+        ASSERT_TRUE((string(it.Value()) == string(value1)) || (string(it.Value()) == string(value2))) << "invalid value";
+        exp_count++;
+    }
+    ASSERT_TRUE(exp_count == 2) << "unexpected number of keys";
+
+    // verify find works with multiple keys
+    char *gptr = (char *)tbl->Find(key1, strlen(key1));
+    ASSERT_TRUE(gptr != NULL) << "find failed";
+    tbl->Release(gptr);
+    tbl->DumpTable();
+
+    // delete one key
+    error err = tbl->Delete(key1, strlen(key1));
+    ASSERT_EQ(err, error::OK()) << "Error deleting the key";
+
+    exp_count = 0;
+    for (TableIterator it = tbl->Iterator(); it.IsNotNil(); it.Next()) {
+        LogInfo("Got key {} value {}", it.Key(), it.Value());
+        ASSERT_TRUE((string(it.Key()) == string(key2))) << "invalid key";
+        ASSERT_TRUE((string(it.Value()) == string(value2))) << "invalid value";
+        exp_count++;
+    }
+    ASSERT_TRUE(exp_count == 1) << "unexpected number of keys";
+
+    // delete second key
+    err = tbl->Delete(key2, strlen(key2));
+    ASSERT_EQ(err, error::OK()) << "Error deleting the key";
+
+    exp_count = 0;
+    for (TableIterator it = tbl->Iterator(); it.IsNotNil(); it.Next()) {
+        LogInfo("Got key {} value {}", it.Key(), it.Value());
+        exp_count++;
+    }
+    ASSERT_TRUE(exp_count == 0) << "unexpected number of keys";
+}
+
+TEST_F(KvstoreTest, HashCollisionTest) {
+    int test_count = 40;
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_collision_kind", 10);
+    ASSERT_TRUE(tbl != NULL) << "Failed to create table";
+
+    // create entries in table
+    for (int i = 0; i < test_count; i++) {
+        char key[100];
+        char value[100];
+        sprintf(key, "test_key-%d", i);
+        sprintf(value, "test_value-%d", i);
+
+        char *valptr = (char *)tbl->Create(key, (strlen(key)), (strlen(value) + 1));
+        ASSERT_TRUE(valptr != NULL) << "error creating key";
+        strcpy(valptr, value);
+    }
+
+    tbl->DumpTable();
+
+    // verify find works
+    for (int i = 0; i < test_count; i++) {
+        char key[100];
+        char value[100];
+        sprintf(key, "test_key-%d", i);
+        sprintf(value, "test_value-%d", i);
+
+        char *gptr = (char *)tbl->Find(key, (strlen(key)));
+        ASSERT_TRUE(gptr != NULL) << "find failed";
+        ASSERT_EQ(string(gptr), string(value)) << "value did not match";
+        tbl->Release(gptr);
+    }
+
+
+    // verify iterator find all the entries
+    int exp_count = 0;
+    for (TableIterator it = tbl->Iterator(); it.IsNotNil(); it.Next()) {
+        LogInfo("Got key {} value {}", it.Key(), it.Value());
+        exp_count++;
+    }
+    ASSERT_TRUE(exp_count == test_count) << "unexpected number of keys";
+
+    // delete all the keys
+    for (int i = 0; i < test_count; i++) {
+        char key[100];
+        char value[100];
+        sprintf(key, "test_key-%d", i);
+        sprintf(value, "test_value-%d", i);
+
+        error err = tbl->Delete(key, (strlen(key)));
+        ASSERT_EQ(err, error::OK()) << "Error deleting the key";
+    }
+
+    tbl->DumpTable();
 }
 
 TEST_F(KvstoreTest, KvstoreBenchmark) {

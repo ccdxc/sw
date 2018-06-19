@@ -635,6 +635,8 @@ void DelphiClient::msgqTimerHandler(ev::timer &watcher, int revents) {
         }
 
 
+        this->syncQueue.push_back(make_shared<ObjectMutation>(oldObj, objinfo, (*iter)->op));
+
         // find the watcher for the kind
         ReactorListPtr rl = this->GetReactorList(kind);
         if (rl != NULL) {

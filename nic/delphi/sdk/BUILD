@@ -11,11 +11,13 @@ cc_library(
         "delphi_service.hpp",
         "object_factory.hpp",
         "delphi_utest.hpp",
+        "delphi_metrics.hpp",
     ],
     include_prefix = "nic/delphi/sdk",
     deps = [
         "//nic/delphi/utils",
         "//nic/delphi/messanger",
+        "//nic/delphi/shm",
         "@third_party//:libev_includes",
         "@third_party//:libev",
     ],
@@ -33,6 +35,25 @@ cc_test(
         "//:gtest",
         "//nic/delphi/utils",
         "//nic/delphi/messanger:messanger",
+        "//nic/delphi/sdk",
+        "@third_party//:libev",
+    ],
+    timeout="short",
+)
+
+cc_test(
+    name = "delphi_metrics_test",
+    srcs = [
+        "delphi_metrics_test.cc",
+    ],
+    linkopts = [
+        "-lpthread",
+        "-lrt",
+    ],
+    deps = [
+        "//:gtest",
+        "//nic/delphi/utils",
+        "//nic/delphi/shm",
         "//nic/delphi/sdk",
         "@third_party//:libev",
     ],

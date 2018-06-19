@@ -22,6 +22,11 @@ error DelphiServer::Start() {
     // create a messager server
     this->msgServer = make_shared<MessangerServer>(shared_from_this());
 
+    // init the delphi shared memory
+    srv_shm_ = make_shared<delphi::shm::DelphiShm>();
+    delphi::error err = srv_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, true);
+    assert(err.IsOK());
+
     // start the server
     return this->msgServer->Start();
 }

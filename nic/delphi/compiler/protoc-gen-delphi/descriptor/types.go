@@ -252,6 +252,45 @@ func (f *Field) TypeIsMessage() bool {
 	return false
 }
 
+// GetCppTypeName returns C++ type name for the field
+func (f *Field) GetCppTypeName() string {
+	var proto3TypeNames = map[descriptor.FieldDescriptorProto_Type]string{
+		descriptor.FieldDescriptorProto_TYPE_DOUBLE:  "double",
+		descriptor.FieldDescriptorProto_TYPE_FLOAT:   "float",
+		descriptor.FieldDescriptorProto_TYPE_INT64:   "int64_t",
+		descriptor.FieldDescriptorProto_TYPE_UINT64:  "uint64_t",
+		descriptor.FieldDescriptorProto_TYPE_INT32:   "int32_t",
+		descriptor.FieldDescriptorProto_TYPE_FIXED64: "uint64_t",
+		descriptor.FieldDescriptorProto_TYPE_FIXED32: "uint32_t",
+		descriptor.FieldDescriptorProto_TYPE_BOOL:    "bool",
+		descriptor.FieldDescriptorProto_TYPE_STRING:  "string",
+		// FieldDescriptorProto_TYPE_GROUP
+		// FieldDescriptorProto_TYPE_MESSAGE
+		descriptor.FieldDescriptorProto_TYPE_BYTES:  "string",
+		descriptor.FieldDescriptorProto_TYPE_UINT32: "uint32_t",
+		// FieldDescriptorProto_TYPE_ENUM
+		// TODO(yugui) Handle Enum
+		descriptor.FieldDescriptorProto_TYPE_SFIXED32: "int32_t",
+		descriptor.FieldDescriptorProto_TYPE_SFIXED64: "int64_t",
+		descriptor.FieldDescriptorProto_TYPE_SINT32:   "int32_t",
+		descriptor.FieldDescriptorProto_TYPE_SINT64:   "int64_t",
+	}
+
+	switch f.GetType() {
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		sl := strings.Split(f.GetTypeName(), ".")
+		if len(sl) > 2 {
+			return sl[2]
+		} else if len(sl) > 1 {
+			return sl[1]
+		} else {
+			return sl[0]
+		}
+	default:
+		return proto3TypeNames[f.GetType()]
+	}
+}
+
 // IsRepeated checks if the field is a repeated field
 func (f *Field) IsRepeated() bool {
 	if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {

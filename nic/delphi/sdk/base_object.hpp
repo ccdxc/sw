@@ -45,7 +45,7 @@ public:
     static inline void RegisterKind(string kind, ObjectFactory *factry) {
         try {
             map<string, ObjectFactory*> *fctries = BaseObject::GetFactoryMap();
-            LogInfo("Registering object kind {}", kind);
+            LogDebug("Registering object kind {}", kind);
             fctries->insert(std::pair<string, ObjectFactory*>(kind, factry));
         } catch (...){}
     }

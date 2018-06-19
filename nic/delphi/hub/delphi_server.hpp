@@ -7,6 +7,7 @@
 
 #include "nic/delphi/utils/utils.hpp"
 #include "nic/delphi/messanger/messanger_server.hpp"
+#include "nic/delphi/shm/shm.hpp"
 
 namespace delphi {
 
@@ -88,6 +89,8 @@ private:
     map<uint16_t, ServiceInfoPtr>  serviceIds;     // map of services by service id
     map<int, ServiceInfoPtr>       sockets;        // map of socket id to service
     map<string, MountPointPtr>     mountPoints;    // map of object kind to mount point
+    delphi::shm::DelphiShmPtr      srv_shm_;       // shared memory instance
+
 protected:
     void syncTimerHandler(ev::timer &watcher, int revents);
 };

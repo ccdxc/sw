@@ -1,0 +1,82 @@
+syntax = "proto3";
+package test;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+
+// key for test objects
+message TestIndex {
+    uint32    Ifidx = 1;
+}
+
+// state enum
+enum TestState {
+    InvalidIntfState   = 0;
+    IntfStateUp        = 1;
+    IntfStateDown      = 2;
+}
+
+// basic object test
+message TestSpec {
+    delphi.ObjectMeta      Meta         = 1;
+    TestIndex              Key          = 2;
+    TestState              AdminState   = 3 [(delphi.event) = true];
+    string                 MacAddress   = 4;
+    uint64                 StatusHandle = 5;
+    TestIndex              StatusIdx    = 6 [(delphi.event) = true];
+}
+
+// object with update event and repeated fields
+message TestStatus {
+    option (delphi.update_event) = false;
+    delphi.ObjectMeta      Meta              = 1;
+    uint32                 Key               = 2;
+    TestState              OperState         = 3 [(delphi.event) = true];
+    string                 DummyStatusField  = 4 [(delphi.event) = false];
+    delphi.ReferList       SpecHandles       = 5 [(delphi.event) = true];
+    repeated TestIndex     SpecIdxs          = 6 [(delphi.event) = true];
+    repeated uint32        VlanIds           = 7 [(delphi.event) = true];
+    map<string, string>    IPAddresses       = 8 [(delphi.event) = true];
+}
+
+message TestKeyHandle {
+  oneof key_or_handle {
+    fixed64         lif_id     = 1;     // app allocated unique LIF id
+    fixed64         lif_handle = 2;     // id of interface returned by HAL
+  }
+}
+
+// test for key_or_handle types
+message TestKeyOrHandle {
+    delphi.ObjectMeta      Meta          = 1;
+    TestKeyHandle          key_or_handle = 2;
+    string                 MyState       = 3 [(delphi.event) = true];
+    string                 DontCareState = 4;
+}
+
+// test for singleton objects
+message TestSingleton {
+    option (delphi.singleton) = true;
+    delphi.ObjectMeta      Meta          = 1;
+    string                 MyState       = 2 [(delphi.event) = true];
+    string                 DontCareState = 3;
+}
+
+// basic metrics test
+message TestMetrics {
+    uint32           Key         = 1;
+    delphi.Counter   PktCounter  = 2;
+    delphi.Gauge     PktRate     = 3;
+}
+
+message TestMetrKey {
+    uint32    VlanID    = 1;
+    uint64    MacAddr   = 2;
+}
+
+// test metrics with nested message as key
+message TestMsgKeyMetrics {
+    TestMetrKey       Key         = 1;
+    delphi.Counter   PktCounter  = 2;
+    delphi.Gauge     PktRate     = 3;
+}

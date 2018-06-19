@@ -8,6 +8,7 @@ var (
 #define _{{ .FilePrefix | ToUpper }}_OBJECTS_DELPHI_H_
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "nic/delphi/sdk/delphi_metrics.hpp"
 #include "{{.FilePrefix}}.pb.h"
 #include <google/protobuf/text_format.h>
 
@@ -18,11 +19,12 @@ namespace objects {
 {{$pkgName := .Package}}
 {{$msgs := .Messages}}
 {{range $msgs}}
+  {{if not (HasSuffix .GetName "Metrics")}}
   {{if .HasFieldType ".delphi.ObjectMeta" }}
     {{if .HasField "Key" }} {{if or (.HasField "key_or_handle") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
-	{{else if .HasField "key_or_handle"}} {{if or (.HasField "Key") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
-	{{else if .HasExtOption "delphi.singleton" }} {{if or (.HasField "key_or_handle") (.HasField "key_or_handle")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
-	{{else}} {{ ThrowError "does not have Key field" $fileName .GetName }}
+    {{else if .HasField "key_or_handle"}} {{if or (.HasField "Key") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
+    {{else if .HasExtOption "delphi.singleton" }} {{if or (.HasField "key_or_handle") (.HasField "key_or_handle")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
+    {{else}} {{ ThrowError "does not have Key field" $fileName .GetName }}
     {{end}}
 
 class {{.GetName}};
@@ -49,11 +51,11 @@ public:
     virtual delphi::ObjectMeta *GetMeta() {
         return this->mutable_meta();
     };
-	{{if .HasExtOption "delphi.singleton" }}
-	virtual string GetKey() {
+    {{if .HasExtOption "delphi.singleton" }}
+    virtual string GetKey() {
         return "default";
     }
-	{{end}}
+    {{end}}
     {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }} {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }} {{end}}{{ if .TypeIsMessage }}
     virtual string GetKey() {
         return this->key().ShortDebugString();
@@ -65,13 +67,13 @@ public:
         return out_str;
     }
     {{end}} {{end}}
-	  {{if (eq .GetName "key_or_handle") }} {{ if .TypeIsMessage }}
-	  virtual string GetKey() {
+      {{if (eq .GetName "key_or_handle") }} {{ if .TypeIsMessage }}
+      virtual string GetKey() {
           return this->key_or_handle().ShortDebugString();
       }
-	  {{else}} {{ ThrowError "does not have Key field" $fileName $msgName .GetName }}
-	  {{end}} {{end}}
-	{{end}}
+      {{else}} {{ ThrowError "does not have Key field" $fileName $msgName .GetName }}
+      {{end}} {{end}}
+    {{end}}
 
     virtual ::google::protobuf::Message *GetMessage() {
         return this;
@@ -79,10 +81,22 @@ public:
     static error Mount(SdkPtr sdk, MountMode mode) {
         return sdk->MountKind("{{.GetName}}", mode);
     }
+    static error MountKey(SdkPtr sdk, {{.GetName}}Ptr objkey, MountMode mode) {
+        return sdk->MountKey("{{.GetName}}", objkey->GetKey(), mode);
+    }
     static error Watch(SdkPtr sdk, {{.GetName}}ReactorPtr reactor);
     static vector<{{.GetName}}Ptr> List(SdkPtr sdk);
     virtual error TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, ReactorListPtr rl);
 
+    {{if .HasExtOption "delphi.singleton" }}
+    // FindObject finds the object for singletons
+    static inline {{.GetName}}Ptr FindObject(SdkPtr sdk) {
+        {{.GetName}}Ptr objkey = make_shared<{{.GetName}}>();
+        BaseObjectPtr base_obj = sdk->FindObject(objkey);
+        {{.GetName}}Ptr obj = static_pointer_cast<{{.GetName}}>(base_obj);
+
+        return obj;
+    } {{else}}
     // FindObject finds the object by key
     static inline {{.GetName}}Ptr FindObject(SdkPtr sdk, {{.GetName}}Ptr objkey) {
         BaseObjectPtr base_obj = sdk->FindObject(objkey);
@@ -90,6 +104,7 @@ public:
 
         return obj;
     }
+    {{end}}
 };
 
 class {{.GetName}}Reactor : public BaseReactor {
@@ -113,7 +128,95 @@ public:
 };
 
 REGISTER_KIND({{.GetName}});
-{{end}} {{end}}
+{{end}}
+{{else}}
+  {{if not (.HasField "Key")}} {{ ThrowError "metrics does not have Key field" $fileName .GetName }} {{end}}
+// forward declaration
+class {{.GetName}};
+typedef std::shared_ptr<{{.GetName}}> {{.GetName}}Ptr;
+class {{.GetName}}Iterator;
+
+// {{.GetName}} class
+class {{.GetName}} : public delphi::metrics::DelphiMetrics {
+private:
+    char                          *shm_ptr_;
+    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+    {{if (eq .GetName "Key") }} {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }} {{end}}
+    {{ if .TypeIsMessage }} {{if or (eq .GetTypeName ".delphi.Counter") (eq .GetTypeName ".delphi.Gauge") }} {{ ThrowError "Key field type can not be counter or gauge" $fileName $msgName .GetName }} {{end}}
+    {{$pkgName}}::{{.GetCppTypeName}}      key_;
+    {{else}}
+    {{.GetCppTypeName}}                       key_;
+    {{end}}
+    {{else}}
+    {{if (eq .GetTypeName ".delphi.Counter") }}
+    delphi::metrics::CounterPtr   {{.GetName}}_;
+    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    delphi::metrics::GaugePtr     {{.GetName}}_;
+    {{else}} {{ ThrowError "Invalid field type for" $fileName $msgName .GetName .GetCppTypeName }}
+    {{end}}
+    {{end}}
+    {{end}}
+
+public:
+    static int32_t Size();
+    delphi::error Delete();
+    string DebugString();
+    static {{.GetName}}Iterator Iterator();
+
+    {{$fields := .Fields}}{{range $fields}}
+    {{if (eq .GetName "Key") }}
+    {{ if .TypeIsMessage }}
+    {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *ptr);
+	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{$pkgName}}::{{.GetCppTypeName}} *)kptr, vptr){ };
+    {{$pkgName}}::{{.GetCppTypeName}} GetKey() { return key_; };
+    static {{$msgName}}Ptr  New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key);
+    {{else}}
+    {{$msgName}}({{.GetCppTypeName}} key, char *ptr);
+	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, vptr){ };
+    {{.GetCppTypeName}} GetKey() { return key_; };
+    static {{$msgName}}Ptr  New{{$msgName}}({{.GetCppTypeName}} key);
+    {{end}}
+    {{end}}
+
+    {{if (eq .GetTypeName ".delphi.Counter") }}
+    delphi::metrics::CounterPtr {{.GetName}}() { return {{.GetName}}_; };
+
+    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    delphi::metrics::GaugePtr {{.GetName}}() { return {{.GetName}}_; };
+    {{end}}
+    {{end}}
+};
+REGISTER_METRICS({{.GetName}});
+
+class {{.GetName}}Iterator {
+public:
+    explicit {{.GetName}}Iterator(delphi::shm::TableIterator tbl_iter) {
+        tbl_iter_ = tbl_iter;
+    }
+    inline void Next() {
+        tbl_iter_.Next();
+    }
+    inline {{.GetName}}Ptr Get() {
+        {{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }}
+		{{ if .TypeIsMessage }}
+        {{$pkgName}}::{{.GetCppTypeName}} *key = ({{$pkgName}}::{{.GetCppTypeName}} *)tbl_iter_.Key();
+		{{else}}
+		{{.GetCppTypeName}} *key = ({{.GetCppTypeName}} *)tbl_iter_.Key();
+        {{end}} {{end}} {{end}}
+        return make_shared<{{.GetName}}>(*key, tbl_iter_.Value());
+    }
+    inline bool IsNil() {
+        return tbl_iter_.IsNil();
+    }
+    inline bool IsNotNil() {
+        return tbl_iter_.IsNotNil();
+    }
+private:
+    delphi::shm::TableIterator tbl_iter_;
+};
+
+{{end}}
+{{end}}
 } // namespace objects
 } // namespace delphi
 
@@ -122,12 +225,17 @@ REGISTER_KIND({{.GetName}});
 
 	SrcTemplate = `// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
+#include <string>       // std::string
+#include <iostream>     // std::cout
+#include <sstream>      // std::stringstream
 #include "{{.FilePrefix}}.delphi.hpp"
 
 namespace delphi {
 namespace objects {
 
-{{$fileName := .GetName}} {{$msgs := .Messages}}{{range $msgs}} {{if .HasFieldType ".delphi.ObjectMeta" }}
+{{$fileName := .GetName}} {{$pkgName := .Package}} {{$msgs := .Messages}}{{range $msgs}}
+{{if not (HasSuffix .GetName "Metrics")}}
+{{if .HasFieldType ".delphi.ObjectMeta" }}
 // Watch watches a kind of objects
 error {{.GetName}}::Watch(SdkPtr sdk, {{.GetName}}ReactorPtr reactor) {
     return sdk->WatchKind("{{.GetName}}", reactor);
@@ -199,7 +307,122 @@ vector<{{.GetName}}Ptr> {{.GetName}}::List(SdkPtr sdk) {
 
     return objlist;
 }
-{{end}} {{end}}
+{{end}}
+{{else}}
+// {{.GetName}} metrics constructor
+    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+    {{if (eq .GetName "Key") }}
+	{{ if .TypeIsMessage }}
+{{$msgName}}::{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *ptr) {
+	{{else}}
+{{$msgName}}::{{$msgName}}({{.GetCppTypeName}} key, char *ptr) {
+	{{end}}
+    shm_ptr_ = ptr;
+    key_ = key;
+    {{end}}
+
+    {{if (eq .GetTypeName ".delphi.Counter") }}
+    {{.GetName}}_ = make_shared<delphi::metrics::Counter>((uint64_t *)ptr);
+    ptr += delphi::metrics::Counter::Size();
+    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    {{.GetName}}_ = make_shared<delphi::metrics::Gauge>((double *)ptr);
+    ptr += delphi::metrics::Gauge::Size();
+    {{end}}
+    {{end}}
+}
+
+int32_t {{.GetName}}::Size() {
+    int32_t sz = 0;
+
+    // calculate the shared memory size
+    {{$fields := .Fields}}{{range $fields}}
+    {{if not (eq .GetName "Key") }}
+    {{if (eq .GetTypeName ".delphi.Counter") }}
+    sz += delphi::metrics::Counter::Size();
+    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    sz += delphi::metrics::Gauge::Size();
+    {{end}}
+    {{end}}
+    {{end}}
+
+    return sz;
+}
+
+// New{{.GetName}} creates a new metrics instance
+{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+{{if (eq .GetName "Key") }}
+{{ if .TypeIsMessage }}
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key) {
+{{else}}
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{.GetCppTypeName}} key) {
+{{end}} {{end}} {{end}}
+
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{.GetName}}", DEFAULT_METRIC_TBL_SIZE);
+
+    // create an entry in hash table
+    char *shmptr = (char *)tbl->Create((char *)&key, sizeof(key), {{.GetName}}::Size());
+
+    // return an instance of {{.GetName}}
+    return make_shared<{{.GetName}}>(key, shmptr);
+}
+
+// Delete deletes the metric instance
+delphi::error {{.GetName}}::Delete() {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // get the table
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{.GetName}}");
+    assert(tbl != NULL);
+
+    // delete the key
+    return tbl->Delete((char *)&key_, sizeof(key_));
+}
+
+// Iterator returns an iterator for metrics
+{{.GetName}}Iterator {{.GetName}}::Iterator() {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // get the table
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{.GetName}}");
+    assert(tbl != NULL);
+
+    return {{.GetName}}Iterator(tbl->Iterator());
+}
+
+// DebugString prints the contents of the metrics object
+string {{.GetName}}::DebugString() {
+    stringstream outstr;
+    outstr << "{{.GetName}} {" << endl;
+
+    {{$fields := .Fields}}{{range $fields}}
+    {{if (eq .GetName "Key") }}
+	{{ if .TypeIsMessage }}
+	outstr << "    Key: " << key_.DebugString() << endl;
+	{{else}}
+	outstr << "    Key: " << key_ << endl;
+	{{end}}
+    {{else if (eq .GetTypeName ".delphi.Counter") }}
+    outstr << "    {{.GetName}}: " << {{.GetName}}()->Get() << endl;
+    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    outstr << "    {{.GetName}}: " << {{.GetName}}()->Get() << endl;
+    {{end}}
+    {{end}}
+    outstr << "}" << endl;
+
+    return outstr.str();
+}
+
+{{end}}
+{{end}}
 } // namespace objects
 } // namespace delphi
 `
@@ -231,7 +454,8 @@ private: \
 }; \
 DELPHI_SERVICE_TEST(test_name, {{.GetName}}Service);
 
-{{end}} {{end}}
+{{end}}
+{{end}}
 
 `
 )

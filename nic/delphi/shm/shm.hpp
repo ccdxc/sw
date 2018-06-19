@@ -10,6 +10,9 @@
 namespace delphi {
 namespace shm {
 
+#define DELPHI_SHM_NAME  "delphi_shm"
+#define DELPHI_SHM_SIZE (32 * 1024 * 1024)
+
 // DelphiShm class represents a delphi shaed memory region
 class DelphiShm : public enable_shared_from_this<DelphiShm> {
 public:
@@ -19,6 +22,9 @@ public:
     void * Alloc(int size);                 // allocate space from shared memory
     error  Free(void *ptr);                 // free space from shared memory
     void   DumpMeta();                      // dump contents of shm meta
+
+    // IsMapped returns if shared memory is mapped
+    inline bool IsMapped() { return mapped_; };
 
     // GetBase returns the base address of shared memory
     inline uint8_t * GetBase() { return (uint8_t *)shm_meta_; }

@@ -1,4 +1,4 @@
-.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim
+.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim delphi
 
 default: all
 
@@ -132,6 +132,10 @@ tyche:
 
 delphi:
 	bazel build //nic/delphi/...
+
+delphi-test:
+	bazel test //nic/delphi/... --jobs=1 --cache_test_results=no --test_output=all
+	go test -v github.com/pensando/sw/nic/delphi/...
 
 ###########################################################
 #################### UPGRADE Infra ########################

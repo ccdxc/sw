@@ -36,6 +36,20 @@ enum MountMode {
     ReadWriteMode = 2;
 }
 
+// Metrics types
+message Counter {
+    uint64    value = 1;
+}
+
+message Gauge {
+    double    value = 1;
+}
+
+message Histogram {
+    repeated uint64   ranges = 1;
+    repeated uint64   counts = 2;
+}
+
 // Delphi options applied at the message level
 extend google.protobuf.MessageOptions {
     // update_event: if set to true, will generate object level 'update' event
@@ -46,6 +60,9 @@ extend google.protobuf.MessageOptions {
     // singleton: if set to true, object is a singleton (i.e has no key field)
     // only one object of this kind can exist.
     bool singleton = 70001;
+
+    // table_size: will determine the hash table size for metrics entries
+    int32 metrics_table_size = 70002;
 }
 
 // Delphi options applied at the field level

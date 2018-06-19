@@ -12,15 +12,19 @@ class test_name : public testing::Test { \
 protected: \
     pthread_t ev_thread_id = 0; \
     delphi::SdkPtr sdk_; \
+    delphi::shm::DelphiShmPtr srv_shm_; \
     shared_ptr<svc_name> exsvc_; \
 public: \
     virtual void SetUp() { \
         sdk_ = make_shared<delphi::Sdk>(); \
+        srv_shm_ = make_shared<delphi::shm::DelphiShm>(); \
+        delphi::error err = srv_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, true); \
+        assert(err.IsOK()); \
         exsvc_ = make_shared<svc_name>(sdk_); \
         assert(exsvc_ != NULL); \
         sdk_->RegisterService(exsvc_); \
         pthread_create(&ev_thread_id, 0, &StartTestLoop, (void*)&sdk_); \
-        usleep(1000); \
+        usleep(10 * 1000); \
     } \
     virtual void TearDown() { \
         sdk_->Stop(); \

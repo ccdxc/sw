@@ -5,6 +5,7 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/delphi/example/example.delphi.hpp"
+#include "nic/delphi/example/example_stats.hpp"
 
 namespace example {
 
@@ -38,9 +39,10 @@ typedef std::shared_ptr<InterfaceMgr> InterfaceMgrPtr;
 // ExampleService is the service object for this example
 class ExampleService : public delphi::Service, public enable_shared_from_this<ExampleService> {
 private:
-    InterfaceMgrPtr    intfMgr_;
-    delphi::SdkPtr     sdk_;
-    string             svcName_;
+    InterfaceMgrPtr        intf_mgr_;
+    InterfaceStatsMgrPtr   intf_stats_mgr_;
+    delphi::SdkPtr         sdk_;
+    string                 svcName_;
 public:
     // ExampleService constructor
     ExampleService(delphi::SdkPtr sk);

@@ -18,7 +18,7 @@ class KvstoreMgr {
 public:
     KvstoreMgr(int32_t *kvstore_root, DelphiShmPtr shm_ptr);    // constructor
     TableMgrUptr Table(string kind);               // returns the table mgr for a kind
-    TableMgrUptr CreateTable(string kind, int32_t size); // creates a hash table fo specific size
+    TableMgrUptr CreateTable(string kind, int32_t size); // creates a hash table of specific size
     static error Init(int32_t *kvstore_root, DelphiShmPtr shm_ptr);      // initializes the shared memory for kv-store
     void         DumpInfo();                       // prints information about the kvstore
 private:

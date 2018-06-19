@@ -136,6 +136,17 @@ public:
         LogInfo("TestHandler {} OnMountComplete got called\n", service_id);
         inited = true;
     }
+    void QueueObject(int unique_id) {
+        // create an object
+        TestObjectPtr tobj = make_shared<TestObject>("");
+        delphi::ObjectMeta *meta = tobj->mutable_meta();
+        meta->set_kind(tobj->GetDescriptor()->name());
+        tobj->set_testdata1("Test Data");
+        tobj->mutable_key()->set_idx(unique_id);
+
+        // add it to database
+        client->QueueUpdate(tobj);
+    }
     void SendObject(int unique_id) {
         // create an object
         TestObjectPtr tobj = make_shared<TestObject>("");
@@ -235,7 +246,7 @@ TEST_F(DelphiHubTest, BasicServerTest) {
 
     // send one object from each client
     for (int i = 0; i < NUM_CLIENTS; i++) {
-        services[i]->SendObject(i+1);
+        services[i]->QueueObject(i+1);
     }
     usleep(1000 * 100);
 
@@ -274,7 +285,7 @@ TEST_F(DelphiHubTest, BasicServerTest) {
     for (int i = 0; i < NUM_CLIENTS; i++) {
         vector<BaseObjectPtr> objs = clients[i]->ListKind("TestObject");
         for (vector<BaseObjectPtr>::iterator iter=objs.begin(); iter!=objs.end(); ++iter) {
-            ASSERT_EQ(clients[i]->DeleteObject(*iter), error::OK()) << "Error deleting objects";
+            ASSERT_EQ(clients[i]->QueueDelete(*iter), error::OK()) << "Error deleting objects";
         }
     }
     usleep(1000 * 100);

@@ -118,6 +118,7 @@ func TestDelphicTemplateBasic(t *testing.T) {
 	checkForString(t, ret, ".delphi.hpp", "class InterfaceSpec : public BaseObject, public test::InterfaceSpec")
 	checkForString(t, ret, ".delphi.hpp", "virtual delphi::ObjectMeta *GetMeta() {\n        return this->mutable_meta();\n    }")
 	checkForString(t, ret, ".delphi.hpp", "virtual string GetKey() {\n        string out_str;\n        const google::protobuf::FieldDescriptor *fld =  this->GetDescriptor()->FindFieldByName(\"Key\");\n        google::protobuf::TextFormat::PrintFieldValueToString(*this, fld, -1, &out_str);\n        return out_str;\n    }")
+	checkForString(t, ret, ".delphi.hpp", "static inline InterfaceSpecPtr FindObject(SdkPtr sdk, InterfaceSpecPtr objkey) {")
 	checkForString(t, ret, ".delphi.hpp", "virtual error OnInterfaceSpecUpdate(InterfaceSpecPtr obj)")
 	checkForString(t, ret, ".delphi.hpp", "virtual error OnAdminStatus(InterfaceSpecPtr obj)")
 	checkForString(t, ret, ".delphi.cc", "if (this->adminstatus() != exObj->adminstatus()) {")
@@ -221,6 +222,7 @@ func TestDelphicTemplateSingleton(t *testing.T) {
 	checkForString(t, ret, ".delphi.hpp", "class InterfaceSpec : public BaseObject, public test::InterfaceSpec")
 	checkForString(t, ret, ".delphi.hpp", "virtual delphi::ObjectMeta *GetMeta() {\n        return this->mutable_meta();\n    }")
 	checkForString(t, ret, ".delphi.hpp", "virtual string GetKey() {\n        return \"default\";\n    }")
+	checkForString(t, ret, ".delphi.hpp", "static inline InterfaceSpecPtr FindObject(SdkPtr sdk) {")
 	checkStringDoesntExist(t, ret, ".delphi.hpp", "virtual error OnInterfaceSpecUpdate(InterfaceSpecPtr obj)")
 	checkForString(t, ret, ".delphi.hpp", "virtual error OnIfState(InterfaceSpecPtr obj)")
 	checkForString(t, ret, ".delphi.cc", "if (this->ifstate().ShortDebugString() != exObj->ifstate().ShortDebugString()) {")
@@ -394,4 +396,298 @@ func TestDelphicTemplateKeyError(t *testing.T) {
 	Assert(t, (err != nil), "running templates did not return error", err)
 	Assert(t, strings.Contains(err.Error(), "test.proto : InterfaceSpec : Key :  Key field can not be repeated"), "Invalid error msg", err)
 
+}
+
+func TestDelphicMetricsBasic(t *testing.T) {
+
+	opts := google_protobuf.MessageOptions{}
+	proto.SetRawExtension(&opts, 70000, []byte{1, 1})
+
+	fldOpts := google_protobuf.FieldOptions{}
+	proto.SetRawExtension(&fldOpts, 70000, []byte{1, 1})
+
+	// proto definition
+	req := plugin.CodeGeneratorRequest{
+		FileToGenerate: []string{"test.proto"},
+		ProtoFile: []*google_protobuf.FileDescriptorProto{
+			{
+				Name:    proto.String("test.proto"),
+				Package: proto.String("test"),
+				MessageType: []*google_protobuf.DescriptorProto{
+					{
+						Name:    proto.String("InterfaceSpec"),
+						Options: &opts,
+						Field: []*google_protobuf.FieldDescriptorProto{
+							{
+								Name:     proto.String("Meta"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.ObjectMeta"),
+							},
+							{
+								Name:     proto.String("Key"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_INT32.Enum(),
+								TypeName: proto.String(google_protobuf.FieldDescriptorProto_TYPE_INT32.String()),
+							},
+							{
+								Name:     proto.String("AdminStatus"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_STRING.Enum(),
+								TypeName: proto.String(google_protobuf.FieldDescriptorProto_TYPE_STRING.String()),
+								Options:  &fldOpts,
+							},
+						},
+					},
+					{
+						Name: proto.String("InterfaceMetrics"),
+						Field: []*google_protobuf.FieldDescriptorProto{
+							{
+								Name:     proto.String("Key"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_INT32.Enum(),
+								TypeName: proto.String(google_protobuf.FieldDescriptorProto_TYPE_INT32.String()),
+							},
+							{
+								Name:     proto.String("PktCounter"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Counter"),
+							},
+							{
+								Name:     proto.String("PktRate"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Gauge"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	ret, err := runTemplates(&req)
+	AssertOk(t, err, "Error running templates")
+
+	// look for specific strings
+	checkForString(t, ret, ".delphi.hpp", "class InterfaceSpec : public BaseObject, public test::InterfaceSpec")
+	checkForString(t, ret, ".delphi.hpp", "virtual delphi::ObjectMeta *GetMeta() {\n        return this->mutable_meta();\n    }")
+	checkForString(t, ret, ".delphi.hpp", "virtual string GetKey() {\n        string out_str;\n        const google::protobuf::FieldDescriptor *fld =  this->GetDescriptor()->FindFieldByName(\"Key\");\n        google::protobuf::TextFormat::PrintFieldValueToString(*this, fld, -1, &out_str);\n        return out_str;\n    }")
+	checkForString(t, ret, ".delphi.hpp", "static inline InterfaceSpecPtr FindObject(SdkPtr sdk, InterfaceSpecPtr objkey) {")
+	checkForString(t, ret, ".delphi.hpp", "virtual error OnInterfaceSpecUpdate(InterfaceSpecPtr obj)")
+	checkForString(t, ret, ".delphi.hpp", "virtual error OnAdminStatus(InterfaceSpecPtr obj)")
+	checkForString(t, ret, ".delphi.cc", "if (this->adminstatus() != exObj->adminstatus()) {")
+
+	checkForString(t, ret, ".delphi.hpp", "class InterfaceMetrics : public delphi::metrics::DelphiMetrics {")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::CounterPtr   PktCounter_;")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::GaugePtr     PktRate_;")
+	checkForString(t, ret, ".delphi.hpp", "InterfaceMetrics(int32_t key, char *ptr);\n\tInterfaceMetrics(char *kptr, char *vptr) : InterfaceMetrics(*(int32_t *)kptr, vptr){ };")
+	checkForString(t, ret, ".delphi.hpp", "int32_t GetKey() { return key_; }")
+	checkForString(t, ret, ".delphi.hpp", "static InterfaceMetricsPtr  NewInterfaceMetrics(int32_t key);")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::CounterPtr PktCounter() { return PktCounter_; };")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::GaugePtr PktRate() { return PktRate_; };")
+	checkForString(t, ret, ".delphi.hpp", "REGISTER_METRICS(InterfaceMetrics);")
+	checkForString(t, ret, ".delphi.hpp", "class InterfaceMetricsIterator {")
+	checkForString(t, ret, ".delphi.hpp", "explicit InterfaceMetricsIterator(delphi::shm::TableIterator tbl_iter) {")
+	checkForString(t, ret, ".delphi.hpp", "inline InterfaceMetricsPtr Get() {\n         \n\t\t\n\t\tint32_t *key = (int32_t *)tbl_iter_.Key();\n              \n        return make_shared<InterfaceMetrics>(*key, tbl_iter_.Value());\n    }")
+
+	checkForString(t, ret, ".delphi.cc", "InterfaceMetrics::InterfaceMetrics(int32_t key, char *ptr) {")
+	checkForString(t, ret, ".delphi.cc", "PktCounter_ = make_shared<delphi::metrics::Counter>((uint64_t *)ptr);\n    ptr += delphi::metrics::Counter::Size();")
+	checkForString(t, ret, ".delphi.cc", "PktRate_ = make_shared<delphi::metrics::Gauge>((double *)ptr);\n    ptr += delphi::metrics::Gauge::Size();")
+	checkForString(t, ret, ".delphi.cc", "InterfaceMetricsPtr InterfaceMetrics::NewInterfaceMetrics(int32_t key) {")
+
+}
+
+func TestDelphicMetricsKeyType(t *testing.T) {
+
+	// proto definition
+	req := plugin.CodeGeneratorRequest{
+		FileToGenerate: []string{"test.proto"},
+		ProtoFile: []*google_protobuf.FileDescriptorProto{
+			{
+				Name:    proto.String("test.proto"),
+				Package: proto.String("test"),
+				MessageType: []*google_protobuf.DescriptorProto{
+					{
+						Name: proto.String("InterfaceMetrics"),
+						Field: []*google_protobuf.FieldDescriptorProto{
+							{
+								Name:     proto.String("Key"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String("InterfaceIdx"),
+							},
+							{
+								Name:     proto.String("PktCounter"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Counter"),
+							},
+							{
+								Name:     proto.String("PktRate"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Gauge"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	ret, err := runTemplates(&req)
+	AssertOk(t, err, "Error running templates")
+
+	// look for specific strings
+	checkForString(t, ret, ".delphi.hpp", "class InterfaceMetrics : public delphi::metrics::DelphiMetrics {")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::CounterPtr   PktCounter_;")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::GaugePtr     PktRate_;")
+	checkForString(t, ret, ".delphi.hpp", "InterfaceMetrics(test::InterfaceIdx key, char *ptr);\n\tInterfaceMetrics(char *kptr, char *vptr) : InterfaceMetrics(*(test::InterfaceIdx *)kptr, vptr){ };")
+	checkForString(t, ret, ".delphi.hpp", "InterfaceIdx GetKey() { return key_; };")
+	checkForString(t, ret, ".delphi.hpp", "static InterfaceMetricsPtr  NewInterfaceMetrics(test::InterfaceIdx key);")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::CounterPtr PktCounter() { return PktCounter_; };")
+	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::GaugePtr PktRate() { return PktRate_; };")
+	checkForString(t, ret, ".delphi.hpp", "REGISTER_METRICS(InterfaceMetrics);")
+	checkForString(t, ret, ".delphi.hpp", "class InterfaceMetricsIterator {")
+	checkForString(t, ret, ".delphi.hpp", "explicit InterfaceMetricsIterator(delphi::shm::TableIterator tbl_iter) {")
+	checkForString(t, ret, ".delphi.hpp", "inline InterfaceMetricsPtr Get() {\n         \n\t\t\n        test::InterfaceIdx *key = (test::InterfaceIdx *)tbl_iter_.Key();\n\t\t      \n        return make_shared<InterfaceMetrics>(*key, tbl_iter_.Value());\n    }")
+
+	checkForString(t, ret, ".delphi.cc", "InterfaceMetrics::InterfaceMetrics(test::InterfaceIdx key, char *ptr) {")
+	checkForString(t, ret, ".delphi.cc", "PktCounter_ = make_shared<delphi::metrics::Counter>((uint64_t *)ptr);\n    ptr += delphi::metrics::Counter::Size();")
+	checkForString(t, ret, ".delphi.cc", "PktRate_ = make_shared<delphi::metrics::Gauge>((double *)ptr);\n    ptr += delphi::metrics::Gauge::Size();")
+	checkForString(t, ret, ".delphi.cc", "InterfaceMetricsPtr InterfaceMetrics::NewInterfaceMetrics(test::InterfaceIdx key) {")
+
+}
+
+func TestDelphicMetricsError(t *testing.T) {
+	// metrics definition without key
+	req := plugin.CodeGeneratorRequest{
+		FileToGenerate: []string{"test.proto"},
+		ProtoFile: []*google_protobuf.FileDescriptorProto{
+			{
+				Name:    proto.String("test.proto"),
+				Package: proto.String("test"),
+				MessageType: []*google_protobuf.DescriptorProto{
+					{
+						Name: proto.String("InterfaceMetrics"),
+						Field: []*google_protobuf.FieldDescriptorProto{
+							{
+								Name:     proto.String("PktCounter"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Counter"),
+							},
+							{
+								Name:     proto.String("PktRate"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Gauge"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	ret, err := runTemplates(&req)
+	Assert(t, (err != nil), "Metrics without key was accepted", ret)
+	Assert(t, strings.Contains(err.Error(), "metrics does not have Key field"), "incorrect error", err)
+
+	// metrics definition without key
+	req = plugin.CodeGeneratorRequest{
+		FileToGenerate: []string{"test.proto"},
+		ProtoFile: []*google_protobuf.FileDescriptorProto{
+			{
+				Name:    proto.String("test.proto"),
+				Package: proto.String("test"),
+				MessageType: []*google_protobuf.DescriptorProto{
+					{
+						Name: proto.String("InterfaceMetrics"),
+						Field: []*google_protobuf.FieldDescriptorProto{
+							{
+								Name:     proto.String("Key"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Counter"),
+							},
+							{
+								Name:     proto.String("PktCounter"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Counter"),
+							},
+							{
+								Name:     proto.String("PktRate"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Gauge"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	ret, err = runTemplates(&req)
+	Assert(t, (err != nil), "Metrics with invalid key type was accepted", ret)
+	Assert(t, strings.Contains(err.Error(), "Key field type can not be counter or gauge"), "incorrect error", err)
+
+	// metrics with invalid field type
+	req = plugin.CodeGeneratorRequest{
+		FileToGenerate: []string{"test.proto"},
+		ProtoFile: []*google_protobuf.FileDescriptorProto{
+			{
+				Name:    proto.String("test.proto"),
+				Package: proto.String("test"),
+				MessageType: []*google_protobuf.DescriptorProto{
+					{
+						Name: proto.String("InterfaceMetrics"),
+						Field: []*google_protobuf.FieldDescriptorProto{
+							{
+								Name:     proto.String("Key"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_INT32.Enum(),
+								TypeName: proto.String(google_protobuf.FieldDescriptorProto_TYPE_INT32.String()),
+							},
+							{
+								Name:     proto.String("PktCounter"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Invalid"),
+							},
+							{
+								Name:     proto.String("PktRate"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(".delphi.Gauge"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	ret, err = runTemplates(&req)
+	Assert(t, (err != nil), "Metrics with invalid field type accepted", ret)
+	Assert(t, strings.Contains(err.Error(), "Invalid field type for"), "incorrect error", err)
+
+	// metrics with invalid field type
+	req = plugin.CodeGeneratorRequest{
+		FileToGenerate: []string{"test.proto"},
+		ProtoFile: []*google_protobuf.FileDescriptorProto{
+			{
+				Name:    proto.String("test.proto"),
+				Package: proto.String("test"),
+				MessageType: []*google_protobuf.DescriptorProto{
+					{
+						Name: proto.String("InterfaceMetrics"),
+						Field: []*google_protobuf.FieldDescriptorProto{
+							{
+								Name:     proto.String("Key"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_INT32.Enum(),
+								TypeName: proto.String(google_protobuf.FieldDescriptorProto_TYPE_INT32.String()),
+							},
+							{
+								Name:     proto.String("PktCounter"),
+								Type:     google_protobuf.FieldDescriptorProto_TYPE_INT32.Enum(),
+								TypeName: proto.String(google_protobuf.FieldDescriptorProto_TYPE_INT32.String()),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	ret, err = runTemplates(&req)
+	Assert(t, (err != nil), "Metrics with invalid field type accepted", ret)
+	Assert(t, strings.Contains(err.Error(), "Invalid field type for"), "incorrect error", err)
 }
