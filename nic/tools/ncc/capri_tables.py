@@ -453,7 +453,7 @@ class capri_table:
                  self.input_fields))
             violation = True
 
-        assert violation == False, "Fix violations and try again"
+        assert violation == False, pdb.set_trace() #"Fix violations and try again"
         if len(self.key_makers) == 0:
             self.gtm.tm.logger.critical("%s:Problem:%s has no km created for it" % \
                     (self.gtm.d.name, self.p4_table.name))
@@ -2970,6 +2970,8 @@ class capri_key_maker:
         # keep flit components of the combined profile.. these are needed while
         # sharing profiles across tables
         self.flit_km_profiles = OrderedDict() # {fid: profile}
+        # HACK: there is problem in sharing km which has overflow key 
+        self.has_overflow_key = False   # set it when overflow key is added
 
     def _merge(self, rhs, is_overflow_key_merge=False):
         #pdb.set_trace()
@@ -2977,6 +2979,7 @@ class capri_key_maker:
         for ct in rhs.ctables:
             if ct not in self.ctables:
                 self.ctables.append(ct)
+        self.has_overflow_key = rhs.has_overflow_key
         base_table = None
         idx_tbls = [ct for ct in self.ctables if ct.is_index_table()]
         h_tbls = [ct for ct in self.ctables if ct.is_hash_table()]
@@ -3019,6 +3022,7 @@ class capri_key_maker:
             self.combined_profile = capri_km_profile(self.stage.gtm)
 
         # clear existing info
+
         self.combined_profile.i1_byte_sel = []
         self.combined_profile.i2_byte_sel = []
         self.combined_profile.k_byte_sel = []
@@ -3042,14 +3046,15 @@ class capri_key_maker:
                 if len(k_byte_sel):
                     fk_byte = k_byte_sel[0]
 
-                # fk_byte == -1 indicates on k bytes of base table.. it will make all
+                # fk_byte == -1 indicates no k bytes of base table.. it will make all
                 # bytes of shared table as i2
                 for b in self.flit_km_profiles[fid].i1_byte_sel:
-                    if b < fk_byte:
+                    if self.flit_km_profiles[fid].has_overflow_key or b < fk_byte:
                         i1_byte_sel.append(b)
                     else:
                         i2_byte_sel.append(b)
 
+                overflow_k_bytes = []
                 for b in self.flit_km_profiles[fid].k_byte_sel:
                     # pick up k bytes of shared table (non hash/idx)
                     if b in k_byte_sel:
@@ -3058,10 +3063,21 @@ class capri_key_maker:
                         # special case for hash_overflow table k-bytes
                         # keep them as i1 bytes
                         i1_byte_sel.append(b)
+                        self.has_overflow_key = True
+                        overflow_k_bytes.append(b)
                     elif b < fk_byte:
                         i1_byte_sel.append(b)
                     else:
                         i2_byte_sel.append(b)
+
+                # fix the profile used for the overflow key, move overflow key to i1
+                for b in overflow_k_bytes:
+                    self.flit_km_profiles[fid].k_byte_sel.remove(b)
+                    self.flit_km_profiles[fid].i1_byte_sel.append(b)
+                    self.flit_km_profiles[fid].has_overflow_key = True
+                    rhs.flit_km_profiles[fid].has_overflow_key = True
+                    self.stage.gtm.tm.logger.debug("km_merge: move k to i1 fid %d: %d" % \
+                        (fid, b))
 
                 i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
                 self.combined_profile.i1_byte_sel += sorted(i1_byte_sel)
@@ -3259,6 +3275,7 @@ class capri_key_maker:
         new_km.flits_used = copy.copy(self.flits_used)
         new_km.combined_profile = copy.deepcopy(self.combined_profile)
         new_km.flit_km_profiles = copy.deepcopy(self.flit_km_profiles)
+        new_km.has_overflow_key = self.has_overflow_key
         return new_km
 
 class capri_km_profile:
@@ -3279,6 +3296,9 @@ class capri_km_profile:
         self.bit_loc1 = -1    # byte1 reseved for bit extracted values
         self.start_key_off = -1
         self.end_key_off = -1
+
+        # HACK
+        self.has_overflow_key = False
 
     def __add__(self, rhs):
         # should be used on per flit basis
@@ -3400,6 +3420,7 @@ class capri_km_profile:
         new_obj.bit_loc1 = self.bit_loc1    # byte(s) reseved for bit extracted values
         new_obj.start_key_off = self.start_key_off
         new_obj.end_key_off = self.end_key_off
+        new_obj.has_overflow_key = self.has_overflow_key
 
         return new_obj
 
@@ -3590,6 +3611,7 @@ class capri_stage:
         # 1. Tables with the same key
         # 2. Index tables that can fit into same key-makers
         # create a list of tables from allocated key makers in this flit
+
         km_tables = []
         for km in self.km_allocator[fid]:
             if km == None:
@@ -3644,6 +3666,73 @@ class capri_stage:
                         break
                 if km_id_used:
                     continue
+                # HACK: there is problem in sharing km which has overflow key 
+                # once overflow key is added to a key maker, need to check that overflow key 
+                # is not disturbed
+                if km.has_overflow_key or new_km.has_overflow_key:
+                    continue
+
+                '''
+                # following code tries to fine tune the sharing of key-makers.. but it is not
+                # working correctly. Keep it for some time - either fix it soon or get rid of it
+                # when banyon restriction is removed
+                if km.has_overflow_key:
+                    pdb.set_trace()
+                    cannot_share = False
+                    for fid,fkp in km.flit_km_profiles.items():
+                        if not fkp.has_overflow_key or fid not in new_km.flit_km_profiles:
+                            continue
+                        n_fkp = new_km.flit_km_profiles[fid]
+                        if len(n_fkp.byte_sel) == 0:
+                            continue
+                        # XXX don't remeber if bit_sel positions are already added
+                        assert n_fkp.byte_sel[0] > 0, pdb.set_trace()
+                        if kt.is_overflow:
+                            if len(fkp.k_byte_sel) == 0:
+                                continue
+                            if fkp.k_byte_sel[-1] < n_fkp.byte_sel[0]:
+                                continue
+                        else:
+                            if len(fkp.i1_byte_sel) == 0:
+                                continue
+                            if fkp.i1_byte_sel[-1] < n_fkp.byte_sel[0]:
+                                continue
+                        self.gtm.tm.logger.debug("km has overflow key and i1bytes - cannot share")
+                        cannot_share = True
+                        break
+                        
+                    if cannot_share:
+                        continue
+
+                if new_km.has_overflow_key:
+                    pdb.set_trace()
+                    cannot_share = False
+                    for fid,fkp in new_km.flit_km_profiles.items():
+                        if not fkp.has_overflow_key or fid not in km.flit_km_profiles:
+                            continue
+                        n_fkp = km.flit_km_profiles[fid]
+                        if len(n_fkp.byte_sel) == 0:
+                            continue
+                        # XXX don't remeber if bit_sel positions are already added
+                        assert n_fkp.byte_sel[0] > 0, pdb.set_trace()
+                        if ct.is_overflow:
+                            if len(fkp.k_byte_sel) == 0:
+                                continue
+                            if fkp.k_byte_sel[-1] < n_fkp.byte_sel[0]:
+                                continue
+                        else:
+                            if len(fkp.i1_byte_sel) == 0:
+                                continue
+                            if fkp.i1_byte_sel[-1] < n_fkp.byte_sel[0]:
+                                continue
+                        self.gtm.tm.logger.debug("km has overflow key and i1bytes - cannot share")
+                        cannot_share = True
+                        break
+                        
+                    if cannot_share:
+                        continue
+                '''
+
                 u_byte_sel = set(km_profile.byte_sel) | ct_byte_sel
                 # remove the bytes reserved for bit_sel
                 u_byte_sel = u_byte_sel - set([-1])
@@ -5311,6 +5400,7 @@ class capri_gress_tm:
                             continue
                         if k < ct.num_km:
                             _km._merge(ct.key_makers[k], is_overflow_key_merge=True)
+                            ct.key_makers[k].has_overflow_key = True
                             _km.ctables.remove(ct)
                             km = _km.copy_km()
                             km.ctables.append(ct)
