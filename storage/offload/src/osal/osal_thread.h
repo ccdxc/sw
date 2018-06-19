@@ -12,7 +12,7 @@ typedef pthread_t thread_t;
 typedef struct task_struct thread_t;
 #endif
 
-typedef void* (*osal_thread_fn_t)(void *);
+typedef int (*osal_thread_fn_t)(void *);
 typedef struct osal_thread_ {
 	thread_t handle;
 	osal_atomic_int_t running;
@@ -22,7 +22,6 @@ typedef struct osal_thread_ {
 
 int osal_thread_run(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg);
 int osal_thread_stop(osal_thread_t *osal_thread);
-int osal_get_coreid(void);
 
 
 

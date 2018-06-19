@@ -8,6 +8,7 @@
 #include "osal_mem.h"
 #include "osal_thread.h"
 #include "osal_setup.h"
+#include "osal_sys.h"
 
 
 

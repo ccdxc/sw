@@ -25,3 +25,7 @@ int osal_atomic_fetch_sub(osal_atomic_int_t* addr, int val)
 	return atomic_fetch_sub(addr, val);
 }
 
+int osal_atomic_exchange(osal_atomic_int_t* addr, int new_val)
+{
+	return atomic_exchange(addr, new_val);
+}

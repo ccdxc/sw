@@ -369,7 +369,7 @@ void pnso_sim_run_worker_once(struct pnso_sim_worker_ctx *worker_ctx)
 	while (!req->end_of_batch);
 }
 
-void *pnso_sim_run_worker_loop(void *opaque)
+int pnso_sim_run_worker_loop(void *opaque)
 {
 	struct pnso_sim_worker_ctx *worker_ctx = (struct pnso_sim_worker_ctx *) opaque;
 	struct pnso_sim_q *q = worker_ctx->req_q;
@@ -383,7 +383,7 @@ void *pnso_sim_run_worker_loop(void *opaque)
 		pnso_sim_run_worker_once(worker_ctx);
 	}
 
-	return NULL;
+	return 0;
 }
 
 pnso_error_t pnso_sim_start_worker_thread()

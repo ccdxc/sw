@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <assert.h>
 #include "pnso_sim_api.h"
 #include "pnso_sim.h"
 #include "osal_mem.h"
@@ -6,6 +7,7 @@
 #include "osal_atomic.h"
 #include "osal_setup.h"
 #include "osal_log.h"
+#include "osal_sys.h"
 
 #define PNSO_TEST_DATA_SIZE 4*1024
 
@@ -95,7 +97,7 @@ int exec_dc_req(void)
 
 }
 
-void *exec_req(void *arg)
+int exec_req(void *arg)
 {
 	size_t alloc_sz;
 	/* Allocate request and response */
@@ -146,6 +148,41 @@ void *exec_req(void *arg)
 	return 0;
 }
 
+#define MAX_NUM_THREADS 128
+uint8_t thread_id_arr[MAX_NUM_THREADS];
+osal_atomic_int_t thread_done[MAX_NUM_THREADS];
+static int nthreads;
+int thread_test_fn(void* arg) {
+	int core = osal_get_coreid();
+	int id = (int)((uint64_t)arg);
+	thread_id_arr[nthreads++] = core;
+	assert(core == osal_get_coreid());	
+	osal_atomic_set(&thread_done[id], 1);
+	return 0;
+}
+
+int osal_thread_test(void)
+{
+	int done = 0;
+	void *arg = NULL;
+	for(int i = 0; i < MAX_NUM_THREADS; i++) {
+		osal_thread_t ot;
+		arg = (void *)((uint64_t)i);
+		osal_thread_run(&ot, thread_test_fn, arg);
+		do 
+		{
+			done = osal_atomic_read(&thread_done[i]);
+			osal_yield();
+		}while(done != 1);
+		osal_thread_stop(&ot);			
+	}
+	
+	for(int i = 0; i < MAX_NUM_THREADS; i++) {
+		assert(thread_id_arr[i] == i);
+	}
+	return 0;
+}
+
 int body(void)
 {
 	struct pnso_init_params init_params;
@@ -172,6 +209,7 @@ int body(void)
 	} else {
 		osal_log("IO: Final memcmp failed\n");
 	}
+	osal_thread_test();
 	return 0;
 }
 
