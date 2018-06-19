@@ -55,7 +55,7 @@ func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 	}
 
 	// save it in db
-	key := objectKey(np.ObjectMeta, np.TypeMeta)
+	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.NatPoolDB[key] = np
 	na.Unlock()
@@ -74,7 +74,7 @@ func (na *Nagent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) {
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	tn, ok := na.NatPoolDB[key]
 	if !ok {
 		return nil, fmt.Errorf("nat pool not found %v", meta.Name)
@@ -116,7 +116,7 @@ func (na *Nagent) UpdateNatPool(np *netproto.NatPool) error {
 	}
 
 	err = na.Datapath.UpdateNatPool(np, ns)
-	key := objectKey(np.ObjectMeta, np.TypeMeta)
+	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.NatPoolDB[key] = np
 	na.Unlock()
@@ -149,7 +149,7 @@ func (na *Nagent) DeleteNatPool(np *netproto.NatPool) error {
 	}
 
 	// delete from db
-	key := objectKey(np.ObjectMeta, np.TypeMeta)
+	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	delete(na.NatPoolDB, key)
 	na.Unlock()

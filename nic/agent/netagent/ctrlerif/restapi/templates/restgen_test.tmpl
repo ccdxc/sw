@@ -123,7 +123,7 @@ import (
                             {{lower .}}Data := netproto.{{title $crudObject}}{
                                                     TypeMeta: api.TypeMeta{Kind: "Tenant"},
                                                     ObjectMeta : api.ObjectMeta{
-                                                                        Tenant:"test{{title .}}{{title $crudObject}}",
+                                                                        Tenant:"default",
                                                                         Name: "test{{title .}}{{title $crudObject}}",
                                                                         Namespace: "test{{title .}}{{title $crudObject}}",
                                                     },

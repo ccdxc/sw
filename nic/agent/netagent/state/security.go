@@ -101,7 +101,7 @@ func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// save it in db
-	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
+	key := na.Solver.ObjectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
 	na.SecgroupDB[key] = sg
 	na.Unlock()
@@ -138,7 +138,7 @@ func (na *Nagent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGrou
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	sg, ok := na.SecgroupDB[key]
 	if !ok {
 		return nil, errors.New("Security group not found")
@@ -187,7 +187,7 @@ func (na *Nagent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// update it in db
-	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
+	key := na.Solver.ObjectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
 	na.SecgroupDB[key] = sg
 	na.Unlock()
@@ -229,7 +229,7 @@ func (na *Nagent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// delete from db
-	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
+	key := na.Solver.ObjectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
 	delete(na.SecgroupDB, key)
 	na.Unlock()

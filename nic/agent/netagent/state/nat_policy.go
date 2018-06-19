@@ -72,7 +72,7 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// save it in db
-	key := objectKey(np.ObjectMeta, np.TypeMeta)
+	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.NatPolicyDB[key] = np
 	na.Unlock()
@@ -91,7 +91,7 @@ func (na *Nagent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, error
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	np, ok := na.NatPolicyDB[key]
 	if !ok {
 		return nil, fmt.Errorf("nat policy not found %v", meta.Name)
@@ -133,7 +133,7 @@ func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	err = na.Datapath.UpdateNatPolicy(np, ns)
-	key := objectKey(np.ObjectMeta, np.TypeMeta)
+	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.NatPolicyDB[key] = np
 	na.Unlock()
@@ -166,7 +166,7 @@ func (na *Nagent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// delete from db
-	key := objectKey(np.ObjectMeta, np.TypeMeta)
+	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	delete(na.NatPolicyDB, key)
 	na.Unlock()

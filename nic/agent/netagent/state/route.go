@@ -52,7 +52,7 @@ func (na *Nagent) CreateRoute(rt *netproto.Route) error {
 	}
 
 	// save it in db
-	key := objectKey(rt.ObjectMeta, rt.TypeMeta)
+	key := na.Solver.ObjectKey(rt.ObjectMeta, rt.TypeMeta)
 	na.Lock()
 	na.RouteDB[key] = rt
 	na.Unlock()
@@ -87,7 +87,7 @@ func (na *Nagent) FindRoute(meta api.ObjectMeta) (*netproto.Route, error) {
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	rt, ok := na.RouteDB[key]
 	if !ok {
 		return nil, fmt.Errorf("route not found %v", meta.Name)
@@ -116,7 +116,7 @@ func (na *Nagent) UpdateRoute(rt *netproto.Route) error {
 	}
 
 	err = na.Datapath.UpdateRoute(rt, ns)
-	key := objectKey(rt.ObjectMeta, rt.TypeMeta)
+	key := na.Solver.ObjectKey(rt.ObjectMeta, rt.TypeMeta)
 	na.Lock()
 	na.RouteDB[key] = rt
 	na.Unlock()
@@ -151,7 +151,7 @@ func (na *Nagent) DeleteRoute(rt *netproto.Route) error {
 	}
 
 	// delete from db
-	key := objectKey(rt.ObjectMeta, rt.TypeMeta)
+	key := na.Solver.ObjectKey(rt.ObjectMeta, rt.TypeMeta)
 	na.Lock()
 	delete(na.RouteDB, key)
 	na.Unlock()

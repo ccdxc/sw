@@ -93,7 +93,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// save it in db
-	key := objectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
+	key := na.Solver.ObjectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
 	na.Lock()
 	na.IPSecPolicyDB[key] = ipSec
 	na.Unlock()
@@ -112,7 +112,7 @@ func (na *Nagent) FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy, e
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	ipSec, ok := na.IPSecPolicyDB[key]
 	if !ok {
 		return nil, fmt.Errorf("IPSec policy not found %v", meta.Name)
@@ -154,7 +154,7 @@ func (na *Nagent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	err = na.Datapath.UpdateIPSecPolicy(ipSec, ns)
-	key := objectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
+	key := na.Solver.ObjectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
 	na.Lock()
 	na.IPSecPolicyDB[key] = ipSec
 	na.Unlock()
@@ -187,7 +187,7 @@ func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// delete from db
-	key := objectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
+	key := na.Solver.ObjectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
 	na.Lock()
 	delete(na.IPSecPolicyDB, key)
 	na.Unlock()

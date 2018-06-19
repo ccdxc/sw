@@ -54,7 +54,7 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 	}
 
 	// save it in db
-	key := objectKey(tun.ObjectMeta, tun.TypeMeta)
+	key := na.Solver.ObjectKey(tun.ObjectMeta, tun.TypeMeta)
 	na.Lock()
 	na.TunnelDB[key] = tun
 	na.Unlock()
@@ -89,7 +89,7 @@ func (na *Nagent) FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error) {
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	tun, ok := na.TunnelDB[key]
 	if !ok {
 		return nil, fmt.Errorf("tunnel not found %v", meta.Name)
@@ -118,7 +118,7 @@ func (na *Nagent) UpdateTunnel(tun *netproto.Tunnel) error {
 	}
 
 	err = na.Datapath.UpdateTunnel(tun, ns)
-	key := objectKey(tun.ObjectMeta, tun.TypeMeta)
+	key := na.Solver.ObjectKey(tun.ObjectMeta, tun.TypeMeta)
 	na.Lock()
 	na.TunnelDB[key] = tun
 	na.Unlock()
@@ -153,7 +153,7 @@ func (na *Nagent) DeleteTunnel(tun *netproto.Tunnel) error {
 	}
 
 	// delete from db
-	key := objectKey(tun.ObjectMeta, tun.TypeMeta)
+	key := na.Solver.ObjectKey(tun.ObjectMeta, tun.TypeMeta)
 	na.Lock()
 	delete(na.TunnelDB, key)
 	na.Unlock()

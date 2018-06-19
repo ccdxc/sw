@@ -61,7 +61,7 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	}
 
 	// save it in db
-	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
+	key := na.Solver.ObjectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	na.NetworkDB[key] = nt
 	na.Unlock()
@@ -96,7 +96,7 @@ func (na *Nagent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	nt, ok := na.NetworkDB[key]
 	if !ok {
 		return nil, fmt.Errorf("network not found %v", meta.Name)
@@ -125,7 +125,7 @@ func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 	}
 
 	err = na.Datapath.UpdateNetwork(nt, ns)
-	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
+	key := na.Solver.ObjectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	na.NetworkDB[key] = nt
 	na.Unlock()
@@ -163,7 +163,7 @@ func (na *Nagent) DeleteNetwork(nt *netproto.Network) error {
 	}
 
 	// delete from db
-	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
+	key := na.Solver.ObjectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	delete(na.NetworkDB, key)
 	na.Unlock()

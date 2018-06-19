@@ -20,9 +20,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "testTenant",
-			Namespace: "default",
-			Name:      "testTenant",
+			Name: "testTenant",
 		},
 	}
 
@@ -43,13 +41,13 @@ func TestTenantCreateDelete(t *testing.T) {
 
 	// delete the network and verify its gone from db
 	err = ag.DeleteTenant(&tn)
-	AssertOk(t, err, "Error deleting network")
+	AssertOk(t, err, "Error deleting tenant")
 	_, err = ag.FindTenant(tn.Name)
 	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
 	err = ag.DeleteTenant(&tn)
-	Assert(t, err != nil, "deleting non-existing network succeeded", ag)
+	Assert(t, err != nil, "deleting non-existing tenant succeeded", ag)
 }
 
 func TestTenantUpdate(t *testing.T) {

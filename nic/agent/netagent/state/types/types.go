@@ -5,7 +5,10 @@ package types
 import (
 	"sync"
 
+	"fmt"
+
 	"github.com/pensando/sw/api"
+	//"encoding/json"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
@@ -35,6 +38,22 @@ type IntfInfo struct {
 	SwitchIntfName    string // Name of switch side of the interface
 }
 
+// ErrCannotDelete is returned when a delete on an object having dependent objects is attempted.
+type ErrCannotDelete struct {
+	//Message string `json:"message,omitempty"`
+	References []string `json:"references,omitempty"`
+}
+
+func (e *ErrCannotDelete) Error() (err string) {
+	if len(e.References) > 0 {
+		//e.Message = fmt.Sprintf("cannot delete an object that has pending references.")
+		//b, _ := json.Marshal(e)
+		err = fmt.Sprintf("cannot delete an object that has pending references.")
+		return
+	}
+	return
+}
+
 // NatPoolRef keeps the mapping between a natpool ID and its corresponding NamespaceID.
 // We need this to build a look up table between the natpool name and its refs which can be in non local namespaces
 type NatPoolRef struct {
@@ -49,6 +68,14 @@ type IPSecRuleRef struct {
 	RuleID      uint64
 }
 
+// DepSolver is a netagent state object dependency solver
+type DepSolver interface {
+	ObjectKey(o api.ObjectMeta, t api.TypeMeta) string        // ObjectKey generates an the lookup key for an object. tenant|name for tenants, namespace|tenant|name for namespaces and kind|tenant|namespace|name for all other objects
+	Add(parent interface{}, children ...interface{}) error    // Adds the parent to children dependencies.
+	Remove(parent interface{}, children ...interface{}) error // Removes the parent to children dependencies
+	Solve(o interface{}) error                                // Checks if an object o has an pending dependencies. Will return ErrCannotDelete if there are pending dependencies
+}
+
 // NetAgent is the network agent instance
 type NetAgent struct {
 	sync.Mutex                                           // global lock for the agent
@@ -56,6 +83,7 @@ type NetAgent struct {
 	NodeUUID         string                              // Node's UUID
 	Datapath         NetDatapathAPI                      // network datapath
 	Ctrlerif         CtrlerAPI                           // controller object
+	Solver           DepSolver                           // Object dependency resolver
 	NetworkDB        map[string]*netproto.Network        // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
 	EndpointDB       map[string]*netproto.Endpoint       // Endpoint object db
 	SecgroupDB       map[string]*netproto.SecurityGroup  // security group object db

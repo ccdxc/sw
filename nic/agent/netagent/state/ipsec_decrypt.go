@@ -69,7 +69,7 @@ func (na *Nagent) CreateIPSecSADecrypt(ipSecSADecrypt *netproto.IPSecSADecrypt) 
 	}
 
 	// save it in db
-	key := objectKey(ipSecSADecrypt.ObjectMeta, ipSecSADecrypt.TypeMeta)
+	key := na.Solver.ObjectKey(ipSecSADecrypt.ObjectMeta, ipSecSADecrypt.TypeMeta)
 	na.Lock()
 	na.IPSecSADecryptDB[key] = ipSecSADecrypt
 	na.Unlock()
@@ -88,7 +88,7 @@ func (na *Nagent) FindIPSecSADecrypt(meta api.ObjectMeta) (*netproto.IPSecSADecr
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	ipSecDecryptSA, ok := na.IPSecSADecryptDB[key]
 	if !ok {
 		return nil, fmt.Errorf("IPSec decrypt SA not found %v", meta.Name)
@@ -130,7 +130,7 @@ func (na *Nagent) UpdateIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt) 
 	}
 
 	err = na.Datapath.UpdateIPSecSADecrypt(ipSecDecryptSA, ns)
-	key := objectKey(ipSecDecryptSA.ObjectMeta, ipSecDecryptSA.TypeMeta)
+	key := na.Solver.ObjectKey(ipSecDecryptSA.ObjectMeta, ipSecDecryptSA.TypeMeta)
 	na.Lock()
 	na.IPSecSADecryptDB[key] = ipSecDecryptSA
 	na.Unlock()
@@ -163,7 +163,7 @@ func (na *Nagent) DeleteIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt) 
 	}
 
 	// delete from db
-	key := objectKey(ipSecDecryptSA.ObjectMeta, ipSecDecryptSA.TypeMeta)
+	key := na.Solver.ObjectKey(ipSecDecryptSA.ObjectMeta, ipSecDecryptSA.TypeMeta)
 	na.Lock()
 	delete(na.IPSecSADecryptDB, key)
 	na.Unlock()

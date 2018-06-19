@@ -4,13 +4,13 @@ package state
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	gogoproto "github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	config "github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/netagent/state/dependencies"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
@@ -112,18 +112,6 @@ func (na *Nagent) Stop() error {
 	return na.Store.Close()
 }
 
-// objectKey returns object key from object meta
-func objectKey(meta api.ObjectMeta, T api.TypeMeta) string {
-	switch strings.ToLower(T.Kind) {
-	case "tenant":
-		return fmt.Sprintf("%s", meta.Name)
-	case "namespace":
-		return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
-	default:
-		return fmt.Sprintf("%s|%s|%s", meta.Tenant, meta.Namespace, meta.Name)
-	}
-}
-
 // GetAgentID returns UUID of the agent
 func (na *Nagent) GetAgentID() string {
 	return na.NodeUUID
@@ -198,5 +186,5 @@ func (na *Nagent) init(emdb emstore.Emstore, nodeUUID string, dp types.NetDatapa
 	na.IPSecPolicyLUT = make(map[string]*types.IPSecRuleRef)
 	na.SGPolicyDB = make(map[string]*netproto.SGPolicy)
 	na.TunnelDB = make(map[string]*netproto.Tunnel)
-
+	na.Solver = dependencies.NewDepSolver()
 }

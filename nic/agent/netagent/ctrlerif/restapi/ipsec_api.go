@@ -18,6 +18,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
+	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
@@ -60,10 +61,12 @@ func (s *RestServer) postIPSecPolicyHandler(r *http.Request) (interface{}, error
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -87,10 +90,12 @@ func (s *RestServer) putIPSecPolicyHandler(r *http.Request) (interface{}, error)
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -110,10 +115,17 @@ func (s *RestServer) deleteIPSecPolicyHandler(r *http.Request) (interface{}, err
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
-		return res, err
+
+		// check if its a cannot delete type err
+		delErr, ok := err.(*agentTypes.ErrCannotDelete)
+		if ok {
+			res.References = delErr.References
+			return res, err
+		}
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -158,10 +170,12 @@ func (s *RestServer) postIPSecSADecryptHandler(r *http.Request) (interface{}, er
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -185,10 +199,12 @@ func (s *RestServer) putIPSecSADecryptHandler(r *http.Request) (interface{}, err
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -208,10 +224,17 @@ func (s *RestServer) deleteIPSecSADecryptHandler(r *http.Request) (interface{}, 
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
-		return res, err
+
+		// check if its a cannot delete type err
+		delErr, ok := err.(*agentTypes.ErrCannotDelete)
+		if ok {
+			res.References = delErr.References
+			return res, err
+		}
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -256,10 +279,12 @@ func (s *RestServer) postIPSecSAEncryptHandler(r *http.Request) (interface{}, er
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -283,10 +308,12 @@ func (s *RestServer) putIPSecSAEncryptHandler(r *http.Request) (interface{}, err
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -306,10 +333,17 @@ func (s *RestServer) deleteIPSecSAEncryptHandler(r *http.Request) (interface{}, 
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
-		return res, err
+
+		// check if its a cannot delete type err
+		delErr, ok := err.(*agentTypes.ErrCannotDelete)
+		if ok {
+			res.References = delErr.References
+			return res, err
+		}
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err

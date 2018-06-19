@@ -64,7 +64,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 	if err != nil {
 		return nil, err
 	}
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
+	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
 	oldEp, ok := na.EndpointDB[key]
 	na.Unlock()
@@ -164,7 +164,7 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		return err
 	}
 	// check if the endpoint already exists and convert it to an update
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
+	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
 	oldEp, ok := na.EndpointDB[key]
 	na.Unlock()
@@ -239,7 +239,7 @@ func (na *Nagent) DeleteEndpoint(ep *netproto.Endpoint) error {
 		return err
 	}
 	// check if we have the endpoint
-	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
+	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
 	ep, ok := na.EndpointDB[key]
 	na.Unlock()

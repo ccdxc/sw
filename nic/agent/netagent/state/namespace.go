@@ -39,6 +39,19 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 		return err
 	}
 
+	tn, err := na.FindTenant(ns.Tenant)
+	if err != nil {
+		log.Errorf("Could not find the tenant %v for namespace %v. Err: %v", ns.Tenant, ns.Name, err)
+		return err
+	}
+
+	// Add a dependency
+	err = na.Solver.Add(tn, ns)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", tn, ns)
+		return err
+	}
+
 	// create it in datapath
 	err = na.Datapath.CreateVrf(ns.Status.NamespaceID, ns.Spec.NamespaceType)
 	if err != nil {
@@ -47,7 +60,7 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 	}
 
 	// save it in db
-	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
+	key := na.Solver.ObjectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
 	na.NamespaceDB[key] = ns
 	na.Unlock()
@@ -76,7 +89,7 @@ func (na *Nagent) FindNamespace(tenant, namespace string) (*netproto.Namespace, 
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, nsTypeMeta)
+	key := na.Solver.ObjectKey(meta, nsTypeMeta)
 	ns, ok := na.NamespaceDB[key]
 	if !ok {
 		return nil, fmt.Errorf("namespace not found %v", namespace)
@@ -113,7 +126,7 @@ func (na *Nagent) UpdateNamespace(ns *netproto.Namespace) error {
 	}
 
 	err = na.Datapath.UpdateVrf(ns.Status.NamespaceID)
-	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
+	key := na.Solver.ObjectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
 	na.NamespaceDB[key] = ns
 	na.Unlock()
@@ -133,14 +146,31 @@ func (na *Nagent) DeleteNamespace(ns *netproto.Namespace) error {
 		return errors.New("namespace not found")
 	}
 
-	// delete it in the datapath
+	// check if the current namespace has any objects referring to it
+	err = na.Solver.Solve(existingNamespace)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingNamespace.Name, err)
+		return err
+
+	}
+
+	// clear for deletion. delete it in the datapath
 	err = na.Datapath.DeleteVrf(existingNamespace.Status.NamespaceID)
 	if err != nil {
 		log.Errorf("Error deleting namespace {%+v}. Err: %v", ns, err)
+		return err
+	}
+
+	// update the parent references.
+	tn, _ := na.FindTenant(existingNamespace.Tenant)
+	err = na.Solver.Remove(tn, existingNamespace)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the tenant: %v. Err: %v", existingNamespace.Tenant, err)
+		return err
 	}
 
 	// delete from db
-	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
+	key := na.Solver.ObjectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
 	delete(na.NamespaceDB, key)
 	na.Unlock()

@@ -82,7 +82,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 	}
 
 	// save it in db
-	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
+	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	na.EnicDB[key] = intf
 	na.Unlock()
@@ -102,7 +102,7 @@ func (na *Nagent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, error
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	tn, ok := na.EnicDB[key]
 	if !ok {
 		return nil, fmt.Errorf("interface not found %v", meta.Name)
@@ -145,7 +145,7 @@ func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 	}
 
 	err = na.Datapath.UpdateInterface(intf, ns)
-	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
+	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	na.EnicDB[key] = intf
 	na.Unlock()
@@ -178,7 +178,7 @@ func (na *Nagent) DeleteInterface(intf *netproto.Interface) error {
 	}
 
 	// delete from db
-	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
+	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	delete(na.EnicDB, key)
 	na.Unlock()
@@ -213,7 +213,7 @@ func (na *Nagent) GetHwInterfaces() error {
 				InterfaceID: lif.Spec.KeyOrHandle.GetLifId(),
 			},
 		}
-		key := objectKey(l.ObjectMeta, l.TypeMeta)
+		key := na.Solver.ObjectKey(l.ObjectMeta, l.TypeMeta)
 		na.Lock()
 		na.HwIfDB[key] = l
 		na.Unlock()
@@ -237,7 +237,7 @@ func (na *Nagent) GetHwInterfaces() error {
 				InterfaceID: uplink.Spec.KeyOrHandle.GetInterfaceId(),
 			},
 		}
-		key := objectKey(u.ObjectMeta, u.TypeMeta)
+		key := na.Solver.ObjectKey(u.ObjectMeta, u.TypeMeta)
 		na.Lock()
 		na.HwIfDB[key] = u
 		na.Unlock()
@@ -256,7 +256,7 @@ func (na *Nagent) findIntfByName(intfName string) (intf *netproto.Interface, ok 
 	typeMeta := api.TypeMeta{
 		Kind: "Interface",
 	}
-	key := objectKey(lifMeta, typeMeta)
+	key := na.Solver.ObjectKey(lifMeta, typeMeta)
 	na.Lock()
 	intf, ok = na.HwIfDB[key]
 	na.Unlock()

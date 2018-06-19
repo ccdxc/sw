@@ -68,7 +68,7 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// save it in db
-	key := objectKey(nb.ObjectMeta, nb.TypeMeta)
+	key := na.Solver.ObjectKey(nb.ObjectMeta, nb.TypeMeta)
 	na.Lock()
 	na.NatBindingDB[key] = nb
 	na.Unlock()
@@ -87,7 +87,7 @@ func (na *Nagent) FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, err
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	nb, ok := na.NatBindingDB[key]
 	if !ok {
 		return nil, fmt.Errorf("nat binding not found %v", nb)
@@ -129,7 +129,7 @@ func (na *Nagent) UpdateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	err = na.Datapath.UpdateNatBinding(nb, ns)
-	key := objectKey(nb.ObjectMeta, nb.TypeMeta)
+	key := na.Solver.ObjectKey(nb.ObjectMeta, nb.TypeMeta)
 	na.Lock()
 	na.NatBindingDB[key] = nb
 	na.Unlock()
@@ -162,7 +162,7 @@ func (na *Nagent) DeleteNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// delete from db
-	key := objectKey(nb.ObjectMeta, nb.TypeMeta)
+	key := na.Solver.ObjectKey(nb.ObjectMeta, nb.TypeMeta)
 	na.Lock()
 	delete(na.NatBindingDB, key)
 	na.Unlock()

@@ -49,7 +49,7 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 	}
 
 	// save it in db
-	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
+	key := na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	na.TenantDB[key] = tn
 	na.Unlock()
@@ -90,7 +90,7 @@ func (na *Nagent) FindTenant(tenant string) (*netproto.Tenant, error) {
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	tn, ok := na.TenantDB[key]
 	if !ok {
 		return nil, fmt.Errorf("tenant not found %v", tn)
@@ -127,7 +127,7 @@ func (na *Nagent) UpdateTenant(tn *netproto.Tenant) error {
 	}
 
 	err = na.Datapath.UpdateVrf(tn.Status.TenantID)
-	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
+	key := na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	na.TenantDB[key] = tn
 	na.Unlock()
@@ -141,6 +141,12 @@ func (na *Nagent) DeleteTenant(tn *netproto.Tenant) error {
 		return errors.New("default tenants can not be deleted")
 	}
 
+	existingTenant, err := na.FindTenant(tn.ObjectMeta.Name)
+	if err != nil {
+		log.Errorf("Tenant %+v not found", tn.ObjectMeta)
+		return errors.New("tenant not found")
+	}
+
 	// delete the default namespace under the tenant first
 	// Create a default namespace for every tenant
 	defaultNS := &netproto.Namespace{
@@ -150,27 +156,50 @@ func (na *Nagent) DeleteTenant(tn *netproto.Tenant) error {
 			Name:   "default",
 		},
 	}
-	// ignore error if the default namespace under non-default tenant is already deleted
-	na.DeleteNamespace(defaultNS)
 
-	existingTenant, err := na.FindTenant(tn.ObjectMeta.Name)
-	if err != nil {
-		log.Errorf("Tenant %+v not found", tn.ObjectMeta)
-		return errors.New("tenant not found")
+	// check if the current tenant has any objects referring to it
+	err = na.Solver.Solve(existingTenant)
+
+	// err is non nil even for default namespaces under the tenant. In such case, we
+	// ignore the err as the default ns will be automatically deleted on a tenant delete.
+	delErr := checkForDefaultNS(err, existingTenant.Name)
+
+	if delErr != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingTenant.Name, err)
+		return err
 	}
 
-	// delete it in the datapath
+	err = na.DeleteNamespace(defaultNS)
+	if err != nil {
+		log.Errorf("Failed to delete default namespace under %v tenant. Err: %v", existingTenant.Name)
+		return err
+	}
+
+	// clear for deletion, call datapath delete
 	err = na.Datapath.DeleteVrf(existingTenant.Status.TenantID)
 	if err != nil {
 		log.Errorf("Error deleting tenant {%+v}. Err: %v", tn, err)
+		return err
 	}
 
 	// delete from db
-	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
+	key := na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	delete(na.TenantDB, key)
 	na.Unlock()
 	err = na.Store.Delete(tn)
 
+	return err
+}
+
+func checkForDefaultNS(err error, tenantName string) error {
+	delErr, ok := err.(*types.ErrCannotDelete)
+	defaultNS := fmt.Sprintf("/api/namespaces/%v/default", tenantName)
+	// check if the err is of type ErrCannotDelete, has just the default ns dependency
+	if ok && len(delErr.References) == 1 && delErr.References[0] == defaultNS {
+		// benign error, can be ignored
+		return nil
+	}
+	// return the unmodified error
 	return err
 }

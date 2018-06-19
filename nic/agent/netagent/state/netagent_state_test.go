@@ -5,6 +5,9 @@ package state
 import (
 	"testing"
 
+	"fmt"
+	"strings"
+
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -15,7 +18,7 @@ type mockCtrler struct {
 }
 
 func (ctrler *mockCtrler) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
+	key := fmt.Sprintf("endpoint|%v|%v|%v", strings.ToLower(epinfo.Tenant), strings.ToLower(epinfo.Namespace), strings.ToLower(epinfo.Name))
 	ctrler.epdb[key] = epinfo
 	return epinfo, nil
 }
@@ -25,7 +28,7 @@ func (ctrler *mockCtrler) EndpointAgeoutNotif(epinfo *netproto.Endpoint) error {
 }
 
 func (ctrler *mockCtrler) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
+	key := fmt.Sprintf("endpoint|%v|%v|%v", strings.ToLower(epinfo.Tenant), strings.ToLower(epinfo.Namespace), strings.ToLower(epinfo.Name))
 	delete(ctrler.epdb, key)
 	return epinfo, nil
 }

@@ -74,7 +74,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// save it in db
-	key := objectKey(sgp.ObjectMeta, sgp.TypeMeta)
+	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
 	na.SGPolicyDB[key] = sgp
 	na.Unlock()
@@ -93,7 +93,7 @@ func (na *Nagent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) 
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta, typeMeta)
+	key := na.Solver.ObjectKey(meta, typeMeta)
 	sgp, ok := na.SGPolicyDB[key]
 	if !ok {
 		return nil, fmt.Errorf("security group policy not found %v", meta.Name)
@@ -135,7 +135,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID)
-	key := objectKey(sgp.ObjectMeta, sgp.TypeMeta)
+	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
 	na.SGPolicyDB[key] = sgp
 	na.Unlock()
@@ -169,7 +169,7 @@ func (na *Nagent) DeleteSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// delete from db
-	key := objectKey(sgp.ObjectMeta, sgp.TypeMeta)
+	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
 	delete(na.SGPolicyDB, key)
 	na.Unlock()

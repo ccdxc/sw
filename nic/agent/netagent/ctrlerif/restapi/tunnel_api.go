@@ -18,6 +18,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
+	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
@@ -60,10 +61,12 @@ func (s *RestServer) postTunnelHandler(r *http.Request) (interface{}, error) {
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -83,10 +86,17 @@ func (s *RestServer) deleteTunnelHandler(r *http.Request) (interface{}, error) {
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
-		return res, err
+
+		// check if its a cannot delete type err
+		delErr, ok := err.(*agentTypes.ErrCannotDelete)
+		if ok {
+			res.References = delErr.References
+			return res, err
+		}
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -110,10 +120,12 @@ func (s *RestServer) putTunnelHandler(r *http.Request) (interface{}, error) {
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
+
 		return res, err
+
 	}
 
-	res.SelfLink = r.RequestURI
+	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err

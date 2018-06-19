@@ -44,7 +44,7 @@ func TestNamespacePost(t *testing.T) {
 	postData := netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "testPostNamespace",
+			Tenant:    "default",
 			Name:      "testPostNamespace",
 			Namespace: "testPostNamespace",
 		},

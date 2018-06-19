@@ -9,6 +9,7 @@ import (
     "github.com/gorilla/mux"
     "github.com/pensando/sw/api"
     "github.com/gogo/protobuf/types"
+    agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
 )
 {{range .Services}}
     {{$svcname := .Name}}
@@ -74,18 +75,27 @@ import (
                         if err != nil {
                           res.StatusCode = http.StatusInternalServerError
                           res.Error = err.Error()
-                          return res, err
+                          {{if strEq . "delete"}}
+                          // check if its a cannot delete type err
+                          delErr , ok := err.(*agentTypes.ErrCannotDelete)
+                          if ok {
+                            res.References = delErr.References
+                            return res, err
+                          }
+                          {{else}}
+                            return res, err
+                          {{end}}
                         }
                         {{if strEq . "post"}}
                           {{if strEq $crudObject "Tenant"}}
-                            res.SelfLink = fmt.Sprintf("%s%s",r.RequestURI, o.Name)
+                            res.References = []string{fmt.Sprintf("%s%s",r.RequestURI, o.Name)}
                           {{else if strEq $crudObject "Namespace"}}
-                            res.SelfLink = fmt.Sprintf("%s%s/%s",r.RequestURI, o.Tenant, o.Name)
+                            res.References = []string{fmt.Sprintf("%s%s/%s",r.RequestURI, o.Tenant, o.Name)}
                           {{else}}
-                            res.SelfLink = fmt.Sprintf("%s%s/%s/%s",r.RequestURI, o.Tenant, o.Namespace, o.Name)
+                            res.References = []string{fmt.Sprintf("%s%s/%s/%s",r.RequestURI, o.Tenant, o.Namespace, o.Name)}
                           {{end}}
                         {{else}}
-                          res.SelfLink = r.RequestURI
+                          res.References = []string{r.RequestURI}
                         {{end}}
                         res.StatusCode = http.StatusOK
                         return res, err

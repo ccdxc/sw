@@ -44,7 +44,7 @@ func TestTenantPost(t *testing.T) {
 	postData := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "testPostTenant",
+			Tenant:    "default",
 			Name:      "testPostTenant",
 			Namespace: "testPostTenant",
 		},
