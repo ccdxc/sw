@@ -30,15 +30,15 @@ int ionic_debugfs_add_ident(struct ionic *ionic);
 int ionic_debugfs_add_sizes(struct ionic *ionic);
 int ionic_debugfs_add_lif(struct lif *lif);
 #else
-void ionic_debugfs_create(void) { }
-void ionic_debugfs_destroy(void) { }
-int ionic_debugfs_add_dev(struct ionic *ionic) { return 0; }
-void ionic_debugfs_del_dev(struct ionic *ionic) { }
-int ionic_debugfs_add_bars(struct ionic *ionic) { return 0; }
-int ionic_debugfs_add_dev_cmd(struct ionic *ionic) { return 0; }
-int ionic_debugfs_add_ident(struct ionic *ionic) { return 0; }
-int ionic_debugfs_add_sizes(struct ionic *ionic) { return 0; }
-int ionic_debugfs_add_lif(struct lif *lif) { return 0; }
+static inline void ionic_debugfs_create(void) { }
+static inline void ionic_debugfs_destroy(void) { }
+static inline int ionic_debugfs_add_dev(struct ionic *ionic) { return 0; }
+static inline void ionic_debugfs_del_dev(struct ionic *ionic) { }
+static inline int ionic_debugfs_add_bars(struct ionic *ionic) { return 0; }
+static inline int ionic_debugfs_add_dev_cmd(struct ionic *ionic) { return 0; }
+static inline int ionic_debugfs_add_ident(struct ionic *ionic) { return 0; }
+static inline int ionic_debugfs_add_sizes(struct ionic *ionic) { return 0; }
+static inline int ionic_debugfs_add_lif(struct lif *lif) { return 0; }
 #endif
 
 #endif /* _IONIC_DEBUGFS_H_ */
