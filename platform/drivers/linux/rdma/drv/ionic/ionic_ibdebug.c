@@ -135,10 +135,12 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	dev->debug_qp = NULL;
 	dev->debug_srq = NULL;
 
-	if (!parent)
+	if (IS_ERR_OR_NULL(parent))
 		return;
 
 	dev->debug = debugfs_create_dir("rdma", parent);
+	if (IS_ERR(dev->debug))
+		dev->debug = NULL;
 	if (!dev->debug)
 		return;
 
@@ -146,14 +148,40 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 			    &ionic_dev_info_fops);
 
 	dev->debug_ah = debugfs_create_dir("ah", dev->debug);
+	if (IS_ERR(dev->debug_ah))
+		dev->debug_ah = NULL;
+
 	dev->debug_aq = debugfs_create_dir("aq", dev->debug);
+	if (IS_ERR(dev->debug_aq))
+		dev->debug_aq = NULL;
+
 	dev->debug_cq = debugfs_create_dir("cq", dev->debug);
+	if (IS_ERR(dev->debug_cq))
+		dev->debug_cq = NULL;
+
 	dev->debug_eq = debugfs_create_dir("eq", dev->debug);
+	if (IS_ERR(dev->debug_eq))
+		dev->debug_eq = NULL;
+
 	dev->debug_mr = debugfs_create_dir("mr", dev->debug);
+	if (IS_ERR(dev->debug_mr))
+		dev->debug_mr = NULL;
+
 	dev->debug_mw = debugfs_create_dir("mw", dev->debug);
+	if (IS_ERR(dev->debug_mw))
+		dev->debug_mw = NULL;
+
 	dev->debug_pd = debugfs_create_dir("pd", dev->debug);
+	if (IS_ERR(dev->debug_pd))
+		dev->debug_pd = NULL;
+
 	dev->debug_qp = debugfs_create_dir("qp", dev->debug);
+	if (IS_ERR(dev->debug_qp))
+		dev->debug_qp = NULL;
+
 	dev->debug_srq = debugfs_create_dir("srq", dev->debug);
+	if (IS_ERR(dev->debug_srq))
+		dev->debug_srq = NULL;
 }
 
 void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev)
@@ -235,6 +263,8 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 	snprintf(name, sizeof(name), "%u", eq->vec);
 
 	eq->debug = debugfs_create_dir(name, dev->debug_eq);
+	if (IS_ERR(eq->debug))
+		eq->debug = NULL;
 	if (!eq->debug)
 		return;
 
@@ -311,6 +341,8 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 	snprintf(name, sizeof(name), "%u", mr->ibmr.lkey);
 
 	mr->debug = debugfs_create_dir(name, dev->debug_mr);
+	if (IS_ERR(mr->debug))
+		mr->debug = NULL;
 	if (!mr->debug)
 		return;
 
@@ -416,6 +448,8 @@ void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	snprintf(name, sizeof(name), "%u", cq->cqid);
 
 	cq->debug = debugfs_create_dir(name, dev->debug_cq);
+	if (IS_ERR(cq->debug))
+		cq->debug = NULL;
 	if (!cq->debug)
 		return;
 
@@ -497,6 +531,8 @@ void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 	snprintf(name, sizeof(name), "%u", aq->aqid);
 
 	aq->debug = debugfs_create_dir(name, dev->debug_aq);
+	if (IS_ERR(aq->debug))
+		aq->debug = NULL;
 	if (!aq->debug)
 		return;
 
@@ -656,6 +692,8 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	snprintf(name, sizeof(name), "%u", qp->qpid);
 
 	qp->debug = debugfs_create_dir(name, dev->debug_qp);
+	if (IS_ERR(qp->debug))
+		qp->debug = NULL;
 	if (!qp->debug)
 		return;
 
