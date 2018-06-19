@@ -111,22 +111,22 @@ func (ctx *upgapprespctx) invokeAgentHandler(obj *upgrade.UpgAppResp) {
 }
 
 func (ctx *upgapprespctx) OnUpgAppRespCreate(obj *upgrade.UpgAppResp) {
-	log.Infof("OnUpgAppRespCreate called %d\n", obj.GetUpgAppRespVal())
+	log.Infof("OnUpgAppRespCreate called %d", obj.GetUpgAppRespVal())
 	ctx.invokeAgentHandler(obj)
 }
 
 func (ctx *upgapprespctx) OnUpgAppRespUpdate(obj *upgrade.UpgAppResp) {
-	log.Infof("======OnUpgAppRespUpdate called %d\n", obj.GetUpgAppRespVal())
+	log.Infof("OnUpgAppRespUpdate called %d", obj.GetUpgAppRespVal())
 	ctx.invokeAgentHandler(obj)
 }
 
 func (ctx *upgapprespctx) OnUpgAppRespDelete(obj *upgrade.UpgAppResp) {
-	log.Infof("OnUpgAppRespDelete called %d\n", obj.GetUpgAppRespVal())
+	log.Infof("OnUpgAppRespDelete called %d", obj.GetUpgAppRespVal())
 }
 
-//UpgAppRespInit init resp subtree coming from upgrade applications
-func UpgAppRespInit(client gosdk.Client, hdlrs AgentHandlers) {
-	log.Infof("UpgAppRespInit called\n")
+//upgAppRespInit init resp subtree coming from upgrade applications
+func upgAppRespInit(client gosdk.Client, hdlrs AgentHandlers) {
+	log.Infof("upgAppRespInit called")
 	ctx := &upgapprespctx{
 		agentHdlrs: hdlrs,
 	}

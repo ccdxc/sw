@@ -20,7 +20,7 @@ type upgStateMachine struct {
 var stateMachine []upgStateMachine
 
 func initStateMachineVector() {
-	log.Infof("initStateMachineVector called!!!\n")
+	log.Infof("initStateMachineVector called!!!")
 
 	stateMachine = []upgStateMachine{
 		upgStateMachine{
@@ -101,6 +101,17 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrFail: "Dataplane Downtime Phase2 Fail",
 		},
 		upgStateMachine{
+			state:                     upgrade.UpgReqStateType_Cleanup,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateTerminal,
+			statePassResp:             upgrade.UpgRespStateType_CleanupPass,
+			stateFailResp:             upgrade.UpgRespStateType_CleanupFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr after cleaning up stale state",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr after cleaning up stale state",
+			upgReqStateTypeToStr:      "Cleanup State",
+			upgRespStateTypeToStrPass: "Cleanup Pass",
+			upgRespStateTypeToStrFail: "Cleanup Fail",
+		},
+		upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgSuccess,
 			stateNext:                 upgrade.UpgReqStateType_Cleanup,
 			statePassResp:             upgrade.UpgRespStateType_UpgSuccessPass,
@@ -121,17 +132,6 @@ func initStateMachineVector() {
 			upgReqStateTypeToStr:      "Upgrade Fail",
 			upgRespStateTypeToStrPass: "",
 			upgRespStateTypeToStrFail: "",
-		},
-		upgStateMachine{
-			state:                     upgrade.UpgReqStateType_Cleanup,
-			stateNext:                 upgrade.UpgReqStateType_UpgStateTerminal,
-			statePassResp:             upgrade.UpgRespStateType_CleanupPass,
-			stateFailResp:             upgrade.UpgRespStateType_CleanupFail,
-			upgAppRespValToStrPass:    "Sending pass to upg-mgr after cleaning up stale state",
-			upgAppRespValToStrFail:    "Sending fail to upg-mgr after cleaning up stale state",
-			upgReqStateTypeToStr:      "Cleanup State",
-			upgRespStateTypeToStrPass: "Cleanup Pass",
-			upgRespStateTypeToStrFail: "Cleanup Fail",
 		},
 		upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgAborted,

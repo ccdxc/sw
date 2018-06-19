@@ -50,7 +50,7 @@ func (r *receiver) loopForever() {
 			panic(err)
 		}
 
-		go r.handler.HandleMessage(&message)
+		r.handler.HandleMessage(&message)
 	}
 }
 

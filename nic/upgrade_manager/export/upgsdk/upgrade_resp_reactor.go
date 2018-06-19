@@ -15,13 +15,13 @@ type upgrespctx struct {
 func (ctx *upgrespctx) invokeAgentHandler(respType upgrade.UpgRespType) {
 	switch respType {
 	case upgrade.UpgRespType_UpgRespPass:
-		log.Infof("upgrade success!!\n")
+		log.Infof("upgrade success!!")
 		ctx.agentHdlrs.UpgSuccessful()
 	case upgrade.UpgRespType_UpgRespFail:
-		log.Infof("upgrade failed!!\n")
+		log.Infof("upgrade failed!!")
 		ctx.agentHdlrs.UpgFailed()
 	case upgrade.UpgRespType_UpgRespAbort:
-		log.Infof("upgrade aborted!!\n")
+		log.Infof("upgrade aborted!!")
 		ctx.agentHdlrs.UpgAborted()
 	}
 }
@@ -32,22 +32,24 @@ func (ctx *upgrespctx) DeleteUpgReqSpec() {
 }
 
 func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
-	log.Infof("OnUpgRespCreate called %d\n", obj.GetUpgRespVal())
+	log.Infof("OnUpgRespCreate called %d", obj.GetUpgRespVal())
 	ctx.invokeAgentHandler(obj.GetUpgRespVal())
 	ctx.DeleteUpgReqSpec()
 }
 
 func (ctx *upgrespctx) OnUpgRespUpdate(obj *upgrade.UpgResp) {
-	log.Infof("OnUpgRespUpdate called %d\n", obj.GetUpgRespVal())
+	log.Infof("OnUpgRespUpdate called %d", obj.GetUpgRespVal())
+	ctx.invokeAgentHandler(obj.GetUpgRespVal())
+	ctx.DeleteUpgReqSpec()
 }
 
 func (ctx *upgrespctx) OnUpgRespDelete(obj *upgrade.UpgResp) {
-	log.Infof("OnUpgRespDelete called %d\n", obj.GetUpgRespVal())
+	log.Infof("OnUpgRespDelete called %d", obj.GetUpgRespVal())
 }
 
-//UpgRespInit init resp subtree coming from upgrade manager
-func UpgRespInit(client gosdk.Client, hdlrs AgentHandlers) {
-	log.Infof("UpgRespInit called\n")
+//upgRespInit init resp subtree coming from upgrade manager
+func upgRespInit(client gosdk.Client, hdlrs AgentHandlers) {
+	log.Infof("upgRespInit called")
 	ctx := &upgrespctx{
 		agentHdlrs: hdlrs,
 		sdkClient:  client,

@@ -69,7 +69,7 @@ func (u *upgradeCompletion) UpgStateAbortedComplete(resp *upgsdk.HdlrResp, svcNa
 
 func main() {
 	s1 := &service{
-		name: "example",
+		name: "Example go Service",
 	}
 	c1, err := gosdk.NewClient(s1)
 	if err != nil {
@@ -96,7 +96,7 @@ func main() {
 
 	retStr := make([]string, 0)
 	//err = upg.AbortUpgrade()
-	err = upg.GetUpgradeStatus(&retStr)
+	//err = upg.GetUpgradeStatus(&retStr)
 	if err != nil {
 		log.Fatalf("Could not abort upgrade because of %s\n", err)
 	}

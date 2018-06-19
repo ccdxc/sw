@@ -59,6 +59,17 @@ type AgentHandlers interface {
 	UpgAborted()
 }
 
+//UpgCtx is the wrapper that holds all the information about the current upgrade
+type UpgCtx struct {
+	fromVer string
+	toVer   string
+	upgType upgrade.UpgType
+}
+
+//UpgAppHandlers all upgrade applications to implement this
+type UpgAppHandlers interface {
+}
+
 // UpgSdk is the main Upgrade SDK API
 type UpgSdk interface {
 	//API used initiate upgrade request
@@ -71,7 +82,7 @@ type UpgSdk interface {
 
 //NewUpgSdk API is used to init upgrade sdk
 func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentHandlers) (UpgSdk, error) {
-	log.Infof("NewUpgSdk called for %s\n", name)
+	log.Infof("NewUpgSdk called for %s", name)
 	upgsdk := &upgSdk{
 		svcName:   name,
 		sdkClient: client,
@@ -79,9 +90,10 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 	}
 	if role == AgentRole {
 		upgrade.UpgReqMount(client, delphi.MountMode_ReadWriteMode)
-		UpgRespInit(client, agentHdlrs)
-		UpgAppRespInit(client, agentHdlrs)
+		upgRespInit(client, agentHdlrs)
+		upgAppRespInit(client, agentHdlrs)
 	}
+	upgStateReqInit(client /*appHdlrs,*/, name)
 	initStateMachineVector()
 	return upgsdk, nil
 }
