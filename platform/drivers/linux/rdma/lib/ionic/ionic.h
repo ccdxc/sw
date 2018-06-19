@@ -59,8 +59,8 @@ struct ionic_sq_meta {
 	bool			signal;
 };
 
-/* XXX this rq_meta will go away */
 struct ionic_rq_meta {
+	uint64_t		wrid;
 	uint32_t		len; /* XXX byte_len must come from cqe */
 };
 
@@ -93,7 +93,7 @@ struct ionic_qp {
 
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;
-	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
+	struct ionic_rq_meta	*rq_meta;
 };
 
 struct ionic_ah {

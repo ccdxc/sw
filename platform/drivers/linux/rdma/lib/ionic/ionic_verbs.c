@@ -155,7 +155,7 @@ static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ibv_wc *wc,
 	wc->status = ionic_to_ibv_wc_status(cqe->status);
 	wc->vendor_err = cqe->status;
 
-	wc->wr_id = cqe->id.wrid;
+	wc->wr_id = meta->wrid;
 	wc->qp_num = cqe_qp->qpid;
 
 	if (wc->status != IBV_WC_SUCCESS)
@@ -1286,7 +1286,9 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 	if (signed_len < 0)
 		return (int)-signed_len;
 
-	wqe->wrid = wr->wr_id;
+	meta->wrid = wr->wr_id;
+
+	wqe->wrid = qp->rq.prod;
 	wqe->num_sges = wr->num_sge;
 
 	meta->len = (uint32_t)signed_len;
