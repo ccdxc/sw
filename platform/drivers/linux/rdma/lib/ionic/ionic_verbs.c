@@ -126,14 +126,21 @@ static uint32_t ionic_cqe_src_qpn(struct cqwqe_be_t *cqe)
 	return ((uint32_t)cqe->src_qp_hi << 16) | be16toh(cqe->src_qp_lo);
 }
 
-static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ibv_wc *wc,
-			   struct cqwqe_be_t *cqe)
+static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_qp *cqe_qp,
+			   struct ibv_wc *wc, struct cqwqe_be_t *cqe)
 {
 	struct ionic_qp *qp = NULL;
 	struct ionic_rq_meta *meta;
 
 	if (cqe_qp->has_rq) {
 		qp = cqe_qp;
+
+		if (unlikely(cqe->id.wrid != qp->rq.cons)) {
+			ionic_dbg(ctx, "XXX missed recv cqe for %u got %llu",
+				  qp->rq.cons, cqe->id.wrid);
+			return -EIO;
+		}
+
 	} else {
 		if (unlikely(cqe_qp->is_srq))
 			return -EIO;
@@ -426,7 +433,7 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 			/* completion for receive */
 
 			pthread_spin_lock(&qp->rq_lock);
-			rc = ionic_poll_recv(qp, wc + npolled, &cqe);
+			rc = ionic_poll_recv(ctx, qp, wc + npolled, &cqe);
 			pthread_spin_unlock(&qp->rq_lock);
 
 			if (rc < 0)
