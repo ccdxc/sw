@@ -18,6 +18,8 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { SecurityService } from 'app/services/security.service';
 import { SgpolicyComponent } from './sgpolicy.component';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 
 
@@ -49,6 +51,8 @@ describe('SgpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         SecurityService,
         MatIconRegistry,
       ]

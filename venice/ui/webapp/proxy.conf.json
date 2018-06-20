@@ -34,5 +34,14 @@
     },
     "changeOrigin": false,
     "logLevel": "debug"
+  },
+  "/v1/*": {
+    "target": "http://192.168.69.189:10001/v1",
+      "secure": false,
+      "pathRewrite": {
+        "^/v1": ""
+      },
+      "changeOrigin": true,
+      "logLevel": "debug"
   }
 }

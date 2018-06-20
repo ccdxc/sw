@@ -10,6 +10,8 @@ import { ControllerService } from '@app/services/controller.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 import { SettingsComponent } from './settings.component';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 @Component({
   template: ''
@@ -36,6 +38,8 @@ describe('SettingsComponent', () => {
         providers: [
           AuthService,
           ControllerService,
+          LogService,
+          LogPublishersService,
           MatIconRegistry
         ],
         declarations: [SettingsComponent, DummyComponent]

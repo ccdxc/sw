@@ -8,6 +8,8 @@ import { CoreModule } from '@app/core';
 import { AuthService } from '../../services/auth.service';
 import { ControllerService } from '../../services/controller.service';
 import { LoginComponent } from './login.component';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -24,6 +26,8 @@ describe('LoginComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         AuthService,
         MatIconRegistry
       ]

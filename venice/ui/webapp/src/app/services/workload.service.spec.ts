@@ -15,6 +15,8 @@ import { WorkloadService } from './workload.service';
  Third Party imports
  ------------------*/
 import { MatIconRegistry } from '@angular/material';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 /**
  * workload.service.spec.ts
@@ -33,6 +35,8 @@ describe('WorkloadService', () => {
     TestBed.configureTestingModule({
       providers: [WorkloadService,
         ControllerService,
+        LogService,
+        LogPublishersService,
         MatIconRegistry
       ],
       imports: [

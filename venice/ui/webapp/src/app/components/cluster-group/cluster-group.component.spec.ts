@@ -1,11 +1,11 @@
 /**-----
  Angular imports
  ------------------*/
- import { async, ComponentFixture, TestBed } from '@angular/core/testing';
- import { RouterTestingModule } from '@angular/router/testing';
- import { HttpClientTestingModule } from '@angular/common/http/testing';
- import { Component } from '@angular/core';
- 
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
+
 /**-----
  Venice UI -  imports
  ------------------*/
@@ -16,6 +16,8 @@ import { ControllerService } from '@app/services/controller.service';
  Third-parties imports
  ------------------*/
 import { MatIconRegistry } from '@angular/material';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 @Component({
   template: ''
@@ -40,10 +42,12 @@ describe('ClusterGroupComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         MatIconRegistry
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

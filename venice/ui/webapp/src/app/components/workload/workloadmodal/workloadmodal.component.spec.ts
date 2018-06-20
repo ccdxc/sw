@@ -22,6 +22,8 @@ import { SharedModule } from '@app/components/shared//shared.module';
 import { LabelselectorComponent } from '@app/components/workload/labelselector/labelselector.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 @NgModule({
   declarations: [WorkloadModalComponent, LabelselectorComponent],
@@ -47,6 +49,8 @@ describe('WorkloadModalComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         MatIconRegistry,
         MatDialog
       ]

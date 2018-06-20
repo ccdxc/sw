@@ -23,7 +23,8 @@
       "@components/*": ["app/components/*"],
       "@common/*": ["app/common/*"],
       "@lib/*": ["app/lib/*"],
-      "@env/*": ["environments/*"]
+      "@env/*": ["environments/*"],
+      "@sdk/*": ["../../venice-sdk/*"]
     },
   },
 }

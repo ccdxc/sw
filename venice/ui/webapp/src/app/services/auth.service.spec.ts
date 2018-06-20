@@ -5,11 +5,17 @@ import { RouterTestingModule } from '@angular/router/testing';
 
 import { AuthService } from './auth.service';
 import { ControllerService } from './controller.service';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 describe('AuthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [AuthService, ControllerService, MatIconRegistry],
+      providers: [AuthService,
+        ControllerService,
+        LogService,
+        LogPublishersService,
+        MatIconRegistry],
       imports: [
         HttpClientTestingModule,
         RouterTestingModule

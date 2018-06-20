@@ -18,6 +18,8 @@ import { NodesService } from '@app/services/nodes.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { PrimengModule } from '@app/lib/primeng.module';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 @Component({
   template: ''
@@ -46,12 +48,14 @@ describe('ClusterComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         ClusterService,
         NodesService,
         MatIconRegistry
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

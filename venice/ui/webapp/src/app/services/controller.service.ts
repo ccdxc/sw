@@ -19,6 +19,7 @@ import * as _ from 'lodash';
 import { Promise } from 'q';
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
+import { LogService } from '@app/services/logging/log.service';
 
 interface Message {
   type: Eventtypes;
@@ -78,7 +79,8 @@ export class ControllerService {
     private _appRef: ApplicationRef,
     private loader: NgModuleFactoryLoader,
     protected domSanitizer: DomSanitizer,
-    protected matIconRegistry: MatIconRegistry
+    protected matIconRegistry: MatIconRegistry,
+    protected logger: LogService
   ) {
     this._subscribeToEvents();
     this._registerSVGIcons();
@@ -323,5 +325,36 @@ export class ControllerService {
       this._enableIdle = enableIdle;
       this.publish(Eventtypes.IDLE_CHANGE, { active: enableIdle });
     }
+  }
+
+  /**
+   * Logging methods
+   */
+  debug(msg: string, caller: string, ...optionalParams: any[]) {
+    this.logger.debug(msg, caller, optionalParams);
+  }
+
+  info(msg: string, caller: string, ...optionalParams: any[]) {
+    this.logger.info(msg, caller, optionalParams);
+  }
+
+  warn(msg: string, caller: string, ...optionalParams: any[]) {
+    this.logger.warn(msg, caller, optionalParams);
+  }
+
+  error(msg: string, caller: string, ...optionalParams: any[]) {
+    this.logger.error(msg, caller, optionalParams);
+  }
+
+  fatal(msg: string, caller: string, ...optionalParams: any[]) {
+    this.logger.fatal(msg, caller, optionalParams);
+  }
+
+  log(msg: string, caller: string, ...optionalParams: any[]) {
+    this.logger.log(msg, caller, optionalParams);
+  }
+
+  clear(): void {
+    this.logger.clear();
   }
 }

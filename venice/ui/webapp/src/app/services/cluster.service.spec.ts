@@ -5,8 +5,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 /**-----
  Venice imports
  ------------------*/
- import { ControllerService } from './controller.service';
- import { ClusterService } from './cluster.service';
+import { ClusterService } from './cluster.service';
 
 describe('ClusterService', () => {
 

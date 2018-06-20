@@ -4,6 +4,8 @@ import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityComponent } from './security.component';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 
 
@@ -25,6 +27,8 @@ describe('SecurityComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         MatIconRegistry,
       ]
     })

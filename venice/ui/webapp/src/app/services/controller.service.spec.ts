@@ -4,12 +4,18 @@ import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { ControllerService } from './controller.service';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 
 describe('ControllerService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ControllerService, MatIconRegistry],
+      providers: [ControllerService,
+        LogService,
+        LogPublishersService,
+        MatIconRegistry,
+      ],
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,

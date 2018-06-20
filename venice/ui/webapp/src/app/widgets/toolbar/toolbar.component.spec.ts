@@ -15,6 +15,8 @@ import { MatIconRegistry } from '@angular/material';
 ----------------------------------------------------- */
 import { PrimengModule } from '@lib/primeng.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 describe('ToolbarComponent', () => {
   let component: ToolbarComponent;
@@ -30,6 +32,8 @@ describe('ToolbarComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         MatIconRegistry
       ]
     })

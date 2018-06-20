@@ -10,6 +10,8 @@ import { WorkloadService } from '@app/services/workload.service';
 import { WidgetsModule } from 'web-app-framework';
 
 import { DsbdworkloadComponent } from './dsbdworkload.component';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 @Component({
   template: ''
@@ -34,6 +36,8 @@ describe('DsbdworkloadComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         WorkloadService
       ]
     })

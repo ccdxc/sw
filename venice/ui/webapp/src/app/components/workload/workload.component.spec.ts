@@ -33,6 +33,8 @@ import { MatIconRegistry } from '@angular/material';
 import { PrimengModule } from '@lib/primeng.module';
 import { Component } from '@angular/core';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 @Component({
   template: ''
 })
@@ -98,6 +100,8 @@ describe('WorkloadComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         WorkloadService,
         MatIconRegistry
       ]

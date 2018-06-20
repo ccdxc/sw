@@ -31,6 +31,8 @@ import { ControllerService } from '@app/services/controller.service';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { AlertseventsComponent } from './alertsevents.component';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 @Component({
   template: ''
@@ -58,6 +60,8 @@ describe('AlertseventsComponent', () => {
       ],
       providers: [
         ControllerService,
+        LogService,
+        LogPublishersService,
         AlerttableService,
         MatIconRegistry,
       ]
