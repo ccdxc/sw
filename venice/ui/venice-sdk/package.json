@@ -1,0 +1,19 @@
+{
+  "name": "venice-sdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "swaggerGen.js",
+  "dependencies": {
+    "@angular/core": "5.2.9",
+    "@angular/forms": "5.2.9"
+  },
+  "devDependencies": {
+    "rimraf": "^2.6.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
