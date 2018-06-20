@@ -521,6 +521,8 @@ decrypt_decomp_chain_t::full_verify(void)
     max_blks = enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK ?
                xts_dst_aol_vec->num_lines_get() : num_enc_blks;
     if (!suppress_info_log) {
+        xts_aol_trace("decrypt_decomp_chain xts_src_aol_vec", xts_src_aol_vec,
+                       max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
         xts_aol_trace("decrypt_decomp_chain xts_dst_aol_vec", xts_dst_aol_vec,
                        max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
         if (d->cmd_bits.src_is_list) {
@@ -560,7 +562,7 @@ decrypt_decomp_chain_t::full_verify(void)
 
         if (test_data_verify_and_dump(comp_encrypt_chain->comp_data_get(),
                              xts_decrypt_buf2->read_thru(),
-                             comp_encrypt_chain->cp_output_data_len_get())) {
+                             comp_encrypt_chain->encrypt_output_data_len_get())) {
             printf("ERROR: decrypt_decomp_chain decrypted data "
                    "verification failed\n");
             return -1;

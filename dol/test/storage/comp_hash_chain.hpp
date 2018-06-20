@@ -267,6 +267,11 @@ public:
         return last_cp_output_data_len;
     }
 
+    uint64_t uncomp_integrity_data_get(void)
+    {
+        return uncomp_integrity_data;
+    }
+
     dp_mem_t *uncomp_buf_get(void)
     {
         return uncomp_buf;
@@ -356,6 +361,7 @@ private:
     uint32_t        seq_comp_qid;
 
     uint32_t        last_cp_output_data_len;
+    uint64_t        uncomp_integrity_data;
 
     bool            destructor_free_buffers;
     bool            suppress_info_log;

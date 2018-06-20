@@ -709,6 +709,7 @@ struct capri_dma_cmd_mem2mem_t {
 // Note: PHV flit memory is in big endian layout, so the next adjacent
 // descriptor is at a LOWER address! Hence, the subi instruction below.
 #define CAPRI_FLIT_TO_DMA_PTR(_flit_no)                                 \
+    tblwr.l     l_dma_desc_count, 0;                                    \
     addi        r_curr_dma_cmd_ptr, r0, ((_flit_no + 1) *               \
                 CAPRI_PHV_FLIT_SIZE_BITS) - CAPRI_TXDMA_DESC_SIZE_BITS; \
     subi        r_last_dma_cmd_ptr, r_curr_dma_cmd_ptr,                 \
@@ -719,6 +720,7 @@ struct capri_dma_cmd_mem2mem_t {
 // descriptors in a flit, from which r_curr_dma_cmd_ptr and
 // r_last_dma_cmd_ptr can be calculated.
 #define CAPRI_FLIT_DMA_PTR_INITIAL(_dma_desc_avail, _dma_desc_last)     \
+    tblwr.l     l_dma_desc_count, 0;                                    \
     addi        r_curr_dma_cmd_ptr, r0,                                 \
                 PHV_DMA_CMD_START_OFFSET(_dma_desc_avail);              \
     addi        r_last_dma_cmd_ptr, r0,                                 \
@@ -734,6 +736,7 @@ struct capri_dma_cmd_mem2mem_t {
 // Note: PHV flit memory is in big endian layout, so the next adjacent
 // descriptor is at a LOWER address! Hence, the subi instruction below.
 #define CAPRI_FLIT_DMA_PTR_ADVANCE(_outer_label)                        \
+    tbladd.l    l_dma_desc_count, 1;                                    \
     bne         r_curr_dma_cmd_ptr, r_last_dma_cmd_ptr, _outer_label;   \
     subi        r_curr_dma_cmd_ptr, r_curr_dma_cmd_ptr,                 \
                 CAPRI_TXDMA_DESC_SIZE_BITS;                             \
@@ -744,6 +747,17 @@ struct capri_dma_cmd_mem2mem_t {
                 CAPRI_TXDMA_DESC_SIZE_BITS *                            \
                     (CAPRI_NUM_TXDMA_DESCS_PER_FLIT - 1);               \
 
+// Validate that the number of DMA descriptors (i.e. commands) consumed
+// so far does not exceed limit (_final_no minus _initial_no).
+// 
+// _initial_no and _final_no must be literals.
+#define CAPRI_FLIT_DMA_PTR_FINAL_CHECK(_dma_desc_initial, _initial_no,  \
+                                       _dma_desc_final, _final_no,      \
+                                       _error_label)                    \
+    sle         c1, l_dma_desc_count, _final_no - _initial_no;          \
+    bcf         [!c1], _error_label;                                    \
+    nop;                                                                \
+    
 // Offset/size operands for tblrdp/tblwrp instruction
 #define CAPRI_TBLRWP_FIELD_OP(_struct, _field)                          \
     offsetof(struct _struct, _field),                                   \
@@ -1286,16 +1300,18 @@ struct capri_dma_cmd_mem2mem_t {
 // chain_sgl_pdma embedded in descriptor are ordered from low to high as 
 // len/addr tuples. Hence, the initial starting offset below is len0.
 #define CAPRI_CHAIN_SGL_PDMA_TUPLE_INITIAL()                            \
-    addi         r_sgl_tuple_p, r0, offsetof(d, len0);                  \
+    addi    r_sgl_tuple_p, r0, offsetof(d, len0);                       \
 
 // Given the current chain_sgl_pdma tuple pointer in r_sgl_tuple_p,
 // advance to the next tuple. Due to Capri big endian layout, each 
 // subsequent tuple is *BELOW* its predecessor, hence the subi 
 // sinstruction below.
-#define CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE()                            \
+#define CAPRI_CHAIN_SGL_PDMA_TUPLE_ADVANCE(_error_label)                \
     subi    r_sgl_tuple_p, r_sgl_tuple_p,                               \
             sizeof(struct chain_sgl_pdma_tuple_t);                      \
-
+    blei.s  r_sgl_tuple_p, offsetof(d, pad0), _error_label;             \
+    nop;                                                                \
+            
 // Setup the compression data buffer DMA based on flat source buffer 
 // and destination SGL (processing one SGL entry in this macro).
 // Notes: These GPRs are used for input/output to/from this macro

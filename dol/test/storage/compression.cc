@@ -433,6 +433,14 @@ comp_status_output_data_len_get(dp_mem_t *status)
 }
 
 
+uint64_t
+comp_status_integrity_data_get(dp_mem_t *status)
+{
+    cp_status_sha512_t *st = (cp_status_sha512_t *)status->read_thru();
+    return st->integrity_data;
+}
+
+
 // Calculate comp sequencer status producer index
 // then fill the next available seq_status_desc with the
 // given chaining parameters.
