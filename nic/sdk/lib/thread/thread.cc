@@ -214,7 +214,8 @@ thread::start(void *ctxt)
     // create the thread now
     rv = pthread_create(&pthread_id_, &attr, entry_func_, ctxt);
     if (rv != 0) {
-        SDK_TRACE_ERR("pthread_create failure, err : %d", rv);
+        SDK_TRACE_ERR("pthread_create failure, err : %d, role : %d, cores_mask : %lu, sched_policy : %d, sched_priority : %u",
+                      rv, thread_role_, cores_mask_, sched_policy_, prio_);
         return SDK_RET_ERR;
     }
 
