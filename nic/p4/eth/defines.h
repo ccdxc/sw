@@ -49,21 +49,29 @@
 
 #define MODIFY_ETH_TX_GLOBAL \
     modify_field(eth_tx_global_scratch.dma_cur_flit, eth_tx_global.dma_cur_flit); \
-    modify_field(eth_tx_global_scratch.dma_cur_index, eth_tx_global.dma_cur_index);
+    modify_field(eth_tx_global_scratch.dma_cur_index, eth_tx_global.dma_cur_index); \
+    modify_field(eth_tx_global_scratch.sg_desc_addr, eth_tx_global.sg_desc_addr); \
+    modify_field(eth_tx_global_scratch.sg_in_progress, eth_tx_global.sg_in_progress); \
+    modify_field(eth_tx_global_scratch.num_sg_elems, eth_tx_global.num_sg_elems); \
+    modify_field(eth_tx_global_scratch.tso_sot, eth_tx_global.tso_sot); \
 
 #define MODIFY_ETH_TX_T0_S2S \
     modify_field(eth_tx_t0_s2s_scratch.num_todo, eth_tx_t0_s2s.num_todo); \
     modify_field(eth_tx_t0_s2s_scratch.num_desc, eth_tx_t0_s2s.num_desc); \
-    modify_field(eth_tx_t0_s2s_scratch.sg_start, eth_tx_t0_s2s.sg_start); \
+    modify_field(eth_tx_t0_s2s_scratch.do_sg, eth_tx_t0_s2s.do_sg); \
+    modify_field(eth_tx_t0_s2s_scratch.do_tso, eth_tx_t0_s2s.do_tso); \
     modify_field(eth_tx_t0_s2s_scratch.__pad, eth_tx_t0_s2s.__pad); \
     modify_field(eth_tx_t0_s2s_scratch.cq_desc_addr, eth_tx_t0_s2s.cq_desc_addr); \
     modify_field(eth_tx_t0_s2s_scratch.intr_assert_addr, eth_tx_t0_s2s.intr_assert_addr); \
     modify_field(eth_tx_t0_s2s_scratch.intr_assert_data, eth_tx_t0_s2s.intr_assert_data);
 
-#define MODIFY_ETH_TX_T1_S2S \
-    modify_field(eth_tx_t1_s2s_scratch.sg_desc_addr, eth_tx_t1_s2s.sg_desc_addr); \
-    modify_field(eth_tx_t1_s2s_scratch.sg_in_progress, eth_tx_t1_s2s.sg_in_progress); \
-    modify_field(eth_tx_t1_s2s_scratch.num_sg_elems, eth_tx_t1_s2s.num_sg_elems);
+#define MODIFY_ETH_TX_T1_S2S
+
+#define MODIFY_ETH_TX_T2_S2S \
+    modify_field(eth_tx_t2_s2s_scratch.tso_hdr_addr, eth_tx_t2_s2s.tso_hdr_addr); \
+    modify_field(eth_tx_t2_s2s_scratch.tso_hdr_len, eth_tx_t2_s2s.tso_hdr_len); \
+    modify_field(eth_tx_t2_s2s_scratch.tso_ipid_delta, eth_tx_t2_s2s.tso_ipid_delta); \
+    modify_field(eth_tx_t2_s2s_scratch.tso_seq_delta, eth_tx_t2_s2s.tso_seq_delta);
 
 #define MODIFY_ETH_TX_TO_S1 \
     modify_field(eth_tx_to_s1_scratch.qstate_addr, eth_tx_to_s1.qstate_addr);
@@ -72,7 +80,9 @@
     modify_field(eth_tx_to_s2_scratch.lif, eth_tx_to_s2.lif); \
     modify_field(eth_tx_to_s2_scratch.qtype, eth_tx_to_s2.qtype); \
     modify_field(eth_tx_to_s2_scratch.qid, eth_tx_to_s2.qid); \
-    modify_field(eth_tx_to_s2_scratch.my_ci, eth_tx_to_s2.my_ci);
+    modify_field(eth_tx_to_s2_scratch.my_ci, eth_tx_to_s2.my_ci); \
+    modify_field(eth_tx_to_s2_scratch.tso_hdr_addr, eth_tx_to_s2.tso_hdr_addr); \
+    modify_field(eth_tx_to_s2_scratch.tso_hdr_len, eth_tx_to_s2.tso_hdr_len);
 
 #define MODIFY_ETH_TX_TO_S3 \
     MODIFY_TX_DESC_KEY(to_s3, 0)
@@ -82,7 +92,7 @@
     len##n, vlan_tci##n, \
     hdr_len_lo##n, \
     encap##n, cq_entry##n, vlan_insert##n, rsvd2##n, hdr_len_hi##n, \
-    mss_or_csumoff_lo##n, csum_l4##n, csum_l3##n, mss_or_csumoff_hi##n
+    mss_or_csumoff_lo##n, csum_l4_or_eot##n, csum_l3_or_sot##n, mss_or_csumoff_hi##n
 
 #define MODIFY_TX_DESC(n) \
     modify_field(eth_tx_desc.addr_lo##n, addr_lo##n); \
@@ -99,8 +109,8 @@
     modify_field(eth_tx_desc.cq_entry##n, cq_entry##n); \
     modify_field(eth_tx_desc.encap##n, encap##n); \
     modify_field(eth_tx_desc.mss_or_csumoff_lo##n, mss_or_csumoff_lo##n); \
-    modify_field(eth_tx_desc.csum_l4##n, csum_l4##n); \
-    modify_field(eth_tx_desc.csum_l3##n, csum_l3##n); \
+    modify_field(eth_tx_desc.csum_l4_or_eot##n, csum_l4_or_eot##n); \
+    modify_field(eth_tx_desc.csum_l3_or_sot##n, csum_l3_or_sot##n); \
     modify_field(eth_tx_desc.mss_or_csumoff_hi##n, mss_or_csumoff_hi##n);
 
 #define PARAM_TX_SG_ELEM(n) \
@@ -129,6 +139,6 @@
     modify_field(eth_tx_##hdr##_scratch.cq_entry##n, eth_tx_##hdr.cq_entry##n); \
     modify_field(eth_tx_##hdr##_scratch.encap##n, eth_tx_##hdr.encap##n); \
     modify_field(eth_tx_##hdr##_scratch.mss_or_csumoff_lo##n, eth_tx_##hdr.mss_or_csumoff_lo##n); \
-    modify_field(eth_tx_##hdr##_scratch.csum_l4##n, eth_tx_##hdr.csum_l4##n); \
-    modify_field(eth_tx_##hdr##_scratch.csum_l3##n, eth_tx_##hdr.csum_l3##n); \
+    modify_field(eth_tx_##hdr##_scratch.csum_l4_or_eot##n, eth_tx_##hdr.csum_l4_or_eot##n); \
+    modify_field(eth_tx_##hdr##_scratch.csum_l3_or_sot##n, eth_tx_##hdr.csum_l3_or_sot##n); \
     modify_field(eth_tx_##hdr##_scratch.mss_or_csumoff_hi##n, eth_tx_##hdr.mss_or_csumoff_hi##n);

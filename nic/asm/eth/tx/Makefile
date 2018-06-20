@@ -23,6 +23,7 @@ SRC_FILES := \
 	eth_tx_prep.s \
 	eth_tx.s \
 	eth_tx_sg.s \
+	eth_tx_tso.s \
 	eth_tx_completion.s \
 	eth_tx_drop.s \
 	eth_tx_commit.s \

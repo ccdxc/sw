@@ -52,3 +52,21 @@ eth_tx_cq_wrap:
 
 eth_tx_1:
 	$(CAPSIM) $(INC_DIRS) -P eth_tx_completion=0xffffffff eth_tx_1.ctl $(BINDIR)/eth_tx.bin
+
+eth_tx_prep_tso_sot:
+	$(CAPSIM) $(INC_DIRS) -P eth_tx_commit=0xffffffff eth_tx_prep_tso_sot.ctl $(BINDIR)/eth_tx_prep.bin
+
+eth_tx_prep_tso_eot:
+	$(CAPSIM) $(INC_DIRS) -P eth_tx_commit=0xffffffff eth_tx_prep_tso_eot.ctl $(BINDIR)/eth_tx_prep.bin
+
+eth_tx_commit_tso_sot:
+	$(CAPSIM) $(INC_DIRS) -P eth_tx_start=0xffffffff -P eth_tx_sg_start=0xffffffff -P eth_tx_tso_start=0xffffffff eth_tx_commit_tso_sot.ctl $(BINDIR)/eth_tx_commit.bin
+
+eth_tx_commit_tso_eot:
+	$(CAPSIM) $(INC_DIRS) -P eth_tx_start=0xffffffff -P eth_tx_sg_start=0xffffffff -P eth_tx_tso_start=0xffffffff eth_tx_commit_tso_eot.ctl $(BINDIR)/eth_tx_commit.bin
+
+eth_tx_tso_sot:
+	$(CAPSIM) $(INC_DIRS) -P eth_tx_completion=0xffffffff eth_tx_tso_sot.ctl $(BINDIR)/eth_tx_tso.bin
+
+eth_tx_tso_eot:
+	$(CAPSIM) $(INC_DIRS) -P eth_tx_completion=0xffffffff eth_tx_tso_eot.ctl $(BINDIR)/eth_tx_tso.bin

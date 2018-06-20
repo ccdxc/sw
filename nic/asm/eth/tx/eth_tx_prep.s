@@ -46,23 +46,27 @@ eth_tx_prep:
   addi            _r_num_desc, r0, 0
 
   sne             c1, d.num_sg_elems0, 0
-  bcf             [c1], eth_tx_prep1
+  seq             c7, d.opcode0, TXQ_DESC_OPCODE_TSO
+  bcf             [c1|c7], eth_tx_prep1
   subi            _r_num_rem, _r_num_rem, 1
   beq             _r_num_rem, r0, eth_tx_prep1
   
 
   sne             c2, d.num_sg_elems1, 0
-  bcf             [c2], eth_tx_prep1
+  seq             c7, d.opcode1, TXQ_DESC_OPCODE_TSO
+  bcf             [c2|c7], eth_tx_prep1
   subi            _r_num_rem, _r_num_rem, 1
   beq             _r_num_rem, r0, eth_tx_prep2
 
   sne             c3, d.num_sg_elems2, 0
-  bcf             [c3], eth_tx_prep2
+  seq             c7, d.opcode2, TXQ_DESC_OPCODE_TSO
+  bcf             [c3|c7], eth_tx_prep2
   subi            _r_num_rem, _r_num_rem, 1
   beq             _r_num_rem, r0, eth_tx_prep3
 
   sne             c4, d.num_sg_elems3, 0
-  bcf             [c4], eth_tx_prep3
+  seq             c7, d.opcode3, TXQ_DESC_OPCODE_TSO
+  bcf             [c4|c7], eth_tx_prep3
   nop
 
 eth_tx_prep4:
@@ -90,8 +94,8 @@ eth_tx_prep_done:
   phvwr           p.eth_tx_t0_s2s_num_desc, _r_num_desc
 
   // Set number of sg elements to process
-  phvwr.c1        p.eth_tx_t0_s2s_sg_start, 1
-  phvwr.c1        p.eth_tx_t1_s2s_num_sg_elems, d.num_sg_elems0
+  phvwr.c1        p.eth_tx_t0_s2s_do_sg, 1
+  phvwr.c1        p.eth_tx_global_num_sg_elems, d.num_sg_elems0
 
   // Launch commit stage
   phvwri          p.common_te0_phv_table_lock_en, 1

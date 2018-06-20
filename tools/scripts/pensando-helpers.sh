@@ -213,7 +213,7 @@ start_model_how() {
 
     setup_pcie
 
-    export GDB="gdb -ex run -e ~/.gdbinit --args"
+    # export GDB="gdb -ex run -e ~/.gdbinit --args"
     # IRIS_DEBUG=1 LOG_LEVEL=“info”
 
     LD_LIBRARY_PATH="$PWD/../nic/gen/x86_64/lib" \
@@ -226,7 +226,7 @@ start_model_rdma() {
 }
 
 start_model() {
-    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0045000:0xc0045040:0xc0045080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0085000:0xc0085040:0xc0085080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
 }
 
 start_hal() {
@@ -237,7 +237,7 @@ start_hal() {
 
     killall hal
 
-    export GDB="gdb -ex run -e ~/.gdbinit --args"
+    # export GDB="gdb -ex run -e ~/.gdbinit --args"
     ZMQ_SOC_DIR="$PWD" ./tools/start-hal.sh
 }
 
@@ -250,7 +250,7 @@ start_hal_classic() {
     killall hal
 
     cp conf/hal_classic.ini conf/hal.ini
-    export GDB="gdb -ex run -e ~/.gdbinit --args"
+    # export GDB="gdb -ex run -e ~/.gdbinit --args"
     ZMQ_SOC_DIR="$PWD" ./tools/start-hal.sh
 }
 
@@ -273,7 +273,7 @@ start_relay() {
         return -1 
     fi
 
-    sudo ZMQ_SOC_DIR=$PWD ./model_sim/src/relay.py bidi -v -x --mac $RELAY_MAC_ADDR
+    sudo ZMQ_SOC_DIR=$PWD ./model_sim/src/relay.py bidi -v -x --mac $RELAY_MAC_ADDR -tname $RELAY_TAP
 }
 
 find_tap() {
