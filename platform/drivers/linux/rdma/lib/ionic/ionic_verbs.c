@@ -209,13 +209,9 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc)
 		if (ionic_op_is_local(meta->op)) {
 			if (meta->seq == qp->sq_npg_cons)
 				return 0;
-
-			qp->sq_npg_cons = (qp->sq_npg_cons + 1) & qp->sq.mask;
 		} else {
 			if (meta->seq == qp->sq_msn_cons)
 				return 0;
-
-			qp->sq_msn_cons = (qp->sq_msn_cons + 1) & qp->sq.mask;
 		}
 
 		ionic_queue_consume(&qp->sq);
@@ -267,7 +263,7 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct cqwqe_be_t *cqe)
 	int rc;
 
 	cqe_seq = be32toh(cqe->id.msn) & qp->sq.mask;
-	cqe_idx = qp->sq_msn_idx[cqe_seq];
+	cqe_idx = qp->sq_msn_idx[(cqe_seq - 1) & qp->sq.mask];
 
 	rc = ionic_validate_cons(qp->sq_msn_prod,
 				 qp->sq_msn_cons,
@@ -288,7 +284,7 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct cqwqe_be_t *cqe)
 	int rc;
 
 	cqe_idx = be32toh(cqe->id.msn) & qp->sq.mask;
-	cqe_seq = qp->sq_meta[cqe_idx].seq;
+	cqe_seq = (qp->sq_meta[cqe_idx].seq + 1) & qp->sq.mask;
 
 	rc = ionic_validate_cons(qp->sq_npg_prod,
 				 qp->sq_npg_cons,
