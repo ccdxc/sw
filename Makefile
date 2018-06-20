@@ -55,6 +55,7 @@ BUILD_CONTAINER ?= pens-bld:v0.12
 UI_BUILD_CONTAINER ?= pens-ui-bld:v0.4
 TARGETS ?= ws-tools gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
+E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
 
 default:
 	$(MAKE) ws-tools
@@ -303,12 +304,12 @@ pull-assets:
 dind-cluster:
 	$(MAKE) container-compile
 	$(MAKE) install
-	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config_dev.json
+	./test/e2e/dind/do.py -configFile ${E2E_CONFIG}
 
 # Target to run venice e2e on mac using a dind environment. Uses Agent with its datapath mocked
 e2e:
 	$(MAKE) dind-cluster
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config_dev.json '
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG}'
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
