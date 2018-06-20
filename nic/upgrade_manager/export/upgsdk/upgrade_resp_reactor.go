@@ -19,9 +19,11 @@ func (ctx *upgrespctx) invokeAgentHandler(respType upgrade.UpgRespType) {
 		ctx.agentHdlrs.UpgSuccessful()
 	case upgrade.UpgRespType_UpgRespFail:
 		log.Infof("upgrade failed!!")
+		//TODO for (int i=0; i<resp->upgrespfailstr_size(); i++) {
 		ctx.agentHdlrs.UpgFailed()
 	case upgrade.UpgRespType_UpgRespAbort:
 		log.Infof("upgrade aborted!!")
+		//TODO for (int i=0; i<resp->upgrespfailstr_size(); i++) {
 		ctx.agentHdlrs.UpgAborted()
 	}
 }

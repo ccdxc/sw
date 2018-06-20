@@ -63,7 +63,7 @@ func (ctx *upgstatereqctx) getUpgCtx(upgCtx *UpgCtx, obj *upgrade.UpgStateReq) {
 
 func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
 	log.Infof("OnUpgStateReqCreate got created")
-	if canInvokeHandler(obj.GetUpgReqState()) {
+	if canInvokeHandler(ctx.sdkClient, ctx.appName, obj.GetUpgReqState()) {
 		createUpgAppResp(ctx.sdkClient, ctx.appName)
 		var hdlrResp HdlrResp
 		var upgctx UpgCtx
@@ -109,3 +109,5 @@ func upgStateReqInit(client gosdk.Client, hdlrs UpgAppHandlers, name string) {
 	upgrade.UpgStateReqWatch(client, ctx)
 	//WatchMountComplete
 }
+
+//TODO OnMountComplete

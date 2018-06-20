@@ -6,7 +6,16 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-func canInvokeHandler(reqType upgrade.UpgReqStateType) bool {
+func canInvokeHandler(sdkClient gosdk.Client, name string, reqType upgrade.UpgReqStateType) bool {
+	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
+	if upgAppResp == nil {
+		return true
+	}
+	if (getUpgAppRespNextPass(reqType) == upgAppResp.GetUpgAppRespVal()) &&
+		(getUpgAppRespNextFail(reqType) == upgAppResp.GetUpgAppRespVal()) {
+		log.Infof("Application %s already responded with %s", name, upgAppRespValToStr(upgAppResp.GetUpgAppRespVal()))
+		return false
+	}
 	return true
 }
 

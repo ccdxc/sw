@@ -90,10 +90,8 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
 
 // OnUpgStateReqDelete gets called when UpgStateReq object is deleted
 delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
-    UpgCtx   ctx;
     LogInfo("UpgReqReactor UpgStateReq got deleted with {}", req->upgreqstate());
     //delete the object
-    UpgReqReactor::GetUpgCtx(ctx, req);
     upgAppRespPtr_->DeleteUpgAppResp();
     return delphi::error::OK();
 }
