@@ -14,9 +14,9 @@ endif
 TOPDIR_ABS = ${CURDIR}
 # For code coverage for HAL & ASM code
 ifeq ($(c),1)
-	GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone 
+	GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone
 else
-  GCOV = 
+  GCOV =
   c    = 0
 endif
 
@@ -25,9 +25,9 @@ ifneq ($(GCOV),)
     CAPAS_COV = -C
 endif
 
-# Jobs 
+# Jobs
 ifeq ($(j),)
-  JOBS = 
+  JOBS =
 else
   JOBS = --jobs=$(j)
 endif
@@ -53,6 +53,12 @@ ifeq ($(ARCH), aarch64)
 else
     BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(BAZEL_CUSTOM_FLAGS)
 endif
+
+# Limiting the resources on the machine
+ram_mb := $(shell free -m | grep Mem | awk '{print $$7}')
+cores := $(shell grep -c processor /proc/cpuinfo)
+BZL_BLD_OPT += --local_resources=$(ram_mb),$(cores),1
+
 
 #BZL_OPT = --bazelrc=bazel.rc
 BZL_OPT = $(OUTPUT_BASE)

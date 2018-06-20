@@ -1232,7 +1232,7 @@ end:
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace("API End: mc entry delete ");
+    hal_api_trace("API End: mc entry update ");
     return ret;
 }
 

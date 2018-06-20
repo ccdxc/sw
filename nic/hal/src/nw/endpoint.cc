@@ -584,9 +584,9 @@ endpoint_del_from_db (ep_t *ep)
     if (ep->if_handle != HAL_HANDLE_INVALID) {
         hal_if = find_if_by_handle(ep->if_handle);
         HAL_ASSERT(hal_if != NULL);
-        ret = if_add_ep(hal_if, ep);
+        ret = if_del_ep(hal_if, ep);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to add ep to if. err: {}", ret);
+            HAL_TRACE_ERR("failed to del ep from if. err: {}", ret);
             goto end;
         }
     }

@@ -124,12 +124,11 @@ ReplTableEntry::del_replication(void *data)
 
             num_repl_entries_--;
 
-            if (!num_repl_entries_) {
-                // Process previous
-                repl_list_->process_del_repl_tbl_entry(this);
-            } else {
+            if (num_repl_entries_) {
                 program_table();
             }
+            //else the table entry is going away.
+            //de-programming will be done there.
 
             // delete re;
             ReplEntry::destroy(re);

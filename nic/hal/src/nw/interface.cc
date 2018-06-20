@@ -536,7 +536,7 @@ if_update_oif_lists(if_t *hal_if, bool add)
     l2seg_t    *l2seg = NULL, *nat_l2seg = NULL;
 
     HAL_ASSERT(hal_if);
-    HAL_TRACE_DEBUG("Add intf to OIFs : if_id : {}", hal_if->if_id);
+    HAL_TRACE_DEBUG("if_id : {}", hal_if->if_id);
 
     // If its enic, add to l2seg and lif
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
@@ -2232,7 +2232,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     // Validate if l2seg and uplink exists
     ret = validate_l2seg_on_uplink(spec, rsp);
     if (ret != HAL_RET_OK) {
-        return ret;
+        goto end;
     }
 
     // Fetch L2 Segment and Uplink If

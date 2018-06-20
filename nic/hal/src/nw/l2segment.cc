@@ -242,7 +242,7 @@ l2seg_del_from_db (l2seg_t *l2seg)
 }
 
 static inline hal_ret_t
-l2seg_create_oifs (l2seg_t *l2seg)
+l2seg_create_oiflists (l2seg_t *l2seg)
 {
     hal_ret_t  ret = HAL_RET_OK;
 
@@ -300,8 +300,83 @@ end:
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// Add all oifs to bcast oiflist
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+l2seg_add_oifs (l2seg_t *l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+    oif_t           oif = {};
+
+    if (l2seg->mbrif_list) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            hal_if = find_if_by_handle(*p_hdl_id);
+            oif.intf = hal_if;
+            oif.l2seg = l2seg;
+            ret = oif_list_add_oif(l2seg->base_oif_list_id, &oif);
+        }
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Build oiflists: Create and add oifs.
+//  - Corresponding call to l2seg_cleanup_oiflists
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+l2seg_build_oiflists (l2seg_t *l2seg)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    // Create all oiflists
+    ret = l2seg_create_oiflists(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete OIFlist for l2seg, err : {}", ret);
+    }
+
+    // Add oifs to bcast oiflist.
+    ret = l2seg_add_oifs(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove all oifs from bcast oiflist
+//-----------------------------------------------------------------------------
 static inline hal_ret_t
 l2seg_delete_oifs (l2seg_t *l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+    oif_t           oif = {};
+
+    if (l2seg->mbrif_list) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            hal_if = find_if_by_handle(*p_hdl_id);
+            oif.intf = hal_if;
+            oif.l2seg = l2seg;
+            ret = oif_list_remove_oif(l2seg->base_oif_list_id, &oif);
+        }
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Delete oiflist. Call this only when all oifs are removed from oiflist
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+l2seg_delete_oiflists (l2seg_t *l2seg)
 {
     // create the broadcast/flood list for this l2seg
     if (is_forwarding_mode_classic_nic()) {
@@ -318,6 +393,29 @@ l2seg_delete_oifs (l2seg_t *l2seg)
 
     l2seg->base_oif_list_id = OIF_LIST_ID_INVALID;
     return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Remove all oifs from oiflist and delete oiflist
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+l2seg_cleanup_oiflists (l2seg_t *l2seg)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    // Remove oifs from bcast oiflist.
+    ret = l2seg_delete_oifs(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+    }
+
+    // Remove all oiflists
+    ret = l2seg_delete_oiflists(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete OIFlist for l2seg, err : {}", ret);
+    }
+
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -388,7 +486,14 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
     switch (spec.wire_encap().encap_type()) {
     case types::ENCAP_TYPE_NONE:
     case types::ENCAP_TYPE_DOT1Q:
+        break;
     case types::ENCAP_TYPE_VXLAN:
+        // Check if infra l2seg is present
+        if (l2seg_get_infra_l2seg() == NULL) {
+            HAL_TRACE_ERR("Fail: Cannot create L2seg with vxlan encap without infra L2seg.");
+            // TODO: Fix this once MBT supports catching this error.
+            // return HAL_RET_INVALID_ARG;
+        }
         break;
     default:
         HAL_TRACE_ERR("L2seg id wire encap type {} not allowed", spec.wire_encap().encap_type());
@@ -455,7 +560,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("create add cb for l2seg_id : {}", l2seg->seg_id);
 
-    ret = l2seg_create_oifs(l2seg);
+    ret = l2seg_build_oiflists(l2seg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create OIFs for l2seg, err : {}", ret);
         goto end;
@@ -1881,7 +1986,7 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    ret = l2seg_delete_oifs(l2seg);
+    ret = l2seg_cleanup_oiflists(l2seg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
     }
@@ -2557,7 +2662,7 @@ l2seg_restore_cb (void *obj, uint32_t len)
     // repopulate handle db
     hal_handle_insert(HAL_OBJ_ID_L2SEG, l2seg->hal_handle, (void *)l2seg);
 
-    l2seg_create_oifs(l2seg);
+    l2seg_build_oiflists(l2seg);
 
     ret = l2seg_restore_add(l2seg, l2seg_info);
     if (ret != HAL_RET_OK) {

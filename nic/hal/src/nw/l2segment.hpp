@@ -78,7 +78,7 @@ typedef struct l2seg_s {
     uint32_t              num_ep;                  // no. of endpoints
     // forward references
     block_list            *nw_list;                // network list
-    block_list            *mbrif_list;                // interface list
+    block_list            *mbrif_list;             // interface list
     // back references
     block_list            *acl_list;               // acl list
     block_list            *if_list;                // back_iflist

@@ -173,6 +173,8 @@ ReplList::del_replication(void *data)
         if (rs == HAL_RET_OK) { // deletion happened
             // Check if repl. table entry has to be removed.
             if (!repl_te->get_num_repl_entries()) {
+                // Yes. Process dependencies.
+                process_del_repl_tbl_entry(repl_te);
 
                 // Repl List will have the first entry till its deleted.
                 if (repl_te->get_repl_table_index() != repl_tbl_index_) {
@@ -253,10 +255,8 @@ ReplList::process_del_repl_tbl_entry(ReplTableEntry *rte)
             } else {
                 // De-program at rte's index.
                 rte->program_table();
-
-                // Update first and last as the only RTE is going away
-                first_repl_tbl_entry_ = NULL;
-                last_repl_tbl_entry_ = NULL;
+                // The only RTE is going away. Nothing to be done since the
+                // Repl List will retain the first entry till it is deleted.
             }
         } else {
             // Middle RTE/Last RTE
@@ -356,6 +356,10 @@ ReplList::cleanup_last_repl_table_entry()
 {
     hal_ret_t       rs       = HAL_RET_OK;
     ReplTableEntry  *repl_te = last_repl_tbl_entry_;
+
+    HAL_ASSERT(last_repl_tbl_entry_);
+    HAL_ASSERT(num_repl_tbl_entries_ == 1);
+    HAL_ASSERT(last_repl_tbl_entry_->get_num_repl_entries() == 0);
 
     if (get_attached_list_index()) {
         rs = detach_frm_repl_list();

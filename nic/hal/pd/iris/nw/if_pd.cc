@@ -459,6 +459,12 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
                     uint32_t tnnl_rw_idx;
                     pd_tnnl_rw_entry_key_t tnnl_rw_key = {0};
                     l2seg_t *infra_seg = l2seg_get_infra_l2seg();
+
+                    if (!infra_seg) {
+                        HAL_TRACE_ERR("Unable to find infra l2seg. TODO: Catch this in validation.");
+                        goto end;
+                    }
+
                     mac_addr_t *outer_mac = l2seg_get_rtr_mac(infra_seg);
 
                     ret = if_l2seg_get_encap(pi_if, infra_seg, &is_tagged, &vlan_id);
@@ -515,6 +521,7 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
             HAL_ASSERT(0);
     }
 
+end:
     return HAL_RET_OK;
 }
 

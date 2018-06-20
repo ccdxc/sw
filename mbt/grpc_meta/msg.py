@@ -189,7 +189,8 @@ class GrpcReqRspMsg:
         else:
             # If the field is a protobuf message, generate the message
             if message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_INT32 or \
-               message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_UINT32:
+               message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_UINT32  or \
+               message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_UINT64:
                 # Include offset of 65535 to not clash with DOL key ids
                 setattr(message, key_name, KeyIdAllocator.get() + 65535)
             elif message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_MESSAGE:
