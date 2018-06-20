@@ -9,9 +9,10 @@ export interface ToolbarButton {
   text: string;
   cssClass: string;
   callback: (...args: any[]) => void;
+  computeClass?: any;
 }
 
 export interface ToolbarData {
-  buttons: ToolbarButton[];
-  breadcrumb: BreadcrumbItem[];
+  buttons?: ToolbarButton[];
+  breadcrumb?: BreadcrumbItem[];
 }

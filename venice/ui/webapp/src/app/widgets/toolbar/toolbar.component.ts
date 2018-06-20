@@ -1,9 +1,11 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation, TemplateRef } from '@angular/core';
 import { ControllerService } from '../../services/controller.service';
 import { CommonComponent } from '../../common.component';
 import { Subscription } from 'rxjs/Subscription';
 
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { ToolbarButton, BreadcrumbItem, ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
+import { Utility } from '@app/common/Utility';
 
 @Component({
   selector: 'app-toolbar',
@@ -13,17 +15,17 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 })
 export class ToolbarComponent extends CommonComponent implements OnInit, OnDestroy {
   private subscription: Subscription;
-  breadcrumb: any;
-  buttons: any;
+  breadcrumb: BreadcrumbItem[] = [{ label: '' }];
+  buttons: ToolbarButton[] = [];
 
   constructor(protected _controllerService: ControllerService) {
     super();
   }
 
   ngOnInit() {
-    this.breadcrumb = [{ label: '' }];
     this.subscription = this._controllerService.subscribe(Eventtypes.TOOLBAR_DATA_CHANGE,
-      (data) => {
+      (data: ToolbarData) => {
+        data = Utility.getLodash().cloneDeep(data);
         this.breadcrumb = data.breadcrumb;
         this.buttons = data.buttons;
       });
@@ -39,7 +41,6 @@ export class ToolbarComponent extends CommonComponent implements OnInit, OnDestr
   }
 
   public clear() {
-    console.log('ToolbarComponent.clear()');
     if (this.breadcrumb) {
       this.breadcrumb.length = 0;
     }

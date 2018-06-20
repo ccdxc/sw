@@ -177,12 +177,12 @@ export class ControllerService {
 
   /***** Getting and setting toolbar data *****/
   public getToolbarData(): any {
-    return this.toolbarData;
+    return _.cloneDeep(this.toolbarData);
   }
 
   public setToolbarData(data: ToolbarData) {
     if (!_.isEqual(this.toolbarData, data)) {
-      this.toolbarData = data;
+      this.toolbarData = _.cloneDeep(data);
       this.publish(Eventtypes.TOOLBAR_DATA_CHANGE, data);
     }
   }
