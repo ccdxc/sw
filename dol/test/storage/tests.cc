@@ -43,12 +43,24 @@ dp_mem_t *read_hbm_buf;
 dp_mem_t *write_hbm_buf;
 dp_mem_t *read_hbm_buf2;
 dp_mem_t *write_hbm_buf2;
+dp_mem_t *time_adv_buf;
 
 dp_mem_t *seq_db_data;
 
 static uint16_t global_cid = 0x1;
 static uint64_t global_slba = 0x0000;
 static uint64_t global_byte = 0xA0;
+
+/*
+ * This function provides non-blocking poll on an HBM location in use by the test to
+ * ensure that simulation time advances.
+ */
+static void
+verification_time_advance(void)
+{
+    assert(time_adv_buf->is_mem_type_hbm());
+    time_adv_buf->read_thru();
+}
 
 int Poller::operator()(std::function<int(void)> poll_func) {
   std::time_t start = std::time(nullptr);
@@ -58,6 +70,7 @@ int Poller::operator()(std::function<int(void)> poll_func) {
     rv = poll_func();
     if(0 == rv)
       return rv;
+    verification_time_advance();
     if(fast_poll) {
       usleep(10000); //Sleep 10msec
     } else {
@@ -151,6 +164,8 @@ int alloc_buffers() {
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
   if ((seq_db_data = new dp_mem_t(1, kSeqDbDataSize, DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM)) == nullptr) return -1;
 
+  // Allocate a scratch buffer for use by verification_time_advance().
+  time_adv_buf = new dp_mem_t(1, sizeof(uint32_t));
   return 0;
 
 }

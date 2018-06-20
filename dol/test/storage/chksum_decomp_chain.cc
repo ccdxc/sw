@@ -464,6 +464,7 @@ chksum_decomp_chain_t::full_verify(void)
     if (fast_verify()) {
         return -1;
     }
+    success = false;
 
     /*
      * Validate decompressed data

@@ -99,13 +99,21 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, app_enc_size);
     max_src_blks = max_enc_blks * 2;
 
+    /*
+     * Preference is to put AOLs in host memory similar to what Driver
+     * would do. However, model has a bug where, when run concurrently
+     * with RTL, model sometimes fails to see updates to AOL from the
+     * host (DOL) software. RTL would still see the correct AOL data,
+     * but at EOS there would be a mismatch between model and RTL.
+     * The simple workaround here is to put AOLs in HBM.
+     */
     xts_src_aol_vec = new dp_mem_t(max_src_blks, sizeof(xts::xts_aol_t),
-                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
     xts_desc_vec = new dp_mem_t(max_src_blks, sizeof(xts::xts_desc_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
                                 sizeof(xts::xts_desc_t));
     xts_dst_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
-                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
     xts_opaque_vec = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                   sizeof(uint64_t));
@@ -705,6 +713,7 @@ comp_encrypt_chain_t::full_verify(void)
     if (fast_verify()) {
         return -1;
     }
+    success = false;
 
     /*
      * Validate PDMA

@@ -653,6 +653,7 @@ comp_hash_chain_t::full_verify(void)
     if (fast_verify()) {
         return -1;
     }
+    success = false;
 
     /*
      * Validate PDMA transfer capability

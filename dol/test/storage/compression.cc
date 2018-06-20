@@ -293,10 +293,6 @@ comp_status_poll(dp_mem_t *status,
   auto func = [status, suppress_log] () -> int {
     cp_status_sha512_t *s = (cp_status_sha512_t *)status->read_thru();
     if (s->valid) {
-      if (status->is_mem_type_hbm()) {
-        usleep(100);
-        s = (cp_status_sha512_t *)status->read_thru();
-      }
       if (!suppress_log) {
           printf("Got status %llx\n", *((unsigned long long *)s));
       }
@@ -837,7 +833,6 @@ void decompress_cp_desc_template_fill(cp_desc_t &d,
     memset(&d, 0, sizeof(d));
     d.cmd_bits.comp_decomp_en = 1;
     d.cmd_bits.header_present = 1;
-    d.cmd_bits.cksum_verify_en = 1;
     d.src = src_buf->pa();
     d.dst = dst_buf->pa();
     d.status_addr = status_buf->pa();
