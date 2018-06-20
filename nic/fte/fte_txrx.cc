@@ -64,7 +64,7 @@ static inst_t *g_inst_list[hal::MAX_FTE_THREADS];
 //------------------------------------------------------------------------------
 // FTE instance of current thread
 //------------------------------------------------------------------------------
-thread_local inst_t *g_inst;
+thread_local inst_t *t_inst;
 
 //------------------------------------------------------------------------------
 // FTE main pkt loop
@@ -73,12 +73,12 @@ thread_local inst_t *g_inst;
 void
 fte_start(uint8_t fte_id)
 {
-    HAL_ASSERT(g_inst == NULL);
+    HAL_ASSERT(t_inst == NULL);
     HAL_ASSERT(fte_id < hal::MAX_FTE_THREADS);
     HAL_ASSERT(g_inst_list[fte_id] == NULL);
 
-    g_inst = g_inst_list[fte_id] = new inst_t(fte_id);
-    g_inst->start();
+    t_inst = g_inst_list[fte_id] = new inst_t(fte_id);
+    t_inst->start();
     HAL_TRACE_DEBUG("Started FTE thread: {}", fte_id);
 }
 
@@ -91,8 +91,8 @@ fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
              hal::pd::p4plus_to_p4_header_t* p4plus_header,
              uint8_t* pkt, size_t pkt_len)
 {
-    HAL_ASSERT_RETURN(g_inst, HAL_RET_INVALID_ARG);
-    return g_inst->asq_send(cpu_header, p4plus_header, pkt, pkt_len);
+    HAL_ASSERT_RETURN(t_inst, HAL_RET_INVALID_ARG);
+    return t_inst->asq_send(cpu_header, p4plus_header, pkt, pkt_len);
 }
 
 //------------------------------------------------------------------------------
@@ -106,8 +106,8 @@ fte_id()
         return 0;
     }
 
-    HAL_ASSERT_RETURN(g_inst, HAL_RET_INVALID_ARG);
-    return g_inst->get_id();
+    HAL_ASSERT_RETURN(t_inst, HAL_RET_INVALID_ARG);
+    return t_inst->get_id();
 }
 
 //------------------------------------------------------------------------------
@@ -121,8 +121,8 @@ get_current_ipc_logger_inst()
         return 0;
     }
 
-    HAL_ASSERT_RETURN(g_inst, NULL);
-    return g_inst->get_ipc_logger();
+    HAL_ASSERT_RETURN(t_inst, NULL);
+    return t_inst->get_ipc_logger();
 }
 
 
@@ -139,7 +139,7 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
         fn(data);
     }
 
-    HAL_ASSERT_RETURN(g_inst == NULL, HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN(t_inst == NULL, HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN(fte_id < hal::MAX_FTE_THREADS, HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN(fn, HAL_RET_INVALID_ARG);
 

@@ -15,7 +15,7 @@ using namespace hal::app_redir;
 //-------------------------------------------------------
 // Thread local protospec to update FTE Flow logging info
 // ------------------------------------------------------
-thread_local fwlog::FWEvent fwlg;
+thread_local fwlog::FWEvent t_fwlg;
 
 std::ostream& operator<<(std::ostream& os, const ether_addr& val)
 {
@@ -474,28 +474,28 @@ ctx_t::create_session()
 void
 ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
                          fte_flow_log_info_t *log) {
-    fwlg.Clear();
+    t_fwlg.Clear();
 
-    fwlg.set_source_vrf(key.svrf_id);
-    fwlg.set_dest_vrf(key.dvrf_id);
+    t_fwlg.set_source_vrf(key.svrf_id);
+    t_fwlg.set_dest_vrf(key.dvrf_id);
     if (key.flow_type == hal::FLOW_TYPE_V4) {
-        fwlg.set_sipv4(key.sip.v4_addr);
-        fwlg.set_dipv4(key.dip.v4_addr);
+        t_fwlg.set_sipv4(key.sip.v4_addr);
+        t_fwlg.set_dipv4(key.dip.v4_addr);
     }
-    fwlg.set_sport(key.sport);
-    fwlg.set_dport(key.dport);
-    fwlg.set_ipprot(key.proto);
-    fwlg.set_direction(key.dir);
+    t_fwlg.set_sport(key.sport);
+    t_fwlg.set_dport(key.dport);
+    t_fwlg.set_ipprot(key.proto);
+    t_fwlg.set_direction(key.dir);
     if (pipeline_event() == FTE_SESSION_DELETE)
-        fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
-    fwlg.set_session_id(sess_hdl);
-    fwlg.set_alg(log->alg);
-    fwlg.set_fwaction(log->sfw_action);
-    fwlg.set_parent_session_id(log->parent_session_id);
-    fwlg.set_rule_id(log->rule_id);
+        t_fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
+    t_fwlg.set_session_id(sess_hdl);
+    t_fwlg.set_alg(log->alg);
+    t_fwlg.set_fwaction(log->sfw_action);
+    t_fwlg.set_parent_session_id(log->parent_session_id);
+    t_fwlg.set_rule_id(log->rule_id);
 
     if (logger_ != NULL)
-        logger_->fw_log(fwlg);
+        logger_->fw_log(t_fwlg);
 }
 
 //------------------------------------------------------------------------------

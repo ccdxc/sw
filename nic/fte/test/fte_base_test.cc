@@ -442,6 +442,8 @@ int parse_v4_packet (uint8_t *pkt, int len, uint16_t *l3_offset,
         } else if (ip->protocol == IPPROTO_UDP) {
             *payload_offset = *l4_offset + sizeof(udp_header_t);
             *proto = IPPROTO_UDP;
+        } else {
+            return 1;
         }
     } else {
         return 1;

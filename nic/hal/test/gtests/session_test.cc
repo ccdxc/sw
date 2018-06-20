@@ -1562,7 +1562,7 @@ TEST_F(session_test, test9)
     SessionDeleteResponse       delrsp;
 
     // Force FTE thread to start
-    sleep(1);
+    sleep(5);
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(9);
