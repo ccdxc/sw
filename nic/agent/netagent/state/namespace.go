@@ -45,17 +45,17 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 		return err
 	}
 
-	// Add a dependency
-	err = na.Solver.Add(tn, ns)
-	if err != nil {
-		log.Errorf("Could not add dependency. Parent: %v. Child: %v", tn, ns)
-		return err
-	}
-
 	// create it in datapath
 	err = na.Datapath.CreateVrf(ns.Status.NamespaceID, ns.Spec.NamespaceType)
 	if err != nil {
 		log.Errorf("Error creating namespace in datapath. Namespace {%+v}. Err: %v", ns, err)
+		return err
+	}
+
+	// Add a dependency on successful datapath create
+	err = na.Solver.Add(tn, ns)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", tn, ns)
 		return err
 	}
 

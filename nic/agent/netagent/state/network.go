@@ -39,7 +39,6 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	}
 
 	// reject config that specifies both vlan and vxlan configs.
-
 	if nt.Spec.VlanID != 0 && nt.Spec.VxlanVNI != 0 {
 		log.Errorf("Should specify either vlan-id or vxlan-vni, but not both")
 		return fmt.Errorf("must specify either vlan-id or vxlan-id, but not both. vlan-id: %v, vxlan-vni: %v", nt.Spec.VlanID, nt.Spec.VxlanVNI)
@@ -52,6 +51,13 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	}
 
 	uplinks := na.getUplinks()
+
+	// Add the current network as a dependency to the namespace.
+	err = na.Solver.Add(ns, nt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, nt)
+		return err
+	}
 
 	// create it in datapath
 	err = na.Datapath.CreateNetwork(nt, uplinks, ns)
@@ -155,10 +161,23 @@ func (na *Nagent) DeleteNetwork(nt *netproto.Network) error {
 	// get all the uplinks
 	uplinks := na.getUplinks()
 
-	// delete the network in datapath
+	// check if the current network has any objects referring to it
+	err = na.Solver.Solve(nw)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", nw.Name, err)
+		return err
+	}
+	// clear for deletion. delete the network in datapath
 	err = na.Datapath.DeleteNetwork(nw, uplinks, ns)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
+		return err
+	}
+
+	// update parent references
+	err = na.Solver.Remove(ns, nw)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
 		return err
 	}
 
