@@ -137,7 +137,16 @@ toolchain {
   compiler_flag: "-U_FORTIFY_SOURCE"
   compiler_flag: "-fstack-protector"
   compiler_flag: "-fPIE"
-  linker_flag: "-pie"
+  feature {
+    name: "pie_for_linking"
+    enabled: true
+    flag_set {
+      action: "c++-link-executable"
+      flag_group {
+        flag: "-pie"
+      }
+    }
+  }
   linker_flag: "-Wl,-z,relro,-z,now"
 
   # Enable coloring even if there's no attached terminal. Bazel removes the

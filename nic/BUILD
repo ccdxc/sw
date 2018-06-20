@@ -493,7 +493,7 @@ config_setting(
 )
 
 # Used by dol/test/storage/BUILD
-cc_inc_library(
+cc_library(
     name = "compression_asic_hdrs",
     hdrs = [
         "asic/capri/design/common/cap_addr_define.h",

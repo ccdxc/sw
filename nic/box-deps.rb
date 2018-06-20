@@ -225,19 +225,15 @@ inside "#{BASE_BUILD_DIR}/bind9" do
   run "make install"
 end
 
+run "pip install --upgrade pip"
 run "pip install --upgrade #{PIP2_PACKAGES.join(" ")}"
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 
 run "yum install -y dkms iproute2 net-tools zip zlib1g-dev"
 inside BASE_BUILD_DIR do
-  run "wget https://github.com/bazelbuild/bazel/releases/download/0.5.4/bazel-0.5.4-installer-linux-x86_64.sh"
-  run "chmod +x bazel-0.5.4-installer-linux-x86_64.sh"
-  run "./bazel-0.5.4-installer-linux-x86_64.sh"
-end
-
-copy "nic/sknobs.tar.gz", "#{BASE_BUILD_DIR}/sknobs.tar.gz"
-inside "/" do
-  run "tar xzf #{BASE_BUILD_DIR}/sknobs.tar.gz"
+  run "wget https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh"
+  run "chmod +x bazel-0.14.1-installer-linux-x86_64.sh"
+  run "./bazel-0.14.1-installer-linux-x86_64.sh"
 end
 
 copy "nic/toolchain.tar.gz", "#{BASE_BUILD_DIR}/toolchain.tar.gz"
@@ -253,7 +249,7 @@ inside BASE_BUILD_DIR do
        && CFLAGS=\"$CFLAGS -fPIC\" ./configure && make && make install"
 end
 
-OPENAPP_VERSION = "6329"
+OPENAPP_VERSION = "7630"
 inside BASE_BUILD_DIR do
   run "wget https://www.snort.org/downloads/openappid/#{OPENAPP_VERSION} \
        && mv #{OPENAPP_VERSION} snort-openappid.tar.gz \
@@ -277,7 +273,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.22"
+tag "pensando/nic:1.23"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

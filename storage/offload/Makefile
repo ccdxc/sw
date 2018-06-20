@@ -13,7 +13,7 @@ shell: build-runtime-image
 REGISTRY = registry.test.pensando.io:5000
 
 build-runtime-image: install_box
-	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.22; fi
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.23; fi
 	cd ../.. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box -t pensando/offload storage/offload/box.rb
 
 install_box:
