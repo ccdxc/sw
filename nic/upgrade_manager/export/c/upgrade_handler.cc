@@ -9,18 +9,6 @@ namespace upgrade {
 
 using namespace std;
 
-HdlrResp UpgHandler::UpgStateReqCreate(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler UpgStateReqCreate not implemented by service");
-    return resp;
-}
-
-HdlrResp UpgHandler::UpgStateReqDelete(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler UpgStateReqDelete not implemented by service");
-    return resp;
-}
-
 HdlrResp UpgHandler::HandleStateUpgReqRcvd(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStateUpgReqRcvd not implemented by service");
@@ -69,16 +57,14 @@ HdlrResp UpgHandler::HandleStateCleanup(UpgCtx& upgCtx) {
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateUpgSuccess(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+void UpgHandler::HandleStateUpgSuccess(UpgCtx& upgCtx) {
     LogInfo("UpgHandler HandleStateUpgSuccess not implemented by service");
-    return resp;
+    return;
 }
 
-HdlrResp UpgHandler::HandleStateUpgFailed(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+void UpgHandler::HandleStateUpgFailed(UpgCtx& upgCtx) {
     LogInfo("UpgHandler HandleStateUpgFailed not implemented by service");
-    return resp;
+    return;
 }
 
 void UpgHandler::HandleStateUpgAborted(UpgCtx& upgCtx) {

@@ -40,52 +40,50 @@ public:
     ExSvcHandler(){}
     HdlrResp UpgStateReqCreate(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler UpgStateReqCreate called for the SVC!!");
+        LogInfo("UpgHandler UpgStateReqCreate called for the SVC!");
         return resp;
     }
 
     HdlrResp UpgStateReqDelete(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler UpgStateReqDelete called for the SVC!!");
+        LogInfo("UpgHandler UpgStateReqDelete called for the SVC!");
         return resp;
     }
 
     HdlrResp HandleStateUpgReqRcvd(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleStateUpgReqRcvd called for the SVC!!");
+        LogInfo("UpgHandler HandleStateUpgReqRcvd called for the SVC!");
         return resp;
     }
 
     HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx) {
         //HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleStateProcessesQuiesced called for the SVC!!");
+        LogInfo("UpgHandler HandleStateProcessesQuiesced called for the SVC!");
         return resp;
     }
 
     HdlrResp HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         //HdlrResp resp = {.resp=FAIL, .errStr="LALALALA: Example could not do HandleStateDataplaneDowntimePhase1Start"};
-        LogInfo("UpgHandler HandleStateDataplaneDowntimePhase1Start called for the SVC!!");
+        LogInfo("UpgHandler HandleStateDataplaneDowntimePhase1Start called for the SVC!");
         return resp;
     }
 
     HdlrResp HandleStateCleanup(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleStateCleanup called for the SVC!!");
+        LogInfo("UpgHandler HandleStateCleanup called for the SVC!");
         return resp;
     }
 
-    HdlrResp HandleStateUpgSuccess(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleStateUpgSuccess called for the SVC!!");
-        return resp;
+    void HandleStateUpgSuccess(UpgCtx& upgCtx) {
+        LogInfo("UpgHandler HandleStateUpgSuccess called for the SVC!");
+        return;
     }
 
-    HdlrResp HandleStateUpgFailed(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleStateUpgFailed called for the SVC!!");
-        return resp;
+    void HandleStateUpgFailed(UpgCtx& upgCtx) {
+        LogInfo("UpgHandler HandleStateUpgFailed called for the SVC!");
+        return;
     }
 };
 

@@ -87,28 +87,19 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleStateCleanup(upgCtx *upgsdk.UpgCt
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgSuccess(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
-	hdlrResp.ErrStr = ""
+func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgSuccess(upgCtx *upgsdk.UpgCtx) {
 	log.Infof("HandleStateUpgSuccess called")
-	return hdlrResp
+	return
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgFailed(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
-	hdlrResp.ErrStr = ""
+func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgFailed(upgCtx *upgsdk.UpgCtx) {
 	log.Infof("HandleStateUpgFailed called")
-	return hdlrResp
+	return
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgAborted(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
-	hdlrResp.ErrStr = ""
+func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgAborted(upgCtx *upgsdk.UpgCtx) {
 	log.Infof("HandleStateUpgAborted called")
-	return hdlrResp
+	return
 }
 
 type upgradeCompletion struct {

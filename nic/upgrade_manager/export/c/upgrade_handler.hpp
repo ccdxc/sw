@@ -14,8 +14,6 @@ using namespace std;
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual HdlrResp UpgStateReqCreate(UpgCtx& upgCtx);
-    virtual HdlrResp UpgStateReqDelete(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateUpgReqRcvd(UpgCtx& upgCtx);
     virtual HdlrResp HandleStatePreUpgState(UpgCtx& upgCtx);
     virtual HdlrResp HandleStatePostBinRestart(UpgCtx& upgCtx);
@@ -24,8 +22,8 @@ public:
     virtual HdlrResp HandleDataplaneDowntimeAdminQ(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateDataplaneDowntimePhase2Start(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateCleanup(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateUpgSuccess(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateUpgFailed(UpgCtx& upgCtx);
+    virtual void HandleStateUpgSuccess(UpgCtx& upgCtx);
+    virtual void HandleStateUpgFailed(UpgCtx& upgCtx);
     virtual void HandleStateUpgAborted(UpgCtx& upgCtx);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;

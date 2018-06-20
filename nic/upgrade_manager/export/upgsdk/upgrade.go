@@ -76,9 +76,9 @@ type UpgAppHandlers interface {
 	HandleDataplaneDowntimeAdminQ(upgCtx *UpgCtx) HdlrResp
 	HandleStateDataplaneDowntimePhase2Start(upgCtx *UpgCtx) HdlrResp
 	HandleStateCleanup(upgCtx *UpgCtx) HdlrResp
-	HandleStateUpgSuccess(upgCtx *UpgCtx) HdlrResp
-	HandleStateUpgFailed(upgCtx *UpgCtx) HdlrResp
-	HandleStateUpgAborted(upgCtx *UpgCtx) HdlrResp
+	HandleStateUpgSuccess(upgCtx *UpgCtx)
+	HandleStateUpgFailed(upgCtx *UpgCtx)
+	HandleStateUpgAborted(upgCtx *UpgCtx)
 }
 
 // UpgSdk is the main Upgrade SDK API

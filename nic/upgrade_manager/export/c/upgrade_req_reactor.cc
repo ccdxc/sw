@@ -46,11 +46,13 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgC
             break;
         case UpgSuccess:
             LogInfo("Upgrade: Succeeded");
-            hdlrResp = upgHdlrPtr_->HandleStateUpgSuccess(ctx);
+            hdlrResp = resp;
+            upgHdlrPtr_->HandleStateUpgSuccess(ctx);
             break;
         case UpgFailed:
             LogInfo("Upgrade: Failed");
-            hdlrResp = upgHdlrPtr_->HandleStateUpgFailed(ctx);
+            hdlrResp = resp;
+            upgHdlrPtr_->HandleStateUpgFailed(ctx);
             break;
         case UpgAborted:
             LogInfo("Upgrade: Aborted");
@@ -93,9 +95,6 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
     //delete the object
     UpgReqReactor::GetUpgCtx(ctx, req);
     upgAppRespPtr_->DeleteUpgAppResp();
-    if (upgHdlrPtr_) {
-        upgHdlrPtr_->UpgStateReqDelete(ctx);
-    }
     return delphi::error::OK();
 }
 
