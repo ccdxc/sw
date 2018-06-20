@@ -96,7 +96,13 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 		sdkClient: client,
 		svcRole:   role,
 	}
+	if appHdlrs == nil {
+		return nil, errors.New("Application handlers need to be provided")
+	}
 	if role == AgentRole {
+		if agentHdlrs == nil {
+			return nil, errors.New("Agent completion handlers need to be provided")
+		}
 		upgrade.UpgReqMount(client, delphi.MountMode_ReadWriteMode)
 		upgRespInit(client, agentHdlrs)
 		upgAppRespInit(client, agentHdlrs)
