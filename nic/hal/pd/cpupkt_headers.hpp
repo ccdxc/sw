@@ -3,6 +3,8 @@
 #include <sys/param.h>
 #include "nic/include/pkt_hdrs.hpp"
 
+#define L2HDR_DOT1Q_OFFSET              12
+
 namespace hal {
 namespace pd {
 

@@ -195,10 +195,20 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
             HAL_TRACE_DEBUG("asq base: {:#x}", asq_base);
             data.u.cpu_tx_initial_action_d.asq_base = asq_base;
         }
-
-        // flags
-        data.u.cpu_tx_initial_action_d.flags = cpucb_pd->cpucb->cfg_flags;
-        HAL_TRACE_DEBUG("cpucb: tx: flags: {}", data.u.cpu_tx_initial_action_d.flags);
+        
+        // get ascq address 
+        wring_hw_id_t   ascq_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASCQ, 0, &ascq_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive ascq base, ret: {}", ret);
+        } else {
+            HAL_TRACE_DEBUG("ascq base: {:#x}", ascq_base);
+            data.u.cpu_tx_initial_action_d.ascq_base = ascq_base;
+        }
+        
+        // get ascq sem address
+        HAL_TRACE_DEBUG("ascq sem: {:#x}", CAPRI_SEM_ASCQ_INF_ADDR(0));
+        data.u.cpu_tx_initial_action_d.ascq_sem_inf_addr = CAPRI_SEM_ASCQ_INF_ADDR(0);
     }
 
     HAL_TRACE_DEBUG("Programming tx stage0 at hw-id: {:#x}", hwid);
@@ -234,6 +244,21 @@ p4pd_add_or_del_cpucb_txdma_entry(pd_cpucb_t* cpucb_pd, bool del)
 
     ret = p4pd_add_or_del_cpu_tx_stage0_entry(cpucb_pd, del);
     if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
+    // Initialize CPU Descriptor and page rings
+    ret = wring_pd_table_init(types::WRING_TYPE_CPUDR, 
+                              cpucb_pd->cpucb->cb_id);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to init CPUDR ring: {}", ret);
+        goto cleanup;
+    }
+
+    ret = wring_pd_table_init(types::WRING_TYPE_CPUPR, 
+                              cpucb_pd->cpucb->cb_id);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to init CPUDR ring: {}", ret);
         goto cleanup;
     }
 

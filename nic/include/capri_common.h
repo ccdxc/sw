@@ -50,6 +50,9 @@
 #define CAPRI_SEM_RNMPR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 9)
 #define CAPRI_SEM_TNMPR_SMALL_ALLOC_ADDR    (CAPRI_MEM_SEMA_START + 8 * 10)
 #define CAPRI_SEM_TNMPR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 11)
+#define CAPRI_SEM_ASCQ_0_ADDR               (CAPRI_MEM_SEMA_START + 8 * 12)
+#define CAPRI_SEM_ASCQ_1_ADDR               (CAPRI_MEM_SEMA_START + 8 * 13)
+#define CAPRI_SEM_ASCQ_2_ADDR               (CAPRI_MEM_SEMA_START + 8 * 14)
 
 #define CAPRI_SEM_LAST_PI_CI_SEMAPHORE      (CAPRI_MEM_SEMA_START + 8 * 63)
 
@@ -198,6 +201,19 @@
                 (CAPRI_SEM_ARQ_RX_IDX_ADDR(_queue_id) + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_ARQ_RX_IDX_INC_ADDR(_queue_id) \
                 (CAPRI_SEM_ARQ_RX_IDX_ADDR(_queue_id) + CAPRI_SEM_INC_OFFSET)
+
+// ASCQ Semaphores
+#define CAPRI_SEM_ASCQ_ADDR(_queue_id)                                  \
+                            (CAPRI_SEM_ASCQ_0_ADDR + 8 * _queue_id)  
+#define CAPRI_SEM_ASCQ_RAW_ADDR(_queue_id)                              \
+                            (CAPRI_SEM_ASCQ_ADDR(_queue_id) + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_ASCQ_CI_RAW_ADDR(_queue_id)                           \
+                            (CAPRI_SEM_ASCQ_RAW_ADDR(_queue_id) + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
+#define CAPRI_SEM_ASCQ_INF_ADDR(_queue_id)                              \
+                            (CAPRI_SEM_ASCQ_ADDR(_queue_id) + CAPRI_SEM_INF_OFFSET)
+
+#define CAPRI_HBM_CPUDR_RING_SIZE              1024
+#define CAPRI_HBM_CPUPR_RING_SIZE              1024
 
 // TLS Semaphores
 #define CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR    \

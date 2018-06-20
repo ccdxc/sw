@@ -27,6 +27,11 @@
 #define CPU_ASQ_ENTRY_SIZE                  8
 #define CPU_ASQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
 
+#define CPU_ASCQ_TABLE_SIZE                 1024
+#define CPU_ASCQ_TABLE_SHIFT                10
+#define CPU_ASCQ_ENTRY_SIZE                 8
+#define CPU_ASCQ_ENTRY_SIZE_SHIFT           3
+
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_END CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
 
@@ -62,7 +67,27 @@
 	phvwri  p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_phv_desc_field_name); \
     phvwri  p.##_dma_cmd_prefix##_eop, _eop_; \
     phvwri  p.##_dma_cmd_prefix##_wr_fence, _wr_fence_ 
-   
+
+#define CPU_TX_ASCQ_ENQUEUE(_dest_r,                \
+                            _descr_addr,            \
+                            _ascq_pindex,           \
+                            _ascq_base,             \
+                            _phv_desc_field_name,   \
+                            _dma_cmd_prefix,        \
+                            _eop_,                  \
+                            _wr_fence_)             \
+ 	add     _dest_r, r0, _ascq_pindex;                                  \
+    andi    _dest_r, _dest_r, ((1 << CPU_ASCQ_TABLE_SHIFT) - 1);        \
+	sll     _dest_r, _dest_r, CPU_ASCQ_ENTRY_SIZE_SHIFT;                \
+	add     _dest_r, _dest_r, _ascq_base;                               \
+	phvwri  p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;   \
+	phvwr   p.##_dma_cmd_prefix##_addr, _dest_r;                        \
+    add     _dest_r, r0, 0x1, CPU_VALID_BIT_SHIFT;                      \
+    add     _dest_r, _dest_r, _descr_addr;                              \
+	phvwr   p._phv_desc_field_name, _dest_r;                            \
+	phvwri  p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_phv_desc_field_name); \
+	phvwri  p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_phv_desc_field_name);     \
+    phvwrpair p.##_dma_cmd_prefix##_wr_fence, _wr_fence_, p.##_dma_cmd_prefix##_eop, _eop_;
 
 #define CPU_ARQ_PIDX_READ_INC(_dest_r, _k_cpu_id, _d_struct, _pi0_field_name, _temp1_r, _temp2_r) \
     add     _temp1_r, r0, _k_cpu_id; \

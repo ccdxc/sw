@@ -9,27 +9,27 @@
 
 #define tx_table_s1_t0 cpu_tx_read_asq_ci
 #define tx_table_s1_t0_action read_asq_ci
-#
+
 #define tx_table_s2_t0 cpu_tx_read_asq_descr
 #define tx_table_s2_t0_action read_asq_descr
 
 #define tx_table_s3_t0 cpu_tx_read_cpu_hdr
 #define tx_table_s3_t0_action read_cpu_hdr
-#define tx_table_s4_t0 cpu_tx_read_l2_vlan_hdr
-#define tx_table_s4_t0_action read_l2_vlan_hdr
 
-#define tx_table_s5_t0 cpu_tx_write_pkt
-#define tx_table_s5_t0_action write_pkt
+#define tx_table_s3_t1 cpu_tx_read_l2_vlan_hdr
+#define tx_table_s3_t1_action read_l2_vlan_hdr
+
+#define tx_table_s4_t0 cpu_tx_write_pkt
+#define tx_table_s4_t0_action write_pkt
 
 #include "../common-p4+/common_txdma.p4"
 
 #define GENERATE_GLOBAL_K \
-    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
-    modify_field(common_global_scratch.qid, common_phv.qid); \
     modify_field(common_global_scratch.write_vlan_tag, common_phv.write_vlan_tag); \
     modify_field(common_global_scratch.rem_vlan_tag, common_phv.rem_vlan_tag); \
-    modify_field(common_global_scratch.flags, common_phv.flags); \
-    modify_field(common_global_scratch.cpu_hdr_flags, common_phv.cpu_hdr_flags); \
+    modify_field(common_global_scratch.add_qs_trlr, common_phv.add_qs_trlr); \
+    modify_field(common_global_scratch.free_buffer, common_phv.free_buffer); \
+    modify_field(common_global_scratch.ascq_base, common_phv.ascq_base); \
    
 
 /********************
@@ -54,9 +54,10 @@ header_type cpu_txdma_initial_action_t {
         
         CAPRI_QSTATE_HEADER_RING(0)
 
-        asq_base                : 64; 
-        flags                   : 8;
-    }    
+        asq_base                : 64;
+        ascq_base               : 64;
+        ascq_sem_inf_addr       : 64;
+    }
 }
 
 // d for stage1
@@ -69,6 +70,13 @@ header_type read_asq_ci_d_t {
 // d fpr stage2
 // use pkt_descr_t
 
+// d for stage 4
+header_type write_pkt_d_t {
+    fields {
+        ascq_pindex      : 32;
+        ascq_full        : 8;
+    }
+} 
 
 /******************************************************************************
  * Global PHV definitions
@@ -76,22 +84,21 @@ header_type read_asq_ci_d_t {
 header_type common_global_phv_t {
     fields {
         // global k (max 128)
-        qstate_addr             : CPU_HBM_ADDRESS_WIDTH;
-        qid                     : 24;
         write_vlan_tag          : 1;
         rem_vlan_tag            : 1;
-        flags                   : 8;
-        cpu_hdr_flags           : 16;
+        add_qs_trlr             : 1;
+        free_buffer             : 1;
+        ascq_base               : CPU_HBM_ADDRESS_WIDTH;
     }
 }
 
-header_type to_stage_1_phv_t {
+header_type to_stage_3_phv_t {
     fields {
-        asq_ci_addr             : CPU_HBM_ADDRESS_WIDTH; 
-    }    
+        ascq_sem_inf_addr       : CPU_HBM_ADDRESS_WIDTH;
+    }
 }
 
-header_type to_stage_5_phv_t {
+header_type to_stage_4_phv_t {
     fields {
         src_lif                 : 16;
         asq_desc_addr           : CPU_HBM_ADDRESS_WIDTH;    
@@ -120,6 +127,9 @@ metadata cpu_to_p4plus_header_t read_cpu_hdr_d;
 @pragma scratch_metadata
 metadata vlan_hdr_t read_l2_vlan_hdr_d;
 
+@pragma scratch_metadata
+metadata write_pkt_d_t write_pkt_d;
+
 /******************************************************************************
  * Header unions for PHV layout
  *****************************************************************************/
@@ -131,17 +141,17 @@ metadata common_global_phv_t common_global_scratch;
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_header_t cpu_app_header;
 
-@pragma pa_header_union ingress to_stage_1
-metadata to_stage_1_phv_t to_s1;
+@pragma pa_header_union ingress to_stage_3
+metadata to_stage_3_phv_t to_s3;
 
-@pragma pa_header_union ingress to_stage_5
-metadata to_stage_5_phv_t to_s5;
-
-@pragma scratch_metadata
-metadata to_stage_1_phv_t to_s1_scratch;
+@pragma pa_header_union ingress to_stage_4
+metadata to_stage_4_phv_t to_s4;
 
 @pragma scratch_metadata
-metadata to_stage_5_phv_t to_s5_scratch;
+metadata to_stage_3_phv_t to_s3_scratch;
+
+@pragma scratch_metadata
+metadata to_stage_4_phv_t to_s4_scratch;
 
 /******************************************************************************
  * PHV following k (for app DMA etc.)
@@ -152,9 +162,12 @@ metadata vlan_hdr_t vlan_hdr_entry;
 @pragma dont_trim
 metadata quiesce_pkt_trlr_t quiesce_pkt_trlr;
 
+@pragma dont_trim
+metadata ring_entry_t ascq_ring_entry; 
+
 header_type dma_phv_pad_t {
     fields {
-        dma_pad                 : 192;
+        dma_pad                 : 128;
     }    
 }
 
@@ -179,6 +192,9 @@ metadata dma_cmd_mem2pkt_t dma_cmd4;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t dma_cmd5;
 
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_ascq;
+
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
  *
@@ -190,7 +206,7 @@ metadata dma_cmd_phv2pkt_t dma_cmd5;
  * Stage 0 table 0 action
  */
 action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-                             pi_0, ci_0, asq_base, flags) {
+                             pi_0, ci_0, asq_base, ascq_base, ascq_sem_inf_addr) {
     // k + i for stage 0
 
     // from intrinsic
@@ -199,13 +215,6 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
-
-    // from app header
-    //modify_field(cpu_scratch_app.p4plus_app_id, cpu_app_header.p4plus_app_id);
-    //modify_field(cpu_scratch_app.table0_valid, cpu_app_header.table0_valid);
-    //modify_field(cpu_scratch_app.table1_valid, cpu_app_header.table1_valid);
-    //modify_field(cpu_scratch_app.table2_valid, cpu_app_header.table2_valid);
-    //modify_field(cpu_scratch_app.table3_valid, cpu_app_header.table3_valid);
 
     // d for stage 0
     
@@ -222,16 +231,14 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     modify_field(cpu_txdma_initial_d.ci_0, ci_0);
     
     modify_field(cpu_txdma_initial_d.asq_base, asq_base);
-    modify_field(cpu_txdma_initial_d.flags, flags);
+    modify_field(cpu_txdma_initial_d.ascq_base, ascq_base);
+    modify_field(cpu_txdma_initial_d.ascq_sem_inf_addr, ascq_sem_inf_addr);
 }
 
 // Stage 1 table 0
 action read_asq_ci(desc_addr) {
     // from ki global
     GENERATE_GLOBAL_K
-
-    // from to_stage 1
-    modify_field(to_s1_scratch.asq_ci_addr, to_s1.asq_ci_addr);
 
     // d for stage 1
     modify_field(read_asq_ci_d.desc_addr, desc_addr);
@@ -258,6 +265,10 @@ action read_asq_descr(A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt) {
 
 // Stage 3 table 0
 action read_cpu_hdr(flags, src_lif, hw_vlan_id, l2_offset, tm_oq) {
+    // K
+    modify_field(to_s3_scratch.ascq_sem_inf_addr, to_s3.ascq_sem_inf_addr);
+
+    // d for stage 3 table 0
     modify_field(read_cpu_hdr_d.flags, flags);
     modify_field(read_cpu_hdr_d.src_lif, src_lif);
     modify_field(read_cpu_hdr_d.hw_vlan_id, hw_vlan_id);
@@ -275,14 +286,21 @@ action read_l2_vlan_hdr(etherType, pcp, dei, vid) {
     modify_field(read_l2_vlan_hdr_d.dei, dei); 
     modify_field(read_l2_vlan_hdr_d.vid, vid); 
 }
-action write_pkt() {
+
+
+// Stage 4 table 0
+action write_pkt(ascq_pindex, ascq_full) {
     // from ki global
     GENERATE_GLOBAL_K
 
-    modify_field(to_s5_scratch.src_lif, to_s5.src_lif);
-    modify_field(to_s5_scratch.asq_desc_addr, to_s5.asq_desc_addr);
-    modify_field(to_s5_scratch.page_addr, to_s5.page_addr);
-    modify_field(to_s5_scratch.len, to_s5.len);
-    modify_field(to_s5_scratch.vlan_tag_exists, to_s5.vlan_tag_exists);
-    modify_field(to_s5_scratch.tm_oq, to_s5.tm_oq);
+    modify_field(to_s4_scratch.src_lif, to_s4.src_lif);
+    modify_field(to_s4_scratch.asq_desc_addr, to_s4.asq_desc_addr);
+    modify_field(to_s4_scratch.page_addr, to_s4.page_addr);
+    modify_field(to_s4_scratch.len, to_s4.len);
+    modify_field(to_s4_scratch.vlan_tag_exists, to_s4.vlan_tag_exists);
+    modify_field(to_s4_scratch.tm_oq, to_s4.tm_oq);
+
+    // d-vector
+    modify_field(write_pkt_d.ascq_pindex, ascq_pindex);
+    modify_field(write_pkt_d.ascq_full, ascq_full);
 }

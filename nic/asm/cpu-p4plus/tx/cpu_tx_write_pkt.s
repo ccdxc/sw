@@ -1,32 +1,37 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
 #include "cpu-table.h"
-
+#include "cpu-macros.h"
+        
 struct phv_ p;
 struct cpu_tx_write_pkt_k k;
-
+struct cpu_tx_write_pkt_d d;
+        
 #define c_upd_vlan_tag      c1
 #define c_rem_vlan_tag      c2
-#define c_vlan_tag_exists   c3
-#define c_add_qs_trlr       c4
-#define c_temp              c5
+#define c_add_qs_trlr       c3
+#define c_free_buffer       c4
+#define c_vlan_tag_exists   c5
+#define c_qs_or_free_buffer c6
+#define c_temp              c7
+
+#define r_addr              r1
+#define r_len               r2
+#define r_temp              r3
         
 %%
     .align
 cpu_tx_write_pkt_start:
     CAPRI_CLEAR_TABLE_VALID(0)
-    smeqb   c_add_qs_trlr, k.{common_phv_cpu_hdr_flags_sbit0_ebit5...common_phv_cpu_hdr_flags_sbit14_ebit15}, CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR, CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR  
-
 
 dma_cmd_global_intrinsic:
     phvwri  p.p4_intr_global_tm_iport, 9
     phvwri  p.p4_intr_global_tm_oport, 11
-    phvwr   p.p4_intr_global_tm_oq, k.to_s5_tm_oq
-    phvwr   p.p4_intr_global_lif, k.to_s5_src_lif
+    phvwr   p.p4_intr_global_tm_oq, k.to_s4_tm_oq
+    phvwr   p.p4_intr_global_lif, k.to_s4_src_lif
 
-    addi    r5, r0, CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16
-    add     r4, r5, r0
-    phvwr   p.p4_txdma_intr_dma_cmd_ptr, r4
+    addi    r_addr, r0, CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16
+    phvwr   p.p4_txdma_intr_dma_cmd_ptr, r_addr
 
     phvwri  p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwr   p.dma_cmd0_dma_cmd_phv_start_addr, CPU_PHV_INTRINSIC_START
@@ -37,36 +42,40 @@ dma_cmd_txdma_intrinsic:
     phvwr   p.dma_cmd1_dma_cmd_phv_start_addr, CPU_PHV_TXDMA_INTRINSIC_START
     phvwr   p.dma_cmd1_dma_cmd_phv_end_addr, CPU_PHV_TXDMA_INTRINSIC_END
 
-cpu_tx_check_vlan_rewrite:
+cpu_tx_check_flags:
     sne     c_upd_vlan_tag, k.common_phv_write_vlan_tag, r0
     sne     c_rem_vlan_tag, k.common_phv_rem_vlan_tag, r0
-    sne     c_vlan_tag_exists, k.to_s5_vlan_tag_exists, r0
+    sne     c_add_qs_trlr, k.common_phv_add_qs_trlr, r0
+    sne     c_free_buffer, k.common_phv_free_buffer, r0
+    setcf   c_qs_or_free_buffer, [c_add_qs_trlr | c_free_buffer]
+        
+cpu_tx_check_vlan_rewrite:
+    sne     c_vlan_tag_exists, k.to_s4_vlan_tag_exists, r0
     setcf   c_temp, [c_rem_vlan_tag & c_vlan_tag_exists]
     bcf     [c_upd_vlan_tag | c_temp], dma_cmd_vlan_rewrite_header
     nop
 
 dma_cmd_data:
     // Calculate offsets after removing CPU HDR 
-    add     r4, k.to_s5_page_addr, CPU_TO_P4PLUS_HDR_SIZE
-    sub     r5, k.to_s5_len, CPU_TO_P4PLUS_HDR_SIZE
+    add     r_addr, k.to_s4_page_addr, CPU_TO_P4PLUS_HDR_SIZE
+    sub     r_len, k.to_s4_len, CPU_TO_P4PLUS_HDR_SIZE
 
     phvwri  p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwri.!c_add_qs_trlr p.dma_cmd2_dma_pkt_eop, 1
     
-    phvwr   p.dma_cmd2_dma_cmd_addr, r4
-    phvwr   p.dma_cmd2_dma_cmd_size, r5
-    phvwr.!c_add_qs_trlr p.dma_cmd2_dma_cmd_eop, 1
-    b       cpu_tx_write_quiesce_trailer 
-    nop
+    phvwr   p.dma_cmd2_dma_cmd_addr, r_addr
+    phvwr   p.dma_cmd2_dma_cmd_size, r_len
+    b       cpu_tx_write_quiesce_trailer    
+    phvwr.!c_qs_or_free_buffer p.dma_cmd2_dma_cmd_eop, 1
 
 dma_cmd_vlan_rewrite_header:
     //  Start offset 
-    add     r4, k.to_s5_page_addr, CPU_TO_P4PLUS_HDR_SIZE
-    add     r5, r0, (P4PLUS_TO_P4_HDR_SIZE + L2HDR_DOT1Q_OFFSET)
+    add     r_addr, k.to_s4_page_addr, CPU_TO_P4PLUS_HDR_SIZE
+    add     r_len, r0, (P4PLUS_TO_P4_HDR_SIZE + L2HDR_DOT1Q_OFFSET)
 
     phvwri  p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr   p.dma_cmd2_dma_cmd_addr, r4
-    phvwr   p.dma_cmd2_dma_cmd_size, r5
+    phvwr   p.dma_cmd2_dma_cmd_addr, r_addr
+    phvwr   p.dma_cmd2_dma_cmd_size, r_len
 
 dma_cmd_vlan_header:
     phvwri.c_upd_vlan_tag  p.dma_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
@@ -75,30 +84,58 @@ dma_cmd_vlan_header:
 
 dma_cmd_trailer:
     //  trailer start =header start + header size
-    add     r4, r4, r5
-    sub     r5, k.to_s5_len, r5
-    sub     r5, r5, CPU_TO_P4PLUS_HDR_SIZE
+    add     r_addr, r_addr, r_len
+    sub     r_len, k.to_s4_len, r_len
+    sub     r_len, r_len, CPU_TO_P4PLUS_HDR_SIZE
    
     // Remove any existing vlan tag from the packet
-    add.c_vlan_tag_exists  r4, r4, VLAN_TAG_HDR_SIZE
-    sub.c_vlan_tag_exists  r5, r5, VLAN_TAG_HDR_SIZE
+    add.c_vlan_tag_exists  r_addr, r_addr, VLAN_TAG_HDR_SIZE
+    sub.c_vlan_tag_exists  r_len, r_len, VLAN_TAG_HDR_SIZE
 
     phvwri  p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr   p.dma_cmd4_dma_cmd_addr, r4
-    phvwr   p.dma_cmd4_dma_cmd_size, r5
-    phvwri.!c_add_qs_trlr  p.dma_cmd4_dma_pkt_eop, 1
-    phvwri.!c_add_qs_trlr  p.dma_cmd4_dma_cmd_eop, 1
+    phvwr   p.dma_cmd4_dma_cmd_addr, r_addr
+    phvwr   p.dma_cmd4_dma_cmd_size, r_len
+
+    phvwri.!c_add_qs_trlr       p.dma_cmd4_dma_pkt_eop, 1
+    phvwri.!c_qs_or_free_buffer p.dma_cmd4_dma_cmd_eop, 1
 
 cpu_tx_write_quiesce_trailer:
-    bcf     [!c_add_qs_trlr], cpu_tx_write_pkt_done
+    bcf     [!c_add_qs_trlr], cpu_tx_write_ascq
     nop
     
     CAPRI_DMA_CMD_PHV2PKT_SETUP(dma_cmd5_dma_cmd,
                                 quiesce_pkt_trlr_timestamp,
                                 quiesce_pkt_trlr_timestamp)
-    CAPRI_DMA_CMD_PKT_STOP(dma_cmd5_dma)
-    CAPRI_DMA_CMD_STOP(dma_cmd5_dma_cmd)
+
+    phvwri                p.dma_cmd5_dma_pkt_eop, 1
+    phvwri.!c_free_buffer p.dma_cmd5_dma_cmd_eop, 1
+
+cpu_tx_write_ascq:
+    bcf     [!c_free_buffer], cpu_tx_write_pkt_done
+    nop
+
+    seq     c_temp, d.u.write_pkt_d.ascq_full, 1
+    b.c_temp cpu_tx_ascq_full_fatal_error
+    nop
+
+    CPU_TX_ASCQ_ENQUEUE(r_temp,
+                        k.to_s4_asq_desc_addr,
+                        d.{u.write_pkt_d.ascq_pindex}.wx,
+                        k.{common_phv_ascq_base_sbit0_ebit3...common_phv_ascq_base_sbit36_ebit39},
+                        ascq_ring_entry_descr_addr,
+                        dma_cmd_ascq_dma_cmd,
+                        1,
+                        1)
 
 cpu_tx_write_pkt_done:
+    nop.e
+    nop
+
+cpu_tx_ascq_full_fatal_error:
+    CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_CLEAR_TABLE2_VALID
+    CAPRI_CLEAR_TABLE3_VALID
+    illegal
     nop.e
     nop

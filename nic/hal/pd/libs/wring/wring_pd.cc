@@ -88,7 +88,10 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQTX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, arqrx_get_hw_meta, false};
 
     g_meta[types::WRING_TYPE_ASQ] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+
+    g_meta[types::WRING_TYPE_ASCQ] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0,
@@ -115,6 +118,16 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_RX_GC,
                            CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+    
+    g_meta[types::WRING_TYPE_CPUDR] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPUDR, 
+                           CAPRI_HBM_CPUDR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           CAPRI_HBM_REG_CPU_DESCR, 128, 0, 0, NULL, NULL, false};
+
+    g_meta[types::WRING_TYPE_CPUPR] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPUPR,
+                           CAPRI_HBM_CPUPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           CAPRI_HBM_REG_CPU_PAGE, 128, 0, 0, NULL, NULL, false};
 
     return HAL_RET_OK;
 }

@@ -27,16 +27,13 @@ cpu_tx_stage0_start:
 #endif
     phvwr   p.quiesce_pkt_trlr_timestamp, r6.wx
     
-    phvwr   p.common_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
-    phvwr   p.common_phv_qid, k.p4_txdma_intr_qid
-    phvwr   p.common_phv_flags, d.u.cpu_tx_initial_action_d.flags
-
+    phvwr   p.common_phv_ascq_base, d.{u.cpu_tx_initial_action_d.ascq_base}.dx
+    phvwr   p.to_s3_ascq_sem_inf_addr, d.{u.cpu_tx_initial_action_d.ascq_sem_inf_addr}.dx
+        
 table_read_asq_cindex:
     add     r_asq_addr, r0, d.{u.cpu_tx_initial_action_d.ci_0}.hx
     andi    r_asq_addr, r_asq_addr, ((1 << CPU_ASQ_TABLE_SHIFT) - 1)
     add     r_asq_addr, d.{u.cpu_tx_initial_action_d.asq_base}.dx, r_asq_addr, CPU_ASQ_ENTRY_SIZE_SHIFT
-    //add     r3, d.{u.cpu_tx_initial_action_d.asq_base}.dx, d.{u.cpu_tx_initial_action_d.ci_0}.hx, NIC_ASQ_ENTRY_SIZE_SHIFT 
-    phvwr   p.to_s1_asq_ci_addr, r_asq_addr
     tbladd  d.{u.cpu_tx_initial_action_d.ci_0}.hx, 1
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, cpu_tx_read_asq_ci_start, r_asq_addr, TABLE_SIZE_64_BITS)

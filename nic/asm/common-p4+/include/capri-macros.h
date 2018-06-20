@@ -410,6 +410,7 @@
 #define ARQRX_QIDXR_BASE               hbm_arqrx_qidxr_base 
 #define CAPRI_CPU_HASH_MASK            cpu_hash_mask
 #define CAPRI_CPU_MAX_ARQID            cpu_max_arqid
+#define CPU_TX_DOT1Q_HDR_OFFSET        cpu_tx_dot1q_hdr_offset
 
 #define TABLE_TYPE_RAW                 0
 #define TABLE_LOCK_DIS                 0

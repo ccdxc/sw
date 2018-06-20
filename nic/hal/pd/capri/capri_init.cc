@@ -20,6 +20,7 @@
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/include/capri_common.h"
+#include "nic/include/cpupkt_headers.hpp"
 
 #define P4PLUS_SYMBOLS_MAX  131
 
@@ -403,6 +404,13 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].num_params = 1;
     symbols[i].params[0].name = ARQRX_QIDXR_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+    i++;
+
+    symbols[i].name = "cpu_tx_read_asq_descr.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = CPU_TX_DOT1Q_HDR_OFFSET;
+    symbols[i].params[0].val = sizeof(hal::pd::cpu_to_p4plus_header_t) + \
+        sizeof(hal::pd::p4plus_to_p4_header_t) + L2HDR_DOT1Q_OFFSET;
     i++;
 
     symbols[i].name = "tls-dec-read-tnmdr-alloc-idx.bin";
