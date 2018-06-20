@@ -19,6 +19,35 @@
     text-align: center;
     color: #ffffff;
   }
+
+  /* Alert color stylings */
+  .global-alert-critical {
+    background-color: #dd3b09;
+    color: #dd3b09;
+  }
+
+  .global-alert-warning {
+    background-color: #fcb710;
+    color: #fcb710;
+  }
+
+  .global-alert-info {
+    background-color: #6ba0e5;
+    color: #6ba0e5;
+  }
+
+  /* Alert color stylings */
+  .global-alert-critical-icon {
+    color: #dd3b09;
+  }
+
+  .global-alert-warning-icon {
+    color: #fcb710;
+  }
+
+  .global-alert-info-icon {
+    color: #6ba0e5;
+  }
   /* Button styling */
   .global-button-disabled {
       opacity: 0.3;

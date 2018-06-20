@@ -13,6 +13,7 @@ import { TroubleshootingComponent } from './troubleshooting/troubleshooting.comp
 import { MonitoringRoutingModule } from './monitoring.route';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { AlertseventsComponent } from '@app/components/monitoring/alertsevents/alertsevents.component';
 
 @NgModule({
   imports: [
@@ -26,7 +27,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     MaterialdesignModule,
     MonitoringRoutingModule
   ],
-  declarations: [TroubleshootingComponent, MonitoringComponent],
+  declarations: [TroubleshootingComponent, MonitoringComponent, AlertseventsComponent],
   exports: [TroubleshootingComponent, MonitoringComponent]
 })
 export class MonitoringModule { }

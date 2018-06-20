@@ -1,5 +1,5 @@
 <div class="pagebody-container">
-    <div fxLayoutAlign="row" class="pagebody-header">
+    <div *ngIf="title" fxLayoutAlign="row" class="pagebody-header">
         <div fxFlex="48px" class="pagebody-iconcontainer">
             <div [ngStyle]="_iconStyles" class="pagebody-icon"></div>
         </div>

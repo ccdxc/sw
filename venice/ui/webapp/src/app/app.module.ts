@@ -50,7 +50,6 @@ import { CoreModule } from '@app/core';
 import { SettingsModule } from '@app/components/settings';
 import { DashboardModule } from '@app/components/dashboard';
 import { AlertlistModule } from '@app/components/alertlist';
-import { AlerttableModule } from '@app/components/alerttable';
 import { SecurityModule } from '@app/components/security';
 import { NetworkModule } from '@app/components/network';
 import { LoginModule } from '@app/components/login/login.module';
@@ -101,7 +100,6 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     CoreModule,
     SettingsModule,
     AlertlistModule,
-    AlerttableModule,
     LoginModule,
     DashboardModule,
     SecurityModule,

@@ -3,6 +3,7 @@
 @import 'src/app/app.component.sidenav.scss-theme';
 @import 'src/app/components/shared/pagebody/pagebody.component.scss-theme';
 @import 'styles';
+@import 'global-mixins';
 @import url('https://fonts.googleapis.com/css?family=Roboto|Roboto+Condensed|Fira+Sans|Fira+Sans+Condensed');
 @include mat-core();
 
@@ -16,6 +17,7 @@
   @include toolbar-theme($theme);
   @include sidenav-theme($theme);
   @include pagebody-theme($theme);
+  @include tabs-theme($theme);
 }
 
 .default-theme {

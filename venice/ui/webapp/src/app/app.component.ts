@@ -258,8 +258,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   private onSidenavInvokation(payload) {
     if (payload['id'] === 'workload') {
       this.navigate(['/workload']);
-    } else if (payload['id'] === 'alerttable') {
-      this.navigate(['/alerttable']);
     } else if (payload['id'] === 'sgpolicy') {
       this.navigate(['/security', 'sgpolicy']);
     } else if (payload['id'] === 'network') {
@@ -270,6 +268,8 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
       this.navigate(['/cluster-group', 'cluster']);
     } else if (payload['id'] === 'naples') {
       this.navigate(['/cluster-group', 'naples']);
+    } else if (payload['id'] === 'alertsevents') {
+      this.navigate(['/monitoring', 'alertsevents']);
     } else {
       this.navigate(['/dashboard']);
     }
@@ -560,7 +560,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
    * @param  alertlist
    */
   onExpandAllAlertsClick(alertlist) {
-    this.navigate(['alerttable']);
+    this.navigate(['/monitoring', 'alertsevents']);
     this._rightSideNav.close();
 
   }

@@ -9,7 +9,7 @@ import { Component, Input, OnDestroy, OnInit, OnChanges, ViewEncapsulation } fro
   styleUrls: ['./pagebody.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class PagebodyComponent implements OnInit, OnChanges, OnDestroy {
+export class PagebodyComponent implements OnInit, OnDestroy {
   hasOptions: Boolean;
   _iconStyles: any;
 
@@ -37,12 +37,6 @@ export class PagebodyComponent implements OnInit, OnChanges, OnDestroy {
       'background-image': 'url(' + this.icon.url + ')',
     };
     return styles;
-  }
-
-  ngOnChanges() {
-    if (!this.title) {
-      this.title = 'Workloads header';
-    }
   }
 
   ngOnDestroy() {

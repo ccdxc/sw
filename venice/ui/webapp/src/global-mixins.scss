@@ -48,3 +48,89 @@
     background-color: rgb(221, 221, 221);
   }
 }
+
+/**
+ * Overrides material's theming of tabs. Adapted from material's tab theming file.
+ */
+@mixin tabs-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
+  $header-border: #dddddd;
+
+  .mat-tab-nav-bar,
+  .mat-tab-header {
+    border-top: $header-border;
+    border-bottom: none;
+    box-shadow: inset 0px 0px 0px 1px #dddddd;
+  }
+
+  .mat-tab-label, .mat-tab-link {
+    opacity: 1;
+    @include primary-font(16px);
+    border: 1px solid $header-border;
+    border-left: none;
+    &:not(.mat-tab-label-active):not(.mat-tab-disabled):hover {
+      box-shadow: inset 0px -3px 0px 0px #dddddd;
+    }
+
+    &.mat-tab-disabled {
+      color: rgb(215, 216, 223);
+      opacity: 0.6;
+    }
+  }
+
+  .mat-tab-header-pagination-chevron {
+    border-color: #676763;
+  }
+
+  .mat-tab-header-pagination-disabled .mat-tab-header-pagination-chevron {
+    border-color: rgb(215, 216, 223);
+  }
+
+  // Remove header border when there is a background color
+  .mat-tab-group[class*='mat-background-'] .mat-tab-header,
+  .mat-tab-nav-bar[class*='mat-background-'] {
+    border-left: $header-border;
+    border-right: $header-border;
+    border-top: none;
+  }
+
+  .mat-tab-group, .mat-tab-nav-bar {
+    $highlightColor : #6ba0e5;
+
+    // Set the foreground color of the tabs
+    &.mat-primary {
+      @include _tab-label-focus();
+      @include _ink-bar($highlightColor);
+    }
+
+    &.mat-background-primary {
+      .mat-ripple-element {
+        background-color: red;
+      }
+    }
+  }
+}
+
+@mixin _ink-bar($color, $hue: default) {
+  .mat-ink-bar {
+    display: none;
+  }
+}
+
+@mixin _tab-label-focus() {
+  .mat-tab-label:not(.mat-tab-disabled):focus,
+  .mat-tab-link:not(.mat-tab-disabled):focus {
+    background-color: white;
+  }
+  .mat-tab-label-active {
+    opacity: 1;
+    color: #6ba0e5;
+    box-shadow: inset 0px 3px 0px 0px #6ba0e5;
+    border-top: 1px solid #6ba0e5;
+    border-bottom: 1px solid white;
+  }
+}

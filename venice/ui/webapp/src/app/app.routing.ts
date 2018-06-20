@@ -30,10 +30,6 @@ export const routes: Routes = [
     loadChildren: '@components/workload/workload.module#WorkloadModule'
   },
   {
-    path: 'alerttable',
-    loadChildren: '@components/alerttable/alerttable.module#AlerttableModule'
-  },
-  {
     path: 'monitoring',
     loadChildren: '@components/monitoring/monitoring.module#MonitoringModule'
   },
