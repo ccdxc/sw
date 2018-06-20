@@ -68,20 +68,28 @@ type UpgCtx struct {
 
 //UpgAppHandlers all upgrade applications to implement this
 type UpgAppHandlers interface {
+	HandleStateUpgReqRcvd(upgCtx *UpgCtx) HdlrResp
+	HandleStatePreUpgState(upgCtx *UpgCtx) HdlrResp
+	HandleStatePostBinRestart(upgCtx *UpgCtx) HdlrResp
+	HandleStateProcessesQuiesced(upgCtx *UpgCtx) HdlrResp
+	HandleStateDataplaneDowntimePhase1Start(upgCtx *UpgCtx) HdlrResp
+	HandleDataplaneDowntimeAdminQ(upgCtx *UpgCtx) HdlrResp
+	HandleStateDataplaneDowntimePhase2Start(upgCtx *UpgCtx) HdlrResp
+	HandleStateCleanup(upgCtx *UpgCtx) HdlrResp
+	HandleStateUpgSuccess(upgCtx *UpgCtx) HdlrResp
+	HandleStateUpgFailed(upgCtx *UpgCtx) HdlrResp
+	HandleStateUpgAborted(upgCtx *UpgCtx) HdlrResp
 }
 
 // UpgSdk is the main Upgrade SDK API
 type UpgSdk interface {
-	//API used initiate upgrade request
 	StartUpgrade() error
-	//API used abort existing upgrade request
 	AbortUpgrade() error
-	//API used to check status of upgrade request
 	GetUpgradeStatus(retStr *[]string) error
 }
 
 //NewUpgSdk API is used to init upgrade sdk
-func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentHandlers) (UpgSdk, error) {
+func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentHandlers, appHdlrs UpgAppHandlers) (UpgSdk, error) {
 	log.Infof("NewUpgSdk called for %s", name)
 	upgsdk := &upgSdk{
 		svcName:   name,
@@ -93,7 +101,7 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 		upgRespInit(client, agentHdlrs)
 		upgAppRespInit(client, agentHdlrs)
 	}
-	upgStateReqInit(client /*appHdlrs,*/, name)
+	upgStateReqInit(client, appHdlrs, name)
 	initStateMachineVector()
 	return upgsdk, nil
 }
