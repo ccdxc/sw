@@ -242,6 +242,14 @@ def print_logs():
                 print("    " + line)
         log.close()
 
+    if os.path.isfile(tls_clt_log):
+        print("TLS Client log:")
+        log = open(tls_clt_log, "r")
+        for line in log.readlines():
+            if "Client:" in line:
+                print("    " + line)
+        log.close()
+
     if len(sock_stats) != 0:
       print("Socket states:")
       for line in sock_stats:
@@ -282,9 +290,9 @@ def run_test(testnum, testname, tcp_port, bypass_tls, cipher, certfile, keyfile,
     print_logs()
     print("\n- Test %d: run time: %s seconds\n" % (testnum, round(time.time() - start_time, 1)))
     if status != 0:
-        print("Test %d: E2E %s Proxy Status = FAIL\n" % (testnum, testname))
+        print("Test %d: E2E %s Proxy Status = FAIL (%d)\n" % (testnum, testname, status))
     else:
-        print("Test %d: E2E %s Proxy Status = PASS\n" % (testnum, testname))
+        print("Test %d: E2E %s Proxy Status = PASS (%d)\n" % (testnum, testname, status))
 
     cleanup(keep_logs=True)
     return status
