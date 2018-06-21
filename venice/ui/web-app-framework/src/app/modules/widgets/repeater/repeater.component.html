@@ -43,8 +43,8 @@
                                         [formControlName]="valueFormName">
       </div>
       <!-- Add and delete buttons -->
-      <!-- Only show and if its the last row, and there are keys left -->
-      <div fxFlex="nogrow" *ngIf="last && repeaterList.length < keyOptions.length" class="repeater-and">
+      <!-- Only show and if its the last row -->
+      <div fxFlex="nogrow" *ngIf="last" class="repeater-and">
         <span (click)="addRepeater()">+ AND</span>
       </div> 
       <!-- Only show if its not the only repeater left -->

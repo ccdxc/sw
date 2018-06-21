@@ -96,7 +96,7 @@ describe('RepeaterComponent', () => {
     expect(addElem.length).toBe(1);
     expect(trashElem.length).toBe(2);
 
-    // last add
+    // add
     addElem[0].nativeElement.querySelector('span').click();
     expect(component.repeaterValues.emit).toHaveBeenCalled();
     expect(component.repeaterValues.emit).toHaveBeenCalledWith([
@@ -108,11 +108,53 @@ describe('RepeaterComponent', () => {
     spy.calls.reset();
     fixture.detectChanges();
 
-    // zero Ands, three trash cans
+    // Should still be able to add since add is not unique, three trash cans
     addElem = fixture.debugElement.queryAll(By.css('.repeater-and'));
     trashElem = fixture.debugElement.queryAll(By.css('.repeater-trash-icon'));
-    expect(addElem.length).toBe(0);
+    expect(addElem.length).toBe(1);
     expect(trashElem.length).toBe(3);
+    spy.calls.reset();
+    fixture.detectChanges();
+
+    // add
+    addElem[0].nativeElement.querySelector('span').click();
+    expect(component.repeaterValues.emit).toHaveBeenCalled();
+    expect(component.repeaterValues.emit).toHaveBeenCalledWith([
+      { keyFormControl: 'severity', operatorFormControl: 'is', valueFormControl: 'critical' },
+      { keyFormControl: 'severity', operatorFormControl: 'is', valueFormControl: 'critical' },
+      { keyFormControl: 'severity', operatorFormControl: 'is', valueFormControl: 'critical' },
+      { keyFormControl: 'severity', operatorFormControl: 'is', valueFormControl: 'critical' }
+    ]);
+    expect(component.repeaterList.length).toBe(4);
+    spy.calls.reset();
+    fixture.detectChanges();
+
+    addElem = fixture.debugElement.queryAll(By.css('.repeater-and'));
+    trashElem = fixture.debugElement.queryAll(By.css('.repeater-trash-icon'));
+    expect(addElem.length).toBe(1);
+    expect(trashElem.length).toBe(4);
+    spy.calls.reset();
+    fixture.detectChanges();
+
+    // delete
+    trashElem[0].nativeElement.children[0].click();
+    expect(component.repeaterValues.emit).toHaveBeenCalled();
+    expect(component.repeaterValues.emit).toHaveBeenCalledWith([
+      { keyFormControl: 'severity', operatorFormControl: 'is', valueFormControl: 'critical' },
+      { keyFormControl: 'severity', operatorFormControl: 'is', valueFormControl: 'critical' },
+      { keyFormControl: 'severity', operatorFormControl: 'is', valueFormControl: 'critical' }
+    ]);
+    expect(component.repeaterList.length).toBe(3);
+    spy.calls.reset();
+    fixture.detectChanges();
+
+    // one And, 3 trash cans
+    addElem = fixture.debugElement.queryAll(By.css('.repeater-and'));
+    trashElem = fixture.debugElement.queryAll(By.css('.repeater-trash-icon'));
+    expect(addElem.length).toBe(1);
+    expect(trashElem.length).toBe(3);
+    spy.calls.reset();
+    fixture.detectChanges();
 
     // delete
     trashElem[0].nativeElement.children[0].click();

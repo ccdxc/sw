@@ -123,11 +123,8 @@ export class RepeaterComponent implements OnInit {
 
 
   addRepeater() {
-    // checking if there are any keys left before creating
-    if (this.repeaterList.length < this.keyOptions.length) {
-      this.createRepeater();
-      this.emitValues()
-    }
+    this.createRepeater();
+    this.emitValues()
   }
 
   removeRepeater(id: number) {
