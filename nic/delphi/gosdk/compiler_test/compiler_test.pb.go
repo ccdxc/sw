@@ -151,60 +151,6 @@ type delphiWrapper interface {
 	bubbleSave()
 }
 
-type MessageKey struct {
-	sdkClient gosdk.Client
-	parent    delphiWrapper
-	value     uint32
-}
-
-func (o *MessageKey) GetValue() uint32 {
-	return o.value
-}
-
-func (o *MessageKey) SetValue(val uint32) {
-	o.value = val
-	o.bubbleSave()
-}
-
-func (o *MessageKey) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *MessageKey) save() {
-}
-
-func NewMessageKey(sdkClient gosdk.Client) *MessageKey {
-	w := &MessageKey{}
-	w.sdkClient = sdkClient
-	return w
-}
-
-func childNewMessageKey(parent delphiWrapper, sdkClient gosdk.Client) *MessageKey {
-	w := NewMessageKey(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func (o *MessageKey) GetProtoMsg() *MessageKey_ {
-	return &MessageKey_{
-		Value: o.value,
-	}
-}
-
-func (o *MessageKey) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func newMessageKeyFromMessage(msg *MessageKey_) *MessageKey {
-	return &MessageKey{
-		value: msg.Value,
-	}
-}
-
 type MessageB struct {
 	sdkClient   gosdk.Client
 	parent      delphiWrapper
@@ -653,6 +599,60 @@ func MessageAWatch(client gosdk.Client, reactor MessageAReactor) {
 	client.WatchKind("MessageA", reactor)
 }
 
+type MessageKey struct {
+	sdkClient gosdk.Client
+	parent    delphiWrapper
+	value     uint32
+}
+
+func (o *MessageKey) GetValue() uint32 {
+	return o.value
+}
+
+func (o *MessageKey) SetValue(val uint32) {
+	o.value = val
+	o.bubbleSave()
+}
+
+func (o *MessageKey) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *MessageKey) save() {
+}
+
+func NewMessageKey(sdkClient gosdk.Client) *MessageKey {
+	w := &MessageKey{}
+	w.sdkClient = sdkClient
+	return w
+}
+
+func childNewMessageKey(parent delphiWrapper, sdkClient gosdk.Client) *MessageKey {
+	w := NewMessageKey(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func (o *MessageKey) GetProtoMsg() *MessageKey_ {
+	return &MessageKey_{
+		Value: o.value,
+	}
+}
+
+func (o *MessageKey) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func newMessageKeyFromMessage(msg *MessageKey_) *MessageKey {
+	return &MessageKey{
+		value: msg.Value,
+	}
+}
+
 type StringArray struct {
 	parent delphiWrapper
 	values []string
@@ -665,6 +665,10 @@ func (arr *StringArray) Append(value string) {
 
 func (arr *StringArray) Get(pos int) string {
 	return arr.values[pos]
+}
+
+func (arr *StringArray) Length() int {
+	return len(arr.values)
 }
 
 func newStringArrayFromMessage(msg []string) *StringArray {

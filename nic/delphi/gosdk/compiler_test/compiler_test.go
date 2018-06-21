@@ -224,6 +224,10 @@ func TestMessageC(t *testing.T) {
 		t.Errorf("v should be \"testC\" it is: %s", v)
 	}
 
+	if arrWrapper.Length() != 1 {
+		t.Errorf(`arrWrapper.Length() != 1`)
+	}
+
 	msg, ok := c.GetMessage().(*MessageC_)
 	if !ok {
 		t.Errorf("Cast to *MessageC_ failed")

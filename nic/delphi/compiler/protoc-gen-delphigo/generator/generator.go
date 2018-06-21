@@ -3426,6 +3426,11 @@ func (g *Generator) delphiGenerateArrayWrapper(name string) {
 	g.P("  return arr.values[pos]")
 	g.P("}\n")
 
+	// Length
+	g.P("func (arr *" + name + ") Length() int {")
+	g.P("  return len(arr.values)")
+	g.P("}\n")
+
 	// new<NAME>ArrayFromMessage
 	g.P("func new" + name +
 		"FromMessage (msg []" + typeName + ") *" + name + " {")
