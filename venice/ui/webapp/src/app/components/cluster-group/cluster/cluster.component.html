@@ -9,31 +9,31 @@
       <div fxLayout="row">
         <div fxFlex="50">
           <div class="cluster-details-panel-content-label">Leader:</div>
-          <div class="cluster-details-panel-content-value">{{cluster?.status.leader}}</div>
+          <div class="cluster-details-panel-content-value cluster-details-panel-leader-value">{{cluster?.status.leader}}</div>
         </div>
         <div fxFlex="50">
           <div class="cluster-details-panel-content-label">Last Leader Transition Time:</div>
-          <div class="cluster-details-panel-content-value">{{cluster?.status['last-leader-transition-time'] | date: 'MM-dd-yyyy HH:mm a'}}</div>
+          <div class="cluster-details-panel-content-value cluster-details-panel-last-leader-transition-time">{{cluster?.status['last-leader-transition-time'] | date: 'MM-dd-yyyy HH:mm a'}}</div>
         </div>
       </div>
       <div fxLayout="row">
        <div fxFlex="50">
           <div class="cluster-details-panel-content-label">Quorum Nodes:</div>
-          <div class="cluster-details-panel-content-value">{{cluster?.spec['quorum-nodes']}}</div>
+          <div class="cluster-details-panel-content-value cluster-details-panel-quorum-nodes">{{cluster?.spec['quorum-nodes'].toString().split(',').join(', ')}}</div>
         </div>
         <div fxFlex="50">
             <div class="cluster-details-panel-content-label">Virtual IP:</div>
-            <div class="cluster-details-panel-content-value">{{cluster?.spec['virtual-ip']}}</div>
+            <div class="cluster-details-panel-content-value cluster-details-panel-virtual-ip">{{cluster?.spec['virtual-ip']}}</div>
           </div>
       </div>
       <div fxLayout="row">
         <div fxFlex="50">
           <div class="cluster-details-panel-content-label">NTP Servers:</div>
-          <div class="cluster-details-panel-content-value">{{cluster?.spec['ntp-servers']}}</div>
+          <div class="cluster-details-panel-content-value cluster-details-panel-ntp-servers">{{cluster?.spec['ntp-servers'].toString().split(',').join(', ')}}</div>
         </div>
         <div fxFlex="50">
             <div class="cluster-details-panel-content-label">Auto Admit NICs:</div>
-            <div class="cluster-details-panel-content-value">{{cluster?.spec['auto-admit-nics']}}</div>
+            <div class="cluster-details-panel-content-value cluster-details-panel-auto-admit-nics">{{cluster?.spec['auto-admit-nics']}}</div>
         </div>
       </div>
     </div>
@@ -43,14 +43,14 @@
 
 <ng-template #DataTable>
   <!-- Table Caption -->
-  <div fxLayout="row" class="nodes-table-header">
-    <i fxFlex='nogrow' class="fa fa-table nodes-table-icon"></i>
-    <div fxFlex='nogrow' class="nodes-table-headercontent">
+  <div fxLayout="row" class="cluster-details-nodes-table-header">
+    <i fxFlex='nogrow' class="fa fa-table cluster-details-nodes-table-icon"></i>
+    <div fxFlex='nogrow' class="cluster-details-nodes-table-headercontent">
       Total Nodes ({{nodeCount}})
     </div>
   </div>
   <!-- PrimeNG Turbo Table -->
-  <p-table #nodestable [value]="nodes" dataKey="name" class="nodes-table global-primeng-table">
+  <p-table #nodestable [value]="nodes" dataKey="name" class="cluster-details-nodes-table global-primeng-table">
     <!-- Table Header -->  
     <ng-template pTemplate="header">
       <tr>

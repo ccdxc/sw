@@ -23,8 +23,8 @@ export class ClusterComponent extends BaseComponent implements OnInit {
     url: '/assets/images/icons/cluster/ico-cluster-black.svg'
   };
   cluster: any;
-  nodes: any[];
-  nodeCount: number;
+  nodes: any[] = [];
+  nodeCount: 0;
   cols: any[] = [
     { field: 'name', header: 'Name' },
     { field: 'quorum', header: 'Quorum Member' },
@@ -53,7 +53,7 @@ export class ClusterComponent extends BaseComponent implements OnInit {
             text: 'Refresh',
             callback: () => { this.getCluster(); this.getNodes(); },
           }],
-        breadcrumb: [{ label: 'Cluster', url: ''},{label: 'Cluster', url: ''}]
+        breadcrumb: [{ label: 'Cluster', url: ''}, {label: 'Cluster', url: ''}]
       });
     }
   }
@@ -62,7 +62,7 @@ export class ClusterComponent extends BaseComponent implements OnInit {
     this._clusterService.getCluster().subscribe(
       data => {
         if (data.Items.length > 0) {
-          this.cluster = data.Items[0]
+          this.cluster = data.Items[0];
         }
       }
     );
@@ -71,15 +71,15 @@ export class ClusterComponent extends BaseComponent implements OnInit {
   getNodes() {
     this._nodesService.getNodes().subscribe(
       data => {
-        this.nodeCount = data.Items.length
-        for (var i = 0; i < data.Items.length; i++) {
+        this.nodeCount = data.Items.length;
+        for (let i = 0; i < data.Items.length; i++) {
           if (data.Items[i].status.quorum === true) {
-            data.Items[i].status.quorum = 'yes'
+            data.Items[i].status.quorum = 'yes';
           }
-          var phase = String(data.Items[i].status.phase)
-          data.Items[i].status.phase = phase.charAt(0).toUpperCase() + phase.slice(1).toLowerCase()
+          const phase = String(data.Items[i].status.phase);
+          data.Items[i].status.phase = phase.charAt(0).toUpperCase() + phase.slice(1).toLowerCase();
         }
-        this.nodes = data.Items
+        this.nodes = data.Items;
       }
     );
   }

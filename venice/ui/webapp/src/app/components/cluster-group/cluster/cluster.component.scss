@@ -31,14 +31,14 @@
 /** TABLE RELATED CSS **/
 $table-headerheight: 55px;
 
-.nodes-table-header {
+.cluster-details-nodes-table-header {
     @include primary-font(18px, black);
     width: 100%;
     height: $table-headerheight;
     font-weight: normal;
 }
 
-.nodes-table-icon {
+.cluster-details-nodes-table-icon {
     width: 30px;
     height: 30px;
     font-size: 30px;
@@ -48,6 +48,6 @@ $table-headerheight: 55px;
     opacity: 0.3;
 }
 
-.nodes-table-headercontent {
+.cluster-details-nodes-table-headercontent {
     margin: 20px 15px 13px 0px;
 }

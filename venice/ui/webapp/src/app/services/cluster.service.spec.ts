@@ -26,7 +26,7 @@ describe('ClusterService', () => {
     httpMock = injector.get(HttpTestingController);
   });
 
-  it('should be created', inject([ClusterService], (service: ClusterService) => {
-    expect(service).toBeTruthy();
+  it('should be created', inject([ClusterService], (svc: ClusterService) => {
+    expect(svc).toBeTruthy();
   }));
 });
