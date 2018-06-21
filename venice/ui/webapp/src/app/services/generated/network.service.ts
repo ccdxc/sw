@@ -61,6 +61,11 @@ export class NetworkService extends NetworkV1Service {
   }
 
   protected invokeAJAX(method: string, url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<VeniceResponse> {
+    // Removing time fields as null values will be attempted to be parsed
+    if (payload != null && payload.meta != null) {
+      delete payload.meta['creation-time'];
+      delete payload.meta['mod-time'];
+    }
     const eventPayload = { 'ajax': 'start', 'method': method, 'name': eventPayloadID + '-ajax', 'url': url }
     this.publishAJAXStart(eventPayload);
 

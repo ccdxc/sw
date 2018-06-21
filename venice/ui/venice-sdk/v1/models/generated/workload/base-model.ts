@@ -38,7 +38,7 @@ export abstract class BaseModel {
     protected abstract getFormGroup(): FormGroup;
 
     getValues() {
-        return this.$formGroup.value();
+        return this.$formGroup.value;
     }
 
     /** 

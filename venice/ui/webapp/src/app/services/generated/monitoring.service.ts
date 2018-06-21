@@ -61,6 +61,10 @@ export class MonitoringService extends MonitoringV1Service {
   }
 
   protected invokeAJAX(method: string, url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<VeniceResponse> {
+    if (payload != null && payload.meta != null) {
+      delete payload.meta['creation-time'];
+      delete payload.meta['mod-time'];
+    }
     const eventPayload = { 'ajax': 'start', 'method': method, 'name': eventPayloadID + '-ajax', 'url': url }
     this.publishAJAXStart(eventPayload);
 
