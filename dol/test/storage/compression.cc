@@ -194,6 +194,7 @@ comp_sgl_packed_fill(dp_mem_t *comp_sgl_vec,
         comp_buf_size -= comp_sgl->len0;
         comp_sgl->len1 = std::min(comp_buf_size, blk_size);
         if (comp_sgl->len1 == 0) {
+            comp_sgl_vec->write_thru();
             break;
         }
         comp_sgl->addr1 = comp_buf_addr;
@@ -202,6 +203,7 @@ comp_sgl_packed_fill(dp_mem_t *comp_sgl_vec,
         comp_buf_size -= comp_sgl->len1;
         comp_sgl->len2 = std::min(comp_buf_size, blk_size);
         if (comp_sgl->len2 == 0) {
+            comp_sgl_vec->write_thru();
             break;
         }
         comp_sgl->addr2 = comp_buf_addr;
@@ -611,8 +613,10 @@ compression_buf_init()
                                              decrypt_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                              destructor_free_buffers(true));
     decrypt_decomp_chain_pre_push_params_t ddc_pre_push;
-    decrypt_decomp_chain->pre_push(ddc_pre_push.caller_comp_status_buf(status_host_buf).
-                                                caller_comp_opaque_buf(nullptr).
+    ddc_pre_push.caller_comp_status_buf(
+        test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM) == DP_MEM_TYPE_HOST_MEM ?
+        status_host_buf : status_buf);
+    decrypt_decomp_chain->pre_push(ddc_pre_push.caller_comp_opaque_buf(nullptr).
                                                 caller_comp_opaque_data(0));
     // Create and initialize compression->hash chaining
     comp_hash_chain_params_t chc_ctor;
@@ -625,10 +629,12 @@ compression_buf_init()
                                         comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                         destructor_free_buffers(true));
     hash_status_host_vec = new dp_mem_t(max_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
-                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                        DP_MEM_ALIGN_SPEC,
+                                        test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                         kMinHostMemAllocSize);
     hash_opaque_host_vec = new dp_mem_t(max_hash_blks, sizeof(uint64_t),
-                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                        DP_MEM_ALIGN_SPEC, 
+                                        test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                         kMinHostMemAllocSize);
     comp_hash_chain_pre_push_params_t chc_pre_push;
     comp_hash_chain->pre_push(chc_pre_push.caller_comp_pad_buf(comp_pad_buf).
@@ -879,11 +885,11 @@ int _compress_same_src_and_dst(acc_ring_push_t push_type,
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
 
-  memcpy(compressed_host_buf->read(), uncompressed_data, kCompAppMinSize);
-  compressed_host_buf->write_thru();
-  compress_cp_desc_template_fill(d, compressed_host_buf, compressed_host_buf,
-                                 status_host_buf, nullptr, kCompAppMinSize);
-  if (run_cp_test(d, compressed_host_buf, status_host_buf, 
+  memcpy(compressed_buf->read(), uncompressed_data, kCompAppMinSize);
+  compressed_buf->write_thru();
+  compress_cp_desc_template_fill(d, compressed_buf, compressed_buf,
+                                 status_buf, nullptr, kCompAppMinSize);
+  if (run_cp_test(d, compressed_buf, status_buf, 
                   push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;

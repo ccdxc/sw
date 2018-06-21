@@ -16,6 +16,7 @@ DECLARE_uint64(acc_scale_submissions);
 DECLARE_uint64(acc_scale_blk_size);
 DECLARE_uint64(acc_scale_iters);
 DECLARE_string(acc_scale_verify_method);
+DECLARE_bool(rtl);
 DECLARE_bool(with_rtl_skipverify);
 DECLARE_bool(combined);
 
@@ -203,6 +204,8 @@ int test_run_rdma_e2e_xts_write1(void);
 int test_run_rdma_e2e_xts_read1(void);
 
 int test_run_seq_pdma_multi_xfers();
+
+dp_mem_type_t test_mem_type_workaround(dp_mem_type_t preference);
 
 void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
                         uint8_t ring, uint16_t index,

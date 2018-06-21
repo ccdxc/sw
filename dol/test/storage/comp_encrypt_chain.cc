@@ -38,6 +38,7 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     seq_comp_qid(0),
     actual_enc_blks(-1),
     num_enc_blks(0),
+    initial_xts_opaque_tag(0),
     last_cp_output_data_len(0),
     last_encrypt_output_data_len(0),
     expected_status(CP_STATUS_SUCCESS),
@@ -61,7 +62,8 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
                              0, DP_MEM_ALLOC_NO_FILL);
     if (params.comp_mem_type2_ != DP_MEM_TYPE_VOID) {
         comp_buf2 = new dp_mem_t(1, comp_buf1->line_size_get(),
-                                 DP_MEM_ALIGN_PAGE, params.comp_mem_type2_,
+                                 DP_MEM_ALIGN_PAGE,
+                                 test_mem_type_workaround(params.comp_mem_type2_),
                                  0, DP_MEM_ALLOC_NO_FILL);
     } else {
         comp_buf2 = comp_buf1;
@@ -99,23 +101,21 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, app_enc_size);
     max_src_blks = max_enc_blks * 2;
 
-    /*
-     * Preference is to put AOLs in host memory similar to what Driver
-     * would do. However, model has a bug where, when run concurrently
-     * with RTL, model sometimes fails to see updates to AOL from the
-     * host (DOL) software. RTL would still see the correct AOL data,
-     * but at EOS there would be a mismatch between model and RTL.
-     * The simple workaround here is to put AOLs in HBM.
-     */
+    // Workaround model PCIe coherency issue: use HBM based AOLs,
+    // opaque buffers, etc.
     xts_src_aol_vec = new dp_mem_t(max_src_blks, sizeof(xts::xts_aol_t),
-                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
+                                   DP_MEM_ALIGN_SPEC,
+                                   test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM), 512);
     xts_desc_vec = new dp_mem_t(max_src_blks, sizeof(xts::xts_desc_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                DP_MEM_ALIGN_SPEC,
+                                test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                 sizeof(xts::xts_desc_t));
     xts_dst_aol_vec = new dp_mem_t(max_enc_blks, sizeof(xts::xts_aol_t),
-                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
+                                   DP_MEM_ALIGN_SPEC,
+                                   test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM), 512);
     xts_opaque_vec = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
-                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                  DP_MEM_ALIGN_SPEC,
+                                  test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                   sizeof(uint64_t));
 
     // sgl_pad_vec would be used for PDMA of the pad data into comp_buf1
@@ -443,6 +443,7 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t src_block_no,
 
     // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
+    xts_ctx.suppress_info_log = suppress_info_log;
     xts_ctx.op = xts::AES_ENCR_ONLY;
     xts_ctx.push_type = ACC_RING_PUSH_INVALID;
     if (chain_params.seq_spec.seq_next_q) {
@@ -464,6 +465,12 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t src_block_no,
     xts_desc->cmd = cmd;
     xts_desc_vec->write_thru();
     xts_ctx.desc_write_seq_xts(xts_desc);
+
+    // Remember the applicable starting opaque tag for verification later.
+    // The value depends on whether we expect to use the alternate descriptor set.
+    if ((src_block_no == 0) || (src_block_no == num_enc_blks)) {
+        initial_xts_opaque_tag = xts_ctx.last_used_opaque_tag;
+    }
 }
 
 
@@ -595,14 +602,11 @@ comp_encrypt_chain_t::full_verify(void)
                                                      app_enc_size) * app_enc_size;
     /*
      * Before we start validation of AOLs, ensure that P4+ has had a chance
-     * to write them. For that, we wait for completion of at least one 
-     * encryption block.
+     * to write them. For that, we wait for the "real" XTS opaque tag.
      */ 
-    caller_xts_opaque_vec->line_set(0);
-    xts_ctx.xts_db = 
-        caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
-    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
-        printf("ERROR: comp_encrypt_chain block 0 XTS doorbell engine never came\n");
+    if (xts_ctx.verify_exp_opaque_tag(initial_xts_opaque_tag + actual_enc_blks - 1,
+                                      FLAGS_long_poll_interval * poll_factor)) {
+        printf("ERROR: comp_encrypt_chain XTS opaque tag never came\n");
         return -1;
     }
 
@@ -622,6 +626,9 @@ comp_encrypt_chain_t::full_verify(void)
                        max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
     }
 
+    caller_xts_opaque_vec->line_set(0);
+    xts_ctx.xts_db = 
+        caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
     src_len0 = 0;
     src_len1 = 0;
     src_len2 = 0;

@@ -20,7 +20,6 @@
 
 namespace tests {
 
-
 /*
  * Constructor
  */
@@ -87,7 +86,8 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                  sizeof(cp_desc_t));
     hash_sgl_vec = new dp_mem_t(max_hash_blks, sizeof(cp_sgl_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                DP_MEM_ALIGN_SPEC,
+                                test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                 sizeof(cp_sgl_t));
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncomp_buf->read();
@@ -322,12 +322,6 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      * P4+ is capable of initiating chained hash operation simultaneous
      * with PDMA transfer of the comp data. So activate that if the caller
      * had requested it.
-     *
-     * Note: this mode has a limitation in P4+ in terms of the number of
-     * TxDMA descriptors P4+ has at its disposal for doing the transfer.
-     * This translates to the number of "chunks" in the SGL. The limitation
-     * could be as low as just 1 chunk, depending on how many other
-     * chaining features are also enabled in the current chain.
      */
     if (comp_buf1 == comp_buf2) {
         chain_params.sgl_pdma_pad_only = 1;
@@ -566,6 +560,7 @@ comp_hash_chain_t::full_verify(void)
     uint64_t    accum_data_len2;
     uint64_t    accum_link;
     uint64_t    total_accum_data_len;
+    uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
 
     success = false;
     if (actual_hash_blks_get(TEST_RESOURCE_BLOCKING_QUERY) < 0) {
@@ -604,6 +599,33 @@ comp_hash_chain_t::full_verify(void)
         accum_link |= hash_sgl->link;
         if (block_no == ((uint32_t)actual_hash_blks - 1)) {
             pad_data_len = hash_sgl->len1;
+        }
+    }
+
+    /*
+     * Verify hash opaque data
+     */
+    auto hash_opaque_poll_func = [this] () -> int {
+        uint32_t    block_no;
+
+        for (block_no = 0; block_no < (uint32_t)actual_hash_blks; block_no++) {
+            caller_hash_opaque_vec->line_set(block_no);
+            if (*((uint32_t *)caller_hash_opaque_vec->read_thru()) != 
+                                                      caller_hash_opaque_data) {
+                break;
+            }
+        }
+
+        return block_no == (uint32_t)actual_hash_blks ? 0 : 1;
+    };
+
+    if (caller_hash_opaque_vec) {
+        assert(poll_factor);
+        tests::Poller hash_opaque_poll(FLAGS_long_poll_interval * poll_factor);
+
+        if (hash_opaque_poll(hash_opaque_poll_func) != 0) {
+            printf("ERROR: comp_hash_chain hash opaque never came\n");
+            return -1;
         }
     }
 

@@ -211,6 +211,8 @@ public:
   void status_invalidate(void);
   int ring_doorbell();
   uint16_t seq_xts_index_get(void);
+  int verify_exp_opaque_tag(uint32_t exp_opaque_tag,
+                            uint64_t poll_interval=FLAGS_poll_interval);
   int verify_doorbell(bool verify_pi=true,
                       uint64_t poll_interval=FLAGS_poll_interval);
   int queue_req_n_ring_db_from_host();
@@ -242,12 +244,14 @@ public:
   uint64_t exp_db_data = 0xdeadbeefdeadbeef;
   dp_mem_t* status = NULL;
   uint32_t opaque_tag = 0;
+  uint32_t last_used_opaque_tag = 0;
   bool caller_status_en = false;
   bool caller_xts_db_en = false;
   bool opa_tag_en = true;
   bool t10_en = false;
   bool decr_en = false;
   bool is_gcm=false;
+  bool suppress_info_log=false;
   void* auth_tag_addr = NULL;
 
   acc_ring_t *acc_ring = nullptr;
