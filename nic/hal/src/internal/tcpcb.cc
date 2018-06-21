@@ -288,7 +288,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_header_len(rtcpcb.header_len);
     rsp->mutable_spec()->set_header_template(rtcpcb.header_template,
                                              sizeof(rtcpcb.header_template));
-    rsp->mutable_spec()->set_retx_xmit_cursor(rtcpcb.retx_xmit_cursor);
+    rsp->mutable_spec()->set_sesq_retx_ci(rtcpcb.sesq_retx_ci);
     rsp->mutable_spec()->set_retx_snd_una(rtcpcb.retx_snd_una);
     rsp->mutable_spec()->set_rto(rtcpcb.rto);
 

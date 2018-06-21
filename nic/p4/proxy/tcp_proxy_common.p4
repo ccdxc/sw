@@ -44,7 +44,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 
 #define RX2TX_SHARED_STATE \
-        snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : 16                    ;\
         ft_pi                           : 16                    ;\
@@ -59,6 +58,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 #define RX2TX_SHARED_EXTRA_STATE \
         ato_deadline                    : TS_WIDTH              ;\
+        snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_tsval                       : TS_WIDTH              ;\
         srtt_us                         : TS_WIDTH              ;\
         rcv_wnd                         : WINDOW_WIDTH          ;\
@@ -75,7 +75,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         snd_ssthresh                    : WINDOW_WIDTH          ;\
         loss_cwnd                       : WINDOW_WIDTH          ;\
         write_seq                       : SEQ_NUMBER_WIDTH      ;\
-        tso_seq                         : SEQ_NUMBER_WIDTH      ;\
         rcv_mss                         : 16                    ;\
         ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
@@ -103,12 +102,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
-        retx_head_desc                  : HBM_ADDRESS_WIDTH     ;\
-        retx_tail_desc                  : HBM_ADDRESS_WIDTH     ;\
-        retx_xmit_cursor                : 40                    ;\
-        retx_next_desc                  : HBM_ADDRESS_WIDTH     ;\
-        retx_head_offset                : 16                    ;\
-        retx_head_len                   : 16                    ;\
         sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
         tx_ring_pi                      : 16                    ;\
 
@@ -161,9 +154,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         quick_acks_decr                 : 4                     ;\
 
 #define RETX_SHARED_PARAMS \
-retx_snd_una, retx_head_desc, retx_tail_desc,\
-retx_xmit_cursor, retx_next_desc,\
-retx_head_offset, retx_head_len, sesq_ci_addr,\
+retx_snd_una,\
+sesq_ci_addr,\
 tx_ring_pi
 
 #define CC_AND_FRA_SHARED_PARAMS \
@@ -190,12 +182,6 @@ quick_acks_decr
 
 #define GENERATE_RETX_SHARED_D \
     modify_field(retx_d.retx_snd_una, retx_snd_una); \
-    modify_field(retx_d.retx_head_desc, retx_head_desc); \
-    modify_field(retx_d.retx_tail_desc, retx_tail_desc); \
-    modify_field(retx_d.retx_xmit_cursor, retx_xmit_cursor); \
-    modify_field(retx_d.retx_next_desc, retx_next_desc); \
-    modify_field(retx_d.retx_head_offset, retx_head_offset); \
-    modify_field(retx_d.retx_head_len, retx_head_len); \
     modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
 

@@ -63,7 +63,7 @@ typedef struct tcpcb_s {
     uint32_t              header_len;
     uint32_t              pending_ack_send;
     types::AppRedirType   l7_proxy_type;
-    uint64_t              retx_xmit_cursor;        // for testing, check in DOL
+    uint32_t              sesq_retx_ci;            // for testing, check in DOL
     uint32_t              retx_snd_una;            // for testing, check in DOL
     uint32_t              rto;
     uint32_t              snd_cwnd_cnt;

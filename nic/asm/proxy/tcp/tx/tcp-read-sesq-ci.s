@@ -38,7 +38,7 @@ tcp_tx_sesq_read_ci_stage1_start:
          * Launch stage to read tcp flags
          */
         add             r3, r4, NIC_DESC_ENTRY_TCP_FLAGS_OFFSET
-		CAPRI_NEXT_TABLE_READ_e(2, TABLE_LOCK_DIS,
+		CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
                         tcp_tx_read_tcp_flags_start, r3, TABLE_SIZE_8_BITS)
 
         nop

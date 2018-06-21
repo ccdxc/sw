@@ -19,7 +19,6 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
     .align
     .param          tcp_tx_read_rx2tx_shared_extra_stage1_start
     .param          tcp_tx_sesq_read_ci_stage1_start
-    .param          tcp_tx_process_pending_start
     .param          tcp_tx_process_read_xmit_start
 
 tcp_tx_read_rx2tx_shared_process:
@@ -76,7 +75,6 @@ tcp_tx_launch_sesq:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TBL_SETADDR, TCP_TX_DDOL_FORCE_TBL_SETADDR
     phvwri.c1       p.common_phv_debug_dol_force_tbl_setaddr, 1
     add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
-    phvwr           p.to_s1_sesq_ci_addr, r3
 
     /* Check if we have pending del ack timer (fast timer)
      * and cancel if running. The cancel is done by setting ci = pi
@@ -90,11 +88,6 @@ tcp_tx_launch_sesq:
     phvwri          p.common_phv_pending_sesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
-
-    /*
-     * Relay SESQ CI to S3 for updation in the TLS-CB
-     */
-    phvwr           p.to_s3_wb_ci, d.{ci_0}.hx
 
     /*
      * Ring doorbell to set CI if pi == ci
@@ -127,7 +120,6 @@ tcp_tx_launch_asesq:
     and             r1, d.{ci_4}.hx, (CAPRI_ASESQ_RING_SLOTS - 1)
     add             r3, d.{asesq_base}.wx, r1, NIC_SESQ_ENTRY_SIZE_SHIFT
     tbladd.f        d.{ci_4}.hx, 1
-    phvwr           p.to_s1_sesq_ci_addr, r3
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
 
@@ -161,18 +153,36 @@ tcp_tx_launch_pending_tx:
 
 pending_tx_snd_una_update:
     /*
-     * pending stage is only to read retx_next_desc currently, which is
-     * only used in retx cleanup, so don't launch the stage if this
-     * is not a snd_una_update
+     * Relay SESQ CI to S3 for updation in the TLS-CB
      */
+    phvwr           p.to_s3_sesq_retx_ci, d.sesq_retx_ci
 
+    seq             c1, d.asesq_retx_ci, d.{ci_4}.hx
+    b.c1            pending_tx_clean_sesq
+
+pending_tx_clean_asesq:
+    /*
+     * Launch asesq entry read with asesq RETX CI as index
+     */
+    add             r3, d.{asesq_base}.wx, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
+    phvwri          p.common_phv_pending_asesq, 1
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
+    b pending_tx_clean_sesq_done
+
+pending_tx_clean_sesq:
+    /*
+     * Launch sesq entry read with RETX CI as index
+     */
+    add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    tblmincri.f     d.sesq_retx_ci, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
+
+pending_tx_clean_sesq_done:
     phvwrpair       p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, \
                         p.common_phv_pending_rx2tx, 1
-
-    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
-                        tcp_tx_process_pending_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
 
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
                         tcp_tx_process_read_xmit_start,
@@ -227,16 +237,34 @@ tcp_tx_launch_pending_rx2tx:
 
 pending_rx2tx_snd_una_update:
     /*
-     * pending stage is only to read retx_next_desc currently, which is
-     * only used in retx cleanup, so don't launch the stage if this
-     * is not a snd_una_update
+     * Relay SESQ CI to S3 for updation in the TLS-CB
      */
+    phvwr           p.to_s3_sesq_retx_ci, d.sesq_retx_ci
 
-    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
-                        tcp_tx_process_pending_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
+    seq             c1, d.asesq_retx_ci, d.{ci_4}.hx
+    b.c1            pending_rx2tx_clean_sesq
 
+pending_rx2tx_clean_asesq:
+    /*
+     * Launch asesq entry read with asesq RETX CI as index
+     */
+    add             r3, d.{asesq_base}.wx, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
+    phvwri          p.common_phv_pending_asesq, 1
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
+    b               pending_rx2tx_clean_sesq_done
+
+pending_rx2tx_clean_sesq:
+    /*
+     * Launch sesq entry read with RETX CI as index
+     */
+    add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    tblmincri.f     d.sesq_retx_ci, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
+
+pending_rx2tx_clean_sesq_done:
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
                         tcp_tx_process_read_xmit_start,
                         k.p4_txdma_intr_qstate_addr,
@@ -281,6 +309,13 @@ tcp_tx_st_expired:
     // data will be in r3
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_ST, 0)
     memwr.dx        r4, r3
+
+    /*
+     * Launch sesq entry ready with RETX CI as index
+     */
+    add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
 
 tcp_tx_st_expired_end:
     // DEBUG code

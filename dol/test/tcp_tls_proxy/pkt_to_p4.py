@@ -351,14 +351,15 @@ def TestCaseVerify(tc):
     print("TNMPR old pi=%d,ci=%d / new pi=%d,ci=%d" %
             (tnmpr.pi, tnmpr.ci, tnmpr_cur.pi, tnmpr_cur.ci))
 
-    print("retx_xmit_cursor before 0x%lx after 0x%lx" % \
-            (tcpcb_cur.retx_xmit_cursor, other_tcpcb_cur.retx_xmit_cursor))
+    print("sesq_retx_ci before 0x%lx after 0x%lx" % \
+            (tcpcb_cur.sesq_retx_ci, other_tcpcb_cur.sesq_retx_ci))
     print("retx_snd_una before 0x%x after 0x%x" % \
             (tcpcb_cur.retx_snd_una, other_tcpcb_cur.retx_snd_una))
 
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'partial':
-        if other_tcpcb_cur.retx_xmit_cursor == 0:
-            print("retx_xmit_cursor is 0")
+        if other_tcpcb_cur.sesq_retx_ci != other_tcpcb.sesq_retx_ci + 1:
+            print("sesq_retx_ci is %d, expected %d" %
+                    (other_tcpcb_cur.sesq_retx_ci, other_tcpcb.sesq_retx_ci + 1))
             return False
         if other_tcpcb_cur.retx_snd_una != tc.pvtdata.flow2_snd_una + \
                  tc.pvtdata.flow2_bytes_txed / 2:
@@ -367,8 +368,9 @@ def TestCaseVerify(tc):
             return False
 
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'complete':
-        if other_tcpcb_cur.retx_xmit_cursor != 0:
-            print("retx_xmit_cursor is not 0")
+        if other_tcpcb_cur.sesq_retx_ci != other_tcpcb.sesq_retx_ci + 2:
+            print("sesq_retx_ci is %d, expected %d" %
+                    (other_tcpcb_cur.sesq_retx_ci, other_tcpcb.sesq_retx_ci + 2))
             return False
         if other_tcpcb_cur.retx_snd_una != tc.pvtdata.flow2_snd_una + \
                  tc.pvtdata.flow1_bytes_rxed:

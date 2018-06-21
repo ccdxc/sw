@@ -121,7 +121,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.state = resp_spec.spec.state
             self.source_lif = resp_spec.spec.source_lif
             self.l7_proxy_type = resp_spec.spec.l7_proxy_type
-            self.retx_xmit_cursor = resp_spec.spec.retx_xmit_cursor
+            self.sesq_retx_ci = resp_spec.spec.sesq_retx_ci
             self.retx_snd_una = resp_spec.spec.retx_snd_una
             self.serq_pi = resp_spec.spec.serq_pi
             self.pred_flags = resp_spec.spec.pred_flags

@@ -46,6 +46,8 @@ tcp_tx_read_nmdr_gc_idx_start:
     bcf             [!c1 & !c2], free_tnmdr
     nop
 
+    phvwri          p.p4_intr_global_drop, 1
+
     nop.e
     nop
 

@@ -20,7 +20,7 @@ struct s2_t1_tcp_tx_read_tcp_flags_d d;
     .align
 
 tcp_tx_read_tcp_flags_start:
-    CAPRI_CLEAR_TABLE_VALID(2)
+    CAPRI_CLEAR_TABLE_VALID(1)
 
     CAPRI_OPERAND_DEBUG(d.tcp_flags)
     /*

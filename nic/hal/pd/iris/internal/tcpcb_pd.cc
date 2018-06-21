@@ -667,7 +667,6 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             debug_dol_timer_full_hw_id = 0;
         }
         data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
-        data.u.read_rx2tx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         data.u.read_rx2tx_d.pending_ack_send = tcpcb_pd->tcpcb->pending_ack_send;
         data.u.read_rx2tx_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
         // TODO : fix this hardcoding
@@ -724,6 +723,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX_EXTRA);
 
     if(!del) {
+        data.u.read_rx2tx_extra_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         data.u.read_rx2tx_extra_d.rcv_mss = htons((uint16_t)tcpcb_pd->tcpcb->rcv_mss);
 
     }
@@ -754,6 +754,7 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
                     tcpcb_pd->tcpcb->other_qid);
         data.sesq_ci_addr =
             htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
+        data.retx_snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -952,12 +953,15 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->sesq_base = data.u.read_rx2tx_d.sesq_base;
     tcpcb_pd->tcpcb->sesq_pi = data.u.read_rx2tx_d.pi_0;
     tcpcb_pd->tcpcb->sesq_ci = data.u.read_rx2tx_d.ci_0;
+    tcpcb_pd->tcpcb->sesq_retx_ci = ntohs(data.u.read_rx2tx_d.sesq_retx_ci);
 
     tcpcb_pd->tcpcb->asesq_base = data.u.read_rx2tx_d.asesq_base;
     tcpcb_pd->tcpcb->asesq_pi = data.u.read_rx2tx_d.pi_4;
     tcpcb_pd->tcpcb->asesq_ci = data.u.read_rx2tx_d.ci_4;
 
     tcpcb_pd->tcpcb->pending_ack_send = data.u.read_rx2tx_d.pending_ack_send;
+
+    tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
 
     tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
 
@@ -1010,7 +1014,6 @@ p4pd_get_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
     // The following are used for DOL tests only
-    tcpcb_pd->tcpcb->retx_xmit_cursor = ntohll(data.retx_xmit_cursor);
     tcpcb_pd->tcpcb->retx_snd_una = ntohl(data.retx_snd_una);
 
     return HAL_RET_OK;

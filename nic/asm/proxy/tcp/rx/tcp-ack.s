@@ -64,7 +64,7 @@ tcp_snd_una_update_fast:
      */
 tcp_ack_done:
     phvwr           p.rx2tx_rx_flag, d.flag
-    phvwr           p.rx2tx_snd_una, d.snd_una
+    phvwr           p.rx2tx_extra_snd_una, d.snd_una
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_rx_rtt_start,
                         k.common_phv_qstate_addr,

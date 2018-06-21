@@ -320,7 +320,7 @@ void inst_t::start()
 
     while(true) {
         if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
-            usleep(1000000/3);
+            usleep(1000000/30);
         } else if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL) {
             usleep(1000000 * 3);
         }

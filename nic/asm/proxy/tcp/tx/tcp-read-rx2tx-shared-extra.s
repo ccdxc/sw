@@ -27,6 +27,7 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
 #endif
     CAPRI_OPERAND_DEBUG(d.rcv_mss)
     CAPRI_OPERAND_DEBUG(k.common_phv_pending_rx2tx)
+    phvwr           p.common_phv_snd_una, d.snd_una
     phvwr           p.to_s6_rcv_mss, d.rcv_mss
     phvwr           p.t0_s2s_snd_ssthresh, d.snd_ssthresh
     phvwri          p.tcp_header_flags, TCPHDR_ACK
@@ -38,8 +39,6 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
 
     seq             c1, k.common_phv_pending_rx2tx, 1
     bcf             [c1], tcp_tx_start_pending
-    seq             c1, k.common_phv_pending_rto, 1
-    bcf             [c1], tcp_tx_start_s2_bubble
     nop
     nop.e
     nop

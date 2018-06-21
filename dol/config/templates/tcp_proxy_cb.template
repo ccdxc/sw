@@ -38,7 +38,7 @@ source_lif  : 0
 dest_port   : 80
 header_len  : 0
 l7_proxy_type : 0
-retx_xmit_cursor : 1
+sesq_retx_ci : 0
 retx_snd_una : 1
 debug_dol_tblsetaddr : 0
 serq_pi      : 0

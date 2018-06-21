@@ -36,7 +36,7 @@ dma_cmd_write_rx2tx_shared:
      * DMA rx2tx shared
      */
     add         r5, TCP_TCB_RX2TX_SHARED_WRITE_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r5, rx2tx_snd_una, rx2tx_pad1_rx2tx)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r5, rx2tx_rcv_nxt, rx2tx_pad1_rx2tx)
 
 dma_cmd_write_rx2tx_extra_shared:
     /*

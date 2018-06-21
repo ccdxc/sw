@@ -21,7 +21,6 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 tcp_tx_read_rx2tx_shared_process_ext:
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.common_phv_snd_una, d.snd_una
     CAPRI_OPERAND_DEBUG(d.snd_wnd)
     phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
                         p.t0_s2s_rto, d.rto

@@ -37,7 +37,7 @@ table_launch_cc_and_fra:
     bcf             [c1], tcp_retx_retransmit
 
     seq             c1, k.common_phv_pending_sesq, 1
-    memwr.h.c1      d.sesq_ci_addr, k.to_s3_wb_ci
+    memwr.h.c1      d.sesq_ci_addr, k.to_s3_sesq_retx_ci
     seq.!c1         c1, k.common_phv_pending_asesq, 1
 
     b.c1            tcp_retx_enqueue
@@ -53,59 +53,6 @@ tcp_retx_enqueue:
     phvwr           p.to_s5_offset, k.to_s3_offset
     phvwr           p.to_s5_len, k.to_s3_len
 
-    seq             c1, d.retx_tail_desc, r0
-    bcf             [!c1], queue_to_tail
-    nop
-
-retx_empty:
-    /*
-     * retx empty, update head/tail/xmit desc and cursors
-     */
-    // DEBUG CODE ONLY
-    //addi            r1, r0, 0xc0009000
-    //seq             c1, d.debug1, 0
-    //tblwr.c1        d.debug1, r1
-
-    //memwr.wx        d.debug1, k.to_s3_sesq_desc_addr
-    //tbladd          d.debug1, 4
-    // END DEBUG CODE ONLY
-
-    //tbladd          d.{debug1}.wx, 1
-    tblwr           d.retx_head_desc, k.to_s3_sesq_desc_addr
-
-    tblwr           d.retx_tail_desc, k.to_s3_sesq_desc_addr
-    tblwr           d.retx_next_desc, r0
-
-    add             r2, k.to_s3_addr, k.to_s3_offset
-
-    tblwr           d.retx_xmit_cursor, r2
-    tblwr           d.retx_head_offset, k.to_s3_offset
-    tblwr           d.retx_head_len, k.to_s3_len
-    seq             c1, k.common_phv_fin, 1
-    tbladd.c1       d.retx_head_len, 1
-
-    phvwr           p.to_s5_addr, r2
-    phvwr           p.to_s5_offset, k.to_s3_offset
-    phvwr           p.to_s5_len, k.to_s3_len
-    tblwr           d.retx_snd_una, k.common_phv_snd_una
-    nop
-    nop.e
-    nop
-
-queue_to_tail:
-    /*
-     * If retx_tail is not NULL, queue to tail, update tail and return
-     */
-    add             r1, d.retx_tail_desc, NIC_DESC_ENTRY_NEXT_ADDR_OFFSET
-    /*
-     * k.to_s3_sesq_desc_addr is big endian, but descriptor contents are little
-     * endian when passed via sesq. Use little endian format for next_addr as
-     * well
-     */
-    memwr.wx        r1, k.to_s3_sesq_desc_addr
-    tblwr           d.retx_tail_desc, k.to_s3_sesq_desc_addr
-    seq             c1, d.retx_next_desc, r0
-    tblwr.c1        d.retx_next_desc, k.to_s3_sesq_desc_addr
     nop.e
     nop
 
@@ -114,71 +61,20 @@ tcp_retx_snd_una_update:
     seq             c1, k.common_phv_snd_una, d.retx_snd_una
     b.c1            tcp_retx_end_program
 
-    sub             r1, k.common_phv_snd_una, d.retx_snd_una
     /*
-     * c1 = less than data in head descriptor needs to be cleaned up
+     * We need to free sesq[sesq_retx_ci]
      */
-    slt             c1, r1, d.retx_head_len
-    b.!c1           tcp_retx_snd_una_update_free_head
-    tbladd.c1       d.retx_snd_una, r1
-    tblsub          d.retx_head_len, r1
-    tbladd.e        d.retx_head_offset, r1
-    tbladd          d.retx_xmit_cursor, r1
-
-tcp_retx_snd_una_update_free_head:
+    phvwr           p.t1_s2s_free_desc_addr, k.to_s3_sesq_desc_addr
 
     /*
-     * Since we are using memwr to update old_tail->next_desc (above),
-     * we have a race condition where the memwr has not gone through
-     * but tail has been updated. We may end up performing incorrect
-     * linked list operations, if we get an ACK fast enough to cause
-     * us to clean up the linked list.
-     *
-     * For now the best we can detect this condition and reschedule if
-     * that is the case
-     * 
-     * if (head != tail && head->next != tail) {
-     *      if (t0_s2s_next_addr is NULL): reschedule
+     * TODO : We need to handle (atleast detect) the case when
+     * peer acknowledges less than data in descriptor. This is more
+     * of an error case. Under normal conditions this should not 
+     * happen.
      */
-
-    sne             c1, d.retx_head_desc, d.retx_tail_desc
-    sne             c2, d.retx_next_desc, d.retx_tail_desc
-    seq             c3, k.t0_s2s_next_addr, 0
-    bcf             [c1 & c2 & c3], tcp_retx_reschedule_and_quit
-
-    /*
-     * Another race condition is where stage 1 has read
-     * t0_s2s_next_addr before next_desc got updated
-     * here, in which case we will update next_desc to
-     * itself, which we should not do. We need to
-     * reschedule to read the right value
-     */
-    sne             c1, d.retx_next_desc, 0
-    seq             c2, d.retx_next_desc, k.t0_s2s_next_addr
-    bcf             [c1 & c2], tcp_retx_reschedule_and_quit
-
-    /*
-     * We need to free d.retx_head_desc. Pass the address to read_nmdr_gc stage
-     * to free it
-     */
-    phvwr           p.t1_s2s_free_desc_addr, d.retx_head_desc
-    tbladd          d.retx_snd_una, d.retx_head_len
-
-    // write new descriptor address, offset and length
-    tblwr           d.retx_head_desc, d.retx_next_desc
-    tblwr           d.retx_next_desc, k.t0_s2s_next_addr
-    tblwr           d.retx_head_offset, k.to_s3_offset
-    tblwr           d.retx_head_len, k.to_s3_len
-    add             r2, k.to_s3_addr, k.to_s3_offset
-    tblwr           d.retx_xmit_cursor, r2
-    
-    phvwr           p.t0_s2s_packets_out_decr, 1
-    phvwr           p.t0_s2s_rto_pi_incr, 1
-    phvwr           p.t0_s2s_pkts_acked, 1
-    
-    // If we have completely cleaned up, set tail to NULL
-    seq             c1, d.retx_head_desc, r0
-    tblwr.c1        d.retx_tail_desc, r0
+    tbladd          d.retx_snd_una, k.to_s3_len
+    seq             c1, k.common_phv_fin, 1
+    tbladd.c1       d.retx_snd_una, 1
 
     /*
      * if we still have more data to be cleaned up,
@@ -197,17 +93,27 @@ tcp_retx_snd_una_update_free_head:
     memwr.dx        r4, r3
 
 free_descriptor:
+    /*
+     * TODO handle freeing pkts queued to asesq
+     */
+    seq             c1, k.common_phv_pending_asesq, 1
+    b.c1            skip_free_descriptor
+
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_tx_read_nmdr_gc_idx_start,
                         TCP_NMDR_GC_IDX, TABLE_SIZE_32_BITS)
     nop.e
     nop
 
+skip_free_descriptor:
+    phvwri          p.p4_intr_global_drop, 1
+    nop.e
+    nop
+
 tcp_retx_retransmit:
-    seq             c1, d.retx_head_desc, r0
-    b.c1            tcp_retx_end_program
     phvwr           p.t0_s2s_snd_nxt, d.retx_snd_una
-    phvwr           p.to_s6_xmit_cursor_addr, d.retx_xmit_cursor
-    phvwr           p.to_s6_xmit_cursor_len, d.retx_head_len
+    add             r2, k.to_s3_addr, k.to_s3_offset
+    phvwr           p.to_s6_xmit_cursor_addr, r2
+    phvwr           p.to_s6_xmit_cursor_len, k.to_s3_len
     phvwri          p.to_s6_pending_tso_data, 1
     nop.e
     nop
