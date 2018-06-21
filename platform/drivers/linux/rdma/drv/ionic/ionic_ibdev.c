@@ -1492,7 +1492,7 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 }
 
 static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
-			       u32 eqid)
+				  u32 eqid)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -1554,7 +1554,7 @@ static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	WARN_ON(pg_i != npages);
 
 	pagedma = ib_dma_map_single(&dev->ibdev, pagedir, pagedir_size,
-					DMA_TO_DEVICE);
+				    DMA_TO_DEVICE);
 	rc = ib_dma_mapping_error(&dev->ibdev, pagedma);
 	if (rc)
 		goto err_pagedma;
@@ -1586,7 +1586,7 @@ static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 
 err_cmd:
 	ib_dma_unmap_single(&dev->ibdev, pagedma, pagedir_size,
-				DMA_TO_DEVICE);
+			    DMA_TO_DEVICE);
 err_pagedma:
 	kfree(pagedir);
 err_pagedir:
@@ -2243,11 +2243,11 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 }
 
 static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
-				   struct ionic_pd *pd,
-				   struct ionic_cq *send_cq,
-				   struct ionic_cq *recv_cq,
-				   struct ionic_qp *qp,
-				   struct ib_qp_init_attr *attr)
+			       struct ionic_pd *pd,
+			       struct ionic_cq *send_cq,
+			       struct ionic_cq *recv_cq,
+			       struct ionic_qp *qp,
+			       struct ib_qp_init_attr *attr)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -2293,7 +2293,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		rq_npages = DIV_ROUND_UP_ULL(qp->rq.size, PAGE_SIZE);
 		npages += rq_npages;
 	}
-	
+
 	pagedir_size = npages * sizeof(*pagedir);
 	pagedir = kmalloc(pagedir_size, GFP_KERNEL);
 	if (!pagedir) {
@@ -2344,7 +2344,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 	}
 
 	pagedma = ib_dma_map_single(&dev->ibdev, pagedir, pagedir_size,
-								DMA_TO_DEVICE);
+				    DMA_TO_DEVICE);
 	rc = ib_dma_mapping_error(&dev->ibdev, pagedma);
 	if (rc)
 		goto err_pagedma;
@@ -2353,7 +2353,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 	admin.cmd.create_qp.sq_pt_size = sq_npages;
 	admin.cmd.create_qp.pt_base_addr = pagedma;
 	admin.cmd.create_qp.pt_size = npages;
-	
+
 	/* XXX for HAPS: side-data */
 	if (ionic_xxx_haps) {
 #ifndef ADMINQ
@@ -2361,7 +2361,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		admin.side_data_len = pagedir_size;
 #endif
 	}
-	
+
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
 		goto err_cmd;
@@ -2377,7 +2377,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 
 err_cmd:
 	ib_dma_unmap_single(&dev->ibdev, pagedma, pagedir_size,
-						DMA_TO_DEVICE);
+			    DMA_TO_DEVICE);
 err_pagedma:
 	kfree(pagedir);
 err_pagedir:
@@ -2468,7 +2468,7 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 err_cmd:
 	if (mask & IB_QP_AV)
 		ib_dma_unmap_single(&dev->ibdev, hdr_dma, hdr_len,
-					DMA_TO_DEVICE);
+				    DMA_TO_DEVICE);
 err_dma:
 	if (mask & IB_QP_AV)
 		kfree(hdr_buf);
@@ -3971,8 +3971,8 @@ static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
 }
 
 static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
-					  struct ionic_queue *q,
-					  u32 qid, u32 cid, u16 opcode)
+				   struct ionic_queue *q,
+				   u32 qid, u32 cid, u16 opcode)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -4728,7 +4728,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 		dev = ionic_create_ibdev(work->lif, ndev);
 		if (IS_ERR(dev)) {
 			netdev_dbg(ndev, "error register ibdev %d\n",
-				(int)PTR_ERR(dev));
+				   (int)PTR_ERR(dev));
 			break;
 		}
 
