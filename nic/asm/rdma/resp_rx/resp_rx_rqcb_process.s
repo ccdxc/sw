@@ -142,7 +142,7 @@ skip_cnp_receive:
     // skip_token_id_check if fresh packet except send FML, OR 
     // recirc packet with reason other than work_not_done
     // recirc packets with any other reason do not come here
-    bcf         [c7 | !c2], skip_token_id_check
+    bcf         [c2 & !c7], skip_token_id_check
 
 token_id_check:
     // Slow path: token id check is mandatory
