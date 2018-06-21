@@ -74,12 +74,12 @@ typedef struct {
     uint64_t pad_buf_addr;	    // pad buffer address
     uint64_t intr_addr;		    // MSI-X Interrupt address
     uint32_t intr_data;		    // MSI-X Interrupt data
-    uint16_t status_len;		// Length of the status header
+    uint16_t status_len;		// Length for status PDMA purposes
     uint16_t data_len;		    // Remaining data length of compression buffer
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
     uint8_t  pad_boundary_shift;// log2(pad block length)
     uint16_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
-             status_dma_en        :1,	// enable DMA of status to status_hbm_pa
+             status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
     // NOTE: intr_en and next_doorbell_en can be enabled together.
     // When comp/decomp succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.
     // When comp/decomp fails and stop_chain_on_error is set, intr_en will be honored
@@ -88,8 +88,6 @@ typedef struct {
              next_db_action_barco_push:1,	// next_db action is actually a Barco push
              stop_chain_on_error  :1, // stop chaining on error
              chain_alt_desc_on_error:1,// chain with alternate set of descriptors on error
-    // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.
-    // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
              aol_pad_en           :1, // enable AOL length padding
              sgl_pad_en           :1, // enable SGL length padding (e.g., for multi-block hash)
              sgl_sparse_format_en :1, // SGL sparsely formatted
@@ -120,11 +118,11 @@ typedef struct {
     uint64_t sgl_pdma_dst_addr; // points to chain_sgl_pdma_t when sgl_pdma_en is set
     uint64_t intr_addr;		    // MSI-X Interrupt address
     uint32_t intr_data;		    // MSI-X Interrupt data
-    uint16_t status_len;		// Length of the status header
+    uint16_t status_len;		// Length for PDMA purposes
     uint16_t data_len;		    // valid PDMA data length if sgl_pdma_len_from_desc is set
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
     uint8_t  blk_boundary_shift;// log2(block size)
-    uint16_t status_dma_en        :1,	// enable DMA of status to status_hbm_pa
+    uint16_t status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
     // NOTE: intr_en and next_doorbell_en can be enabled together.
     // When XTS succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.
     // When XTS fails and stop_chain_on_error is set, intr_en will be honored

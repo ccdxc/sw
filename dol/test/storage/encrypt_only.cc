@@ -245,6 +245,7 @@ encrypt_only_t::full_verify(void)
     if (fast_verify()) {
         return -1;
     }
+    success = false;
 
     // Status verification done.
     xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read_thru();

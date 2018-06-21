@@ -458,6 +458,9 @@ void CreateInitiatorCQ() {
 }
 
 void CreateTargetCQ() {
+  printf("eos_ignore_addr target CQ 0x%lx len %u\n", target_cq_va->pa(),
+         roce_cq_mem_reg_size);
+  eos_ignore_addr(target_cq_va->pa(), roce_cq_mem_reg_size);
   RdmaMemRegister(target_cq_va, roce_cq_mem_reg_size, kTargetCQLKey, 0, false);
   CreateCQ(1, kTargetCQLKey);
 }
@@ -1131,7 +1134,13 @@ int set_rtl_qstate_cmp_ignore(int src_lif, int src_qtype, int src_qid) {
     printf("Failed to get q state address \n");
     return -1;
   }
-	eos_ignore_addr(qaddr + 64 + 64 + 21, 6);
+
+  // Storage/RDMA P4+ running operating in model is known to be able to 
+  // consolidate certain processing, resulting in fewer RDMA acks than RTL.
+  // This would lead to EOS miscompares on RDMA qstate. The call below
+  // sets ignore range for CB up to 192 bytes in length.
+  printf("eos_ignore_addr RDMA qstate 0x%lx\n", qaddr);
+  eos_ignore_addr(qaddr, 64 * 3);
 	return 0;
 }
 

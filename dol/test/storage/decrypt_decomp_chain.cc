@@ -514,6 +514,7 @@ decrypt_decomp_chain_t::full_verify(void)
     if (fast_verify()) {
         return -1;
     }
+    success = false;
 
     /*
      * Trace AOL and SGL info

@@ -213,8 +213,6 @@ std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_decrypt_output_decompress_len_update_flat, "Sequencer XTS decrypt->Decompress chaining: len update flat", false},
   {&tests::seq_compress_output_encrypt_app_test_size, "Sequencer Compress->XTS encrypt chaining: app test block size", false},
   {&tests::seq_decrypt_output_decompress_len_update_sgl_src, "Sequencer XTS decrypt->Decompress chaining: len update SGL", false},
-  {&tests::seq_compress_output_encrypt_force_uncomp_encrypt, "Sequencer Compress->XTS encrypt chaining: force encrypt of uncomp data", false},
-  {&tests::seq_decrypt_output_decompress_len_update_sgl_src, "Sequencer XTS decrypt->Decompress chaining: len update SGL", false},
   {&tests::seq_compress_output_encrypt_app_max_size, "Sequencer Compress->XTS encrypt chaining: app max block size", false},
   {&tests::seq_decrypt_output_decompress_len_update_sgl_src_vec, "Sequencer XTS decrypt->Decompress chaining: len update SGL vector", false},
   {&tests::seq_compress_output_encrypt_force_comp_buf2_bypass, "Sequencer Compress->XTS encrypt chaining: force pad-only xfer", false},
@@ -235,6 +233,12 @@ std::vector<tests::TestEntry> comp_perf_tests = {
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
   {&tests::max_data_rate, "Test max data rate", false},
   {&tests::seq_max_data_rate, "Sequencer Test max data rate", false},
+
+  // At EOS, RTL currently reports any CP/DC error status it has encountered
+  // regardless of whether errors were intentionally induced, such as from the
+  // tests below. Hence, these tests are moved here to exclude them from RTL sanity.
+  {&tests::seq_compress_output_encrypt_force_uncomp_encrypt, "Sequencer Compress->XTS encrypt chaining: force encrypt of uncomp data", false},
+  {&tests::seq_decrypt_output_decompress_len_update_sgl_src, "Sequencer XTS decrypt->Decompress chaining: len update SGL", false},
 
   // Last in series
   {&tests::compression_resync, "Compression rings resync", false},
