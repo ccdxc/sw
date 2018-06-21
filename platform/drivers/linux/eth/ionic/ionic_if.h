@@ -1326,23 +1326,15 @@ struct create_qp_cmd {
 	u32 sq_cq_num;
 	u32 rq_cq_num;    
 	u32 host_pg_size;
-	u32 sq_lkey;
-	u32 rq_lkey;
-
-#ifdef ADMINQ
-	/*
-	 * dev command is only 64 bytes right now. So for now do multiple calls to
-	 * register queue memory first and then create_qp.
-	 */
-	u64 sq_pt_base_addr;
-	u64 sq_cq_va;
+    /*
+     * For we can transfer only one DMA mapped address range in dev commands
+     * because of HAPS devcmd limitations. So need to combine sq/rq translations
+     * to a single PT table.
+     */
+	u64 pt_base_addr;
+	u32 pt_size;
 	u32 sq_pt_size;
-	u64 rq_pt_base_addr;
-	u64 rq_cq_va;
-	u32 rq_pt_size;
-#endif
-	
-	u32 rsvd2[4];
+	u32 rsvd2[2];
 };
 
 /**

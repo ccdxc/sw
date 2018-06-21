@@ -54,10 +54,6 @@ class CqObject(base.ConfigObjectBase):
             self.cq_slab = slab.SlabObject(self.pd.ep, self.cq_size)
             self.pd.ep.AddSlab(self.cq_slab)
 
-            # create sq/rq mrs
-            self.cq_mr = mr.MrObject(self.pd, self.cq_slab)
-            self.pd.AddMr(self.cq_mr)
-    
         self.Show()
 
         return
@@ -77,9 +73,9 @@ class CqObject(base.ConfigObjectBase):
                        %(self.num_cq_wqes, self.cqwqe_size, self.pd.id)) 
 
     def PrepareHALRequestSpec(self, req_spec):
-        logger.info("CQ: %s PD: %s Remote: %s LKey: %d LIF: %d" %\
+        logger.info("CQ: %s PD: %s Remote: %s LIF: %d" %\
                         (self.GID(), self.pd.GID(), self.remote, 
-                         self.cq_mr.lkey, self.pd.ep.intf.lif.hw_lif_id))
+                         self.pd.ep.intf.lif.hw_lif_id))
         if (GlobalOptions.dryrun): return
         req_spec.cq_num = self.id
         req_spec.eq_id = self.pd.id  # PD id is the EQ number
@@ -87,7 +83,7 @@ class CqObject(base.ConfigObjectBase):
         req_spec.cq_wqe_size = self.cqwqe_size
         req_spec.num_cq_wqes = self.num_cq_wqes
         req_spec.hostmem_pg_size = self.hostmem_pg_size
-        req_spec.cq_lkey = self.cq_mr.lkey
+        req_spec.cq_va_pages_phy_addr[:] = self.cq_slab.phy_address
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.cq.SetRingParams('CQ', 0, True, False,

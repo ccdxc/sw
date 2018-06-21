@@ -680,7 +680,7 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     //g_pt_base[lif] += num_pages;
     num_pt_entries = ((pt_end_page_id / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
     g_pt_base[lif] += num_pt_entries;
-    HAL_TRACE_DEBUG("{}: Enf of MR PT index: {}", __FUNCTION__, g_pt_base[lif]);
+    HAL_TRACE_DEBUG("{}: End of MR PT index: {}", __FUNCTION__, g_pt_base[lif]);
 
 #if 0
     lkey_entry_p->pt_size = num_pt_entries;
@@ -934,8 +934,27 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     } else {
         sqcb_p->sqcb0.sq_in_hbm = 0;
         hbm_sq_base_addr = 0;
+
+        /*
+         * 1. Copy the VA translations to pt table.
+         * 2. Adjust the g_pt_base[lif] accordingly
+         * 3. Set the pt_base_addr
+         */
+
         sqcb_p->sqcb0.pt_base_addr =
-            rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())) >> PT_BASE_ADDR_SHIFT;
+            rdma_pt_addr_get(lif, g_pt_base[lif]) >> PT_BASE_ADDR_SHIFT;
+        
+        for (uint32_t i = 0; i < spec.num_sq_pages(); i++) {
+            // write the physical page pointer address into pt entry
+            rdma_pt_entry_write(lif, g_pt_base[lif]+i, (uint64_t) spec.va_pages_phy_addr(i));
+            HAL_TRACE_DEBUG("PT Entry Write: Lif {}: SQ PT Idx: {} PhyAddr: {:#x}",
+                            lif, g_pt_base[lif]+i, spec.va_pages_phy_addr(i));
+        }
+
+        uint32_t num_pt_entries = (( spec.num_sq_pages() / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
+        g_pt_base[lif] += num_pt_entries;
+        
+        HAL_TRACE_DEBUG("{}: End of SQ PT index: {}", __FUNCTION__, g_pt_base[lif]);        
     }
 
     HAL_TRACE_DEBUG("{}: lif: {}, lkey: {}, rdma_mr_pt_base: {}, rdma_pt_addr: {}, shifted rdma_pt_addr: {} sqcb0_pt_base_addr: {}",
@@ -1039,9 +1058,29 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
         rqcb_p->rqcb0.rq_in_hbm = 0;
         rqcb_p->rqcb1.rq_in_hbm = 0;
         hbm_rq_base_addr = 0;
+
+        /*
+         * 1. Copy the VA translations to pt table.
+         * 2. Adjust the g_pt_base[lif] accordingly
+         * 3. Set the pt_base_addr
+         */
+
         rqcb_p->rqcb0.pt_base_addr =
-            rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.rq_lkey())) >> PT_BASE_ADDR_SHIFT;
+            rdma_pt_addr_get(lif, g_pt_base[lif]) >> PT_BASE_ADDR_SHIFT;
         rqcb_p->rqcb1.pt_base_addr = rqcb_p->rqcb0.pt_base_addr;
+
+        uint32_t num_rq_pages = spec.va_pages_phy_addr_size() - spec.num_sq_pages();
+        for (uint32_t i = 0; i < num_rq_pages; i++) {
+            // write the physical page pointer address into pt entry
+            rdma_pt_entry_write(lif, g_pt_base[lif]+i, (uint64_t) spec.va_pages_phy_addr(spec.num_sq_pages()+i));
+            HAL_TRACE_DEBUG("PT Entry Write: Lif {}: RQ PT Idx: {} PhyAddr: {:#x}",
+                            lif, g_pt_base[lif]+i, spec.va_pages_phy_addr(spec.num_sq_pages()+i));
+        }
+
+        uint32_t num_pt_entries = (( num_rq_pages / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
+        g_pt_base[lif] += num_pt_entries;
+        
+        HAL_TRACE_DEBUG("{}: End of RQ PT index: {}", __FUNCTION__, g_pt_base[lif]);              
     }
 
     HAL_ASSERT(rqcb.rqcb0.pt_base_addr);
@@ -1416,9 +1455,29 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     memset(&cqcb, 0, sizeof(cqcb_t));
     cqcb.ring_header.total_rings = MAX_CQ_RINGS;
     cqcb.ring_header.host_rings = MAX_CQ_HOST_RINGS;
-    int32_t cq_pt_base = rdma_mr_pt_base_get(lif, spec.cq_lkey());
+    int32_t cq_pt_base = g_pt_base[lif];
+    
+    /*
+     * 1. Copy the VA translations to pt table.
+     * 2. Adjust the g_pt_base[lif] accordingly
+     * 3. Set the pt_base_addr
+     */
+
     cqcb.pt_base_addr =
         rdma_pt_addr_get(lif, cq_pt_base) >> PT_BASE_ADDR_SHIFT;
+
+    for (int i = 0; i < spec.cq_va_pages_phy_addr_size(); i++) {
+        // write the physical page pointer address into pt entry
+        rdma_pt_entry_write(lif, g_pt_base[lif]+i, (uint64_t) spec.cq_va_pages_phy_addr(i));
+        HAL_TRACE_DEBUG("PT Entry Write: Lif {}: CQ PT Idx: {} PhyAddr: {:#x}",
+                        lif, g_pt_base[lif]+i, spec.cq_va_pages_phy_addr(i));
+    }
+
+    uint32_t num_pt_entries = (( spec.cq_va_pages_phy_addr_size() / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
+    g_pt_base[lif] += num_pt_entries;
+        
+    HAL_TRACE_DEBUG("{}: End of CQ PT index: {}", __FUNCTION__, g_pt_base[lif]);
+    
     cqcb.log_cq_page_size = log2(spec.hostmem_pg_size());
     cqcb.log_wqe_size = log2(cqwqe_size);
     cqcb.log_num_wqes = log2(num_cq_wqes);

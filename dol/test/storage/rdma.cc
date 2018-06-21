@@ -414,7 +414,7 @@ void RdmaMemRegister(dp_mem_t *mem, uint32_t len, uint32_t lkey, uint32_t rkey, 
   RdmaMemRegister(mem->va(), mem->pa(), len, lkey, rkey, remote);
 }
 
-void CreateCQ(uint32_t cq_num, uint32_t lkey) {
+void CreateCQ(uint32_t cq_num, uint64_t pa, uint32_t len, bool is_targetCQ) {
   rdma::RdmaCqRequestMsg req;
   rdma::RdmaCqResponseMsg resp;
   rdma::RdmaCqSpec *cq = req.add_request();
@@ -424,11 +424,16 @@ void CreateCQ(uint32_t cq_num, uint32_t lkey) {
   cq->set_cq_wqe_size(kCQWQESize);
   cq->set_num_cq_wqes(kNumCQWQEs);
   cq->set_hostmem_pg_size(4096);
-  cq->set_cq_lkey(lkey);
+
+  uint32_t size_done = 0;
+  while (size_done < len) {
+      cq->add_cq_va_pages_phy_addr(pa + size_done);
+      size_done += (4096 - (pa & 0xFFF));
+  }
 
   // when not using send_imm, configure RDMA to wake up target CQ
   if ((kRdmaSendOpType != RDMA_OP_TYPE_SEND_IMM) &&
-      (lkey == kTargetCQLKey)) {
+      is_targetCQ) {
 
       uint64_t db_addr;
       uint64_t db_data;
@@ -453,21 +458,17 @@ void CreateCQ(uint32_t cq_num, uint32_t lkey) {
 }
 
 void CreateInitiatorCQ() {
-  RdmaMemRegister(initiator_cq_va, roce_cq_mem_reg_size, kInitiatorCQLKey, 0, false);
-  CreateCQ(0, kInitiatorCQLKey);
+    CreateCQ(0, initiator_cq_va->pa(), roce_cq_mem_reg_size, false);
 }
 
 void CreateTargetCQ() {
   printf("eos_ignore_addr target CQ 0x%lx len %u\n", target_cq_va->pa(),
          roce_cq_mem_reg_size);
   eos_ignore_addr(target_cq_va->pa(), roce_cq_mem_reg_size);
-  RdmaMemRegister(target_cq_va, roce_cq_mem_reg_size, kTargetCQLKey, 0, false);
-  CreateCQ(1, kTargetCQLKey);
+  CreateCQ(1, target_cq_va->pa(), roce_cq_mem_reg_size, true);
 }
 
 void CreateInitiatorQP() {
-  RdmaMemRegister(initiator_sq_va, roce_sq_mem_reg_size, kInitiatorSQLKey, 0, false);
-  RdmaMemRegister(initiator_rq_va, roce_rq_mem_reg_size, kInitiatorRQLKey, 0, false);
   rdma::RdmaQpRequestMsg req;
   rdma::RdmaQpResponseMsg resp;
   rdma::RdmaQpSpec *rq = req.add_request();
@@ -482,21 +483,33 @@ void CreateInitiatorQP() {
   rq->set_pmtu(9200);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
-  rq->set_sq_lkey(kInitiatorSQLKey);
-  rq->set_rq_lkey(kInitiatorRQLKey);
+
   rq->set_rq_cq_num(0);
   rq->set_sq_cq_num(0);
   rq->set_immdt_as_dbell(true);
 
+  uint32_t size_done = 0;
+  uint32_t num_sq_pages = 0;
+  while (size_done < roce_sq_mem_reg_size) {
+      rq->add_va_pages_phy_addr(initiator_sq_va->pa() + size_done);
+      size_done += (4096 - (initiator_sq_va->pa() & 0xFFF));
+      ++num_sq_pages;
+  }
+
+  size_done = 0;
+  while (size_done < roce_rq_mem_reg_size) {
+      rq->add_va_pages_phy_addr(initiator_rq_va->pa() + size_done);
+      size_done += (4096 - (initiator_rq_va->pa() & 0xFFF));
+  }
+
+  rq->set_num_sq_pages(num_sq_pages);
+  
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);
   assert(status.ok());
 }
 
 void CreateTargetQP() {
-  RdmaMemRegister(target_sq_va, roce_sq_mem_reg_size, kTargetSQLKey, 0, false);
-  RdmaMemRegister(target_rq_va, roce_rq_mem_reg_size, kTargetRQLKey, 0, false);
-  RdmaMemRegister(initiator_rq_va, roce_rq_mem_reg_size, kInitiatorRQLKey, 0, false);
   rdma::RdmaQpRequestMsg req;
   rdma::RdmaQpResponseMsg resp;
   rdma::RdmaQpSpec *rq = req.add_request();
@@ -511,12 +524,26 @@ void CreateTargetQP() {
   rq->set_pmtu(9200);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
-  rq->set_sq_lkey(kTargetSQLKey);
-  rq->set_rq_lkey(kTargetRQLKey);
   rq->set_rq_cq_num(1);
   rq->set_sq_cq_num(1);
   rq->set_immdt_as_dbell(true);
 
+  uint32_t size_done = 0;
+  uint32_t num_sq_pages = 0;
+  while (size_done < roce_sq_mem_reg_size) {
+      rq->add_va_pages_phy_addr(target_sq_va->pa() + size_done);
+      size_done += (4096 - (target_sq_va->pa() & 0xFFF));
+      ++num_sq_pages;
+  }
+
+  size_done = 0;  
+  while (size_done < roce_rq_mem_reg_size) {
+      rq->add_va_pages_phy_addr(target_rq_va->pa() + size_done);
+      size_done += (4096 - (target_rq_va->pa() & 0xFFF));
+  }
+
+  rq->set_num_sq_pages(num_sq_pages);
+  
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);
   assert(status.ok());

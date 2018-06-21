@@ -1543,7 +1543,7 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	WARN_ON(pg_i != npages);
 
 	pagedma = ib_dma_map_single(&dev->ibdev, pagedir, pagedir_size,
-				    DMA_TO_DEVICE);
+					DMA_TO_DEVICE);
 	rc = ib_dma_mapping_error(&dev->ibdev, pagedma);
 	if (rc)
 		goto err_pagedma;
@@ -1575,7 +1575,7 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 
 err_cmd:
 	ib_dma_unmap_single(&dev->ibdev, pagedma, pagedir_size,
-			    DMA_TO_DEVICE);
+				DMA_TO_DEVICE);
 err_pagedma:
 	kfree(pagedir);
 err_pagedir:
@@ -1625,9 +1625,9 @@ static void ionic_cq_fake_notify(struct work_struct *ws)
 }
 
 static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
-				     const struct ib_cq_init_attr *attr,
-				     struct ib_ucontext *ibctx,
-				     struct ib_udata *udata)
+					 const struct ib_cq_init_attr *attr,
+					 struct ib_ucontext *ibctx,
+					 struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_ctx *ctx = to_ionic_ctx_fb(ibctx);
@@ -2209,11 +2209,11 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 }
 
 static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
-			       struct ionic_pd *pd,
-			       struct ionic_cq *send_cq,
-			       struct ionic_cq *recv_cq,
-			       struct ionic_qp *qp,
-			       struct ib_qp_init_attr *attr)
+				   struct ionic_pd *pd,
+				   struct ionic_cq *send_cq,
+				   struct ionic_cq *recv_cq,
+				   struct ionic_qp *qp,
+				   struct ib_qp_init_attr *attr)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -2235,38 +2235,99 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.sq_cq_num = send_cq->cqid,
 			.rq_cq_num = recv_cq->cqid,
 			.host_pg_size = PAGE_SIZE,
-			.sq_lkey = qp->sq_lkey,
-			.rq_lkey = qp->rq_lkey,
 		},
 	};
 	int rc;
+	size_t pagedir_size;
+	struct scatterlist *sg;
+	u64 *pagedir;
+	dma_addr_t pagedma;
+	int sg_i, pg_i, pg_end, npages, sq_npages, rq_npages;
+
+	if (qp->sq_umem) {
+		sq_npages = ib_umem_page_count(qp->sq_umem);
+		npages = sq_npages;
+	} else {
+		sq_npages = DIV_ROUND_UP_ULL(qp->sq.size, PAGE_SIZE);
+		npages = sq_npages;
+	}
+
+	if (qp->rq_umem) {
+		rq_npages = ib_umem_page_count(qp->rq_umem);
+		npages += rq_npages;
+	} else {
+		rq_npages = DIV_ROUND_UP_ULL(qp->rq.size, PAGE_SIZE);
+		npages += rq_npages;
+	}
+	
+	pagedir_size = npages * sizeof(*pagedir);
+	pagedir = kmalloc(pagedir_size, GFP_KERNEL);
+	if (!pagedir) {
+		rc = -ENOMEM;
+		goto err_pagedir;
+	}
 
 	if (qp->has_sq) {
-		if (qp->sq_umem)
-			rc = ionic_kernel_umr_cmd(dev, pd,
-						  qp->sq_lkey, qp->sq_lkey, 0,
-						  qp->sq.size, qp->sq_umem, 0);
-		else
-			rc = ionic_kernel_mr_cmd(dev, pd, qp->sq_lkey,
-						 qp->sq_lkey, 0, qp->sq.size,
-						 PAGE_SIZE, qp->sq.dma, 0);
-		if (rc)
-			goto err_cmd;
+		if (qp->sq_umem) {
+			pg_i = 0;
+			pg_end = 0;
+			for_each_sg(qp->sq_umem->sg_head.sgl, sg, qp->sq_umem->nmap, sg_i) {
+				pagedma = sg_dma_address(sg);
+				pg_end += sg_dma_len(sg) >> PAGE_SHIFT;
+				for (; pg_i < pg_end; ++pg_i) {
+					/* XXX endian? */
+					pagedir[pg_i] = BIT_ULL(63) | pagedma;
+					pagedma += PAGE_SIZE;
+				}
+			}
+		} else {
+			pagedma = qp->sq.dma;
+			for (pg_i = 0; pg_i < sq_npages; ++pg_i) {
+				pagedir[pg_i] = BIT_ULL(63) | pagedma;
+				pagedma += PAGE_SIZE;
+			}
+		}
 	}
 
 	if (qp->has_rq) {
-		if (qp->rq_umem)
-			rc = ionic_kernel_umr_cmd(dev, pd,
-						  qp->rq_lkey, qp->rq_lkey, 0,
-						  qp->rq.size, qp->rq_umem, 0);
-		else
-			rc = ionic_kernel_mr_cmd(dev, pd, qp->rq_lkey,
-						 qp->rq_lkey, 0, qp->rq.size,
-						 PAGE_SIZE, qp->rq.dma, 0);
-		if (rc)
-			goto err_cmd;
+		if (qp->rq_umem) {
+			for_each_sg(qp->rq_umem->sg_head.sgl, sg, qp->rq_umem->nmap, sg_i) {
+				pagedma = sg_dma_address(sg);
+				pg_end += sg_dma_len(sg) >> PAGE_SHIFT;
+				for (; pg_i < pg_end; ++pg_i) {
+					/* XXX endian? */
+					pagedir[pg_i] = BIT_ULL(63) | pagedma;
+					pagedma += PAGE_SIZE;
+				}
+			}
+		} else {
+			pagedma = qp->rq.dma;
+			for (; pg_i < npages; ++pg_i) {
+				pagedir[pg_i] = BIT_ULL(63) | pagedma;
+				pagedma += PAGE_SIZE;
+			}
+		}
 	}
 
+	pagedma = ib_dma_map_single(&dev->ibdev, pagedir, pagedir_size,
+								DMA_TO_DEVICE);
+	rc = ib_dma_mapping_error(&dev->ibdev, pagedma);
+	if (rc)
+		goto err_pagedma;
+
+	/* XXX endian? */
+	admin.cmd.create_qp.sq_pt_size = sq_npages;
+	admin.cmd.create_qp.pt_base_addr = pagedma;
+	admin.cmd.create_qp.pt_size = npages;
+	
+	/* XXX for HAPS: side-data */
+	if (ionic_xxx_haps) {
+#ifndef ADMINQ
+		admin.side_data = pagedir;
+		admin.side_data_len = pagedir_size;
+#endif
+	}
+	
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
 		goto err_cmd;
@@ -2281,6 +2342,11 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 	rc = ionic_verbs_status_to_rc(admin.comp.create_qp.status);
 
 err_cmd:
+	ib_dma_unmap_single(&dev->ibdev, pagedma, pagedir_size,
+						DMA_TO_DEVICE);
+err_pagedma:
+	kfree(pagedir);
+err_pagedir:
 	return rc;
 }
 
@@ -2368,7 +2434,7 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 err_cmd:
 	if (mask & IB_QP_AV)
 		ib_dma_unmap_single(&dev->ibdev, hdr_dma, hdr_len,
-				    DMA_TO_DEVICE);
+					DMA_TO_DEVICE);
 err_dma:
 	if (mask & IB_QP_AV)
 		kfree(hdr_buf);

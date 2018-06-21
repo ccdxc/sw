@@ -333,46 +333,6 @@ void hal_create_cq (struct create_cq_cmd  *cmd,
 {
     shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
 
-    
-    ClientContext context1;
-
-    RdmaMemRegRequestMsg request;
-    RdmaMemRegResponseMsg response;
-
-    /*
-     * Ideally we are supposed to have a single HAL command for CQ and QP
-     * implementation, but its not the case right now. We need to change it
-     * later. For now call MR registration first and then create_cq 
-     */
-    RdmaMemRegSpec *spec = request.add_request();
-    spec->set_hw_lif_id(cmd->lif_id+lif_base);
-    //CQ does not have a PD associated. For now anyway we support only
-    //one PD=1
-    spec->set_pd(1);
-    spec->set_va(cmd->cq_va);
-    spec->set_len(cmd->va_len);
-    spec->set_ac_local_wr(1);
-    spec->set_ac_remote_wr(0);
-    spec->set_ac_remote_rd(0);
-    spec->set_ac_remote_atomic(0);
-    spec->set_lkey(cmd->cq_lkey);
-    spec->set_hostmem_pg_size(cmd->host_pg_size);
-
-    //Set the va to pa translations.
-    for (int i = 0; i < (int)cmd->pt_size; i++) {
-        spec->add_va_pages_phy_addr(item->pt_table[i]);
-    }
-
-    Status status = rdma_svc->RdmaMemReg(&context1, request, &response);
-    if (!status.ok()) {
-        cout << "lib_driver.cc: hal_create_cq MemReg error: "
-            << status.error_code() << ": " << status.error_message() << endl;
-
-        comp->status = status.error_code();
-        *item->done = 1;
-        return;
-    }
-
     /*
      * create CQ
      */
@@ -387,9 +347,13 @@ void hal_create_cq (struct create_cq_cmd  *cmd,
     cq_spec->set_cq_wqe_size(cmd->cq_wqe_size);
     cq_spec->set_num_cq_wqes(cmd->num_cq_wqes);
     cq_spec->set_hostmem_pg_size(cmd->host_pg_size);
-    cq_spec->set_cq_lkey(cmd->cq_lkey);
 
-    status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
+    //Set the va to pa translations.
+    for (int i = 0; i < (int)cmd->pt_size; i++) {
+        cq_spec->add_cq_va_pages_phy_addr(item->pt_table[i]);
+    }
+    
+    Status status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
     if (!status.ok()) {
         cout << "lib_driver.cc: hal_create_cq error: "
             << status.error_code() << ": " << status.error_message() << endl;
@@ -434,11 +398,14 @@ void hal_create_qp (struct create_qp_cmd *cmd,
     spec->set_hostmem_pg_size(cmd->host_pg_size);
     spec->set_svc((RdmaServiceType)cmd->service);
     spec->set_atomic_enabled(0);
-    spec->set_sq_lkey(cmd->sq_lkey);
-    spec->set_rq_lkey(cmd->rq_lkey);
     spec->set_sq_cq_num(cmd->sq_cq_num);
     spec->set_rq_cq_num(cmd->rq_cq_num);
+    spec->set_num_sq_pages(cmd->sq_pt_size);
 
+    for (int i = 0; i < (int)cmd->pt_size; i++) {
+        spec->add_va_pages_phy_addr(item->pt_table[i]);
+    }
+    
     Status status = rdma_svc->RdmaQpCreate(&context, request, &response);
     if (!status.ok()) {
         cout << "lib_driver.cc: hal_create_qp error: "
@@ -769,6 +736,12 @@ extern "C" void hal_create_qp_wrapper (struct create_qp_cmd  *cmd,
     memcpy(&item.cmd, cmd, sizeof(*cmd));
     memcpy(&item.comp, comp, sizeof(*comp));
     item.done = done;
+
+    item.pt_table = new uint64_t [cmd->pt_size];
+
+    simdev_read_host_mem(cmd->pt_base_addr, item.pt_table,
+                         cmd->pt_size*sizeof(uint64_t));
+    
     
     reqBuf.add(item);
     comp->status = 0;

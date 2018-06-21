@@ -63,7 +63,14 @@ message RdmaQpSpec {
   bool                     immdt_as_dbell  = 19;   // Use immdt data to ring dbell
   bool                     sq_in_nic_memory= 20;   // Allocate SQ in NIC Memory
   bool                     rq_in_nic_memory= 21;   // Allocate RQ in NIC Memory
-  fixed64                  if_handle       = 22;   // EP's/ENIC's interface handle
+  fixed64                  if_handle       = 22;   // EP's/ENIC's interface
+                                                   // handle
+  repeated uint64          va_pages_phy_addr = 23;  // Virtual memory pages's
+                                                       // phy addr
+  uint32                   num_sq_pages      = 24;  // rq num PT entries
+  //repeated uint64          rq_va_pages_phy_addr = 25;  // Virtual memory pages's
+                                                       // phy addr
+  //uint32                   num_rq_pages      = 26;  // rq num PT entries
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
@@ -182,6 +189,8 @@ message RdmaCqSpec {
   uint32                   wakeup_qtype    = 11;   // Wake up Qtype
   uint32                   wakeup_qid      = 12;   // Wake up QID
   uint32                   wakeup_ring_id  = 13;   // Wake up RING_ID
+  repeated uint64          cq_va_pages_phy_addr = 14;  // Virtual memory pages's
+                                                       // phy addr
 }
 
 // RdmaCqRequestMsg is batched request used to create/update of Rdma QPs

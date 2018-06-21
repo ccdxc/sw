@@ -105,10 +105,10 @@ class QpObject(base.ConfigObjectBase):
             self.pd.ep.AddSlab(self.rq_slab)
 
             # create sq/rq mrs
-            self.sq_mr = mr.MrObject(self.pd, self.sq_slab)
-            self.rq_mr = mr.MrObject(self.pd, self.rq_slab)
-            self.pd.AddMr(self.sq_mr)
-            self.pd.AddMr(self.rq_mr)
+            #self.sq_mr = mr.MrObject(self.pd, self.sq_slab)
+            #self.rq_mr = mr.MrObject(self.pd, self.rq_slab)
+            #self.pd.AddMr(self.sq_mr)
+            #self.pd.AddMr(self.rq_mr)
     
         self.Show()
 
@@ -183,8 +183,13 @@ class QpObject(base.ConfigObjectBase):
             req_spec.hostmem_pg_size = self.hostmem_pg_size
             req_spec.svc = self.svc
             req_spec.atomic_enabled = self.atomic_enabled
-            req_spec.sq_lkey = self.sq_mr.lkey
-            req_spec.rq_lkey = self.rq_mr.lkey
+
+            #req_spec.sq_lkey = self.sq_mr.lkey
+            #req_spec.rq_lkey = self.rq_mr.lkey
+            
+            req_spec.va_pages_phy_addr[:] = self.sq_slab.phy_address + self.rq_slab.phy_address
+            req_spec.num_sq_pages = len(self.sq_slab.phy_address)
+
             req_spec.sq_cq_num = self.sq_cq.id
             req_spec.rq_cq_num = self.rq_cq.id
             req_spec.sq_in_nic_memory = self.sq_in_nic
