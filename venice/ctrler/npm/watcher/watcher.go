@@ -431,12 +431,11 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string, resolver 
 	return watcher, nil
 }
 
-func (w *Watcher) stopped() (val bool) {
+func (w *Watcher) stopped() bool {
 	w.stopFlag.RLock()
 
 	defer w.stopFlag.RUnlock()
-	val = w.stopFlag.flag
-	return
+	return w.stopFlag.flag
 }
 
 func (w *Watcher) stop() {

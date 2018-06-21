@@ -77,7 +77,11 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			Type:   kvstore.Created,
 			Object: tn,
 		}
-		w.tenantWatcher <- evt
+		if !w.stopped() {
+			w.tenantWatcher <- evt
+		} else {
+			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+		}
 	}
 
 	// get all current networks
@@ -93,7 +97,11 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			Type:   kvstore.Created,
 			Object: nw,
 		}
-		w.netWatcher <- evt
+		if !w.stopped() {
+			w.netWatcher <- evt
+		} else {
+			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+		}
 	}
 
 	// get all current sgs
@@ -109,7 +117,11 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			Type:   kvstore.Created,
 			Object: sg,
 		}
-		w.sgWatcher <- evt
+		if !w.stopped() {
+			w.sgWatcher <- evt
+		} else {
+			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+		}
 	}
 
 	// get all current sg policies
@@ -125,7 +137,11 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			Type:   kvstore.Created,
 			Object: sgp,
 		}
-		w.sgPolicyWatcher <- evt
+		if !w.stopped() {
+			w.sgPolicyWatcher <- evt
+		} else {
+			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+		}
 	}
 
 	// wait for events
@@ -133,38 +149,61 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		select {
 		case evt, ok := <-netWatcher.EventChan():
 			if !ok {
-				log.Errorf("Error receiving from apisrv watcher")
+				log.Error("Error receiving from apisrv watcher")
 				return
 			}
 
-			w.netWatcher <- *evt
+			// check if the watchers are not stopped
+			if !w.stopped() {
+				w.netWatcher <- *evt
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
+
 		case evt, ok := <-sgWatcher.EventChan():
 			if !ok {
-				log.Errorf("Error receiving from apisrv watcher")
+				log.Error("Error receiving from apisrv watcher")
 				return
 			}
 
-			w.sgWatcher <- *evt
+			if !w.stopped() {
+				w.sgWatcher <- *evt
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
 
 		case evt, ok := <-sgpWatcher.EventChan():
 			if !ok {
-				log.Errorf("Error receiving from apisrv watcher")
+				log.Error("Error receiving from apisrv watcher")
 				return
 			}
-			w.sgPolicyWatcher <- *evt
+
+			if !w.stopped() {
+				w.sgPolicyWatcher <- *evt
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
 
 		case evt, ok := <-epWatcher.EventChan():
 			if !ok {
-				log.Errorf("Error receiving from apisrv watcher")
+				log.Error("Error receiving from apisrv watcher")
 				return
 			}
-			w.vmmEpWatcher <- *evt
+			if !w.stopped() {
+				w.vmmEpWatcher <- *evt
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
 		case evt, ok := <-tnWatcher.EventChan():
 			if !ok {
-				log.Errorf("Error receiving from apisrv watcher")
+				log.Error("Error receiving from apisrv watcher")
 				return
 			}
-			w.tenantWatcher <- *evt
+			if !w.stopped() {
+				w.tenantWatcher <- *evt
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
 		}
 	}
 }

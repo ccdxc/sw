@@ -373,8 +373,8 @@ func TestRestartWatchers(t *testing.T) {
 	close(w.vmmEpWatcher)
 	close(w.tenantWatcher)
 
-	// Sleep for 30 seconds to ensure that all the watchers are restarted. Do this only in test code.
-	time.Sleep(time.Second * 30)
+	// Sleep for 1 second to ensure that all the watchers are restarted. Do this only in test code.
+	time.Sleep(time.Second * 1)
 
 	// Ensure object creates go through.
 	// create a tenant
