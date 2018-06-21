@@ -35,16 +35,6 @@ action lpm_s2(data) {
     modify_field(rewrite_metadata.nexthop_index, scratch_metadata.lpm_data);
 }
 
-action lpm_cache_info(epoch, nexthop_index) {
-    // if hardware register indicates miss, return
-    if (service_header.epoch == epoch) {
-        modify_field(rewrite_metadata.nexthop_index, nexthop_index);
-        modify_field(lpm_metadata.done, TRUE);
-    }
-
-    modify_field(scratch_metadata.epoch, epoch);
-}
-
 @pragma stage 2
 @pragma hbm_table
 @pragma raw_index_table
@@ -81,20 +71,7 @@ table lpm_s2 {
     }
 }
 
-@pragma stage 1
-table lpm_cache {
-    reads {
-        control_metadata.subnet_id  : ternary;
-        key_metadata.dst            : ternary;
-    }
-    actions {
-        lpm_cache_info;
-    }
-    size : LPM_CACHE_TABLE_SIZE;
-}
-
 control lpm_lookup {
-    apply(lpm_cache);
     if (lpm_metadata.done == FALSE) {
         apply(lpm_s0);
     }

@@ -75,7 +75,7 @@ header_type scratch_metadata_t {
     fields {
         flag        : 1;
         use_epoch1  : 1;
-        epoch       : 4;
+        epoch       : 32;
         ep_hash     : 11;
         ep_hint     : 18;
         ip_src      : 128;

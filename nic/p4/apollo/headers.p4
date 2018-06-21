@@ -127,12 +127,13 @@ header_type service_header_t {
         source_guard_ohash : 32;
         policy_ohash : 32;
 
+        epoch : 32;
+
         pad1 : 5;
         ep_mapping_done : 1;
         source_guard_done : 1;
         policy_done : 1;
 
-        epoch : 4;
         egress_vnic : 12;
         nexthop_index : 16;
     }

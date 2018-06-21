@@ -21,7 +21,8 @@ action source_guard_info(entry_valid, src,
 
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table
-        modify_field(service_header.source_guard_ohash, hint1);
+        modify_field(service_header.source_guard_ohash,
+                     scratch_metadata.ep_hint);
         modify_field(control_metadata.source_guard_ohash_lkp, TRUE);
     }
 

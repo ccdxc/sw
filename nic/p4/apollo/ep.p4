@@ -19,7 +19,7 @@ action ep_mapping_info(entry_valid,
 
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table
-        modify_field(service_header.ep_mapping_ohash, hint1);
+        modify_field(service_header.ep_mapping_ohash, scratch_metadata.ep_hint);
         modify_field(control_metadata.ep_mapping_ohash_lkp, TRUE);
     }
 

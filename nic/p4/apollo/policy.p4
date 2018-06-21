@@ -13,7 +13,7 @@ action policy_info(entry_valid, epoch, policy_index, hash1, hint1,
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table
         modify_field(control_metadata.policy_ohash_lkp, TRUE);
-        modify_field(service_header.policy_ohash, hint1);
+        modify_field(service_header.policy_ohash, scratch_metadata.policy_hint);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
@@ -28,16 +28,6 @@ action policy_info(entry_valid, epoch, policy_index, hash1, hint1,
     modify_field(scratch_metadata.policy_hint, hint3);
     modify_field(scratch_metadata.policy_hint, hint4);
     modify_field(scratch_metadata.policy_hint, hintn);
-}
-
-action policy_cache_info(epoch, policy_index) {
-    // if hardware register indicates miss, return
-    if (service_header.epoch == epoch) {
-        modify_field(control_metadata.policy_index, policy_index);
-        modify_field(control_metadata.skip_policy_lkp, TRUE);
-    }
-
-    modify_field(scratch_metadata.epoch, epoch);
 }
 
 action policy_stats(permit_packets, permit_bytes, deny_packets, deny_bytes,
@@ -84,23 +74,6 @@ table policy_ohash {
     size : POLICY_OHASH_TABLE_SIZE;
 }
 
-@pragma stage 1
-table policy_cache {
-    reads {
-        control_metadata.subnet_id  : ternary;
-        key_metadata.ktype          : ternary;
-        key_metadata.src            : ternary;
-        key_metadata.dst            : ternary;
-        key_metadata.proto          : ternary;
-        key_metadata.sport          : ternary;
-        key_metadata.dport          : ternary;
-    }
-    actions {
-        policy_cache_info;
-    }
-    size : POLICY_CACHE_TABLE_SIZE;
-}
-
 @pragma stage 5
 @pragma hbm_table
 table policy_stats {
@@ -115,7 +88,6 @@ table policy_stats {
 
 control policy_lookup {
     if (service_header.valid == FALSE) {
-        apply(policy_cache);
         if (control_metadata.skip_policy_lkp == TRUE) {
             apply(policy);
         }

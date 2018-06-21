@@ -6,8 +6,6 @@
 #define EP_MAPPING_OHASH_TABLE_SIZE                         262144
 #define SOURCE_GUARD_TABLE_SIZE                             2097152
 #define SOURCE_GUARD_OHASH_TABLE_SIZE                       262144
-#define LPM_CACHE_TABLE_SIZE                                1024
-#define POLICY_CACHE_TABLE_SIZE                             1024
 #define POLICY_TABLE_SIZE                                   16777216
 #define POLICY_OHASH_TABLE_SIZE                             262144
 #define POLICY_STATS_TABLE_SIZE                             8388608

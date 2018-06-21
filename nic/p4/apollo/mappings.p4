@@ -52,7 +52,8 @@ table vnic {
 /******************************************************************************/
 action encap_mapping(vnic, subnet_id, resource_group1_1, resource_group2_1,
                      resource_group1_2, resource_group2_2,
-                     lpm_addr_1, lpm_addr_2, epoch1, epoch2) {
+                     lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
+                     epoch1, epoch2) {
     modify_field(control_metadata.direction, RX_PACKET);
     modify_field(control_metadata.ingress_vnic, vnic);
     modify_field(control_metadata.subnet_id, subnet_id);
@@ -73,12 +74,14 @@ action encap_mapping(vnic, subnet_id, resource_group1_1, resource_group2_1,
     if (scratch_metadata.use_epoch1 == TRUE) {
         modify_field(policer_metadata.resource_group1, resource_group1_1);
         modify_field(policer_metadata.resource_group2, resource_group2_1);
-        modify_field(lpm_metadata.addr, lpm_addr_1);
+        lpm_init(lpm_addr_1);
+        slacl_init(slacl_addr_1);
         modify_field(service_header.epoch, epoch1);
     } else {
         modify_field(policer_metadata.resource_group1, resource_group1_2);
         modify_field(policer_metadata.resource_group2, resource_group2_2);
-        modify_field(lpm_metadata.addr, lpm_addr_2);
+        lpm_init(lpm_addr_2);
+        slacl_init(slacl_addr_2);
         modify_field(service_header.epoch, epoch2);
     }
 }

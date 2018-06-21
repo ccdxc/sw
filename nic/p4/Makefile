@@ -18,6 +18,7 @@ SUBDIRS = \
           adminq \
           gft \
           tyche \
+          apollo \
           p4pt \
           $(NULL)
 
