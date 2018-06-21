@@ -13,13 +13,15 @@ import (
 	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var (
-	maxRetry = 15
+	maxRetry = 60
 	pkgName  = "venice_events_writer"
 )
 
@@ -46,10 +48,12 @@ type VeniceWriter struct {
 }
 
 // eventsMgr encapsulates all the events manager details including connection string
-// and context to be used while making calls.
+// and context to be used while making calls. Either URL or resolver client is used to establish
+// connection with events manager
 type eventsMgr struct {
 	sync.Mutex
 	url             string                  // events manager gPRC listen URL
+	resolverClient  resolver.Interface      // resolver
 	rpcClient       *rpckit.RPCClient       // RPC client to connect with events manager
 	client          emgrpc.EvtsMgrAPIClient // client to connect with events manager
 	ctx             context.Context         // context to use for events manager gRPC calls
@@ -57,10 +61,14 @@ type eventsMgr struct {
 }
 
 // NewVeniceWriter creates a venice writer which sends events to events manager
-func NewVeniceWriter(name string, chLen int, evtsMgrURL string,
+func NewVeniceWriter(name string, chLen int, evtsMgrURL string, resolverClient resolver.Interface,
 	logger log.Logger) (events.Writer, error) {
-	if utils.IsEmpty(name) || utils.IsEmpty(evtsMgrURL) || chLen <= 0 {
-		return nil, fmt.Errorf("all parameters are required")
+	if utils.IsEmpty(name) || chLen <= 0 || logger == nil {
+		return nil, fmt.Errorf("writer name, channel length and logger is required")
+	}
+
+	if (!utils.IsEmpty(evtsMgrURL) && resolverClient != nil) || (utils.IsEmpty(evtsMgrURL) && resolverClient == nil) {
+		return nil, fmt.Errorf("provide either evtsMgrURL or resolverClient")
 	}
 
 	veniceWriter := &VeniceWriter{
@@ -68,8 +76,9 @@ func NewVeniceWriter(name string, chLen int, evtsMgrURL string,
 		chLen:  chLen,
 		logger: logger.WithContext("submodule", pkgName),
 		eventsMgr: &eventsMgr{
-			url: evtsMgrURL,
-			ctx: context.Background(),
+			url:            evtsMgrURL,
+			resolverClient: resolverClient,
+			ctx:            context.Background(),
 		},
 		shutdown: make(chan struct{}, 1),
 	}
@@ -204,21 +213,28 @@ func (v *VeniceWriter) reconnect() {
 }
 
 // init creates events manager grpc client
-func (v *VeniceWriter) initEvtsMgrGrpcClient(retry int) error {
-	for i := 0; i < retry; i++ {
-		// create a grpc client
-		client, err := rpckit.NewRPCClient(pkgName, v.eventsMgr.url, rpckit.WithRemoteServerName(globals.EvtsMgr))
-		if err != nil {
-			time.Sleep(2 * time.Second)
-			v.logger.Warnf("failed to connect to {%s}, err: %v, retry", globals.EvtsMgr, err)
-			continue
-		}
+func (v *VeniceWriter) initEvtsMgrGrpcClient(maxRetries int) error {
+	var client interface{}
+	var err error
 
-		v.eventsMgr.rpcClient = client
-		v.eventsMgr.client = emgrpc.NewEvtsMgrAPIClient(client.ClientConn)
-		v.eventsMgr.connectionAlive = true
-		return nil
+	if !utils.IsEmpty(v.eventsMgr.url) {
+		log.Debug("creating events manager client using URL")
+		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
+			return rpckit.NewRPCClient(pkgName, v.eventsMgr.url, rpckit.WithRemoteServerName(globals.EvtsMgr))
+		}, 2*time.Second, maxRetries)
+	} else { // use resolver client
+		log.Debug("creating events manager client using resolver")
+		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
+			return rpckit.NewRPCClient(pkgName, globals.EvtsMgr, rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)), rpckit.WithRemoteServerName(globals.EvtsMgr))
+		}, 2*time.Second, maxRetries)
 	}
 
-	return fmt.Errorf("failed to connect to {%s}, exhausted all attempts (%d)", globals.EvtsMgr, retry)
+	if err != nil {
+		return fmt.Errorf("failed to connect to {%s},err: %v", globals.EvtsMgr, err)
+	}
+
+	v.eventsMgr.rpcClient = client.(*rpckit.RPCClient)
+	v.eventsMgr.client = emgrpc.NewEvtsMgrAPIClient(v.eventsMgr.rpcClient.ClientConn)
+	v.eventsMgr.connectionAlive = true
+	return nil
 }

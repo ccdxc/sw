@@ -114,7 +114,8 @@ func (t *tInfo) startEvtsProxy(listenURL string) error {
 	log.Infof("starting events proxy")
 
 	t.evtsProxy, err = evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL,
-		t.evtsMgr.RPCServer.GetListenURL(), 100*time.Second, 100*time.Millisecond, t.proxyEventsStoreDir, t.logger)
+		t.evtsMgr.RPCServer.GetListenURL(), nil, 10*time.Second, 100*time.Millisecond, t.proxyEventsStoreDir,
+		[]evtsproxy.WriterType{evtsproxy.Venice}, t.logger)
 	if err != nil {
 		return fmt.Errorf("failed start events proxy, err: %v", err)
 	}

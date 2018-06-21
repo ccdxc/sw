@@ -4,9 +4,12 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -24,6 +27,7 @@ func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, 
 	}
 
 	log.Infof("Register NIC response mac: %s response: %v", nic.ObjectMeta.Name, resp)
+	recorder.Event(cmd.NICAdmitted, monitoring.SeverityLevel_INFO, fmt.Sprintf("Smart NIC %s addmitted to the cluster", nic.GetName()), nic)
 	return resp, nil
 }
 
@@ -41,6 +45,7 @@ func (n *NMD) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 	}
 
 	log.Infof("Update NIC response mac: %s nic: %+v", nic.ObjectMeta.Name, nicObj)
+	recorder.Event(cmd.NICUpdated, monitoring.SeverityLevel_INFO, fmt.Sprintf("Smart NIC %s updated", nic.GetName()), nic)
 	return nicObj, nil
 }
 

@@ -13,7 +13,26 @@ import (
 	"github.com/pensando/sw/venice/utils/events/dispatcher"
 	"github.com/pensando/sw/venice/utils/events/writers"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
+
+// WriterType represents different writer types (venice, syslog, etc.)
+type WriterType uint
+
+const (
+	// Venice represents the venice writer
+	Venice WriterType = 0
+)
+
+// String returns the string name of the writer
+func (w WriterType) String() string {
+	switch w {
+	case Venice:
+		return "venice"
+	}
+
+	return ""
+}
 
 var (
 	writerChLen = 1000
@@ -29,9 +48,14 @@ type EventsProxy struct {
 }
 
 // NewEventsProxy creates and returns a events proxy instance
-func NewEventsProxy(serverName, serverURL, evtsMgrURL string, dedupInterval, batchInterval time.Duration, eventsStoreDir string, logger log.Logger) (*EventsProxy, error) {
-	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || utils.IsEmpty(evtsMgrURL) || logger == nil {
-		return nil, errors.New("all parameters are required")
+func NewEventsProxy(serverName, serverURL, evtsMgrURL string, resolverClient resolver.Interface, dedupInterval, batchInterval time.Duration,
+	eventsStoreDir string, defaultWriters []WriterType, logger log.Logger) (*EventsProxy, error) {
+	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || logger == nil {
+		return nil, errors.New("serverName, serverURL and logger is required")
+	}
+
+	if (!utils.IsEmpty(evtsMgrURL) && resolverClient != nil) || (utils.IsEmpty(evtsMgrURL) && resolverClient == nil) {
+		return nil, errors.New("provide either evtsMgrURL or resolverClient")
 	}
 
 	// create the events dispatcher
@@ -41,7 +65,7 @@ func NewEventsProxy(serverName, serverURL, evtsMgrURL string, dedupInterval, bat
 	}
 
 	// add venice writer
-	if err = addDefaultWriters(evtsDispatcher, evtsMgrURL, logger); err != nil {
+	if err = addDefaultWriters(defaultWriters, evtsDispatcher, evtsMgrURL, resolverClient, logger); err != nil {
 		return nil, errors.Wrap(err, "failed to register default writers with the dispatcher")
 	}
 
@@ -60,19 +84,26 @@ func NewEventsProxy(serverName, serverURL, evtsMgrURL string, dedupInterval, bat
 }
 
 // addDefaultWriters registers default writer with the dispatcher
-func addDefaultWriters(dispatcher events.Dispatcher, evtsMgrURL string, logger log.Logger) error {
-	veniceWriter, err := writers.NewVeniceWriter("venice_writer", writerChLen, evtsMgrURL, logger)
-	if err != nil {
-		return err
+func addDefaultWriters(defaultWriters []WriterType, dispatcher events.Dispatcher, evtsMgrURL string,
+	resolverClient resolver.Interface, logger log.Logger) error {
+	for _, w := range defaultWriters {
+		switch w {
+		case Venice:
+			veniceWriter, err := writers.NewVeniceWriter(w.String(), writerChLen, evtsMgrURL, resolverClient, logger)
+			if err != nil {
+				return err
+			}
+
+			// register venice writer
+			eventsChan, offsetTracker, err := dispatcher.RegisterWriter(veniceWriter)
+			if err != nil {
+				return err
+			}
+
+			// start all the workers
+			veniceWriter.Start(eventsChan, offsetTracker)
+		}
 	}
 
-	// register venice writer
-	eventsChan, offsetTracker, err := dispatcher.RegisterWriter(veniceWriter)
-	if err != nil {
-		return err
-	}
-
-	// start all the workers
-	veniceWriter.Start(eventsChan, offsetTracker)
 	return nil
 }

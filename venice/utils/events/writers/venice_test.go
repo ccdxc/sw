@@ -63,7 +63,7 @@ func setup(t *testing.T) (*mockes.ElasticServer, *evtsmgr.EventsManager,
 	AssertOk(t, err, "failed to run gRPC events manager server")
 
 	// create venice writer
-	veniceWriter, err := NewVeniceWriter("venice_writer", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), logger)
+	veniceWriter, err := NewVeniceWriter("venice_writer", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), nil, logger)
 	AssertOk(t, err, "failed to create venice events writer")
 
 	// create elastic client; this is used to confirm the events have reached elasticsearch through events manager

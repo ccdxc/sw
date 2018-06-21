@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	pencluster "github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	"github.com/pensando/sw/api/generated/monitoring"
 	nmd "github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	proto "github.com/pensando/sw/nic/agent/nmd/protos"
@@ -38,6 +39,8 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -576,6 +579,11 @@ func TestMain(m *testing.M) {
 			return true, true
 		}
 	}
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
+		pencluster.GetEventTypes(), "", "/tmp")
 
 	// Setup
 	Setup(m)

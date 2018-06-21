@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	"github.com/pensando/sw/api/generated/monitoring"
 	nmd "github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	proto "github.com/pensando/sw/nic/agent/nmd/protos"
@@ -30,6 +31,8 @@ import (
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -903,6 +906,10 @@ func testTeardown() {
 }
 
 func TestMain(m *testing.M) {
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
+		cmd.GetEventTypes(), "", "/tmp")
 
 	// Run tests
 	rcode := m.Run()

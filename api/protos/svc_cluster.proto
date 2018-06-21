@@ -14,12 +14,17 @@ import "tenant.proto";
 
 // list of V1 event types supported by the cluster service
 enum EventTypesV1 {
+    // Leader election events
     ElectionStarted   = 0; // Leader election started in the cluster
     ElectionCancelled = 1; // Leader election cancelled
     ElectionStopped   = 2; // Leader election stopped
     LeaderElected     = 3; // Leader elected for the cluster
     LeaderLost        = 4; // Node lost leadership during the election
     LeaderChanged     = 5; // Leader changed in the election
+
+    // NIC events
+    NICAdmitted       = 6; // NIC joined the cluster
+    NICUpdated        = 7; // NIC status got updated
 }
 
 service ClusterV1 {

@@ -10,9 +10,12 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -31,6 +34,11 @@ var (
 
 	// NIC to be rejected
 	nicKey3 = "6666.6666.6666"
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
+		cmd.GetEventTypes(), "", "/tmp")
 )
 
 // Mock platform agent

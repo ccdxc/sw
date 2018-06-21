@@ -8,9 +8,13 @@ import (
 	"strings"
 	"time"
 
+	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -56,6 +60,13 @@ func main() {
 
 	// Initialize logger config
 	log.SetConfig(logConfig)
+
+	// create events recorder
+	if _, err := recorder.NewRecorder(
+		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Nmd},
+		cmd.GetEventTypes(), "", ""); err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)

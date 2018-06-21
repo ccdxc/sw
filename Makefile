@@ -131,7 +131,9 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
+	@#copy the agent binaries to netagent
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
+	@cp -p ${PWD}/bin/cbin/nevtsproxy tools/docker-files/netagent/nevtsproxy
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js' npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --rm --no-cache -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done

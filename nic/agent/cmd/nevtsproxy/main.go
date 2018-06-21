@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 // main (command source) for events proxy
@@ -20,10 +23,10 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", fmt.Sprintf("/var/log/pensando/%s.log", globals.EvtsProxy), "Path of the log file")
-		logToStdoutFlag = flag.Bool("logtostdout", false, "Enable logging to stdout")
+		logToFile       = flag.String("log-to-file", fmt.Sprintf("/var/log/pensando/%s.log", globals.EvtsProxy), "Path of the log file")
+		logToStdoutFlag = flag.Bool("log-to-stdout", false, "Enable logging to stdout")
 		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
-		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")
+		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "Comma separated list of resolver URLs of the form 'ip:port'")
 		dedupInterval   = flag.Duration("dedup-interval", 100*time.Second, "Events deduplication interval")
 		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching inteval")
 		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
@@ -50,8 +53,17 @@ func main() {
 
 	logger := log.SetConfig(config)
 
+	// Set the TLS provider for rpckit
+	rpckit.SetN4STLSProvider()
+
+	// create resolver client
+	resolverClient := resolver.New(&resolver.Config{
+		Name:    globals.EvtsProxy,
+		Servers: strings.Split(*resolverURLs, ",")})
+
 	// create events proxy
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, *evtsMgrURL, nil,
+	// FIXME: start venice writer only in managed mode
+	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, "", resolverClient,
 		*dedupInterval, *batchInterval, *evtsStoreDir, []evtsproxy.WriterType{evtsproxy.Venice}, logger)
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
