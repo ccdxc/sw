@@ -1,0 +1,27 @@
+{ "regions": [
+              {"name" : "REG-1",
+               "size_kb" : 64,
+               "entry_size" : 4},
+              {"name" : "REG-2",
+               "size_kb" : 64,
+               "entry_size" : 4},
+              {"name" : "REG-3",
+               "size_kb" : 64,
+               "entry_size" : 4},
+              {"name" : "REG-4",
+               "size_kb" : 64,
+               "entry_size" : 4},
+              {"name" : "REG-5",
+               "size_kb" : 64,
+               "entry_size" : 4},
+              {"name" : "REG-6",
+               "size_kb" : 64,
+               "entry_size" : 4},
+              {"name" : "REG-7",
+               "size_kb" : 64,
+               "entry_size" : 4},
+              {"name" : "REG-8",
+               "size_kb" : 64,
+               "entry_size" : 4}
+              ]
+}

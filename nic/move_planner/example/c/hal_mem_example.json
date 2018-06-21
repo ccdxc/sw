@@ -1,0 +1,12 @@
+{ "regions": [
+              {"name" : "RDMA",
+               "size_kb" : 8048,
+               "entry_size" : 1024},
+              {"name" : "FTE_SESSION",
+               "size_kb" : 7040,
+               "entry_size" : 704},
+              {"name" : "REG-8",
+               "size_kb" : 2,
+               "entry_size" : 4}
+              ]
+}
