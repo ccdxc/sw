@@ -20,6 +20,7 @@
 #include "sdk/pal.hpp"
 #include "sdk/types.hpp"
 #include "nic/gen/proto/hal/proxy.grpc.pb.h"
+#include "nic/include/mpu_trace.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -223,29 +224,6 @@ min(uint64_t a, uint64_t b) {
 std::string mpu_trace_cfg_file_name    = "mpu_trace_cfg.log";
 std::string mpu_trace_record_file_name = "mpu_trace_record.bin";
 
-#define MAX_LEN_PIPELINE_TYPE 128
-#define MAX_NUM_PIPELINE 5
-#define MAX_STAGES       8
-#define MAX_MPU          4
-
-typedef struct mpu_trace_record_s {
-    char      pipeline_type[MAX_LEN_PIPELINE_TYPE];
-    uint32_t  stage_id;
-    uint32_t  mpu;
-    uint8_t   enable;
-    uint8_t   trace_enable;
-    uint8_t   phv_debug;
-    uint8_t   phv_error;
-    uint64_t  watch_pc;
-    uint64_t  base_addr;
-    uint8_t   table_key;
-    uint8_t   instructions;
-    uint8_t   wrap;
-    uint8_t   reset;
-    uint32_t  buf_size;
-    uint32_t  mpu_trace_size;
-} mpu_trace_record_t;
-
 mpu_trace_record_t mpu_record[MAX_NUM_PIPELINE][MAX_STAGES][MAX_MPU];
 
 #define MIRROR_SESSION_ID       1
@@ -264,6 +242,8 @@ public:
 
     int mpu_record_read_hw(mpu_trace_record_t *record)
     {
+        int ret = 0;
+
         if (record == NULL ||
             record->base_addr == 0) {
             return 0;
@@ -276,29 +256,33 @@ public:
             return -1;
         }
 
-        uint32_t read_size_bytes = 256;
-        uint8_t data[256];
+        uint32_t read_size_bytes = 2048;
+        uint8_t  data[2048];
 
-        std::cout << "Reading for pipeline: " << record->pipeline_type
-                  << " , stage: "             << record->stage_id
-                  << " , mpu: "               << record->mpu
+        memset (data, 0, sizeof(data));
+
+        std::cout << "Reading for pipeline: " << unsigned(record->pipeline_type)
+                  << ", stage: "              << record->stage_id
+                  << ", mpu: "                << record->mpu
+                  << ", size in bytes: "      << read_size_bytes
                   << std::endl;
 
         sdk::lib::pal_mem_read(record->base_addr, (uint8_t *)&data, read_size_bytes);
 
-        mpu_record_write(fp, record);
+        mpu_record_write(fp, record, false);
 
-        int num_records = 3;
-        int record_size = 64;
+        fwrite(data, sizeof(uint8_t), read_size_bytes, fp);
 
-        for (int i = 0; i < num_records; ++i) {
-            fwrite(data + (i * record_size), 1, record_size, fp);
-            fprintf(fp, "\n");
+        if (ferror (fp)) {
+            std::cout << __func__
+                      << ": Error writing to file: " << mpu_trace_record_file_name.c_str()
+                      << std::endl;
+            ret = -1;
         }
 
         fclose (fp);
 
-        return 0;
+        return ret;
     }
 
     int mpu_record_dump(void)
@@ -346,27 +330,14 @@ public:
     /* set the mpu record in global structure */
     int mpu_record_set(mpu_trace_record_t *record)
     {
-        int pipeline = 0;
-
         if (record == NULL) {
             std::cout << "Record is NULL"
                       << std::endl;
             return -1;
         }
 
-        if (!strcmp(record->pipeline_type, "p4_ingress")) {
-            pipeline = debug::MPU_TRACE_PIPELINE_P4_INGRESS;
-        } else if (!strcmp(record->pipeline_type, "p4_egress")) {
-            pipeline = debug::MPU_TRACE_PIPELINE_P4_EGRESS;
-        } else if (!strcmp(record->pipeline_type, "p4p_rxdma")) {
-            pipeline = debug::MPU_TRACE_PIPELINE_P4P_RXDMA;
-        } else if (!strcmp(record->pipeline_type, "p4p_txdma")) {
-            pipeline = debug::MPU_TRACE_PIPELINE_P4P_TXDMA;
-        } else {
-            pipeline = debug::MPU_TRACE_PIPELINE_NONE;
-        }
-
-        mpu_trace_record_t *g_record = &mpu_record[pipeline][record->stage_id][record->mpu];
+        mpu_trace_record_t *g_record =
+            &mpu_record[record->pipeline_type][record->stage_id][record->mpu];
 
         memcpy(g_record, record, sizeof(mpu_trace_record_t));
 
@@ -391,13 +362,13 @@ public:
 
         do {
             ret = fscanf(fp,
-                         "%s"
+                         "%" SCNu8
                          " %" SCNu32 " %" SCNu32
                          " %" SCNu8  " %" SCNu8  " %" SCNu8 " %" SCNu8
                          " 0x%" SCNx64 " 0x%" SCNx64
                          " %" SCNu8  " %" SCNu8  " %" SCNu8 " %" SCNu8
                          " %" SCNu32 " %" SCNu32 "\n",
-                         record.pipeline_type,
+                         &record.pipeline_type,
                          &record.stage_id,
                          &record.mpu,
                          &record.enable,
@@ -428,16 +399,32 @@ public:
     }
 
     /* write the record to the given file pointer */
-    int mpu_record_write(FILE *fp, mpu_trace_record_t *record)
+    int mpu_record_write(FILE *fp, mpu_trace_record_t *record,
+                         bool readable_format)
     {
+        int ret = 0;
+
         if (NULL == fp) {
             std::cout << "file pointer is NULL"
                       << std::endl;
             return -1;
         }
 
+        if (readable_format == false) {
+            fwrite(record, sizeof(mpu_trace_record_t), 1, fp);
+
+            if (ferror (fp)) {
+                std::cout << __func__
+                          << ": Error writing to file"
+                          << std::endl;
+                ret = -1;
+            }
+
+            return ret;
+        }
+
         fprintf(fp,
-                "%s"
+                "%" PRIu8
                 " %" PRIu32 " %" PRIu32
                 " %" PRIu8  " %" PRIu8  " %" PRIu8 " %" PRIu8
                 " 0x%" PRIx64 " 0x%" PRIx64
@@ -460,7 +447,7 @@ public:
                 record->mpu_trace_size
                 );
 
-        return 0;
+        return ret;
     }
 
     /* store the record to a file */
@@ -475,7 +462,7 @@ public:
             return -1;
         }
 
-        mpu_record_write(fp, record);
+        mpu_record_write(fp, record, true);
 
         fclose(fp);
 
@@ -497,18 +484,21 @@ public:
 
         debug::MpuTraceRequest *req = req_msg.add_request();
 
-        strncpy(record.pipeline_type, pipeline_type, MAX_LEN_PIPELINE_TYPE);
-
         if (!strcmp(pipeline_type, "p4_ingress")) {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_INGRESS);
+            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4_INGRESS;
         } else if (!strcmp(pipeline_type, "p4_egress")) {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_EGRESS);
+            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4_EGRESS;
         } else if (!strcmp(pipeline_type, "p4p_rxdma")) {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_RXDMA);
+            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4P_RXDMA;
         } else if (!strcmp(pipeline_type, "p4p_txdma")) {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_TXDMA);
+            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4P_TXDMA;
         } else {
             req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_NONE);
+            record.pipeline_type = debug::MPU_TRACE_PIPELINE_NONE;
         }
 
         if (stage_id != -1) {
