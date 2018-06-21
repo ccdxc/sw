@@ -79,15 +79,15 @@ lb_padding_done:
   // Now we need to update all the packet lengths, It could be add or subtract 
   sub          r3, r1, r2
 
-  add          r4, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r3.s
+  add          r4, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r3
   phvwr        p.capri_p4_intrinsic_packet_len, r4
-  add          r4, k.ipv4_totalLen, r3.s
+  add          r4, k.ipv4_totalLen, r3
   phvwr        p.ipv4_totalLen, r4
   phvwr        p.tcp_dataOffset, r1[5:2]
   seq          c1, k.tunnel_metadata_tunnel_terminate, TRUE
-  add.c1       r4, k.udp_len, r3.s
+  add.c1       r4, k.udp_len, r3
   phvwr.c1     p.udp_len, r4
-  add.c1       r4, k.inner_ipv4_totalLen, r3.s
+  add.c1       r4, k.inner_ipv4_totalLen, r3
   phvwr.c1     p.inner_ipv4_totalLen, r4
   // Update checksums
   // Assumption is if we terminated the tunnel and looking inner then we will move all
