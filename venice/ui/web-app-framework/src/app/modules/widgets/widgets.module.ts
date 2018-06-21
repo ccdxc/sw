@@ -11,6 +11,9 @@ import { RecursivelistComponent } from './recursivelist/recursivelist/recursivel
 import { RepeaterComponent } from './repeater/repeater.component';
 import { SearchboxComponent } from './searchbox/searchbox.component';
 import { UniquerepeaterComponent } from './repeater/uniquerepeater/uniquerepeater.component';
+import { PenuitabComponent } from './penuitabs/penuitab/penuitab.component';
+import { PenuitabsComponent } from './penuitabs/penuitabs.component';
+import { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component';
 
 
 @NgModule({
@@ -29,7 +32,10 @@ import { UniquerepeaterComponent } from './repeater/uniquerepeater/uniquerepeate
     PlotlyimageComponent,
     SearchboxComponent,
     RepeaterComponent,
-    UniquerepeaterComponent
+    UniquerepeaterComponent,
+    PenuitabComponent,
+    PenuitabsComponent,
+    TabcontentComponent
   ],
   exports: [
     BarchartComponent, // <-- add widgets to here
@@ -38,7 +44,10 @@ import { UniquerepeaterComponent } from './repeater/uniquerepeater/uniquerepeate
     RecursivelistComponent,
     SearchboxComponent,
     RepeaterComponent,
-    UniquerepeaterComponent
+    UniquerepeaterComponent,
+    PenuitabComponent,
+    PenuitabsComponent,
+    TabcontentComponent
   ]
 })
 export class WidgetsModule { }

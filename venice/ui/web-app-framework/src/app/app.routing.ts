@@ -6,6 +6,7 @@ import { TestRecursiveListComponent } from './test/test-recursive-list/test-recu
 import { TestSearchboxComponent } from './test/test-searchbox/test-searchbox.component';
 import { TestRepeaterComponent } from '@testapp/test-repeater/test-repeater.component';
 import { TestUniqueRepeaterComponent } from '@testapp/test-uniquerepeater/test-uniquerepeater.component';
+import { TestTabsComponent } from '@testapp/test-tabs/test-tabs.component';
 
 /**
  * This is the application route configuration file.
@@ -43,6 +44,10 @@ export const routes: Routes = [
     path: 'uniquerepeater',
     component: TestUniqueRepeaterComponent
   },
+  {
+    path: 'tabs',
+    component: TestTabsComponent
+  }
 
 ];
 

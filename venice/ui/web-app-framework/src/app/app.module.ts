@@ -18,6 +18,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { TestSearchboxComponent } from './test/test-searchbox/test-searchbox.component';
 import { TestRepeaterComponent } from '@testapp/test-repeater/test-repeater.component';
 import { TestUniqueRepeaterComponent } from '@testapp/test-uniquerepeater/test-uniquerepeater.component';
+import { TestTabsComponent, SampleTabComponent } from '@testapp/test-tabs/test-tabs.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,9 @@ import { TestUniqueRepeaterComponent } from '@testapp/test-uniquerepeater/test-u
     TestRecursiveListComponent,
     TestSearchboxComponent,
     TestRepeaterComponent,
-    TestUniqueRepeaterComponent
+    TestUniqueRepeaterComponent,
+    TestTabsComponent,
+    SampleTabComponent
   ],
   imports: [
     FormsModule,

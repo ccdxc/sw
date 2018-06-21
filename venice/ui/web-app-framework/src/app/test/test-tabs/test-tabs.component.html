@@ -1,0 +1,27 @@
+<p-button label="inc tab 1 count" (onClick)="countInc(1)"></p-button>
+<p-button label="inc tab 2 count" (onClick)="countInc(2)"></p-button>
+<p-button label="inc tab 3 count" (onClick)="countInc(3)"></p-button>
+<div>
+  <app-penuitabs>
+    <app-penuitab title="TAB 1" [count]="tabCounter1">
+      <ng-template>
+        <app-test-sampletab #tabContent text="tab 1">
+        </app-test-sampletab>
+      </ng-template>
+    </app-penuitab>
+    <app-penuitab title="TAB 2" [count]="tabCounter2">
+      <ng-template>
+        <app-test-sampletab #tabContent text="tab 2">
+        </app-test-sampletab>
+      </ng-template>
+    </app-penuitab>
+    <app-penuitab title="TAB 3" [count]="tabCounter3">
+      <ng-template>
+        <app-test-sampletab #tabContent text="tab 3-1">
+        </app-test-sampletab>
+        <app-test-sampletab #tabContent text="tab 3-2">
+        </app-test-sampletab>
+      </ng-template>
+    </app-penuitab>
+  </app-penuitabs>
+</div>

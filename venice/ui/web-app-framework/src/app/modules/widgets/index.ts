@@ -6,6 +6,9 @@ export { PlotlyimageComponent } from './plotlychart/plotlyimage/plotlyimage.comp
 export { SearchboxComponent } from './searchbox/searchbox.component';
 export { RepeaterComponent } from './repeater/repeater.component';
 export { UniquerepeaterComponent } from './repeater/uniquerepeater/uniquerepeater.component';
+export { PenuitabsComponent } from './penuitabs/penuitabs.component'
+export { PenuitabComponent } from './penuitabs/penuitab/penuitab.component'
+export { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component'
 
 // Interfaces
 export * from './repeater/index';
