@@ -2277,10 +2277,11 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		goto err_pagedir;
 	}
 
+	pg_i = 0;
+	pg_end = 0;
+
 	if (qp->has_sq) {
 		if (qp->sq_umem) {
-			pg_i = 0;
-			pg_end = 0;
 			for_each_sg(qp->sq_umem->sg_head.sgl, sg, qp->sq_umem->nmap, sg_i) {
 				pagedma = sg_dma_address(sg);
 				pg_end += sg_dma_len(sg) >> PAGE_SHIFT;
