@@ -3,7 +3,7 @@
 all: build
 
 build:
-	go build
+	go build nmd.go
 
 clean:
-	rm -rf go-examples
+	rm -rf nmd

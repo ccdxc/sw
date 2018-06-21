@@ -101,11 +101,15 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 	}
 	if role == AgentRole {
 		if agentHdlrs == nil {
-			return nil, errors.New("Agent completion handlers need to be provided")
+			return nil, errors.New("AgentHandlers need to be provided for Agent application")
 		}
 		upgrade.UpgReqMount(client, delphi.MountMode_ReadWriteMode)
 		upgRespInit(client, agentHdlrs)
 		upgAppRespInit(client, agentHdlrs)
+	} else {
+		if agentHdlrs != nil {
+			return nil, errors.New("Non-Agent applications cannot provide AgentHandlers")
+		}
 	}
 	upgStateReqInit(client, appHdlrs, name)
 	initStateMachineVector()

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk"
 	"github.com/pensando/sw/venice/utils/log"
@@ -102,53 +100,6 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgAborted(upgCtx *upgsdk.Up
 	return
 }
 
-type upgradeCompletion struct {
-}
-
-func (u *upgradeCompletion) UpgSuccessful() {
-	log.Infof("Upgupgsdk.Successful got called")
-}
-
-func (u *upgradeCompletion) UpgFailed() {
-	log.Infof("UpgFailed got called")
-}
-
-func (u *upgradeCompletion) UpgAborted() {
-	log.Infof("UpgAborted got called")
-}
-
-func (u *upgradeCompletion) UpgStatePreUpgCheckComplete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStatePreUpgCheckComplete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
-func (u *upgradeCompletion) UpgStateProcessQuiesceComplete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStateProcessQuiesceComplete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
-func (u *upgradeCompletion) UpgStatePostBinRestartComplete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStatePostBinRestartComplete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
-func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase1Complete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStateDataplaneDowntimePhase1Complete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
-func (u *upgradeCompletion) UpgStateDataplaneDowntimeAdminQComplete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStateDataplaneDowntimeAdminQComplete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
-func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase2Complete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStateDataplaneDowntimePhase2Complete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
-func (u *upgradeCompletion) UpgStateCleanupComplete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStateCleanupComplete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
-func (u *upgradeCompletion) UpgStateAbortedComplete(resp *upgsdk.HdlrResp, svcName string) {
-	log.Infof("UpgStateAbortedComplete got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
-}
-
 func main() {
 	s1 := &service{
 		name: "Example go Service",
@@ -157,35 +108,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	u1 := &upgradeCompletion{}
 	ushm := &upgradeStateMachineHdlrsCtx{}
-	upg, err := upgsdk.NewUpgSdk(s1.name, c1, upgsdk.AgentRole, u1, ushm)
+	upg, err := upgsdk.NewUpgSdk(s1.name, c1, upgsdk.NonAgentRole, nil, ushm)
 	if err != nil {
 		panic(err)
 	}
-
+	_ = upg
 	err = c1.Dial()
 	if err != nil {
 		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
 	}
 
-	err = upg.StartUpgrade()
-	if err != nil {
-		log.Fatalf("Could not start upgrade because of %s", err)
-	}
-	timer := time.NewTimer(time.Second * 5)
-	<-timer.C
-	log.Infof("Timer expired")
-
-	retStr := make([]string, 0)
-	//err = upg.AbortUpgrade()
-	//err = upg.GetUpgradeStatus(&retStr)
-	if err != nil {
-		log.Fatalf("Could not abort upgrade because of %s", err)
-	}
-	for _, str := range retStr {
-		log.Infof("%s", str)
-	}
 	a := make(chan struct{})
 	_ = <-a
 }
