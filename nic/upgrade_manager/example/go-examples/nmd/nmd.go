@@ -109,11 +109,14 @@ func (u *upgradeCompletion) UpgSuccessful() {
 	log.Infof("Upgupgsdk.Successful got called")
 }
 
-func (u *upgradeCompletion) UpgFailed() {
+func (u *upgradeCompletion) UpgFailed(errStrList *[]string) {
 	log.Infof("UpgFailed got called")
+	for _, val := range *errStrList {
+		log.Infof("Error %s", val)
+	}
 }
 
-func (u *upgradeCompletion) UpgAborted() {
+func (u *upgradeCompletion) UpgAborted(errStrList *[]string) {
 	log.Infof("UpgAborted got called")
 }
 

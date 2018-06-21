@@ -12,19 +12,24 @@ type upgrespctx struct {
 	sdkClient  gosdk.Client
 }
 
-func (ctx *upgrespctx) invokeAgentHandler(respType upgrade.UpgRespType) {
-	switch respType {
+func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
+	var errStrList []string
+	switch obj.GetUpgRespVal() {
 	case upgrade.UpgRespType_UpgRespPass:
 		log.Infof("upgrade success!!")
 		ctx.agentHdlrs.UpgSuccessful()
 	case upgrade.UpgRespType_UpgRespFail:
 		log.Infof("upgrade failed!!")
-		//TODO for (int i=0; i<resp->upgrespfailstr_size(); i++) {
-		ctx.agentHdlrs.UpgFailed()
+		for idx := 0; idx < obj.GetUpgRespFailStr().Length(); idx++ {
+			errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
+		}
+		ctx.agentHdlrs.UpgFailed(&errStrList)
 	case upgrade.UpgRespType_UpgRespAbort:
 		log.Infof("upgrade aborted!!")
-		//TODO for (int i=0; i<resp->upgrespfailstr_size(); i++) {
-		ctx.agentHdlrs.UpgAborted()
+		for idx := 0; idx < obj.GetUpgRespFailStr().Length(); idx++ {
+			errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
+		}
+		ctx.agentHdlrs.UpgAborted(&errStrList)
 	}
 }
 
@@ -35,13 +40,13 @@ func (ctx *upgrespctx) DeleteUpgReqSpec() {
 
 func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespCreate called %d", obj.GetUpgRespVal())
-	ctx.invokeAgentHandler(obj.GetUpgRespVal())
+	ctx.invokeAgentHandler(obj)
 	ctx.DeleteUpgReqSpec()
 }
 
 func (ctx *upgrespctx) OnUpgRespUpdate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespUpdate called %d", obj.GetUpgRespVal())
-	ctx.invokeAgentHandler(obj.GetUpgRespVal())
+	ctx.invokeAgentHandler(obj)
 	ctx.DeleteUpgReqSpec()
 }
 

@@ -55,8 +55,8 @@ type AgentHandlers interface {
 	UpgStateAbortedComplete(resp *HdlrResp, svcName string)
 
 	UpgSuccessful()
-	UpgFailed()
-	UpgAborted()
+	UpgFailed(errStrList *[]string)
+	UpgAborted(errStrList *[]string)
 }
 
 //UpgCtx is the wrapper that holds all the information about the current upgrade

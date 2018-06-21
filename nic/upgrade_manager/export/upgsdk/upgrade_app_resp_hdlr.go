@@ -47,6 +47,9 @@ func updateUpgAppResp(respStateType upgrade.UpgRespStateType, appHdlrResp *HdlrR
 		log.Infof("%s", upgAppRespValToStr(respStateType))
 	}
 	upgAppResp.SetUpgAppRespVal(respStateType)
+	if appHdlrResp.Resp == Fail {
+		upgAppResp.SetUpgAppRespStr(appHdlrResp.ErrStr)
+	}
 	return
 }
 

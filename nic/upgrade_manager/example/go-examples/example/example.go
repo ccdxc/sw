@@ -57,6 +57,8 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleStateDataplaneDowntimePhase1Start
 	var hdlrResp upgsdk.HdlrResp
 	hdlrResp.Resp = upgsdk.Success
 	hdlrResp.ErrStr = ""
+	//hdlrResp.Resp = upgsdk.Fail
+	//hdlrResp.ErrStr = "TATATA"
 	log.Infof("HandleStateDataplaneDowntimePhase1Start called")
 	return hdlrResp
 }
