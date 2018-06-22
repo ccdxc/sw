@@ -4,7 +4,33 @@
 Vagrant.require_version ">=1.9.5"
 
 BOX_IMAGE = "venice/turin-centos74"
-NODE_COUNT = 2
+
+#default 2 nodes
+DEFAULT_NODE_COUNT = 2
+node_count = DEFAULT_NODE_COUNT
+
+#user can control the number of vagrant nodes based on TURIN_NODE_COUNT env variable
+if ENV['TURIN_NODE_COUNT'] then
+    node_count = ENV["TURIN_NODE_COUNT"].to_i
+end
+
+DEFAULT_CPUS_PER_NODE = "2"
+cpus_per_node = DEFAULT_CPUS_PER_NODE
+
+DEFAULT_MEMORY_PER_NODE = 2048
+memory_per_node = DEFAULT_MEMORY_PER_NODE
+
+
+# number of CPUs per vagrant node is controilled by CPUS_PER_NODE env variable
+if ENV["TURIN_CPUS_PER_NODE"] then
+    cpus_per_node = ENV["TURIN_CPUS_PER_NODE"]
+end
+
+# Memory per vagrant node(unit is Megabytes) is controilled by CPUS_PER_NODE env variable
+if ENV["TURIN_MEMORY_PER_NODE"] then
+    memory_per_node = ENV["TURIN_MEMORY_PER_NODE"].to_i
+end
+ 
 
 NAPLES_VER = "v1"
 NAPLES_IMAGE = "pensando/naples:#{NAPLES_VER}"
@@ -31,7 +57,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
 
   if !ENV['TURIN_DISABLE_NAPLES'] then
-  NODE_COUNT.times do |i|
+  (0..(node_count-1)).each do |i|
     config.vm.define "node#{i+1}" do |subconfig|
       subconfig.vm.hostname = "node#{i+1}"
 
@@ -45,8 +71,8 @@ Vagrant.configure("2") do |config|
       subconfig.vm.network  "forwarded_port", guest: AGENT_PORT, host: 9000+i+11
 
       subconfig.vm.provider "virtualbox" do |vb|
-        vb.memory = "2096"
-        vb.cpus = 2
+        vb.memory = memory_per_node
+        vb.cpus = cpus_per_node
         vb.customize ['modifyvm', :id, '--nictype3', '82545EM']
         vb.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
         vb.linked_clone = true # use base image and clone from it. for multi-VM, saves space
@@ -82,7 +108,7 @@ Vagrant.configure("2") do |config|
 
       # provision data network tunnels
       if i == 0 then
-        NODE_COUNT.times do |n1|
+        (0..(node_count-1)).each do |n1|
           if n1 != 0 then
             subconfig.vm.provision "shell" do |s|
               s.inline = "ovs-vsctl add-port data-net vxtun-to-node#{n1+1} -- set interface vxtun-to-node#{n1+1} type=vxlan options:key=11111 options:remote_ip=192.168.10.#{n1+11}"
@@ -118,6 +144,12 @@ Vagrant.configure("2") do |config|
       SCRIPT
 
       # Run this on every boot
+
+      #If user wants to mount their dircotry inside vagrant node then they need to set TURIN_DEV to 1 and TURIN_DEV_MOUNT_DIR to the directory path which needs to be mounted under the vagrant ndoe at /mnt/sw path
+      if ENV["TURIN_DEV"] && ENV["TURIN_DEV"] == "1" then
+          subconfig.vm.synced_folder ENV["TURIN_DEV_MOUNT_DIR"], "/mnt/sw"
+      end
+
       subconfig.vm.provision "shell", run: 'always', inline: "/usr/bin/naples-bootstrap.sh $1", args: "#{i+1}"
     end
     end
