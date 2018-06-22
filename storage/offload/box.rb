@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.23"
+from "registry.test.pensando.io:5000/pensando/nic:1.24"
 
 PACKAGES = %w[
   numactl-devel libuuid-devel libaio-devel CUnit-devel 

@@ -177,12 +177,12 @@ end
 
 # prep zeromq
 inside BASE_BUILD_DIR do
-  run "wget https://github.com/zeromq/zeromq3-x/releases/download/v3.2.5/zeromq-3.2.5.tar.gz"
-  run "tar zxf zeromq-3.2.5.tar.gz"
+  run "wget https://github.com/zeromq/zeromq4-x/releases/download/v4.0.0/zeromq-4.0.0-rc1.tar.gz"
+  run "tar zxf zeromq-4.0.0-rc1.tar.gz"
 end
 
 # install zeromq
-inside "#{BASE_BUILD_DIR}/zeromq-3.2.5" do
+inside "#{BASE_BUILD_DIR}/zeromq-4.0.0" do
   run "./configure --prefix=/usr"
   run "make -j$(grep -c processor /proc/cpuinfo)"
   run "make install"

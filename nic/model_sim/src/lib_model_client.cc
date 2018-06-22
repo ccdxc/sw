@@ -46,6 +46,9 @@ int lib_model_connect ()
     __zmq_sock = zmq_socket (__zmq_context, ZMQ_REQ);
     rc = zmq_setsockopt (__zmq_sock, ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));
     rc = zmq_setsockopt (__zmq_sock, ZMQ_SNDTIMEO, &timeout_ms, sizeof(timeout_ms));
+    int val = 1;
+    rc = zmq_setsockopt (__zmq_sock, ZMQ_REQ_CORRELATE, &val, sizeof(int));
+    rc = zmq_setsockopt (__zmq_sock, ZMQ_REQ_RELAXED, &val, sizeof(int));
     rc = zmq_connect ((__zmq_sock), zmqsockstr);
     assert(rc == 0);
     

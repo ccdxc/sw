@@ -130,8 +130,8 @@ gtests: gtests-common
     endif
 
 sanity-tests:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
     ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests/proxy:all
 		#This is temporary, will be removed soon.
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:all
