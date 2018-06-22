@@ -88,6 +88,18 @@ type UpgSdk interface {
 	GetUpgradeStatus(retStr *[]string) error
 	SendAppRespSuccess() error
 	SendAppRespFail(str string) error
+	IsUpgradeInProgress() bool
+}
+
+func (u *upgSdk) IsUpgradeInProgress() bool {
+	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
+	if upgreq != nil &&
+		upgreq.GetUpgReqCmd() == upgrade.UpgReqType_UpgStart {
+		log.Infof("Upgrade in progress")
+		return true
+	}
+	log.Infof("Upgrade not in progress")
+	return false
 }
 
 //SendAppRespFail is used to reply with Fail

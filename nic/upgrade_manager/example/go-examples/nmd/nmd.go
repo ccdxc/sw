@@ -183,6 +183,9 @@ func main() {
 	retStr := make([]string, 0)
 	//err = upg.AbortUpgrade()
 	//err = upg.GetUpgradeStatus(&retStr)
+	//if upg.IsUpgradeInProgress() {
+	//	log.Infof("Upgrade going on!")
+	//}
 	if err != nil {
 		log.Fatalf("Could not abort upgrade because of %s", err)
 	}
