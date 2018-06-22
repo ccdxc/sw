@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <signal.h>
+
 #include "nic/e2etests/lib/helpers.hpp"
 #include "nic/e2etests/hntap/dev.hpp"
 
@@ -37,6 +39,15 @@ extern uint32_t nw_retries;
 extern uint16_t hntap_port;
 extern bool hntap_drop_rexmit;
 bool hntap_proxy_uplink_to_uplink_mode = false;
+
+void sig_handler(int signo)
+{
+    TLOG("Received signal %d\n", signo);
+    if(signo == SIGUSR1) {
+        TLOG("Calling exit\n");
+        exit(0);
+    }
+}
 
 
 void
@@ -406,6 +417,13 @@ int main(int argv, char *argc[])
     }
 
   }
+
+  TLOG("Registering signal handler\n");
+  if(signal(SIGUSR1, sig_handler) == SIG_ERR) {
+      TLOG("Failed to register signal handler\n");
+      exit(-1);
+  }
+
   TLOG("Starting Host/network Tapper..\n");
 
   /* Create tap interface for Host-tap */

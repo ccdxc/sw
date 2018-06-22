@@ -140,7 +140,7 @@ def run_tcp_client(tcp_port):
     return p.returncode
 
 def cleanup(keep_logs=True):
-    os.kill(int(hntap_process.pid), 9)
+    os.kill(int(hntap_process.pid), 10)
     if tls_svr_process:
         os.kill(int(tls_svr_process.pid), 9)
     if tcp_svr_process:
