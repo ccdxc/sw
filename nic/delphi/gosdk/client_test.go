@@ -62,8 +62,13 @@ func TestClientBasic(t *testing.T) {
 		t.Errorf("Dial(): %s", err)
 	}
 
+	c1.WatchMount(s1)
+
 	_ = <-s1.mountDone
-	log.Printf("### Client 1 Mount done")
+	log.Printf("### Client 1 Mount done #1")
+
+	_ = <-s1.mountDone
+	log.Printf("### Client 1 Mount done #2")
 
 	s2 := &service{
 		mountDone:       make(chan struct{}),

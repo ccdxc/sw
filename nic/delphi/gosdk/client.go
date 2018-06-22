@@ -18,6 +18,12 @@ type Service interface {
 	Name() string
 }
 
+// MountListener is the interface clients have to implement if the want to be
+// notified of MountComplete
+type MountListener interface {
+	OnMountComplete()
+}
+
 // Client This is the main SDK Client API
 type Client interface {
 	// Mount a kind to get notifications and/or make changes to the objects.
@@ -35,9 +41,11 @@ type Client interface {
 	// Delete object, as it names sugests, deletes an object from the database.
 	// Users can use this, or just call <OBJECT>.Delete()
 	DeleteObject(obj BaseObject) error
-	// WathcKind is used internally by the object to register reactors. Users
+	// WatchKind is used internally by the object to register reactors. Users
 	// should not call this directly
 	WatchKind(kind string, reactor BaseReactor) error
+	// WatchMount allows users to register extra onMount callbacks
+	WatchMount(listener MountListener) error
 	// Close, as the name suggests, closes the connection to the hub.
 	Close()
 	// DumpSubtrees prints the local database state to stderr. It's meant to be
@@ -56,14 +64,15 @@ type change struct {
 
 // The internal state for the client.
 type client struct {
-	id          uint16
-	nextObjID   uint32
-	mclient     messenger.Client
-	service     Service
-	mounts      []*delphi_messanger.MountData
-	watchers    map[string][]BaseReactor
-	subtrees    map[string]subtree
-	changeQueue chan *change
+	id             uint16
+	nextObjID      uint32
+	mclient        messenger.Client
+	service        Service
+	mounts         []*delphi_messanger.MountData
+	mountListeners []MountListener
+	watchers       map[string][]BaseReactor
+	subtrees       map[string]subtree
+	changeQueue    chan *change
 }
 
 // Mount a kind to get notifications and/or make changes to the objects. Must
@@ -145,6 +154,12 @@ func (c *client) WatchKind(kind string, reactor BaseReactor) error {
 	}
 	rl = append(rl, reactor)
 	c.watchers[kind] = rl
+	return nil
+}
+
+// WatchMount
+func (c *client) WatchMount(listener MountListener) error {
+	c.mountListeners = append(c.mountListeners, listener)
 	return nil
 }
 
@@ -254,6 +269,9 @@ func (c *client) HandleMountResp(svcID uint16, status string, objlist []*delphi_
 	c.id = svcID
 	c.updateSubtrees(objlist)
 	c.service.OnMountComplete()
+	for _, l := range c.mountListeners {
+		l.OnMountComplete()
+	}
 	return nil
 }
 
@@ -288,11 +306,12 @@ func (c *client) newHandle() uint64 {
 // to have more than one clients at the same time.
 func NewClient(service Service) (Client, error) {
 	client := &client{
-		mounts:      make([]*delphi_messanger.MountData, 0),
-		service:     service,
-		subtrees:    make(map[string]subtree),
-		watchers:    make(map[string][]BaseReactor),
-		changeQueue: make(chan *change),
+		mounts:         make([]*delphi_messanger.MountData, 0),
+		service:        service,
+		subtrees:       make(map[string]subtree),
+		watchers:       make(map[string][]BaseReactor),
+		changeQueue:    make(chan *change),
+		mountListeners: make([]MountListener, 0),
 	}
 
 	mc, err := messenger.NewClient(client)

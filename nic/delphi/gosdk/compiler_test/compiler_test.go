@@ -38,6 +38,10 @@ func (t *testClient) WatchKind(kind string, reactor gosdk.BaseReactor) error {
 	return nil
 }
 
+func (t *testClient) WatchMount(l gosdk.MountListener) error {
+	return nil
+}
+
 func (t *testClient) Close() {
 
 }
