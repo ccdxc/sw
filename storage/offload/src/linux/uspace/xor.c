@@ -50,7 +50,7 @@ int exec_xor_thread(void *arg1, void *arg2)
 	}
 
 	/* Execute synchronously */
-	rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, NULL, NULL, NULL, NULL);
+	rc = pnso_submit_request(svc_req, svc_res, NULL, NULL, NULL, NULL);
 	if (rc != 0) {
 		printf("pnso_submit_request failed in xor thread with rc: %d\n", rc);
 		return rc;

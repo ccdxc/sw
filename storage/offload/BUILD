@@ -5,25 +5,66 @@ licenses(["notice"])  # MIT license
 cc_library(
     name = "pnso_sim",
     srcs = glob(["src/sim/*.h"]) +
-        glob(["src/sim/*.c"]) + [
-        "src/osal/pnso_sim_osal.h",
-#        "src/osal/linux/uspace/pnso_sim_uspace.c",
-    ],
+        glob(["src/sim/*.c"]),
     includes = [
         "include",
         "src/sim",
-        "src/osal"
+        "src/osal",
+        "third-party/freebsd-crypto/src"
     ],
-    deps = [ "//nic:openssl-native" ],
+    #deps = [ "//nic:openssl-native" ],
+    deps = [
+        "osal",
+        "//storage/offload/third-party:sim_crypto"
+    ],
     copts = [
         "-xc"
     ],
-    hdrs = [
-        "include/pnso_sim_api.h",
-        "include/pnso_wafl.h",
-        "src/sim/pnso_sim.h"
-    ],
+    hdrs = glob(["src/osal/osal*.h"]) +
+        glob(["include/pnso*.h"]),
     alwayslink = 1
+)
+
+cc_library(
+    name = "pnso_test_sim",
+    srcs = [
+        "src/test/pnso_test.h",
+        "src/test/pnso_test_parse.h",
+        "src/test/pnso_test_parse.c",
+        "src/test/pnso_test_file.c",
+        "src/test/pnso_test.c"
+    ],
+    includes = [
+        "include",
+        "src/osal"
+    ],
+    deps = [
+        "//storage/offload/third-party:yaml",
+        "pnso_sim",
+        "osal",
+    ],
+    copts = [
+        "-xc",
+	"-DPNSO_SIM"
+    ],
+    #linkopts = [ "-lyaml" ],
+    alwayslink = 1,
+    linkstatic = 1,
+)
+
+cc_binary(
+    name = "pnso_test_main",
+    srcs = [ "src/test/pnso_test_main.c" ],
+    includes = [
+        "src/test"
+    ],
+    deps = [
+        "//storage/offload:pnso_test_sim",
+    ],
+    copts = [
+        "-xc"
+    ],
+    linkopts = [ "-lpthread", "-lrt", "-ldl", "-lnuma", "-luuid" ],
 )
 
 cc_library(
@@ -68,16 +109,9 @@ config_setting(
 
 cc_library(
     name = "osal",
-    srcs = glob(["src/osal/*.h"]) +
-           glob(["src/osal/*.c"]) + 
-#need to delete below lines once pnso_sim_uspace.c is moved out of osal
-           glob(["src/sim/*.h"]) + 
-           glob(["include/*.h"]) + 
-#need to delete above lines once pnso_sim_uspace.c is moved out of osal
+    srcs = glob(["src/osal/*.c"]) + 
 	   select({
 		"//conditions:default": 
-			#glob(include=["src/osal/linux/uspace/*.c"],
-                        #     exclude=["src/osal/linux/uspace/pnso_sim_uspace.c"]) +
 			glob(["src/osal/linux/uspace/*.c"]) +
 			glob(["src/osal/linux/uspace/*.h"]) +
 			glob(["src/osal/linux/uspace/sim/*.c"]) + 

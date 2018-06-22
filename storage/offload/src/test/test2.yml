@@ -1,0 +1,114 @@
+global_params:
+  cp_hdr_ver: 1
+  per_core_qdepth: 32
+  block_size: 4096
+cp_hdr_format:
+  idx: 1
+  cp_hdr_field:
+    type: indata_chksum
+    offset: 0
+    len: 4
+    val: 0
+  cp_hdr_field:
+    type: outdata_length
+    offset: 4
+    len: 2
+    val: 0
+  cp_hdr_field:
+    type: algo
+    offset: 6
+    len: 2
+    val: 1
+cp_hdr_mapping:
+  - entry:
+      pnso_algo: 1
+      hdr_algo: 1
+crypto_keys:
+  - key:
+      idx: 1
+      key1: 'abcd1234ABCD1234abcd1234ABCD1234'
+      key2: 'abcd1234ABCD1234abcd1234ABCD1234'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 2000
+      ops:
+        - compress:
+            flags: 'zero_pad,insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            threshold_delta: 8
+            output_file: '%chain_id%_compressed_1.bin'
+        - decompress:
+            flags: 'header_present'
+            hdr_fmt_idx: 1
+            output_file: '%chain_id%_decompressed.bin'
+        - compress:
+            flags: 'zero_pad,insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            threshold_delta: 8
+            output_file: '%chain_id%_compressed_2.bin'
+  - svc_chain:
+      idx: 2
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 2000
+      ops:
+        - compress:
+            flags: 'zero_pad,insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            threshold_delta: 8
+            output_file: '%test_id%_%chain_id%_cp.bin'
+        - encrypt:
+            algo_type: xts
+            output_file: '%test_id%_%chain_id%_cp_enc.bin'
+  - svc_chain:
+      idx: 3
+      input:
+        file: '2_2_cp_enc.bin'
+      ops:
+        - decrypt:
+            algo_type: xts
+            output_file: '%test_id%_%chain_id%_cp.bin'
+        - decompress:
+            flags: 'header_present'
+            hdr_fmt_idx: 1
+            output_file: '%test_id%_%chain_id%_dc.bin'
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1
+      repeat: 1000
+      validations:
+        - data_equal:
+            idx: 1
+            file1: '%chain_id%_compressed_1.bin'
+            file2: '%chain_id%_compressed_2.bin'
+  - test:
+      idx: 2
+      svc_chains: 2,3
+      repeat: 1
+      validations:
+        - data_equal:
+            idx: 1
+            file1: '%test_id%_2_cp.bin'
+            file2: '%test_id%_3_cp.bin'
+            len: 200
+        - data_equal:
+            idx: 2
+            file1: '1_decompressed.bin'
+            file2: '%test_id%_3_dc.bin'
+        - retcode_equal:
+            idx: 3
+            svc_chain: 2
+            retcode: 0
+            svc_retcodes: 0,0
+        - retcode_equal:
+            idx: 4
+            svc_chain: 3
+            retcode: 0
+            svc_retcodes: 0,0

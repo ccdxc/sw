@@ -28,3 +28,23 @@ cc_library(
     ],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "yaml",
+    srcs = [
+        "libyaml/export/x86_64/lib/libyaml.so",
+    ],
+    hdrs = [ "libyaml/export/include/yaml.h" ],
+    includes = [
+        "libyaml/export/include",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "sim_crypto",
+    srcs = glob(["freebsd-crypto/src/*.c"]),
+    hdrs = glob(["freebsd-crypto/src/*.h"]),
+    deps = [ "//storage/offload:osal" ],
+    alwayslink = 1,
+)

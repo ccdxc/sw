@@ -3,6 +3,12 @@
 
 #include "osal_stdtypes.h"
 
+#ifndef __KERNEL__
+#include <string.h>
+#else
+#include <linux/string.h>
+#endif
+
 void *osal_alloc(size_t size);
 void *osal_aligned_alloc(size_t alignment, size_t size);
 void osal_free(void *ptr);

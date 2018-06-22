@@ -1,4 +1,6 @@
 
+#include <stdint.h>
+
 #define WAFL_WPBH_MAGIC 0x12345678
 #define WAFL_WPBH_VERSION 1
 
