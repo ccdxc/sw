@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk"
 	"github.com/pensando/sw/venice/utils/log"
@@ -56,6 +58,7 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleStateProcessesQuiesced(upgCtx *up
 func (usmh *upgradeStateMachineHdlrsCtx) HandleStateDataplaneDowntimePhase1Start(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
 	var hdlrResp upgsdk.HdlrResp
 	hdlrResp.Resp = upgsdk.Success
+	//hdlrResp.Resp = upgsdk.InProgress
 	hdlrResp.ErrStr = ""
 	//hdlrResp.Resp = upgsdk.Fail
 	//hdlrResp.ErrStr = "TATATA"
@@ -119,6 +122,16 @@ func main() {
 	err = c1.Dial()
 	if err != nil {
 		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
+	}
+
+	timer := time.NewTimer(time.Second * 20)
+	<-timer.C
+	log.Infof("Timer expired")
+
+	//err = upg.SendAppRespSuccess()
+	//err = upg.GetUpgradeStatus(&retStr)
+	if err != nil {
+		log.Fatalf("Could not send success  %s", err)
 	}
 
 	a := make(chan struct{})

@@ -86,6 +86,38 @@ type UpgSdk interface {
 	StartUpgrade() error
 	AbortUpgrade() error
 	GetUpgradeStatus(retStr *[]string) error
+	SendAppRespSuccess() error
+	SendAppRespFail(str string) error
+}
+
+//SendAppRespFail is used to reply with Fail
+func (u *upgSdk) SendAppRespFail(str string) error {
+	var resp HdlrResp
+	resp.Resp = Fail
+	resp.ErrStr = str
+	upgreq := upgrade.GetUpgStateReq(u.sdkClient, 10)
+	if upgreq == nil {
+		return errors.New("No active upgrade in progress")
+	}
+	reqType := upgreq.GetUpgReqState()
+	respType := getUpgAppRespNextFail(reqType)
+	updateUpgAppResp(respType, &resp, u.svcName, u.sdkClient)
+	return nil
+}
+
+//SendAppRespSuccess is used to reply with Success
+func (u *upgSdk) SendAppRespSuccess() error {
+	var resp HdlrResp
+	resp.Resp = Success
+	resp.ErrStr = ""
+	upgreq := upgrade.GetUpgStateReq(u.sdkClient, 10)
+	if upgreq == nil {
+		return errors.New("No active upgrade in progress")
+	}
+	reqType := upgreq.GetUpgReqState()
+	respType := getUpgAppRespNextPass(reqType)
+	updateUpgAppResp(respType, &resp, u.svcName, u.sdkClient)
+	return nil
 }
 
 //NewUpgSdk API is used to init upgrade sdk
