@@ -19,8 +19,6 @@
 #ifndef _IONIC_TXRX_H_
 #define _IONIC_TXRX_H_
 
-#define NON_TSO_MAX_DESC	16
-
 void ionic_rx_refill(struct queue *q);
 void ionic_rx_fill(struct queue *q);
 void ionic_rx_empty(struct queue *q);

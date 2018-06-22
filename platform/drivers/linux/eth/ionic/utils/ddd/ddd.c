@@ -204,19 +204,30 @@ void dump_txq(char *path)
 
 		printf("%s", heads_or_tails(i, head, tail));
 		printf("[%04x]", i);
-		printf(" %-15s flags %s%s%s addr 0x%lx len %d",
-		       txq_opcode(desc.opcode), desc.V ? "V" : "-",
-		       desc.C ? "C" : "-", desc.O ? "O" : "-",
-		       (u64)desc.addr, desc.len);
 
 		switch (desc.opcode) {
 		case TXQ_DESC_OPCODE_CALC_CSUM:
+			printf(" %-15s flags %s%s%s-- addr 0x%lx len %d",
+			       txq_opcode(desc.opcode), desc.V ? "V" : "-",
+			       desc.C ? "C" : "-", desc.O ? "O" : "-",
+			       (u64)desc.addr, desc.len);
 			printf(" hdr_len %d csum_offset %d", desc.hdr_len,
 			       desc.csum_offset);
 			break;
 		case TXQ_DESC_OPCODE_TSO:
+			printf(" %-15s flags %s%s%s%s%s addr 0x%lx len %d",
+			       txq_opcode(desc.opcode), desc.V ? "V" : "-",
+			       desc.C ? "C" : "-", desc.O ? "O" : "-",
+			       desc.S ? "S" : "-", desc.E ? "E" : "-",
+			       (u64)desc.addr, desc.len);
 			printf(" hdr_len %d mss %d", desc.hdr_len,
 			       desc.mss);
+			break;
+		default:
+			printf(" %-15s flags %s%s%s-- addr 0x%lx len %d",
+			       txq_opcode(desc.opcode), desc.V ? "V" : "-",
+			       desc.C ? "C" : "-", desc.O ? "O" : "-",
+			       (u64)desc.addr, desc.len);
 			break;
 		}
 
@@ -226,7 +237,7 @@ void dump_txq(char *path)
 		printf("\n");
 
 		for (j = 0; j < desc.num_sg_elems; j++) {
-			printf("                                     addr 0x%lx len %d\n",
+			printf("                                       addr 0x%lx len %d\n",
 			       (u64)sg_desc.elems[j].addr,
 			       sg_desc.elems[j].len);
 		}

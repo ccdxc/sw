@@ -413,6 +413,7 @@ struct txq_init_comp {
 enum txq_desc_opcode {
 	TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,
 	TXQ_DESC_OPCODE_CALC_CSUM,
+	TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP,
 	TXQ_DESC_OPCODE_TSO,
 };
 
@@ -530,7 +531,8 @@ struct txq_desc {
 	union {
 		struct {
 			u16 mss:14;
-			u16 rsvd3:2;
+			u16 S:1;
+			u16 E:1;
 		};
 		struct {
 			u16 csum_offset:14;
