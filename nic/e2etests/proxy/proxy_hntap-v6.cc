@@ -41,7 +41,9 @@
 extern uint32_t nw_retries;
 extern uint16_t hntap_port;
 extern bool hntap_drop_rexmit;
-
+dev_handle_t* host_tap_hdl = NULL;
+dev_handle_t* net_tap_hdl = NULL;
+ 
 static char buf[64];
 static char* print_v6_addr(void* addr)
 {
@@ -53,6 +55,27 @@ void sig_handler(int signo)
 {
     TLOG("Received signal %d\n", signo);
     if(signo == SIGUSR1) {
+        if(host_tap_hdl) {
+            if(host_tap_hdl->sock) {
+                TLOG("closing host sock\n");
+                close(host_tap_hdl->sock);
+            }
+            if(host_tap_hdl->fd) {
+                TLOG("closing host fd\n");
+                close(host_tap_hdl->fd);
+            }
+        }
+        if(net_tap_hdl) {
+            if(net_tap_hdl->sock) {
+                TLOG("closing net sock\n");
+                close(net_tap_hdl->sock);
+            }
+            if(net_tap_hdl->fd) {
+                TLOG("closing net fd\n");
+                close(net_tap_hdl->fd);
+            }
+        }
+
         TLOG("Calling exit\n");
         exit(0);
     }
@@ -296,8 +319,6 @@ net_process_nat_cb(char *pktbuf, uint32_t len, pkt_direction_t direction)
 int main(int argv, char *argc[])
 {
 #define MAX_DEV_HANDLES 2
-  dev_handle_t* host_tap_hdl;
-  dev_handle_t* net_tap_hdl;
   setlinebuf(stdout);
   setlinebuf(stderr);
   dev_handle_t *dev_handles[MAX_DEV_HANDLES];
