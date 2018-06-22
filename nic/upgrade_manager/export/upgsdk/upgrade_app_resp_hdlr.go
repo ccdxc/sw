@@ -9,13 +9,15 @@ import (
 func canInvokeHandler(sdkClient gosdk.Client, name string, reqType upgrade.UpgReqStateType) bool {
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
+		log.Infof("UpgAppResp not found for %s", name)
 		return true
 	}
-	if (getUpgAppRespNextPass(reqType) == upgAppResp.GetUpgAppRespVal()) &&
-		(getUpgAppRespNextFail(reqType) == upgAppResp.GetUpgAppRespVal()) {
+	if getUpgAppRespNextPass(reqType) == upgAppResp.GetUpgAppRespVal() ||
+		getUpgAppRespNextFail(reqType) == upgAppResp.GetUpgAppRespVal() {
 		log.Infof("Application %s already responded with %s", name, upgAppRespValToStr(upgAppResp.GetUpgAppRespVal()))
 		return false
 	}
+	log.Infof("Can invoke appliation handler")
 	return true
 }
 

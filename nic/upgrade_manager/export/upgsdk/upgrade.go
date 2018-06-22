@@ -120,7 +120,10 @@ func (u *upgSdk) StartUpgrade() error {
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}
-	upgreq := upgrade.NewUpgReq(u.sdkClient)
+	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
+	if upgreq == nil {
+		upgreq = upgrade.NewUpgReq(u.sdkClient)
+	}
 	upgreq.SetKey(10)
 	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)
 	return nil

@@ -98,6 +98,10 @@ func (ctx *upgstatereqctx) OnUpgStateReqDelete(obj *upgrade.UpgStateReq) {
 	deleteUpgAppResp(ctx.appName, ctx.sdkClient)
 }
 
+type listener struct {
+	reqctx *upgstatereqctx
+}
+
 func upgStateReqInit(client gosdk.Client, hdlrs UpgAppHandlers, name string) {
 	log.Infof("UpgRespInit called")
 	ctx := &upgstatereqctx{
@@ -107,7 +111,20 @@ func upgStateReqInit(client gosdk.Client, hdlrs UpgAppHandlers, name string) {
 	}
 	upgrade.UpgStateReqMount(client, delphi.MountMode_ReadMode)
 	upgrade.UpgStateReqWatch(client, ctx)
-	//WatchMountComplete
+
+	listen := &listener{
+		reqctx: ctx,
+	}
+	client.WatchMount(listen)
 }
 
-//TODO OnMountComplete
+func (listen *listener) OnMountComplete() {
+	log.Infof("OnMountComplete got called to restore UpgStateReq")
+	ctx := listen.reqctx
+	upgstatereq := upgrade.GetUpgStateReq(ctx.sdkClient, 10)
+	if upgstatereq == nil {
+		log.Infof("OnMountComplete could not find UpgStateReq")
+		return
+	}
+	ctx.OnUpgStateReqCreate(upgstatereq)
+}
