@@ -1,6 +1,6 @@
 #! /bin/bash
 
-set -e
+set -x
 
 function create_namespaces {
   NAMESPACE_URL="$NAPLES_AGENT_IP:9007/api/namespaces/"
@@ -88,52 +88,59 @@ function validate_get {
   PATTERN=$1
   URL=$2
   PATTERN_FOUND=$(curl $URL | grep $PATTERN)
-  if [ $PATTERN_FOUND == "" ]; then
+  if [ "$PATTERN_FOUND" == "" ]; then
     echo "Failed GET on $URL for $PATTERN"
     exit 1
   fi
 }
 
+# check_for_naples_health checks if the naples-v1 container is unhealthy. It is exceed MAX_RETRIES it will exit 1
+# MAX_RETRIES guards the maximum time we wait for NAPLES Container to change state to healthy.
+# It waits for a total of 2**(MAX_RETRIES) - 1 seconds
+function check_for_naples_health
+{
+CID=$1
+MAX_RETRIES=10
+NAPLES_HEALTHY=-1
+health="unhealthy"
+i=0
+echo "Checking for NAPLES Sim Container Health Start: `date +%x_%H:%M:%S:%N`"
+until (( NAPLES_HEALTHY == 0 )) || (( i == MAX_RETRIES ))
+do
+	timeout="$((2 ** i))"
+	echo "Checking if the naples container is healthy. Sleeping for $timeout seconds..."
+	sleep "$timeout"
+	health=$(docker inspect -f '{{.State.Health.Status}}' "$CID")
+	if [ "$health" == "healthy" ]; then
+	    echo "NAPLES Container is unhealthy"
+	    NAPLES_HEALTHY=0
+	fi
+	let "i++"
+done
+
+if [ "$i" -eq "$MAX_RETRIES" ]; then
+	echo "NAPLES Container is unhealthy"
+	cat /root/naples/data/logs/start-naples.log
+	docker ps
+	exit 1
+fi
+echo "Checking for NAPLES Sim Container Health End: `date +%x_%H:%M:%S:%N`"
+}
+
+
 cd /sw/nic/obj/images
 tar xvzf naples-release-v1.tgz
-source /sw/nic/sim/naples/start-naples-docker.sh
-NAPLES_CID=$(docker ps | grep -v CONTAINER | cut -d' ' -f1)
-NAPLES_AGENT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $NAPLES_CID)
+bash /sw/nic/sim/naples/start-naples-docker.sh
+NAPLES_CID=$(docker inspect -f'{{.ID}}' naples-v1)
+NAPLES_AGENT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$NAPLES_CID")
 if [ "$NAPLES_CID" == "" ]; then
-    "echo NAPLES container not found"
+    echo "NAPLES container not found"
     exit 1
 fi
 echo "NAPLES container $NAPLES_CID found"
 
-PROC_FOUND=$(docker top $NAPLES_CID | grep cap_model)
-if [ "PROC_FOUND" == "" ]; then
-    echo "Model not running"
-    exit 1
-fi
-echo "Model running"
-
-PROC_FOUND="$(docker top $NAPLES_CID | grep hal)"
-if [ "PROC_FOUND" == "" ]; then
-    echo "HAL not running"
-    exit 1
-fi
-echo "HAL running"
-
-# give sometime for HAL & model to initialize
-sleep 90
-PROC_FOUND="$(docker top $NAPLES_CID | grep netagent)"
-if [ "PROC_FOUND" == "" ]; then
-    echo "Agent not running"
-    exit 1
-fi
-echo "Netagent running"
-
-PROC_FOUND="$(docker top $NAPLES_CID | grep nic_infra_hntap)"
-if [ "PROC_FOUND" == "" ]; then
-    echo "HNTAP not running"
-    exit 1
-fi
-echo "HNTAP running"
+# Check if the naples container is healthy
+check_for_naples_health "$NAPLES_CID"
 
 # create objects
 create_namespaces
@@ -144,6 +151,7 @@ create_namespaces
 # create_nat_bindings
 # create_nat_policies
 
-source /sw/nic/sim/naples/stop-naples-docker.sh
+# Check if the container is still healthy
+check_for_naples_health "$NAPLES_CID"
 
 exit 0

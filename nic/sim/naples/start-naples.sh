@@ -17,7 +17,7 @@ exec 2>&1
 set -x
 
 # create directory for logs/traces
-mkdir -p $LOG_DIR
+mkdir -p "$LOG_DIR"
 if [ -f /tmp/naples-netagent.db ]; then
     rm -f /tmp/naples-netagent.db
 fi
@@ -30,28 +30,14 @@ if [ -d /naples/nic/data/examples ]; then
 fi
 
 # starting the processes from log directory so that cores are saved there
-cd $LOG_DIR
+cd "$LOG_DIR"
 
 echo "Starting CAPRI model ..."
 #$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
-$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
-PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start CAPRI model"
-    #exit $?
-else
-    echo "CAPRI model started, pid is $PID"
-fi
+"$NIC_DIR"/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
 
 echo "Starting HAL ..."
-$NIC_DIR/bin/hal -c hal.json > /dev/null 2>&1 &
-PID=`ps -eaf | grep hal | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start HAL"
-    #exit $?
-else
-    echo "HAL started, pid is $PID"
-fi
+"$NIC_DIR"/bin/hal -c hal.json > /dev/null 2>&1 &
 
 # wait for HAL to open gRPC port before spawning agent(s)
 HAL_WAIT_TIMEOUT=1
@@ -63,10 +49,10 @@ i=0
 until (( HAL_UP == 0 )) || (( i == MAX_RETRIES ))
 do
     echo "Waiting for HAL GRPC server to be up ..."
-    sleep $HAL_WAIT_TIMEOUT
+    sleep "$HAL_WAIT_TIMEOUT"
     curl "$HAL_SERVER"
     HAL_UP="$?"
-    if [ $HAL_UP -eq 0 ]; then
+    if [ "$HAL_UP" -eq 0 ]; then
         echo "HAL is up"
     else
         echo "HAL not up yet"
@@ -74,38 +60,24 @@ do
     let "i++"
 done
 
-if [ $i -eq $MAX_RETRIES ]; then
+if [ "$i" -eq "$MAX_RETRIES" ]; then
     echo "HAL server failed to come up"
-    #exit 1
+    exit 1
 fi
 
 # start NIC manager and allow it to create uplinks
 echo "Starting nicmgr ..."
-$NIC_DIR/bin/nic_mgr_app
+"$NIC_DIR"/bin/nic_mgr_app
 if [ $? -ne 0 ]; then
     echo "Failed to start nic mgr"
-    #exit $?
+    exit $?
 fi
 
 echo "Starting hntap ..."
-$NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json &
-PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start hntap service"
-    #exit $?
-else
-    echo "hntap service started, pid is $PID"
-fi
+"$NIC_DIR"/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json &
 
 echo "Starting netagent ..."
-$NIC_DIR/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath hal &
-PID=`ps -eaf | grep netagent | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start netagent"
-    #exit $?
-else
-    echo "netagent service started, pid is $PID"
-fi
+"$NIC_DIR"/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath hal &
 
 echo "NAPLES services/processes up and running ..."
 
