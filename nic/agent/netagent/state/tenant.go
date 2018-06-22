@@ -171,7 +171,7 @@ func (na *Nagent) DeleteTenant(tn *netproto.Tenant) error {
 
 	err = na.DeleteNamespace(defaultNS)
 	if err != nil {
-		log.Errorf("Failed to delete default namespace under %v tenant. Err: %v", existingTenant.Name)
+		log.Errorf("Failed to delete default namespace under %v tenant. Err: %v", existingTenant.Name, err)
 		return err
 	}
 
