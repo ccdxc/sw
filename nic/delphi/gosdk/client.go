@@ -245,7 +245,7 @@ func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
 
 // This function gets called when there are local or remove changes to the
 // database. It invokes the reactors
-func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData) {
+func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData, triggerEvents bool) {
 	for _, obj := range objlist {
 		factory := factories[obj.Meta.Kind]
 		baseObj, err := factory(c, obj.Data)
@@ -256,9 +256,11 @@ func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData) {
 			c.updateSubtree(obj.GetOp(), obj.GetMeta().GetKind(),
 				obj.GetMeta().GetKey(), baseObj)
 			// FIXME: move somewhere else?
-			rl := c.watchers[obj.GetMeta().GetKind()]
-			if rl != nil {
-				baseObj.TriggerEvent(oldObj, obj.GetOp(), rl)
+			if triggerEvents {
+				rl := c.watchers[obj.GetMeta().GetKind()]
+				if rl != nil {
+					baseObj.TriggerEvent(oldObj, obj.GetOp(), rl)
+				}
 			}
 		}
 	}
@@ -267,7 +269,7 @@ func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData) {
 // Implementing the messegner.Handler interface
 func (c *client) HandleMountResp(svcID uint16, status string, objlist []*delphi_messanger.ObjectData) error {
 	c.id = svcID
-	c.updateSubtrees(objlist)
+	c.updateSubtrees(objlist, false)
 	c.service.OnMountComplete()
 	for _, l := range c.mountListeners {
 		l.OnMountComplete()
@@ -277,7 +279,7 @@ func (c *client) HandleMountResp(svcID uint16, status string, objlist []*delphi_
 
 // Implementing the messegner.Handler interface
 func (c *client) HandleNotify(objlist []*delphi_messanger.ObjectData) error {
-	c.updateSubtrees(objlist)
+	c.updateSubtrees(objlist, true)
 	return nil
 }
 
