@@ -407,7 +407,6 @@
 
 #define ARQRX_BASE                     hbm_arqrx_base
 #define ARQTX_BASE                     hbm_arqtx_base
-#define ARQRX_QIDXR_BASE               hbm_arqrx_qidxr_base 
 #define CAPRI_CPU_HASH_MASK            cpu_hash_mask
 #define CAPRI_CPU_MAX_ARQID            cpu_max_arqid
 #define CPU_TX_DOT1Q_HDR_OFFSET        cpu_tx_dot1q_hdr_offset

@@ -21,7 +21,6 @@ struct s5_t0_tcp_rx_tcp_fc_d d;
     .param          tcp_rx_write_serq_stage_start3
     .param          tcp_rx_write_arq_stage_start
     .param          tcp_rx_write_l7q_stage_start
-    .param          ARQRX_QIDXR_BASE
     .align  
 tcp_rx_fc_stage_start:
     seq         c1, k.common_phv_write_arq, 1
@@ -68,19 +67,6 @@ flow_fc_process_done:
     nop
 
 tcp_cpu_rx:
-
-#ifdef DO_NOT_USE_CPU_SEM
-    addui       r5, r0, hiword(ARQRX_QIDXR_BASE)
-    addi        r5, r5, loword(ARQRX_QIDXR_BASE)
-    CPU_ARQRX_QIDX_ADDR(0, r3, r5)
-
-    CAPRI_NEXT_TABLE_READ_OFFSET(1,
-                                 TABLE_LOCK_EN,
-                                 tcp_rx_write_arq_stage_start,
-                                 r3,
-                                 0,
-                                 TABLE_SIZE_512_BITS)
-#else
     CPU_ARQ_SEM_IDX_INC_ADDR(RX, 0, r3)
 
     CAPRI_NEXT_TABLE_READ(1, 
@@ -89,7 +75,6 @@ tcp_cpu_rx:
                           r3,
                           TABLE_SIZE_64_BITS)
 
-#endif
     b           flow_fc_process_done
     nop
 

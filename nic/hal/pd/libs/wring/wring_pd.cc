@@ -452,21 +452,6 @@ barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
 hal_ret_t
 arqrx_get_hw_meta(pd_wring_t* wring_pd)
 {
-#ifdef DO_NOT_USE_CPU_SEM
-	uint16_t			pindex = 0;
-	// get address for ARQRX queue index region
-	wring_hw_id_t addr = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
-	if(addr <= 0) {
-		HAL_TRACE_ERR("Failed to get ARQ QIDXR region");
-		return HAL_RET_QUEUE_NOT_FOUND;
-	}
-
-	if(!p4plus_hbm_read(addr, (uint8_t*)&pindex, sizeof(pindex))) {
-		HAL_TRACE_ERR("Failed to read pindex value");
-		return HAL_RET_HW_FAIL;
-	}
-    pindex = ntohs(pindex);
-#else
 	uint32_t			pindex = 0;
     wring_hw_id_t addr = CAPRI_SEM_ARQ_RX_IDX_RAW_ADDR(wring_pd->wring->wring_id);
     if(addr <= 0) {
@@ -479,7 +464,6 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
         HAL_TRACE_ERR("Failed to read pindex value");
 		return HAL_RET_HW_FAIL;
     }
-#endif
     HAL_TRACE_DEBUG("ARQRX id: {} pi addr {:#x}, value: {}",
                         wring_pd->wring->wring_id,
                         addr,

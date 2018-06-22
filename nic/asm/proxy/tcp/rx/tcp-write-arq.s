@@ -88,11 +88,7 @@ dma_cmd_descr:
 dma_cmd_arq_slot:
     addui       r4, r0, hiword(ARQRX_BASE)
     addi        r4, r4, loword(ARQRX_BASE)
-#ifdef DO_NOT_USE_CPU_SEM
-    CPU_ARQ_PIDX_READ_INC(r6, 0, struct s5_t1_tcp_rx_write_arq_d, pi_0, r4, r5)
-#else
     add         r6, r0, d.{arq_pindex}.wx 
-#endif
     CPU_RX_ENQUEUE(r5,
                    k.to_s6_descr,
                    r6,

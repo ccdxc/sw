@@ -22,7 +22,7 @@
 #include "nic/include/capri_common.h"
 #include "nic/include/cpupkt_headers.hpp"
 
-#define P4PLUS_SYMBOLS_MAX  131
+#define P4PLUS_SYMBOLS_MAX  129
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -400,12 +400,6 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
     i++;
 
-    symbols[i].name = "cpu_read_arqrx_pindex.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = ARQRX_QIDXR_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
-    i++;
-
     symbols[i].name = "cpu_tx_read_asq_descr.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = CPU_TX_DOT1Q_HDR_OFFSET;
@@ -433,12 +427,6 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
     i++;
 
-    symbols[i].name = "tcp-fc.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = ARQRX_QIDXR_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
-    i++;
-
     symbols[i].name = "tls-dec-read-rnmdr-free-idx.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
@@ -452,11 +440,9 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "tls-dec-bld-barco-req.bin";
-    symbols[i].num_params = 2;
+    symbols[i].num_params = 1;
     symbols[i].params[0].name = ARQTX_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQTX);
-    symbols[i].params[1].name = ARQRX_QIDXR_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
     i++;
 
     if ((offset = get_start_offset("flow_hash")) != CAPRI_INVALID_OFFSET) {

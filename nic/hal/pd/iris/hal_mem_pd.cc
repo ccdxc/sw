@@ -438,11 +438,6 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_QINST_INFO_PD)] != NULL),
                       false);
 
-    cpupkt_descr_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_CPU_PKT_DESCR_ENTRIES);
-    HAL_ASSERT_RETURN((cpupkt_descr_hwid_idxr_ != NULL), false);
-    cpupkt_page_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_CPU_PKT_PAGE_ENTRIES);
-    HAL_ASSERT_RETURN((cpupkt_page_hwid_idxr_ != NULL), false);
-
     // initialize RAWRCB related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWRCB_PD)] =
         slab::factory("RAWRCB PD", HAL_SLAB_RAWRCB_PD,
@@ -536,8 +531,6 @@ hal_state_pd::hal_state_pd()
     qos_common_oq_idxr_      = NULL;
     qos_rxdma_oq_idxr_       = NULL;
     rw_tbl_idxr_             = NULL;
-    cpupkt_descr_hwid_idxr_  = NULL;
-    cpupkt_page_hwid_idxr_   = NULL;
 
     // ht
     flow_lkupid_ht_          = NULL;
@@ -578,8 +571,6 @@ hal_state_pd::~hal_state_pd()
     qos_common_oq_idxr_ ? indexer::destroy(qos_common_oq_idxr_) : HAL_NOP;
     qos_rxdma_oq_idxr_ ? indexer::destroy(qos_rxdma_oq_idxr_) : HAL_NOP;
     rw_tbl_idxr_ ? indexer::destroy(rw_tbl_idxr_) : HAL_NOP;
-    cpupkt_descr_hwid_idxr_ ? indexer::destroy(cpupkt_descr_hwid_idxr_) : HAL_NOP;
-    cpupkt_page_hwid_idxr_ ? indexer::destroy(cpupkt_page_hwid_idxr_) : HAL_NOP;
 
     flow_lkupid_ht_ ? ht::destroy(flow_lkupid_ht_) : HAL_NOP;
     tlscb_hwid_ht_ ? ht::destroy(tlscb_hwid_ht_) : HAL_NOP;

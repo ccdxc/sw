@@ -146,9 +146,6 @@ public:
     indexer *crypto_pd_keys_idxr(void) { return session_keys_idxr_; }
     indexer *rw_tbl_idxr(void) { return rw_tbl_idxr_; }
     indexer *tnnl_rw_tbl_idxr(void) { return tnnl_rw_tbl_idxr_; }
-    indexer *cpupkt_descr_hw_id_idxr(void) {return cpupkt_descr_hwid_idxr_; }
-    indexer *cpupkt_page_hw_id_idxr(void) {return cpupkt_page_hwid_idxr_; }
-
 
     hal_ret_t init_tables(pd_mem_init_args_t *args);
     hal_ret_t p4plus_rxdma_init_tables(pd_mem_init_args_t *args);
@@ -302,12 +299,6 @@ private:
     // cpucb related state
     struct {
         ht         *cpucb_hwid_ht_;
-    } __PACK__;
-
-    // cpupkt related state
-    struct {
-        indexer    *cpupkt_descr_hwid_idxr_;
-        indexer    *cpupkt_page_hwid_idxr_;
     } __PACK__;
 
     // Raw Redirect CB related state

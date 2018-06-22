@@ -21,7 +21,6 @@ struct tx_table_s5_t0_d     d;
             .param      tls_dec_queue_brq_mpp_process
             .param      tls_dec_write_arq
 #           .param      BRQ_QPCB_BASE
-            .param      ARQRX_QIDXR_BASE
             .param      ARQTX_BASE
         
 tls_dec_bld_barco_req_process:
@@ -89,19 +88,6 @@ tls_cpu_rx:
     addi        r5, r5, loword(ARQTX_BASE)
     phvwr       p.s5_s6_t1_s2s_arq_base, r5
 
-#ifdef DO_NOT_USE_CPU_SEM
-    /* Use RxDMA pi (first arg = 1 for TxDMA) */
-    addui       r5, r0, hiword(ARQRX_QIDXR_BASE)
-    addi        r5, r5, loword(ARQRX_QIDXR_BASE)
-    CPU_ARQRX_QIDX_ADDR(1, r4, r5)
-
-    CAPRI_NEXT_TABLE_READ_OFFSET(1,
-                                 TABLE_LOCK_EN,
-                                 tls_dec_write_arq,
-                                 r4,
-                                 0, /* TODO: Make it CPU_ARQRX_QIDXR_OFFSET */
-                                 TABLE_SIZE_512_BITS)
-#else
     CPU_ARQ_SEM_IDX_INC_ADDR(TX, 0, r4)
 
     CAPRI_NEXT_TABLE_READ(1, 
@@ -113,7 +99,6 @@ tls_cpu_rx:
     nop.e
     nop
 
-#endif
     b        tls_dec_bld_barco_req_process_done
     nop
 

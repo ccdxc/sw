@@ -281,40 +281,6 @@ p4pd_get_cpucb_txdma_entry(pd_cpucb_t* cpucb_pd)
 cleanup:
     return ret;
 }
-/**************************/
-
-hal_ret_t
-p4pd_add_or_del_cpucb_rx_qidxr_entry(pd_cpucb_t* cpucb_pd, cpucb_hw_id_t addr)
-{
-    cpu_rx_write_arqrx_d     data = {0};
-
-    HAL_TRACE_DEBUG("Programming qidxr at hw-id: {:#x}", addr);
-    if(!p4plus_hbm_write(addr, (uint8_t *)&data, sizeof(data),
-                P4PLUS_CACHE_INVALIDATE_BOTH)){
-        HAL_TRACE_ERR("Failed to write cpucb_qidxr entry");
-        return HAL_RET_HW_FAIL;
-    }
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-p4pd_add_or_del_cpucb_qidxr_entry(pd_cpucb_t* cpucb_pd)
-{
-    hal_ret_t   ret = HAL_RET_OK;
-
-    cpucb_hw_id_t arqrx_rxdma_qidxr = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
-    ret = p4pd_add_or_del_cpucb_rx_qidxr_entry(cpucb_pd, arqrx_rxdma_qidxr);
-    if(ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    cpucb_hw_id_t arqrx_txdma_qidxr = arqrx_rxdma_qidxr + 64;
-    ret = p4pd_add_or_del_cpucb_rx_qidxr_entry(cpucb_pd, arqrx_txdma_qidxr);
-    if(ret != HAL_RET_OK) {
-        return ret;
-    }
-    return ret;
-}
 
 /**************************/
 
@@ -399,12 +365,6 @@ pd_cpucb_create (pd_func_args_t *pd_func_args)
 
     // program cpucb
     ret = p4pd_add_or_del_cpucb_entry(cpucb_pd, false);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
-
-    // initialize qidxr region during create
-    ret = p4pd_add_or_del_cpucb_qidxr_entry(cpucb_pd);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }

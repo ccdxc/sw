@@ -112,7 +112,6 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_CPUPR              "cpu-pr"
 #define CAPRI_HBM_REG_CPU_DESCR          "cpu-descriptor"
 #define CAPRI_HBM_REG_CPU_PAGE           "cpu-page"
-#define CAPRI_HBM_REG_ARQRX_QIDXR        "arqrx-qidxr"
 #define CAPRI_CPU_HASH_MASK              "cpu_hash_mask"
 #define CAPRI_CPU_MAX_ARQID              "cpu_max_arqid"
 #define CPU_TX_DOT1Q_HDR_OFFSET          "cpu_tx_dot1q_hdr_offset"
@@ -160,7 +159,6 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 
 #define ARQRX_BASE              "hbm_arqrx_base"
 #define ARQTX_BASE              "hbm_arqtx_base"
-#define ARQRX_QIDXR_BASE        "hbm_arqrx_qidxr_base"
 
 #define P4_FLOW_HASH_BASE               "p4_flow_hash_base"
 #define P4_FLOW_HASH_OVERFLOW_BASE      "p4_flow_hash_overflow_base"
