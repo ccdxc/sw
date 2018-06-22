@@ -411,6 +411,7 @@ void pnso_sim_stop_worker_thread()
 	q->stop_worker = true;
 
 	osal_thread_stop(&q->thread);
+	sleep(1);
 	pnso_sim_finit_req_queue();
 }
 
