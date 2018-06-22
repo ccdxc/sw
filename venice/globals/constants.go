@@ -110,4 +110,7 @@ const (
 
 	// Events proxy
 	EvtsProxyRPCPort = "9012"
+
+	// objstore port
+	ObjStorePort = "19001"
 )

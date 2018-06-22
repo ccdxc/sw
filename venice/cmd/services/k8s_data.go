@@ -45,6 +45,13 @@ var eventsVolume = protos.ModuleSpec_Volume{
 	MountPath: "/var/lib/pensando/events/offset",
 }
 
+// objstoreVolume is a reusable volume definition for Pensando object store.
+var objstoreVolume = protos.ModuleSpec_Volume{
+	Name:      "disk1",
+	HostPath:  "/minio/disk1",
+	MountPath: "/disk1",
+}
+
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]protos.Module{
@@ -465,6 +472,35 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []*protos.ModuleSpec_Volume{
 				&logVolume,
 				&eventsVolume,
+			},
+		},
+	},
+	// object store
+	globals.ObjStore: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.ObjStore,
+		},
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*protos.ModuleSpec_Submodule{
+				{
+					Name:    globals.ObjStore,
+					EnvVars: map[string]string{},
+					Args:    []string{},
+					Services: []*protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.ObjStore,
+							Port: runtime.MustUint32(globals.ObjStorePort),
+						},
+					},
+				},
+			},
+			Volumes: []*protos.ModuleSpec_Volume{
+				&objstoreVolume,
 			},
 		},
 	},

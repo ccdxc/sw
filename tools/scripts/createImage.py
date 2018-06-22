@@ -54,6 +54,7 @@ static_images = {
     'pen-influx' : 'registry.test.pensando.io:5000/influxdb:1.4.2',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.3',
     'pen-pause' : 'gcr.io/google_containers/pause-amd64:3.0'
+    'pen-objstore'  : 'registry.test.pensando.io:5000/objstore:v0.2'
 }
 
 # images which are compiled every time
