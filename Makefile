@@ -52,7 +52,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.12
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.4
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.5
 TARGETS ?= ws-tools gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
@@ -191,9 +191,10 @@ container-compile:
 	fi
 	@if [ ! -f bin/webapp-node-modules.tgz ]; then \
 		echo "+++ populating node_modules from cache for ui";\
-		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
-		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
 		cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
+		cd ../venice-sdk && tar zxf ../../../bin/venice-sdk-node-modules.tgz ;\
 	fi
 	@if [ -z ${BYPASS_UI} ]; then \
 	    echo "+++ building ui sources" ; \

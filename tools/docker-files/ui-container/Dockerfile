@@ -24,6 +24,11 @@ COPY webapp/package-lock.json /usr/local/lib/webapp
 RUN cd /usr/local/lib/webapp && npm install phantomjs-prebuilt
 RUN cd /usr/local/lib/webapp && npm install && tar zcvf node_modules.tgz node_modules
 
+RUN mkdir -p /usr/local/lib/venice-sdk
+COPY venice-sdk/package.json /usr/local/lib/venice-sdk
+COPY venice-sdk/package-lock.json /usr/local/lib/venice-sdk
+RUN cd /usr/local/lib/venice-sdk && npm install && tar zcvf node_modules.tgz node_modules
+
 # Install ng
 USER node
 RUN mkdir /home/node/.npm-global
