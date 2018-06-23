@@ -26,7 +26,7 @@ import infra.common.objects as objects
 import threading
 from infra.common.glopts import GlobalOptions
 
-# If the random seed is set as a command line argument, set it into the 
+# If the random seed is set as a command line argument, set it into the
 # environment variables now, so that the same seed is used everywhere.
 if GlobalOptions.mbtrandomseed:
     os.environ['MBT_RANDOM_SEED'] = GlobalOptions.mbtrandomseed
@@ -112,7 +112,9 @@ signal.signal(signal.SIGUSR1, handle_pdb)
 # create initial HAL objects
 def mbt_hal_init():
     (api, req_msg_type) = config_mgr.get_api_stub('Vrf', config_mgr.ConfigObjectMeta.CREATE)
-    init.vrf_init(api, req_msg_type)
+    init.infra_vrf_init(api, req_msg_type)
+    (api, req_msg_type) = config_mgr.get_api_stub('L2Segment', config_mgr.ConfigObjectMeta.CREATE)
+    init.infra_l2seg_init(api, req_msg_type)
 
 if GlobalOptions.mbt:
     # This is blocking.

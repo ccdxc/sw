@@ -479,7 +479,9 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
                            sizeof(ip_addr_t));
                     memcpy(&tnnl_rw_key.ip_da, l2seg_get_gipo(pi_l2seg),
                            sizeof(ip_addr_t));
-                    memcpy(&tnnl_rw_key.mac_sa, outer_mac, sizeof(mac_addr_t));
+                    if (outer_mac) {
+                        memcpy(&tnnl_rw_key.mac_sa, outer_mac, sizeof(mac_addr_t));
+                    }
                     hal::pd::multicast_ip_to_mac(l2seg_get_gipo(pi_l2seg),
                                                  tnnl_rw_key.mac_da);
 
