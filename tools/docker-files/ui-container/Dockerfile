@@ -39,6 +39,17 @@ RUN ng -v
 
 USER root
 RUN chmod -R 777 /root
+
+FROM node:9.11.1
+ENV PATH=/home/node/.npm-global/bin:$PATH
+ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
+
+RUN mkdir -p /usr/local/lib/web-app-framework /usr/local/lib/webapp /usr/local/lib/venice-sdk /home/node/.npm-global /root/.npm && chmod -R 777 /root
+COPY --from=0 /usr/local/lib/web-app-framework/node_modules.tgz /usr/local/lib/web-app-framework/node_modules.tgz
+COPY --from=0 /usr/local/lib/webapp/node_modules.tgz /usr/local/lib/webapp/node_modules.tgz
+COPY --from=0 /usr/local/lib/venice-sdk/node_modules.tgz /usr/local/lib/venice-sdk/node_modules.tgz
+COPY --from=0 /home/node/.npm-global /home/node/.npm-global
+COPY --from=0 /root/.npm /root/.npm
 WORKDIR /import/src/github.com/pensando/sw
 ENV PATH=/usr/local/go/bin:/opt/bin:/import/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/node/.npm-global/bin:/usr/local/lib/web-app-framework/node_modules/.bin
 ENV HOME=/root
