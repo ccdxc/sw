@@ -157,11 +157,10 @@ func (s *smonitoringMirrorBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return r.Validate(ver, "", ignoreStatus)
 		}),
 
-		"monitoring.MirrorSessionSpec":           apisrvpkg.NewMessage("monitoring.MirrorSessionSpec"),
-		"monitoring.MirrorSessionStatus":         apisrvpkg.NewMessage("monitoring.MirrorSessionStatus"),
-		"monitoring.MirrorStartConditions":       apisrvpkg.NewMessage("monitoring.MirrorStartConditions"),
-		"monitoring.MirrorStopConditions":        apisrvpkg.NewMessage("monitoring.MirrorStopConditions"),
-		"monitoring.SmartNICMirrorSessionStatus": apisrvpkg.NewMessage("monitoring.SmartNICMirrorSessionStatus"),
+		"monitoring.MirrorSessionSpec":     apisrvpkg.NewMessage("monitoring.MirrorSessionSpec"),
+		"monitoring.MirrorSessionStatus":   apisrvpkg.NewMessage("monitoring.MirrorSessionStatus"),
+		"monitoring.MirrorStartConditions": apisrvpkg.NewMessage("monitoring.MirrorStartConditions"),
+		"monitoring.MirrorStopConditions":  apisrvpkg.NewMessage("monitoring.MirrorStopConditions"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

@@ -1,4 +1,4 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
 // Service name
@@ -58,7 +58,7 @@ message MirrorStopConditions {
     uint32          MaxPacketCount  = 1 [(gogoproto.jsontag) = "max-packets,omitempty"];
     // Stop after specified amount of time. E.g. 1h, 20min
     // When ExpiryDuration is not specified, Default is "2h"
-    string          ExpiryDuration  = 2 [(gogoproto.jsontag) = "expiry-duration,omitempty"];
+    string          ExpiryDuration  = 2 [(gogoproto.jsontag) = "expiry-duration,omitempty", (venice.check)="Duration()"];
 }
 
 enum PacketCollectorType {
@@ -88,7 +88,7 @@ message MatchSelector {
 // Application/protocol selector
 message AppProtoSelector {
     // ports - Includes protocol name and port Eg ["tcp/1234", "udp"]
-    repeated string Ports   = 1 [(gogoproto.jsontag) = "ports,omitempty"];
+    repeated string Ports   = 1 [(gogoproto.jsontag) = "ports,omitempty", (venice.check)="ProtoPort()"];
     // Apps - E.g. ["Redis"]
     repeated string Apps    = 2 [(gogoproto.jsontag) = "applications,omitempty"];
 }
@@ -121,17 +121,8 @@ enum MirrorSessionState {
 }
 
 message MirrorSessionStatus {
-    string State                = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
-    repeated SmartNICMirrorSessionStatus NICStatus = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "smart-nic-status,omitempty"];
-    string SrcPacketCaptureFileURL = 3 [(gogoproto.jsontag) = "src-packet-capture-url,inline)"];
-    string DstPacketCaptureFileURL = 4 [(gogoproto.jsontag) = "dst-packet-capture-url,inline)"];
-}
-
-message SmartNICMirrorSessionStatus {
-    string SmartNIC             = 1 [(gogoproto.jsontag) = "smart-nic,inline)"];
-    uint32 NumSrcPackets        = 2 [(gogoproto.jsontag) = "num-src-packets,inline"];
-    uint32 NumDstPackets        = 3 [(gogoproto.jsontag) = "num-dst-packets,inline"];
-    uint32 SessionId            = 4 [(gogoproto.jsontag) = "session-id,inline"];
+    string State        = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
+    string PcapFileURL  = 2 [(gogoproto.jsontag) = "pcap-file-url,inline)"];
 }
 
 //------------------

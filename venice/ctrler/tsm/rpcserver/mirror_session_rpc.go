@@ -4,7 +4,6 @@ package rpcserver
 
 import (
 	"errors"
-	"io"
 
 	"golang.org/x/net/context"
 
@@ -28,7 +27,6 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 	tms := tsproto.MirrorSession{
 		TypeMeta:   ms.TypeMeta,
 		ObjectMeta: ms.ObjectMeta,
-		Status:     tsproto.MirrorSessionStatus{},
 	}
 	tSpec := &tms.Spec
 	tSpec.CaptureAt = tsproto.MirrorSrcDst_SRC_DST
@@ -42,11 +40,6 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 			ExportCfg: c.ExportCfg,
 		}
 		tSpec.Collectors = append(tSpec.Collectors, tc)
-	}
-	// XXX Move validations to apiServer
-	if len(tSpec.Collectors) == 0 {
-		log.Debugf("No collectors... Ignore the mirror session %v", ms.Name)
-		return nil
 	}
 	for _, mr := range ms.Spec.MatchRules {
 		tmr := tsproto.MatchRule{}
@@ -76,10 +69,6 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 			}
 		}
 		tSpec.MatchRules = append(tSpec.MatchRules, tmr)
-	}
-	if len(tSpec.MatchRules) == 0 {
-		log.Debugf("No Valid MatchRules... Ignore the mirror session %v", ms.Name)
-		return nil
 	}
 	return &tms
 }
@@ -213,19 +202,6 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 		}
 	}
 	// done
-}
-
-// GetMirrorSessionsStatus : Streaming interface to receive mirror session state and captured packets from smartNICs
-func (r *MirrorSessionRPCServer) GetMirrorSessionsStatus(stream tsproto.MirrorSessionApi_GetMirrorSessionsStatusServer) error {
-	// Receive captured packets from an Agent
-	for {
-		mspList, err := stream.Recv()
-		if err == io.EOF {
-			stream.SendAndClose(&tsproto.PacketAckDummy{})
-			return nil
-		}
-		r.stateMgr.UpdateNICMirrorSessionsStatus(mspList)
-	}
 }
 
 // NewMirrorSessionRPCServer returns a RPC server for mirror sessions

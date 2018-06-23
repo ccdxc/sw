@@ -322,37 +322,3 @@ func EncodeGrpcRespMirrorStopConditions(ctx context.Context, response interface{
 func DecodeGrpcRespMirrorStopConditions(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
-
-func encodeHTTPSmartNICMirrorSessionStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNICMirrorSessionStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNICMirrorSessionStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNICMirrorSessionStatus encodes GRPC request
-func EncodeGrpcReqSmartNICMirrorSessionStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICMirrorSessionStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNICMirrorSessionStatus decodes GRPC request
-func DecodeGrpcReqSmartNICMirrorSessionStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICMirrorSessionStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNICMirrorSessionStatus encodes GRC response
-func EncodeGrpcRespSmartNICMirrorSessionStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNICMirrorSessionStatus decodes GRPC response
-func DecodeGrpcRespSmartNICMirrorSessionStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}

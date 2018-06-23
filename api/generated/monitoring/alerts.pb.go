@@ -46,7 +46,6 @@
 		MirrorSessionStatus
 		MirrorStartConditions
 		MirrorStopConditions
-		SmartNICMirrorSessionStatus
 		AlertDestinationList
 		AlertList
 		AlertPolicyList

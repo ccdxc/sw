@@ -122,15 +122,17 @@ type CheckArgs func(string) bool
 
 // ValidatorArgMap defines the argument types for validators
 var ValidatorArgMap = map[string][]CheckArgs{
-	"StrEnum":  {IsString},
-	"StrLen":   {govldtr.IsInt, govldtr.IsInt},
-	"IntRange": {govldtr.IsInt, govldtr.IsInt},
-	"IPAddr":   {},
-	"IPv4":     {},
-	"HostAddr": {},
-	"MacAddr":  {},
-	"URI":      {},
-	"UUID":     {},
+	"StrEnum":   {IsString},
+	"StrLen":    {govldtr.IsInt, govldtr.IsInt},
+	"IntRange":  {govldtr.IsInt, govldtr.IsInt},
+	"IPAddr":    {},
+	"IPv4":      {},
+	"HostAddr":  {},
+	"MacAddr":   {},
+	"URI":       {},
+	"UUID":      {},
+	"Duration":  {},
+	"ProtoPort": {},
 }
 
 // FieldProfile defines a profile for a field, including validators, defaults,
@@ -162,15 +164,17 @@ func (f *FieldProfile) Init() {
 
 // ValidatorProfileMap maps each validator to a profile function
 var ValidatorProfileMap = map[string]func(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, v *FieldProfile) error{
-	"StrEnum":  strEnumProfile,
-	"StrLen":   strLenProfile,
-	"IntRange": intRangeProfile,
-	"IPAddr":   ipAddrProfile,
-	"IPv4":     ipv4Profile,
-	"HostAddr": hostAddrProfile,
-	"MacAddr":  macAddrProfile,
-	"URI":      uriProfile,
-	"UUID":     uuidProfile,
+	"StrEnum":   strEnumProfile,
+	"StrLen":    strLenProfile,
+	"IntRange":  intRangeProfile,
+	"IPAddr":    ipAddrProfile,
+	"IPv4":      ipv4Profile,
+	"HostAddr":  hostAddrProfile,
+	"MacAddr":   macAddrProfile,
+	"URI":       uriProfile,
+	"UUID":      uuidProfile,
+	"Duration":  durationProfile,
+	"ProtoPort": protoPortProfile,
 }
 
 // convInt is a utility function to get convert string to integer
@@ -344,6 +348,20 @@ func uuidProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, 
 	str := "49943a2c-9d76-11e7-abc4-cec278b6b50a"
 	prof.Example[ver] = prof.Example[ver] + str
 	prof.DocString[ver] = prof.DocString[ver] + "should be a valid UUID\n"
+	return nil
+}
+
+func durationProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	str := "2h"
+	prof.Example[ver] = prof.Example[ver] + str
+	prof.DocString[ver] = prof.DocString[ver] + "should be a valid time duration\n"
+	return nil
+}
+
+func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	str := "tcp/1234, arp"
+	prof.Example[ver] = prof.Example[ver] + str
+	prof.DocString[ver] = prof.DocString[ver] + "should be a valid layer3 or layer 4 protocol and port/type\n"
 	return nil
 }
 

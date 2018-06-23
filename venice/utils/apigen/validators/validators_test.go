@@ -190,3 +190,43 @@ func TestUUID(t *testing.T) {
 		}
 	}
 }
+
+func TestL3L4Proto(t *testing.T) {
+	goodCases := []string{
+		"TCP/1234", "Udp", "IcMp", "aRP", "ipprotocol/17/4119", "ipprotocol/17", "ethertype/0x806",
+		"icmp/1", "icmp/3/2", "icmp/echo reply", "icmp/redirect/5",
+	}
+	badCases := []string{
+		"SCP/1234", "Udp/1/2", "foo", "ipprotocol", "ipprotocol/17/1/2", "ethertype/0x806/10",
+		"ethertype", "ethertype/abc", "ipprotocol/xyz", "ipprotocol/500", "icmp/xyz",
+	}
+	for _, c := range goodCases {
+		if ok := ProtoPort(c); !ok {
+			t.Errorf("Incorrect Error detection in %v", c)
+		}
+	}
+	for _, c := range badCases {
+		if ok := ProtoPort(c); ok {
+			t.Errorf("Undetected error in %v", c)
+		}
+	}
+}
+
+func TestDuration(t *testing.T) {
+	goodCases := []string{
+		"10h", "2m", "3s",
+	}
+	badCases := []string{
+		"1:20:10", "mytime", "3 s",
+	}
+	for _, c := range goodCases {
+		if ok := Duration(c); !ok {
+			t.Errorf("Incorrect Error detection in %v", c)
+		}
+	}
+	for _, c := range badCases {
+		if ok := Duration(c); ok {
+			t.Errorf("Undetected error in %v", c)
+		}
+	}
+}

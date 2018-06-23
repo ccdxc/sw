@@ -56,7 +56,8 @@ func (m *AppProtoSelector) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AppProtoSelector) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -77,7 +78,11 @@ func (m *MatchRule) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MatchRule) Defaults(ver string) bool {
-	return false
+	var ret bool
+	if m.AppProtoSel != nil {
+		ret = m.AppProtoSel.Defaults(ver) || ret
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -174,6 +179,10 @@ func (m *MirrorSessionSpec) Defaults(ver string) bool {
 	for k := range m.Collectors {
 		ret = m.Collectors[k].Defaults(ver) || ret
 	}
+	for k := range m.MatchRules {
+		ret = m.MatchRules[k].Defaults(ver) || ret
+	}
+	ret = m.StopConditions.Defaults(ver) || ret
 	ret = true
 	switch ver {
 	default:
@@ -250,39 +259,42 @@ func (m *MirrorStopConditions) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MirrorStopConditions) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICMirrorSessionStatus) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICMirrorSessionStatus
-	var ok bool
-	if into == nil {
-		out = &SmartNICMirrorSessionStatus{}
-	} else {
-		out, ok = into.(*SmartNICMirrorSessionStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICMirrorSessionStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Validators
 
 func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapMirror["AppProtoSelector"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapMirror["AppProtoSelector"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.AppProtoSel != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "AppProtoSel"
+		if errs := m.AppProtoSel.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -346,6 +358,25 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 			ret = append(ret, errs...)
 		}
 	}
+	for k, v := range m.MatchRules {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sMatchRules[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "StopConditions"
+	if errs := m.StopConditions.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
 	if vs, ok := validatorMapMirror["MirrorSessionSpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -387,11 +418,19 @@ func (m *MirrorStartConditions) Validate(ver, path string, ignoreStatus bool) []
 
 func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	return ret
-}
-
-func (m *SmartNICMirrorSessionStatus) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
+	if vs, ok := validatorMapMirror["MirrorStopConditions"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapMirror["MirrorStopConditions"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -402,6 +441,19 @@ func init() {
 	)
 
 	validatorMapMirror = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapMirror["AppProtoSelector"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapMirror["AppProtoSelector"]["all"] = append(validatorMapMirror["AppProtoSelector"]["all"], func(path string, i interface{}) error {
+		m := i.(*AppProtoSelector)
+		for k, v := range m.Ports {
+			if !validators.ProtoPort(v) {
+				return fmt.Errorf("%v[%v] validation failed", path+"."+"Ports", k)
+			}
+		}
+
+		return nil
+	})
 
 	validatorMapMirror["MirrorCollector"] = make(map[string][]func(string, interface{}) error)
 	validatorMapMirror["MirrorCollector"]["all"] = append(validatorMapMirror["MirrorCollector"]["all"], func(path string, i interface{}) error {
@@ -431,6 +483,16 @@ func init() {
 
 		if _, ok := MirrorSessionState_value[m.State]; !ok {
 			return errors.New("MirrorSessionStatus.State did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapMirror["MirrorStopConditions"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapMirror["MirrorStopConditions"]["all"] = append(validatorMapMirror["MirrorStopConditions"]["all"], func(path string, i interface{}) error {
+		m := i.(*MirrorStopConditions)
+		if !validators.Duration(m.ExpiryDuration) {
+			return fmt.Errorf("%v validation failed", path+"."+"ExpiryDuration")
 		}
 		return nil
 	})

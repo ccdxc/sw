@@ -74,11 +74,7 @@ var typesMapMirror = map[string]*runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"State": runtime.Field{Name: "State", JSONTag: "oper-state", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NICStatus": runtime.Field{Name: "NICStatus", JSONTag: "smart-nic-status", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.SmartNICMirrorSessionStatus"},
-
-			"SrcPacketCaptureFileURL": runtime.Field{Name: "SrcPacketCaptureFileURL", JSONTag: "src-packet-capture-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"DstPacketCaptureFileURL": runtime.Field{Name: "DstPacketCaptureFileURL", JSONTag: "dst-packet-capture-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"PcapFileURL": runtime.Field{Name: "PcapFileURL", JSONTag: "pcap-file-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorStartConditions": &runtime.Struct{
@@ -91,17 +87,6 @@ var typesMapMirror = map[string]*runtime.Struct{
 			"MaxPacketCount": runtime.Field{Name: "MaxPacketCount", JSONTag: "max-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"ExpiryDuration": runtime.Field{Name: "ExpiryDuration", JSONTag: "expiry-duration", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"monitoring.SmartNICMirrorSessionStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"SmartNIC": runtime.Field{Name: "SmartNIC", JSONTag: "smart-nic", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"NumSrcPackets": runtime.Field{Name: "NumSrcPackets", JSONTag: "num-src-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
-
-			"NumDstPackets": runtime.Field{Name: "NumDstPackets", JSONTag: "num-dst-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
-
-			"SessionId": runtime.Field{Name: "SessionId", JSONTag: "session-id", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 }

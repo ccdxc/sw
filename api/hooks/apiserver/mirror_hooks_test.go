@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var testMirrorSessions = []monitoring.MirrorSession{
+var testBadMirrorSessions = []monitoring.MirrorSession{
 	{
 		// 0 collectors
 		ObjectMeta: api.ObjectMeta{
@@ -82,12 +82,6 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			},
 
 			Collectors: []monitoring.MirrorCollector{
-				{
-					Type: "ERSPAN",
-					ExportCfg: api.ExportConfig{
-						Destination: "111.1.1.1",
-					},
-				},
 				{
 					Type: "VENICE",
 				},
@@ -399,7 +393,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 		},
 	},
 	{
-		// matchAll-2
+		// matchAll-2 empty match rule
 		ObjectMeta: api.ObjectMeta{
 			Name:   "Test Mirror Session 11",
 			Tenant: "Tenant 1",
@@ -424,9 +418,83 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{},
 		},
 	},
+	{
+		// Too many collectors
+		ObjectMeta: api.ObjectMeta{
+			Name:   "Test Mirror Session 12",
+			Tenant: "Tenant 1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "MirrorSession",
+			APIVersion: "v1",
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			PacketSize:    128,
+			PacketFilters: []string{"ALL_DROPS"},
+			StopConditions: monitoring.MirrorStopConditions{
+				MaxPacketCount: 50,
+				ExpiryDuration: "5m",
+			},
+
+			Collectors: []monitoring.MirrorCollector{
+				{
+					Type: "VENICE",
+				},
+				{
+					Type: "ERSPAN",
+					ExportCfg: api.ExportConfig{
+						Destination: "111.1.1.1",
+					},
+				},
+				{
+					Type: "ERSPAN",
+					ExportCfg: api.ExportConfig{
+						Destination: "111.1.1.2",
+					},
+				},
+			},
+			MatchRules: []monitoring.MatchRule{},
+		},
+	},
 }
 
-func TestBadMirrorSessions(t *testing.T) {
+var testGoodMirrorSession = []monitoring.MirrorSession{
+	{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "Test Mirror Session 1",
+			Tenant: "Tenant 1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "MirrorSession",
+			APIVersion: "v1",
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			PacketSize:    128,
+			PacketFilters: []string{"ALL_PKTS"},
+			StopConditions: monitoring.MirrorStopConditions{
+				MaxPacketCount: 1000,
+			},
+			Collectors: []monitoring.MirrorCollector{
+				{
+					Type: "VENICE",
+				},
+			},
+
+			MatchRules: []monitoring.MatchRule{
+				{
+					Src: &monitoring.MatchSelector{
+						Endpoints: []string{"Endpoint1"},
+					},
+					AppProtoSel: &monitoring.AppProtoSelector{
+						Ports: []string{"TCP/1234"},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestMirrorSessions(t *testing.T) {
 	ctx := context.Background()
 	logConfig := &log.Config{
 		Module:      "Mirror-hooks",
@@ -455,12 +523,17 @@ func TestBadMirrorSessions(t *testing.T) {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
 	txn := kvs.NewTxn()
-	for _, ms := range testMirrorSessions {
+	for _, ms := range testBadMirrorSessions {
 		_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, ms)
 		if ok {
 			t.Errorf("hook passed, expecting to fail")
 			continue
 		}
 		l.Infof("Session %v : Error %v", ms.Name, err)
+	}
+	ms := &testGoodMirrorSession[0]
+	_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, *ms)
+	if !ok && err != nil {
+		t.Errorf("Failed to create a good mirror session")
 	}
 }

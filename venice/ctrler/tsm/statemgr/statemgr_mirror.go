@@ -3,28 +3,18 @@
 package statemgr
 
 import (
-	"bufio"
 	"fmt"
-	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Default parameters
 var defaultExpiryTime = "2h"
-
-//var timeFormat = "2006-01-02 15:04:05 MST"
-
-type fileIo struct {
-	fname   string
-	fHandle *os.File
-	w       *bufio.Writer
-}
 
 // MirrorSessionState - Internal state for MirrorSession
 type MirrorSessionState struct {
@@ -35,10 +25,7 @@ type MirrorSessionState struct {
 	expTimer *time.Timer
 	*Statemgr
 	// Local information
-	State              monitoring.MirrorSessionState
-	numCapturedPackets int32
-	srcPacketsIo       *fileIo
-	dstPacketsIo       *fileIo
+	State monitoring.MirrorSessionState
 }
 
 type mirrorTimerType int
@@ -87,6 +74,24 @@ func (mss *MirrorSessionState) handleExpTimer() {
 	return
 }
 
+func (mss *MirrorSessionState) hasVeniceCollector() bool {
+	for _, c := range mss.Spec.Collectors {
+		if c.Type == monitoring.PacketCollectorType_VENICE.String() {
+			return true
+		}
+	}
+	return false
+}
+
+func (mss *MirrorSessionState) runMirrorSession() {
+	mss.State = monitoring.MirrorSessionState_RUNNING
+	mss.Status.State = monitoring.MirrorSessionState_RUNNING.String()
+	// create PCAP file URL for sessions with venice collector
+	if mss.hasVeniceCollector() {
+		mss.Status.PcapFileURL = mss.mirrorSessionGetPcapLink()
+	}
+}
+
 // CreateMirrorSession : Create a MirrorSessionState and process the MirrorSession requirements
 func (sm *Statemgr) CreateMirrorSession(ms *monitoring.MirrorSession) error {
 	// All parameters are validated (using apiserver hooks) by the time we get here
@@ -126,12 +131,10 @@ func (sm *Statemgr) CreateMirrorSession(ms *monitoring.MirrorSession) error {
 		} else {
 			// schedule time in the past, run it right-away
 			log.Warnf("Schedule time already passed, strting the mirror-session now - %v\n", mss.MirrorSession.Name)
-			mss.State = monitoring.MirrorSessionState_RUNNING
-			mss.Status.State = monitoring.MirrorSessionState_RUNNING.String()
+			mss.runMirrorSession()
 		}
 	} else {
-		mss.State = monitoring.MirrorSessionState_RUNNING
-		mss.Status.State = monitoring.MirrorSessionState_RUNNING.String()
+		mss.runMirrorSession()
 		log.Infof("Mirror Session is running %v - %v", mss.Name, mss.Status.State)
 	}
 	mss.runMsExpTimer()
@@ -165,20 +168,24 @@ func (sm *Statemgr) deleteMirrorSession(mss *MirrorSessionState) {
 		mss.expTimer.Stop()
 		mss.expTimer = nil
 	}
-	if mss.srcPacketsIo != nil {
-		mss.srcPacketsIo.w.Flush()
-		mss.srcPacketsIo.fHandle.Close()
-	}
-	mss.srcPacketsIo = nil
-	if mss.dstPacketsIo != nil {
-		mss.dstPacketsIo.w.Flush()
-		mss.dstPacketsIo.fHandle.Close()
-	}
-	mss.dstPacketsIo = nil
 	mss.State = monitoring.MirrorSessionState_STOPPED
+	// delete minio bucket used for packet capture
+	if mss.Status.PcapFileURL != "" {
+		// XXX delete this bucket from minio server
+		mss.Status.PcapFileURL = ""
+	}
 
 	// delete mirror session state from DB
 	_ = sm.memDB.DeleteObject(mss)
+}
+
+func (mss *MirrorSessionState) mirrorSessionGetPcapLink() string {
+	// Create a name for packet file directory as -
+	//  packet_capture/<tenant-name>/<mirror-session-name>
+	// XXX Replace all the not-allowed characters by '_' OR add it to validator
+	// so that mirror session name cannot have those (?What about TenantName)
+	s := []string{"packet_capture", mss.Tenant, mss.Name}
+	return strings.Join(s, "/")
 }
 
 func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
@@ -197,7 +204,7 @@ func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
 		return
 	}
 	mss1.State = monitoring.MirrorSessionState_READY_TO_RUN
-	mss1.Status.State = monitoring.MirrorSessionState_RUNNING.String()
+	mss1.runMirrorSession()
 	log.Infof("Mirror Session is running %v - %v", mss1.Name, mss1.Status.State)
 	mss1.schTimer = nil
 	sm.memDB.UpdateObject(mss1)
@@ -262,16 +269,23 @@ func (sm *Statemgr) handleMirrorSessionEvent(et kvstore.WatchEventType, ms *moni
 	case kvstore.Updated:
 		// watcher is set to watch changes to Spec only
 		// Supported updates -
+		// Validation done in the validation hook
 		// - update match rules, packet filters
-		//  - if stopped: Not allowed
+		//  - stopped: Ok, will take effect if/when restarted
+		//  - scheduled: Ok
+		//  - running: Ok will take effect for the remaining capture
 		// - update collector list (add/remove/change destination)
-		//  - if stopped: Not allowed
+		//  - stopped: Ok, will take effect if/when restarted
+		//  - scheduled: Ok
+		//  - running: Ok, will take effect for the remaining
 		// - update stop condition
-		//  - if already stopped?
+		//  - stopped: Ok, for next run
+		//  - scheduled: Ok (stop/restart exp timer as needed)
+		//  - running: Ok (reset the stop condition, i.e. ignore elapsed time and restart the timer for the requested duration)
 		// - update start condition
-		//  - if running: Not allowed, must be stopped first(?)
-		//  - if stopped: apply new start condition
-		//  - if scheduled: Stop Schtimer and apply new start condition
+		//  - stopped: Ok, apply new start condition (may result in running state or scheduled state)
+		//  - running: Not allowed, must be stopped first(?)
+		//  - scheduled: Ok, Stop Schtimer and apply new start condition
 		log.Infof("UpdateMirrorSession(TBD) - %s\n", ms.Name)
 
 	case kvstore.Deleted:
@@ -286,42 +300,5 @@ func (sm *Statemgr) handleMirrorSessionTimerEvent(et mirrorTimerType, mss *Mirro
 	case mirrorExpTimer:
 		sm.stopMirrorSession(mss)
 	default:
-	}
-}
-
-func (mss *MirrorSessionState) findNICStatus(SmartNIC string) *monitoring.SmartNICMirrorSessionStatus {
-	// find a status object for given smartNIC
-	var found *monitoring.SmartNICMirrorSessionStatus
-	found = nil
-	for _, snic := range mss.MirrorSession.Status.NICStatus {
-		if snic.SmartNIC == SmartNIC {
-			found = &snic
-			break
-		}
-	}
-	return found
-}
-
-// UpdateNICMirrorSessionsStatus : process status update from a NIC agent
-func (sm *Statemgr) UpdateNICMirrorSessionsStatus(mspList *tsproto.MirrorSessionStatusList) {
-	for _, msp := range mspList.StatusList {
-		mss, err := sm.GetMirrorSessionState(msp.Tenant, msp.Name)
-		if err != nil || mss == nil {
-			log.Infof("SmartNIC %v captured packets on deleted session %v", mspList.SmartNIC, msp.Name)
-			continue
-		}
-		mss.Mutex.Lock()
-		// store packets.. update counts...
-		nicStatus := mss.findNICStatus(mspList.SmartNIC)
-		if nicStatus == nil {
-			nStatus := monitoring.SmartNICMirrorSessionStatus{
-				SmartNIC:  mspList.SmartNIC,
-				SessionId: msp.Status.SessionId,
-			}
-			nicStatus = &nStatus
-			mss.MirrorSession.Status.NICStatus = append(mss.MirrorSession.Status.NICStatus, *nicStatus)
-		}
-		mss.Mutex.Unlock()
-		sm.writer.WriteMirrorSession(mss.MirrorSession)
 	}
 }

@@ -191,23 +191,6 @@ func TestMirrorSessionRpc(t *testing.T) {
 	}
 	_ = stateMgr.CreateMirrorSession(ms)
 
-	// start client-side streaming to receive status/packets
-	stream, _ := msRPCClient.GetMirrorSessionsStatus(context.Background())
-	mspList := tsproto.MirrorSessionStatusList{
-		SmartNIC: "TestNaples1",
-		StatusList: []*tsproto.MirrorSession{
-			&tsproto.MirrorSession{
-				TypeMeta:   testMirrorSessions[0].TypeMeta,
-				ObjectMeta: testMirrorSessions[0].ObjectMeta,
-				Status: tsproto.MirrorSessionStatus{
-					State:     tsproto.MirrorSessionState_RUNNING.String(),
-					SessionId: 0x55,
-				},
-			},
-		},
-	}
-	stream.Send(&mspList)
-	stream.CloseAndRecv()
 	// pickup session 1 that started running (sheduled->running)
 	evtList, err = rxStream.Recv()
 	Assert(t, (err == nil && (len(evtList.MirrorSessionEvents) == 1)), "Mirror session[1] not received by the client")

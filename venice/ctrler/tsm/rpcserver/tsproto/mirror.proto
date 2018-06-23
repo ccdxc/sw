@@ -65,8 +65,9 @@ message MirrorCollector {
     }
     string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(MirrorCollector.PacketCollectorType)"];
 
-    // When collector type is Venice, collector export information is not required
+    // Collector export information for ERSPAN. Not required for VENICE collector
     api.ExportConfig    ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+    string              PcapDirName = 3 [(gogoproto.jsontag) = "pcap-dir-name"];
 }
 
 // Traffic Selection Rules
@@ -102,32 +103,16 @@ message MatchRule {
 }
 
 
-//-------------------------
-//---- MirrorSessionStatus
-//-------------------------
-enum MirrorSessionState {
-    INACTIVE    = 0;    // not applicable to any flow on this NIC
-    RUNNING     = 1;    // active i.e. capturing packets
-}
-
 enum MirrorSrcDst {
     SRC_DST = 0;    // both src and dst are on the same SamrtNIC
     SRC     = 1;    // captured at src
     DST     = 2;    // captured at dst
 }
 
-message MirrorSessionStatus {
-    string          State                = 4 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
-    uint32          SessionId            = 5 [(gogoproto.jsontag) = "session-id,inline"];
-    MirrorSrcDst    CapturePoint         = 6 [(gogoproto.jsontag) = "capture-point,omitempty", (venice.check) = "StrEnum(MirrorSrcDst)"];
-
-}
-
 message MirrorSession {
     api.TypeMeta            T       = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta          O       = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
     MirrorSessionSpec       Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,inline"];
-    MirrorSessionStatus     Status  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 // mirror session crud event
@@ -144,14 +129,6 @@ message MirrorSessionList {
     repeated MirrorSession      MirrorSessions = 1 [(gogoproto.jsontag) = "mirror-sessions,omitempty"];
 }
 
-message MirrorSessionStatusList {
-    string                      SmartNIC   = 1 [(gogoproto.jsontag) = "smart-nic,inline)"];
-    repeated MirrorSession      StatusList = 2 [(gogoproto.jsontag) = "status-list,omitempty"];
-}
-
-message PacketAckDummy {
-}
-
 // trouble shooting controller - mirror api
 service MirrorSessionApi {
     // options for auto generating rest endpoints
@@ -161,7 +138,4 @@ service MirrorSessionApi {
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
     rpc WatchMirrorSessions (api.ObjectMeta) returns (stream MirrorSessionEventList) {};
-    // client side streaming to receive mirror session status on agent
-    // XXX change it simple rpc status update once we settle down on packet streaming vs minio from naples
-    rpc GetMirrorSessionsStatus (stream MirrorSessionStatusList) returns (PacketAckDummy) {};
 }

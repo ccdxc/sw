@@ -368,7 +368,7 @@
           },
           {
             "name": "stop-condition.expiry-duration",
-            "description": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\".",
+            "description": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\". should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -389,13 +389,7 @@
             "type": "string"
           },
           {
-            "name": "status.src-packet-capture-url",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.dst-packet-capture-url",
+            "name": "status.pcap-file-url",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4597,6 +4591,8 @@
           "items": {
             "type": "string"
           },
+          "example": "tcp/1234, arp",
+          "description": "should be a valid layer3 or layer 4 protocol and port/type\n",
           "title": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]"
         },
         "applications": {
@@ -5494,16 +5490,7 @@
             "STOPPED": "Stopped"
           }
         },
-        "smart-nic-status": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/monitoringSmartNICMirrorSessionStatus"
-          }
-        },
-        "src-packet-capture-url": {
-          "type": "string"
-        },
-        "dst-packet-capture-url": {
+        "pcap-file-url": {
           "type": "string"
         }
       }
@@ -5528,6 +5515,8 @@
         },
         "expiry-duration": {
           "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
           "title": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\""
         }
       },
@@ -5619,26 +5608,6 @@
         }
       },
       "description": "SNMPTrapServer contains the configuration for sending SNMP traps to a receiver."
-    },
-    "monitoringSmartNICMirrorSessionStatus": {
-      "type": "object",
-      "properties": {
-        "smart-nic": {
-          "type": "string"
-        },
-        "num-src-packets": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "num-dst-packets": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "session-id": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
     },
     "monitoringStatsPolicy": {
       "type": "object",
