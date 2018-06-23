@@ -80,7 +80,8 @@ tcp_tx_enqueue:
     bcf             [c3], table_read_TSO
     nop
 
-    bcf             [!c1 | !c2], tcp_tx_end_program
+    // TODO : window checks
+    //bcf             [!c1 | !c2], tcp_tx_end_program
     nop
     /* Inform TSO stage following later to check for any data to
      * send from retx queue

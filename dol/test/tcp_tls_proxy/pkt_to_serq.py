@@ -83,7 +83,7 @@ def TestCaseVerify(tc):
     if tc.pvtdata.ooo_seq_delta:
         ooo = True
         rcv_next_delta = 0
-        if tc.pvtdata.ooo_seq_delta < 0:
+        if tc.pvtdata.ooo_seq_delta:
             num_pkts = 0
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tcbid = "TcpCb%04d" % id

@@ -498,6 +498,8 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->bytes_rcvd = ntohs(tcp_rx_d.u.tcp_rx_d.bytes_rcvd) +
                                     stats.bytes_rcvd;
+    tcpcb_pd->tcpcb->bytes_acked = ntohs(tcp_rx_d.u.tcp_rx_d.bytes_rcvd) +
+                                    stats.bytes_rcvd;
     tcpcb_pd->tcpcb->pkts_rcvd = write_serq_d.pkts_rcvd + stats.pkts_rcvd;
     tcpcb_pd->tcpcb->pages_alloced = write_serq_d.pages_alloced +
                                     stats.pages_alloced;
@@ -527,6 +529,11 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
             tcpcb_pd->tcpcb->debug_atomic_delta,
             tcpcb_pd->tcpcb->debug_atomic0_incr1247,
             tcpcb_pd->tcpcb->debug_atomic1_incr247);
+
+    // These stats don't have overflow implemented in stats region
+    tcpcb_pd->tcpcb->slow_path_cnt = tcp_rx_d.u.tcp_rx_d.slow_path_cnt;
+    tcpcb_pd->tcpcb->serq_full_cnt = tcp_rx_d.u.tcp_rx_d.serq_full_cnt;
+    tcpcb_pd->tcpcb->ooo_cnt = tcp_rx_d.u.tcp_rx_d.ooo_cnt;
 
     return HAL_RET_OK;
 }

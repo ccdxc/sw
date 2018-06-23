@@ -59,6 +59,7 @@ tcp_tx_start_pending:
     bcf             [!c1 & c3], pending_ack
     nop
     bcf             [c1 | c2], tcp_tx_rx2tx_extra_end
+    nop
 
 pending_ack:
     /*

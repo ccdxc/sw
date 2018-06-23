@@ -55,6 +55,11 @@ debug_num_pkt_to_mem_atomic_stats_update_start:
                 TCP_TCB_RX_STATS_OFFSET + 5 * 8, k.to_s7_debug_num_pkt_to_mem)
 debug_num_pkt_to_mem_atomic_stats_update_done:
 
+bytes_acked_atomic_stats_update_start:
+    CAPRI_ATOMIC_STATS_INCR1(bytes_acked, k.common_phv_qstate_addr,
+                TCP_TCB_RX_STATS_OFFSET + 6 * 8, k.to_s7_bytes_acked)
+bytes_acked_atomic_stats_update_done:
+
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_TEST_ATOMIC_STATS, TCP_DDOL_TEST_ATOMIC_STATS
     bcf         [!c1], tcp_rx_stats_stage_done
 

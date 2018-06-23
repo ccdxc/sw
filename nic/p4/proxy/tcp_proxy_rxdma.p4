@@ -141,8 +141,12 @@ header_type read_tls_stage0_d_t {
 // d for stage 2
 header_type tcp_rx_d_t {
     fields {
-        ooo_rcv_bitmap          : TCP_OOO_NUM_CELLS;
+        bytes_acked             : 16;   // tcp_ack stage
+        slow_path_cnt           : 16;
+        serq_full_cnt           : 16;
+        ooo_cnt                 : 16;
         rcv_nxt                 : 32;
+        ooo_rcv_bitmap          : TCP_OOO_NUM_CELLS;
         rcv_tstamp              : 32;
         ts_recent               : 32;
         lrcv_time               : 32;
@@ -151,7 +155,6 @@ header_type tcp_rx_d_t {
         pred_flags              : 32;   // tcp_ack stage
         max_window              : 16;   // tcp_ack_stage
         bytes_rcvd              : 16;
-        bytes_acked             : 64;   // tcp_ack stage
         snd_wnd                 : 16;   // tcp_ack stage
         ato                     : 16;
         serq_pidx               : 16; 
@@ -337,10 +340,10 @@ header_type to_stage_7_phv_t {
         debug_num_pkt_to_mem    : 8;
         debug_num_phv_to_mem    : 8;
 
-        stats4                  : 16;
-        stats5                  : 16;
-        stats6                  : 16;
-        stats7                  : 16;
+        bytes_acked             : 16;
+        slow_path_cnt           : 16;
+        serq_full_cnt           : 16;
+        ooo_cnt                 : 16;
     }
 }
 
@@ -745,15 +748,20 @@ action tcp_read_tls_stage0(TXDMA_PARAMS_BASE, pi_0, ci_0) {
 }
 
 #define TCP_RX_CB_PARAMS \
-        ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time, \
+        bytes_acked, slow_path_cnt, serq_full_cnt, ooo_cnt, \
+        rcv_nxt, ooo_rcv_bitmap, rcv_tstamp, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, max_window, bytes_rcvd, \
-        bytes_acked, snd_wnd, rcv_mss, rto, ecn_flags, state, \
+        snd_wnd, rcv_mss, rto, ecn_flags, state, \
         parsed_state, flag, ato, serq_pidx, quick, snd_wscale, pending, ca_flags, \
         write_serq, pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q, alloc_descr
 
 #define TCP_RX_CB_D \
-    modify_field(tcp_rx_d.ooo_rcv_bitmap, ooo_rcv_bitmap); \
+    modify_field(tcp_rx_d.bytes_acked, bytes_acked); \
+    modify_field(tcp_rx_d.slow_path_cnt, slow_path_cnt); \
+    modify_field(tcp_rx_d.serq_full_cnt, serq_full_cnt); \
+    modify_field(tcp_rx_d.ooo_cnt, ooo_cnt); \
     modify_field(tcp_rx_d.rcv_nxt, rcv_nxt); \
+    modify_field(tcp_rx_d.ooo_rcv_bitmap, ooo_rcv_bitmap); \
     modify_field(tcp_rx_d.rcv_tstamp, rcv_tstamp); \
     modify_field(tcp_rx_d.ts_recent, ts_recent); \
     modify_field(tcp_rx_d.lrcv_time, lrcv_time); \
@@ -762,7 +770,6 @@ action tcp_read_tls_stage0(TXDMA_PARAMS_BASE, pi_0, ci_0) {
     modify_field(tcp_rx_d.pred_flags, pred_flags); \
     modify_field(tcp_rx_d.max_window, max_window); \
     modify_field(tcp_rx_d.bytes_rcvd, bytes_rcvd); \
-    modify_field(tcp_rx_d.bytes_acked, bytes_acked); \
     modify_field(tcp_rx_d.snd_wnd, snd_wnd); \
     modify_field(tcp_rx_d.rcv_mss, rcv_mss); \
     modify_field(tcp_rx_d.rto, rto); \
@@ -1094,6 +1101,7 @@ action stats() {
     modify_field(to_s7_scratch.desc_alloced, to_s7.desc_alloced);
     modify_field(to_s7_scratch.debug_num_pkt_to_mem, to_s7.debug_num_pkt_to_mem);
     modify_field(to_s7_scratch.debug_num_phv_to_mem, to_s7.debug_num_phv_to_mem);
+    modify_field(to_s7_scratch.bytes_acked, to_s7.bytes_acked);
 
     // from ki global
     GENERATE_GLOBAL_K

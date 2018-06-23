@@ -109,6 +109,7 @@ modules:
         name    : OOO_PKT_TO_SERQ_V4
         spec    : ooo_pkt.testspec
         module  : pkt_to_serq
+        ignore  : True
         rtl     : True
         args    :
             maxflows: 1
@@ -120,6 +121,7 @@ modules:
         name    : OOO_PKT_IN_ORDER_PKT_TO_SERQ_V4
         spec    : ooo_pkt_in_order_pkt.testspec
         module  : pkt_to_serq_ooo_in_order
+        ignore  : True
         rtl     : True
         args    :
             maxflows: 1

@@ -128,6 +128,10 @@ message TcpCbStats {
   uint32                debug_atomic4_incr7        = 13;
   uint32                debug_atomic5_incr7        = 14;
   uint32                debug_atomic6_incr7        = 15;
+  uint64                bytes_acked                = 16;
+  uint64                slow_path_cnt              = 17;
+  uint64                serq_full_cnt              = 18;
+  uint64                ooo_cnt                    = 19;
 
   uint64                bytes_sent                 = 10001;
   uint64                pkts_sent                  = 10002;

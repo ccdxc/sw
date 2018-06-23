@@ -47,7 +47,9 @@ tcp_update_wl_fast:
     tblwr           d.snd_wl1, k.s1_s2s_ack_seq
 tcp_snd_una_update_fast:
     sub             r1, k.s1_s2s_ack_seq, d.snd_una
-    tbladd          d.bytes_acked, r1
+bytes_acked_stats_update_start:
+    CAPRI_STATS_INC(bytes_acked, r1, d.bytes_acked, p.to_s7_bytes_acked)
+bytes_acked_stats_update_end:
     tblwr           d.snd_una, k.s1_s2s_ack_seq
 
     tblor.l         d.flag, FLAG_WIN_UPDATE

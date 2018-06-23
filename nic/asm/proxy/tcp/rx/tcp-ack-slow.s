@@ -237,7 +237,9 @@ tcp_snd_una_update_slow:
     /* tcp_snd_una_update */
     /* Increment bytes acked by the delta between ack_seq and snd_una */
     sub             r3, k.s1_s2s_ack_seq, d.snd_una
-    tbladd          d.bytes_acked, r3
+bytes_acked_stats_update_start:
+    CAPRI_STATS_INC(bytes_acked, r1, d.bytes_acked, p.to_s7_bytes_acked)
+bytes_acked_stats_update_end:
     /* Update snd_una */
     tblwr           d.snd_una, k.s1_s2s_ack_seq
 

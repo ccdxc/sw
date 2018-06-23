@@ -91,22 +91,10 @@
         phvwri          p.table_addr[63], 1                             ;\
         phvwri          p.table_size, 8                                 ;
 
-#define CAPRI_STATS_INC(_stats_name, _stats_overflow_width, _inc_val, _d_field) \
-        add             r2, _d_field, _inc_val; \
-        bgei            r2, ((1 << _stats_overflow_width) - 1), _stats_name##_stats_update; \
-        nop; \
-        tbladd          _d_field, _inc_val; \
-        b               _stats_name##_stats_update_end; \
-        nop
-
-#define CAPRI_STATS_INC_UPDATE(_inc_val, _d_field, _p_field) \
-        phvwr           _p_field, _d_field; \
-        tblwr           _d_field, _inc_val; \
-
 /*
  * uses r2 and c1
  */
-#define CAPRI_STATS_INC2(_stats_name, _inc_val, _d_field, _p_field) \
+#define CAPRI_STATS_INC(_stats_name, _inc_val, _d_field, _p_field) \
         add             r2, _d_field, _inc_val; \
         slt             c1, r2, 1 << sizeof(_d_field) - 1; \
         b.c1            _stats_name##_stats_update_end; \

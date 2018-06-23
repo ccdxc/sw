@@ -105,7 +105,7 @@ tcp_rcv_nxt_update:
     tbladd          d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_payload_len
 
 bytes_rcvd_stats_update_start:
-    CAPRI_STATS_INC2(bytes_rcvd, k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
+    CAPRI_STATS_INC(bytes_rcvd, k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
 bytes_rcvd_stats_update_end:
 
     /* SCHEDULE_ACK(tp) */
@@ -421,6 +421,7 @@ tcp_enter_quickack_mode:
     add             r7, r0, r0
 
 tcp_rx_slow_path:
+    tbladd          d.{u.tcp_rx_d.slow_path_cnt}.hx, 1
     seq             c1, k.s1_s2s_payload_len, r0
     tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 0
     phvwri.c1       p.common_phv_write_serq, 0
@@ -445,19 +446,18 @@ tcp_rx_slow_path:
     /* Setup the to-stage/stage-to-stage variables */
 
     /* if (cp->seq != tp->rx.rcv_nxt) { */
-    /* if pkt->seq > rcv_nxt, do ooo (SACK) processing */
-    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.to_s2_seq
-    bcf             [c7], ooo_received
     /*
-     * if pkt->seq < rcv_nxt, its a retransmission, drop the packet,
+     * if pkt->seq != rcv_nxt, its a retransmission or OOO, drop the packet,
+     * (until we handle SACK)
      * but send ack. We don't partially accept unacknowledged bytes yet,
      * the entire frame is dropped.
      */
-    slt             c1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
+    sne             c1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_pending_ack_send, 1
     phvwr.c1        p.rx2tx_pending_dup_ack_send, 1
+    tbladd.c1       d.{u.tcp_rx_d.ooo_cnt}.hx, 1
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
     phvwr.c3        p.common_phv_skip_pkt_dma, 1
@@ -475,6 +475,7 @@ tcp_rx_slow_path:
     and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
     seq             c2, r2, k.to_s2_serq_cidx
     setcf           c7, [c1 & c2]
+    tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
     phvwri.c7       p.p4_intr_global_drop, 1
     b.c7            flow_rx_process_done
 
@@ -620,7 +621,7 @@ tcp_queue_rcv:
      // END OF TEST
 
 ooo_bytes_rcvd_stats_update_start:
-    CAPRI_STATS_INC2(ooo_bytes_rcvd, r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
+    CAPRI_STATS_INC(ooo_bytes_rcvd, r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
 ooo_bytes_rcvd_stats_update_end:
     b               bytes_rcvd_stats_update_end
     setcf           c6, [c0]

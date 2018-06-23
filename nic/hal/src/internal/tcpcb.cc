@@ -312,6 +312,10 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_desc_alloced(rtcpcb.desc_alloced);
     rsp->mutable_stats()->set_debug_num_pkt_to_mem(rtcpcb.debug_num_pkt_to_mem);
     rsp->mutable_stats()->set_debug_num_phv_to_mem(rtcpcb.debug_num_phv_to_mem);
+    rsp->mutable_stats()->set_bytes_acked(rtcpcb.bytes_acked);
+    rsp->mutable_stats()->set_slow_path_cnt(rtcpcb.slow_path_cnt);
+    rsp->mutable_stats()->set_serq_full_cnt(rtcpcb.serq_full_cnt);
+    rsp->mutable_stats()->set_ooo_cnt(rtcpcb.ooo_cnt);
 
     rsp->mutable_stats()->set_debug_atomic_delta(rtcpcb.debug_atomic_delta);
     rsp->mutable_stats()->set_debug_atomic0_incr1247(rtcpcb.debug_atomic0_incr1247);
