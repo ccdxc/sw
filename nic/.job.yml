@@ -51,7 +51,7 @@ targets:
   p4pt:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --topo p4pt --feature p4pt ; ret=$? ; make sanity_logs ; exit $ret" ]
   app_redir:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo app_redir --feature app_redir ; ret=$? ; make sanity_logs ; exit $ret" ]
   e2el7:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-l7-dol ; ret=$? ; make sanity_logs ; exit $ret" ]
-  mbt: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --mbt ; ret=$? ; make sanity_logs ; exit $ret" ]
+  mbt: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --mbt --mbtrandomseed 6003702; ret=$? ; make sanity_logs ; exit $ret" ]
   mbt_dol: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --topo=up2up --feature=networking --mbt; ret=$? ; make sanity_logs ; exit $ret" ]
   mbt_firewall:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo firewall --feature firewall --mbt && make sanity_logs" ]
   mbt_alg: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --topo alg --feature alg --mbt && make sanity_logs" ]
