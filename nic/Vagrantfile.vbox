@@ -1,0 +1,97 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$num_nodes = 1
+$base_ip = "192.168.50."
+$node_box = "venice/centos74"
+$node_box_ver = "0.8"
+$pens_node_id = 0
+
+# globals
+$cluster_ip_nodes = ""
+$node_ips = []
+$node_names = ['devvm']
+
+# main config logic
+Vagrant.configure("2") do |config|
+  config.vm.box = $node_box
+  config.vm.box_version = $node_box_ver
+
+  # getting node IPs
+  $node_ips = $num_nodes.times.collect { |n| $base_ip + "#{n+11}" }
+  $cluster_ip_nodes = $node_ips.join(",")
+  # $node_names = $num_nodes.times.collect { |n| "node#{n+1}" }
+
+  $num_nodes.times do |n|
+    node_name = $node_names[n]
+    node_addr = $node_ips[n]
+
+    configure_node(config, n, node_name, node_addr)
+  end
+end
+
+# configure nodes
+def configure_node(config, nid, node_name, node_addr)
+  # config.vm.synced_folder "./Shared/", "/home/ubuntu/Shared/"
+  config.vm.define node_name do |node|
+    node.vm.box = $node_box
+
+    # private Network
+    node.vm.network :private_network, ip: node_addr, virtualbox__intnet: true
+
+    node.vm.provider "virtualbox" do |v|
+      v.name = node_name
+      v.cpus = 6
+      v.memory = 8192
+      # v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+    end
+
+    # mount shared folder
+    node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
+
+    # provision the VM
+    node.vm.provision "shell" do |s|
+      s.inline = $pens_vm_script
+      s.args = [node_name, node_addr, $cluster_ip_nodes]
+    end
+
+    get_files_into_server(node)
+
+  end
+end
+
+# configure and install all needed packages in the VM
+$pens_vm_script = <<SCRIPT
+
+# no Interactive input
+export DEBIAN_FRONTEND=noninteractive
+
+# set hostName
+echo -n "$1" > /etc/hostname
+hostname -F /etc/hostname
+
+# change file ownership
+chown -R vagrant /import
+
+# turn off StrictHostKeyChecking
+f='/home/ubuntu/.ssh/config'
+mkdir -p /home/ubuntu/.ssh/ && touch $f
+grep -q 'StrictHostKeyChecking' $f
+echo 'StrictHostKeyChecking no' >> $f
+
+## Populate environment vars
+echo 'export PATH=$PATH:/usr/local/bin:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
+SCRIPT
+
+# copy your environment
+def get_files_into_server(node)
+  node.vm.provision "file", source: "~/.ssh/id_rsa", destination: ".ssh/id_rsa"
+  node.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: ".ssh/id_rsa.pub"
+  node.vm.provision "file", source: "~/.bashrc", destination: ".bashrc"
+  node.vm.provision "file", source: "~/.vimrc", destination: ".vimrc"
+  node.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+  node.vm.provision "file", source: "~/.vim", destination: ".vim"
+  node.vm.provision "file", source: "~/.vim_go_runtime", destination: ".vim_go_runtime"
+  node.vm.provision "file", source: "~/.gdbinit", destination: ".gdbinit"
+end
