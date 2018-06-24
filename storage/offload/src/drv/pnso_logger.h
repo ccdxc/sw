@@ -11,7 +11,11 @@
 #include "pnso_global.h"
 
 enum pnso_log_level {
-	PNSO_LOG_LEVEL_EMERGENCY = LOG_EMERG,	/* reference standard syslog */
+#ifndef __KERNEL__
+	PNSO_LOG_LEVEL_EMERGENCY = LOG_EMERG,
+#else
+	PNSO_LOG_LEVEL_EMERGENCY = KERN_EMERG,
+#endif
 	PNSO_LOG_LEVEL_ALERT,
 	PNSO_LOG_LEVEL_CRITICAL,
 	PNSO_LOG_LEVEL_ERROR,

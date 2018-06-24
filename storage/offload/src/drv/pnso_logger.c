@@ -37,7 +37,7 @@ static const char * const level_name[] = {
 };
 
 static inline const char *
-__get_level_name(enum pnso_log_level level)
+get_level_name(enum pnso_log_level level)
 {
 	assert((level >= PNSO_LOG_LEVEL_EMERGENCY) &&
 			(level <= PNSO_LOG_LEVEL_DEBUG));
@@ -60,7 +60,7 @@ pnso_log_init(const pnso_bool_t log_console, const enum pnso_log_level level,
 
 	g_pnso_log_enabled = true;
 	g_pnso_log_level = level;
-	prog_id = getpid();	/* TODO-logger: Add core-id, etc. */
+	prog_id = getpid();
 	g_pnso_log_console = log_console;
 
 	if (log_console) {
@@ -119,11 +119,13 @@ pnso_log_msg(enum pnso_log_level level, pnso_error_t err,
 		 time_stamp.tm_hour, time_stamp.tm_min, time_stamp.tm_sec);
 
 	if (err)
-		snprintf(hdr_buf, sizeof(hdr_buf), "%u | %.5s | %3d",
-			 prog_id, __get_level_name(level), err);
+		snprintf(hdr_buf, sizeof(hdr_buf), "%u | %u | %.5s | %3d",
+			 prog_id, osal_get_coreid(),
+			 get_level_name(level), err);
 	else
 		snprintf(hdr_buf, sizeof(hdr_buf),
-			 "%u | %.5s | ---", prog_id, __get_level_name(level));
+			 "%u | %u | %.5s | ---", prog_id, osal_get_coreid(),
+			 get_level_name(level));
 
 	fprintf(g_pnso_log_fp, "%s | %s |", time_buf, hdr_buf);
 	va_start(args, format);
