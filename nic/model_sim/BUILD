@@ -10,8 +10,9 @@ cc_library(
             "-lzmq",
             ],
     deps = [
-            "//nic/model_sim/include:modelsim_includes"
-            ],
+            "//nic/model_sim/include:modelsim_includes",
+            "//nic:zmq_includes",
+           ],
 )
 
 cc_binary(
@@ -31,7 +32,7 @@ cc_binary(
     deps = [
             "//nic/model_sim/include:modelsim_includes",
             "//nic/utils/host_mem:host_mem_includes",
-	    "//nic:boost",
+            "//nic:boost",
             ],
     linkopts = [
             "-lJudy",

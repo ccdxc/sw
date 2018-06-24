@@ -87,6 +87,24 @@ cc_library(
 )
 
 cc_library(
+    name = "zmq_includes",
+    hdrs = glob(["zmq/include/*.h"]),
+    includes = ["zmq/include"],
+)
+
+cc_library(
+    name = "libzmq",
+    srcs = select ({
+        "//conditions:default" : [
+	        "zmq/x86_64/libzmq.so",
+        ],
+        ":aarch64_mode" : [
+	        "zmq/aarch64/libzmq.so",
+        ],
+    }),
+)
+
+cc_library(
    name = "spdlog",
    includes = ["spdlog/include"],
    hdrs = glob(["spdlog/include/**/*.hpp"]) + glob(["spdlog/include/**/*.h"]) + glob(["spdlog/include/**/*.cc"]),
@@ -120,16 +138,6 @@ cc_library(
        "lkl/export/include/lkl_host.h",
        "lkl/export/include/lkl_autoconf.h",
        "lkl/export/include/lkl/autoconf.h",
-       #"third-party/lkl/export/include/lkl/asm/syscalls.h",
-       #"third-party/lkl/export/include/lkl/linux/types.h",
-       #"third-party/lkl/export/include/lkl/linux/stddef.h",
-       #"third-party/lkl/export/include/lkl/linux/posix_types.h",
-       #"third-party/lkl/export/include/lkl/asm/types.h",
-       #"third-party/lkl/export/include/lkl/asm/posix_types.h",
-       #"third-party/lkl/export/include/lkl/asm/bitsperlong.h",
-       #"third-party/lkl/export/include/lkl/asm-generic/types.h",
-       #"third-party/lkl/export/include/lkl/asm-generic/posix_types.h",
-       #"third-party/lkl/export/include/lkl/asm-generic/int-ll64.h",
     ] + glob(["lkl/export/include/lkl/linux/*.h",
               "lkl/export/include/lkl/asm/*.h",
               "lkl/export/include/lkl/asm-generic/*.h",

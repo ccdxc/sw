@@ -487,6 +487,16 @@ cc_library(
     deps = ["//nic/hal/third-party:libtins"],
 )
 
+cc_library(
+    name = "libzmq",
+    deps = ["//nic/hal/third-party:libzmq"],
+)
+
+cc_library(
+    name = "zmq_includes",
+    deps = ["//nic/hal/third-party:zmq_includes"],
+)
+
 config_setting(
     name = "aarch64_mode",
     values = { "cpu": "aarch64-linux" }
