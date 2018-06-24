@@ -368,6 +368,7 @@ ep_pd_alloc_pd_ip_entries (dllist_ctxt_t *pi_ep_list)
             ret = HAL_RET_OOM;
             goto end;
         }
+        pi_ip_entry->pd->ipsg_tbl_idx = INVALID_INDEXER_INDEX;
 
         // Link PI to PD
         pi_ip_entry->pd->pi_ep_ip_entry = pi_ip_entry;
@@ -641,16 +642,19 @@ ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
 
     ipsg_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_IPSG);
     HAL_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
+    HAL_TRACE_DEBUG("Delete the ipsg_tbl at index {}", pd_ip_entry->ipsg_tbl_idx);
 
-    sdk_ret = ipsg_tbl->remove(pd_ip_entry->ipsg_tbl_idx);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to deprogram IPSG for: {}",
-                      ipaddr2str(&(pi_ep_ip_entry->ip_addr)));
-        goto end;
-    } else {
-        HAL_TRACE_DEBUG("DeProgrammed IPSG at: {} ",
-                        pd_ip_entry->ipsg_tbl_idx);
+    if (pd_ip_entry->ipsg_tbl_idx != INVALID_INDEXER_INDEX) {
+        sdk_ret = ipsg_tbl->remove(pd_ip_entry->ipsg_tbl_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to deprogram IPSG for: {}",
+                          ipaddr2str(&(pi_ep_ip_entry->ip_addr)));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("DeProgrammed IPSG at: {} ",
+                            pd_ip_entry->ipsg_tbl_idx);
+        }
     }
 
 end:

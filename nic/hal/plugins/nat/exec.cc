@@ -9,10 +9,17 @@ namespace hal {
 namespace plugins {
 namespace nat {
 
+using hal::utils::nat::addr_entry_key_t;
+using hal::utils::nat::addr_entry_t;
+
 hal_ret_t
-get_nat_addr_from_pool(nat_pool_t *nat_pool, hal::utils::nat::addr_entry_t *addr_entry) 
+get_nat_addr_from_pool(nat_pool_t       *nat_pool, 
+                       addr_entry_key_t *key, 
+                       addr_entry_t     *addr_entry) 
+
 {
     hal_ret_t ret = HAL_RET_OK;
+    addr_entry_key_t rkey;
 
     ret = nat_pool_address_alloc(nat_pool, &addr_entry->tgt_ip_addr);
     if (ret != HAL_RET_OK) {
@@ -21,7 +28,20 @@ get_nat_addr_from_pool(nat_pool_t *nat_pool, hal::utils::nat::addr_entry_t *addr
     }
     addr_entry->tgt_vrf_id = nat_pool->key.vrf_id;
     addr_entry->nat_pool_id = nat_pool->key.pool_id;
-
+	ret = hal::utils::nat::addr_entry_add (key, nat_pool->key.vrf_id, addr_entry->tgt_ip_addr);
+    if (ret != HAL_RET_OK) {
+        //call nat pool free
+        HAL_TRACE_DEBUG("failed to add it to the db with error:{}", ret);
+        return ret;
+    }
+    //Add reverse mapping
+    rkey.vrf_id = addr_entry->tgt_vrf_id;
+    memcpy(&rkey.ip_addr, &addr_entry->tgt_ip_addr, sizeof(ip_addr_t));
+    ret = hal::utils::nat::addr_entry_add(&rkey, key->vrf_id, key->ip_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("failed to add the reverse map to the db with error:{}", ret);
+        return ret;
+    }
     return ret;
 }
 
@@ -111,7 +131,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
                 src_addr_entry = &src_nat_addr;
                 nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.src_nat_pool);
                 if (nat_pool) {
-                    ret = get_nat_addr_from_pool(nat_pool, src_addr_entry);
+                    ret = get_nat_addr_from_pool(nat_pool, &src_addr_key, src_addr_entry);
                     if (ret != HAL_RET_OK) {
                         HAL_TRACE_DEBUG("failed to allocate src nat ip");
                         return ret;
@@ -126,7 +146,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
                 dst_addr_entry = &dst_nat_addr;
                 nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.dst_nat_pool);
                 if (nat_pool) {
-                    ret = get_nat_addr_from_pool(nat_pool, dst_addr_entry);
+                    ret = get_nat_addr_from_pool(nat_pool, &dst_addr_key, dst_addr_entry);
                     if (ret != HAL_RET_OK) {
                         HAL_TRACE_DEBUG("failed to allocate dst nat ip");
                         return ret;
