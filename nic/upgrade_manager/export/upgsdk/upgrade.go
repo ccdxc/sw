@@ -154,6 +154,7 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 		if agentHdlrs != nil {
 			return nil, errors.New("Non-Agent applications cannot provide AgentHandlers")
 		}
+		upgAppRespInit(client, nil)
 	}
 	upgStateReqInit(client, appHdlrs, name)
 	initStateMachineVector()
@@ -224,10 +225,14 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 		*retStr = append(*retStr, "Upgrade completed successfully.")
 	} else if upgresp.GetUpgRespVal() == upgrade.UpgRespType_UpgRespFail {
 		*retStr = append(*retStr, "Upgrade completed with failure.")
-		//TODO
+		for idx := 0; idx < upgresp.GetUpgRespFailStr().Length(); idx++ {
+			*retStr = append(*retStr, upgresp.GetUpgRespFailStr().Get(idx))
+		}
 	} else if upgresp.GetUpgRespVal() == upgrade.UpgRespType_UpgRespAbort {
 		*retStr = append(*retStr, "Upgrade aborted.")
-		//TODO
+		for idx := 0; idx < upgresp.GetUpgRespFailStr().Length(); idx++ {
+			*retStr = append(*retStr, upgresp.GetUpgRespFailStr().Get(idx))
+		}
 	}
 
 	return nil

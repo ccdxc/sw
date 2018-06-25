@@ -48,7 +48,6 @@ string UpgAppRespHdlr::UpgAppRespValToStr(UpgRespStateType type) {
 }
 
 delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type, HdlrResp appHdlrResp) {
-    //LogInfo("UpgAppRespHdlr::UpdateUpgAppResp called for {} with type {}", appName_, type);
     auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
         LogInfo("UpgAppRespHdlr::UpdateUpgAppResp returning error for {}", appName_);

@@ -56,14 +56,14 @@ void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) 
         default:
             break;
     }
-    if (DeleteUpgReqSpec() == delphi::error::OK()) {
-        LogInfo("Upgrade Req Object deleted for next request");
-    }
 }
 
 delphi::error UpgMgrAgentRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
     LogInfo("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
     InvokeAgentHandler(resp);
+    if (DeleteUpgReqSpec() == delphi::error::OK()) {
+        LogInfo("Upgrade Req Object deleted for next request");
+    }
     return delphi::error::OK();
 }
 
@@ -72,6 +72,9 @@ resp) {
     if (GetRespStr(resp) != "")
         LogInfo("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
     InvokeAgentHandler(resp);
+    if (DeleteUpgReqSpec() == delphi::error::OK()) {
+        LogInfo("Upgrade Req Object deleted for next request");
+    }
     return delphi::error::OK();
 }
 

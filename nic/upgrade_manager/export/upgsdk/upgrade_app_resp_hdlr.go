@@ -22,6 +22,7 @@ func canInvokeHandler(sdkClient gosdk.Client, name string, reqType upgrade.UpgRe
 }
 
 func createUpgAppResp(sdkClient gosdk.Client, name string) {
+	log.Infof("Creating UpgAppResp for %s", name)
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
 		upgAppResp = upgrade.NewUpgAppResp(sdkClient)
@@ -40,6 +41,7 @@ func upgAppRespValToStr(respStateType upgrade.UpgRespStateType) string {
 }
 
 func updateUpgAppResp(respStateType upgrade.UpgRespStateType, appHdlrResp *HdlrResp, name string, sdkClient gosdk.Client) {
+	log.Infof("Updating UpgAppResp for %s", name)
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
 		log.Infof("UpgAppRespHdlr::UpdateUpgAppResp returning error for %s", name)

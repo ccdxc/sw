@@ -72,6 +72,9 @@ func getAppResp(obj *upgrade.UpgAppResp, hdlrResp *HdlrResp) {
 }
 
 func (ctx *upgapprespctx) invokeAgentHandler(obj *upgrade.UpgAppResp) {
+	if ctx.agentHdlrs == nil {
+		return
+	}
 	var hdlrResp HdlrResp
 	getAppResp(obj, &hdlrResp)
 	switch obj.GetUpgAppRespVal() {
@@ -129,6 +132,8 @@ func upgAppRespInit(client gosdk.Client, hdlrs AgentHandlers) {
 	ctx := &upgapprespctx{
 		agentHdlrs: hdlrs,
 	}
+	//TODO
+	//upgrade.UpgAppRespMount(client, delphi.MountMode_ReadWriteMode)
 	upgrade.UpgAppRespMount(client, delphi.MountMode_ReadMode)
 	upgrade.UpgAppRespWatch(client, ctx)
 }

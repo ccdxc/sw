@@ -35,7 +35,11 @@ func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
 
 func (ctx *upgrespctx) deleteUpgReqSpec() {
 	upgReq := upgrade.GetUpgReq(ctx.sdkClient, 10)
+	if upgReq == nil {
+		log.Infof("upgReq not found")
+	}
 	upgReq.Delete()
+	log.Infof("Upgrade Req Object deleted for next request")
 }
 
 func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
