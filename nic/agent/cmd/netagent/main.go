@@ -131,7 +131,7 @@ func main() {
 		}
 		tsdp = mockDp
 	}
-	tsa, err := troubleshooting.NewTsAgent(tsdp, "/tmp/naples-TsAgent.db", macAddr.String(), *npmURL, resolverClient, agMode)
+	tsa, err := troubleshooting.NewTsAgent(tsdp, "/tmp/naples-TsAgent.db", macAddr.String(), *npmURL, resolverClient, agMode, ag.NetworkAgent)
 	if err != nil {
 		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}

@@ -259,7 +259,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		//it.datapaths = append(it.datapaths, dp)
 
 		log.Infof("creating troubleshooting subagent")
-		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("/tmp/TsAgent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, tsmrc, state.AgentMode_MANAGED)
+		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("/tmp/TsAgent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, tsmrc, state.AgentMode_MANAGED, agent.NetworkAgent)
 		c.Assert(aerr, IsNil)
 		if tsa == nil {
 			c.Fatalf("cannot create troubleshooting agent. Err: %v", err)

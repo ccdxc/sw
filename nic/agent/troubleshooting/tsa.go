@@ -4,6 +4,7 @@ package troubleshooting
 
 import (
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
+	netAgentState "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/troubleshooting/ctrlerif"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
@@ -51,11 +52,11 @@ type Agent struct {
 }
 
 // NewTsAgent creates troubleshooting agent instance
-func NewTsAgent(dp types.TsDatapathAPI, dbPath, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode) (*Agent, error) {
+func NewTsAgent(dp types.TsDatapathAPI, dbPath, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode, na *netAgentState.Nagent) (*Agent, error) {
 
 	var tsClient *ctrlerif.TsClient
 
-	tsAgent, err := state.NewTsAgent(dp, mode, dbPath, nodeUUID)
+	tsAgent, err := state.NewTsAgent(dp, mode, dbPath, nodeUUID, na)
 	if err != nil {
 		log.Errorf("Error creating trouble shooting agent, Err: %v", err)
 		return nil, err

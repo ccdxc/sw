@@ -14,12 +14,12 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
+	halMaxMirrorSession   = 8
 	halGRPCDefaultBaseURL = "localhost"
 	halGRPCDefaultPort    = "50054"
 )
@@ -103,6 +103,15 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
@@ -133,7 +142,7 @@ func (hd *Datapath) SetAgent(ag types.TsDatapathIntf) error {
 }
 
 // This function deletes partially updated flow/drop rules and mirror session during mirror session create.
-func handleMirrorSessionCreateFailure(hd *Datapath, db *types.MirrorDB,
+func handleMirrorSessionCreateFailure(hd *Datapath, vrfID uint64, db *types.MirrorDB,
 	mirrorSessionReqs []*halproto.MirrorSessionRequestMsg,
 	flowRuleReqs []*halproto.FlowMonitorRuleRequestMsg,
 	dropRuleReqs []*halproto.DropMonitorRuleRequestMsg) {
@@ -143,7 +152,7 @@ func handleMirrorSessionCreateFailure(hd *Datapath, db *types.MirrorDB,
 		for _, ruleSpec := range halConsumedDropRule.Request {
 			dropDeleteRule := halproto.DropMonitorRuleDeleteRequest{
 				Meta: &halproto.ObjectMeta{
-					VrfId: 0, // TODO: Map Tenant-Name to Vrf
+					VrfId: vrfID,
 				},
 				KeyOrHandle: &halproto.DropMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.DropMonitorRuleKeyHandle_DropmonitorruleId{
@@ -152,10 +161,6 @@ func handleMirrorSessionCreateFailure(hd *Datapath, db *types.MirrorDB,
 				},
 			}
 			ReqMsg.Request = append(ReqMsg.Request, &dropDeleteRule)
-			//clean up locally maintained map for this rule.
-			dropRule := db.DropRuleIDToDropRule[ruleSpec.KeyOrHandle.GetDropmonitorruleId()]
-			delete(db.DropMonitorRules, dropRule)
-			delete(db.DropRuleIDToDropRule, ruleSpec.KeyOrHandle.GetDropmonitorruleId())
 		}
 		hd.Hal.TeleClient.DropMonitorRuleDelete(context.Background(), &ReqMsg)
 	}
@@ -164,7 +169,7 @@ func handleMirrorSessionCreateFailure(hd *Datapath, db *types.MirrorDB,
 		for _, ruleSpec := range halConsumedFlowRule.Request {
 			flowDeleteRule := halproto.FlowMonitorRuleDeleteRequest{
 				Meta: &halproto.ObjectMeta{
-					VrfId: 0, // TODO: Map Tenant-Name to Vrf
+					VrfId: vrfID,
 				},
 				KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
@@ -173,10 +178,6 @@ func handleMirrorSessionCreateFailure(hd *Datapath, db *types.MirrorDB,
 				},
 			}
 			FlowReqMsg.Request = append(FlowReqMsg.Request, &flowDeleteRule)
-			//clean up locally maintained map for this rule.
-			flowRule := db.FlowMonitorRuleIDToFlowMonitorRule[ruleSpec.KeyOrHandle.GetFlowmonitorruleId()]
-			delete(db.FlowMonitorRules, flowRule)
-			delete(db.FlowMonitorRuleIDToFlowMonitorRule, ruleSpec.KeyOrHandle.GetFlowmonitorruleId())
 		}
 		hd.Hal.TeleClient.FlowMonitorRuleDelete(context.Background(), &FlowReqMsg)
 	}
@@ -186,7 +187,7 @@ func handleMirrorSessionCreateFailure(hd *Datapath, db *types.MirrorDB,
 		for _, mirrorSess := range halConsumedMirrorSession.Request {
 			mirrorDelReq := halproto.MirrorSessionDeleteRequest{
 				Meta: &halproto.ObjectMeta{
-					VrfId: 0, // TODO: Map Tenant-Name to Vrf
+					VrfId: vrfID,
 				},
 				KeyOrHandle: &halproto.MirrorSessionKeyHandle{
 					KeyOrHandle: &halproto.MirrorSessionKeyHandle_MirrorsessionId{
@@ -198,22 +199,41 @@ func handleMirrorSessionCreateFailure(hd *Datapath, db *types.MirrorDB,
 		}
 		hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), &MirrorReqMsg)
 	}
-
 }
 
-// CreatePacketCaptureSession creates a mirror session
-func (hd *Datapath) CreatePacketCaptureSession(mirrorSessionName string, db *types.MirrorDB, mirrorReqMsg *halproto.MirrorSessionRequestMsg, flowRuleReqMsgList []*halproto.FlowMonitorRuleRequestMsg, dropRuleReqMsgList []*halproto.DropMonitorRuleRequestMsg) error {
+func checkIDContainment(IDs []uint64, ID uint64) (bool, int) {
+	for i, v := range IDs {
+		if v == ID {
+			return true, i
+		}
+	}
+	return false, 0
+}
+
+// createUpdateMirorSession is used to create new  mirror session or update exisitng session.
+func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uint64, update bool, db *types.MirrorDB,
+	mirrorReqMsg *halproto.MirrorSessionRequestMsg,
+	flowRuleReqMsgList []*halproto.FlowMonitorRuleRequestMsg,
+	dropRuleReqMsgList []*halproto.DropMonitorRuleRequestMsg) ([]uint64, []uint64, error) {
 
 	var err error
-
-	log.Infof("Packet capture session create request sent to Hal {%+v}", mirrorReqMsg)
 
 	// Maintains list of RequestMessages for each of MirrorCreate, FlowRuleCreate, DropRuleCreate.
 	// These lists are used to cleanup rules and/or mirror session in case of any failures.
 	var halConsumedMirrorSessions []*halproto.MirrorSessionRequestMsg
 	var halConsumedFlowRules []*halproto.FlowMonitorRuleRequestMsg
 	var halConsumedDropRules []*halproto.DropMonitorRuleRequestMsg
+	var purgedFlowRuleIDs []uint64
+	var purgedDropRuleIDs []uint64
 
+	mirrorSessID, ok := db.MirrorSessionNameToID[mirrorSessionKey]
+	if !ok {
+		return nil, nil, ErrMirrorCreate
+	}
+	mirrorSessObj, ok := db.MirrorSessionIDToObj[mirrorSessID]
+	if !ok {
+		return nil, nil, ErrMirrorCreate
+	}
 	if mirrorReqMsg != nil {
 		resp, err := hd.Hal.TeleClient.MirrorSessionCreate(context.Background(), mirrorReqMsg)
 		if err != nil {
@@ -226,8 +246,8 @@ func (hd *Datapath) CreatePacketCaptureSession(mirrorSessionName string, db *typ
 				err = ErrMirrorCreate
 			} else {
 				halConsumedMirrorSessions = append(halConsumedMirrorSessions, mirrorReqMsg)
-				db.PktMirrorSessions[mirrorSessionName].Handle = resp.Response[0].Status.Handle
-				db.PktMirrorSessions[mirrorSessionName].Created = true
+				mirrorSessObj.Handle = resp.Response[0].Status.Handle
+				mirrorSessObj.Created = true
 			}
 		}
 	}
@@ -274,59 +294,193 @@ func (hd *Datapath) CreatePacketCaptureSession(mirrorSessionName string, db *typ
 
 	if err == nil {
 		if len(flowRuleReqMsgList) > 0 {
+			oldFlowRuleIDs := mirrorSessObj.FlowMonitorRuleIDs
+			mirrorSessObj.FlowMonitorRuleIDs = nil
 			// Since all FlowRules are successfully processed by HAL,
 			// create FlowRule to FlowStatus map
 			for _, flowRuleReqMsg := range flowRuleReqMsgList {
 				for _, ruleSpec := range flowRuleReqMsg.Request {
-					flowRule := db.FlowMonitorRuleIDToFlowMonitorRule[ruleSpec.KeyOrHandle.
-						GetFlowmonitorruleId()]
-					db.FlowMonitorRules[flowRule] = &types.MonitorRuleStatus{
-						RuleID:  ruleSpec.KeyOrHandle.GetFlowmonitorruleId(),
-						Applied: true,
-						//Handle:Need a way to map DoprMonitorRuleStatus to ruleID
-						//so that handle returned by HAL corresponds to appropriate
-						//DropRule. For now ignore handle value returned by HAL
+					ruleID := ruleSpec.KeyOrHandle.GetFlowmonitorruleId()
+					flowRuleObj := db.FlowMonitorRuleIDToObj[ruleID]
+					//Add mirrorSession Key to the rule if this rule is not associated with mirrorsession
+					if len(flowRuleObj.MirrorSessionIDs) >= halMaxMirrorSession {
+						// Assert
+					}
+					contains, _ := checkIDContainment(flowRuleObj.MirrorSessionIDs, mirrorSessID)
+					if !contains {
+						flowRuleObj.MirrorSessionIDs = append(flowRuleObj.MirrorSessionIDs, mirrorSessID)
+					}
+					mirrorSessObj.FlowMonitorRuleIDs = append(mirrorSessObj.FlowMonitorRuleIDs, ruleID)
+				}
+			}
+			//In case of mirror session update, if previous flow rules are dropped, for those rules
+			// we need to delete rule  or remove mirrorSession from the rule if the rule has
+			// list of active mirrorSessions. Prepare a list of purged RuleIDs and return.
+			if update {
+				for _, f := range oldFlowRuleIDs {
+					present, _ := checkIDContainment(mirrorSessObj.FlowMonitorRuleIDs, f)
+					if !present {
+						//oldRuleID is not part of mirrorSession anymore.
+						purgedFlowRuleIDs = append(purgedFlowRuleIDs, f)
 					}
 				}
 			}
 		}
 		if len(dropRuleReqMsgList) > 0 {
+			oldDropRuleIDs := mirrorSessObj.DropMonitorRuleIDs
+			mirrorSessObj.DropMonitorRuleIDs = nil
 			// Since all dropRules are successfully processed by HAL,
 			// create dropRule to dropStatus map
 			for _, dropRuleReqMsg := range dropRuleReqMsgList {
 				for _, ruleSpec := range dropRuleReqMsg.Request {
-					dropRule := db.DropRuleIDToDropRule[ruleSpec.KeyOrHandle.
-						GetDropmonitorruleId()]
-					db.DropMonitorRules[dropRule] = &types.MonitorRuleStatus{
-						RuleID:  ruleSpec.KeyOrHandle.GetDropmonitorruleId(),
-						Applied: true,
-						//Handle:Need a way to map DoprMonitorRuleStatus to ruleID
-						//so that handle returned by HAL corresponds to appropriate
-						//DropRule. For now ignore handle value returned by HAL
+					ruleID := ruleSpec.KeyOrHandle.GetDropmonitorruleId()
+					dropRuleObj := db.DropRuleIDToObj[ruleID]
+					//Add mirrorSession key to the rule if this rule is not associated with mirrorsession
+					if len(dropRuleObj.MirrorSessionIDs) >= halMaxMirrorSession {
+						// Assert
+					}
+					contains, _ := checkIDContainment(dropRuleObj.MirrorSessionIDs, mirrorSessID)
+					if !contains {
+						dropRuleObj.MirrorSessionIDs = append(dropRuleObj.MirrorSessionIDs, mirrorSessID)
+					}
+					mirrorSessObj.DropMonitorRuleIDs = append(mirrorSessObj.DropMonitorRuleIDs, ruleID)
+				}
+			}
+			//In case of mirror session update, if previous drop rules are dropped, for those rules
+			// we need to delete rule  or remove mirrorSession from the rule if the rule has
+			// list of active mirrorSessions. Prepare a list of purged RuleIDs and return.
+			if update {
+				for _, d := range oldDropRuleIDs {
+					present, _ := checkIDContainment(mirrorSessObj.DropMonitorRuleIDs, d)
+					if !present {
+						//oldRuleID is not part of mirrorSession anymore.
+						purgedDropRuleIDs = append(purgedDropRuleIDs, d)
 					}
 				}
 			}
 		}
 	} else {
-		handleMirrorSessionCreateFailure(hd, db, halConsumedMirrorSessions,
+		handleMirrorSessionCreateFailure(hd, vrfID, db, halConsumedMirrorSessions,
 			halConsumedFlowRules, halConsumedDropRules)
 	}
 
+	return purgedFlowRuleIDs, purgedDropRuleIDs, err
+}
+
+// CreatePacketCaptureSession creates a mirror session
+func (hd *Datapath) CreatePacketCaptureSession(mirrorSessionKey string, vrfID uint64, db *types.MirrorDB,
+	mirrorReqMsg *halproto.MirrorSessionRequestMsg,
+	flowRuleReqMsgList []*halproto.FlowMonitorRuleRequestMsg,
+	dropRuleReqMsgList []*halproto.DropMonitorRuleRequestMsg) error {
+	log.Debugf("Packet capture session create request sent to Hal {%+v}, {%+v}, {%+v}", mirrorReqMsg,
+		flowRuleReqMsgList, dropRuleReqMsgList)
+	_, _, err := hd.createUpdateMirrorSession(mirrorSessionKey, vrfID, false, db, mirrorReqMsg,
+		flowRuleReqMsgList, dropRuleReqMsgList)
 	return err
 }
 
 // UpdatePacketCaptureSession updates a mirror session
-func (hd *Datapath) UpdatePacketCaptureSession(mirrorSession *tsproto.MirrorSession) error {
-	var err error
-	log.Infof("Update packet capture session request being sent to Hal {%+v}", mirrorSession)
-
-	return err
+func (hd *Datapath) UpdatePacketCaptureSession(mirrorSessionKey string, vrfID uint64, db *types.MirrorDB,
+	mirrorReqMsg *halproto.MirrorSessionRequestMsg,
+	flowRuleReqMsgList []*halproto.FlowMonitorRuleRequestMsg,
+	dropRuleReqMsgList []*halproto.DropMonitorRuleRequestMsg) ([]uint64, []uint64, error) {
+	log.Debugf("Update packet capture session request being sent to Hal {%+v}", mirrorSessionKey)
+	return hd.createUpdateMirrorSession(mirrorSessionKey, vrfID, true, db, mirrorReqMsg,
+		flowRuleReqMsgList, dropRuleReqMsgList)
 }
 
 // DeletePacketCaptureSession deletes mirror session
-func (hd *Datapath) DeletePacketCaptureSession(mirrorSession *tsproto.MirrorSession) error {
+func (hd *Datapath) DeletePacketCaptureSession(mirrorSessionKey string, mirrorDeleteReqMsg *halproto.MirrorSessionDeleteRequestMsg) error {
 	var err error
-	log.Infof("Delete packet capture session request being sent to Hal {%+v}", mirrorSession)
-
+	log.Debugf("Delete packet capture session request being sent to Hal {%+v}", mirrorSessionKey)
+	if mirrorDeleteReqMsg != nil {
+		resp, err := hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), mirrorDeleteReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting  mirror session. Err: %v", err)
+		}
+		if hd.Kind == "hal" {
+			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				log.Errorf("HAL returned non OK status when deleting  mirror session. %v",
+					resp.Response[0].ApiStatus)
+				err = ErrMirrorCreate
+			}
+		}
+	}
 	return err
+}
+
+// UpdateFlowMonitorRule updates changes to existing FlowMonitor rule
+func (hd *Datapath) UpdateFlowMonitorRule(flowRuleReqMsgList []*halproto.FlowMonitorRuleRequestMsg) error {
+	for _, flowRuleReqMsg := range flowRuleReqMsgList {
+		resp, err := hd.Hal.TeleClient.FlowMonitorRuleCreate(context.Background(), flowRuleReqMsg)
+		if err != nil {
+			log.Errorf("Error creating flow monitor rule. Err: %v", err)
+		}
+		if err == nil && hd.Kind == "hal" {
+			for _, Response := range resp.Response {
+				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					log.Errorf("Flow monitor rule error. HAL returned Err. %v",
+						Response.ApiStatus)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// DeleteFlowMonitorRule updates removes FlowMonitor rule
+func (hd *Datapath) DeleteFlowMonitorRule(flowRuleDeleteReqMsgList []*halproto.FlowMonitorRuleDeleteRequestMsg) error {
+	for _, flowRuleDeleteReqMsg := range flowRuleDeleteReqMsgList {
+		resp, err := hd.Hal.TeleClient.FlowMonitorRuleDelete(context.Background(), flowRuleDeleteReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting flow monitor rule. Err: %v", err)
+		}
+		if err == nil && hd.Kind == "hal" {
+			for _, Response := range resp.Response {
+				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					log.Errorf("Flow monitor rule delete error. HAL returned Err. %v",
+						Response.ApiStatus)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// UpdateDropMonitorRule updates changes to existing DropMonitor rule
+func (hd *Datapath) UpdateDropMonitorRule(dropRuleReqMsgList []*halproto.DropMonitorRuleRequestMsg) error {
+	for _, dropRuleReqMsg := range dropRuleReqMsgList {
+		resp, err := hd.Hal.TeleClient.DropMonitorRuleCreate(context.Background(), dropRuleReqMsg)
+		if err != nil {
+			log.Errorf("Error creating drop monitor rule. Err: %v", err)
+		}
+		if err == nil && hd.Kind == "hal" {
+			for _, Response := range resp.Response {
+				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					log.Errorf("Drop monitor rule error. HAL returned Err. %v",
+						Response.ApiStatus)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// DeleteDropMonitorRule updates removes DropMonitor rule
+func (hd *Datapath) DeleteDropMonitorRule(dropRuleDeleteReqMsgList []*halproto.DropMonitorRuleDeleteRequestMsg) error {
+	for _, dropRuleDeleteReqMsg := range dropRuleDeleteReqMsgList {
+		resp, err := hd.Hal.TeleClient.DropMonitorRuleDelete(context.Background(), dropRuleDeleteReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting drop monitor rule. Err: %v", err)
+		}
+		if err == nil && hd.Kind == "hal" {
+			for _, Response := range resp.Response {
+				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					log.Errorf("Drop monitor rule delete error. HAL returned Err. %v",
+						Response.ApiStatus)
+				}
+			}
+		}
+	}
+	return nil
 }

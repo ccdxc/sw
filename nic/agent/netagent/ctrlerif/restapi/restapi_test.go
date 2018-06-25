@@ -11,6 +11,8 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state"
+	tsdatapath "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
+	tsstate "github.com/pensando/sw/nic/agent/troubleshooting/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -58,7 +60,18 @@ func setup() (*RestServer, error) {
 		return nil, err
 	}
 
-	return NewRestServer(nagent, nil, agentRestURL)
+	tsdp, err := tsdatapath.NewHalDatapath(tsdatapath.Kind(*datapathKind))
+	if err != nil {
+		log.Errorf("Could not create troubleshooting HAL datapath. Kind: %v, Error %v", datapathKind, err)
+		return nil, err
+	}
+	tsagent, err := tsstate.NewTsAgent(tsdp, protos.AgentMode_CLASSIC, "", "dummy-node-uuid", nagent)
+	if err != nil {
+		log.Errorf("Could not create ts troubleshooting agent")
+		return nil, err
+	}
+
+	return NewRestServer(nagent, tsagent, agentRestURL)
 
 }
 

@@ -8,11 +8,16 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 )
@@ -34,13 +39,15 @@ func addMirrorSessionAPIRoutes(r *mux.Router, srv *RestServer) {
 
 func (s *RestServer) PacketCaptureGetHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	return s.TsAgent.GetPacketCaptureSession(), nil
+	tenant_namespace_mirrorname_uri := strings.Split(r.RequestURI, "/api/mirror/sessions/")
+	tenant_namespace_mirrorname := strings.Split(tenant_namespace_mirrorname_uri[1], "/")
+	o.TypeMeta.Kind = "MirrorSession"
+	o.ObjectMeta.Tenant = tenant_namespace_mirrorname[0]
+	o.ObjectMeta.Namespace = tenant_namespace_mirrorname[1]
+	o.ObjectMeta.Name = tenant_namespace_mirrorname[2]
+
+	return s.TsAgent.GetPacketCaptureSession(&o), nil
 
 }
 
@@ -50,35 +57,59 @@ func (s *RestServer) PacketCaptureListHandler(r *http.Request) (interface{}, err
 
 func (s *RestServer) PacketCapturePostHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
+
+	var res Response
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
-	return nil, s.TsAgent.CreatePacketCaptureSession(&o)
+	c, _ := types.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	err = s.TsAgent.CreatePacketCaptureSession(&o)
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+	res.StatusCode = http.StatusOK
+	return res, err
 
 }
 
 func (s *RestServer) PacketCapturePutHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
+
+	var res Response
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
-	return nil, s.TsAgent.UpdatePacketCaptureSession(&o)
+	m, _ := types.TimestampProto(time.Now())
+	o.ModTime = api.Timestamp{
+		Timestamp: *m,
+	}
+	err = s.TsAgent.UpdatePacketCaptureSession(&o)
+	if err != nil {
+		res.StatusCode = http.StatusInternalServerError
+		res.Error = err.Error()
+		return res, err
+	}
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+	res.StatusCode = http.StatusOK
+	return res, err
 
 }
 
 func (s *RestServer) PacketCaptureDeleteHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
 	return nil, s.TsAgent.DeletePacketCaptureSession(&o)
 

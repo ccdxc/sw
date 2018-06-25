@@ -2,3 +2,5 @@
  templates:
    - template: "restgen.tmpl"
      outputpath: "{FILE}_api.go"
+   - template: "restgen_test.tmpl"
+     outputpath: "{FILE}_api_test.go"

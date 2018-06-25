@@ -4,45 +4,14 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/troubleshooting/protos"
 	tsproto "github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
 
-// MirrorSessionStatus maintains status of mirrorSession
-type MirrorSessionStatus struct {
-	MirrorID uint32 // upto maximum of halMaxMirrorSession. Id assigned to mirror session.
-	Created  bool   // True when mirror session is active
-	Handle   uint64 // handle returned by HAL when mirror session is created in pipeline.
-}
-
-// FlowMonitorRule rule object fields that HAL uses
-type FlowMonitorRule struct {
-	SourceIP          [16]byte
-	DestIP            [16]byte
-	SourceMac         uint64
-	DestMac           uint64
-	EtherType         uint32
-	Protocol          uint32
-	SourceL4Port      uint32
-	DestL4Port        uint32
-	SourceGroupID     uint64
-	DestGroupID       uint64
-	MirrorSessionName string
-}
-
-// DropMonitorRule drop rule fields that HAL uses
-type DropMonitorRule struct {
-	DropReasons       halproto.DropReasons
-	DropReasonAll     bool
-	MirrorSessionName string
-}
-
-// MonitorRuleStatus maintains status of drop/flow rule
-type MonitorRuleStatus struct {
-	RuleID  uint64 // Id allocated to flow rule or drop rule
-	Applied bool   // True when rule is applied / sent to HAL.
-	Handle  uint64 // Handle returned by HAL. If valid, then rule is applied in HAL
-}
+const (
+	halMaxMirrorSession = 8
+)
 
 // IPAddrDetails maintains ip details.
 type IPAddrDetails struct {
@@ -60,9 +29,11 @@ type AppPortDetails struct {
 
 // FlowMonitorIPRuleDetails contains src, dest selection value, AppPort selection value.
 type FlowMonitorIPRuleDetails struct {
-	SrcIPObj   *IPAddrDetails
-	DestIPObj  *IPAddrDetails
-	AppPortObj *AppPortDetails
+	SrcIPObj     *IPAddrDetails
+	SrcIPString  string
+	DestIPObj    *IPAddrDetails
+	DestIPString string
+	AppPortObj   *AppPortDetails
 }
 
 // FlowMonitorMACRuleDetails contains src, dest selection value, AppPort selection value.
@@ -72,22 +43,19 @@ type FlowMonitorMACRuleDetails struct {
 	AppPortObj *AppPortDetails
 }
 
-// MirrorDB maintains list of mirrorSessions, flow,drop rules.
+// MirrorDB maintains list of mirrorSessions, flow, drop rule objects.
 type MirrorDB struct {
-	// Span related DS
-	//mirrorDB map[int]*tsproto.MirrorSession // maps Mirror-session-ID to mirror config
-	MirrorSessionNameToID              map[string]uint32
-	PktMirrorSessions                  map[string]*MirrorSessionStatus
-	FlowMonitorRuleIDToFlowMonitorRule map[uint64]FlowMonitorRule
-	FlowMonitorRules                   map[FlowMonitorRule]*MonitorRuleStatus
-	DropRuleIDToDropRule               map[uint64]DropMonitorRule
-	DropMonitorRules                   map[DropMonitorRule]*MonitorRuleStatus
-	AllocatedMirrorIds                 uint32
-	AllocatedDropRuleIds               uint64
-	AllocatedFlowMonitorRuleIds        uint64
+	MirrorSessionDB        map[string]*tsproto.MirrorSession
+	MirrorSessionNameToID  map[string]uint64
+	MirrorSessionIDToObj   map[uint64]state.MirrorSessionObj
+	FlowMonitorRuleToID    map[state.FlowMonitorRuleSpec]uint64
+	FlowMonitorRuleIDToObj map[uint64]state.FlowMonitorObj
+	DropRuleToID           map[state.CopiedDropReasons]uint64
+	DropRuleIDToObj        map[uint64]state.DropMonitorObj
+	AllocatedMirrorIds     map[uint64]bool
 }
 
-// TsAgent is the network agent instance
+// TsAgent is the troubleshooting agent instance
 type TsAgent struct {
 	sync.Mutex
 	Store    emstore.Emstore
@@ -108,7 +76,7 @@ type CtrlerIntf interface {
 	RegisterCtrlerIf(ctrlerif CtrlerAPI) error
 	CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) error
 	ListPacketCaptureSession() []*tsproto.MirrorSession
-	GetPacketCaptureSession() *tsproto.MirrorSession
+	GetPacketCaptureSession(pcSession *tsproto.MirrorSession) *tsproto.MirrorSession
 	UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) error
 	DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) error
 	//EnablePacketCaptureSession(pcSession *tsproto.PacketCaptureSession) error
@@ -118,11 +86,17 @@ type CtrlerIntf interface {
 // TsDatapathAPI is all APIs provided by datapath/hal module. Implemented in datapath/hal.go (and in mockhal.go)
 type TsDatapathAPI interface {
 	SetAgent(ag TsDatapathIntf) error
-	CreatePacketCaptureSession(string, *MirrorDB, *halproto.MirrorSessionRequestMsg, []*halproto.FlowMonitorRuleRequestMsg, []*halproto.DropMonitorRuleRequestMsg) error
-	UpdatePacketCaptureSession(pcs *tsproto.MirrorSession) error
-	DeletePacketCaptureSession(pcs *tsproto.MirrorSession) error
-	//EnablePacketCaptureSession(pcs *tsproto.PacketCaptureSession) error
-	//DisablePacketCaptureSession(pcs *tsproto.PacketCaptureSession) error
+	CreatePacketCaptureSession(string, uint64, *MirrorDB, *halproto.MirrorSessionRequestMsg,
+		[]*halproto.FlowMonitorRuleRequestMsg,
+		[]*halproto.DropMonitorRuleRequestMsg) error
+	UpdatePacketCaptureSession(string, uint64, *MirrorDB, *halproto.MirrorSessionRequestMsg,
+		[]*halproto.FlowMonitorRuleRequestMsg,
+		[]*halproto.DropMonitorRuleRequestMsg) ([]uint64, []uint64, error)
+	DeletePacketCaptureSession(string, *halproto.MirrorSessionDeleteRequestMsg) error
+	UpdateFlowMonitorRule([]*halproto.FlowMonitorRuleRequestMsg) error
+	DeleteFlowMonitorRule([]*halproto.FlowMonitorRuleDeleteRequestMsg) error
+	UpdateDropMonitorRule([]*halproto.DropMonitorRuleRequestMsg) error
+	DeleteDropMonitorRule([]*halproto.DropMonitorRuleDeleteRequestMsg) error
 }
 
 // TsDatapathIntf is all APIs provided by troubleshooting agent to datapath
