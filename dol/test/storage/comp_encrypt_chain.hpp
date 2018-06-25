@@ -346,6 +346,7 @@ private:
     uint32_t        max_enc_blks;
     uint32_t        num_enc_blks;
 
+    uint32_t        initial_xts_opaque_tag;
     uint32_t        last_cp_output_data_len;
     uint32_t        last_encrypt_output_data_len;
     uint32_t        expected_status;

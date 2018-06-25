@@ -170,6 +170,32 @@ int alloc_buffers() {
 
 }
 
+/*
+ * For certain types of resource (such as AOLs, SGLs, etc.), the default
+ * placement is host memory, similar to what Driver would do. However,
+ * when model is run together with RTL, the model would exhibit PCIe coherency
+ * issues. What is known so far is:
+ *
+ * 1) When model runs by itself, there are no coherency issues
+ * 2) When model runs with RTL, RTL works (i.e., RTL sees and acts on correct data)
+ *    but model doesn't.
+ *
+ * The workaround is to place the affected resources in HBM.
+ */
+dp_mem_type_t
+test_mem_type_workaround(dp_mem_type_t preference)
+{
+    /*
+     * FLAGS_rtl means model runs with RTL.
+     */
+    if (preference == DP_MEM_TYPE_HOST_MEM) {
+        if (FLAGS_rtl) {
+            return DP_MEM_TYPE_HBM;
+        }
+    }
+
+    return preference;
+}
 
 void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
                         uint8_t ring, uint16_t index, 

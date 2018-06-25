@@ -324,6 +324,9 @@ def run_storage_dol(port, args):
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip)]
     if args.combined:
         cmd.append('--combined')
+    if args.rtl:
+        cmd.append('--rtl')
+
     #pass additional arguments to storage_test
     if args.storage_runargs:
         cmd.extend(shlex.split(args.storage_runargs))

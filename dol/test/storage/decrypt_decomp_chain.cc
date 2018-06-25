@@ -91,9 +91,11 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(xts::xts_desc_t));
     xts_decomp_cp_desc = new dp_mem_t(1, sizeof(cp_desc_t), DP_MEM_ALIGN_SPEC,
-                                      DP_MEM_TYPE_HOST_MEM, sizeof(cp_desc_t));
+                                      test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
+                                      sizeof(cp_desc_t));
     decomp_sgl_src_vec = new dp_mem_t(max_enc_blks, sizeof(cp_sgl_t),
-                                      DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                      DP_MEM_ALIGN_SPEC,
+                                      test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                       sizeof(cp_sgl_t));
 }
 
@@ -370,6 +372,7 @@ decrypt_decomp_chain_t::decrypt_setup(uint32_t block_no,
 
     // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
+    xts_ctx.suppress_info_log = suppress_info_log;
     xts_ctx.op = xts::AES_DECR_ONLY;
     xts_ctx.seq_xts_q = chain_params.seq_spec.seq_q;
     xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
@@ -459,7 +462,7 @@ decrypt_decomp_chain_t::full_verify(void)
     uint32_t        poll_factor = app_blk_size / kCompAppMinSize;
 
     // Don't call xts_ctx.verify_doorbell() as XTS completion would go
-    // to XTS status sequenceer in the decrypt chaining case.
+    // to XTS status sequencer in the decrypt chaining case.
 
     // Poll for XTS status
     auto xts_status_poll_func = [this, &xts_status] () -> int {
@@ -496,6 +499,13 @@ decrypt_decomp_chain_t::full_verify(void)
 
     if (xts_poll(xts_status_poll_func) != 0) {
         printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", xts_status);
+        return -1;
+    }
+
+    // Poll for XTS opaque
+    if (xts_ctx.verify_exp_opaque_tag(xts_ctx.last_used_opaque_tag,
+                                      FLAGS_long_poll_interval * poll_factor)) {
+        printf("ERROR: decrypt_decomp_chain XTS opaque tag never came\n");
         return -1;
     }
 

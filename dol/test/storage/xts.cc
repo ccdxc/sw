@@ -239,7 +239,8 @@ bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset
 }
 
 
-int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_interval=FLAGS_poll_interval, bool is_gcm=false) {
+int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_interval=FLAGS_poll_interval, bool is_gcm=false,
+                      bool suppress_info_log=false) {
 
   uint64_t opaque_tag_addr = 0;
   if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr, is_gcm)) {
@@ -263,8 +264,10 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_inter
   Poller poll(poll_interval);
   int rv = poll(func);
   if(0 == rv) {
-    if(decr_en) printf("Decr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
-    else printf("Encr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
+    if (!suppress_info_log) {
+      if(decr_en) printf("Decr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
+      else printf("Encr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
+    }
   } else {
     printf("Opaque tag expected value %u rcvd %u addr %lx\n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
   }
@@ -456,6 +459,7 @@ XtsCtx::desc_prefill_seq_xts(xts::xts_desc_t *xts_desc) {
   } else {
     xts_desc->opaque_tag = opaque_tag;
   }
+  last_used_opaque_tag = xts_desc->opaque_tag;
 
   if(!xts_db_addr) {
     xts_db_addr = xts_db->pa();
@@ -721,6 +725,11 @@ void XtsCtx::status_invalidate(void) {
     status->fragment_find(0, sizeof(uint32_t))->fill_thru(inval_byte);
 }
 
+int XtsCtx::verify_exp_opaque_tag(uint32_t exp_opaque_tag,
+                                  uint64_t poll_interval) {
+  return verify_opaque_tag(exp_opaque_tag, decr_en, poll_interval, is_gcm, suppress_info_log);
+}
+
 int XtsCtx::verify_doorbell(bool verify_pi,
                             uint64_t poll_interval) {
 
@@ -751,10 +760,9 @@ int XtsCtx::verify_doorbell(bool verify_pi,
       uint64_t status_data = *((uint64_t *)status->read_thru());
       if(STATUS_DEF_VALUE != status_data) {
         printf(" status check failed - status value %lu\n", status_data);
-        rv = -1;
+        return -1;
       }
     }
-
     uint32_t exp_opaque_tag = decr_en? exp_opaque_tag_decr : exp_opaque_tag_encr;
     return verify_opaque_tag(exp_opaque_tag, decr_en);
   }

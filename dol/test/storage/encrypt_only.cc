@@ -164,6 +164,7 @@ encrypt_only_t::encrypt_setup(uint32_t seq_xts_qid)
 
     // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
+    xts_ctx.suppress_info_log = suppress_info_log;
     xts_ctx.op = xts::AES_ENCR_ONLY;
     xts_ctx.seq_xts_q = seq_xts_qid;
     xts_ctx.push_type = ACC_RING_PUSH_SEQUENCER_BATCH;
@@ -234,8 +235,9 @@ encrypt_only_t::full_verify(void)
     assert(poll_factor);
     success = false;
 
-    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
-        printf("ERROR: encrypt_only doorbell from XTS engine never came\n");
+    if (xts_ctx.verify_exp_opaque_tag(xts_ctx.last_used_opaque_tag,
+                                      FLAGS_long_poll_interval * poll_factor)) {
+        printf("ERROR: encrypt_only XTS opaque tag never came\n");
         return -1;
     }
 

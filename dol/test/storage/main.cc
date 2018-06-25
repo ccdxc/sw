@@ -60,6 +60,8 @@ DEFINE_uint64(acc_scale_iters, 1,
 DEFINE_string(acc_scale_verify_method, "full",
               "Per-iteration verification method for accelerator scale testing: fast, or full");
 
+DEFINE_bool(rtl, false,
+            "Test being run under RTL");
 DEFINE_bool(with_rtl_skipverify, false,
             "Test being run under RTL with --skipverify in effect");
 
@@ -423,6 +425,7 @@ int main(int argc, char**argv) {
             << "\n# Iterations for accelerator scale testing (0 = infinite): " << FLAGS_acc_scale_iters 
             << "\nVerification method for accelerator scale testing: " << FLAGS_acc_scale_verify_method 
             << "\nAccelerator scale tests: " << FLAGS_acc_scale_test
+            << "\nRTL: " << FLAGS_rtl
             << "\nWith RTL --skipverify in effect: " << FLAGS_with_rtl_skipverify
             << "\nWith combined --combined in effect: " << FLAGS_combined
             << std::endl;

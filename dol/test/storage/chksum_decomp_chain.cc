@@ -58,10 +58,8 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
     uncomp_buf = new dp_mem_t(1, app_max_size,
                               DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
                               0, DP_MEM_ALLOC_NO_FILL);
-    /*
-     * Allocate enough chksum status for the worst case
-     */
     max_hash_blks = COMP_MAX_HASH_BLKS(app_max_size, app_hash_size);
+
     /*
      * Allocate enough chksum status for the worst case; used in the event
      * caller does not supply their own status buffers.
@@ -273,9 +271,9 @@ chksum_decomp_chain_t::chksum_setup(uint32_t block_no)
     if (!FLAGS_with_rtl_skipverify) {
 
         /*
-         * Add standalone model workaround (the closest flag to indicate RTL
-         * we currently have is FLAGS_with_rtl_skipverify). But it won't
-         * hurt to specify a dst buffer for RTL anyway.
+         * Add standalone model workaround as certain versions of
+         * model would write something to dst even when comp/decomp
+         * is not enabled.
          */
         chksum_desc.dst = sam_chksum_dst_buf->pa();
     }
