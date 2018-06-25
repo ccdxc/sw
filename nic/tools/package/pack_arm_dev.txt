@@ -1,3 +1,13 @@
+# common arm libs
+nic/gen/aarch64/lib/libhalproto.so                                                /nic/lib/
+nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so                              /nic/lib/
+nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so                   /nic/lib/
+nic/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so                   /nic/lib/
+nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so                      /nic/lib/
+nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1                             /nic/lib/
+nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1                          /nic/lib/
+nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14                          /nic/lib/
+
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Splugins_Ssfw_Slibsfw_Upkt_Uutils.so   /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Se2etests_Slibe2etest-lib.so                /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Ssvc_Slibhal_Usvc.so                   /nic/lib/
@@ -14,6 +24,8 @@ bazel-bin/_solib_aarch64-linux/libnic_Sutils_Sbitmap_Slibbitmap.so              
 bazel-bin/_solib_aarch64-linux/libnic_Sutils_Snat_Slibnat.so                      /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Slib_Slibhal_Ulib.so                   /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Ssrc_Snw_Slibnw.so                     /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Ssrc_Saclqos_Slibaclqos.so             /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Shal_Ssrc_Sfirewall_Slibfirewall.so         /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Stls_Slibtls_Uapi.so                   /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Stls_Sengine_Slibpse.so                /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Sutils_Strace_Slibtrace.so                  /nic/lib/

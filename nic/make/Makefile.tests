@@ -101,10 +101,7 @@ gtests-common:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/block_list:block_list_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/agent_api:agent_api_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr/test/gtests:port_test
-    ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
-    endif
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/network:network_test
 	# PD Utils
 	# TODO: Please enable after PD cleanup commit
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
@@ -126,7 +123,8 @@ gtests: gtests-common
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_rtsp:alg_rtsp_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_tftp:alg_tftp_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_ftp:alg_ftp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/network:network_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
     endif
 
 sanity-tests:

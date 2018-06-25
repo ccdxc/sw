@@ -142,8 +142,12 @@ if arm_pkg == 0:
 ##### create tar balls #####
 ############################
 
+print ("creating tar ball")
+
 cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -cf ../nic/nic.tar *'
 call(cmd, shell=True)
+
+print ("creating gzipped tar ball")
 
 # create tar.gz
 cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ../nic/nic.tgz * && chmod 766 ../nic/nic.tgz'
