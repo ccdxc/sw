@@ -33,7 +33,7 @@ func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
 	}
 }
 
-func (ctx *upgrespctx) DeleteUpgReqSpec() {
+func (ctx *upgrespctx) deleteUpgReqSpec() {
 	upgReq := upgrade.GetUpgReq(ctx.sdkClient, 10)
 	upgReq.Delete()
 }
@@ -41,13 +41,13 @@ func (ctx *upgrespctx) DeleteUpgReqSpec() {
 func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespCreate called %d", obj.GetUpgRespVal())
 	ctx.invokeAgentHandler(obj)
-	ctx.DeleteUpgReqSpec()
+	ctx.deleteUpgReqSpec()
 }
 
 func (ctx *upgrespctx) OnUpgRespUpdate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespUpdate called %d", obj.GetUpgRespVal())
 	ctx.invokeAgentHandler(obj)
-	ctx.DeleteUpgReqSpec()
+	ctx.deleteUpgReqSpec()
 }
 
 func (ctx *upgrespctx) OnUpgRespDelete(obj *upgrade.UpgResp) {

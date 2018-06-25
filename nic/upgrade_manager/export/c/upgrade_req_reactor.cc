@@ -122,10 +122,18 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
 void UpgReqReactor::OnMountComplete(void) {
     LogInfo("UpgReqReactor OnMountComplete called");
 
-    vector<delphi::objects::UpgStateReqPtr> upgReqStatuslist = delphi::objects::UpgStateReq::List(sdk_);
-    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatuslist.begin(); reqStatus != upgReqStatuslist.end(); ++reqStatus) {
-        OnUpgStateReqCreate(*reqStatus);
+    delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
+    req->set_key(10);
+
+    //find the object
+    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
+
+    delphi::objects::UpgStateReqPtr reqStatus = static_pointer_cast<delphi::objects::UpgStateReq>(obj);
+    if (reqStatus == NULL) {
+        LogInfo("No UpgStateReq object found");
+        return;
     }
+    OnUpgStateReqCreate(reqStatus);
 }
 
 } // namespace upgrade
