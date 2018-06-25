@@ -8,21 +8,16 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel } from './base-model';
 
 import { MonitoringMirrorSessionStatus_oper_state } from './enums';
-import { MonitoringSmartNICMirrorSessionStatus } from './monitoring-smart-nic-mirror-session-status.model';
 
 export interface IMonitoringMirrorSessionStatus {
     'oper-state'?: MonitoringMirrorSessionStatus_oper_state;
-    'smart-nic-status'?: Array<MonitoringSmartNICMirrorSessionStatus>;
-    'src-packet-capture-url'?: string;
-    'dst-packet-capture-url'?: string;
+    'pcap-file-url'?: string;
 }
 
 
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
     'oper-state': MonitoringMirrorSessionStatus_oper_state;
-    'smart-nic-status': Array<MonitoringSmartNICMirrorSessionStatus>;
-    'src-packet-capture-url': string;
-    'dst-packet-capture-url': string;
+    'pcap-file-url': string;
     public static enumProperties = {
         'oper-state': MonitoringMirrorSessionStatus_oper_state,
     }
@@ -33,7 +28,6 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     */
     constructor(values?: any) {
         super();
-        this['smart-nic-status'] = new Array<MonitoringSmartNICMirrorSessionStatus>();
         if (values) {
             this.setValues(values);
         }
@@ -46,9 +40,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     setValues(values: any): void {
         if (values) {
             this['oper-state'] = values['oper-state'];
-            this.fillModelArray<MonitoringSmartNICMirrorSessionStatus>(this, 'smart-nic-status', values['smart-nic-status'], MonitoringSmartNICMirrorSessionStatus);
-            this['src-packet-capture-url'] = values['src-packet-capture-url'];
-            this['dst-packet-capture-url'] = values['dst-packet-capture-url'];
+            this['pcap-file-url'] = values['pcap-file-url'];
         }
     }
 
@@ -56,12 +48,8 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'oper-state': new FormControl(this['oper-state'], [enumValidator(MonitoringMirrorSessionStatus_oper_state), ]),
-                'smart-nic-status': new FormArray([]),
-                'src-packet-capture-url': new FormControl(this['src-packet-capture-url']),
-                'dst-packet-capture-url': new FormControl(this['dst-packet-capture-url']),
+                'pcap-file-url': new FormControl(this['pcap-file-url']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<MonitoringSmartNICMirrorSessionStatus>('smart-nic-status', this['smart-nic-status'], MonitoringSmartNICMirrorSessionStatus);
         }
         return this._formGroup;
     }
@@ -69,9 +57,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['oper-state'].setValue(this['oper-state']);
-            this.fillModelArray<MonitoringSmartNICMirrorSessionStatus>(this, 'smart-nic-status', this['smart-nic-status'], MonitoringSmartNICMirrorSessionStatus);
-            this._formGroup.controls['src-packet-capture-url'].setValue(this['src-packet-capture-url']);
-            this._formGroup.controls['dst-packet-capture-url'].setValue(this['dst-packet-capture-url']);
+            this._formGroup.controls['pcap-file-url'].setValue(this['pcap-file-url']);
         }
     }
 }

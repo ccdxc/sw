@@ -8,17 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel } from './base-model';
 
 
-export interface IMonitoringMirrorStopConditions {
-    'max-packets'?: number;
-    'expiry-duration'?: string;
+export interface ISearchTenantPreview {
+    'tenants'?: object;
 }
 
 
-export class MonitoringMirrorStopConditions extends BaseModel implements IMonitoringMirrorStopConditions {
-    'max-packets': number;
-    /** should be a valid time duration
- */
-    'expiry-duration': string;
+export class SearchTenantPreview extends BaseModel implements ISearchTenantPreview {
+    'tenants': object;
     public static enumProperties = {
     }
 
@@ -39,16 +35,14 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     */
     setValues(values: any): void {
         if (values) {
-            this['max-packets'] = values['max-packets'];
-            this['expiry-duration'] = values['expiry-duration'];
+            this['tenants'] = values['tenants'];
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'max-packets': new FormControl(this['max-packets']),
-                'expiry-duration': new FormControl(this['expiry-duration']),
+                'tenants': new FormControl(this['tenants']),
             });
         }
         return this._formGroup;
@@ -56,8 +50,7 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['max-packets'].setValue(this['max-packets']);
-            this._formGroup.controls['expiry-duration'].setValue(this['expiry-duration']);
+            this._formGroup.controls['tenants'].setValue(this['tenants']);
         }
     }
 }

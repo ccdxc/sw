@@ -7,6 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel } from './base-model';
 
+import { SearchSearchRequest_mode } from './enums';
 import { SearchSearchQuery } from './search-search-query.model';
 
 export interface ISearchSearchRequest {
@@ -14,6 +15,7 @@ export interface ISearchSearchRequest {
     'from'?: number;
     'max-results'?: number;
     'sort-by'?: string;
+    'mode'?: SearchSearchRequest_mode;
     'query'?: SearchSearchQuery;
 }
 
@@ -32,6 +34,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
 to be sorted by, For eg: "meta.name"
 This can be specified as URI parameter. */
     'sort-by': string;
+    'mode': SearchSearchRequest_mode;
     /** Search query contains the search requirements
 This is intended for advanced query use cases involving
 boolean query, structured term query and supports various
@@ -40,6 +43,7 @@ for specific categories, kinds, fields and labels.
 This cannot be specified as URI parameter. */
     'query': SearchSearchQuery;
     public static enumProperties = {
+        'mode': SearchSearchRequest_mode,
     }
 
     /**
@@ -64,6 +68,7 @@ This cannot be specified as URI parameter. */
             this['from'] = values['from'];
             this['max-results'] = values['max-results'];
             this['sort-by'] = values['sort-by'];
+            this['mode'] = values['mode'];
             this['query'].setValues(values['query']);
         }
     }
@@ -75,6 +80,7 @@ This cannot be specified as URI parameter. */
                 'from': new FormControl(this['from'], [maxValueValidator(1023), ]),
                 'max-results': new FormControl(this['max-results'], [maxValueValidator(8192), ]),
                 'sort-by': new FormControl(this['sort-by'], [Validators.maxLength(256), ]),
+                'mode': new FormControl(this['mode'], [enumValidator(SearchSearchRequest_mode), ]),
                 'query': this['query'].$formGroup,
             });
         }
@@ -87,6 +93,7 @@ This cannot be specified as URI parameter. */
             this._formGroup.controls['from'].setValue(this['from']);
             this._formGroup.controls['max-results'].setValue(this['max-results']);
             this._formGroup.controls['sort-by'].setValue(this['sort-by']);
+            this._formGroup.controls['mode'].setValue(this['mode']);
             this['query'].setFormGroupValues();
         }
     }

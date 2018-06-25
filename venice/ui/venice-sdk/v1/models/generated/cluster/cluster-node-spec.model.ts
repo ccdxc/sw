@@ -9,13 +9,10 @@ import { BaseModel } from './base-model';
 
 
 export interface IClusterNodeSpec {
-    'roles'?: Array<string>;
 }
 
 
 export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
-    /** Roles is of list of roles a node can be configured with. */
-    'roles': Array<string>;
     public static enumProperties = {
     }
 
@@ -25,7 +22,6 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
     */
     constructor(values?: any) {
         super();
-        this['roles'] = new Array<string>();
         if (values) {
             this.setValues(values);
         }
@@ -37,24 +33,19 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<string>(this, 'roles', values['roles']);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'roles': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('roles', this['roles']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'roles', this['roles']);
         }
     }
 }

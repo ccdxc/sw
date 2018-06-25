@@ -86,7 +86,6 @@ export * from './monitoring-mirror-stop-conditions.model';
 export * from './monitoring-privacy-config.model';
 export * from './monitoring-requirement.model';
 export * from './monitoring-snmp-trap-server.model';
-export * from './monitoring-smart-nic-mirror-session-status.model';
 export * from './monitoring-stats-policy.model';
 export * from './monitoring-stats-policy-list.model';
 export * from './monitoring-stats-spec.model';

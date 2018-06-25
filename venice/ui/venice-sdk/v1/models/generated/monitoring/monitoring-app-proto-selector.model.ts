@@ -15,6 +15,8 @@ export interface IMonitoringAppProtoSelector {
 
 
 export class MonitoringAppProtoSelector extends BaseModel implements IMonitoringAppProtoSelector {
+    /** should be a valid layer3 or layer 4 protocol and port/type
+ */
     'ports': Array<string>;
     'applications': Array<string>;
     public static enumProperties = {

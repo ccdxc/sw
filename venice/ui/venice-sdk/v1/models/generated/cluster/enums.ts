@@ -22,11 +22,6 @@ export enum ClusterNodeCondition_status {
     'FALSE' = <any>"FALSE",
 }
 
-export enum ClusterNodeSpec_roles {
-    'CONTROLLER' = <any>"CONTROLLER",
-    'QUORUM' = <any>"QUORUM",
-}
-
 export enum ClusterNodeStatus_phase {
     'UNKNOWN' = <any>"UNKNOWN",
     'PENDING' = <any>"PENDING",
@@ -72,11 +67,6 @@ export enum ClusterNodeCondition_status_uihint {
     'FALSE' = <any> "False",
     'TRUE' = <any> "True",
     'UNKNOWN' = <any> "Unknown",
-}
-
-export enum ClusterNodeSpec_roles_uihint {
-    'CONTROLLER' = <any> "Controller",
-    'QUORUM' = <any> "Quorum",
 }
 
 export enum ClusterNodeStatus_phase_uihint {
@@ -149,7 +139,6 @@ export class AllEnums {
     ClusterHostStatus_type = ClusterHostStatus_type;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
-    ClusterNodeSpec_roles = ClusterNodeSpec_roles;
     ClusterNodeStatus_phase = ClusterNodeStatus_phase;
     ClusterPortCondition_type = ClusterPortCondition_type;
     ClusterPortCondition_status = ClusterPortCondition_status;
@@ -159,7 +148,6 @@ export class AllEnums {
 
     ClusterNodeCondition_type_uihint = ClusterNodeCondition_type_uihint;
     ClusterNodeCondition_status_uihint = ClusterNodeCondition_status_uihint;
-    ClusterNodeSpec_roles_uihint = ClusterNodeSpec_roles_uihint;
     ClusterNodeStatus_phase_uihint = ClusterNodeStatus_phase_uihint;
     ClusterPortCondition_type_uihint = ClusterPortCondition_type_uihint;
     ClusterPortCondition_status_uihint = ClusterPortCondition_status_uihint;

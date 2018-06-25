@@ -69,6 +69,11 @@ export enum SearchSearchQuery_kinds {
     'MirrorSession' = <any>"MirrorSession",
 }
 
+export enum SearchSearchRequest_mode {
+    'Full' = <any>"Full",
+    'Preview' = <any>"Preview",
+}
+
 
 export enum FieldsRequirement_operator_uihint {
     'gt' = <any> "greater than",
@@ -119,6 +124,7 @@ export class AllEnums {
     LabelsRequirement_operator = LabelsRequirement_operator;
     SearchSearchQuery_categories = SearchSearchQuery_categories;
     SearchSearchQuery_kinds = SearchSearchQuery_kinds;
+    SearchSearchRequest_mode = SearchSearchRequest_mode;
 
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;

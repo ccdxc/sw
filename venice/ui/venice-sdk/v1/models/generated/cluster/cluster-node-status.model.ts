@@ -12,6 +12,7 @@ import { ClusterNodeCondition } from './cluster-node-condition.model';
 
 export interface IClusterNodeStatus {
     'phase'?: ClusterNodeStatus_phase;
+    'quorum'?: boolean;
     'conditions'?: Array<ClusterNodeCondition>;
 }
 
@@ -19,6 +20,8 @@ export interface IClusterNodeStatus {
 export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     /** Current lifecycle phase of the node. */
     'phase': ClusterNodeStatus_phase;
+    /** Quorum node or not. */
+    'quorum': boolean;
     'conditions': Array<ClusterNodeCondition>;
     public static enumProperties = {
         'phase': ClusterNodeStatus_phase,
@@ -43,6 +46,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     setValues(values: any): void {
         if (values) {
             this['phase'] = values['phase'];
+            this['quorum'] = values['quorum'];
             this.fillModelArray<ClusterNodeCondition>(this, 'conditions', values['conditions'], ClusterNodeCondition);
         }
     }
@@ -51,6 +55,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'phase': new FormControl(this['phase'], [enumValidator(ClusterNodeStatus_phase), ]),
+                'quorum': new FormControl(this['quorum']),
                 'conditions': new FormArray([]),
             });
             // generate FormArray control elements
@@ -62,6 +67,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['phase'].setValue(this['phase']);
+            this._formGroup.controls['quorum'].setValue(this['quorum']);
             this.fillModelArray<ClusterNodeCondition>(this, 'conditions', this['conditions'], ClusterNodeCondition);
         }
     }

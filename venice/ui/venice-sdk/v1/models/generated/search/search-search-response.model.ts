@@ -9,6 +9,7 @@ import { BaseModel } from './base-model';
 
 import { SearchError } from './search-error.model';
 import { SearchEntry } from './search-entry.model';
+import { SearchTenantPreview } from './search-tenant-preview.model';
 import { SearchTenantAggregation } from './search-tenant-aggregation.model';
 
 export interface ISearchSearchResponse {
@@ -17,6 +18,7 @@ export interface ISearchSearchResponse {
     'time-taken-msecs'?: string;
     'error'?: SearchError;
     'entries'?: Array<SearchEntry>;
+    'preview-entries'?: SearchTenantPreview;
     'aggregated-entries'?: SearchTenantAggregation;
 }
 
@@ -26,10 +28,8 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     'actual-hits': string;
     'time-taken-msecs': string;
     'error': SearchError;
-    /** EntryList is list of all search results with no grouping. */
     'entries': Array<SearchEntry>;
-    /** AggregatedEntries is a three level grouping of all search results,
-Grouped by tenant, category and kind in that order. */
+    'preview-entries': SearchTenantPreview;
     'aggregated-entries': SearchTenantAggregation;
     public static enumProperties = {
     }
@@ -42,6 +42,7 @@ Grouped by tenant, category and kind in that order. */
         super();
         this['error'] = new SearchError();
         this['entries'] = new Array<SearchEntry>();
+        this['preview-entries'] = new SearchTenantPreview();
         this['aggregated-entries'] = new SearchTenantAggregation();
         if (values) {
             this.setValues(values);
@@ -59,6 +60,7 @@ Grouped by tenant, category and kind in that order. */
             this['time-taken-msecs'] = values['time-taken-msecs'];
             this['error'].setValues(values['error']);
             this.fillModelArray<SearchEntry>(this, 'entries', values['entries'], SearchEntry);
+            this['preview-entries'].setValues(values['preview-entries']);
             this['aggregated-entries'].setValues(values['aggregated-entries']);
         }
     }
@@ -71,6 +73,7 @@ Grouped by tenant, category and kind in that order. */
                 'time-taken-msecs': new FormControl(this['time-taken-msecs']),
                 'error': this['error'].$formGroup,
                 'entries': new FormArray([]),
+                'preview-entries': this['preview-entries'].$formGroup,
                 'aggregated-entries': this['aggregated-entries'].$formGroup,
             });
             // generate FormArray control elements
@@ -86,6 +89,7 @@ Grouped by tenant, category and kind in that order. */
             this._formGroup.controls['time-taken-msecs'].setValue(this['time-taken-msecs']);
             this['error'].setFormGroupValues();
             this.fillModelArray<SearchEntry>(this, 'entries', this['entries'], SearchEntry);
+            this['preview-entries'].setFormGroupValues();
             this['aggregated-entries'].setFormGroupValues();
         }
     }
