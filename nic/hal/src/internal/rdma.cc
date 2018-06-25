@@ -1043,6 +1043,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.ring_header.total_rings = MAX_RQ_RINGS;
     rqcb.rqcb0.ring_header.host_rings = MAX_RQ_RINGS;
 
+    // for now initialize state with RTS to satisfy DOLs.
+    // it needs to be changed to RESET state at later time
+    rqcb.rqcb0.state = rqcb.rqcb1.state = RDMA_QP_STATE_RTS;
+
     if (spec.rq_in_nic_memory()) {
         rqcb_p->rqcb0.rq_in_hbm = 1;
         rqcb_p->rqcb1.rq_in_hbm = 1;

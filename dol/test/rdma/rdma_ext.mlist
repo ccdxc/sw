@@ -989,7 +989,6 @@ modules:
         spec    : resp_rx_send_only_arm_sarm_eq_se.testspec
         ignore  : False
 
-
     - module:
         name    : RDMA_RX_SEND_ONLY_CQ_FULL_EQ
         enable  : True
@@ -998,6 +997,10 @@ modules:
         spec    : resp_rx_send_only_cq_full_eq.testspec
         ignore  : False
 
-
-
-
+    - module:
+        name    : RDMA_RX_STATE_CHECK
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_state_check
+        spec    : resp_rx_state_check.testspec
+        ignore  : False

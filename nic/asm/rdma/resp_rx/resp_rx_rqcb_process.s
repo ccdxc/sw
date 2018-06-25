@@ -59,6 +59,10 @@ resp_rx_rqcb_process:
     bcf     [!c1], recirc_pkt
     cmov    TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
 
+    // are we in a state to process received packets ?
+    slt     c1, d.state, QP_STATE_RTR
+    bcf     [c1], phv_drop
+
     //fresh packet
     // populate global fields
 
@@ -80,7 +84,7 @@ resp_rx_rqcb_process:
 skip_roce_opt_parsing:
 
     // get a tokenid for the fresh packet
-    phvwr  p.common.rdma_recirc_token_id, TOKEN_ID
+    phvwr  p.common.rdma_recirc_token_id, TOKEN_ID  //BD Slot in fast path
 
     CAPRI_SET_FIELD2(TO_S_WB1_P, my_token_id, TOKEN_ID)
     // every fresh packet gets a unique token id 
@@ -740,16 +744,16 @@ process_ud:
     seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type
     seq         c3, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     // if it doesn't match serv_type OR not send OR not only, drop
-    bcf         [!c7 | !c2 | !c1], ud_drop
+    bcf         [!c7 | !c2 | !c1], phv_drop
     // check if payload_len is <= pmtu
     sll         r1, 1, d.log_pmtu // BD Slot
-    blt         r1, REM_PYLD_BYTES, ud_drop
+    blt         r1, REM_PYLD_BYTES, phv_drop
 
     // check if q_key matches
     sne    c1, CAPRI_RXDMA_DETH_Q_KEY, d.q_key //BD Slot
     addi   r1, r0, 0x01234567
     sne    c2, CAPRI_RXDMA_DETH_Q_KEY, r1
-    bcf    [c1 & c2] , ud_drop
+    bcf    [c1 & c2] , phv_drop
     IS_ANY_FLAG_SET(c6, r7, RESP_RX_FLAG_IMMDT) //BD Slot
 
     // populate completion entry
@@ -823,7 +827,7 @@ pt_process:
     nop.e
     nop
 
-ud_drop:
+phv_drop:
     phvwr.e     p.common.p4_intr_global_drop, 1
     nop
     

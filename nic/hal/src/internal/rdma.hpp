@@ -892,6 +892,16 @@ typedef enum rdma_pkt_opc_e {
     RDMA_PKT_OPC_SEND_ONLY_WITH_INV = 0x17,
 }rdma_rc_opc_t;
 
+typedef enum rdma_qp_state_e {
+    RDMA_QP_STATE_RESET     = 0,
+    RDMA_QP_STATE_INIT      = 1,
+    RDMA_QP_STATE_ERR       = 2,
+    RDMA_QP_STATE_RTR       = 3,
+    RDMA_QP_STATE_SQ_ERR    = 4,
+    RDMA_QP_STATE_SQD       = 5,
+    RDMA_QP_STATE_RTS       = 6
+} rdma_qp_state_t;
+
 /*====================  TYPES.H ===================*/
 
 //RRQ_RING is not visible to Doorbell

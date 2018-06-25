@@ -1117,4 +1117,16 @@ struct resp_bt_info_t {
     len: 32;
 };
 
+
+// the state numbers are assigned this way so that assembly code can use 
+// single < or > operation for fast path checks
+#define QP_STATE_RESET  0
+#define QP_STATE_INIT   1
+#define QP_STATE_ERR    2
+#define QP_STATE_RTR    3
+#define QP_STATE_SQ_ERR 4
+#define QP_STATE_SQD    5
+#define QP_STATE_RTS    6
+
+
 #endif //__TYPES_H
