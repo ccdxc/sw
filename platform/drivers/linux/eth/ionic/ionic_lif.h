@@ -19,6 +19,8 @@
 #ifndef _IONIC_LIF_H_
 #define _IONIC_LIF_H_
 
+#include "ionic_rx_filter.h"
+
 struct tx_stats {
 	u64 dma_map_err;
 	u64 pkts;
@@ -68,8 +70,28 @@ struct qcq {
 #define napi_to_qcq(napi)	container_of(napi, struct qcq, napi)
 #define napi_to_cq(napi)	(&napi_to_qcq(napi)->cq)
 
-#define LIF_NAME_MAX_SZ			(32)
+enum deferred_work_type {
+	DW_TYPE_RX_MODE,
+	DW_TYPE_RX_ADDR_ADD,
+	DW_TYPE_RX_ADDR_DEL,
+};
 
+struct deferred_work {
+	struct list_head list;
+	enum deferred_work_type type;
+	union {
+		unsigned int rx_mode;
+		u8 addr[ETH_ALEN];
+	};
+};
+
+struct deferred {
+	spinlock_t lock;
+	struct list_head list;
+	struct work_struct work;
+};
+
+#define LIF_NAME_MAX_SZ		(32)
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
@@ -77,7 +99,6 @@ struct lif {
 	struct ionic *ionic;
 	bool registered;
 	unsigned int index;
-	struct workqueue_struct *adminq_wq;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
 	struct qcq **txqcqs;
@@ -92,6 +113,8 @@ struct lif {
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
 	u8 *rss_ind_tbl;
 	dma_addr_t rss_ind_tbl_pa;
+	struct rx_filters rx_filters;
+	struct deferred deferred;
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
 	void *api_private;

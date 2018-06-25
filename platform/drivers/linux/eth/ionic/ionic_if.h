@@ -945,28 +945,38 @@ enum rx_filter_match_type {
 };
 
 /**
- * struct rx_filter_cmd - Add/delete LIF's Rx filter command
- * @opcode:     opcode = 18 (add), 19 (delete)
+ * struct rx_filter_add_cmd - Add LIF Rx filter command
+ * @opcode:     opcode = 18
  * @match:      Rx filter match type.  (See RX_FILTER_MATCH_xxx)
+ * @vlan:       VLAN ID
+ * @addr:       MAC address (network-byte order)
  * @qid:        Queue ID
  * @qtype:      Queue type
- * @vlan:       VLAN ID
- * @addr:       MAC Address (network-byte order)
  */
-struct rx_filter_cmd {
+struct rx_filter_add_cmd {
 	u16 opcode;
 	u16 match;
-	u32 qid:24;
-	u32 qtype:8;
-	u16 vlan;
-	u8 addr[6];
-	u8 rsvd[2];
-	u16 rsvd2[23];
+	union {
+		struct {
+			u16 vlan;
+			u16 rsvd[29];
+		} vlan;
+		struct {
+			u8 addr[6];
+			u8 rsvd[2];
+			u16 rsvd2[26];
+		} mac;
+		struct {
+			u16 vlan;
+			u8 addr[6];
+			u8 rsvd[2];
+			u16 rsvd3[25];
+		} mac_vlan;
+	};
 };
 
 /**
- * struct rx_filter_comp - Add/delete LIF's Rx filter command
- *                         completion
+ * struct rx_filter_add_comp - Add LIF Rx filter command completion
  * @status:     The status of the command.  Values for status are:
  *                 0 = Successful completion
  * @comp_index: The index in the descriptor ring for which this
@@ -974,7 +984,7 @@ struct rx_filter_cmd {
  * @filter_id:  Filter ID
  * @color:      Color bit.
  */
-struct rx_filter_comp {
+struct rx_filter_add_comp {
 	u32 status:8;
 	u32 rsvd:8;
 	u32 comp_index:16;
@@ -983,6 +993,19 @@ struct rx_filter_comp {
 	u32 rsvd3:31;
 	u32 color:1;
 };
+
+/**
+ * struct rx_filter_del_cmd - Delete LIF Rx filter command
+ * @opcode:     opcode = 19
+ * @filter_id:  Filter ID
+ */
+struct rx_filter_del_cmd {
+	u16 opcode;
+	u32 filter_id;
+	u16 rsvd[29];
+};
+
+typedef struct admin_comp rx_filter_del_comp;
 
 #define STATS_DUMP_VERSION_1		1
 
@@ -1454,7 +1477,8 @@ union adminq_cmd {
 	struct station_mac_addr_get_cmd station_mac_addr_get;
 	struct mtu_set_cmd mtu_set;
 	struct rx_mode_set_cmd rx_mode_set;
-	struct rx_filter_cmd rx_filter;
+	struct rx_filter_add_cmd rx_filter_add;
+	struct rx_filter_del_cmd rx_filter_del;
 	struct stats_dump_cmd stats_dump;
 	struct rss_hash_set_cmd rss_hash_set;
 	struct rss_indir_set_cmd rss_indir_set;
@@ -1475,7 +1499,7 @@ union adminq_comp {
 	struct rxq_init_comp rxq_init;
 	struct features_comp features;
 	struct station_mac_addr_get_comp station_mac_addr_get;
-	struct rx_filter_comp rx_filter;
+	struct rx_filter_add_comp rx_filter_add;
 	struct stats_dump_comp stats_dump;
 	struct debug_q_dump_comp debug_q_dump;
 	struct create_ah_comp create_ah;
