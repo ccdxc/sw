@@ -294,38 +294,49 @@ hal_handle_t fte_base_test::add_nat_mapping(hal_handle_t vrfh, uint32_t v4_addr,
 }
 
 hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
-                                    uint8_t *pkt, size_t pkt_len)
+                                    std::vector<uint8_t *> &pkts, size_t pkt_len)
 {
-    // process the pkt in fte ctx
     struct fn_ctx_t {
         fte::ctx_t *ctx;
         fte::cpu_rxhdr_t *cpu_rxhdr;
-        uint8_t *pkt;
+        std::vector<uint8_t *> &pkts;
         size_t pkt_len;
         hal_ret_t ret;
-    } fn_ctx = { &ctx_, cpu_rxhdr, pkt, pkt_len, HAL_RET_OK };
+    } fn_ctx = { &ctx_, cpu_rxhdr, pkts, pkt_len, HAL_RET_OK };
 
     fte::fte_execute(FTE_ID, [](void *data) {
-            fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
-            fte::ctx_t *ctx = fn_ctx->ctx;
+        fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
+        auto pkt = fn_ctx->pkts[0];
+        fte::ctx_t *ctx = fn_ctx->ctx;
 
-            fte::flow_t iflow[fte::ctx_t::MAX_STAGES], rflow[fte::ctx_t::MAX_STAGES];
-            uint16_t num_features;
-            size_t fstate_size = fte::feature_state_size(&num_features);
-            fte::feature_state_t *feature_state = (fte::feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
+        fte::flow_t iflow[fte::ctx_t::MAX_STAGES], rflow[fte::ctx_t::MAX_STAGES];
+        uint16_t num_features;
+        size_t fstate_size = fte::feature_state_size(&num_features);
+        fte::feature_state_t *feature_state = (fte::feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
 
+        for (uint32_t i=0; i<fn_ctx->pkts.size(); i++) {
             hal::hal_cfg_db_open(hal::CFG_OP_READ);
-            fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, fn_ctx->pkt, fn_ctx->pkt_len,
+            fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, pkt, fn_ctx->pkt_len,
                                     iflow, rflow, feature_state, num_features);
             if (fn_ctx->ret == HAL_RET_OK) {
                 fn_ctx->ret = ctx->process();
             }
-            HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
-
+            HAL_ASSERT(fn_ctx->ret == HAL_RET_OK);
             hal::hal_cfg_db_close();
-        }, &fn_ctx );
+        }
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
+      
+    }, &fn_ctx );
 
-    return fn_ctx.ret;
+    return HAL_RET_OK;
+}
+
+hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
+                                    uint8_t *pkt, size_t pkt_len)
+{
+    std::vector<uint8_t *> pkts = { pkt };
+
+    return inject_pkt(cpu_rxhdr, pkts, pkt_len);
 }
 
 static inline ip_addr_t ep_ip(hal::ep_t *ep) {
@@ -335,11 +346,14 @@ static inline ip_addr_t ep_ip(hal::ep_t *ep) {
 hal_ret_t
 fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
                               hal_handle_t src_ifh, hal_handle_t src_l2segh,
-                              Tins::EthernetII &eth)
+                              std::vector<Tins::EthernetII> &pkts)
 {
     hal::if_t *sif = hal::find_if_by_handle(src_ifh);
     hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(src_l2segh);
     EXPECT_NE(l2seg, nullptr);
+
+    // use first pkt to build cpu header
+    Tins::EthernetII eth = pkts[0];
 
     uint8_t vlan_valid;
     uint16_t vlan_id;
@@ -375,11 +389,29 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
 
     cpu_rxhdr.flags = 0;
 
-    std::vector<uint8_t> buffer = eth.serialize();
+    std::vector<uint8_t *>buffs;
+    size_t buff_size;
 
-    return inject_pkt(&cpu_rxhdr, &buffer[0], buffer.size());
+    std::vector<uint8_t> buffer = pkts[0].serialize();
+    buff_size = buffer.size();
+    for (auto pkt: pkts) {
+        //uint8_t *buffer = (uint8_t *)malloc(buff_size);
+        //vector<uint8_t> raw = pkt.serialize();
+        //memcpy(buffer, &raw[0], buff_size);
+        buffs.push_back(&buffer[0]);
+    }
+
+    return inject_pkt(&cpu_rxhdr, buffs, buff_size);
 }
 
+hal_ret_t
+fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
+                              hal_handle_t src_ifh, hal_handle_t src_l2segh,
+                              Tins::EthernetII &eth)
+{
+    ::vector<Tins::EthernetII> pkts = {eth};
+    return inject_eth_pkt(lifq, src_ifh, src_l2segh, pkts);
+}
 
 
 hal_ret_t

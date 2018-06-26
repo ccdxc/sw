@@ -642,10 +642,10 @@ ctx_t::update_flow_table()
                 return HAL_RET_L2SEG_NOT_FOUND;
             }
 
-		    args.l2seg = dl2seg_;
+	    args.l2seg = dl2seg_;
             pd_func_args.pd_l2seg_get_flow_lkupid = &args;
-		    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
-		    rflow_attrs.vrf_hwid = args.hwid;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
+            rflow_attrs.vrf_hwid = args.hwid;
             // rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(dl2seg_);
         }
         // TODO(goli) fix tnnl w_idx lookup
@@ -654,11 +654,11 @@ ctx_t::update_flow_table()
         } else if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
             rflow_attrs.tnnl_rw_idx = 1;
         } else if (sif_ && sif_->if_type == intf::IF_TYPE_TUNNEL) {
-			t_args.hal_if = sif_;
+            t_args.hal_if = sif_;
             pd_func_args.pd_tunnelif_get_rw_idx = &t_args;
-			ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
                                        &pd_func_args);
-			rflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
+            rflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
         }
 
         session_args.rflow[stage] = &rflow_cfg;

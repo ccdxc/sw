@@ -622,7 +622,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // initialize the logger
     HAL_TRACE_DEBUG("Initializing HAL ...");
-    if (hal_logger_init(hal_cfg) != HAL_RET_OK) {
+    if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
     }
 

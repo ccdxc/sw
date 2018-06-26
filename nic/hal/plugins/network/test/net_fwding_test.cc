@@ -3,10 +3,12 @@
 #include "nic/p4/iris/include/defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/fte.hpp"
+#include <vector>
 
 #include <tins/tins.h>
 
 using namespace fte;
+using namespace std;
 
 class fwding_test : public fte_base_test {
 protected:
@@ -22,6 +24,7 @@ protected:
 
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
+        setenv("DISABLE_LOGGING", "true", 1);
         fte_base_test::SetUpTestCase();
 
         // create topo
@@ -57,6 +60,8 @@ TEST_F (fwding_test, route_lookup)
 {
     hal_ret_t ret;
 
+    return;
+
     // Create TCP session
     Tins::TCP tcp = Tins::TCP(80, 1000);
     tcp.flags(Tins::TCP::SYN);
@@ -84,3 +89,45 @@ TEST_F (fwding_test, route_lookup)
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_sa_rewrite, 1);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mac_da_rewrite, 1);
 }
+
+void timeit(const std::string &msg, int count, std::function<void()> fn)
+{
+    cout << msg << " " << count << " " << std::flush;
+
+    std::clock_t start = clock();
+    fn();
+    int ticks = clock()-start;
+
+    cout << " (" << 1000.0*ticks/CLOCKS_PER_SEC << " ms) ";
+    if (count) {
+        cout << count*CLOCKS_PER_SEC/ticks << "/sec";
+    }
+    cout << "\n";
+}
+
+TEST_F (fwding_test, flow_benchmark)
+{
+    vector<Tins::EthernetII> pkts;
+    const int num_flows = 1000; // thousnads
+
+    for (uint32_t sport = 1; sport <= num_flows; sport++) {
+        for (uint32_t dport = 1; dport <= 1000; dport++) {
+            Tins::TCP tcp = Tins::TCP(dport, sport);
+            tcp.flags(Tins::TCP::SYN);
+
+            Tins::EthernetII eth =
+                Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:02"),
+                                 Tins::HWAddress<6>("aa:bb:0a:00:00:01")) /
+                Tins::Dot1Q(100) /
+                Tins::IP(Tins::IPv4Address(htonl(0x0A000002)), Tins::IPv4Address(htonl(0x0A000001))) /
+                tcp;
+            pkts.push_back(eth);
+        }
+    }
+
+    timeit("inject_pkts", pkts.size(), [&]() {
+            inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh1_, l2segh1_, pkts);
+        });
+
+}
+

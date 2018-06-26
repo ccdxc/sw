@@ -71,11 +71,17 @@ public:
                                         hal_handle_t poolh, uint32_t *mapped_ip);
 
     static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len);
+    static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,std::vector<uint8_t *> &pkts, size_t pkt_len);
+
     static hal_ret_t inject_eth_pkt(const fte::lifqid_t &lifq,
                                     hal_handle_t src_ifh, hal_handle_t src_l2segh,
                                     Tins::EthernetII &eth);
+    static hal_ret_t inject_eth_pkt(const fte::lifqid_t &lifq,
+                                    hal_handle_t src_ifh, hal_handle_t src_l2segh,
+                                    std::vector<Tins::EthernetII> &pkts);
     static hal_ret_t inject_ipv4_pkt(const fte::lifqid_t &lifq,
-                                     hal_handle_t dep, hal_handle_t sep, Tins::PDU &l4pdu);
+                                     hal_handle_t dep, hal_handle_t sep,
+                                     Tins::PDU &l4pdu);
     static void set_logging_disable(bool val) { ipc_logging_disable_ = val; }
  
     static void run_service(hal_handle_t ep_h, std::string cmd);
