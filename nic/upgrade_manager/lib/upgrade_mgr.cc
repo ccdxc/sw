@@ -14,8 +14,10 @@ using namespace std;
 
 void UpgradeMgr::RegNewApp(string name) {
     if (appRegMap_[name] == false) {
-        LogInfo("App not registered. Registering it now.");
+        LogInfo("App not registered. Registering {} now.", name);
         appRegMap_[name] = true;
+    } else {
+        LogInfo("App {} already registered.", name);
     }
 }
 
@@ -80,15 +82,20 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
 
     //check if all responses have come
     vector<delphi::objects::UpgAppRespPtr> upgAppRespList = delphi::objects::UpgAppResp::List(sdk_);
-    for (vector<delphi::objects::UpgAppRespPtr>::iterator appResp=upgAppRespList.begin(); appResp!=upgAppRespList.end(); ++appResp) {
-        if (((*appResp)->upgapprespval() != passType) &&
-            ((*appResp)->upgapprespval() != failType)){
-            LogInfo("Application {} still processing {}", (*appResp)->key(), UpgReqStateTypeToStr(reqType));
-            ret = false;
-        } else if ((*appResp)->upgapprespval() == passType) {
-            LogInfo("Got pass from application {}/{}", (*appResp)->key(), ((*appResp))->meta().ShortDebugString());
-        } else {
-            LogInfo("Got fail from application {}", (*appResp)->key());
+    if (upgAppRespList.size() != appRegMap_.size()) {
+        ret = false;
+        LogInfo("Number of responses from Applications {} is not same as the number of applications {}", upgAppRespList.size(), appRegMap_.size());
+    } else {
+        for (vector<delphi::objects::UpgAppRespPtr>::iterator appResp=upgAppRespList.begin(); appResp!=upgAppRespList.end(); ++appResp) {
+            if (((*appResp)->upgapprespval() != passType) &&
+                ((*appResp)->upgapprespval() != failType)){
+                LogInfo("Application {} still processing {}", (*appResp)->key(), UpgReqStateTypeToStr(reqType));
+                ret = false;
+            } else if ((*appResp)->upgapprespval() == passType) {
+                LogInfo("Got pass from application {}/{}", (*appResp)->key(), ((*appResp))->meta().ShortDebugString());
+            } else {
+                LogInfo("Got fail from application {}", (*appResp)->key());
+            }
         }
     }
     if (ret) {

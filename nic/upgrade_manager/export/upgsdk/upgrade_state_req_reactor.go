@@ -111,6 +111,7 @@ func upgStateReqInit(client gosdk.Client, hdlrs UpgAppHandlers, name string) {
 }
 
 func (ctx *upgstatereqctx) OnMountComplete() {
+	registerUpgApp(ctx.sdkClient, ctx.appName)
 	log.Infof("OnMountComplete got called to restore UpgStateReq")
 	upgstatereq := upgrade.GetUpgStateReq(ctx.sdkClient, 10)
 	if upgstatereq == nil {
