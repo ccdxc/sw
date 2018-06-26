@@ -677,6 +677,7 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	struct lif *lif = netdev_priv(netdev);
 	struct queue *q = lif_to_txq(lif, queue_index);
 	struct tx_stats *stats = q_to_tx_stats(q);
+	unsigned int len = skb->len;
 	int ndescs;
 	int err;
 
@@ -705,7 +706,7 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 		goto err_out_drop;
 
 	stats->pkts++;
-	stats->bytes += skb->len;
+	stats->bytes += len;
 
 	return NETDEV_TX_OK;
 
