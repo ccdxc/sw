@@ -22,7 +22,10 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/netprotoNatBindingList"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/netprotoNatBinding"
+              }
             }
           }
         },
@@ -52,7 +55,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoNatBindingSpec"
+              "$ref": "#/definitions/netprotoNatBinding"
             }
           }
         ],
@@ -84,37 +87,15 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoNatBindingSpec"
-            }
-          }
-        ],
-        "tags": [
-          "NatBinding"
-        ]
-      },
-      "put": {
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/netprotoNatBindingSpec"
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "meta": {
+                  "$ref": "#/definitions/apiObjectMeta"
+                }
+              }
             }
           }
         ],
@@ -130,7 +111,10 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/netprotoNatPolicyList"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/netprotoNatPolicy"
+              }
             }
           }
         },
@@ -160,7 +144,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoNatPolicySpec"
+              "$ref": "#/definitions/netprotoNatPolicy"
             }
           }
         ],
@@ -192,37 +176,15 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoNatPolicySpec"
-            }
-          }
-        ],
-        "tags": [
-          "NatPolicy"
-        ]
-      },
-      "put": {
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/netprotoNatPolicySpec"
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "meta": {
+                  "$ref": "#/definitions/apiObjectMeta"
+                }
+              }
             }
           }
         ],
@@ -238,7 +200,10 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/netprotoNatPoolList"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/netprotoNatPool"
+              }
             }
           }
         },
@@ -268,7 +233,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoNatPoolSpec"
+              "$ref": "#/definitions/netprotoNatPool"
             }
           }
         ],
@@ -300,37 +265,15 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoNatPoolSpec"
-            }
-          }
-        ],
-        "tags": [
-          "NatPool"
-        ]
-      },
-      "put": {
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/netprotoNatPoolSpec"
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "meta": {
+                  "$ref": "#/definitions/apiObjectMeta"
+                }
+              }
             }
           }
         ],

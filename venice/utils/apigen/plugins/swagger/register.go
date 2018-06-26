@@ -81,7 +81,7 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 							Required: true,
 							Schema: &genswagger.SwaggerSchemaObject{
 								SchemaCore: genswagger.SchemaCore{
-									Ref: fmt.Sprintf("#/definitions/netproto%sSpec", n.Object),
+									Ref: fmt.Sprintf("#/definitions/netproto%s", n.Object),
 								},
 							},
 						},
@@ -100,10 +100,14 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 							},
 						},
 					}
+
 					listResp["200"] = genswagger.SwaggerResponseObject{
 						Schema: genswagger.SwaggerSchemaObject{
 							SchemaCore: genswagger.SchemaCore{
-								Ref: fmt.Sprintf("#/definitions/netproto%sList", n.Object),
+								Type: "array",
+								Items: &genswagger.SwaggerItemsObject{
+									Ref: fmt.Sprintf("#/definitions/netproto%s", n.Object),
+								},
 							},
 						},
 					}
@@ -126,17 +130,46 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 
 				if m == "put" || m == "delete" {
 					resp := make(genswagger.SwaggerResponsesObject)
-					//Resp := make(genswagger.SwaggerResponsesObject)
-					params := []genswagger.SwaggerParameterObject{
+					//var schema *genswagger.SwaggerSchemaObject
+					putSchema := &genswagger.SwaggerSchemaObject{
+						SchemaCore: genswagger.SchemaCore{
+							Ref: fmt.Sprintf("#/definitions/netproto%sSpec", n.Object),
+						},
+					}
+					deleteSchema := &genswagger.SwaggerSchemaObject{
+						SchemaCore: genswagger.SchemaCore{
+							Type: "object",
+						},
+						Properties: genswagger.SwaggerSchemaObjectProperties{
+							{
+								Key: "kind",
+								Value: genswagger.SchemaCore{
+									Type: "string",
+								},
+							},
+							{
+								Key: "meta",
+								Value: genswagger.SchemaCore{
+									Ref: "#/definitions/apiObjectMeta",
+								},
+							},
+						},
+					}
+					putParams := []genswagger.SwaggerParameterObject{
 						{
 							Name:     "body",
 							In:       "body",
 							Required: true,
-							Schema: &genswagger.SwaggerSchemaObject{
-								SchemaCore: genswagger.SchemaCore{
-									Ref: fmt.Sprintf("#/definitions/netproto%sSpec", n.Object),
-								},
-							},
+							Schema:   putSchema,
+						},
+					}
+					glog.V(1).Infof("Put Parameters: ", putParams)
+					deleteParams := []genswagger.SwaggerParameterObject{
+						{
+							Name:     "body",
+							In:       "body",
+							Required: true,
+							Schema:   deleteSchema,
 						},
 					}
 					resp["200"] = genswagger.SwaggerResponseObject{
@@ -154,14 +187,15 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 						},
 					}
 					p := genswagger.SwaggerPathItemObject{
-						Put: &genswagger.SwaggerOperationObject{
-							Tags:       []string{n.Object},
-							Parameters: params,
-							Responses:  resp,
-						},
+						// ToDo enable PUT when updates are supported
+						//Put: &genswagger.SwaggerOperationObject{
+						//	Tags:       []string{n.Object},
+						//	Parameters: putParams,
+						//	Responses:  resp,
+						//},
 						Delete: &genswagger.SwaggerOperationObject{
 							Tags:       []string{n.Object},
-							Parameters: params,
+							Parameters: deleteParams,
 							Responses:  resp,
 						},
 					}

@@ -22,7 +22,10 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/netprotoRouteList"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/netprotoRoute"
+              }
             }
           }
         },
@@ -52,7 +55,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoRouteSpec"
+              "$ref": "#/definitions/netprotoRoute"
             }
           }
         ],
@@ -84,37 +87,15 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoRouteSpec"
-            }
-          }
-        ],
-        "tags": [
-          "Route"
-        ]
-      },
-      "put": {
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/netprotoRouteSpec"
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "meta": {
+                  "$ref": "#/definitions/apiObjectMeta"
+                }
+              }
             }
           }
         ],
