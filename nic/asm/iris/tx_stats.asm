@@ -23,24 +23,27 @@ tx_stats:
   .brcase 0
   add         r7, d.tx_stats_d.tx_ucast_pkts, 1
   bgti        r7, 0xF, tx_ucast_overflow
-  tblwr.e     d.tx_stats_d.tx_ucast_pkts, r7[3:0]
-  tbladd.f    d.tx_stats_d.tx_ucast_bytes, \
+  tblwr       d.tx_stats_d.tx_ucast_pkts, r7[3:0]
+  tbladd.e    d.tx_stats_d.tx_ucast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  nop
   .brcase 1
   add         r7, d.tx_stats_d.tx_mcast_pkts, 1
   bgti        r7, 0xF, tx_mcast_overflow
-  tblwr.e     d.tx_stats_d.tx_mcast_pkts, r7[3:0]
-  tbladd.f    d.tx_stats_d.tx_mcast_bytes, \
+  tblwr       d.tx_stats_d.tx_mcast_pkts, r7[3:0]
+  tbladd.e    d.tx_stats_d.tx_mcast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  nop
   .brcase 2
   add         r7, d.tx_stats_d.tx_bcast_pkts, 1
   bgti        r7, 0xF, tx_bcast_overflow
-  tblwr.e     d.tx_stats_d.tx_bcast_pkts, r7[3:0]
-  tbladd.f    d.tx_stats_d.tx_bcast_bytes, \
+  tblwr       d.tx_stats_d.tx_bcast_pkts, r7[3:0]
+  tbladd.e    d.tx_stats_d.tx_bcast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  nop
   .brcase 3
   nop.e
   nop
@@ -49,8 +52,9 @@ tx_stats:
 tx_egress_drops:
   add         r6, d.tx_stats_d.tx_egress_drops, 1
   bgti        r6, 0xF, tx_egress_drops_overflow
-  add.e       r4, r0, k.control_metadata_src_lif, 6
-  tblwr.f     d.tx_stats_d.tx_egress_drops, r6
+  add         r4, r0, k.control_metadata_src_lif, 6
+  tblwr.e     d.tx_stats_d.tx_egress_drops, r6
+  nop
 
 tx_ucast_overflow:
   add         r7, d.tx_stats_d.tx_ucast_bytes, \

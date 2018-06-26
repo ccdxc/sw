@@ -112,7 +112,7 @@ p4plus_app_classic_nic_tunneled_ipv4_udp:
   or          r7, r7, r6, 2
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   bcf         [!c1], p4plus_app_classic_nic_ipv4
-  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
+  phvwr.c1.e  p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}
   phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_UDP
 
