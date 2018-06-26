@@ -20,7 +20,8 @@ required = ["github.com/GeertJohan/go.rice",
             "golang.org/x/tools/cmd/goimports",
             "github.com/haya14busa/gopkgs/cmd/gopkgs",
             "github.com/cpuguy83/go-md2man",
-            "github.com/russross/blackfriday",]
+            "github.com/russross/blackfriday",
+            "layeh.com/radius/cmd/radius-dict-gen",]
 
 [[constraint]]
   branch = "master"
@@ -285,3 +286,7 @@ required = ["github.com/GeertJohan/go.rice",
 [[constraint]]
   name = "github.com/pkg/sftp"
   version = "1.7.0"
+
+[[constraint]]
+  branch = "master"
+  name = "layeh.com/radius"

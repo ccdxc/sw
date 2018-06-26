@@ -158,10 +158,12 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		"auth.Authenticators":             apisrvpkg.NewMessage("auth.Authenticators"),
 		"auth.Ldap":                       apisrvpkg.NewMessage("auth.Ldap"),
 		"auth.LdapAttributeMapping":       apisrvpkg.NewMessage("auth.LdapAttributeMapping"),
+		"auth.LdapServer":                 apisrvpkg.NewMessage("auth.LdapServer"),
 		"auth.Local":                      apisrvpkg.NewMessage("auth.Local"),
 		"auth.PasswordCredential":         apisrvpkg.NewMessage("auth.PasswordCredential"),
 		"auth.Permission":                 apisrvpkg.NewMessage("auth.Permission"),
 		"auth.Radius":                     apisrvpkg.NewMessage("auth.Radius"),
+		"auth.RadiusServer":               apisrvpkg.NewMessage("auth.RadiusServer"),
 		"auth.Role": apisrvpkg.NewMessage("auth.Role").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := auth.Role{}

@@ -9,6 +9,8 @@ import (
 var (
 	// ErrInvalidCredentialType error is returned when an incorrect credential type is passed to an authenticator
 	ErrInvalidCredentialType = errors.New("incorrect credential type")
+	// ErrNoGroupMembership error is returned when user does not belong to any group
+	ErrNoGroupMembership = errors.New("user is not a member of any group")
 )
 
 // Credential is a marker interface representing credential of a user.

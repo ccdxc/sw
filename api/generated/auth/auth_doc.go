@@ -13,10 +13,12 @@ The following Messages are defined.
   Authenticators
   Ldap
   LdapAttributeMapping
+  LdapServer
   Local
   PasswordCredential
   Permission
   Radius
+  RadiusServer
   Role
   RoleBinding
   RoleBindingSpec

@@ -150,7 +150,11 @@ func TestMain(m *testing.M) {
 	}
 	tinfo.apigwport = port
 
+	setupLdap()
+
 	rcode := m.Run()
+
+	shutdownLdap()
 
 	os.Exit(rcode)
 }

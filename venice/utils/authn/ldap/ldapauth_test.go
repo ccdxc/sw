@@ -1,15 +1,22 @@
 package ldap
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"reflect"
+	"sort"
 	"testing"
+
+	"gopkg.in/ldap.v2"
+
 	"time"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -20,38 +27,36 @@ import (
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
+// testcase drives the mock ldap connection
+type testcase string
+
 const (
-	apisrvURL    = "localhost:0"
-	ldapURL      = "192.168.99.100:389"
-	serverName   = "0a7af420ff67"
-	trustedCerts = `-----BEGIN CERTIFICATE-----
-MIIC/TCCAoOgAwIBAgIUF58P7j/wJUrJXKM1LVlrWRaAc8wwCgYIKoZIzj0EAwMw
-gZYxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxBMUEgQ2FyIFdhc2gxJDAiBgNVBAsT
-G0luZm9ybWF0aW9uIFRlY2hub2xvZ3kgRGVwLjEUMBIGA1UEBxMLQWxidXF1ZXJx
-dWUxEzARBgNVBAgTCk5ldyBNZXhpY28xHzAdBgNVBAMTFmRvY2tlci1saWdodC1i
-YXNlaW1hZ2UwHhcNMTcxMjEzMjIyNDAwWhcNMTgxMjEzMjIyNDAwWjCBjDELMAkG
-A1UEBhMCVVMxEzARBgNVBAgTCk5ldyBNZXhpY28xFDASBgNVBAcTC0FsYnVxdWVy
-cXVlMRUwEwYDVQQKEwxBMUEgQ2FyIFdhc2gxJDAiBgNVBAsTG0luZm9ybWF0aW9u
-IFRlY2hub2xvZ3kgRGVwLjEVMBMGA1UEAxMMMGE3YWY0MjBmZjY3MHYwEAYHKoZI
-zj0CAQYFK4EEACIDYgAE0kmi9mFmxknKd5nDSTG/aIzTvJ3Uza7kNJzNP8+F9Fsb
-F9A2N0uDcGuEYZfDwfwHcoUIw/+1kNy+endSrAipOYSEZN91bOdGAOzZE+JsrLhW
-yS3MrFIUviI1qevigvJwo4GZMIGWMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAU
-BggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUOJFK
-TNnQJCm5qhClodH6dCz3zkswHwYDVR0jBBgwFoAUT6XpeiVcMBicYtOXhbpQsoeu
-bvgwFwYDVR0RBBAwDoIMMGE3YWY0MjBmZjY3MAoGCCqGSM49BAMDA2gAMGUCMQCC
-wNQ0bAkWU27WgzOhn0m7wh87W2U9NX0xJLGNDFsjwfn26uagp46V4h2UKVICe98C
-MFB3stnk7Lfr/w/14951n5lek97eDTodYfiF4UxeqL386krQ6eduscPIrin1114r
-0w==
------END CERTIFICATE-----`
-	baseDN                    = "DC=pensando,DC=io"
-	bindDN                    = "CN=admin,DC=pensando,DC=io"
-	bindPassword              = "pensando"
-	testUser                  = "test"
-	testPassword              = "pensando"
-	userAttribute             = "cn"
-	userObjectClassAttribute  = "organizationalPerson"
-	groupAttribute            = "ou"
-	groupObjectClassAttribute = "groupOfNames"
+	successfulAuth          testcase = "successful authentication"
+	incorrectReferralFormat testcase = "incorrect referral format"
+	incorrectBindDN         testcase = "incorrect bind DN"
+	failedSearch            testcase = "failed search"
+	incorrectUserPassword   testcase = "incorrect user password"
+	nonExistentUser         testcase = "non existent user"
+	noGroupMembership       testcase = "user is not a member of any group"
+	connectionError         testcase = "connection failure"
+	groupReferral           testcase = "group referral"
+	loopReferral            testcase = "loop in referral"
+	groupHierarchy          testcase = "group hierarchy"
+	userReferral            testcase = "user referral"
+)
+
+const (
+	apisrvURL            = "localhost:0"
+	ldapURL              = "localhost:389"
+	testUser             = "test"
+	testPassword         = "pensando"
+	testUserDN           = "CN=" + testUser + "," + BaseDN
+	networkAdminGroupDN  = "CN=NetworkAdmin," + BaseDN
+	securityAdminGroupDN = "CN=SecurityAdmin," + BaseDN
+	referralAddr         = "localhost:3089"
+	groupReferralURL     = "ldap://" + referralAddr + "/" + networkAdminGroupDN + "??base"
+	loopReferralURL      = "ldap://" + ldapURL + "/" + networkAdminGroupDN + "??base"
+	userReferralURL      = "ldap://" + referralAddr + "/" + BaseDN + "??sub"
 )
 
 var apicl apiclient.Services
@@ -59,15 +64,10 @@ var apiSrv apiserver.Server
 var apiSrvAddr string
 
 func TestMain(m *testing.M) {
-	// run LDAP tests only if RUN_LDAP_TESTS env variable is set to true
-	if os.Getenv("RUN_LDAP_TESTS") == "true" {
-		setup()
-		code := m.Run()
-		shutdown()
-
-		os.Exit(code)
-	}
-
+	setup()
+	code := m.Run()
+	shutdown()
+	os.Exit(code)
 }
 
 func setup() {
@@ -118,67 +118,6 @@ func createAPIServer(url string) apiserver.Server {
 	return apiSrv
 }
 
-// authenticationPoliciesData returns ldap configs to test TLS and non TLS connections
-func authenticationPoliciesData() map[string]*auth.Ldap {
-	ldapdata := make(map[string]*auth.Ldap)
-	ldapdata["TLS Enabled"] = &auth.Ldap{
-		Enabled: true,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS:                   true,
-			SkipServerCertVerification: false,
-			ServerName:                 serverName,
-			TrustedCerts:               trustedCerts,
-		},
-		BaseDN:       baseDN,
-		BindDN:       bindDN,
-		BindPassword: bindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             userAttribute,
-			UserObjectClass:  userObjectClassAttribute,
-			Group:            groupAttribute,
-			GroupObjectClass: groupObjectClassAttribute,
-		},
-	}
-	ldapdata["TLS Skip Server Verification"] = &auth.Ldap{
-		Enabled: true,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS:                   true,
-			SkipServerCertVerification: true,
-			ServerName:                 serverName,
-			TrustedCerts:               trustedCerts,
-		},
-		BaseDN:       baseDN,
-		BindDN:       bindDN,
-		BindPassword: bindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             userAttribute,
-			UserObjectClass:  userObjectClassAttribute,
-			Group:            groupAttribute,
-			GroupObjectClass: groupObjectClassAttribute,
-		},
-	}
-	ldapdata["Without TLS"] = &auth.Ldap{
-		Enabled: true,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS: false,
-		},
-		BaseDN:       baseDN,
-		BindDN:       bindDN,
-		BindPassword: bindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             userAttribute,
-			UserObjectClass:  userObjectClassAttribute,
-			Group:            groupAttribute,
-			GroupObjectClass: groupObjectClassAttribute,
-		},
-	}
-
-	return ldapdata
-}
-
 // createDefaultAuthenticationPolicy creates an authentication policy with LDAP with TLS enabled
 func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 	return MustCreateAuthenticationPolicy(apicl,
@@ -186,235 +125,432 @@ func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 			Enabled: true,
 		}, &auth.Ldap{
 			Enabled: true,
-			Url:     ldapURL,
-			TLSOptions: &auth.TLSOptions{
-				StartTLS:                   true,
-				SkipServerCertVerification: false,
-				ServerName:                 serverName,
-				TrustedCerts:               trustedCerts,
+			Servers: []*auth.LdapServer{
+				{
+					Url: ldapURL,
+					TLSOptions: &auth.TLSOptions{
+						StartTLS:                   true,
+						SkipServerCertVerification: false,
+						ServerName:                 ServerName,
+						TrustedCerts:               TrustedCerts,
+					},
+				},
 			},
-			BaseDN:       baseDN,
-			BindDN:       bindDN,
-			BindPassword: bindPassword,
+
+			BaseDN:       BaseDN,
+			BindDN:       BindDN,
+			BindPassword: BindPassword,
 			AttributeMapping: &auth.LdapAttributeMapping{
-				User:             userAttribute,
-				UserObjectClass:  userObjectClassAttribute,
-				Group:            groupAttribute,
-				GroupObjectClass: groupObjectClassAttribute,
+				User:             UserAttribute,
+				UserObjectClass:  UserObjectClassAttribute,
+				Group:            GroupAttribute,
+				GroupObjectClass: GroupObjectClassAttribute,
 			},
 		})
 }
 
-func TestAuthenticate(t *testing.T) {
-	for testtype, ldapconf := range authenticationPoliciesData() {
-		_, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
-		if err != nil {
-			t.Errorf("err %s in CreateAuthenticationPolicy", err)
-			return
+func getMockConnectionGetter(tc testcase) connectionGetter {
+	switch tc {
+	case connectionError:
+		return func(string, *auth.TLSOptions) (connection, error) {
+			return nil, errors.New("ldap connection error")
 		}
-		// create password authenticator
-		authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, ldapconf)
-
-		// authenticate
-		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-		DeleteAuthenticationPolicy(apicl)
-
-		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
-		Assert(t, autheduser.Name == testUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))
-		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", testtype))
-		AssertOk(t, err, fmt.Sprintf("[%v] Error authenticating user", testtype))
 	}
-
+	return func(addr string, options *auth.TLSOptions) (connection, error) {
+		return newMockConnection(tc, addr), nil
+	}
 }
 
-func TestIncorrectPasswordAuthentication(t *testing.T) {
+type mockConnection struct {
+	tc   testcase
+	addr string
+}
+
+func (m *mockConnection) Bind(username, password string) error {
+	switch m.tc {
+	case incorrectBindDN:
+		return errors.New("incorrect bind DN")
+	case incorrectUserPassword:
+		if username != BindDN {
+			return errors.New("incorrect user password")
+		}
+	}
+	return nil
+}
+
+func (m *mockConnection) Search(sr *ldap.SearchRequest) (*ldap.SearchResult, error) {
+	switch m.tc {
+	case failedSearch:
+		return nil, errors.New("search failed")
+	case nonExistentUser:
+		return &ldap.SearchResult{}, nil
+	case noGroupMembership:
+		return &ldap.SearchResult{
+			Entries: []*ldap.Entry{
+				{
+					DN: sr.BaseDN,
+				},
+			},
+		}, nil
+	case groupReferral:
+		switch sr.BaseDN {
+		// if group search
+		case networkAdminGroupDN:
+			// if addr is referred LDAP for group info then return group entry
+			if m.addr == referralAddr {
+				return &ldap.SearchResult{
+					Entries: []*ldap.Entry{
+						{
+							DN: sr.BaseDN,
+						},
+					},
+				}, nil
+			}
+			// else return a referral for group entry
+			return &ldap.SearchResult{
+				Entries:   []*ldap.Entry{},
+				Referrals: []string{groupReferralURL},
+			}, nil
+			// if user search
+		default:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN: testUserDN,
+						Attributes: []*ldap.EntryAttribute{
+							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+						},
+					},
+				},
+			}, nil
+		}
+	case loopReferral:
+		switch sr.BaseDN {
+		// if group search
+		case networkAdminGroupDN:
+			// if addr is referred LDAP for group info then loop to original LDAP
+			if m.addr == referralAddr {
+				return &ldap.SearchResult{
+					Entries:   []*ldap.Entry{},
+					Referrals: []string{loopReferralURL},
+				}, nil
+			}
+			// else return a referral for group entry
+			return &ldap.SearchResult{
+				Entries:   []*ldap.Entry{},
+				Referrals: []string{groupReferralURL},
+			}, nil
+			// if user search
+		default:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN: testUserDN,
+						Attributes: []*ldap.EntryAttribute{
+							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+						},
+					},
+				},
+			}, nil
+		}
+	case successfulAuth:
+		switch sr.BaseDN {
+		// if group search
+		case networkAdminGroupDN:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN: sr.BaseDN,
+					},
+				},
+			}, nil
+			// if user search
+		case BaseDN:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN: testUserDN,
+						Attributes: []*ldap.EntryAttribute{
+							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+						},
+					},
+				},
+			}, nil
+		}
+	case groupHierarchy:
+		switch sr.BaseDN {
+		// if NetworkAdmin group search
+		case networkAdminGroupDN:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN: sr.BaseDN,
+						Attributes: []*ldap.EntryAttribute{
+							ldap.NewEntryAttribute(GroupAttribute, []string{securityAdminGroupDN}),
+						},
+					},
+				},
+			}, nil
+			// if SecurityAdmin group search
+		case securityAdminGroupDN:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN:         sr.BaseDN,
+						Attributes: []*ldap.EntryAttribute{},
+					},
+				},
+			}, nil
+			// if user search
+		case BaseDN:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN: testUserDN,
+						Attributes: []*ldap.EntryAttribute{
+							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+						},
+					},
+				},
+			}, nil
+		}
+	case userReferral:
+		switch sr.BaseDN {
+		// if group search
+		case BaseDN:
+			// if addr is referred LDAP for user info then return user entry
+			if m.addr == referralAddr {
+				return &ldap.SearchResult{
+					Entries: []*ldap.Entry{
+						{
+							DN: testUserDN,
+							Attributes: []*ldap.EntryAttribute{
+								ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+							},
+						},
+					},
+				}, nil
+			}
+			// else return a referral for user entry
+			return &ldap.SearchResult{
+				Entries:   []*ldap.Entry{},
+				Referrals: []string{userReferralURL},
+			}, nil
+			// if user search
+		case networkAdminGroupDN:
+			return &ldap.SearchResult{
+				Entries: []*ldap.Entry{
+					{
+						DN: networkAdminGroupDN,
+					},
+				},
+			}, nil
+		}
+	}
+	return &ldap.SearchResult{}, nil
+}
+
+func (m *mockConnection) Close() {}
+
+func newMockConnection(tc testcase, addr string) *mockConnection {
+	return &mockConnection{
+		tc:   tc,
+		addr: addr,
+	}
+}
+
+func TestBind(t *testing.T) {
+	tests := []struct {
+		name     testcase
+		url      string
+		username string
+		password string
+		entry    *ldap.Entry
+		groups   []string
+		err      error
+	}{
+		{
+			name:     incorrectReferralFormat,
+			url:      "incorrect referral",
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleUserEntries,
+		},
+		{
+			name:     incorrectReferralFormat,
+			url:      "", // to test no host name in url
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleUserEntries,
+		},
+		{
+			name:     incorrectBindDN,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleUserEntries,
+		},
+		{
+			name:     incorrectUserPassword,
+			url:      ldapURL,
+			username: testUser,
+			password: "wrongPassword",
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleUserEntries,
+		},
+		{
+			name:     nonExistentUser,
+			url:      ldapURL,
+			username: "non existent",
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleUserEntries,
+		},
+		{
+			name:     noGroupMembership,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      authn.ErrNoGroupMembership,
+		},
+		{
+			name:     connectionError,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoServerAvailable,
+		},
+		{
+			name:     failedSearch,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleUserEntries,
+		},
+		{
+			name:     groupReferral,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry: &ldap.Entry{
+				DN: testUserDN,
+				Attributes: []*ldap.EntryAttribute{
+					ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+				},
+			},
+			groups: []string{networkAdminGroupDN},
+			err:    nil,
+		},
+		{
+			name:     loopReferral,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleGroupEntries,
+		},
+		{
+			name:     groupHierarchy,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry: &ldap.Entry{
+				DN: testUserDN,
+				Attributes: []*ldap.EntryAttribute{
+					ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+				},
+			},
+			groups: []string{networkAdminGroupDN, securityAdminGroupDN},
+			err:    nil,
+		},
+		{
+			name:     userReferral,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry: &ldap.Entry{
+				DN: testUserDN,
+				Attributes: []*ldap.EntryAttribute{
+					ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+				},
+			},
+			groups: []string{networkAdminGroupDN},
+			err:    nil,
+		},
+	}
+
+	ldapConf := &auth.Ldap{
+		Enabled: true,
+		Servers: []*auth.LdapServer{
+			{
+				Url: ldapURL,
+				TLSOptions: &auth.TLSOptions{
+					StartTLS:                   true,
+					SkipServerCertVerification: false,
+					ServerName:                 ServerName,
+					TrustedCerts:               TrustedCerts,
+				},
+			},
+		},
+		BaseDN:       BaseDN,
+		BindDN:       BindDN,
+		BindPassword: BindPassword,
+		AttributeMapping: &auth.LdapAttributeMapping{
+			User:             UserAttribute,
+			UserObjectClass:  UserObjectClassAttribute,
+			Group:            GroupAttribute,
+			GroupObjectClass: GroupObjectClassAttribute,
+		},
+	}
+	for _, test := range tests {
+		ldapConf.Servers[0].Url = test.url
+		authenticator := &authenticator{
+			name:            "ldap_test",
+			apiServer:       apiSrvAddr,
+			resolver:        nil,
+			ldapConfig:      ldapConf,
+			getConnectionFn: getMockConnectionGetter(test.name),
+		}
+		entry, groups, err := authenticator.bind(test.username, test.password)
+		Assert(t, test.err == err, fmt.Sprintf("[%v] test failed, err: %v", test.name, err))
+		Assert(t, reflect.DeepEqual(test.entry, entry), fmt.Sprintf("[%v] test failed, expected entry [%v], got [%v]", test.name, test.entry, entry))
+		// sort groups
+		sort.Strings(test.groups)
+		sort.Strings(groups)
+		Assert(t, reflect.DeepEqual(test.groups, groups), fmt.Sprintf("[%v] test failed,, expected groups [%v], got [%v]", test.name, test.groups, groups))
+	}
+}
+
+func TestAuthenticate(t *testing.T) {
 	policy := createDefaultAuthenticationPolicy()
 	defer DeleteAuthenticationPolicy(apicl)
-
-	// create ldap authenticator
-	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: "wrongpassword"})
-
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned while authenticating with wrong password")
-	Assert(t, err != nil, "No error returned while authenticating with wrong password")
-}
-
-func TestIncorrectUserAuthentication(t *testing.T) {
-	policy := createDefaultAuthenticationPolicy()
-	defer DeleteAuthenticationPolicy(apicl)
-
-	// create ldap authenticator
-	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: "test1", Password: "password"})
-
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
-	Assert(t, err != nil, "No error returned while authenticating with incorrect username")
-	Assert(t, err == ErrNoneOrMultipleUserEntries, "Incorrect error type returned")
-
-}
-
-func TestMissingLdapAttributeMapping(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS: true,
-		},
-		BaseDN:       baseDN,
-		BindDN:       bindDN,
-		BindPassword: bindPassword,
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
+	authenticator := &authenticator{
+		name:            "ldap_test",
+		apiServer:       apiSrvAddr,
+		resolver:        nil,
+		ldapConfig:      policy.Spec.Authenticators.Ldap,
+		getConnectionFn: getMockConnectionGetter(successfulAuth),
 	}
-	defer DeleteAuthenticationPolicy(apicl)
-
-	// create ldap authenticator
-	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Missing LDAP Attribute Mapping")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Missing LDAP Attribute Mapping")
-}
-
-func TestIncorrectLdapAttributeMapping(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS: true,
-		},
-		BaseDN:       baseDN,
-		BindDN:       bindDN,
-		BindPassword: bindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             "cn",
-			UserObjectClass:  "organization",
-			Group:            "ou",
-			GroupObjectClass: "groupOfNames",
-		},
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(apicl)
-
-	// create ldap authenticator
-	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
-}
-
-func TestIncorrectBaseDN(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS: false,
-		},
-		BaseDN:       "DC=pensandoo,DC=io",
-		BindDN:       bindDN,
-		BindPassword: bindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             userAttribute,
-			UserObjectClass:  userObjectClassAttribute,
-			Group:            groupAttribute,
-			GroupObjectClass: groupObjectClassAttribute,
-		},
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(apicl)
-
-	// create ldap authenticator
-	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Base DN")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Base DN")
-}
-
-func TestIncorrectBindPassword(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS: false,
-		},
-		BaseDN:       baseDN,
-		BindDN:       bindDN,
-		BindPassword: "wrongbindpassword",
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             userAttribute,
-			UserObjectClass:  userObjectClassAttribute,
-			Group:            groupAttribute,
-			GroupObjectClass: groupObjectClassAttribute,
-		},
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(apicl)
-
-	// create ldap authenticator
-	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Bind Password")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Bind Password")
-}
-
-func TestDisabledLdapAuthenticator(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: false,
-		Url:     ldapURL,
-		TLSOptions: &auth.TLSOptions{
-			StartTLS: false,
-		},
-		BaseDN:       baseDN,
-		BindDN:       bindDN,
-		BindPassword: bindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             userAttribute,
-			UserObjectClass:  userObjectClassAttribute,
-			Group:            groupAttribute,
-			GroupObjectClass: groupObjectClassAttribute,
-		},
-	})
-
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(apicl)
-
-	// create ldap authenticator
-	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with disabled LDAP authenticator")
-	AssertOk(t, err, "Error returned with disabled LDAP authenticator")
+	Assert(t, ok, "Unsuccessful ldap user authentication")
+	Assert(t, autheduser.Name == testUser, "User returned by ldap authenticator didn't match user being authenticated")
+	Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), "User created is not of type EXTERNAL")
+	Assert(t, autheduser.Status.GetUserGroups()[0] == networkAdminGroupDN,
+		fmt.Sprintf("Incorrect user group returned, expected [%s], got [%s]", networkAdminGroupDN, autheduser.Status.GetUserGroups()[0]))
+	AssertOk(t, err, "Error authenticating user")
 }

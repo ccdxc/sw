@@ -1111,7 +1111,10 @@
 
 [[projects]]
   name = "github.com/spf13/cobra"
-  packages = ["."]
+  packages = [
+    ".",
+    "doc"
+  ]
   revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
   version = "v0.0.1"
 
@@ -1667,9 +1670,21 @@
   revision = "d1303b003001cf2b5b8cec099383125096b3dac0"
   version = "v1.7.14"
 
+[[projects]]
+  branch = "master"
+  name = "layeh.com/radius"
+  packages = [
+    ".",
+    "cmd/radius-dict-gen",
+    "dictionary",
+    "dictionarygen",
+    "rfc2865"
+  ]
+  revision = "505941eec7a1478cee7528d056963577ca4e9cc3"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "544f50bce024efc4b9dbe80bc3f31b649156b0aa4a4b43e5dd5c2ffe9483ae70"
+  inputs-digest = "e98b69f0f950a8635c777ade8ceb1c10bcf4f62b15a29785112b440e4522df69"
   solver-name = "gps-cdcl"
   solver-version = 1

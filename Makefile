@@ -20,7 +20,8 @@ venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi \
 venice/ctrler/evtsmgr/rpcserver/evtsmgrproto \
 venice/evtsproxy/rpcserver/evtsproxyproto \
-nic/agent/nmd/protos nic/agent/netagent/protos
+nic/agent/nmd/protos nic/agent/netagent/protos \
+venice/utils/authn/radius
 
 # Lists all the vendored packages that need to be installed prior to the build.
 TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway \
@@ -36,6 +37,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/github.com/golang/dep/cmd/dep \
 							./asset-build/... \
 							./nic/delphi/compiler/... \
+							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm evtsproxy

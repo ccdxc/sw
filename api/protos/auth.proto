@@ -65,22 +65,27 @@ message Authenticators {
         RADIUS = 2;
     }
 
-    Ldap Ldap                          = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ldap,omitempty"];
-    Local Local                        = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "local,omitempty"];
-    Radius Radius                      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "radius,omitempty"];
-
     //Order in which authenticators are applied. If an authenticator returns success, others are skipped
-    repeated string AuthenticatorOrder = 9 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticator-order,omitempty"];
+    repeated string AuthenticatorOrder = 1 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticator-order,omitempty"];
+    Ldap Ldap                          = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ldap,omitempty"];
+    Local Local                        = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "local,omitempty"];
+    Radius Radius                      = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "radius,omitempty"];
 }
 
 message Ldap {
     bool Enabled                          = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
-    string Url                            = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "url,omitempty"];
-    TLSOptions TLSOptions                 = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tls-options,omitempty"];
-    string BaseDN                         = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "base-dn,omitempty"];
-    string BindDN                         = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-dn,omitempty"];
-    string BindPassword                   = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-password,omitempty"];
-    LdapAttributeMapping AttributeMapping = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attribute-mapping,omitempty"];
+    string BaseDN                         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "base-dn,omitempty"];
+    string BindDN                         = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-dn,omitempty"];
+    string BindPassword                   = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-password,omitempty"];
+    LdapAttributeMapping AttributeMapping = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attribute-mapping,omitempty"];
+
+    // Servers is a list that lets you configure multiple LDAP servers for high availability
+    repeated LdapServer Servers           = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];
+}
+
+message LdapServer {
+    string Url                            = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "url,omitempty"];
+    TLSOptions TLSOptions                 = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tls-options,omitempty"];
 }
 
 message TLSOptions {
@@ -120,11 +125,32 @@ message Local {
 }
 
 message Radius {
-    bool Enabled  = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
-    string Ip     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ip,omitempty"];
-    string Port   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "port,omitempty"];
-    string NasIp  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nas-ip,omitempty"];
-    string Secret = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "secret,omitempty"];
+    // RadiusAuthMethod describes how the communication between API Gw and RADIUS server is secured. These auth methods are not for end user
+    // authentication. Currently only PAP is supported.
+    enum AuthMethod {
+        // PAP is password auth protocol with only password attribute encrypted
+        PAP           = 0;
+        // PEAP_MSCHAPv2 sends user credentials using TLS tunnel
+        PEAP_MSCHAPv2 = 1;
+        // EAP_TTLS sends user credentials using TLS tunnel
+        EAP_TTLS_PAP  = 2;
+    }
+    bool Enabled                  = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
+    // NasID is a string identifying the NAS(API Gw) originating the Access-Request
+    string NasID                  = 2 [(gogoproto.jsontag) = "nas-id,omitempty"];
+    repeated RadiusServer Servers = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];
+}
+
+message RadiusServer {
+    // <IP address>:<Port> of the RADIUS server
+    string Url          = 1 [(gogoproto.jsontag) = "url,omitempty"];
+    // Secret is the shared secret between API Gw and RADIUS server
+    string Secret       = 2 [(gogoproto.jsontag) = "secret,omitempty"];
+    // AuthMethod is authentication method to use with the RADIUS server
+    string AuthMethod   = 3 [(venice.check) = "StrEnum(Radius.AuthMethod)", (gogoproto.jsontag) = "auth-method,omitempty"];
+    // TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. It is
+    // used in PEAP and EAP_TTLS auth methods
+    string TrustedCerts = 4 [(gogoproto.jsontag) = "trusted-certs,omitempty"];
 }
 
 // status part of authentication policy object

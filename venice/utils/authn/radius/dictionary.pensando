@@ -1,0 +1,16 @@
+##############################################################################
+#
+#       Pensando FreeRADIUS dictionary
+#
+#
+#
+##############################################################################
+
+VENDOR          Pensando                        51886
+
+BEGIN-VENDOR    Pensando
+
+ATTRIBUTE       Pensando-User-Group                     1       string
+ATTRIBUTE       Pensando-Tenant                         2       string
+
+END-VENDOR      Pensando

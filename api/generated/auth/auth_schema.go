@@ -35,22 +35,18 @@ var typesMapAuth = map[string]*runtime.Struct{
 	},
 	"auth.Authenticators": &runtime.Struct{
 		Fields: map[string]runtime.Field{
+			"AuthenticatorOrder": runtime.Field{Name: "AuthenticatorOrder", JSONTag: "authenticator-order", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"Ldap": runtime.Field{Name: "Ldap", JSONTag: "ldap", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Ldap"},
 
 			"Local": runtime.Field{Name: "Local", JSONTag: "local", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Local"},
 
 			"Radius": runtime.Field{Name: "Radius", JSONTag: "radius", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Radius"},
-
-			"AuthenticatorOrder": runtime.Field{Name: "AuthenticatorOrder", JSONTag: "authenticator-order", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.Ldap": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Enabled": runtime.Field{Name: "Enabled", JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
-
-			"Url": runtime.Field{Name: "Url", JSONTag: "url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"TLSOptions": runtime.Field{Name: "TLSOptions", JSONTag: "tls-options", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.TLSOptions"},
 
 			"BaseDN": runtime.Field{Name: "BaseDN", JSONTag: "base-dn", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -59,6 +55,8 @@ var typesMapAuth = map[string]*runtime.Struct{
 			"BindPassword": runtime.Field{Name: "BindPassword", JSONTag: "bind-password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"AttributeMapping": runtime.Field{Name: "AttributeMapping", JSONTag: "attribute-mapping", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.LdapAttributeMapping"},
+
+			"Servers": runtime.Field{Name: "Servers", JSONTag: "servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.LdapServer"},
 		},
 	},
 	"auth.LdapAttributeMapping": &runtime.Struct{
@@ -76,6 +74,13 @@ var typesMapAuth = map[string]*runtime.Struct{
 			"Email": runtime.Field{Name: "Email", JSONTag: "email", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Fullname": runtime.Field{Name: "Fullname", JSONTag: "fullname", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"auth.LdapServer": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Url": runtime.Field{Name: "Url", JSONTag: "url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TLSOptions": runtime.Field{Name: "TLSOptions", JSONTag: "tls-options", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.TLSOptions"},
 		},
 	},
 	"auth.Local": &runtime.Struct{
@@ -111,13 +116,20 @@ var typesMapAuth = map[string]*runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Enabled": runtime.Field{Name: "Enabled", JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"Ip": runtime.Field{Name: "Ip", JSONTag: "ip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"NasID": runtime.Field{Name: "NasID", JSONTag: "nas-id", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Port": runtime.Field{Name: "Port", JSONTag: "port", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"NasIp": runtime.Field{Name: "NasIp", JSONTag: "nas-ip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Servers": runtime.Field{Name: "Servers", JSONTag: "servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.RadiusServer"},
+		},
+	},
+	"auth.RadiusServer": &runtime.Struct{
+		Fields: map[string]runtime.Field{
+			"Url": runtime.Field{Name: "Url", JSONTag: "url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Secret": runtime.Field{Name: "Secret", JSONTag: "secret", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"AuthMethod": runtime.Field{Name: "AuthMethod", JSONTag: "auth-method", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TrustedCerts": runtime.Field{Name: "TrustedCerts", JSONTag: "trusted-certs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.Role": &runtime.Struct{

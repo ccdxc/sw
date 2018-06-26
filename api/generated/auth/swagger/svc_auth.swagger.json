@@ -200,47 +200,21 @@
             "type": "string"
           },
           {
+            "name": "authenticators.authenticator-order",
+            "description": "Order in which authenticators are applied. If an authenticator returns success, others are skipped.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "name": "ldap.enabled",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
-          },
-          {
-            "name": "ldap.url",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "tls-options.start-tls",
-            "description": "StartTLS determines if ldap connection uses TLS.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "tls-options.skip-server-cert-verification",
-            "description": "SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.\nIf SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.\nIn this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "tls-options.server-name",
-            "description": "ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "tls-options.trusted-certs",
-            "description": "TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           },
           {
             "name": "ldap.base-dn",
@@ -319,38 +293,11 @@
             "format": "boolean"
           },
           {
-            "name": "radius.ip",
+            "name": "radius.nas-id",
+            "description": "NasID is a string identifying the NAS(API Gw) originating the Access-Request.",
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "radius.port",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "radius.nas-ip",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "radius.secret",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "authenticators.authenticator-order",
-            "description": "Order in which authenticators are applied. If an authenticator returns success, others are skipped.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           {
             "name": "spec.secret",
@@ -2261,15 +2208,6 @@
     "authAuthenticators": {
       "type": "object",
       "properties": {
-        "ldap": {
-          "$ref": "#/definitions/authLdap"
-        },
-        "local": {
-          "$ref": "#/definitions/authLocal"
-        },
-        "radius": {
-          "$ref": "#/definitions/authRadius"
-        },
         "authenticator-order": {
           "type": "array",
           "items": {
@@ -2285,6 +2223,15 @@
             "LOCAL": "Local"
           },
           "title": "Order in which authenticators are applied. If an authenticator returns success, others are skipped"
+        },
+        "ldap": {
+          "$ref": "#/definitions/authLdap"
+        },
+        "local": {
+          "$ref": "#/definitions/authLocal"
+        },
+        "radius": {
+          "$ref": "#/definitions/authRadius"
         }
       }
     },
@@ -2387,12 +2334,6 @@
           "type": "boolean",
           "format": "boolean"
         },
-        "url": {
-          "type": "string"
-        },
-        "tls-options": {
-          "$ref": "#/definitions/authTLSOptions"
-        },
         "base-dn": {
           "type": "string"
         },
@@ -2404,6 +2345,13 @@
         },
         "attribute-mapping": {
           "$ref": "#/definitions/authLdapAttributeMapping"
+        },
+        "servers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authLdapServer"
+          },
+          "title": "Servers is a list that lets you configure multiple LDAP servers for high availability"
         }
       }
     },
@@ -2432,6 +2380,17 @@
         },
         "fullname": {
           "type": "string"
+        }
+      }
+    },
+    "authLdapServer": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "tls-options": {
+          "$ref": "#/definitions/authTLSOptions"
         }
       }
     },
@@ -2561,17 +2520,42 @@
           "type": "boolean",
           "format": "boolean"
         },
-        "ip": {
-          "type": "string"
+        "nas-id": {
+          "type": "string",
+          "title": "NasID is a string identifying the NAS(API Gw) originating the Access-Request"
         },
-        "port": {
-          "type": "string"
-        },
-        "nas-ip": {
-          "type": "string"
+        "servers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authRadiusServer"
+          }
+        }
+      }
+    },
+    "authRadiusServer": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "\u003cIP address\u003e:\u003cPort\u003e of the RADIUS server"
         },
         "secret": {
-          "type": "string"
+          "type": "string",
+          "title": "Secret is the shared secret between API Gw and RADIUS server"
+        },
+        "auth-method": {
+          "type": "string",
+          "enum": [
+            "PAP",
+            "PEAP_MSCHAPv2",
+            "EAP_TTLS_PAP"
+          ],
+          "default": "PAP",
+          "title": "AuthMethod is authentication method to use with the RADIUS server"
+        },
+        "trusted-certs": {
+          "type": "string",
+          "title": "TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. It is\nused in PEAP and EAP_TTLS auth methods"
         }
       }
     },
