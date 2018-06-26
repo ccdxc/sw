@@ -19,7 +19,16 @@
 #ifndef _IONIC_DEBUGFS_H_
 #define _IONIC_DEBUGFS_H_
 
+#include <linux/debugfs.h>
+
+struct ionic;
+
 #ifdef CONFIG_DEBUG_FS
+
+#ifdef DEBUGFS_TEST_API
+#define NUM_SCRATCH_BUFS	16
+#endif
+
 void ionic_debugfs_create(void);
 void ionic_debugfs_destroy(void);
 int ionic_debugfs_add_dev(struct ionic *ionic);

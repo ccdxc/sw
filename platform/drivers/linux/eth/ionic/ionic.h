@@ -20,6 +20,7 @@
 #define _IONIC_H_
 
 #include "ionic_dev.h"
+#include "ionic_debugfs.h"
 #include "ionic_api.h"
 
 //#define ADMINQ
@@ -50,7 +51,13 @@ struct ionic {
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
-
+#ifdef CONFIG_DEBUG_FS
+#ifdef DEBUGFS_TEST_API
+	void *scratch_bufs[NUM_SCRATCH_BUFS];
+	dma_addr_t scratch_bufs_pa[NUM_SCRATCH_BUFS];
+	struct debugfs_blob_wrapper scratch_bufs_blob[NUM_SCRATCH_BUFS];
+#endif
+#endif
 #ifndef ADMINQ
 	spinlock_t cmd_lock;
 	struct list_head cmd_list;

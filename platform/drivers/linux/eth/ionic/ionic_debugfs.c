@@ -16,12 +16,12 @@
  *
  */
 
-#include <linux/debugfs.h>
 #include <linux/netdevice.h>
 
 #include "ionic.h"
 #include "ionic_bus.h"
 #include "ionic_lif.h"
+#include "ionic_debugfs.h"
 
 /*
  * The debugfs contents are an informative resoure for debugging, only.  They
@@ -91,36 +91,31 @@ struct dentry *debugfs_create_blob(const char *name, umode_t mode,
 				   &blob_fops);
 }
 
-#define NUM_SCRATCH_BUFS	16
 #define SIZE_SCRATCH_BUF	(4 * PAGE_SIZE)
 
-static void *scratch_bufs[NUM_SCRATCH_BUFS];
-static dma_addr_t scratch_bufs_pa[NUM_SCRATCH_BUFS];
-static struct debugfs_blob_wrapper scratch_bufs_blob[NUM_SCRATCH_BUFS];
-
-static int scratch_bufs_alloc(struct device *dev)
+static int scratch_bufs_alloc(struct ionic *ionic)
 {
 	unsigned int i;
 
-	for (i = 0; i < ARRAY_SIZE(scratch_bufs); i++) {
-		scratch_bufs[i] = dma_alloc_coherent(dev, SIZE_SCRATCH_BUF,
-						     &scratch_bufs_pa[i],
-						     GFP_KERNEL | GFP_DMA);
-		if (!scratch_bufs[i])
+	for (i = 0; i < ARRAY_SIZE(ionic->scratch_bufs); i++) {
+		ionic->scratch_bufs[i] = dma_alloc_coherent(ionic->dev,
+			SIZE_SCRATCH_BUF, &ionic->scratch_bufs_pa[i],
+			GFP_KERNEL | GFP_DMA);
+		if (!ionic->scratch_bufs[i])
 			return -ENOMEM;
 	}
 
 	return 0;
 }
 
-static int scratch_bufs_add(struct device *dev, struct dentry *parent)
+static int scratch_bufs_add(struct ionic *ionic, struct dentry *parent)
 {
 	struct dentry *scratch_dentry;
 	unsigned int i;
 	char name[32];
 	int err;
 
-	err = scratch_bufs_alloc(dev);
+	err = scratch_bufs_alloc(ionic);
 	if (err)
 		return err;
 
@@ -128,24 +123,26 @@ static int scratch_bufs_add(struct device *dev, struct dentry *parent)
 	if (IS_ERR_OR_NULL(scratch_dentry))
 		return PTR_ERR(scratch_dentry);
 
-	for (i = 0; i < ARRAY_SIZE(scratch_bufs); i++) {
-		scratch_bufs_blob[i].data = scratch_bufs[i];
-		scratch_bufs_blob[i].size = SIZE_SCRATCH_BUF;
-		snprintf(name, sizeof(name), "0x%016llx", scratch_bufs_pa[i]);
+	for (i = 0; i < ARRAY_SIZE(ionic->scratch_bufs); i++) {
+		ionic->scratch_bufs_blob[i].data = ionic->scratch_bufs[i];
+		ionic->scratch_bufs_blob[i].size = SIZE_SCRATCH_BUF;
+		snprintf(name, sizeof(name), "0x%016llx",
+			 ionic->scratch_bufs_pa[i]);
 		debugfs_create_blob(name, 0600, scratch_dentry,
-			&scratch_bufs_blob[i]);
+				    &ionic->scratch_bufs_blob[i]);
 	}
 
 	return 0;
 }
 
-static void scratch_bufs_free(struct device *dev)
+static void scratch_bufs_free(struct ionic *ionic)
 {
 	unsigned int i;
 
-	for (i = 0; i < ARRAY_SIZE(scratch_bufs); i++)
-		dma_free_coherent(dev, SIZE_SCRATCH_BUF, scratch_bufs[i],
-				  scratch_bufs_pa[i]);
+	for (i = 0; i < ARRAY_SIZE(ionic->scratch_bufs); i++)
+		dma_free_coherent(ionic->dev, SIZE_SCRATCH_BUF,
+				  ionic->scratch_bufs[i],
+				  ionic->scratch_bufs_pa[i]);
 }
 
 #endif
@@ -190,7 +187,7 @@ int ionic_debugfs_add_dev(struct ionic *ionic)
 	ionic->dentry = dentry;
 
 #ifdef DEBUGFS_TEST_API
-	err = scratch_bufs_add(ionic->dev, dentry);
+	err = scratch_bufs_add(ionic, dentry);
 	if (err)
 		debugfs_remove_recursive(ionic->dentry);
 	return err;
@@ -202,7 +199,7 @@ int ionic_debugfs_add_dev(struct ionic *ionic)
 void ionic_debugfs_del_dev(struct ionic *ionic)
 {
 #ifdef DEBUGFS_TEST_API
-	scratch_bufs_free(ionic->dev);
+	scratch_bufs_free(ionic);
 #endif
 	debugfs_remove_recursive(ionic->dentry);
 }
