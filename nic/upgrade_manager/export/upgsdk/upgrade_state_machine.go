@@ -23,7 +23,7 @@ func initStateMachineVector() {
 	log.Infof("initStateMachineVector called!!!")
 
 	stateMachine = []upgStateMachine{
-		upgStateMachine{
+		upgrade.UpgReqStateType_UpgReqRcvd: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgReqRcvd,
 			stateNext:                 upgrade.UpgReqStateType_PreUpgState,
 			statePassResp:             upgrade.UpgRespStateType_UpgReqRcvdPass,
@@ -34,7 +34,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Upgrade Request Received Pass",
 			upgRespStateTypeToStrFail: "Upgrade Request Received Fail",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_PreUpgState: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_PreUpgState,
 			stateNext:                 upgrade.UpgReqStateType_ProcessesQuiesced,
 			statePassResp:             upgrade.UpgRespStateType_PreUpgStatePass,
@@ -45,7 +45,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Compat check passed",
 			upgRespStateTypeToStrFail: "Compat check failed",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_ProcessesQuiesced: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_ProcessesQuiesced,
 			stateNext:                 upgrade.UpgReqStateType_PostBinRestart,
 			statePassResp:             upgrade.UpgRespStateType_ProcessesQuiescedPass,
@@ -56,7 +56,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Process Quiesce Pass",
 			upgRespStateTypeToStrFail: "Process Quiesce Fail",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_PostBinRestart: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_PostBinRestart,
 			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimePhase1Start,
 			statePassResp:             upgrade.UpgRespStateType_PostBinRestartPass,
@@ -67,7 +67,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Post Process Restart Pass",
 			upgRespStateTypeToStrFail: "Post Process Restart Fail",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_DataplaneDowntimePhase1Start: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_DataplaneDowntimePhase1Start,
 			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling,
 			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass,
@@ -78,7 +78,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Dataplane Downtime Phase1 Success",
 			upgRespStateTypeToStrFail: "Dataplane Downtime Phase1 Fail",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling,
 			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimePhase2Start,
 			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass,
@@ -89,7 +89,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Dataplane Downtime AdminQ Handling Success",
 			upgRespStateTypeToStrFail: "Dataplane Downtime AdminQ Handling Fail",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_DataplaneDowntimePhase2Start: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_DataplaneDowntimePhase2Start,
 			stateNext:                 upgrade.UpgReqStateType_UpgSuccess,
 			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass,
@@ -100,7 +100,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Dataplane Downtime Phase2 Success",
 			upgRespStateTypeToStrFail: "Dataplane Downtime Phase2 Fail",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_Cleanup: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_Cleanup,
 			stateNext:                 upgrade.UpgReqStateType_UpgStateTerminal,
 			statePassResp:             upgrade.UpgRespStateType_CleanupPass,
@@ -111,7 +111,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Cleanup Pass",
 			upgRespStateTypeToStrFail: "Cleanup Fail",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_UpgSuccess: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgSuccess,
 			stateNext:                 upgrade.UpgReqStateType_Cleanup,
 			statePassResp:             upgrade.UpgRespStateType_UpgSuccessPass,
@@ -122,7 +122,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "",
 			upgRespStateTypeToStrFail: "",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_UpgFailed: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgFailed,
 			stateNext:                 upgrade.UpgReqStateType_Cleanup,
 			statePassResp:             upgrade.UpgRespStateType_UpgFailedPass,
@@ -133,7 +133,7 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "",
 			upgRespStateTypeToStrFail: "",
 		},
-		upgStateMachine{
+		upgrade.UpgReqStateType_UpgAborted: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgAborted,
 			stateNext:                 upgrade.UpgReqStateType_UpgStateTerminal,
 			statePassResp:             upgrade.UpgRespStateType_UpgAbortedPass,
