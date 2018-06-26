@@ -5,10 +5,12 @@
 #include <math.h>
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/vrf.grpc.pb.h"
+#include "nic/gen/proto/hal/nic.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/event.grpc.pb.h"
 #include "nic/gen/proto/hal/system.grpc.pb.h"
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "nic/gen/proto/hal/nic.pb.h"
 #include "nic/include/eth_common.h"
 
 using grpc::Channel;
@@ -19,6 +21,9 @@ using intf::InterfaceSpec;
 using intf::InterfaceRequestMsg;
 using intf::InterfaceResponse;
 using intf::InterfaceResponseMsg;
+using device::DeviceRequestMsg;
+using device::DeviceResponseMsg;
+using device::Nic;
 using intf::LifSpec;
 using intf::LifGetRequestMsg;
 using intf::LifGetResponseMsg;
@@ -244,7 +249,8 @@ print_admin_qstate (const char *qstate)
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) :
-        intf_stub_(Interface::NewStub(channel)) {
+        intf_stub_(Interface::NewStub(channel)),
+        nic_stub_(Nic::NewStub(channel)) {
         channel_ = channel;
     }
 
@@ -275,6 +281,28 @@ public:
         } else {
             std::cout << "Lif Get Failed" << std::endl;
         }
+    }
+
+    void device_set_smart_nic_mode(void) {
+        DeviceRequestMsg            nic_req;
+        DeviceResponseMsg           nic_rsp;
+        Status                      status;
+        ClientContext               context;
+
+        // Set device mode as Smart switch
+        nic_req.mutable_request()->mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
+
+        status = nic_stub_->DeviceCreate(&context, nic_req, &nic_rsp);
+        if (status.ok()) {
+            assert(nic_rsp.response().api_status() == types::API_STATUS_OK);
+            std::cout << "Device set to Smart NIC Mode"
+                      << std::endl;
+        } else {
+        std::cout << "Device not set to Smart NIC Mode"
+                  << std::endl;
+        }
+
+        return;
     }
 
     uint64_t lif_create(uint32_t lif_id, uint32_t type_num, uint32_t num_lifs) {
@@ -383,6 +411,7 @@ public:
 
 private:
     std::unique_ptr<Interface::Stub> intf_stub_;
+    std::unique_ptr<Nic::Stub> nic_stub_;
     std::shared_ptr<Channel> channel_;
 };
 
@@ -406,6 +435,8 @@ main (int argc, char** argv)
     hal_client hclient(grpc::CreateChannel(svc_endpoint,
                                            grpc::InsecureChannelCredentials()));
     //hclient.wait_until_ready();
+
+    hclient.device_set_smart_nic_mode();
 
     // create uplinks
     uplink_if_handle = hclient.uplinks_create(if_id, num_uplinks);

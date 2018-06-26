@@ -339,7 +339,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         fprintf(stderr, "HAL ini file %s doesn't exist or not accessible,"
                 "picking smart-switch mode\n",
                 ini_file.c_str());
-        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_SWITCH;
+        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
         return HAL_RET_OK;
     }
 
@@ -347,7 +347,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     if (!in) {
         HAL_TRACE_ERR("Failed to open ini file ... "
                       "setting forwarding mode to smart-switch\n");
-        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_SWITCH;
+        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
         return HAL_RET_OK;
     }
 

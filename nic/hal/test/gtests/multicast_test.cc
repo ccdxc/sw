@@ -1,5 +1,6 @@
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/nw/nic.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/mcast/multicast.hpp"
@@ -8,6 +9,7 @@
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/multicast.pb.h"
+#include "nic/gen/proto/hal/nic.pb.h"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
 #include <gtest/gtest.h>
@@ -81,9 +83,18 @@ protected:
         NetworkSpec                     nw_spec;
         NetworkResponse                 nw_rsp;
         NetworkKeyHandle                *nkh = NULL;
+        DeviceRequest               nic_req;
+        DeviceResponseMsg           nic_rsp;
 
         hal_base_test::SetUpTestCase();
         hal_test_utils_slab_disable_delete();
+
+        // Set device mode as Smart switch
+        nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::device_create(&nic_req, &nic_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
 
         // Create nwsec
         sp_spec.mutable_key_or_handle()->set_profile_id(NW_SEC_PROFILE_ID1);
@@ -193,6 +204,8 @@ TEST_F(multicast_test, test1)
     MulticastEntryDeleteResponse    mc_del_rsp;
     MulticastEntryGetRequest        mc_get_req;
     MulticastEntryGetResponseMsg    mc_get_rsp;
+    DeviceRequest                   nic_req;
+    DeviceResponseMsg               nic_rsp;
 
     pre = hal_test_utils_collect_slab_stats();
 
@@ -260,6 +273,14 @@ TEST_F(multicast_test, test1)
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
+
+    // Set device mode as Host Pin
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
 }
 
 // Create 100 multicast entries, update them, and delete them (use keys)
@@ -274,6 +295,8 @@ TEST_F(multicast_test, test2)
     MulticastEntryDeleteResponse    mc_del_rsp;
     MulticastEntryGetRequest        mc_get_req;
     MulticastEntryGetResponseMsg    mc_get_rsp;
+    DeviceRequest                   nic_req;
+    DeviceResponseMsg               nic_rsp;
 
     pre = hal_test_utils_collect_slab_stats();
 
@@ -344,6 +367,13 @@ TEST_F(multicast_test, test2)
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
+
+    // Set device mode as Host Pin
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 int main(int argc, char **argv) {

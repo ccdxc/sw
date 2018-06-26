@@ -36,6 +36,7 @@
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/barco_rings_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
+#include "nic/hal/svc/nic_svc.hpp"
 
 #include "nic/gen/hal/svc/vrf_svc_gen.hpp"
 #include "nic/gen/hal/svc/l2segment_svc_gen.hpp"
@@ -90,6 +91,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     L2SegmentServiceImpl     l2seg_svc;
     DebugServiceImpl         debug_svc;
     TableServiceImpl         table_svc;
+    NicServiceImpl           nic_svc;
     SessionServiceImpl       session_svc;
     EndpointServiceImpl      endpoint_svc;
     L4LbServiceImpl          l4lb_svc;
@@ -128,6 +130,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&rdma_svc);
         server_builder->RegisterService(&debug_svc);
         server_builder->RegisterService(&table_svc);
+        server_builder->RegisterService(&nic_svc);
         server_builder->RegisterService(&l4lb_svc);
         server_builder->RegisterService(&dos_svc);
         server_builder->RegisterService(&nat_svc);

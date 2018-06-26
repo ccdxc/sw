@@ -5,6 +5,8 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
+#include "nic/gen/proto/hal/nic.pb.h"
+#include "nic/hal/src/nw/nic.hpp"
 #include "nic/include/fte_ctx.hpp"
 #include <tins/tins.h>
 #include <map>
@@ -20,6 +22,9 @@
 #define FTE_ID 0
 #define PKTBUF_LEN  2000
 using namespace std;
+
+using device::DeviceResponseMsg;
+using device::DeviceRequest;
 
 typedef struct dev_handle_ {
     int                  sock;
@@ -103,8 +108,20 @@ protected:
 
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
+        hal_ret_t                   ret;
+        DeviceRequest               nic_req;
+        DeviceResponseMsg           nic_rsp;
+ 
         hal_base_test::SetUpTestCase(false);
         sleep(1);
+
+        // Set device mode as Smart switch
+        nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::device_create(&nic_req, &nic_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+ 
         ipc_logging_disable_ = false;
     }
 

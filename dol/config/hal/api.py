@@ -44,6 +44,7 @@ import barco_rings_pb2      as barco_rings_pb2
 import system_pb2           as system_pb2
 import gft_pb2              as gft_pb2
 import dos_pb2              as dos_pb2
+import nic_pb2              as nic_pb2
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -59,23 +60,34 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
                 assert(0)
         return
 
-    num_req_specs = len(req_msg.request)
-    num_resp_specs = len(resp_msg.response)
-    if num_req_specs != num_resp_specs:
-        logger.error(" - Bad # of resp_specs:%d Expected:%d" %\
+    if (req_msg.DESCRIPTOR.fields_by_name["request"].label == 3):
+        num_req_specs = len(req_msg.request)
+        num_resp_specs = len(resp_msg.response)
+            
+        if num_req_specs != num_resp_specs:
+            logger.error(" - Bad # of resp_specs:%d Expected:%d" %\
                         (num_resp_specs, num_req_specs))
-        assert(0)
-
-    for idx in range(len(req_msg.request)):
-        req_spec = req_msg.request[idx]
-        resp_spec = resp_msg.response[idx]
-        req_obj = req_objs[idx]
-        getattr(req_obj, respcb)(req_spec, resp_spec)
-        if resp_spec.api_status == types_pb2.API_STATUS_EXISTS_ALREADY:
-            logger.info(" Object exists already")
-        elif resp_spec.api_status != types_pb2.API_STATUS_OK:
-            logger.error(" HAL Returned API Status:%d" % (resp_spec.api_status))
             assert(0)
+
+        for idx in range(len(req_msg.request)):
+            req_spec = req_msg.request[idx]
+            resp_spec = resp_msg.response[idx]
+            req_obj = req_objs[idx]
+            getattr(req_obj, respcb)(req_spec, resp_spec)
+            if resp_spec.api_status == types_pb2.API_STATUS_EXISTS_ALREADY:
+                logger.info(" Object exists already")
+            elif resp_spec.api_status != types_pb2.API_STATUS_OK:
+                logger.error(" HAL Returned API Status:%d" % (resp_spec.api_status))
+                assert(0)
+    else:
+        req_obj = req_objs[0]
+        getattr(req_obj, respcb)(req_msg.request, resp_msg.response)
+        if resp_msg.response.api_status == types_pb2.API_STATUS_EXISTS_ALREADY:
+            logger.info(" Object exists already")
+        elif resp_msg.response.api_status != types_pb2.API_STATUS_OK:
+            logger.error(" HAL Returned API Status:%d" % (resp_msg.response.api_status))
+            assert(0)
+
     return
 
 def __invoke_api(api, req_msg):
@@ -94,8 +106,11 @@ def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
     for obj in objs:
         req_spec = None
         if req_msg:
-            req_spec = req_msg.request.add()
-        getattr(obj,reqcb)(req_spec)
+            if (req_msg.DESCRIPTOR.fields_by_name["request"].label == 3):
+                req_spec = req_msg.request.add()
+                getattr(obj,reqcb)(req_spec)
+            else:
+                getattr(obj,reqcb)(req_msg.request)
         req_objs.append(obj)
         count += 1
         if count >= HAL_MAX_BATCH_SIZE:
@@ -195,6 +210,25 @@ def GetInterfaces(objlist):
     stub = interface_pb2.InterfaceStub(HalChannel)
     __get(objlist, interface_pb2.InterfaceGetRequestMsg,
           stub.InterfaceGet)
+    return
+
+def ConfigureDevice(objlist, update = False):
+    if not IsConfigAllowed(objlist): return
+    stub = nic_pb2.NicStub(HalChannel)
+    msg = nic_pb2.DeviceRequestMsg
+    api = stub.DeviceUpdate if update else stub.DeviceCreate
+    __config(objlist, msg, api)
+    if not update and GlobalOptions.mbt:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
+    return
+
+def GetDevices(objlist):
+    if not IsConfigAllowed(objlist):
+        return
+    stub = nic_pb2.NicStub(HalChannel)
+    __get(objlist, nic_pb2.DeviceGetRequestMsg,
+          stub.DeviceGet)
     return
 
 def ConfigureInterfaceSegmentAssociations(objlist):

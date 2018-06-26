@@ -13,6 +13,8 @@
 #include "nic/gen/proto/hal/session.pb.h"
 #include "nic/gen/proto/hal/l4lb.pb.h"
 #include "nic/gen/proto/hal/nw.pb.h"
+#include "nic/gen/proto/hal/nic.pb.h"
+#include "nic/hal/src/nw/nic.hpp"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -90,7 +92,6 @@ TEST_F(session_test, test1)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
     NetworkKeyHandle                *nkh = NULL;
-
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(1);
@@ -255,6 +256,15 @@ TEST_F(session_test, test2)
     ::google::protobuf::uint32  ip3 = 0x40020001;
     ::google::protobuf::uint32  ip4 = 0x40020002;
     NetworkKeyHandle                *nkh = NULL;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
+    
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -469,6 +479,13 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
 }
 
 // ----------------------------------------------------------------------------
@@ -498,6 +515,15 @@ TEST_F(session_test, test3)
     ::std::string ipv6_ip1 = "00010001000100010001000100010001";
     ::std::string ipv6_ip2 = "10010001000100010001000100010002";
     NetworkKeyHandle                *nkh = NULL;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
+    
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(3);
@@ -657,6 +683,12 @@ TEST_F(session_test, test3)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 // ----------------------------------------------------------------------------
@@ -1723,6 +1755,15 @@ TEST_F(session_test, test10)
     ::std::string ipv6_ip1 = "00010001000100010001000100010001";
     ::std::string ipv6_ip2 = "00020001000100010001000100010002";
     NetworkKeyHandle                *nkh = NULL;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
+    
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(10);
@@ -1881,6 +1922,14 @@ TEST_F(session_test, test10)
     // Delete Session
     ret = fte::session_delete(hal::find_session_by_handle(sess_rsp.status().session_handle()));
     ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
 }
 
 TEST_F(session_test, test11)

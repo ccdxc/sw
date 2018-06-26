@@ -1,0 +1,7 @@
+# Nic Object Template File.
+meta:
+    id      : NIC
+    package : config.objects
+    module  : nic
+    feature_set:
+        - iris

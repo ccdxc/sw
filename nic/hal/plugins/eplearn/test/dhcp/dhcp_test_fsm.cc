@@ -13,11 +13,13 @@
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/nw/nic.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/endpoint.pb.h"
 #include "nic/gen/proto/hal/nw.pb.h"
+#include "nic/gen/proto/hal/nic.pb.h"
 // clang-format on
 
 #include "nic/include/pd_api.hpp"
@@ -77,7 +79,15 @@ void dhcp_topo_setup()
     InterfaceResponse           enicif_rsp;
     LifSpec                     lif_spec;
     LifResponse                 lif_rsp;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
 
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(1);

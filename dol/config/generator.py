@@ -12,6 +12,7 @@ import config.hal.api               as halapi
 import config.resmgr                as resmgr
 
 from config.objects.uplink              import UplinkHelper
+from config.objects.nic                 import NicHelper
 from config.objects.uplinkpc            import UplinkPcHelper
 from config.objects.tenant              import TenantHelper
 from config.objects.session             import SessionHelper
@@ -40,6 +41,9 @@ from config.store                       import Store
 from infra.common.glopts                import GlobalOptions
 
 def process(topospec):
+    # Device Mode
+    NicHelper.main()
+
     # Security Profiles
     SecurityProfileHelper.main(topospec)
     QosClassHelper.main(topospec)

@@ -6,6 +6,8 @@
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
+#include "nic/gen/proto/hal/nic.pb.h"
+#include "nic/hal/src/nw/nic.hpp"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -29,6 +31,8 @@ using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
 using nw::NetworkSpec;
 using nw::NetworkResponse;
+using device::DeviceRequest;
+using device::DeviceResponseMsg;
 
 
 class enicif_test : public hal_base_test {
@@ -75,9 +79,18 @@ TEST_F(enicif_test, test1)
     NetworkResponse             nw_rsp;
     InterfaceDeleteRequest      del_req;
     InterfaceDeleteResponse     del_rsp;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
     NetworkKeyHandle                *nkh = NULL;
+
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -166,6 +179,13 @@ TEST_F(enicif_test, test1)
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
     // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
@@ -179,8 +199,8 @@ TEST_F(enicif_test, test1)
 TEST_F(enicif_test, test2)
 {
     hal_ret_t                   ret;
-    VrfSpec                  ten_spec;
-    VrfResponse              ten_rsp;
+    VrfSpec                     ten_spec;
+    VrfResponse                 ten_rsp;
     LifSpec                     lif_spec;
     LifResponse                 lif_rsp;
     L2SegmentSpec               l2seg_spec;
@@ -195,9 +215,19 @@ TEST_F(enicif_test, test2)
     InterfaceDeleteResponse     del_rsp;
     int                         num_l2segs = 10;
     uint64_t                    l2seg_hdls[10] = { 0 };
-    NetworkKeyHandle                *nkh = NULL;
+    NetworkKeyHandle            *nkh = NULL;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
+
     // slab_stats_t                *pre = NULL, *post = NULL;
     // bool                        is_leak = false;
+
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -454,6 +484,13 @@ TEST_F(enicif_test, test2)
 
     // Update classic enic - Change native l2seg
     // Update classic enic - Change l2seg list
+    
+    // Set device mode as Host Pinned
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+
 
 
 }
@@ -477,11 +514,20 @@ TEST_F(enicif_test, test3)
     NetworkResponse             nw_rsp;
     InterfaceDeleteRequest      del_req;
     InterfaceDeleteResponseMsg  del_rsp;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
     int                         num_l2segs = 1;
     NetworkKeyHandle                *nkh = NULL;
     // uint64_t                    l2seg_hdls[10] = { 0 };
     // slab_stats_t                *pre = NULL, *post = NULL;
     // bool                        is_leak = false;
+
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(3);
@@ -573,6 +619,13 @@ TEST_F(enicif_test, test3)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
 
 }
 
@@ -594,6 +647,8 @@ TEST_F(enicif_test, test4)
     SecurityProfileResponse     sp_rsp;
     NetworkSpec                 nw_spec;
     NetworkResponse             nw_rsp;
+    DeviceRequest               nic_req;
+    DeviceResponseMsg           nic_rsp;
     InterfaceDeleteRequest      del_req;
     InterfaceDeleteResponse     del_rsp;
     int                         num_l2segs = 3;
@@ -718,6 +773,13 @@ TEST_F(enicif_test, test4)
     lif_spec.mutable_packet_filter()->set_receive_promiscuous(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 

@@ -57,6 +57,9 @@ device_create (DeviceRequest *req, DeviceResponseMsg *rsp)
 {
     auto response = rsp->mutable_response();
 
+    HAL_TRACE_DEBUG("Device Mode changed from {} to {}", g_hal_state->forwarding_mode(),
+                    device_mode_to_hal_fwd_mode(req->device().device_mode()));
+
     g_hal_state->set_forwarding_mode(
             device_mode_to_hal_fwd_mode(req->device().device_mode()));
 
@@ -73,6 +76,9 @@ device_update (DeviceRequest *req, DeviceResponseMsg *rsp)
 {
     auto response = rsp->mutable_response();
 
+    HAL_TRACE_DEBUG("Device Mode changed from {} to {}", g_hal_state->forwarding_mode(),
+                    device_mode_to_hal_fwd_mode(req->device().device_mode()));
+    
     g_hal_state->set_forwarding_mode(
             device_mode_to_hal_fwd_mode(req->device().device_mode()));
 
