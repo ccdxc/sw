@@ -2014,7 +2014,7 @@ func (tsa *Tagent) UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 			return errors.New("Duplicate MirrorSession during update")
 		}
 	} else {
-		log.Errorf("MirrorSession %+v does not exist to update")
+		log.Errorf("MirrorSession %+v does not exist to update", oldMs)
 		return ErrInvalidMirrorSpec
 	}
 	return tsa.createUpdatePacketCaptureSession(pcSession, true)
@@ -2025,7 +2025,7 @@ func (tsa *Tagent) DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 	log.Debugf("Processing packet capture session delete... %v", pcSession)
 	_, err := tsa.findMirrorSession(pcSession.ObjectMeta)
 	if err != nil {
-		log.Errorf("MirrorSession %+v does not exist to delete it")
+		log.Errorf("MirrorSession does not exist to delete it")
 		return ErrInvalidMirrorSpec
 	}
 	return tsa.deletePacketCaptureSession(pcSession)
