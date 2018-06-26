@@ -72,20 +72,6 @@ import (
                         {{else if strEq . "delete"}}
                              err = s.agent.Delete{{title $crudObject}}(&o)
                         {{end}}
-                        if err != nil {
-                          res.StatusCode = http.StatusInternalServerError
-                          res.Error = err.Error()
-                          {{if strEq . "delete"}}
-                          // check if its a cannot delete type err
-                          delErr , ok := err.(*agentTypes.ErrCannotDelete)
-                          if ok {
-                            res.References = delErr.References
-                            return res, err
-                          }
-                          {{else}}
-                            return res, err
-                          {{end}}
-                        }
                         {{if strEq . "post"}}
                           {{if strEq $crudObject "Tenant"}}
                             res.References = []string{fmt.Sprintf("%s%s",r.RequestURI, o.Name)}
@@ -97,6 +83,19 @@ import (
                         {{else}}
                           res.References = []string{r.RequestURI}
                         {{end}}
+                        if err != nil {
+                          res.StatusCode = http.StatusInternalServerError
+                          res.Error = err.Error()
+                          {{if strEq . "delete"}}
+                          // check if its a cannot delete type err
+                          delErr , ok := err.(*agentTypes.ErrCannotDelete)
+                          if ok {
+                            res.References = delErr.References
+                          }
+                          {{end}}
+                            return res, err
+                        }
+
                         res.StatusCode = http.StatusOK
                         return res, err
                     }

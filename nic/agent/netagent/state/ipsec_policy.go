@@ -17,6 +17,8 @@ import (
 
 // CreateIPSecPolicy creates an IPSec Policy
 func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+	var encryptRules []*netproto.IPSecSAEncrypt
+	var decryptRules []*netproto.IPSecSADecrypt
 	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
 	if err != nil {
 		return err
@@ -60,6 +62,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				RuleID:      sa.Status.IPSecSAEncryptID,
 			}
 			na.IPSecPolicyLUT[key] = saRef
+			encryptRules = append(encryptRules, sa)
 		case "DECRYPT":
 			sa, err := na.findIPSecSADecrypt(ipSec.ObjectMeta, r.SAName)
 			if err != nil {
@@ -72,6 +75,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				RuleID:      sa.Status.IPSecSADecryptID,
 			}
 			na.IPSecPolicyLUT[key] = saRef
+			decryptRules = append(decryptRules, sa)
 		default:
 			log.Errorf("Invalid IPSec Policy rule type")
 			return errors.New("invalid IPSec Policy rule type")
@@ -90,6 +94,23 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	if err != nil {
 		log.Errorf("Error creating ipsec policy in datapath. IPSecPolicy {%+v}. Err: %v", ipSec, err)
 		return err
+	}
+
+	// Add the current policy as a dependency to all the rules
+	for _, e := range encryptRules {
+		err = na.Solver.Add(e, ipSec)
+		if err != nil {
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", e, ipSec)
+			return err
+		}
+	}
+
+	for _, d := range decryptRules {
+		err = na.Solver.Add(d, ipSec)
+		if err != nil {
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", d, ipSec)
+			return err
+		}
 	}
 
 	// save it in db
@@ -180,10 +201,51 @@ func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 		return errors.New("IPSec policy not found")
 	}
 
+	// check if the current ipsec policy has any objects referring to it
+	err = na.Solver.Solve(existingIPSec)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingIPSec.Name, err)
+		return err
+	}
+
 	// delete it in the datapath
 	err = na.Datapath.DeleteIPSecPolicy(existingIPSec, ns)
 	if err != nil {
 		log.Errorf("Error deleting IPSec policy {%+v}. Err: %v", ipSec, err)
+	}
+
+	// Remove references for all the rules
+	for _, r := range existingIPSec.Spec.Rules {
+		r.ID, err = na.Store.GetNextID(types.IPSecRuleID)
+		switch r.SAType {
+		case "ENCRYPT":
+			// find the corresponding encrypt SA
+			sa, err := na.findIPSecSAEncrypt(existingIPSec.ObjectMeta, r.SAName)
+			if err != nil {
+				log.Errorf("could not find SA Encrypt rule. Rule: {%v}. Err: %v", r, err)
+				return err
+			}
+			err = na.Solver.Remove(sa, existingIPSec)
+			if err != nil {
+				log.Errorf("Could not remove the reference to the encrypt rule: %v. Err: %v", existingIPSec.Name, err)
+				return err
+			}
+		case "DECRYPT":
+			sa, err := na.findIPSecSADecrypt(existingIPSec.ObjectMeta, r.SAName)
+			if err != nil {
+				log.Errorf("could not find SA Decrypt rule. Rule: {%v}. Err: %v", r, err)
+				return err
+			}
+			err = na.Solver.Remove(sa, existingIPSec)
+			if err != nil {
+				log.Errorf("Could not remove the reference to the decrypt rule: %v. Err: %v", existingIPSec.Name, err)
+				return err
+			}
+
+		default:
+			log.Errorf("Invalid IPSec Policy rule type")
+			return errors.New("invalid IPSec Policy rule type")
+		}
 	}
 
 	// delete from db

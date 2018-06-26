@@ -58,15 +58,14 @@ func (s *RestServer) postIPSecPolicyHandler(r *http.Request) (interface{}, error
 
 	err = s.agent.CreateIPSecPolicy(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -87,15 +86,14 @@ func (s *RestServer) putIPSecPolicyHandler(r *http.Request) (interface{}, error)
 	}
 	err = s.agent.UpdateIPSecPolicy(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -112,6 +110,8 @@ func (s *RestServer) deleteIPSecPolicyHandler(r *http.Request) (interface{}, err
 
 	err = s.agent.DeleteIPSecPolicy(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -120,12 +120,10 @@ func (s *RestServer) deleteIPSecPolicyHandler(r *http.Request) (interface{}, err
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -167,15 +165,14 @@ func (s *RestServer) postIPSecSADecryptHandler(r *http.Request) (interface{}, er
 
 	err = s.agent.CreateIPSecSADecrypt(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -196,15 +193,14 @@ func (s *RestServer) putIPSecSADecryptHandler(r *http.Request) (interface{}, err
 	}
 	err = s.agent.UpdateIPSecSADecrypt(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -221,6 +217,8 @@ func (s *RestServer) deleteIPSecSADecryptHandler(r *http.Request) (interface{}, 
 
 	err = s.agent.DeleteIPSecSADecrypt(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -229,12 +227,10 @@ func (s *RestServer) deleteIPSecSADecryptHandler(r *http.Request) (interface{}, 
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -276,15 +272,14 @@ func (s *RestServer) postIPSecSAEncryptHandler(r *http.Request) (interface{}, er
 
 	err = s.agent.CreateIPSecSAEncrypt(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -305,15 +300,14 @@ func (s *RestServer) putIPSecSAEncryptHandler(r *http.Request) (interface{}, err
 	}
 	err = s.agent.UpdateIPSecSAEncrypt(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -330,6 +324,8 @@ func (s *RestServer) deleteIPSecSAEncryptHandler(r *http.Request) (interface{}, 
 
 	err = s.agent.DeleteIPSecSAEncrypt(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -338,12 +334,10 @@ func (s *RestServer) deleteIPSecSAEncryptHandler(r *http.Request) (interface{}, 
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err

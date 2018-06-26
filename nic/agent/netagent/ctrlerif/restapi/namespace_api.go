@@ -58,15 +58,14 @@ func (s *RestServer) postNamespaceHandler(r *http.Request) (interface{}, error) 
 
 	err = s.agent.CreateNamespace(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s", r.RequestURI, o.Tenant, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s", r.RequestURI, o.Tenant, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -83,6 +82,8 @@ func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error
 
 	err = s.agent.DeleteNamespace(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -91,12 +92,10 @@ func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -117,15 +116,14 @@ func (s *RestServer) putNamespaceHandler(r *http.Request) (interface{}, error) {
 	}
 	err = s.agent.UpdateNamespace(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err

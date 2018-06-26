@@ -52,17 +52,17 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 
 	uplinks := na.getUplinks()
 
-	// Add the current network as a dependency to the namespace.
-	err = na.Solver.Add(ns, nt)
-	if err != nil {
-		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, nt)
-		return err
-	}
-
 	// create it in datapath
 	err = na.Datapath.CreateNetwork(nt, uplinks, ns)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
+		return err
+	}
+
+	// Add the current network as a dependency to the namespace.
+	err = na.Solver.Add(ns, nt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, nt)
 		return err
 	}
 

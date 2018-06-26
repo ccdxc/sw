@@ -58,15 +58,14 @@ func (s *RestServer) postNatBindingHandler(r *http.Request) (interface{}, error)
 
 	err = s.agent.CreateNatBinding(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -87,15 +86,14 @@ func (s *RestServer) putNatBindingHandler(r *http.Request) (interface{}, error) 
 	}
 	err = s.agent.UpdateNatBinding(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -112,6 +110,8 @@ func (s *RestServer) deleteNatBindingHandler(r *http.Request) (interface{}, erro
 
 	err = s.agent.DeleteNatBinding(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -120,12 +120,10 @@ func (s *RestServer) deleteNatBindingHandler(r *http.Request) (interface{}, erro
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -167,15 +165,14 @@ func (s *RestServer) postNatPolicyHandler(r *http.Request) (interface{}, error) 
 
 	err = s.agent.CreateNatPolicy(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -196,15 +193,14 @@ func (s *RestServer) putNatPolicyHandler(r *http.Request) (interface{}, error) {
 	}
 	err = s.agent.UpdateNatPolicy(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -221,6 +217,8 @@ func (s *RestServer) deleteNatPolicyHandler(r *http.Request) (interface{}, error
 
 	err = s.agent.DeleteNatPolicy(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -229,12 +227,10 @@ func (s *RestServer) deleteNatPolicyHandler(r *http.Request) (interface{}, error
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -276,15 +272,14 @@ func (s *RestServer) postNatPoolHandler(r *http.Request) (interface{}, error) {
 
 	err = s.agent.CreateNatPool(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -305,15 +300,14 @@ func (s *RestServer) putNatPoolHandler(r *http.Request) (interface{}, error) {
 	}
 	err = s.agent.UpdateNatPool(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -330,6 +324,8 @@ func (s *RestServer) deleteNatPoolHandler(r *http.Request) (interface{}, error) 
 
 	err = s.agent.DeleteNatPool(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -338,12 +334,10 @@ func (s *RestServer) deleteNatPoolHandler(r *http.Request) (interface{}, error) 
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err

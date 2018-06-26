@@ -68,6 +68,20 @@ func (na *Nagent) CreateIPSecSADecrypt(ipSecSADecrypt *netproto.IPSecSADecrypt) 
 		return err
 	}
 
+	// Add the current ipsecDecryptSA Rule as a dependency to the namespace.
+	err = na.Solver.Add(ns, ipSecSADecrypt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, ipSecSADecrypt)
+		return err
+	}
+
+	// Add the current ipsecDecryptSA Rule as a dependency to the tep namespace as well.
+	err = na.Solver.Add(tep, ipSecSADecrypt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", tep, ipSecSADecrypt)
+		return err
+	}
+
 	// save it in db
 	key := na.Solver.ObjectKey(ipSecSADecrypt.ObjectMeta, ipSecSADecrypt.TypeMeta)
 	na.Lock()
@@ -144,11 +158,6 @@ func (na *Nagent) DeleteIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt) 
 	if err != nil {
 		return err
 	}
-	// find the corresponding namespace
-	ns, err := na.FindNamespace(ipSecDecryptSA.Tenant, ipSecDecryptSA.Namespace)
-	if err != nil {
-		return err
-	}
 
 	existingIPSecSADecrypt, err := na.FindIPSecSADecrypt(ipSecDecryptSA.ObjectMeta)
 	if err != nil {
@@ -156,10 +165,42 @@ func (na *Nagent) DeleteIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt) 
 		return errors.New("IPSec decrypt SA not found")
 	}
 
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(existingIPSecSADecrypt.Tenant, existingIPSecSADecrypt.Namespace)
+	if err != nil {
+		return err
+	}
+
+	// find the corresponding tep namespace
+	tep, err := na.FindNamespace(existingIPSecSADecrypt.Tenant, existingIPSecSADecrypt.Spec.TepNS)
+	if err != nil {
+		return err
+	}
+
+	// check if the current ipsec sa decrypt rule has any objects referring to it
+	err = na.Solver.Solve(existingIPSecSADecrypt)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingIPSecSADecrypt.Name, err)
+		return err
+	}
+
 	// delete it in the datapath
 	err = na.Datapath.DeleteIPSecSADecrypt(existingIPSecSADecrypt, ns)
 	if err != nil {
 		log.Errorf("Error deleting IPSec decrypt SA {%+v}. Err: %v", ipSecDecryptSA, err)
+	}
+
+	// update parent references
+	err = na.Solver.Remove(tep, existingIPSecSADecrypt)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
+		return err
+	}
+
+	err = na.Solver.Remove(ns, existingIPSecSADecrypt)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
+		return err
 	}
 
 	// delete from db

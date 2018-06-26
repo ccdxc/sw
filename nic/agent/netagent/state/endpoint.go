@@ -145,6 +145,11 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 			return nil, err
 		}
 	}
+	na.Solver.Add(nw, ep)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", nw, ep)
+		return nil, err
+	}
 
 	// add the ep to database
 	na.Lock()
@@ -255,6 +260,13 @@ func (na *Nagent) DeleteEndpoint(ep *netproto.Endpoint) error {
 		return err
 	}
 
+	// check if the current network has any objects referring to it
+	err = na.Solver.Solve(ep)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", ep.Name, err)
+		return err
+	}
+
 	// call the datapath
 	if ep.Spec.NodeUUID == na.NodeUUID {
 		err = na.Datapath.DeleteLocalEndpoint(ep, nw, ep.Status.EnicID)
@@ -268,6 +280,12 @@ func (na *Nagent) DeleteEndpoint(ep *netproto.Endpoint) error {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
 		}
+	}
+
+	err = na.Solver.Remove(nw, ep)
+	if err != nil {
+		log.Errorf("Could not remove dependency. Parent: %v. Child: %v", nw, ep)
+		return err
 	}
 
 	// remove from the database

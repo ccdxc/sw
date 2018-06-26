@@ -58,15 +58,14 @@ func (s *RestServer) postSecurityGroupHandler(r *http.Request) (interface{}, err
 
 	err = s.agent.CreateSecurityGroup(&o)
 
+	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -87,15 +86,14 @@ func (s *RestServer) putSecurityGroupHandler(r *http.Request) (interface{}, erro
 	}
 	err = s.agent.UpdateSecurityGroup(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
 
 		return res, err
-
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -112,6 +110,8 @@ func (s *RestServer) deleteSecurityGroupHandler(r *http.Request) (interface{}, e
 
 	err = s.agent.DeleteSecurityGroup(&o)
 
+	res.References = []string{r.RequestURI}
+
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -120,12 +120,10 @@ func (s *RestServer) deleteSecurityGroupHandler(r *http.Request) (interface{}, e
 		delErr, ok := err.(*agentTypes.ErrCannotDelete)
 		if ok {
 			res.References = delErr.References
-			return res, err
 		}
 
+		return res, err
 	}
-
-	res.References = []string{r.RequestURI}
 
 	res.StatusCode = http.StatusOK
 	return res, err
