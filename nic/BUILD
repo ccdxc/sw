@@ -395,6 +395,18 @@ cc_library(
 )
 
 cc_library(
+    name = "p4pluspd_storage_seq",
+    srcs = ["gen/storage_seq/src/storage_seq_p4pd.cc",
+            "gen/storage_seq/src/storage_seq_p4plus_entry_packing.cc"],
+    hdrs = [
+        "gen/storage_seq/include/storage_seq_p4pd.h",
+    ],
+    deps = [
+        "//nic/include:base_includes",
+    ],
+)
+
+cc_library(
         name = "gen_common_includes",
         srcs = [],
         hdrs =  [

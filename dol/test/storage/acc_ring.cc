@@ -10,6 +10,7 @@
 #include "acc_ring.hpp"
 #include "queues.hpp"
 #include "tests.hpp"
+#include "storage_seq_p4pd.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -73,6 +74,41 @@ acc_ring_t::acc_ring_t(const char *ring_name,
 }
 
 /*
+ * Format a sequencer descriptor
+ */
+void
+acc_ring_t::seq_desc_pack(dp_mem_t *seq_desc,
+                          uint64_t dst_desc_pa,
+                          uint16_t batch_size)
+{
+    STORAGE_SEQ_DESC_DEFINE(desc_action) = {0};
+    uint64_t    barco_pndx_shadow_pa = shadow_pd_idx_mem->pa();
+
+    seq_desc->clear();
+    STORAGE_SEQ_DESC_ARRAY_SET(desc_action, barco_desc_addr, 
+                               dst_desc_pa);
+    STORAGE_SEQ_DESC_ARRAY_SET(desc_action, barco_pndx_addr,
+                               cfg_ring_pd_idx);
+    STORAGE_SEQ_DESC_ARRAY_SET(desc_action, barco_pndx_shadow_addr, 
+                               barco_pndx_shadow_pa);
+    STORAGE_SEQ_DESC_ARRAY_SET(desc_action, barco_ring_addr, 
+                               ring_base_mem_pa);
+    STORAGE_SEQ_DESC_SCALAR_SET(desc_action, barco_desc_size,
+                                (uint8_t)log2(desc_size));
+    STORAGE_SEQ_DESC_SCALAR_SET(desc_action, barco_pndx_size,
+                                (uint8_t)log2(pi_size));
+    STORAGE_SEQ_DESC_SCALAR_SET(desc_action, barco_ring_size,
+                                (uint8_t)log2(ring_size));
+    if (batch_size > 1) {
+        STORAGE_SEQ_DESC_SCALAR_SET(desc_action, barco_batch_size,
+                                    batch_size);
+        STORAGE_SEQ_DESC_SCALAR_SET(desc_action, barco_batch_mode, 1);
+    }
+    STORAGE_SEQ_DESC_PACK(seq_desc->read(), desc_action);
+    seq_desc->write_thru();
+}
+
+/*
  * Function to handle notification from queues.cc at completion of
  * a batch construction for a given sequencer queue.
  */
@@ -81,16 +117,16 @@ acc_ring_batch_end_notify(void *user_ctx,
                           dp_mem_t *seq_desc,
                           uint16_t batch_size)
 {
+    acc_ring_t  *acc_ring = (acc_ring_t *)user_ctx;
+    uint64_t    dst_desc_pa;
+
     /*
      * Indicate batch mode in the given descriptor and the
      * accumulated batch count.
      */
     assert(batch_size);
-    if (batch_size) {
-        seq_desc->write_bit_fields(178, 16, batch_size);
-        seq_desc->write_bit_fields(194, 1, 1); /* set batch_mode */
-    }
-    seq_desc->write_thru();
+    dst_desc_pa = *((uint64_t *)seq_desc->read());
+    acc_ring->seq_desc_pack(seq_desc, dst_desc_pa, batch_size);
 }
 
 /*
@@ -104,7 +140,7 @@ acc_ring_t::push(const void *src_desc,
 {
     uint8_t     *dst_desc;
     dp_mem_t    *seq_desc;
-    bool        update_seq_desc;
+    bool        new_batch;
     uint32_t    pd_idx;
 
     switch (push_type) {
@@ -121,37 +157,31 @@ acc_ring_t::push(const void *src_desc,
         if (push_type == ACC_RING_PUSH_SEQUENCER_BATCH) {
             seq_desc = queues::seq_sq_batch_consume_entry(curr_seq_qid,
                                    ring_base_mem_pa, &curr_seq_pd_idx,
-                                   &update_seq_desc, acc_ring_batch_end_notify,
+                                   &new_batch, acc_ring_batch_end_notify,
                                    (void *)this);
-        } else {
-            queues::seq_sq_batch_consume_end(curr_seq_qid);
-            seq_desc = queues::seq_sq_consume_entry(curr_seq_qid, &curr_seq_pd_idx);
-            update_seq_desc = true;
-        }
+            if (new_batch) {
 
-        if (update_seq_desc) {
-            seq_desc->clear();
-            seq_desc->write_bit_fields(0, 64, host_mem_v2p(dst_desc));
-            seq_desc->write_bit_fields(64, 34, cfg_ring_pd_idx);
-            seq_desc->write_bit_fields(98, 34, shadow_pd_idx_mem->pa());
-            seq_desc->write_bit_fields(132, 4, (uint8_t)log2(desc_size));
-            seq_desc->write_bit_fields(136, 3, (uint8_t)log2(pi_size));
-            seq_desc->write_bit_fields(139, 5, (uint8_t)log2(ring_size));
-            seq_desc->write_bit_fields(144, 34, ring_base_mem_pa);
-        }
+                /*
+                 * Hitch a ride on seq_desc to save our dst_desc info
+                 * until acc_ring_batch_end_notify() is called.
+                 */
+                assert(desc_size >= sizeof(uint64_t));
+                *((uint64_t *)seq_desc->read()) = host_mem_v2p(dst_desc);
+            }
 
-        if (push_type == ACC_RING_PUSH_SEQUENCER) {
-            seq_desc->write_thru();
-            test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                               curr_seq_qid, 0, curr_seq_pd_idx);
-            curr_push_type = ACC_RING_PUSH_INVALID;
+            /*
+             * Defer until caller calls post_push()
+             */
+            curr_push_type = push_type;
             break;
         }
 
-        /*
-         * Defer until caller calls post_push()
-         */
-        curr_push_type = push_type;
+        queues::seq_sq_batch_consume_end(curr_seq_qid);
+        seq_desc = queues::seq_sq_consume_entry(curr_seq_qid, &curr_seq_pd_idx);
+        seq_desc_pack(seq_desc, host_mem_v2p(dst_desc));
+        test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE,
+                           curr_seq_qid, 0, curr_seq_pd_idx);
+        curr_push_type = ACC_RING_PUSH_INVALID;
         break;
 
     case ACC_RING_PUSH_HW_DIRECT:
