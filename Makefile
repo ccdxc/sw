@@ -54,7 +54,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.12
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.6
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.7
 TARGETS ?= ws-tools gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
@@ -137,7 +137,7 @@ install:
 	@#copy the agent binaries to netagent
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
 	@cp -p ${PWD}/bin/cbin/nevtsproxy tools/docker-files/netagent/nevtsproxy
-	@# npm is special - The executable is called pen-npm since it conflicts with node.js' npm. Hence copy it explicitly here
+	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --rm --no-cache -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
 	@tools/scripts/createImage.py
@@ -324,7 +324,7 @@ e2e:
 	#./test/e2e/dind/do.py -delete
 
 e2e-ui:
-	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=http://192.168.30.10:9000" -w /import/src/github.com/pensando/sw/venice/ui/webapp registry.test.pensando.io:5000/pens-ui-bld:v0.4 ng e2e -s=false
+	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=http://192.168.30.10:9000" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ng e2e -s=false
 
 # Target to run venice e2e a dind environment. Uses real HAL as Agent Datapath and starts HAL with model
 e2e-sanities:

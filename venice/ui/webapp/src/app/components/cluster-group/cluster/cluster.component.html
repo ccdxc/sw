@@ -33,7 +33,7 @@
         </div>
         <div fxFlex="50">
             <div class="cluster-details-panel-content-label">Auto Admit NICs:</div>
-            <div class="cluster-details-panel-content-value cluster-details-panel-auto-admit-nics">{{cluster?.spec['auto-admit-nics']}}</div>
+            <div class="cluster-details-panel-content-value cluster-details-panel-auto-admit-nics">{{(cluster?.spec['auto-admit-nics'] === true) ? 'yes' : 'no'}}</div>
         </div>
       </div>
     </div>
@@ -70,8 +70,8 @@
           <p-tableCheckbox [value]="node"></p-tableCheckbox>
         </td>
         <td>{{node.meta.name}}</td>
-        <td>{{node.status.quorum}}</td>
-        <td>{{node.status.phase}}</td>
+        <td>{{(node.status.quorum === true) ? 'yes' : ''}}</td>
+        <td>{{node.status.phase.charAt(0).toUpperCase() + node.status.phase.slice(1).toLowerCase()}}</td>
       </tr>
     </ng-template>  
   </p-table>

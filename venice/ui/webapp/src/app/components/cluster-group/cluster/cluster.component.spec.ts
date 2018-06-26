@@ -14,13 +14,13 @@ import { MatIconRegistry } from '@angular/material';
  ------------------*/
 import { ClusterComponent } from './cluster.component';
 import { ControllerService } from '@app/services/controller.service';
-import { ClusterService } from '@app/services/cluster.service';
-import { NodesService } from '@app/services/nodes.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { ClusterCluster, ClusterNode } from '@sdk/v1/models/generated/cluster';
 
 @Component({
   template: ''
@@ -52,7 +52,6 @@ describe('ClusterComponent', () => {
         LogService,
         LogPublishersService,
         ClusterService,
-        NodesService,
         MatIconRegistry
       ]
     })
@@ -69,7 +68,7 @@ describe('ClusterComponent', () => {
   });
 
   it('cluster should have right values', () => {
-    component.cluster = {'kind': 'Cluster', 'api-version': 'v1', 'meta':  {'name': 'testCluster', 'tenant': 'default', 'namespace': 'default', 'resource-version': '454', 'uuid': '88f8baa7-7a8e-4a2a-9780-c23d2a217b5d', 'creation-time': '2018-06-13T17:50:29.117538562Z', 'mod-time': '2018-06-13T17:50:44.783819163Z', 'self-link': '/v1/cluster/cluster/testCluster'}, 'spec':  {'quorum-nodes': ['node1', 'node2', 'node3'], 'virtual-ip': '192.168.30.10', 'ntp-servers': ['1.pool.ntp.org', '2.pool.ntp.org'], 'auto-admit-nics': true}, 'status':  {'leader': 'node1', 'last-leader-transition-time': '2018-06-13T17:50:44.783544086Z'}};
+    component.cluster = new ClusterCluster({'kind': 'Cluster', 'api-version': 'v1', 'meta':  {'name': 'testCluster', 'tenant': 'default', 'namespace': 'default', 'resource-version': '454', 'uuid': '88f8baa7-7a8e-4a2a-9780-c23d2a217b5d', 'creation-time': '2018-06-13T17:50:29.117538562Z', 'mod-time': '2018-06-13T17:50:44.783819163Z', 'self-link': '/v1/cluster/cluster/testCluster'}, 'spec':  {'quorum-nodes': ['node1', 'node2', 'node3'], 'virtual-ip': '192.168.30.10', 'ntp-servers': ['1.pool.ntp.org', '2.pool.ntp.org'], 'auto-admit-nics': true}, 'status':  {'leader': 'node1', 'last-leader-transition-time': '2018-06-13T17:50:44.783544086Z'}});
     fixture.detectChanges();
     // Cluster icon should be visible
     const clusterDe: DebugElement = fixture.debugElement;
@@ -81,11 +80,16 @@ describe('ClusterComponent', () => {
     expect(clusterHe.querySelector('div.cluster-details-panel-quorum-nodes').textContent).toContain('node1, node2, node3');
     expect(clusterHe.querySelector('div.cluster-details-panel-ntp-servers').textContent).toContain('1.pool.ntp.org, 2.pool.ntp.org');
     expect(clusterHe.querySelector('div.cluster-details-panel-virtual-ip').textContent).toContain('192.168.30.10');
-    expect(clusterHe.querySelector('div.cluster-details-panel-auto-admit-nics').textContent).toContain('true');
+    expect(clusterHe.querySelector('div.cluster-details-panel-auto-admit-nics').textContent).toContain('yes');
   });
 
   it('nodes should have right values', () => {
-    component.nodes = [{'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node1', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': '6a000b60-949b-4338-bd7e-8e750a9a8edb', 'creation-time': '2018-06-13T17:50:29.117624431Z', 'mod-time': '2018-06-13T17:50:29.117624431Z', 'self-link': '/v1/cluster/nodes/node1'}, 'spec':  {}, 'status':  {'phase': 'JOINED', 'quorum': true}}, {'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node2', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': '1d96fc5c-7701-4d8d-ada8-3ec160a50138', 'creation-time': '2018-06-13T17:50:29.117702613Z', 'mod-time': '2018-06-13T17:50:29.117702613Z', 'self-link': '/v1/cluster/nodes/node2'}, 'spec':  {}, 'status':  {'phase': 'JOINED', 'quorum': true}}, {'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node3', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': 'cdf2c24c-3afb-417f-a615-6a4cbd77f2c4', 'creation-time': '2018-06-13T17:50:29.117712981Z', 'mod-time': '2018-06-13T17:50:29.117712981Z', 'self-link': '/v1/cluster/nodes/node3'}, 'spec':  {}, 'status':  {'phase': 'JOINED', 'quorum': true}}, {'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node4', 'tenant': 'default', 'resource-version': '6918', 'uuid': 'ae07bb01-b50c-4941-9be8-133766b3725e', 'creation-time': '2018-06-13T18:22:28.189909722Z', 'mod-time': '2018-06-13T18:22:28.25393029Z', 'self-link': '/v1/cluster/nodes/node4'}, 'spec':  {}, 'status':  {'phase': 'JOINED'}}, {'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node5', 'tenant': 'default', 'resource-version': '6957', 'uuid': '199e7e27-a191-4332-9e28-e3c1f4445ddf', 'creation-time': '2018-06-13T18:22:30.542580696Z', 'mod-time': '2018-06-13T18:22:30.607773739Z', 'self-link': '/v1/cluster/nodes/node5'}, 'spec':  {}, 'status':  {'phase': 'JOINED'}}];
+    const node1 = new ClusterNode({'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node1', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': '6a000b60-949b-4338-bd7e-8e750a9a8edb', 'creation-time': '2018-06-13T17:50:29.117624431Z', 'mod-time': '2018-06-13T17:50:29.117624431Z', 'self-link': '/v1/cluster/nodes/node1'}, 'spec':  {}, 'status':  {'phase': 'JOINED', 'quorum': true}});
+    const node2 = new ClusterNode({'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node2', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': '1d96fc5c-7701-4d8d-ada8-3ec160a50138', 'creation-time': '2018-06-13T17:50:29.117702613Z', 'mod-time': '2018-06-13T17:50:29.117702613Z', 'self-link': '/v1/cluster/nodes/node2'}, 'spec':  {}, 'status':  {'phase': 'JOINED', 'quorum': true}});
+    const node3 = new ClusterNode({'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node3', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': 'cdf2c24c-3afb-417f-a615-6a4cbd77f2c4', 'creation-time': '2018-06-13T17:50:29.117712981Z', 'mod-time': '2018-06-13T17:50:29.117712981Z', 'self-link': '/v1/cluster/nodes/node3'}, 'spec':  {}, 'status':  {'phase': 'JOINED', 'quorum': true}});
+    const node4 = new ClusterNode({'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node4', 'tenant': 'default', 'resource-version': '6918', 'uuid': 'ae07bb01-b50c-4941-9be8-133766b3725e', 'creation-time': '2018-06-13T18:22:28.189909722Z', 'mod-time': '2018-06-13T18:22:28.25393029Z', 'self-link': '/v1/cluster/nodes/node4'}, 'spec':  {}, 'status':  {'phase': 'JOINED'}});
+    const node5 = new ClusterNode({'kind': 'Node', 'api-version': 'v1', 'meta':  {'name': 'node5', 'tenant': 'default', 'resource-version': '6957', 'uuid': '199e7e27-a191-4332-9e28-e3c1f4445ddf', 'creation-time': '2018-06-13T18:22:30.542580696Z', 'mod-time': '2018-06-13T18:22:30.607773739Z', 'self-link': '/v1/cluster/nodes/node5'}, 'spec':  {}, 'status':  {'phase': 'JOINED'}});
+    component.nodes = [node1, node2, node3, node4, node5];
     fixture.detectChanges();
     const nodesDe: DebugElement = fixture.debugElement;
     const nodesHe: HTMLElement = nodesDe.nativeElement;
@@ -99,11 +103,11 @@ describe('ClusterComponent', () => {
       expect(cols.length).toBe(4);
       expect(cols[1].textContent).toContain('node' + (i + 1));
       if (i < 3) {
-        expect(cols[2].textContent).toContain('true');
+        expect(cols[2].textContent).toContain('yes');
       } else {
         expect(cols[2].textContent).toBe('');
       }
-      expect(cols[3].textContent).toContain('JOINED');
+      expect(cols[3].textContent).toContain('Joined');
     }
   });
 });
