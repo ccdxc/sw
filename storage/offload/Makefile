@@ -1,4 +1,4 @@
-CUR_DIR:=$(shell pwd)
+CUR_DIR:=$(PWD)
 STORAGE_DIR:=$(shell dirname ${CUR_DIR})
 SW_DIR:=$(shell dirname ${STORAGE_DIR})
 CUR_USER:=$(shell whoami)
@@ -8,7 +8,7 @@ CONTAINER_NAME:=${CUR_USER}_${CUR_TIME}
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 shell: build-runtime-image
 	mkdir -p ${SW_DIR}/bazel-cache;
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/storage/offload pensando/offload bash
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -v /lib/modules:/lib/modules -v /usr/src/kernels:/usr/src/kernels -w /sw/storage/offload pensando/offload bash
 
 REGISTRY = registry.test.pensando.io:5000
 
@@ -18,3 +18,22 @@ build-runtime-image: install_box
 
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
+
+MODNAME = pnso
+INCDIRS = include src/osal src/osal/test
+
+$(MODNAME)-y = src/osal/linux/kernel/osal_thread.o 
+$(MODNAME)-y += src/osal/linux/kernel/osal_atomic.o 
+$(MODNAME)-y += src/osal/linux/kernel/osal_sys.o 
+$(MODNAME)-y += src/osal/linux/kernel/sim/osal_mem.o 
+$(MODNAME)-y += src/osal/test/osal_test.o
+
+obj-m = $(MODNAME).o
+ccflags-y = $(INCDIRS:%=-I$(PWD)/%)
+KERN_DIR = /lib/modules/$(shell uname -r)/build
+modules: modules-clean
+	make -C $(KERN_DIR) M=$(PWD) modules
+
+modules-clean:
+	make -C $(KERN_DIR) M=$(PWD) clean
+

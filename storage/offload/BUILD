@@ -68,8 +68,7 @@ config_setting(
 
 cc_library(
     name = "osal",
-    srcs = glob(["src/osal/*.h"]) +
-           glob(["src/osal/*.c"]) + 
+    srcs = glob(["src/osal/*.c"]) + 
 #need to delete below lines once pnso_sim_uspace.c is moved out of osal
            glob(["src/sim/*.h"]) + 
            glob(["include/*.h"]) + 
@@ -93,7 +92,7 @@ cc_library(
     copts = [
         "-xc"
     ],
-    hdrs = glob(["src/osal/*.h"])
+    hdrs = glob(["src/osal/*.h"]),
 )
 
 cc_binary(

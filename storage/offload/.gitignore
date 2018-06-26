@@ -1,0 +1,8 @@
+.pnso*
+*.o
+*.cmd
+Module*
+modules*
+*.ko
+*mod.c
+.tmp_versions
