@@ -4,6 +4,7 @@
 #define __UPGRADE_STATE_MACHINE_H__
 
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "upgrade_pre_state_handlers.hpp"
 
 namespace upgrade {
 
@@ -26,6 +27,8 @@ typedef struct UpgCtx_ {
     UpgType               upgType;
 } UpgCtx;
 
+typedef void (UpgPreStateHandler::*UpgStateFunc)(void);
+
 typedef struct UpgStateMachine_ {
     UpgReqStateType             state;
     UpgReqStateType             stateNext;
@@ -36,9 +39,11 @@ typedef struct UpgStateMachine_ {
     string                      upgReqStateTypeToStr;
     string                      upgRespStateTypeToStrPass;
     string                      upgRespStateTypeToStrFail;
+    UpgStateFunc                preStateFunc;
 } UpgStateMachine;
 
 extern UpgStateMachine StateMachine[UpgStateTerminal]; 
+extern UpgPreStateHandler* preStateHandlers;
 void InitStateMachineVector(void);
 }
 

@@ -2,15 +2,19 @@
 #include <iostream>
 
 #include "upgrade_state_machine.hpp"
+#include "upgrade_pre_state_handlers.hpp"
+#include "nic/delphi/sdk/delphi_sdk.hpp"
 
 namespace upgrade {
 
 using namespace std;
 
 UpgStateMachine StateMachine[UpgStateTerminal];
+UpgPreStateHandler* preStateHandlers;
 
 void InitStateMachineVector(void) {
     LogInfo("InitStateMachineVector called!!!");
+    preStateHandlers = new UpgPreStateHandler();
     StateMachine[UpgReqRcvd] = 
                {
                 UpgReqRcvd, 
@@ -21,7 +25,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr for Upgrade Request Received message",
                 "Upgrade Request Received", 
                 "Upgrade Request Received Pass", 
-                "Upgrade Request Received Fail"
+                "Upgrade Request Received Fail",
+                &UpgPreStateHandler::PreUpgReqRcvd
                };
     StateMachine[PreUpgState] = 
                {
@@ -33,7 +38,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr for Pre-Upgrade Check message", 
                 "Perform Compat Check", 
                 "Compat check passed", 
-                "Compat check failed"
+                "Compat check failed",
+                &UpgPreStateHandler::PrePreUpgState
                };
     StateMachine[ProcessesQuiesced] = 
                {
@@ -45,7 +51,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr for Process Quiesced message", 
                 "Quiesce Processes Pre-Restart", 
                 "Process Quiesce Pass", 
-                "Process Quiesce Fail"
+                "Process Quiesce Fail",
+                &UpgPreStateHandler::PreProcessesQuiesced
                };
     StateMachine[PostBinRestart] = 
                {
@@ -57,7 +64,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr for Post-Binary Restart message", 
                 "Post Process Restart", 
                 "Post Process Restart Pass", 
-                "Post Process Restart Fail"
+                "Post Process Restart Fail",
+                &UpgPreStateHandler::PrePostBinRestart
                };
     StateMachine[DataplaneDowntimePhase1Start] =
                {
@@ -69,7 +77,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr for Dataplane Downtime Phase1 Start message",
                 "Dataplane Downtime Phase1 Start",
                 "Dataplane Downtime Phase1 Success",
-                "Dataplane Downtime Phase1 Fail"
+                "Dataplane Downtime Phase1 Fail",
+                &UpgPreStateHandler::PreDataplaneDowntimePhase1Start
                };
     StateMachine[DataplaneDowntimeAdminQHandling] = 
                {
@@ -81,7 +90,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr for Dataplane Downtime AdminQ Handling message", 
                 "Dataplane Downtime AdminQ Handling Start", 
                 "Dataplane Downtime AdminQ Handling Success", 
-                "Dataplane Downtime AdminQ Handling Fail"
+                "Dataplane Downtime AdminQ Handling Fail",
+                &UpgPreStateHandler::PreDataplaneDowntimeAdminQ
                };
     StateMachine[DataplaneDowntimePhase2Start] =
                {
@@ -93,7 +103,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr for Dataplane Downtime Phase2 Start message",
                 "Dataplane Downtime Phase2 Start",
                 "Dataplane Downtime Phase2 Success",
-                "Dataplane Downtime Phase2 Fail"
+                "Dataplane Downtime Phase2 Fail",
+                &UpgPreStateHandler::PreDataplaneDowntimePhase2Start
                };
     StateMachine[UpgSuccess] = 
                {
@@ -105,7 +116,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr after upgrade fail message", 
                 "Upgrade Success", 
                 "", 
-                ""
+                "",
+                &UpgPreStateHandler::PreUpgSuccess
                };
     StateMachine[UpgFailed] = 
                {
@@ -117,7 +129,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr after upgrade fail message", 
                 "Upgrade Fail", 
                 "", 
-                ""
+                "",
+                &UpgPreStateHandler::PreUpgFailed
                 };
     StateMachine[Cleanup] =
                {
@@ -129,7 +142,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr after cleaning up stale state",
                 "Cleanup State",
                 "Cleanup Pass",
-                "Cleanup Fail"
+                "Cleanup Fail",
+                &UpgPreStateHandler::PreCleanup
                };
     StateMachine[UpgAborted] = 
                {
@@ -141,7 +155,8 @@ void InitStateMachineVector(void) {
                 "Sending fail to upg-mgr after handling upgrade aborted", 
                 "Upgrade Aborted State", 
                 "Upgrade Aborted Pass", 
-                "Upgrade Aborted Fail"
+                "Upgrade Aborted Fail",
+                &UpgPreStateHandler::PreUpgAborted
                };
 }
 }
