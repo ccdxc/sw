@@ -105,7 +105,7 @@ def process(topospec):
 def main(topofile):
     timeprofiler.ConfigTimeProfiler.Start()
     halapi.init()
-    if not GlobalOptions.niccontainer:
+    if not GlobalOptions.naples_container:
         logger.info("Initializing Resmgr")
         resmgr.init()
     logger.info("Generating Config Objects for Topology = %s" % topofile)
@@ -113,7 +113,7 @@ def main(topofile):
     if topospec:
         process(topospec)
     timeprofiler.ConfigTimeProfiler.Stop()
-    if not GlobalOptions.niccontainer:
+    if not GlobalOptions.naples_container:
         ModelConnector.ConfigDone()
     return
 

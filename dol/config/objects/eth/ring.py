@@ -31,7 +31,7 @@ class EthRingObject(ring.RingObject):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
-        if not GlobalOptions.niccontainer:
+        if not GlobalOptions.naples_container:
             #Make sure ring_size is a power of 2
             self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
             resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)

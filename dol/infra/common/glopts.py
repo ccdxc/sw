@@ -89,7 +89,7 @@ parser.add_argument('--agent', dest='agent', action='store_true',
                     help='Start DOL with Agent')
 parser.add_argument('--savepcap', dest='savepcap', action='store_true',
                     help='Save all the packets to PCAP instead.')
-parser.add_argument('--niccontainer', dest='niccontainer', action='store_true',
+parser.add_argument('--naplescontainer', dest='naples_container', action='store_true',
                     help='Nic running(hal,model) inside container.')
 
 

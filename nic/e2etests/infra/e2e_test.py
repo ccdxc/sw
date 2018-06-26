@@ -59,7 +59,7 @@ def SetUpNs(name, ep):
         
 class E2eTest(object):
 
-    def __init__(self, cfg, niccontainer=None):
+    def __init__(self, cfg, naples_container=None):
         self._name = cfg["name"]
         self._src_type = cfg["endpoint"]["src"]
         self._dst_type = cfg["endpoint"]["dst"]
@@ -67,7 +67,7 @@ class E2eTest(object):
         self._src_ep = None
         self._dst_ep = None
         self._modules = cfg["modules"]
-        self._niccontainer = niccontainer
+        self._naples_container = naples_container
     
     def __str__(self):
         return "E2E_TEST: %s" % self._name
@@ -77,7 +77,7 @@ class E2eTest(object):
                                                   self._dst_type)
         with open(consts.HNTAP_CFG_FILE, "w") as fp:
             json.dump(self._ep_pair_cfg, fp)
-        self._hntap = HntapFactory.Get(consts.HNTAP_CFG_FILE, container=self._niccontainer)
+        self._hntap = HntapFactory.Get(consts.HNTAP_CFG_FILE, container=self._naples_container)
         self._hntap.Run(nomodel)
         self.__configure_endpoints()
 
