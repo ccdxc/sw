@@ -1,0 +1,809 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "nat.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/nat/bindings/": {
+      "get": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoNatBindingList"
+            }
+          }
+        },
+        "tags": [
+          "NatBinding"
+        ]
+      },
+      "post": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatBindingSpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatBinding"
+        ]
+      }
+    },
+    "/api/nat/bindings/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+      "delete": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatBindingSpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatBinding"
+        ]
+      },
+      "put": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatBindingSpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatBinding"
+        ]
+      }
+    },
+    "/api/nat/policies/": {
+      "get": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPolicyList"
+            }
+          }
+        },
+        "tags": [
+          "NatPolicy"
+        ]
+      },
+      "post": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatPolicy"
+        ]
+      }
+    },
+    "/api/nat/policies/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+      "delete": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatPolicy"
+        ]
+      },
+      "put": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatPolicy"
+        ]
+      }
+    },
+    "/api/nat/pools/": {
+      "get": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPoolList"
+            }
+          }
+        },
+        "tags": [
+          "NatPool"
+        ]
+      },
+      "post": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPoolSpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatPool"
+        ]
+      }
+    },
+    "/api/nat/pools/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+      "delete": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPoolSpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatPool"
+        ]
+      },
+      "put": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoNatPoolSpec"
+            }
+          }
+        ],
+        "tags": [
+          "NatPool"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiEventType": {
+      "type": "string",
+      "enum": [
+        "CreateEvent",
+        "UpdateEvent",
+        "DeleteEvent"
+      ],
+      "default": "CreateEvent",
+      "title": "Watch event types"
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "resource-version": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "uuid": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "self-link": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "api-version": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "netprotoApiResponse": {
+      "type": "object",
+      "properties": {
+        "status-code": {
+          "type": "integer"
+        },
+        "error": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "netprotoMatchSelector": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "title": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range"
+        },
+        "security-group": {
+          "type": "string",
+          "title": "Match on the security group"
+        },
+        "app": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "L4PORT"
+          ],
+          "default": "NONE",
+          "title": "Match on the App info"
+        },
+        "app-config": {
+          "type": "string"
+        }
+      },
+      "title": "Common MatchSelector. ToDo Add ICMP Match criteria"
+    },
+    "netprotoNatBinding": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoNatBindingSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoNatBindingStatus"
+        }
+      }
+    },
+    "netprotoNatBindingEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "nat-binding": {
+          "$ref": "#/definitions/netprotoNatBinding"
+        }
+      }
+    },
+    "netprotoNatBindingList": {
+      "type": "object",
+      "properties": {
+        "NatBindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatBinding"
+          }
+        }
+      },
+      "title": "list of nat bindings"
+    },
+    "netprotoNatBindingSpec": {
+      "type": "object",
+      "properties": {
+        "nat-pool": {
+          "type": "string"
+        },
+        "ip-address": {
+          "type": "string"
+        }
+      },
+      "title": "nat binding object"
+    },
+    "netprotoNatBindingStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nat-ip": {
+          "type": "string"
+        }
+      }
+    },
+    "netprotoNatPolicy": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoNatPolicySpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoNatPolicyStatus"
+        }
+      },
+      "title": "nat policy object"
+    },
+    "netprotoNatPolicyEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "nat-policy": {
+          "$ref": "#/definitions/netprotoNatPolicy"
+        }
+      },
+      "title": "security group watch event"
+    },
+    "netprotoNatPolicyList": {
+      "type": "object",
+      "properties": {
+        "NatPolicies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatPolicy"
+          }
+        }
+      },
+      "title": "list of nat policies"
+    },
+    "netprotoNatPolicySpec": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatRule"
+          }
+        }
+      }
+    },
+    "netprotoNatPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "netprotoNatPool": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoNatPoolSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoNatPoolStatus"
+        }
+      },
+      "title": "nat pool object"
+    },
+    "netprotoNatPoolEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "natpool": {
+          "$ref": "#/definitions/netprotoNatPool"
+        }
+      },
+      "title": "nat pool watch event"
+    },
+    "netprotoNatPoolList": {
+      "type": "object",
+      "properties": {
+        "NatPools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatPool"
+          }
+        }
+      },
+      "title": "list of nat pools"
+    },
+    "netprotoNatPoolSpec": {
+      "type": "object",
+      "properties": {
+        "ip-range": {
+          "type": "string",
+          "title": "Range of IP Addresses for the nat pool"
+        }
+      }
+    },
+    "netprotoNatPoolStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "NatBindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatPoolStatusNatBinding"
+          }
+        }
+      },
+      "title": "nat pool status"
+    },
+    "netprotoNatPoolStatusNatBinding": {
+      "type": "object",
+      "properties": {
+        "LocalAddress": {
+          "type": "string"
+        },
+        "LocalPort": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "GlobalAddress": {
+          "type": "string"
+        },
+        "GlobalPort": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "Protocol": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "netprotoNatRule": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "description": "Nat Rule From match selector."
+        },
+        "destination": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "description": "Nat Rule To match selector."
+        },
+        "protocol": {
+          "type": "string",
+          "title": "IP Protocol"
+        },
+        "from-port": {
+          "type": "string",
+          "title": "From tcp/udp port. Can be a single port or a port range separated by a hyphen"
+        },
+        "to-port": {
+          "type": "string",
+          "title": "To tcp/udp port. Can be a single port or a port range separated by a hyphen"
+        },
+        "nat-pool": {
+          "type": "string",
+          "title": "NAT pool to use"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "SNAT",
+            "DNAT",
+            "SPAT",
+            "DPAT"
+          ],
+          "default": "SNAT",
+          "title": "Nat action"
+        },
+        "rule-id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "nat rule"
+    }
+  }
+}

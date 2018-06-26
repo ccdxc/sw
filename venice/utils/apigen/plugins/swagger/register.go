@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-swagger/plugins"
 
+	"github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
@@ -21,6 +22,157 @@ func reqMutator(req *plugin.CodeGeneratorRequest) {
 }
 
 func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *descriptor.Registry) error {
+
+	path := make(genswagger.SwaggerPathsObject)
+
+	apiResp := genswagger.SwaggerSchemaObject{
+		SchemaCore: genswagger.SchemaCore{
+			Type: "object",
+		},
+		Properties: genswagger.SwaggerSchemaObjectProperties{
+			{
+				Key: "status-code",
+				Value: genswagger.SchemaCore{
+					Type: "integer",
+				},
+			},
+			{
+				Key: "error",
+				Value: genswagger.SchemaCore{
+					Type: "string",
+				},
+			},
+			{
+				Key: "references",
+				Value: genswagger.SchemaCore{
+					Type: "array",
+					Items: &genswagger.SwaggerItemsObject{
+						Type: "string",
+					},
+				},
+			},
+		},
+	}
+
+	svcs := file.Services
+	for _, s := range svcs {
+		ext, err := gwplugins.GetExtension("venice.naplesRestService", s)
+		if err != nil {
+			// Ignore error here as swagger gen is not parsing the errors
+			continue
+		}
+		glog.V(1).Infof("EXTS: %v", ext)
+		obj.Definitions["netprotoApiResponse"] = apiResp
+
+		naplesRestServices, ok := ext.([]*venice.RestEndpoint)
+		if !ok {
+			glog.V(1).Infof("Failed casting to naples rest endpoint object")
+		}
+
+		for _, n := range naplesRestServices {
+			for _, m := range n.Method {
+				if m == "post" || m == "list" {
+					postResp := make(genswagger.SwaggerResponsesObject)
+					listResp := make(genswagger.SwaggerResponsesObject)
+					params := []genswagger.SwaggerParameterObject{
+						{
+							Name:     "body",
+							In:       "body",
+							Required: true,
+							Schema: &genswagger.SwaggerSchemaObject{
+								SchemaCore: genswagger.SchemaCore{
+									Ref: fmt.Sprintf("#/definitions/netproto%sSpec", n.Object),
+								},
+							},
+						},
+					}
+					postResp["200"] = genswagger.SwaggerResponseObject{
+						Schema: genswagger.SwaggerSchemaObject{
+							SchemaCore: genswagger.SchemaCore{
+								Ref: "#/definitions/netprotoApiResponse",
+							},
+						},
+					}
+					postResp["500"] = genswagger.SwaggerResponseObject{
+						Schema: genswagger.SwaggerSchemaObject{
+							SchemaCore: genswagger.SchemaCore{
+								Ref: "#/definitions/netprotoApiResponse",
+							},
+						},
+					}
+					listResp["200"] = genswagger.SwaggerResponseObject{
+						Schema: genswagger.SwaggerSchemaObject{
+							SchemaCore: genswagger.SchemaCore{
+								Ref: fmt.Sprintf("#/definitions/netproto%sList", n.Object),
+							},
+						},
+					}
+
+					p := genswagger.SwaggerPathItemObject{
+						Post: &genswagger.SwaggerOperationObject{
+							Tags:       []string{n.Object},
+							Parameters: params,
+							Responses:  postResp,
+						},
+						Get: &genswagger.SwaggerOperationObject{
+							Tags:      []string{n.Object},
+							Responses: listResp,
+						},
+					}
+					path[fmt.Sprintf("/%s/", n.Prefix)] = p
+					obj.Paths = path
+
+				}
+
+				if m == "put" || m == "delete" {
+					resp := make(genswagger.SwaggerResponsesObject)
+					//Resp := make(genswagger.SwaggerResponsesObject)
+					params := []genswagger.SwaggerParameterObject{
+						{
+							Name:     "body",
+							In:       "body",
+							Required: true,
+							Schema: &genswagger.SwaggerSchemaObject{
+								SchemaCore: genswagger.SchemaCore{
+									Ref: fmt.Sprintf("#/definitions/netproto%sSpec", n.Object),
+								},
+							},
+						},
+					}
+					resp["200"] = genswagger.SwaggerResponseObject{
+						Schema: genswagger.SwaggerSchemaObject{
+							SchemaCore: genswagger.SchemaCore{
+								Ref: "#/definitions/netprotoApiResponse",
+							},
+						},
+					}
+					resp["500"] = genswagger.SwaggerResponseObject{
+						Schema: genswagger.SwaggerSchemaObject{
+							SchemaCore: genswagger.SchemaCore{
+								Ref: "#/definitions/netprotoApiResponse",
+							},
+						},
+					}
+					p := genswagger.SwaggerPathItemObject{
+						Put: &genswagger.SwaggerOperationObject{
+							Tags:       []string{n.Object},
+							Parameters: params,
+							Responses:  resp,
+						},
+						Delete: &genswagger.SwaggerOperationObject{
+							Tags:       []string{n.Object},
+							Parameters: params,
+							Responses:  resp,
+						},
+					}
+					path[fmt.Sprintf("/%s%s", n.Prefix, n.Pattern)] = p
+					obj.Paths = path
+				}
+			}
+		}
+
+	}
+
 	return nil
 }
 

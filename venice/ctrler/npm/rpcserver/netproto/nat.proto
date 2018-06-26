@@ -19,7 +19,8 @@ service NatPoolApi {
     option(venice.naplesRestService) = {
         Object: "NatPool",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}",
+        Prefix: "api/nat/pools"
     };
 
     rpc GetNatPool (api.ObjectMeta) returns (NatPool) {};
@@ -75,7 +76,9 @@ service NatBindingApi {
     option(venice.naplesRestService) = {
         Object: "NatBinding",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}",
+        Prefix: "api/nat/bindings"
+
     };
 
     rpc GetNatBinding (api.ObjectMeta) returns (NatBinding) {};
@@ -121,7 +124,9 @@ service NatPolicyApi {
     option(venice.naplesRestService) = {
         Object: "NatPolicy",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/nat/policies"
+
     };
 
     rpc GetNatPolicy (api.ObjectMeta) returns (NatPolicy) {};

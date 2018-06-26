@@ -1,0 +1,434 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "sgpolicy.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/security/policies/": {
+      "get": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoSGPolicyList"
+            }
+          }
+        },
+        "tags": [
+          "SGPolicy"
+        ]
+      },
+      "post": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoSGPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "SGPolicy"
+        ]
+      }
+    },
+    "/api/security/policies/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+      "delete": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoSGPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "SGPolicy"
+        ]
+      },
+      "put": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoSGPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "SGPolicy"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiEventType": {
+      "type": "string",
+      "enum": [
+        "CreateEvent",
+        "UpdateEvent",
+        "DeleteEvent"
+      ],
+      "default": "CreateEvent",
+      "title": "Watch event types"
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "resource-version": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "uuid": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "self-link": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "api-version": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "netprotoApiResponse": {
+      "type": "object",
+      "properties": {
+        "status-code": {
+          "type": "integer"
+        },
+        "error": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "netprotoMatchSelector": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "title": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range"
+        },
+        "security-group": {
+          "type": "string",
+          "title": "Match on the security group"
+        },
+        "app": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "L4PORT"
+          ],
+          "default": "NONE",
+          "title": "Match on the App info"
+        },
+        "app-config": {
+          "type": "string"
+        }
+      },
+      "title": "Common MatchSelector. ToDo Add ICMP Match criteria"
+    },
+    "netprotoPolicyRule": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "enum": [
+            "PERMIT",
+            "DENY",
+            "REJECT",
+            "LOG"
+          ],
+          "default": "PERMIT",
+          "title": "list of actions for the rule. Some combinations are invalid, eg: [\"PERMIT\", \"DENY\"]"
+        },
+        "source": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "title": "inbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.\nEmtpy src is interpreted as match all"
+        },
+        "destination": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "title": "outbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.\nEmtpy dst is interpreted as match all"
+        },
+        "rule-id": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Allocated ID"
+        }
+      }
+    },
+    "netprotoSGPolicy": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoSGPolicySpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoSGPolicyStatus"
+        }
+      },
+      "title": "SGPolicy object"
+    },
+    "netprotoSGPolicyEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "sg-policy": {
+          "$ref": "#/definitions/netprotoSGPolicy"
+        }
+      },
+      "title": "sg policy watch event"
+    },
+    "netprotoSGPolicyList": {
+      "type": "object",
+      "properties": {
+        "sgpolicies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoSGPolicy"
+          }
+        }
+      }
+    },
+    "netprotoSGPolicySpec": {
+      "type": "object",
+      "properties": {
+        "attach-group": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "list of security groups on which the policy is applied."
+        },
+        "attach-tenant": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "specifies if the set of rules need to be attached globally to a tenant"
+        },
+        "policy-rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoPolicyRule"
+          },
+          "title": "list of rules"
+        }
+      },
+      "title": "SGPolicySpec captures all the security policy configuration"
+    },
+    "netprotoSGPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "SGPolicyStatus captures the sg policy status"
+    }
+  }
+}

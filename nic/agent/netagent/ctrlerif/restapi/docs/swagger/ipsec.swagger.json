@@ -1,0 +1,921 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "ipsec.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/ipsec/decryption/": {
+      "get": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSADecryptList"
+            }
+          }
+        },
+        "tags": [
+          "IPSecSADecrypt"
+        ]
+      },
+      "post": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSADecryptSpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecSADecrypt"
+        ]
+      }
+    },
+    "/api/ipsec/decryption/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+      "delete": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSADecryptSpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecSADecrypt"
+        ]
+      },
+      "put": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSADecryptSpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecSADecrypt"
+        ]
+      }
+    },
+    "/api/ipsec/encryption/": {
+      "get": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSAEncryptList"
+            }
+          }
+        },
+        "tags": [
+          "IPSecSAEncrypt"
+        ]
+      },
+      "post": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSAEncryptSpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecSAEncrypt"
+        ]
+      }
+    },
+    "/api/ipsec/encryption/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+      "delete": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSAEncryptSpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecSAEncrypt"
+        ]
+      },
+      "put": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecSAEncryptSpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecSAEncrypt"
+        ]
+      }
+    },
+    "/api/ipsec/policies/": {
+      "get": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecPolicyList"
+            }
+          }
+        },
+        "tags": [
+          "IPSecPolicy"
+        ]
+      },
+      "post": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecPolicy"
+        ]
+      }
+    },
+    "/api/ipsec/policies/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+      "delete": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecPolicy"
+        ]
+      },
+      "put": {
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoIPSecPolicySpec"
+            }
+          }
+        ],
+        "tags": [
+          "IPSecPolicy"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiEventType": {
+      "type": "string",
+      "enum": [
+        "CreateEvent",
+        "UpdateEvent",
+        "DeleteEvent"
+      ],
+      "default": "CreateEvent",
+      "title": "Watch event types"
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "resource-version": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "uuid": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "self-link": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "api-version": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "netprotoApiResponse": {
+      "type": "object",
+      "properties": {
+        "status-code": {
+          "type": "integer"
+        },
+        "error": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "netprotoIPSecPolicy": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoIPSecPolicySpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoIPSecPolicyStatus"
+        }
+      },
+      "title": "IPSec Policy object"
+    },
+    "netprotoIPSecPolicyEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "ipsec-policy": {
+          "$ref": "#/definitions/netprotoIPSecPolicy"
+        }
+      },
+      "title": "IPSecPolicy watch event"
+    },
+    "netprotoIPSecPolicyList": {
+      "type": "object",
+      "properties": {
+        "IPSecRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoIPSecRule"
+          }
+        }
+      },
+      "title": "list of IPSecPolicies"
+    },
+    "netprotoIPSecPolicySpec": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoIPSecRule"
+          },
+          "title": "IPSecRules in a given policy"
+        }
+      },
+      "title": "IPSecPolicySpec"
+    },
+    "netprotoIPSecPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "IPSecPolicy Status"
+    },
+    "netprotoIPSecRule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "source": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "description": "IPSec Rule From match selector."
+        },
+        "destination": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "description": "IPSec Rule To match selector."
+        },
+        "sa-name": {
+          "type": "string",
+          "title": "Security Association Name"
+        },
+        "sa-type": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "ENCRYPT",
+            "DECRYPT"
+          ],
+          "default": "NONE",
+          "title": "Security Association type"
+        },
+        "spi": {
+          "type": "integer",
+          "format": "int64",
+          "title": "ESP SPI"
+        }
+      }
+    },
+    "netprotoIPSecSADecrypt": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoIPSecSADecryptSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoIPSecSADecryptStatus"
+        }
+      },
+      "title": "IPSecSADecrypt object"
+    },
+    "netprotoIPSecSADecryptEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "ipsec-sa-encrypt": {
+          "$ref": "#/definitions/netprotoIPSecSADecrypt"
+        }
+      },
+      "title": "IPSecSADecrypt watch event"
+    },
+    "netprotoIPSecSADecryptList": {
+      "type": "object",
+      "properties": {
+        "IPSecRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoIPSecRule"
+          }
+        }
+      },
+      "title": "list of IPSecSADecrypt"
+    },
+    "netprotoIPSecSADecryptSpec": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "AH",
+            "ESP"
+          ],
+          "default": "NONE",
+          "title": "SA Decrypt protocol"
+        },
+        "authentication-algorithm": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "AES_GCM",
+            "AES_CCM",
+            "HMAC",
+            "AES_CBC_SHA"
+          ],
+          "default": "NONE",
+          "title": "SA Decrypt Auth Algorithm"
+        },
+        "authentication-key": {
+          "type": "string",
+          "title": "Authentication Key"
+        },
+        "decryption-algorithm": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "AES_GCM_128",
+            "AES_GCM_256",
+            "AES_CCM_128",
+            "AES_CCM_192",
+            "AES_CCM_256",
+            "AES_CBC_128",
+            "AES_CBC_192",
+            "AES_CBC_256",
+            "DES3",
+            "CHA_CHA"
+          ],
+          "default": "NONE",
+          "title": "SA Decrypt Algorithm"
+        },
+        "rekey-decryption-algorithm": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "AES_GCM_128",
+            "AES_GCM_256",
+            "AES_CCM_128",
+            "AES_CCM_192",
+            "AES_CCM_256",
+            "AES_CBC_128",
+            "AES_CBC_192",
+            "AES_CBC_256",
+            "DES3",
+            "CHA_CHA"
+          ],
+          "default": "NONE",
+          "title": "Rekey Decrypt Algorithm"
+        },
+        "decryption-key": {
+          "type": "string",
+          "title": "Decryption Key"
+        },
+        "rekey-auth-key": {
+          "type": "string",
+          "title": "Rekey Auth Key"
+        },
+        "rekey-decryption-key": {
+          "type": "string",
+          "title": "Rekey Decryption Key"
+        },
+        "local-gateway-ip": {
+          "type": "string",
+          "title": "Local Gateway IP"
+        },
+        "remote-gateway-ip": {
+          "type": "string",
+          "title": "Remote Gateway IP"
+        },
+        "spi": {
+          "type": "integer",
+          "format": "int64",
+          "title": "SPI information"
+        },
+        "tep-namespace": {
+          "type": "string",
+          "title": "TepNS holds the namespace that holds outer IP for the tunnel"
+        }
+      },
+      "title": "IPSecSADecryptSpec"
+    },
+    "netprotoIPSecSADecryptStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "IPSecSADecrypt Status"
+    },
+    "netprotoIPSecSAEncrypt": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoIPSecSAEncryptSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoIPSecSAEncryptStatus"
+        }
+      },
+      "title": "IPSecSAEncrypt object"
+    },
+    "netprotoIPSecSAEncryptEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "ipsec-sa-encrypt": {
+          "$ref": "#/definitions/netprotoIPSecSAEncrypt"
+        }
+      },
+      "title": "IPSecSAEncrypt watch event"
+    },
+    "netprotoIPSecSAEncryptList": {
+      "type": "object",
+      "properties": {
+        "IPSecRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoIPSecRule"
+          }
+        }
+      },
+      "title": "list of IPSecSAEncrypt"
+    },
+    "netprotoIPSecSAEncryptSpec": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "AH",
+            "ESP"
+          ],
+          "default": "NONE",
+          "title": "SA Encrypt protocol"
+        },
+        "authentication-algorithm": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "AES_GCM",
+            "AES_CCM",
+            "HMAC",
+            "AES_CBC_SHA"
+          ],
+          "default": "NONE",
+          "title": "SA Encrypt Auth Algorithm"
+        },
+        "authentication-key": {
+          "type": "string",
+          "title": "Authentication Key"
+        },
+        "encryption-algorithm": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "AES_GCM_128",
+            "AES_GCM_256",
+            "AES_CCM_128",
+            "AES_CCM_192",
+            "AES_CCM_256",
+            "AES_CBC_128",
+            "AES_CBC_192",
+            "AES_CBC_256",
+            "DES3",
+            "CHA_CHA"
+          ],
+          "default": "NONE",
+          "title": "SA Encrypt Algorithm"
+        },
+        "encryption-key": {
+          "type": "string",
+          "title": "Encryption Key"
+        },
+        "local-gateway-ip": {
+          "type": "string",
+          "title": "Local Gateway IP"
+        },
+        "remote-gateway-ip": {
+          "type": "string",
+          "title": "Remote Gateway IP"
+        },
+        "spi": {
+          "type": "integer",
+          "format": "int64",
+          "title": "SPI Value"
+        },
+        "tep-namespace": {
+          "type": "string",
+          "title": "TepNS holds the namespace that holds outer IP for the tunnel"
+        }
+      },
+      "title": "IPSecSAEncryptSpec"
+    },
+    "netprotoIPSecSAEncryptStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "IPSecSAEncrypt Status"
+    },
+    "netprotoMatchSelector": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "title": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range"
+        },
+        "security-group": {
+          "type": "string",
+          "title": "Match on the security group"
+        },
+        "app": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "L4PORT"
+          ],
+          "default": "NONE",
+          "title": "Match on the App info"
+        },
+        "app-config": {
+          "type": "string"
+        }
+      },
+      "title": "Common MatchSelector. ToDo Add ICMP Match criteria"
+    }
+  }
+}

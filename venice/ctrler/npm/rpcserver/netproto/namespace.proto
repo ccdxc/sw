@@ -21,7 +21,8 @@ service NamespaceApi {
     option(venice.naplesRestService) = {
         Object: "Namespace",
         Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}",
+        Prefix: "api/namespaces"
     };
 
     rpc GetNamespace (api.ObjectMeta) returns (Namespace) {};

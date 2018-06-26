@@ -20,7 +20,8 @@ service RouteApi {
     option(venice.naplesRestService) = {
         Object: "Route",
         Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/routes"
     };
 
     rpc GetRoute (api.ObjectMeta) returns (Route) {};

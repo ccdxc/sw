@@ -18,7 +18,8 @@ service EndpointApi {
     option(venice.naplesRestService) = {
         Object: "Endpoint",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/endpoints"
     };
 
     rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
@@ -51,7 +52,7 @@ message EndpointSpec {
     string NetworkName                      = 4 [(gogoproto.jsontag) = "network-name,omitempty"];
     map<string,string> WorkloadAttributes   = 5 [(gogoproto.jsontag) = "workload-attributes,omitempty"];
     repeated string SecurityGroups          = 6 [(gogoproto.jsontag) = "security-groups,omitempty"];
-    string InterfaceType                    = 7 [(venice.check) = "StrEnum(EndpointSpec.IFType)",
+    string InterfaceType                    = 7 [(venice.check) = "StrEnum(EndpointSpec.Type)",
                                                  (gogoproto.jsontag) = "interface-type,omitempty"];
     string Interface                        = 8 [(gogoproto.jsontag) = "interface,omitempty"];
     string IPv4Address                      = 9  [(gogoproto.jsontag) = "ipv4-address,omitempty"];

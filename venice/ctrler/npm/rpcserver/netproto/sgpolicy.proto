@@ -21,7 +21,8 @@ service SGPolicyApi {
     option(venice.naplesRestService) = {
         Object: "SGPolicy",
         Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/security/policies"
     };
 
     rpc GetSGPolicy (api.ObjectMeta) returns (SGPolicy) {};

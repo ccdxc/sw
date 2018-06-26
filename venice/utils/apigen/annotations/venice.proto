@@ -19,6 +19,8 @@ message RestEndpoint {
   repeated string Method = 2;
   // Pattern for the URI
   string Pattern = 3;
+  // Prefix for the URL
+  string Prefix = 4;
 }
 
 // ObjectPrefix defines the way the object is identified in the kvstore and REST api.

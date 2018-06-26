@@ -28,7 +28,6 @@ message MatchSelector {
     // Match on the App info
     string App              = 3 [(venice.check) = "StrEnum(MatchSelector.Type)",
                                  (gogoproto.jsontag) = "app,omitempty"];
-    string AppConfig        = 4 [(venice.check) = "StrEnum(MatchSelector.AppType)",
-                                (gogoproto.jsontag) = "app-config,omitempty"];
+    string AppConfig        = 4 [(gogoproto.jsontag) = "app-config,omitempty"];
 
 }

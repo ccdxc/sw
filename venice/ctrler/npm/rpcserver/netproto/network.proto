@@ -18,6 +18,7 @@ service NetworkApi {
         Object: "Network",
         Method: ["list", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Prefix: "api/networks"
     };
 
     rpc GetNetwork (api.ObjectMeta) returns (Network) {};
@@ -25,6 +26,15 @@ service NetworkApi {
     rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
 }
 
+// ApiResponse Object
+message ApiResponse {
+    // http status code
+    uint32 StatusCode  = 1 [(gogoproto.jsontag)="status-code,omitempty"];
+    // error message if any
+    string Error       = 2 [(gogoproto.jsontag)="error,omitempty"];
+    // self link references
+    repeated string References = 3 [(gogoproto.jsontag)="references,omitempty"];
+}
 // network object
 message Network {
     api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
@@ -35,13 +45,20 @@ message Network {
 
 // network spec
 message NetworkSpec {
-    string IPv4Subnet  = 1[(gogoproto.jsontag)="ipv4-subnet,omitempty"];   // IPv4 subnet CIDR
-    string IPv4Gateway = 2[(gogoproto.jsontag)="ipv4-gateway,omitempty"];   // IPv4 gateway
-    string IPv6Subnet  = 3[(gogoproto.jsontag)="ipv6-subnet,omitempty"];   // IPv6 subnet CIDR
-    string IPv6Gateway = 4[(gogoproto.jsontag)="ipv6-gateway,omitempty"];   // IPv6 gateway
-    uint32 VlanID      = 5[(gogoproto.jsontag)="vlan-id,omitempty"];        // VLAN ID
-    uint32 VxlanVNI    = 6[(gogoproto.jsontag)="vxlan-vni,omitempty"];   // Vxlan VNI
-    string RouterMAC   = 7[(gogoproto.jsontag)="router-mac,omitempty"];   // Optional router MAC parameter
+    // IPv4Subnet of the L3 Network in CIDR format. Required
+    string IPv4Subnet  = 1[(gogoproto.jsontag)="ipv4-subnet,omitempty"];
+    // IPv4Gateway of the L3 Network. Required
+    string IPv4Gateway = 2[(gogoproto.jsontag)="ipv4-gateway,omitempty"];
+    // IPv6Subnet of the L3 Network in CIDR format. Optional
+    string IPv6Subnet  = 3[(gogoproto.jsontag)="ipv6-subnet,omitempty"];
+    // IPv6Gateway of the L3 Network. Optional
+    string IPv6Gateway = 4[(gogoproto.jsontag)="ipv6-gateway,omitempty"];
+    // VlanID of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both
+    uint32 VlanID      = 5[(gogoproto.jsontag)="vlan-id,omitempty"];
+    // VxlanVNI of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both
+    uint32 VxlanVNI    = 6[(gogoproto.jsontag)="vxlan-vni,omitempty"];
+    // Router MAC Address of L3 network in OUI format. Optional
+    string RouterMAC   = 7[(gogoproto.jsontag)="router-mac,omitempty"];
 }
 
 // network status
