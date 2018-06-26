@@ -7,6 +7,7 @@
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
 #include "upgrade_mgr.hpp"
 #include "upgrade_app_resp_handlers.hpp"
+#include "upgrade_app_reg_reactor.hpp"
 
 namespace upgrade {
 
@@ -17,6 +18,7 @@ class UpgradeService : public delphi::Service, public enable_shared_from_this<Up
 private:
     UpgradeMgrPtr      upgMgr_;
     UpgAppRespHdlrPtr  upgAppRespHdlr_;
+    UpgAppRegReactPtr  upgAppRegHdlr_;
     delphi::SdkPtr     sdk_;
     string             svcName_;
 public:

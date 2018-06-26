@@ -119,7 +119,37 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
     return delphi::error::OK();
 }
 
+delphi::objects::UpgAppPtr UpgReqReactor::FindUpgAppPtr(void) {
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key(svcName_);
+
+    // find the object
+    delphi::BaseObjectPtr obj = sdk_->FindObject(app);
+
+    return static_pointer_cast<delphi::objects::UpgApp>(obj);
+}
+
+delphi::objects::UpgAppPtr UpgReqReactor::CreateUpgAppObj(void) {
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key(svcName_);
+
+    // add it to database
+    sdk_->SetObject(app);
+    return app;
+}
+
+void UpgReqReactor::RegisterUpgApp() {
+    LogInfo("UpgReqReactor::RegisterUpgApp");
+    delphi::objects::UpgAppPtr app = FindUpgAppPtr();
+    if (app == NULL) {
+        LogInfo("Creating UpgApp");
+        app = CreateUpgAppObj();
+    }
+    LogInfo("Returning after creating UpgApp");
+}
+
 void UpgReqReactor::OnMountComplete(void) {
+    RegisterUpgApp();
     LogInfo("UpgReqReactor OnMountComplete called");
 
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();

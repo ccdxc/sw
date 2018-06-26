@@ -96,3 +96,8 @@ message UpgAppResp {
     string                 UpgAppRespStr     = 4;
 }
 
+message UpgApp {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta      Meta              = 1;
+    string                 Key               = 2;
+}

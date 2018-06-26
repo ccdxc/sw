@@ -12,6 +12,13 @@ namespace upgrade {
 
 using namespace std;
 
+void UpgradeMgr::RegNewApp(string name) {
+    if (appRegMap_[name] == false) {
+        LogInfo("App not registered. Registering it now.");
+        appRegMap_[name] = true;
+    }
+}
+
 UpgReqStateType UpgradeMgr::GetNextState(void) {
     UpgReqStateType  reqType;
     vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);

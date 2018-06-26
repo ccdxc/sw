@@ -27,15 +27,18 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     delphi::objects::UpgResp::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadMode);
+    delphi::objects::UpgApp::Mount(sdk_, delphi::ReadMode);
 
     // create upgrade manager event handler
     upgMgr_ = make_shared<UpgradeMgr>(sdk_);
 
     upgAppRespHdlr_ = make_shared<UpgAppRespHdlr>(sdk_, upgMgr_);
+    upgAppRegHdlr_ = make_shared<UpgAppRegReact>(upgMgr_);
 
     // Register upgrade request reactor
     delphi::objects::UpgReq::Watch(sdk_, upgMgr_);
     delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespHdlr_);
+    delphi::objects::UpgApp::Watch(sdk_, upgAppRegHdlr_);
 
     InitStateMachineVector();
     LogInfo("Upgrade service constructor got called");

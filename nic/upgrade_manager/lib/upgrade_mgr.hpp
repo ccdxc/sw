@@ -13,13 +13,15 @@ using namespace std;
 
 // UpgradeMgr is the reactor for the UpgReq object
 class UpgradeMgr : public delphi::objects::UpgReqReactor {
-    delphi::SdkPtr    sdk_;
-    UpgMgrRespPtr     upgMgrResp_;
+    delphi::SdkPtr                 sdk_;
+    UpgMgrRespPtr                  upgMgrResp_;
 
-    vector<string>    appRespFailStrList_;
-    bool              appRespFail_;
-    bool              upgAborted_;
-    bool              upgPassed_;
+    vector<string>                 appRespFailStrList_;
+    unordered_map<string, bool>    appRegMap_;
+    bool                           appRespFail_;
+    bool                           upgAborted_;
+    bool                           upgPassed_;
+
 public:
     UpgradeMgr(delphi::SdkPtr sk) {
         sdk_ = sk;
@@ -27,6 +29,7 @@ public:
         upgAborted_  = false;
         upgPassed_   = false;
         upgMgrResp_  = make_shared<UpgMgrResp>(sk);
+        appRegMap_.clear();
     }
 
     // OnUpgReqCreate gets called when UpgReq object is created
@@ -65,6 +68,7 @@ public:
 
     delphi::error StartUpgrade(uint32_t key);
     delphi::error AbortUpgrade(uint32_t key);
+    void RegNewApp(string name);
 };
 typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
 

@@ -15,18 +15,25 @@ using namespace std;
 // UpgReqReactor is the reactor for the UpgStateReq object
 class UpgReqReactor : public delphi::objects::UpgStateReqReactor {
     delphi::SdkPtr sdk_;
+    string svcName_;
     UpgHandlerPtr upgHdlrPtr_;
     UpgAppRespHdlrPtr upgAppRespPtr_;
     delphi::objects::UpgStateReqPtr upgReqStatus_;
+
+    delphi::objects::UpgAppPtr FindUpgAppPtr(void);
+    delphi::objects::UpgAppPtr CreateUpgAppObj(void);
+    void RegisterUpgApp(void);
 public:
     UpgReqReactor(delphi::SdkPtr sk, string name, UpgAppRespHdlrPtr ptr) {
         sdk_ = sk;
+        svcName_ = name;
         upgHdlrPtr_ = make_shared<UpgHandler>();
         upgAppRespPtr_ = ptr;
     }
 
     UpgReqReactor(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, UpgAppRespHdlrPtr ptr) {
         sdk_ = sk;
+        svcName_ = name;
         upgHdlrPtr_ = uh;
         upgAppRespPtr_ = ptr;
     }
