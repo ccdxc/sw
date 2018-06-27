@@ -244,8 +244,6 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 }
 
 func (tsa *Tagent) allocateMirrorSessionID(msName string) uint64 {
-	tsa.Lock()
-	defer tsa.Unlock()
 	if _, v := tsa.DB.MirrorSessionNameToID[msName]; v {
 		return tsa.DB.MirrorSessionNameToID[msName]
 	}
@@ -264,8 +262,6 @@ func (tsa *Tagent) allocateMirrorSessionID(msName string) uint64 {
 }
 
 func (tsa *Tagent) getMirrorSessionID(msName string) uint64 {
-	tsa.Lock()
-	defer tsa.Unlock()
 	if _, v := tsa.DB.MirrorSessionNameToID[msName]; v {
 		return tsa.DB.MirrorSessionNameToID[msName]
 	}
@@ -273,8 +269,6 @@ func (tsa *Tagent) getMirrorSessionID(msName string) uint64 {
 }
 
 func (tsa *Tagent) deleteMirrorSession(msName string) error {
-	tsa.Lock()
-	defer tsa.Unlock()
 	if _, v := tsa.DB.MirrorSessionNameToID[msName]; v {
 		i := tsa.DB.MirrorSessionNameToID[msName]
 		tsa.DB.AllocatedMirrorIds[i] = false
@@ -288,8 +282,6 @@ func (tsa *Tagent) allocateDropRuleID(dropReason state.CopiedDropReasons) (uint6
 	var ruleID uint64
 	var err error
 	allocated := false
-	tsa.Lock()
-	defer tsa.Unlock()
 	if _, v := tsa.DB.DropRuleToID[dropReason]; v {
 		ruleID = tsa.DB.DropRuleToID[dropReason]
 	} else {
@@ -309,8 +301,6 @@ func (tsa *Tagent) allocateFlowMonitorRuleID(flowRule state.FlowMonitorRuleSpec)
 	var ruleID uint64
 	var err error
 	allocated := false
-	tsa.Lock()
-	defer tsa.Unlock()
 	if _, v := tsa.DB.FlowMonitorRuleToID[flowRule]; v {
 		ruleID = tsa.DB.FlowMonitorRuleToID[flowRule]
 	} else {
@@ -986,8 +976,6 @@ func (tsa *Tagent) buildDropRuleUpdateProtoObj(mirrorSession *tsproto.MirrorSess
 	if !contains {
 		return nil, nil
 	}
-	tsa.Lock()
-	defer tsa.Unlock()
 	//Build list of mirror sessions proto obj matching list
 	//of mirrorSession the rule is part of
 	dropRuleObj := tsa.DB.DropRuleIDToObj[ruleID]
@@ -1120,8 +1108,6 @@ func (tsa *Tagent) buildDropRuleCreateProtoObj(mirrorSession *tsproto.MirrorSess
 	if err != nil {
 		return nil, 0, false, err
 	}
-	tsa.Lock()
-	defer tsa.Unlock()
 	if allocated {
 		// create drop rule using drop reason
 		dropRuleObj := state.DropMonitorObj{
@@ -1861,6 +1847,8 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 		log.Errorf("mirror session tenant is invalid")
 		return ErrInvalidMirrorSpec
 	}
+	tsa.Lock()
+	defer tsa.Unlock()
 	mirrorProtoObjs, err := tsa.createPacketCaptureSessionProtoObjs(pcSession)
 	if err == nil {
 		key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
@@ -1920,6 +1908,8 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 
 func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
 	key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
+	tsa.Lock()
+	defer tsa.Unlock()
 	_, ok := tsa.DB.MirrorSessionDB[key]
 	if !ok {
 		log.Errorf("Internal error. MirrorSession lookup failure")
@@ -1946,8 +1936,6 @@ func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 	deleteFmRuleIDs, deleteDropRuleIDs, err := tsa.deleteModifyMirrorSessionRules(pcSession, mirrorSessObj.FlowMonitorRuleIDs, mirrorSessObj.DropMonitorRuleIDs)
 	//All rules that were only part of the mirrorSession under delete should be removed from local map/DB and emstore.
 	if err == nil {
-		tsa.Lock()
-		defer tsa.Unlock()
 		tsa.deleteRuleObjsFromDB(deleteFmRuleIDs, deleteDropRuleIDs)
 		for _, f := range deleteFmRuleIDs {
 			flowRuleObj := tsa.DB.FlowMonitorRuleIDToObj[f]
