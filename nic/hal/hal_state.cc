@@ -1860,6 +1860,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->route_acl_userdata_slab()->free(elem);
         break;
 
+    case HAL_SLAB_IPSEC_CFG_RULE:
+        g_hal_state->ipsec_cfg_rule_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_IPSEC_CFG_POL:
+        g_hal_state->ipsec_cfg_pol_slab()->free(elem);
+        break;
+
     default:
         HAL_TRACE_ERR("Unknown slab id {}", slab_id);
         HAL_ASSERT(FALSE);

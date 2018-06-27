@@ -46,6 +46,13 @@ struct addr_entry_s {
     uint32_t            num_other_sessions;
 } __PACK__;
 
+// Walk CB. true: walk is stopped
+typedef bool (*addr_walk_cb_t)(addr_entry_t *entry, void *ctxt);
+typedef struct addr_walk_ctxt_s {
+    addr_walk_cb_t walk_cb;
+    void *ctxt;
+} __PACK__ addr_walk_ctxt_t;
+
 hal_ret_t addr_db_init(uint32_t db_size);
 hal_ret_t addr_entry_slab_init(void);
 hal_ret_t addr_entry_add(addr_entry_key_t *key, vrf_id_t tgt_vrf_id, ip_addr_t tgt_ip_addr);
@@ -56,6 +63,7 @@ addr_entry_t *addr_entry_alloc(void);
 void addr_entry_free(addr_entry_t *entry);
 hal_ret_t addr_entry_db_insert(addr_entry_t *entry);
 addr_entry_t *addr_entry_db_remove(addr_entry_key_t *key);
+void addr_entry_walk(addr_walk_cb_t walk_cb, void *ctxt);
 
 } // namespace nat
 } // namespace plugins

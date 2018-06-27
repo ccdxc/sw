@@ -34,7 +34,14 @@ cd "$LOG_DIR"
 
 echo "Starting CAPRI model ..."
 #$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
-"$NIC_DIR"/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
+$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
+PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
+if [[ "" ==  "$PID" ]]; then
+    echo "Failed to start CAPRI model"
+    #exit $?
+else
+    echo "CAPRI model started, pid is $PID"
+fi
 
 echo "Starting HAL ..."
 "$NIC_DIR"/bin/hal -c hal.json > /dev/null 2>&1 &

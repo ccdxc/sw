@@ -31,10 +31,12 @@ function setup_intf3()
             start=10
             local_host=`expr $start + $1`
             ip link set up dev $HOST0
+            #ip link set mtu 9216 dev $HOST0
             subif=$HOST0.$LOCAL_SUBNET_VLAN
 
             ip link add link $HOST0 name $subif type vlan id $LOCAL_SUBNET_VLAN
             ip link set up dev $subif
+            #ip link set mtu 9216 dev $subif
 
             #set ip/mac address
             ip link set dev $subif address 00:22:0a:00:03:$local_host
@@ -69,6 +71,7 @@ function setup_intf2()
             set -x
             ovs-vsctl add-port data-net pen-intf2
             ip link set up dev $INTF2
+            ip link set mtu 9216 dev $INTF2
             set +x
         fi
     done
@@ -84,10 +87,12 @@ function setup_intf1()
         if [ $? -eq 0 ]; then
             set -x
             ip link set up dev $INTF1
+            #ip link set mtu 9216 dev $INTF1
             subif=$INTF1.$LOCAL_SUBNET_VLAN
 
             ip link add link $INTF1 name $subif type vlan id $LOCAL_SUBNET_VLAN
             ip link set up dev $subif
+            #ip link set mtu 9216 dev $subif
 
             #set ip/mac address
             ip link set dev $subif address 00:22:0a:00:02:01

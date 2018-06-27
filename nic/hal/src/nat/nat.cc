@@ -1615,7 +1615,7 @@ nat_mapping_delete (NatMappingDeleteRequest& req, NatMappingDeleteResponse *rsp)
     if (pool == NULL) {
         HAL_TRACE_ERR("Failed to find NAT pool ({}, {}) to release NAT mapping "
                       "({}, {}) -> ({}, {})",
-                      pool->key.vrf_id, pool->key.pool_id,
+                      mapping->tgt_vrf_id, mapping->nat_pool_id,
                       mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
                       mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
         ret = HAL_RET_NAT_POOL_NOT_FOUND;
@@ -1669,6 +1669,8 @@ nat_mapping_process_get (addr_entry_t *mapping, NatMappingGetResponse *rsp)
     rsp->mutable_status()->set_handle(mapping->hal_handle);
     ip_addr_to_spec(rsp->mutable_status()->mutable_mapped_ip(),
                     &mapping->tgt_ip_addr);
+    rsp->mutable_status()->set_configured(mapping->origin); // 0: FTE 1: Config
+    rsp->mutable_status()->set_flow_count(mapping->ref_cnt);
 
     // fill the stats portion
     rsp->mutable_stats()->set_num_tcp_sessions(mapping->num_tcp_sessions);
@@ -1699,6 +1701,23 @@ nat_mapping_get_ht_cb (void *ht_entry, void *ctxt)
     return false;
 }
 
+
+static bool
+nat_mapping_addr_db_cb (addr_entry_t *mapping, void *ctxt)
+{
+    NatMappingGetResponseMsg    *rsp = (NatMappingGetResponseMsg *)ctxt;
+    NatMappingGetResponse       *response = rsp->add_response();
+
+    nat_mapping_process_get(mapping, response);
+    if (mapping->bidir) {
+        response = rsp->add_response();
+        nat_mapping_process_get(mapping->rentry, response);
+    }
+    // return false here, so that we don't terminate the walk
+    return false;
+
+}
+
 //------------------------------------------------------------------------------
 // process a NAT mapping get request
 //------------------------------------------------------------------------------
@@ -1712,6 +1731,9 @@ nat_mapping_get (NatMappingGetRequest& req, NatMappingGetResponseMsg *rsp)
     // populate the response
     if (!req.has_key_or_handle()) {
         g_hal_state->nat_mapping_ht()->walk(nat_mapping_get_ht_cb, rsp);
+
+        // Walk addr db
+        utils::nat::addr_entry_walk(nat_mapping_addr_db_cb, rsp);
     } else {
         auto kh = req.key_or_handle();
         mapping = find_nat_mapping_by_key_or_handle(kh);

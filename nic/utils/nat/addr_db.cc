@@ -162,6 +162,24 @@ addr_entry_get (addr_entry_key_t *key)
     return addr_entry_db_lookup(key);
 }
 
+
+static bool
+addr_ht_walk_cb (void *entry, void *ctxt)
+{
+    addr_walk_ctxt_s *addr_ctxt = (addr_walk_ctxt_s *)ctxt;
+    return addr_ctxt->walk_cb((addr_entry_t *)entry, addr_ctxt->ctxt);
+}
+
+void
+addr_entry_walk (addr_walk_cb_t walk_cb, void *ctxt)
+{
+    addr_walk_ctxt_t addr_ctxt;
+    addr_ctxt.walk_cb = walk_cb;
+    addr_ctxt.ctxt = ctxt;
+    addr_db_->walk_safe(addr_ht_walk_cb, (void *)&addr_ctxt);
+}
+
+
 } // namespace nat
-} // namespace plugins
+} // namespace utils
 } // namespace hal

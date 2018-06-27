@@ -75,6 +75,7 @@ ctx_t::extract_flow_key()
     } else if (obj_id == hal::HAL_OBJ_ID_VRF)  {
         HAL_ASSERT_RETURN(cpu_rxhdr_->lkp_type != hal::FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
         key_.svrf_id = key_.dvrf_id  = ((hal::vrf_t *)obj)->vrf_id;
+        use_vrf_= ((hal::vrf_t *)obj);
     } else {
         HAL_TRACE_ERR("fte: Invalid obj id: {}", obj_id);
         return HAL_RET_ERR;
@@ -550,20 +551,26 @@ ctx_t::update_flow_table()
             iflow_attrs = session_->iflow->pgm_attrs;
         }
 
-        if (sl2seg_) {
-            args.l2seg = sl2seg_;
-            pd_func_args.pd_l2seg_get_flow_lkupid = &args;
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
-            iflow_attrs.vrf_hwid = args.hwid;
+        if (protobuf_request()) {
+            if (sl2seg_) {
+                args.l2seg = sl2seg_;
+                pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
+                iflow_attrs.vrf_hwid = args.hwid;
+            } else {
+                vrf_args.vrf = svrf_;
+                pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+                iflow_attrs.vrf_hwid = vrf_args.lkup_id;
+            }
+            iflow->to_config(iflow_cfg, iflow_attrs);
+            iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
         } else {
-            vrf_args.vrf = svrf_;
-            pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
-            iflow_attrs.vrf_hwid = vrf_args.lkup_id;
+            iflow->to_config(iflow_cfg, iflow_attrs);
+            iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
+            iflow_attrs.vrf_hwid = cpu_rxhdr_->lkp_vrf;
         }
 
-        iflow->to_config(iflow_cfg, iflow_attrs);
-        iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
         // Set the lkp_inst for all stages except the first stage
         if (stage != 0) {
@@ -1244,7 +1251,6 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                    post_xmit_cb_t cb)
 {
     txpkt_info_t *pkt_info;
-    hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
     hal::pd::pd_func_args_t          pd_func_args = {0};
 
     if (txpkt_cnt_ >= MAX_QUEUED_PKTS) {
@@ -1262,19 +1268,26 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         if (key_.dir == hal::FLOW_DIR_FROM_UPLINK) {
      	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = hal::SERVICE_LIF_CPU;
-            args.l2seg = sl2seg_;
-            args.vid = &pkt_info->cpu_header.hw_vlan_id;
+            if (use_vrf_) {
+                hal::pd::pd_vrf_get_fromcpu_vlanid_args_t args;
+                args.vrf = use_vrf_;
+                args.vid = &pkt_info->cpu_header.hw_vlan_id;
 
-            pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
-            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                     &pd_func_args) == HAL_RET_OK) {
+                pd_func_args.pd_vrf_get_fromcpu_vlanid = &args;
+                if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FRCPU_VLANID,
+                                         &pd_func_args) == HAL_RET_OK) {
+                    pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+                }   
+            } else {
+                hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
+                args.l2seg = sl2seg_;
+                args.vid = &pkt_info->cpu_header.hw_vlan_id;
 
-#if 0
-            if (hal::pd::pd_l2seg_get_fromcpu_vlanid(sl2seg_,
-                                                     &pkt_info->cpu_header.hw_vlan_id) == HAL_RET_OK) {
-#endif
-
-                pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+                pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
+                if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                                         &pd_func_args) == HAL_RET_OK) {
+                    pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+                }   
             }
         }
     }

@@ -13,13 +13,13 @@ using hal::utils::nat::addr_entry_key_t;
 using hal::utils::nat::addr_entry_t;
 
 hal_ret_t
-get_nat_addr_from_pool(nat_pool_t       *nat_pool, 
-                       addr_entry_key_t *key, 
-                       addr_entry_t     *addr_entry) 
+get_nat_addr_from_pool(nat_pool_t                        *nat_pool, 
+                       hal::utils::nat::addr_entry_key_t *key, 
+                       hal::utils::nat::addr_entry_t     *addr_entry) 
 
 {
     hal_ret_t ret = HAL_RET_OK;
-    addr_entry_key_t rkey;
+    hal::utils::nat::addr_entry_key_t rkey; 
 
     ret = nat_pool_address_alloc(nat_pool, &addr_entry->tgt_ip_addr);
     if (ret != HAL_RET_OK) {
@@ -28,7 +28,7 @@ get_nat_addr_from_pool(nat_pool_t       *nat_pool,
     }
     addr_entry->tgt_vrf_id = nat_pool->key.vrf_id;
     addr_entry->nat_pool_id = nat_pool->key.pool_id;
-	ret = hal::utils::nat::addr_entry_add (key, nat_pool->key.vrf_id, addr_entry->tgt_ip_addr);
+    ret = hal::utils::nat::addr_entry_add (key, nat_pool->key.vrf_id, addr_entry->tgt_ip_addr);
     if (ret != HAL_RET_OK) {
         //call nat pool free
         HAL_TRACE_DEBUG("failed to add it to the db with error:{}", ret);

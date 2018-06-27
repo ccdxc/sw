@@ -187,13 +187,25 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
 static inline fte::pipeline_action_t
 ipsec_process_post_encrypt_esp_flow(fte::ctx_t&ctx)
 {
+    hal_ret_t ret = HAL_RET_OK;
     hal::proxy::ipsec_info_t *ipsec_info = NULL;
+    fte::flow_update_t flowupd = {type: fte::FLOWUPD_LKP_INFO};
+    hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
+    pd::pd_func_args_t                pd_func_args = {0};
 
     ipsec_info = (ipsec_info_t*) ctx.feature_state();
     ipsec_info->vrf = ctx.key().dvrf_id; 
     ipsec_info->action = IPSEC_PLUGIN_RFLOW_ACTION_DECRYPT;
-   
-    HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
+ 
+    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf); 
+    vrf_args.vrf = vrf;
+    pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+    flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
+    HAL_TRACE_DEBUG("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
+    ret = ctx.update_flow(flowupd);
+    ctx.set_feature_status(ret);
+    HAL_TRACE_DEBUG("Return Value {} Reverse Flow params: vrf {} action {}", ret, ipsec_info->vrf, ipsec_info->action);
     return fte::PIPELINE_CONTINUE; 
 }
 
@@ -248,11 +260,23 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
 static inline fte::pipeline_action_t
 ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
 {
+    hal_ret_t ret = HAL_RET_OK;
     hal::proxy::ipsec_info_t *ipsec_info = NULL;
+    fte::flow_update_t flowupd = {type: fte::FLOWUPD_LKP_INFO};
+    hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
+    pd::pd_func_args_t                pd_func_args = {0};
 
     ipsec_info = (ipsec_info_t*) ctx.feature_state();
     ipsec_info->vrf = ctx.get_key().dvrf_id; 
     ipsec_info->action = IPSEC_PLUGIN_RFLOW_ACTION_ENCRYPT;
+    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf); 
+    vrf_args.vrf = vrf;
+    pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+    flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
+    HAL_TRACE_DEBUG("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
+    ret = ctx.update_flow(flowupd);
+    ctx.set_feature_status(ret);
     HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
 
     return fte::PIPELINE_CONTINUE; 
@@ -288,7 +312,7 @@ ipsec_process_rflow(fte::ctx_t&ctx)
         pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
         flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
-        HAL_TRACE_DEBUG("Got vrf-hw-id as {}", flowupd.lkp_info.vrf_hwid);
+        HAL_TRACE_DEBUG("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
         ret = ctx.update_flow(flowupd);
         ctx.set_feature_status(ret);
         return fte::PIPELINE_CONTINUE;
@@ -373,7 +397,8 @@ ipsec_exec(fte::ctx_t& ctx)
     // is sent in the reverse direction for decryption without swapping the sip to dip.
     // For this pkt lport shouldn't be the ipsec proxy-lif.
     if (ctx.existing_session()) {
-        return fte::PIPELINE_CONTINUE;
+        HAL_TRACE_DEBUG("Existing flow came in");
+        return ipsec_exec_pkt(ctx);
     }
 
     // Ignore direction. Always set it to 0
@@ -401,7 +426,6 @@ ipsec_exec(fte::ctx_t& ctx)
             return update_host_flow_fwding_info(ctx, pfi);
         }
     } else {
-        HAL_TRACE_DEBUG("ipsec is not enabled for the flow");
         return ipsec_exec_pkt(ctx);
     }
     return fte::PIPELINE_CONTINUE;

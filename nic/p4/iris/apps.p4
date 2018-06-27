@@ -204,6 +204,7 @@ action p4plus_app_classic_nic() {
 }
 
 action p4plus_app_ipsec() {
+    f_egress_tcp_options_fixup();
     add_header(p4_to_p4plus_ipsec);
     modify_field(p4_to_p4plus_ipsec.p4plus_app_id,
                  control_metadata.p4plus_app_id);

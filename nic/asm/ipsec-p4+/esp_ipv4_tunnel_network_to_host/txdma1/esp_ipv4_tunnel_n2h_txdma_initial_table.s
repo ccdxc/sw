@@ -33,8 +33,9 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     sll r2, r2, 3
     add r2, r2, d.cb_ring_base_addr
     add r7, d.cb_cindex, 1
+    and r7, r7, IPSEC_CB_RING_INDEX_MASK
     tblwr d.cb_cindex, r7
-    tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
+    tblmincri.f     d.{rxdma_ring_cindex}.hx, 8, 1
     phvwr p.common_te0_phv_table_addr, r2
 
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)

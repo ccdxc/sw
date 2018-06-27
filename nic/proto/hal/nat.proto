@@ -129,8 +129,8 @@ message NatRuleAction {
 // NatRuleSpec is the user intent for the NAT rule
 message NatRuleSpec {
   uint64             rule_id    = 1;    // rule id
-  types.RuleMatch    match      = 2;    // match conditions 
-  NatRuleAction      action     = 3;    // action related to the rule 
+  types.RuleMatch    match      = 2;    // match conditions
+  NatRuleAction      action     = 3;    // action related to the rule
 }
 
 // NatPolicySpec captures the NAT policy which is a group of NAT rules
@@ -235,6 +235,9 @@ message NatMappingRequestMsg {
 message NatMappingStatus  {
   fixed64            handle        = 1;    // id of the NAT mapping returned by HAL
   types.IPAddress    mapped_ip     = 2;    // NAT address allocated
+  bool               configured    = 3;    // 0 FTE, 1 config
+  uint32             flow_count    = 4;    // Num of flows using the mapping
+
 }
 
 // NatMappingResponse is the response to NatMappingSpec

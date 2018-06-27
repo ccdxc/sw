@@ -644,6 +644,7 @@ private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
     hal::flow_key_t       rkey_; // rflow key
+    hal::vrf_t            *use_vrf_;  // use vrf vlan to reinject uplink pkts
     bool                  vlan_tag_valid_;
 
     // pkts queued for tx

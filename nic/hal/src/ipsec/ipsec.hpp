@@ -9,6 +9,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
+#include "nic/hal/src/utils/utils.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -135,8 +136,6 @@ typedef struct ipsec_cfg_pol_create_app_ctxt_s {
 typedef struct ipsec_cfg_pol_s {
     ipsec_cfg_pol_key_t    key;
     dllist_ctxt_t        rule_list;
-//    dllist_ctxt_t        list_ctxt;
-    ht_ctxt_t            ht_ctxt;
 
     // operational
     hal_spinlock_t       slock;
@@ -211,9 +210,166 @@ typedef struct ipsec_rule_s {
 #define IPSEC_BARCO_ENCRYPT_AES_GCM_256           0x30000000
 #define IPSEC_BARCO_DECRYPT_AES_GCM_256           0x30100000
 
+extern acl_config_t ipsec_ip_acl_config_glbl;
+
 //-----------------------------------------------------------------------------
 // Inline functions
 //-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Rule routines
+//-----------------------------------------------------------------------------
+
+// Slab delete must not be called directly. It will be called from the acl ref
+// library when the ref_count drops to zero
+static inline void
+ipsec_cfg_rule_free (void *rule)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_IPSEC_CFG_RULE, (ipsec_cfg_rule_t *)rule);
+}
+
+static inline void
+ipsec_cfg_rule_init (ipsec_cfg_rule_t *rule)
+{
+    rule_match_init(&rule->match);
+    dllist_reset(&rule->list_ctxt);
+}
+
+static inline void
+ipsec_cfg_rule_uninit (ipsec_cfg_rule_t *rule)
+{
+    return;
+}
+
+static inline void
+ipsec_cfg_rule_uninit_free (ipsec_cfg_rule_t *rule)
+{
+     ipsec_cfg_rule_uninit(rule);
+     ipsec_cfg_rule_free(rule);
+}
+
+static inline ipsec_cfg_rule_t *
+ipsec_cfg_rule_alloc (void)
+{
+    ipsec_cfg_rule_t *rule;
+    rule = (ipsec_cfg_rule_t *)g_hal_state->ipsec_cfg_rule_slab()->alloc();
+    // Slab free will be called when the ref count drops to zero
+    ref_init(&rule->ref_count, [] (const acl::ref_t * ref_count) {
+        ipsec_cfg_rule_uninit_free(RULE_MATCH_USER_DATA(ref_count, ipsec_cfg_rule_t, ref_count));
+    });
+    return rule;
+}
+
+static inline ipsec_cfg_rule_t *
+ipsec_cfg_rule_alloc_init (void)
+{
+    ipsec_cfg_rule_t *rule;
+
+    if ((rule = ipsec_cfg_rule_alloc()) ==  NULL)
+        return NULL;
+
+    ipsec_cfg_rule_init(rule);
+    return rule;
+}
+
+static inline hal_ret_t
+ipsec_cfg_rule_action_spec_extract (const ipsec::IpsecSAAction& spec,
+                                    ipsec_cfg_rule_action_t *action)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    action->sa_action = spec.sa_action_type();
+    if (action->sa_action == ipsec::IPSEC_SA_ACTION_TYPE_ENCRYPT) {
+        action->sa_action_enc_handle = (hal_handle_t)(spec.enc_handle().cb_id());
+    } else if (action->sa_action == ipsec::IPSEC_SA_ACTION_TYPE_DECRYPT) {
+        action->sa_action_dec_handle = (hal_handle_t)(spec.dec_handle().cb_id());
+    }
+
+    HAL_TRACE_DEBUG("action type {} enc_handle {} dec_handle {}", action->sa_action, action->sa_action_enc_handle, action->sa_action_dec_handle);
+    return ret;
+}
+
+static inline void
+ipsec_cfg_rule_db_add (dllist_ctxt_t *head, ipsec_cfg_rule_t *rule)
+{
+    dllist_add_tail(head, &rule->list_ctxt);
+}
+
+static inline void
+ipsec_cfg_rule_db_del (ipsec_cfg_rule_t *rule)
+{
+    dllist_del(&rule->list_ctxt);
+}
+
+static inline void
+ipsec_cfg_rule_cleanup (ipsec_cfg_rule_t *rule)
+{
+    rule_match_cleanup(&rule->match);
+    ipsec_cfg_rule_db_del(rule);
+}
+
+static inline void
+ipsec_cfg_rule_list_cleanup (dllist_ctxt_t *head)
+{
+    dllist_ctxt_t *curr, *next;
+    ipsec_cfg_rule_t *rule;
+
+    dllist_for_each_safe(curr, next, head) {
+        rule = dllist_entry(curr, ipsec_cfg_rule_t, list_ctxt);
+        ipsec_cfg_rule_cleanup(rule);
+        // Decrement ref count for the rule. When ref count goes to zero
+        // the acl ref library will free up the entry from the slab
+        ref_dec(&rule->ref_count);
+    }
+}
+
+static inline hal_ret_t
+ipsec_cfg_rule_data_spec_extract (const ipsec::IpsecRuleMatchSpec& spec,
+                                  ipsec_cfg_rule_t *rule)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if ((ret = rule_match_spec_extract(
+           spec.match(), &rule->match)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+    if ((ret = ipsec_cfg_rule_action_spec_extract(
+           spec.sa_action(), &rule->action)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+ipsec_cfg_rule_key_spec_extract (const ipsec::IpsecRuleMatchSpec& spec,
+                                 ipsec_cfg_rule_key_t *key)
+{
+    key->rule_id = spec.rule_id();
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+ipsec_cfg_rule_spec_extract (const ipsec::IpsecRuleMatchSpec& spec, ipsec_cfg_rule_t *rule)
+{
+    hal_ret_t ret;
+
+    if ((ret = ipsec_cfg_rule_key_spec_extract(
+           spec, &rule->key)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+    if ((ret = ipsec_cfg_rule_data_spec_extract(
+           spec, rule)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+   return ret;
+}
 
 // allocate a ipsec_sament instance
 static inline ipsec_sa_t *
@@ -302,6 +458,66 @@ ipsec_cfg_pol_key_func_compare (void *key1, void *key2)
 }
 
 //-----------------------------------------------------------------------------
+// IPSec config alloc and init routines
+//-----------------------------------------------------------------------------
+
+static inline ipsec_cfg_pol_t *
+ipsec_cfg_pol_alloc (void)
+{
+    return ((ipsec_cfg_pol_t *)g_hal_state->ipsec_cfg_pol_slab()->alloc());
+}
+
+static inline void
+ipsec_cfg_pol_free (ipsec_cfg_pol_t *pol)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_IPSEC_CFG_POL, pol);
+}
+
+static inline void
+ipsec_cfg_pol_init (ipsec_cfg_pol_t *pol)
+{
+    HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
+    dllist_reset(&pol->rule_list);
+    pol->hal_hdl = HAL_HANDLE_INVALID;
+}
+
+static inline void
+ipsec_cfg_pol_uninit (ipsec_cfg_pol_t *pol)
+{
+    HAL_SPINLOCK_DESTROY(&pol->slock);
+}
+
+static inline ipsec_cfg_pol_t *
+ipsec_cfg_pol_alloc_init (void)
+{
+    ipsec_cfg_pol_t *pol;
+
+    if ((pol = ipsec_cfg_pol_alloc()) ==  NULL) {
+        HAL_TRACE_DEBUG("Failed here");
+        return NULL;
+    }
+
+    ipsec_cfg_pol_init(pol);
+    return pol;
+}
+
+static inline void
+ipsec_cfg_pol_uninit_free (ipsec_cfg_pol_t *pol)
+{
+     ipsec_cfg_pol_uninit(pol);
+     ipsec_cfg_pol_free(pol);
+}
+
+static inline void
+ipsec_cfg_pol_cleanup (ipsec_cfg_pol_t *pol)
+{
+    if (pol) {
+        ipsec_cfg_rule_list_cleanup(&pol->rule_list);
+        ipsec_cfg_pol_uninit_free(pol);
+    }
+}
+
+//-----------------------------------------------------------------------------
 // IPSec config object to its corresponding HAL handle management routines
 //-----------------------------------------------------------------------------
 
@@ -369,27 +585,66 @@ ipsec_hal_handle_id_ht_entry_db_add (ht *root, ht_ctxt_t *ht_ctxt, void *key,
 }
 
 static inline hal_ret_t
-ipsec_cfg_pol_db_add (hal_handle_id_ht_entry_t *entry, ipsec_cfg_pol_t *pol)
+ipsec_cfg_pol_create_db_handle (ipsec_cfg_pol_t *pol)
 {
-    return ipsec_hal_handle_id_ht_entry_db_add(
-        g_hal_state->ipsec_policy_ht(), &pol->ht_ctxt, &pol->key, entry);
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_alloc_init(
+            g_hal_state->hal_handle_id_ht_entry_slab(),
+            pol->hal_hdl)) == NULL)
+        return HAL_RET_OOM;
+
+    return hal_handle_id_ht_entry_db_add(
+        g_hal_state->ipsec_policy_ht(), &pol->key, entry);
+}
+
+//-----------------------------------------------------------------------------
+// IPSec config object to its corresponding HAL handle management routines
+//
+// The IPSec config object can be obtained through key or hal handle. The node
+// is inserted/deleted in two different hash tables.
+//   a) key: hal_handle, data: config object
+//   b) key: config object key, data: hal_handle
+// In case of #b, a second lookup is done to get to object from hal_handle
+//-----------------------------------------------------------------------------
+
+static inline ipsec_cfg_pol_t *
+ipsec_cfg_pol_hal_hdl_db_lookup (hal_handle_t hal_hdl)
+{
+    if (hal_hdl == HAL_HANDLE_INVALID)
+        return NULL;
+
+    auto hal_hdl_e = hal_handle_get_from_handle_id(hal_hdl);
+    if (hal_hdl_e == NULL || hal_hdl_e->obj_id() != HAL_OBJ_ID_IPSEC_POLICY)
+        return NULL;
+
+    return (ipsec_cfg_pol_t *) hal_handle_get_obj(hal_hdl);
+}
+
+static inline ipsec_cfg_pol_t *
+ipsec_cfg_pol_db_lookup (ipsec_cfg_pol_key_t *key)
+{
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_db_lookup(
+            g_hal_state->ipsec_policy_ht(), key)) == NULL)
+        return NULL;
+
+    return ipsec_cfg_pol_hal_hdl_db_lookup(entry->handle_id);
 }
 
 static inline hal_ret_t
-ipsec_cfg_pol_create_db_handle (ipsec_cfg_pol_t *pol)
+ipsec_cfg_pol_delete_db_handle (ipsec_cfg_pol_key_t *key)
 {
-    hal_ret_t ret;
     hal_handle_id_ht_entry_t *entry;
 
-    if ((entry = ipsec_hal_handle_id_ht_entry_alloc_init(pol->hal_hdl)) == NULL)
-        return HAL_RET_OOM;
+    if ((entry = hal_handle_id_ht_entry_db_del(
+            g_hal_state->ipsec_policy_ht(), key)) == NULL)
+        return HAL_RET_IPSEC_RULE_NOT_FOUND;
 
-    if ((ret = ipsec_cfg_pol_db_add(entry, pol)) != HAL_RET_OK)
-        return ret;
-
-    return ret;
+    hal_handle_id_ht_entry_uninit_free(entry);
+    return HAL_RET_OK;
 }
-
 
 static inline void ipsec_acl_ctx_name (char *name, vrf_id_t vrf_id)
 {
@@ -397,6 +652,103 @@ static inline void ipsec_acl_ctx_name (char *name, vrf_id_t vrf_id)
     std::snprintf(name, ACL_NAMESIZE, "ipsec-ipv4-rules:%lu", vrf_id);
     HAL_TRACE_DEBUG("Returning {}", name);
     //return name;
+}
+
+static inline void
+ipsec_cfg_pol_create_rsp_build (ipsec::IpsecRuleResponse *rsp, hal_ret_t ret,
+                                hal_handle_t hal_handle)
+{
+    if (ret == HAL_RET_OK)
+        rsp->mutable_status()->set_handle(hal_handle);
+    rsp->set_api_status(hal_prepare_rsp(ret));
+}
+
+static inline void
+ipsec_cfg_pol_delete_rsp_build (ipsec::IpsecRuleDeleteResponse *rsp, hal_ret_t ret)
+{
+    rsp->set_api_status(hal_prepare_rsp(ret));
+}
+
+//-----------------------------------------------------------------------------
+// ACL LIB operational handling
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// Operational handling (hal handles, acl libs, etc)
+//-----------------------------------------------------------------------------
+
+static inline hal_ret_t
+ipsec_cfg_rule_acl_build (ipsec_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
+{
+    return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, &rule->ref_count);
+}
+
+static inline void
+ipsec_cfg_rule_acl_cleanup (ipsec_cfg_rule_t *rule)
+{
+    return;
+}
+
+static inline hal_ret_t
+ipsec_cfg_pol_rule_acl_build (ipsec_cfg_pol_t *pol, const acl_ctx_t **acl_ctx)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    ipsec_cfg_rule_t *rule;
+    dllist_ctxt_t *entry;
+    uint32_t prio = 0;
+
+    dllist_for_each(entry, &pol->rule_list) {
+        rule = dllist_entry(entry, ipsec_cfg_rule_t, list_ctxt);
+        rule->prio = prio++;
+        if ((ret = ipsec_cfg_rule_acl_build(rule, acl_ctx)) != HAL_RET_OK)
+            return ret;
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+ipsec_cfg_pol_acl_build (ipsec_cfg_pol_t *pol, const acl_ctx_t **out_acl_ctx)
+{
+    hal_ret_t ret = HAL_RET_ERR;
+    const acl_ctx_t *acl_ctx;
+    char acl_name[ACL_NAMESIZE];
+
+    ipsec_acl_ctx_name(acl_name, pol->key.vrf_id);
+    if ((acl_ctx = rule_lib_init(acl_name, &ipsec_ip_acl_config_glbl)) == NULL)
+        return ret;
+
+    if ((ret = ipsec_cfg_pol_rule_acl_build(pol, &acl_ctx)) != HAL_RET_OK) 
+        return ret;
+
+    *out_acl_ctx = acl_ctx;
+    return ret;
+}
+
+static inline void
+ipsec_cfg_pol_rule_acl_cleanup (ipsec_cfg_pol_t *pol)
+{
+    ipsec_cfg_rule_t *rule;
+    dllist_ctxt_t *entry;
+
+    dllist_for_each(entry, &pol->rule_list) {
+        rule = dllist_entry(entry, ipsec_cfg_rule_t, list_ctxt);
+        ipsec_cfg_rule_acl_cleanup(rule);
+    }
+}
+
+static inline hal_ret_t
+ipsec_cfg_pol_acl_cleanup (ipsec_cfg_pol_t *pol)
+{
+    const acl_ctx_t *acl_ctx;
+    char acl_name[ACL_NAMESIZE];
+
+    ipsec_acl_ctx_name(acl_name, pol->key.vrf_id);
+    if ((acl_ctx = acl::acl_get(acl_name)) == NULL)
+        return HAL_RET_IPSEC_RULE_NOT_FOUND;
+
+    ipsec_cfg_pol_rule_acl_cleanup(pol);
+    acl::acl_delete(acl_ctx);
+    return HAL_RET_OK;
 }
 
 extern void *ipsec_sa_get_key_func(void *entry);
@@ -418,17 +770,6 @@ hal_ret_t ipsec_saencrypt_delete(ipsec::IpsecSAEncryptDeleteRequest& req,
 
 hal_ret_t ipsec_saencrypt_get(ipsec::IpsecSAEncryptGetRequest& req,
                     ipsec::IpsecSAEncryptGetResponseMsg *rsp);
-
-#if 0
-extern void *ipsec_sa_decrypt_get_key_func(void *entry);
-extern uint32_t ipsec_sa_decrypt_compute_hash_func(void *key, uint32_t ht_size);
-extern bool ipsec_sa_decrypt_compare_key_func(void *key1, void *key2);
-
-extern void *ipsec_sa_decrypt_get_handle_key_func(void *entry);
-extern uint32_t ipsec_sa_decrypt_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool ipsec_sa_decryptcompare_handle_key_func(void *key1, void *key2);
-#endif
-
 
 hal_ret_t ipsec_sadecrypt_create(ipsec::IpsecSADecrypt& spec,
                        ipsec::IpsecSADecryptResponse *rsp);

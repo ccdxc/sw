@@ -94,16 +94,21 @@ Vagrant.configure("2") do |config|
         mkdir -p #{NAPLES_DATA_DIR}
         if [ -f /vagrant/#{NAPLES_IMAGE_FILE} ]; then
           docker images purge
-          docker rmi -f #{NAPLES_IMAGE}
+          docker rmi -f #{NAPLES_IMAGE} 2> /dev/null
           docker load --input /vagrant/#{NAPLES_IMAGE_FILE}
         else
           docker pull #{NAPLES_IMAGE}
         fi
 
         # create control network: macvlan docker net with 32 containers/node, 8 nodes/system
-        docker network create -d macvlan --subnet=11.1.1.0/24 --ip-range=11.1.1.#{32 + 32*i}/27 --gateway=11.1.1.254 -o parent=eth2 control-net
+        if ! $(docker network inspect control-net &> /dev/null); then
+          docker network create -d macvlan --subnet=11.1.1.0/24 --ip-range=11.1.1.#{32 + 32*i}/27 --gateway=11.1.1.254 -o parent=eth2 control-net
+        fi
+
         # create ovs data network: ovs bridge: all nodes creates tunnel to node0 (hub)
-        ovs-vsctl add-br data-net
+        if ! $(ovs-vsctl br-exists data-net); then
+          ovs-vsctl add-br data-net
+        fi
       SCRIPT
 
       # provision data network tunnels
@@ -111,13 +116,13 @@ Vagrant.configure("2") do |config|
         (0..(node_count-1)).each do |n1|
           if n1 != 0 then
             subconfig.vm.provision "shell" do |s|
-              s.inline = "ovs-vsctl add-port data-net vxtun-to-node#{n1+1} -- set interface vxtun-to-node#{n1+1} type=vxlan options:key=11111 options:remote_ip=192.168.10.#{n1+11}"
+              s.inline = "if ! $(ovs-vsctl show | grep vxtun-to &> /dev/null); then ovs-vsctl add-port data-net vxtun-to-node#{n1+1} -- set interface vxtun-to-node#{n1+1} type=vxlan options:key=11111 options:remote_ip=192.168.10.#{n1+11}; fi"
             end
           end
         end
       else
         subconfig.vm.provision "shell" do |s|
-          s.inline = "ovs-vsctl add-port data-net vxtun-to-node1 -- set interface vxtun-to-node1 type=vxlan options:key=11111 options:remote_ip=192.168.10.11"
+          s.inline = "if ! $(ovs-vsctl show | grep vxtun-to &> /dev/null); then ovs-vsctl add-port data-net vxtun-to-node1 -- set interface vxtun-to-node1 type=vxlan options:key=11111 options:remote_ip=192.168.10.11; fi"
         end
       end
 
@@ -137,7 +142,10 @@ Vagrant.configure("2") do |config|
 
         # configure control-network for naples-sim
         ip link set up dev eth2
-        docker network connect control-net naples-sim
+        ip link set dev eth1 mtu 9216
+        if ! $(docker network inspect control-net | grep "naples-sim" &> /dev/null); then
+          docker network connect control-net naples-sim
+        fi
 
         sudo systemctl stop firewalld
         sudo setenforce 0

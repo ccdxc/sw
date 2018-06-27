@@ -112,25 +112,24 @@ ipsec_cfg_pol_data_spec_extract (ipsec::IpsecRuleSpec& spec, ipsec_cfg_pol_t *po
 }
 
 static hal_ret_t
-ipsec_cfg_pol_key_spec_extract (ipsec::IpsecRuleSpec& spec, ipsec_cfg_pol_key_t *key)
+ipsec_cfg_pol_key_spec_extract (const kh::IpsecRuleKeyHandle& spec, ipsec_cfg_pol_key_t *key)
 {
     vrf_t *vrf;
 
-    key->pol_id = spec.key_or_handle().rule_key().ipsec_rule_id();
+    key->pol_id = spec.rule_key().ipsec_rule_id();
 
-    if (spec.key_or_handle().rule_key().
+    if (spec.rule_key().
         vrf_key_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
-        key->vrf_id = spec.key_or_handle().rule_key().
-            vrf_key_or_handle().vrf_id();
+        key->vrf_id = spec.rule_key().vrf_key_or_handle().vrf_id();
 
         if ((vrf = vrf_lookup_by_id(key->vrf_id)) == NULL) {
         HAL_TRACE_DEBUG("Failed here");
             return  HAL_RET_VRF_NOT_FOUND;
         }
     } else {
-        if ((vrf = vrf_lookup_by_handle(spec.key_or_handle().rule_key().
+        if ((vrf = vrf_lookup_by_handle(spec.rule_key().
                 vrf_key_or_handle().vrf_handle())) == NULL) {
-        HAL_TRACE_DEBUG("Failed here");
+        HAL_TRACE_DEBUG("Failed here 2");
             return HAL_RET_VRF_NOT_FOUND;
          }
 
@@ -144,17 +143,30 @@ ipsec_cfg_pol_spec_extract (ipsec::IpsecRuleSpec& spec, ipsec_cfg_pol_t *pol)
 {
     hal_ret_t ret;
 
-    if ((ret = ipsec_cfg_pol_key_spec_extract(spec, &pol->key)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
+    if ((ret = ipsec_cfg_pol_key_spec_extract(spec.key_or_handle(), &pol->key)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to extract ipsec policy key spec");
         return ret;
     }
 
     if ((ret = ipsec_cfg_pol_data_spec_extract(spec, pol)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
+        HAL_TRACE_DEBUG("Failed to extract ipsec policy data spec");
         return ret;
     }
 
     return ret;
+}
+
+
+ipsec_cfg_pol_t *
+ipsec_cfg_pol_key_or_handle_lookup (const kh::IpsecRuleKeyHandle& kh)
+{
+    if (kh.rule_handle() != HAL_HANDLE_INVALID) {
+        return ipsec_cfg_pol_hal_hdl_db_lookup(kh.rule_handle());
+    } else {
+        ipsec_cfg_pol_key_t key = {0};
+        ipsec_cfg_pol_key_spec_extract(kh, &key);
+        return ipsec_cfg_pol_db_lookup(&key);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -189,6 +201,28 @@ add_ipsec_rule_to_db (ipsec_rule_t *ipsec)
 }
 
 static hal_ret_t
+ipsec_cfg_pol_key_spec_validate (const kh::IpsecRuleKeyHandle& spec, bool create)
+{
+    if (create) {
+        if (spec.rule_handle() != HAL_HANDLE_INVALID)
+            return HAL_RET_INVALID_ARG;
+    }
+
+    if (spec.rule_key().vrf_key_or_handle().key_or_handle_case() ==
+        kh::VrfKeyHandle::kVrfId) {
+        if (vrf_lookup_by_id(spec.rule_key().vrf_key_or_handle().
+                             vrf_id()) == NULL)
+            return  HAL_RET_VRF_NOT_FOUND;
+    } else {
+        if (vrf_lookup_by_handle(spec.rule_key().vrf_key_or_handle().
+                                 vrf_handle()) == NULL)
+            return HAL_RET_VRF_NOT_FOUND;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
 ipsec_cfg_pol_spec_validate (ipsec::IpsecRuleSpec& spec, bool create)
 {
     hal_ret_t ret;
@@ -198,68 +232,13 @@ ipsec_cfg_pol_spec_validate (ipsec::IpsecRuleSpec& spec, bool create)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (create) {
-        if ((ret = validate_ipsec_rule_create(spec)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
-            return ret;
-        }
+    if ((ret = ipsec_cfg_pol_key_spec_validate(
+         spec.key_or_handle(), create)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to validate ipsec rule key spec");
+        return ret;
     }
 
     return HAL_RET_OK;
-}
-
-//-----------------------------------------------------------------------------
-// IPSec config alloc and init routines
-//-----------------------------------------------------------------------------
-
-static inline ipsec_cfg_pol_t *
-ipsec_cfg_pol_alloc (void)
-{
-    return ((ipsec_cfg_pol_t *)g_hal_state->ipsec_cfg_pol_slab()->alloc());
-}
-
-static inline void
-ipsec_cfg_pol_free (ipsec_cfg_pol_t *pol)
-{
-    hal::delay_delete_to_slab(HAL_SLAB_IPSEC_CFG_POL, pol);
-}
-
-static inline void
-ipsec_cfg_pol_init (ipsec_cfg_pol_t *pol)
-{
-    HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
-    dllist_reset(&pol->rule_list);
-    pol->ht_ctxt.reset();
-    pol->hal_hdl = HAL_HANDLE_INVALID;
-}
-
-static inline void
-ipsec_cfg_pol_uninit (ipsec_cfg_pol_t *pol)
-{
-    HAL_SPINLOCK_DESTROY(&pol->slock);
-}
-
-static inline ipsec_cfg_pol_t *
-ipsec_cfg_pol_alloc_init (void)
-{
-    ipsec_cfg_pol_t *pol;
-
-    if ((pol = ipsec_cfg_pol_alloc()) ==  NULL) {
-        HAL_TRACE_DEBUG("Failed here");
-        return NULL;
-    }
-
-    ipsec_cfg_pol_init(pol);
-    return pol;
-}
-
-static inline void
-ipsec_cfg_pol_uninit_free (ipsec_cfg_pol_t *pol)
-{
-    if (pol) {
-        ipsec_cfg_pol_uninit(pol);
-        ipsec_cfg_pol_free(pol);
-    }
 }
 
 hal_ret_t
@@ -311,7 +290,7 @@ ipsec_rule_create (IpsecRuleSpec& spec, IpsecRuleResponse *rsp)
     }
 
 end:
-    ipsec_cfg_pol_rsp_build(rsp, ret, pol ? pol->hal_hdl : HAL_HANDLE_INVALID);
+    ipsec_cfg_pol_create_rsp_build(rsp, ret, pol ? pol->hal_hdl : HAL_HANDLE_INVALID);
     return ret;
 }
 
@@ -324,34 +303,45 @@ ipsec_rule_update (IpsecRuleSpec& spec, IpsecRuleResponse *rsp)
     return HAL_RET_OK;
 }
 
-void
-ipsec_cfg_pol_rsp_build (ipsec::IpsecRuleResponse *rsp, hal_ret_t ret,
-                         hal_handle_t hal_handle)
-{
-    if (ret == HAL_RET_OK)
-        rsp->mutable_status()->set_handle(hal_handle);
-    rsp->set_api_status(hal_prepare_rsp(ret));
-}
-
 hal_ret_t
 ipsec_cfg_pol_rule_spec_build (ipsec_cfg_pol_t *pol,
                                ipsec::IpsecRuleSpec *spec)
 {
-    hal_ret_t        ret;
+    hal_ret_t        ret = HAL_RET_OK;
     dllist_ctxt_t    *entry;
     ipsec_cfg_rule_t *rule;
 
     dllist_for_each(entry, &pol->rule_list) {
-        rule = (ipsec_cfg_rule_t  *)((char *)entry -
-                    (sizeof(ipsec_cfg_rule_action_t) + sizeof(rule_match_t) + sizeof(ipsec_cfg_rule_key_t)));
+        rule = dllist_entry(entry, ipsec_cfg_rule_t, list_ctxt);
         auto rule_spec = spec->add_rules();
         if ((ret = ipsec_cfg_rule_spec_build(
                rule, rule_spec, spec)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
+            HAL_TRACE_DEBUG("Failed here");
             return ret;
         }
     }
 
+    return ret;
+}
+
+static inline hal_ret_t
+ipsec_cfg_pol_data_spec_build (ipsec_cfg_pol_t *pol, ipsec::IpsecRuleSpec *spec)
+{
+    hal_ret_t ret;
+
+    if ((ret = ipsec_cfg_pol_rule_spec_build(pol, spec)) != HAL_RET_OK)
+        return ret;
+
+    return ret;
+}
+
+hal_ret_t
+ipsec_cfg_pol_key_spec_build (ipsec_cfg_pol_t *pol, kh::IpsecRuleKeyHandle *spec)
+{
+    spec->mutable_rule_key()->mutable_vrf_key_or_handle()->set_vrf_id(
+        pol->key.vrf_id);
+    spec->mutable_rule_key()->set_ipsec_rule_id(pol->key.pol_id);
+    spec->set_rule_handle(pol->hal_hdl);
     return HAL_RET_OK;
 }
 
@@ -360,29 +350,12 @@ ipsec_cfg_pol_spec_build (ipsec_cfg_pol_t *pol,
                           ipsec::IpsecRuleSpec *spec)
 {
     hal_ret_t           ret;
-    ipsec_cfg_pol_key_t *key;
 
-    key = &(pol->key);
-    spec->mutable_key_or_handle()->mutable_rule_key()->mutable_vrf_key_or_handle()->set_vrf_id(key->vrf_id);
-    spec->mutable_key_or_handle()->mutable_rule_key()->set_ipsec_rule_id(key->pol_id);
-    spec->mutable_key_or_handle()->set_rule_handle(pol->hal_hdl);
-
-    if ((ret = ipsec_cfg_pol_rule_spec_build(pol, spec)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
+    if ((ret = ipsec_cfg_pol_key_spec_build(
+            pol, spec->mutable_key_or_handle())) != HAL_RET_OK)
         return ret;
-    }
 
-    return ret;
-}
-
-hal_ret_t
-ipsec_cfg_pol_get_cfg_handle (ipsec_cfg_pol_t *pol,
-                              ipsec::IpsecRuleGetResponse *response)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    auto spec = response->mutable_spec();
-
-    if ((ret = ipsec_cfg_pol_spec_build(pol, spec)) != HAL_RET_OK) {
+    if ((ret = ipsec_cfg_pol_data_spec_build(pol, spec)) != HAL_RET_OK) {
         HAL_TRACE_DEBUG("Failed here");
         return ret;
     }
@@ -444,7 +417,7 @@ ipsec_policy_get_ht_cb (void *ht_entry, void *ctxt)
     ipsec_cfg_pol_t             *pol;
 
     pol = (ipsec_cfg_pol_t *)hal_handle_get_obj(entry->handle_id);
-    ipsec_cfg_pol_get_cfg_handle(pol, response);
+    ipsec_cfg_pol_spec_build(pol, response->mutable_spec());
 
     // return false here, so that we don't terminate the walk
     return false;
@@ -456,39 +429,84 @@ ipsec_policy_get_ht_cb (void *ht_entry, void *ctxt)
 hal_ret_t
 ipsec_rule_get (IpsecRuleGetRequest& req, IpsecRuleGetResponseMsg *rsp)
 {
-    hal_ret_t        ret;
     ipsec_cfg_pol_t  *pol;
 
     if (!req.has_key_or_handle()) {
         g_hal_state->ipsec_policy_ht()->walk(ipsec_policy_get_ht_cb, rsp);
-    } else {
-        auto kh = req.key_or_handle();
-        pol = ipsec_find_policy_by_key_or_handle(kh);
-        if (pol == NULL) {
-            auto response = rsp->add_response();
-            response->set_api_status(types::API_STATUS_NOT_FOUND);
-            HAL_API_STATS_INC(HAL_API_IPSEC_RULE_GET_FAIL);
-        HAL_TRACE_DEBUG("Failed here");
-            return HAL_RET_IPSEC_RULE_NOT_FOUND;
-        }
-        auto response = rsp->add_response();
-        if ((ret = ipsec_cfg_pol_get_cfg_handle(pol, response)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
-            return ret;
-        }
+        HAL_API_STATS_INC(HAL_API_IPSEC_RULE_GET_SUCCESS);
+	return HAL_RET_OK;
     }
+
+    auto kh = req.key_or_handle();
+    auto response = rsp->add_response();
+    if ((pol = ipsec_cfg_pol_key_or_handle_lookup(kh)) == NULL) { 
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_API_STATS_INC(HAL_API_IPSEC_RULE_GET_FAIL);
+        return HAL_RET_IPSEC_RULE_NOT_FOUND;
+    }
+    ipsec_cfg_pol_spec_build(pol, response->mutable_spec());
+    HAL_API_STATS_INC(HAL_API_IPSEC_RULE_GET_SUCCESS);
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// DELETE configuration handling
+//-----------------------------------------------------------------------------
+
+hal_ret_t
+ipsec_cfg_pol_delete_cfg_handle (ipsec_cfg_pol_t *pol)
+{
+    ipsec_cfg_pol_cleanup(pol);
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// DELETE operational handling
+//-----------------------------------------------------------------------------
+
+hal_ret_t
+ipsec_cfg_pol_delete_oper_handle (ipsec_cfg_pol_t *pol)
+{
+    hal_ret_t ret;
+
+    if ((ret = ipsec_cfg_pol_delete_db_handle(&pol->key)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = cfg_ctxt_op_delete_handle(
+            HAL_OBJ_ID_IPSEC_POLICY, pol, NULL, hal_cfg_op_null_cb,
+            hal_cfg_op_null_cb, hal_cfg_op_null_cb,
+            hal_cfg_op_null_cb, pol->hal_hdl)) != HAL_RET_OK)
+        return ret;
+
+    if ((ret = ipsec_cfg_pol_acl_cleanup(pol)) != HAL_RET_OK)
+        return ret;
 
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// process a IPSEC CB delete request
+// process a IPSEC SPD Rule delete request
 //------------------------------------------------------------------------------
 hal_ret_t
 ipsec_rule_delete (ipsec::IpsecRuleDeleteRequest& req, ipsec::IpsecRuleDeleteResponse *rsp)
 {
-    rsp->set_api_status(types::API_STATUS_OK);
-    return HAL_RET_OK;
+    hal_ret_t       ret = HAL_RET_OK;
+    ipsec_cfg_pol_t *policy;
+
+    if ((policy = ipsec_cfg_pol_key_or_handle_lookup(req.key_or_handle())) == NULL) {
+        ret = HAL_RET_IPSEC_RULE_NOT_FOUND;
+        goto end;
+    }
+
+    if ((ret = ipsec_cfg_pol_delete_oper_handle(policy)) != HAL_RET_OK)
+        goto end;
+
+    if ((ret = ipsec_cfg_pol_delete_cfg_handle(policy)) != HAL_RET_OK)
+        goto end;
+
+end:
+    ipsec_cfg_pol_delete_rsp_build(rsp, ret);
+    return ret;
 }
 
 
@@ -500,11 +518,7 @@ static inline hal_ret_t
 ipsec_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t ret = HAL_RET_INVALID_ARG;
-    ipsec_cfg_pol_t *policy;
     ipsec_cfg_pol_create_app_ctxt_t *app_ctx = NULL;
-    hal_handle_t hal_handle;
-    dllist_ctxt_t *lnode;
-    dhl_entry_t *dhl_entry;
 
     if (!cfg_ctxt || !cfg_ctxt->app_ctxt) {
         HAL_TRACE_DEBUG("Failed here");
@@ -520,44 +534,11 @@ ipsec_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl_deref(app_ctx->acl_ctx);
 
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    hal_handle = dhl_entry->handle;
-    policy = (ipsec_cfg_pol_t *) dhl_entry->obj;
-    HAL_TRACE_DEBUG("policy key ({}, {}), handle {}",
-                    policy->key.vrf_id, policy->key.pol_id, hal_handle);
-    ret = ipsec_cfg_pol_create_db_handle(policy);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add IPSec policy ({}, {}) to db, err : {}",
-                      policy->key.vrf_id, policy->key.pol_id, ret);
-        goto end;
-    }
-
 end:
 
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("ipsec create commit failed");
         //todo: free resources
-    }
-    return ret;
-}
-
-static hal_ret_t
-ipsec_cfg_pol_rule_oper_handle (
-    ipsec_cfg_pol_t *pol, ipsec_cfg_pol_create_app_ctxt_t *app_ctxt)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    ipsec_cfg_rule_t *rule;
-    dllist_ctxt_t    *entry;
-    uint32_t         prio=0;
-
-    dllist_for_each(entry, &pol->rule_list) {
-        rule = dllist_entry(entry, ipsec_cfg_rule_t, list_ctxt);
-        rule->prio = prio++;
-        if ((ret = ipsec_cfg_rule_create_oper_handle(
-               rule, app_ctxt->acl_ctx)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
-            return ret;
-        }
     }
     return ret;
 }
@@ -575,24 +556,20 @@ ipsec_cfg_pol_create_oper_handle (ipsec_cfg_pol_t *pol)
     hal_handle_t hal_hdl;
     ipsec_cfg_pol_create_app_ctxt_t app_ctxt = { 0 };
 
-    app_ctxt.acl_ctx = ipsec_cfg_pol_create_app_ctxt_init(pol);
-
-    if ((ret = cfg_ctxt_op_create_handle(HAL_OBJ_ID_IPSEC_POLICY, pol, &app_ctxt,
-                                         hal_cfg_op_null_cb,
-                                         ipsec_cfg_pol_create_commit_cb,
-                                         hal_cfg_op_null_cb,
-                                         hal_cfg_op_null_cb,
-                                         &hal_hdl)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
+    // build acl before operating on the callbacks
+    if ((ret = ipsec_cfg_pol_acl_build(pol, &app_ctxt.acl_ctx)) != HAL_RET_OK)
         return ret;
-    }
 
-    ipsec_cfg_pol_oper_init(pol, hal_hdl);
-
-    if ((ret = ipsec_cfg_pol_rule_oper_handle(pol, &app_ctxt)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
+    if ((ret = cfg_ctxt_op_create_handle(
+            HAL_OBJ_ID_IPSEC_POLICY, pol, &app_ctxt, hal_cfg_op_null_cb,
+            ipsec_cfg_pol_create_commit_cb, hal_cfg_op_null_cb,
+            hal_cfg_op_null_cb, &hal_hdl)) != HAL_RET_OK)
         return ret;
-    }
+
+    // save the hal handle and add policy to databases
+    pol->hal_hdl = hal_hdl;
+    if ((ret = ipsec_cfg_pol_create_db_handle(pol)) != HAL_RET_OK)
+        return ret;
 
     return HAL_RET_OK;
 }
@@ -601,139 +578,6 @@ ipsec_cfg_pol_create_oper_handle (ipsec_cfg_pol_t *pol)
 //-----------------------------------------------------------------------------
 // Rule action routines
 //-----------------------------------------------------------------------------
-
-static hal_ret_t
-ipsec_cfg_rule_action_spec_extract (const ipsec::IpsecSAAction& spec,
-                                    ipsec_cfg_rule_action_t *action)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    action->sa_action = spec.sa_action_type();
-    action->sa_action_enc_handle = (hal_handle_t)(spec.enc_handle().cb_id());
-    action->sa_action_dec_handle = (hal_handle_t)(spec.dec_handle().cb_id());
-
-    HAL_TRACE_DEBUG("action type {} enc_handle {} dec_handle {}", action->sa_action, action->sa_action_enc_handle, action->sa_action_dec_handle);
-    return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Rule routines
-//-----------------------------------------------------------------------------
-
-// Slab delete must not be called directly. It will be called from the acl ref
-// library when the ref_count drops to zero
-void
-ipsec_cfg_rule_free (void *rule)
-{
-    hal::delay_delete_to_slab(HAL_SLAB_IPSEC_CFG_RULE, (ipsec_cfg_rule_t *)rule);
-}
-
-static inline void
-ipsec_cfg_rule_init (ipsec_cfg_rule_t *rule)
-{
-    rule_match_init(&rule->match);
-    dllist_reset(&rule->list_ctxt);
-}
-
-static inline void
-ipsec_cfg_rule_uninit (ipsec_cfg_rule_t *rule)
-{
-    return;
-}
-
-static inline void
-ipsec_cfg_rule_uninit_free (ipsec_cfg_rule_t *rule)
-{
-    if (rule) {
-        ipsec_cfg_rule_uninit(rule);
-        ipsec_cfg_rule_free(rule);
-    }
-}
-
-static inline ipsec_cfg_rule_t *
-ipsec_cfg_rule_alloc (void)
-{
-    ipsec_cfg_rule_t *rule;
-    rule = (ipsec_cfg_rule_t *)g_hal_state->ipsec_cfg_rule_slab()->alloc();
-    // Slab free will be called when the ref count drops to zero
-    ref_init(&rule->ref_count, [] (const acl::ref_t * ref_count) {
-        ipsec_cfg_rule_uninit_free(RULE_MATCH_USER_DATA(ref_count, ipsec_cfg_rule_t, ref_count));
-    });
-    return rule;
-}
-
-static inline ipsec_cfg_rule_t *
-ipsec_cfg_rule_alloc_init (void)
-{
-    ipsec_cfg_rule_t *rule;
-
-    if ((rule = ipsec_cfg_rule_alloc()) ==  NULL)
-        return NULL;
-
-    ipsec_cfg_rule_init(rule);
-    return rule;
-}
-
-
-static inline void
-ipsec_cfg_rule_db_add (dllist_ctxt_t *head, ipsec_cfg_rule_t *rule)
-{
-    dllist_add_tail(head, &rule->list_ctxt);
-}
-
-static inline void
-ipsec_cfg_rule_db_del (ipsec_cfg_rule_t *rule)
-{
-    dllist_del(&rule->list_ctxt);
-}
-
-static hal_ret_t
-ipsec_cfg_rule_data_spec_extract (const ipsec::IpsecRuleMatchSpec& spec,
-                                  ipsec_cfg_rule_t *rule)
-{
-    hal_ret_t ret = HAL_RET_OK;
-
-    if ((ret = rule_match_spec_extract(
-           spec.match(), &rule->match)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
-        return ret;
-    }
-
-    if ((ret = ipsec_cfg_rule_action_spec_extract(
-           spec.sa_action(), &rule->action)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
-        return ret;
-    }
-
-    return ret;
-}
-
-static inline hal_ret_t
-ipsec_cfg_rule_key_spec_extract (const ipsec::IpsecRuleMatchSpec& spec,
-                                 ipsec_cfg_rule_key_t *key)
-{
-    key->rule_id = spec.rule_id();
-    return HAL_RET_OK;
-}
-
-static inline hal_ret_t
-ipsec_cfg_rule_spec_extract (const ipsec::IpsecRuleMatchSpec& spec, ipsec_cfg_rule_t *rule)
-{
-    hal_ret_t ret;
-
-    if ((ret = ipsec_cfg_rule_key_spec_extract(
-           spec, &rule->key)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
-        return ret;
-    }
-
-    if ((ret = ipsec_cfg_rule_data_spec_extract(
-           spec, rule)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
-        return ret;
-    }
-
-   return ret;
-}
 
 hal_ret_t
 ipsec_cfg_rule_spec_handle (const ipsec::IpsecRuleMatchSpec& spec, dllist_ctxt_t *head)
@@ -762,11 +606,12 @@ ipsec_cfg_rule_spec_build (ipsec_cfg_rule_t *rule, ipsec::IpsecRuleMatchSpec *sp
 
     spec->set_rule_id(rule->key.rule_id);
 
-    auto action = spec->mutable_sa_action();
-    rule->action.sa_action = action->sa_action_type();
-    rule->action.sa_action_enc_handle = (hal_handle_t)action->mutable_enc_handle();
-    rule->action.sa_action_dec_handle = (hal_handle_t)action->mutable_dec_handle();
-    rule->action.vrf = rule_spec->key_or_handle().rule_key().vrf_key_or_handle().vrf_id();    
+    spec->mutable_sa_action()->set_sa_action_type(rule->action.sa_action);
+    if (rule->action.sa_action == ipsec::IPSEC_SA_ACTION_TYPE_ENCRYPT) {
+        spec->mutable_sa_action()->mutable_enc_handle()->set_cb_id(rule->action.sa_action_enc_handle);
+    } else if (rule->action.sa_action == ipsec::IPSEC_SA_ACTION_TYPE_DECRYPT) {
+        spec->mutable_sa_action()->mutable_dec_handle()->set_cb_id(rule->action.sa_action_dec_handle);
+    }
 
     HAL_TRACE_DEBUG("action type {} enc_handle {} dec_handle {} vrf-id {}", 
                     rule->action.sa_action, rule->action.sa_action_enc_handle, 

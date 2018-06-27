@@ -142,6 +142,8 @@ p4plus_app_cpu_common:
 
 .align
 p4plus_app_ipsec:
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
+  phvwr       p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
