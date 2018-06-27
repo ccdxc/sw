@@ -201,6 +201,7 @@ func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 }
 
 func TestAuthenticate(t *testing.T) {
+	t.Skip()
 	for testtype, ldapconf := range authenticationPoliciesData() {
 		_, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
 		if err != nil {
@@ -225,6 +226,7 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestIncorrectPasswordAuthentication(t *testing.T) {
+	t.Skip()
 	policy := createDefaultAuthenticationPolicy()
 	defer DeleteAuthenticationPolicy(apicl)
 
@@ -240,6 +242,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 }
 
 func TestIncorrectUserAuthentication(t *testing.T) {
+	t.Skip()
 	policy := createDefaultAuthenticationPolicy()
 	defer DeleteAuthenticationPolicy(apicl)
 
@@ -257,6 +260,7 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 }
 
 func TestMissingLdapAttributeMapping(t *testing.T) {
+	t.Skip()
 	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
@@ -291,6 +295,7 @@ func TestMissingLdapAttributeMapping(t *testing.T) {
 }
 
 func TestIncorrectLdapAttributeMapping(t *testing.T) {
+	t.Skip()
 	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
@@ -331,6 +336,7 @@ func TestIncorrectLdapAttributeMapping(t *testing.T) {
 }
 
 func TestIncorrectBaseDN(t *testing.T) {
+	t.Skip()
 	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
@@ -371,6 +377,7 @@ func TestIncorrectBaseDN(t *testing.T) {
 }
 
 func TestIncorrectBindPassword(t *testing.T) {
+	t.Skip()
 	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
@@ -411,6 +418,7 @@ func TestIncorrectBindPassword(t *testing.T) {
 }
 
 func TestDisabledLdapAuthenticator(t *testing.T) {
+	t.Skip()
 	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: false,
 		Servers: []*auth.LdapServer{
@@ -452,6 +460,7 @@ func TestDisabledLdapAuthenticator(t *testing.T) {
 }
 
 func TestReferral(t *testing.T) {
+	t.Skip()
 	for testtype, ldapconf := range authenticationPoliciesData() {
 		_, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
 		if err != nil {
