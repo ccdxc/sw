@@ -9,5 +9,6 @@ cc_test(
     srcs = [ "offload_sim_test.cc", ],
     deps = [ "//storage/offload:pnso_sim",
              "//storage/offload:osal",
-             "//:gtest" ]
+             "//:gtest" ],
+    size = "small"
 )

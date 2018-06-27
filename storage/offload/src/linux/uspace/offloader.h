@@ -4,8 +4,8 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
-#include "pnso_sim_api.h"
-#include "pnso_sim.h"
+#include "pnso_api.h"
+#include "sim.h"
 
 enum  thread_types {
 	THREAD_TYPE_IO_INITIATOR,

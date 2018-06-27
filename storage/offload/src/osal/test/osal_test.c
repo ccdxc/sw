@@ -1,8 +1,8 @@
 #ifndef __KERNEL__
 #include <unistd.h>
 #include <assert.h>
-#include "pnso_sim_api.h"
-#include "pnso_sim.h"
+#include "pnso_api.h"
+#include "sim.h"
 #endif
 #include "osal_mem.h"
 #include "osal_thread.h"
@@ -50,13 +50,12 @@ int exec_cp_req(void)
 
 	/* Setup compression service */
 	svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-	svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-	svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+	svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+	svc_req->svc[0].u.cp_desc.flags = PNSO_CP_DFLAG_ZERO_PAD | PNSO_CP_DFLAG_INSERT_HEADER;
 	svc_req->svc[0].u.cp_desc.threshold_len = PNSO_TEST_DATA_SIZE - 8;
 	svc_res->svc[0].u.dst.sgl = int_buflist;
 
-	rc = pnso_submit_request(PNSO_BATCH_REQ_NONE,
-				svc_req, svc_res,
+	rc = pnso_submit_request(svc_req, svc_res,
 				cp_comp_cb, NULL,
 				NULL, NULL);
 	if (rc != 0) {
@@ -87,12 +86,11 @@ int exec_dc_req(void)
 
 	/* Setup compression service */
 	svc_req->svc[0].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
-	svc_req->svc[0].u.dc_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-	svc_req->svc[0].u.dc_desc.flags = PNSO_DFLAG_HEADER_PRESENT;
+	svc_req->svc[0].u.dc_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+	svc_req->svc[0].u.dc_desc.flags = PNSO_DC_DFLAG_HEADER_PRESENT;
 	svc_res->svc[0].u.dst.sgl = dst_buflist;
 
-	rc = pnso_submit_request(PNSO_BATCH_REQ_NONE,
-				svc_req, svc_res,
+	rc = pnso_submit_request(svc_req, svc_res,
 				dc_comp_cb, NULL,
 				NULL, NULL);
 	if (rc != 0) {
@@ -222,7 +220,6 @@ int body(void)
 
 	memset(&init_params, 0, sizeof(init_params));
 	/* Initialize session */
-	init_params.cp_hdr_version = 1;
 	init_params.per_core_qdepth = 16;
 	init_params.block_size = 4096;
 	pnso_init(&init_params);
