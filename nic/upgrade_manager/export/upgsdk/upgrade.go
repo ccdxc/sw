@@ -168,9 +168,8 @@ func (u *upgSdk) StartUpgrade() error {
 	}
 	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
 	if upgreq == nil {
-		upgreq = upgrade.NewUpgReq(u.sdkClient)
+		upgreq = upgrade.NewUpgReqWithKey(u.sdkClient, 10)
 	}
-	upgreq.SetKey(10)
 	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)
 	return nil
 }

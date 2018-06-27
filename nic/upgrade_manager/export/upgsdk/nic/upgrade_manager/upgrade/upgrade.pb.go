@@ -481,6 +481,12 @@ func NewUpgReq(sdkClient gosdk.Client) *UpgReq {
 	return w
 }
 
+func NewUpgReqWithKey(sdkClient gosdk.Client, key uint32) *UpgReq {
+	w := NewUpgReq(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
 func GetUpgReq(sdkClient gosdk.Client, key uint32) *UpgReq {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("UpgReq", lookupKey)
@@ -497,6 +503,13 @@ func GetUpgReq(sdkClient gosdk.Client, key uint32) *UpgReq {
 func childNewUpgReq(parent delphiWrapper, sdkClient gosdk.Client) *UpgReq {
 	w := NewUpgReq(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewUpgReqWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgReq) *UpgReq {
+	w := childNewUpgReq(parent, sdkClient)
+	w.key = value.key
+	w.upgReqCmd = value.upgReqCmd
 	return w
 }
 
@@ -639,6 +652,12 @@ func NewUpgResp(sdkClient gosdk.Client) *UpgResp {
 	return w
 }
 
+func NewUpgRespWithKey(sdkClient gosdk.Client, key uint32) *UpgResp {
+	w := NewUpgResp(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
 func GetUpgResp(sdkClient gosdk.Client, key uint32) *UpgResp {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("UpgResp", lookupKey)
@@ -655,6 +674,14 @@ func GetUpgResp(sdkClient gosdk.Client, key uint32) *UpgResp {
 func childNewUpgResp(parent delphiWrapper, sdkClient gosdk.Client) *UpgResp {
 	w := NewUpgResp(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewUpgRespWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgResp) *UpgResp {
+	w := childNewUpgResp(parent, sdkClient)
+	w.key = value.key
+	w.upgRespVal = value.upgRespVal
+	w.upgRespFailStr = childNewStringArrayWithValue(w, sdkClient, value.upgRespFailStr)
 	return w
 }
 
@@ -803,6 +830,12 @@ func NewUpgStateReq(sdkClient gosdk.Client) *UpgStateReq {
 	return w
 }
 
+func NewUpgStateReqWithKey(sdkClient gosdk.Client, key uint32) *UpgStateReq {
+	w := NewUpgStateReq(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
 func GetUpgStateReq(sdkClient gosdk.Client, key uint32) *UpgStateReq {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("UpgStateReq", lookupKey)
@@ -819,6 +852,14 @@ func GetUpgStateReq(sdkClient gosdk.Client, key uint32) *UpgStateReq {
 func childNewUpgStateReq(parent delphiWrapper, sdkClient gosdk.Client) *UpgStateReq {
 	w := NewUpgStateReq(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewUpgStateReqWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgStateReq) *UpgStateReq {
+	w := childNewUpgStateReq(parent, sdkClient)
+	w.key = value.key
+	w.upgReqState = value.upgReqState
+	w.upgReqType = value.upgReqType
 	return w
 }
 
@@ -967,6 +1008,12 @@ func NewUpgAppResp(sdkClient gosdk.Client) *UpgAppResp {
 	return w
 }
 
+func NewUpgAppRespWithKey(sdkClient gosdk.Client, key string) *UpgAppResp {
+	w := NewUpgAppResp(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
 func GetUpgAppResp(sdkClient gosdk.Client, key string) *UpgAppResp {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("UpgAppResp", lookupKey)
@@ -983,6 +1030,14 @@ func GetUpgAppResp(sdkClient gosdk.Client, key string) *UpgAppResp {
 func childNewUpgAppResp(parent delphiWrapper, sdkClient gosdk.Client) *UpgAppResp {
 	w := NewUpgAppResp(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewUpgAppRespWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgAppResp) *UpgAppResp {
+	w := childNewUpgAppResp(parent, sdkClient)
+	w.key = value.key
+	w.upgAppRespVal = value.upgAppRespVal
+	w.upgAppRespStr = value.upgAppRespStr
 	return w
 }
 
@@ -1111,6 +1166,12 @@ func NewUpgApp(sdkClient gosdk.Client) *UpgApp {
 	return w
 }
 
+func NewUpgAppWithKey(sdkClient gosdk.Client, key string) *UpgApp {
+	w := NewUpgApp(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
 func GetUpgApp(sdkClient gosdk.Client, key string) *UpgApp {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("UpgApp", lookupKey)
@@ -1127,6 +1188,12 @@ func GetUpgApp(sdkClient gosdk.Client, key string) *UpgApp {
 func childNewUpgApp(parent delphiWrapper, sdkClient gosdk.Client) *UpgApp {
 	w := NewUpgApp(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewUpgAppWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgApp) *UpgApp {
+	w := childNewUpgApp(parent, sdkClient)
+	w.key = value.key
 	return w
 }
 
@@ -1228,6 +1295,14 @@ func childNewStringArray(parent delphiWrapper, sdkClient gosdk.Client) *StringAr
 	arr := new(StringArray)
 	arr.values = make([]string, 0)
 	arr.parent = parent
+	return arr
+}
+
+func childNewStringArrayWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *StringArray) *StringArray {
+	arr := childNewStringArray(parent, sdkClient)
+	for _, v := range value.values {
+		arr.values = append(arr.values, v)
+	}
 	return arr
 }
 

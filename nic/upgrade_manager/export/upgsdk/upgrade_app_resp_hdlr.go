@@ -25,11 +25,10 @@ func createUpgAppResp(sdkClient gosdk.Client, name string) {
 	log.Infof("Creating UpgAppResp for %s", name)
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
-		upgAppResp = upgrade.NewUpgAppResp(sdkClient)
+		upgAppResp = upgrade.NewUpgAppRespWithKey(sdkClient, name)
 		if upgAppResp == nil {
 			log.Infof("application unable to create response object")
 		}
-		upgAppResp.SetKey(name)
 	}
 }
 

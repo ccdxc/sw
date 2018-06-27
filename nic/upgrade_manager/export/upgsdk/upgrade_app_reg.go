@@ -12,12 +12,11 @@ func registerUpgApp(client gosdk.Client, name string) {
 	app := upgrade.GetUpgApp(client, name)
 	if app == nil {
 		log.Infof("App %s not registered. Registering now.", name)
-		app = upgrade.NewUpgApp(client)
+		app = upgrade.NewUpgAppWithKey(client, name)
 		if app == nil {
 			log.Infof("App %s not registered.", name)
 			return
 		}
-		app.SetKey(name)
 	}
 }
 
